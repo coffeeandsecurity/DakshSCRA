@@ -1,0 +1,64 @@
+<root>
+    <rule>
+        <name>Command Injection: eval</name>
+        <regex>(^|\s|=\s?)eval\(</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Network calls</name>
+        <regex>(?i)(urllib2|socket)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Subprocess Modules</name>
+        <regex>(?i)(os\.system|os\.spawn|os\.popen|popen2\.|commands\.|os\.kill)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Command injection (eval|exec)</name>
+        <regex>(^|\s|=\s?)eval\(|(^|\s|=\s?)exec\(|open\(</regex>
+        <description>Desc</description>
+    </rule>
+    <rule>
+        <name>File Manipulation</name>
+        <regex>(?i)tarfile|zipfile|open\(</regex>
+        <description>Desc</description>
+    </rule>
+    <rule>
+        <name>Key Functionalities: 2FA | Password</name>
+        <regex>(?i)(2fa|password)</regex>
+        <description>Desc</description>
+    </rule>
+    <rule>
+        <name>Serialisation Issue</name>
+        <regex>(?i)(pickle|shelve)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Known bugs on exploitdb - Vulnerable methods</name>
+        <regex>(?i)(fromstring|PyTyple_GET_ITEM|pack_string|strop\.replace|objects\.all)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Insecure SQL Queries</name>
+        <regex>(?i)(raw|extra)\(</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Debug Status</name>
+        <regex>(?i)\.debug</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Session cookie and CSRF settings status</name>
+        <regex>(?i)(SESSION_COOKIE_SECURE|CSRF_COOKIE_SECURE)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Insecure Mitigation: Django Safe Filter django.utils.safestring</name>
+        <regex>(?i)\.safestring</regex>
+        <description>django.utils.html.escape is recommended.</description>
+    </rule>
+</root>
+
+

@@ -1,0 +1,28 @@
+<root>
+    <rule>
+        <name>Express BodyParser Tempfile Creation Issue</name>
+        <regex>bodyParser()</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Handlebars Unescaped String</name>
+        <regex>handlebars.SafeString</regex>
+        <description>TBD</description>
+    </rule>
+    <rule>
+        <name>Missing 'httpOnly' in Cookie</name>
+        <regex>httpOnly(\s)*:(\s)*true|httpOnly</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Remote OS Command Execution - (child_process.exec())</name>
+        <regex>require( )*(\()( *)('|")child_process('|")( *)(\))</regex>
+        <description>TBD</description>
+    </rule>
+        <rule>
+        <name>Routes</name>
+        <regex>(^|\s)(?i)route: \'.*(\s?)</regex>
+        <description>TBD</description>
+    </rule>
+</root>
+

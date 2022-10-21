@@ -1,0 +1,60 @@
+<root>
+    <rule>
+        <name>Tainted Inputs: $_REQUEST</name>
+        <regex>\$_REQUEST</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Tainted Inputs: $_GET</name>
+        <regex>\$_GET</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Tainted Inputs: $_COOKIE</name>
+        <regex>\$_COOKIE</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Command injection (shell_exec|exec|passthru|system|backtick)</name>
+        <regex>(^|\s|=\s?)shell_exec\(|(^|\s|=\s?)exec\(|(^|\s|=\s?)passthru\(|(^|\s|=\s?)system\(|\=\s?\`.*\`;</regex>
+        <description></description>
+    </rule>
+    <rule>
+        <name>PHP Execute (preg_replace with /e modifier)</name>
+        <regex>preg_replace\(.\W+e\W,</regex>
+        <regex>preg_replace\(\$_GET</regex>
+        <description>preg_replace could be made dangerous by the use of the /e flag</description>
+    </rule>
+    <rule>
+        <name>Serialisation Issue</name>
+        <regex>unserialize\(</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+        <rule>
+        <name>PHP_SELF XSS</name>
+        <regex>\$_SERVER\['PHP_SELF']</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>SELECT [*] FROM [anytable] WHERE</name>
+        <regex>SELECT\s+?[^\s]+?\s+?FROM\s+?[^\s]+?\s+?WHERE.*</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>SELECT ORDERBY</name>
+        <regex>(SELECT).*(ORDER BY).*</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Insecure Mitigation: SQL Injection (mysql_real_escape_string)</name>
+        <regex>mysql_real_escape_string</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Mitigation Identified: XSS</name>
+        <regex>htmlentities</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+</root>
+
+

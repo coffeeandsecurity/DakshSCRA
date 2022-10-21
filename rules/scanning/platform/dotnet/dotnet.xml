@@ -1,0 +1,69 @@
+<root>
+    <rule>
+        <name>Tainted Inputs</name>
+        <regex>Request\.QueryString</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Execute</name>
+        <regex>(?i)execute\s(\@|\()</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Response.Write</name>
+        <regex>Response.Write\([^\)]*?(\+*|\&amp;*)\s*</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>URL Redirect</name>
+        <regex>(?i)Response\.Redirect</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+        <rule>
+        <name>URL Redirect</name>
+        <regex>(?i)Response\.Redirect</regex>
+        <regex>(?i)Response\\.Redirect\\(\\s*\\\"\\S+\\\"\\s*\\)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Information Disclosure</name>
+        <regex>(?i)Response\.Write\s*\(.*StackTrace</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>API Route Prefix</name>
+        <regex>\[RoutePrefix\("</regex>
+        <description>Find instance of -- [RoutePrefix("...")] --</description>
+    </rule>
+    <rule>
+        <name>API Endpoints</name>
+        <regex>^.*(?i)(\"\/.*{)</regex>
+        <description>Find instance of -- ["/something/{method}"] --</description>
+    </rule>
+    <rule>
+        <name>Platform Specific</name>
+        <regex>ServerCertificateValidationCallback\s*?\=</regex>
+        <regex>%@\s?Page\s?.*\s?validateRequest\s?=\s?(\'|\")false(\'|\")</regex>
+        <regex>\.Append\(.*HttpContext\.Current\.Request\.Url</regex>
+        <regex>\.(Append|WriteLine)\([^\)]*?HttpContext\.Current\.Request\.(Url|Form|QueryString)</regex>
+        <regex>\.Append\(.*HttpContext\.Current\.Request\.Form</regex>
+        <regex>\.Append\(.*HttpContext\.Current\.Request\.QueryString</regex>
+        <regex>\.WriteLine\(.*HttpContext\.Current\.Request\.Url</regex>
+        <regex>\.WriteLine\(.*HttpContext\.Current\.Request\.Form</regex>
+        <regex>\.WriteLine\(.*HttpContext\.Current\.Request\.QueryString</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>XSS Mitigagtion</name>
+        <regex>\@inject\.JavaScriptEncoder\.encoder;</regex>
+        <reference>https://docs.microsoft.com/en-us/aspnet/core/security/cross-site-scripting</reference>
+        <description>Best-Practice In Use for XSS: HTML Encoding using Razor</description>
+    </rule>
+    <rule>
+        <name>CORS Mitigation</name>
+        <regex>EnableCors("AllowSpecificOrigin")</regex>
+        <reference>https://docs.microsoft.com/en-us/aspnet/core/security/cors</reference>
+        <description>Verify whether CORS is enabled</description>
+    </rule>
+</root>
+

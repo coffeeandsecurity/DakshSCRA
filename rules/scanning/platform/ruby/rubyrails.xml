@@ -1,0 +1,12 @@
+<root>
+    <rule>
+        <name>Insecure CSRF Mitigation</name>
+        <regex>protect_from_forgery</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Command Injection</name>
+        <name>Command injection (eval|system|backtick|kernel.exec|open)</name>
+        <regex>(^|\s|=\s?)eval\(|(^|\s|=\s?)system\(|(^|\s|=\s?)kernel\(|(^|\s|=\s?)open\(|\=\s?\`.*\`;</regex>
+    </rule>
+</root>

@@ -1,0 +1,39 @@
+<root>
+    <rule>
+        <name>Log Function</name>
+        <regex>logger\.error</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Flawed Package</name>
+        <regex>java.util.Random</regex>
+        <description>Produces predictable values for any given seed which are easily reproducible once the starting seed is identified.</description>
+    </rule>
+        <rule>
+        <name>Missing 'httpOnly' in Cookie</name>
+        <regex>httpOnly(\s)*:(\s)*true|httpOnly</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Remote OS Command Execution - (child_process.exec())</name>
+        <regex>require( )*(\()( *)('|")child_process('|")( *)(\))</regex>
+        <description>TBD</description>
+    </rule>
+    <rule>
+        <name>Tainted Input : requestParameters</name>
+        <regex>requestParameters</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Tainted Inputs : getParameter</name>
+        <regex>getParameter\(</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Serialisation Issue</name>
+        <regex>(?i)\.readObject</regex>
+        <description>Look for .readObject()</description>
+    </rule>
+</root>
+
+

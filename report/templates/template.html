@@ -1,0 +1,16 @@
+<html>
+    <head>
+        <title>Daksh SCRA Report</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.5.0/themes/prism.min.css"/>
+    </head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.5.0/prism.min.js"></script>
+<body>
+    {% if keyword %}
+    <h3><strong>[+] {{keyword}}</strong></h3>
+    {% endif %}
+    {% if fpath %}
+    <strong>{{fpath}}</strong>
+    {% endif %}
+    <pre><code class="language-plsql">{{snippet}}</code></pre>
+</body>
+</html>

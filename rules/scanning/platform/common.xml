@@ -1,0 +1,59 @@
+<root>
+    <rule>
+        <name>Password</name>
+        <regex>(^|\s)(?i)(Password|password|pwd|passwd)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Credit Card</name>
+        <regex>((\D(6011|5[1-5]\d{2}|4\d{3}|3\d{3})\d{11,12}\D)|(^(6011|5[1-5]\d{2}|4\d{3}|3\d{3})\d{11,12}\D))</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>IPv4 Address</name>
+        <regex>((([1-9]|1[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([1-9]|1[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-4]))</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Misc Modules (Admin|Administrator|CAPTCHA|Login|Authentication|Authenticated|Oauth|JWT)</name>
+        <regex>(^|\s)(?i)(Admin|Administrator|CAPTCHA|Login|Authentication|Authenticated|Oauth|JWT)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Information Disclosure</name>
+        <regex>(?i)Stacktrace</regex>
+        <description>Information disclosure due to error responses.</description>
+    </rule>
+    <rule>
+        <name>Standard Mitigation</name>
+        <regex>\\S*(CSRF|XSS|SQLi)\\S*(\\.|\\-\\>)(ToLower|ToUpper)\\s*\\</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>SELECT ORDERBY</name>
+        <regex>(SELECT).*(ORDER BY).*</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>SELECT ORDERBY @InputName</name>
+        <regex>(SELECT).*(ORDER BY).*\s(\@[a-zA-Z]+)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>URLs</name>
+        <regex>(?i)(http|https)\:\/\/</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>TODO</name>
+        <regex>(^|\s)(?i)TODO(\s?)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>RSA Private Key</name>
+        <regex>BEGIN RSA PRIVATE KEY</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+</root>
+
+

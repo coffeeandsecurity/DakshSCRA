@@ -1,0 +1,89 @@
+<root>
+    <rule>
+        <name>Security Functionality</name>
+        <regex>(?i)security</regex>
+        <description>Security Functionality</description>
+    </rule>
+    <rule>
+        <name>Permissions</name>
+        <regex>(?i)Permission</regex>
+        <description>Permissions</description>
+    </rule>
+    <rule>
+        <name>Password</name>
+        <regex>(?i)(Password|password|pwd|passwd|forgotpassword)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Libraries | Extensions | Plugins</name>
+        <regex>(?i)(Libraries|Extension|Plugin)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Misc Modules (CAPTCHA|Login|Authentication|Authenticated|Oauth|JWT)</name>
+        <regex>(?i)(CAPTCHA|Login|Authentication|Authenticated|Oauth|JWT)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Admin Section/Areas</name>
+        <regex>(?i)(Admin|Administrator)</regex>
+        <description>Admin Section/Areas</description>
+    </rule>
+    <rule>
+        <name>File Upload</name>
+        <regex>(?i)Upload</regex>
+        <description>File Upload</description>
+    </rule>
+    <rule>
+        <name>Login/SignIn</name>
+        <regex>(?i)(Login|Signin)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>API</name>
+        <regex>(?i)(api)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>User Section</name>
+        <regex>(?i)(user)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Payment Functionality</name>
+        <regex>(?i)(payment|pay)</regex>
+        <description>Payment related functionality</description>
+    </rule>
+    <rule>
+        <name>Purchases | Ordering</name>
+        <regex>(?i)(purchase|order|cart)</regex>
+        <description>Purchasing / Ordering functionality</description>
+    </rule>
+    <rule>
+        <name>Models</name>
+        <regex>(?i)\/(Models)\/</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Views</name>
+        <regex>(?i)\/(Views|View)\/</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>ViewModel</name>
+        <regex>(?i)\/(ViewModel)\/</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Controllers</name>
+        <regex>(?i)\/(Controllers|Controller)\/</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Presenter</name>
+        <regex>(?i)\/(Presenter)\/</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+</root>
+
+
