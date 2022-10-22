@@ -60,7 +60,8 @@ if results.recon and results.target_dir:
     else:
         targetdir = results.target_dir
         # Replace this function with direct call to software recon function
-        log_filepaths = mlib.DiscoverFiles('*.*', targetdir, 2)     # mode = 2 - Software Recon
+        # log_filepaths = mlib.DiscoverFiles('*.*', targetdir, 2)     # mode = 2 - Software Recon
+        log_filepaths = parser.recon(targetdir)
         sys.exit(1)
 
 # Priority #2 - If '-recon' option used then only recon must be performed

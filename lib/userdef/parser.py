@@ -140,7 +140,7 @@ def PathsParser(rule_path, targetfile, outputfile):
 
 
 # Software composition analysis
-def recon():
+def recon(targetdir):
     # WORK IN PROGRESS
     '''
     Steps:
@@ -158,4 +158,7 @@ def recon():
         *  Ignore files based on extentions
         *  Effort estimation
     ''' 
-    return
+
+    log_filepaths = mlib.DiscoverFiles('*.*', targetdir, 2)     # mode = 2 - Software Recon
+
+    return log_filepaths
