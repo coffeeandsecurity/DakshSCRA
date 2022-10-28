@@ -1,10 +1,8 @@
-# DakshSCRA
-
 <p align="center">
   <img src="resources/images/logo.jpg" width="500" title="Daksh SCRA">
 </p>
 
-## Daksh SCRA (Source Code Review Assist) - Version 1.0
+# Daksh SCRA (Source Code Review Assist) - Version 1.0
 ```
 Author: 	
 	Debasis Mohanty (d3basis.m0hanty@gmail.com)
