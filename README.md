@@ -1,5 +1,10 @@
 # DakshSCRA
 
+<p align="center">
+  <img src="resources/images/logo.jpg" width="350" title="Daksh SCRA">
+  <img src="resources/images/logo.jpg" width="350" alt="Daksh SCRA">
+</p>
+
 ## Daksh SCRA (Source Code Review Assist) - Version 1.0
 ```
 Author: 	

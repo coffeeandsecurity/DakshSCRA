@@ -248,15 +248,15 @@ def ListRulesFiletypes(option):
     xmltree = ET.parse(settings.rulesConfig)
     rule = xmltree.getroot()
 
-    print(option)
+
     if option == 'R':
-        print("List of all available rules")
+        print("\nList of all available rules")
         for r in rule:
             print("\t" + r.find("platform").text)        # Return supported platforms
             retValue = 1
 
     elif option == 'RF':
-        print("List both available rules and filetypes")
+        print("\nList both available rules and filetypes")
         for r in rule:
             #print(tabulate([["Platform","File Types"],[r.find("platform").text, r.find("ftypes").text]], headers="firstrow", tablefmt="psql"))
             dict[r.find("platform").text] = r.find("ftypes").text
