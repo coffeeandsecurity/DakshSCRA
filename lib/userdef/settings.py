@@ -27,8 +27,11 @@ rulesFpaths = Path(str(rulesRootDir) + "/filepaths.xml")
 outputAoI = Path(str(root_dir) + "/output/areas_of_interest.txt")
 outputAoI_Fpaths = Path(str(root_dir) + "/output/filepaths_aoi.txt")       # Output File for reporting
 
-# Temp Logs File paths
+# Log File paths
 discovered_Fpaths = Path(str(root_dir) + "/output/filepaths.log")
+
+# Logs File paths
+inventory_Fpathext = Path(str(root_dir) + "/output/inventory.json")
 
 # HTML Report template path
 htmltemplates_dir  = Path(str(root_dir) + "/report/templates/")

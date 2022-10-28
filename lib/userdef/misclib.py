@@ -2,6 +2,9 @@ import fnmatch
 import os, sys, html, re
 import pandas as pd
 
+import json
+from json.decoder import JSONDecodeError
+
 from tabulate import tabulate
 from re import search
 from pathlib import Path    # Resolve the windows / mac / linux path issue
@@ -26,14 +29,12 @@ def DiscoverFiles(codebase, sourcepath, mode):
         filetypes = list(ft.split(","))         # Convert the comman separated string to a list
         print("[*] Filetypes Selected: " + str(filetypes))
     elif mode == 2:
-        print("Mode 2 Selected - Software Composition Analysis!!\n")
+        print("\n[*] Software Composition Analysis!!")
         filetypes = '*.*'
 
     matches = []
     fext = []
 
-    # MOVE THIS TO GLOBAL INITIALIZATION FUNC
-    # Logfile to the used to log discovered filepaths 
     parentPath = settings.root_dir                               # Daksh root directory 
     print("[*] DakshSCRA Directory Path: " + settings.root_dir)      
     
@@ -42,6 +43,8 @@ def DiscoverFiles(codebase, sourcepath, mode):
     print("[*] Identifying total files to be scanned!")
     linescount = 0
     filename = None     # To be removed. Temporarily added to fix - "local variable referenced before assignment" error
+    fCnt = 0
+
     # Reccursive Traversal of Directories and Files
     for root, dirnames, filenames in os.walk(sourcepath):
         for extensions in filetypes:
@@ -50,11 +53,19 @@ def DiscoverFiles(codebase, sourcepath, mode):
                 filename = os.path.join(root, filename)
                 f_filepaths.write(filename + "\n")  # Log discovered file paths
                 linescount += 1
-                
+            
+                fCnt += 1
+                #print("[*] Counter = " + str(fCnt) + " File Extension: " + GetFileExtention(filename))
+                # print("[*] Counter = " + str(fCnt) + " Filename: " + filename)
+                # print("[*] Counter = " + str(fCnt) + " Dictionary: " + str(FileExtentionInventory(filename)))
 
-        fext.append(GetFileExtention(filename))
+            fext.append(GetFileExtention(filename))
+            
+    print("[*] Counter - Outer Loop = " + str(fCnt))
+    fCnt = 0
     f_filepaths.close()
     
+
     print("[*] Total files to be scanned: " + str(linescount) + "\n")
     fext = list(dict.fromkeys(filter(None, fext)))      # filter is used to remove empty item that gets added due to 'filename = None' above
     print("[*] File Extentions Identified: " + str(fext) + "\n")
@@ -63,11 +74,60 @@ def DiscoverFiles(codebase, sourcepath, mode):
 
     return settings.discovered_Fpaths
 
-# Discovered files extentions and count of each type
+# Retrieve files extention from file path
 def GetFileExtention(fpath):
     extention = Path(str(fpath)).suffix
 
     return extention
+
+
+# Discovered files extentions and count of each type
+def FileExtentionInventory(fpath):
+    extention = Path(str(fpath)).suffix
+
+    inventory = {}
+    inventory["file"] = fpath 
+    inventory["extension"] = extention
+
+    inventory = json.dumps(inventory)           # Convert dictionary to string object
+    inventory = json.loads(inventory)      # Take a string as input and returns a dictionary as output.
+    # print("Inventory: " + str(load_inventory))
+    # print("Inventory: " + str(inventory))
+
+
+    with open(settings.inventory_Fpathext, "r+") as outfile:
+        try:
+            data = json.loads(outfile)
+            data = data.append(inventory)
+            outfile.seek(0,2)
+            json.dump(data, outfile, indent=2)
+            outfile.close
+            print("Try block: ")
+        
+        except TypeError as e:
+            with open(settings.inventory_Fpathext, "r+") as outfile:
+                outfile.seek(0,2)
+                json.dump(str(inventory), outfile, indent=2)
+                outfile.close
+                print("TypeError block: ")
+
+    '''
+        if not data:
+            with open(settings.inventory_Fpathext, "w") as outfile:
+                json.dump(data, outfile)
+                outfile.close
+        else:
+            outfile.close
+            with open(settings.inventory_Fpathext, "w") as outfile:
+                data.append(inventory)
+                json.dump(data, outfile)
+                outfile.close   
+
+    with open(settings.inventory_Fpathext, "w") as outfile:
+            json.dump(inventory, outfile)
+            outfile.close   
+    '''
+    return inventory
 
 
 # Remove all files in the temp dir
@@ -188,7 +248,7 @@ def ListRulesFiletypes(option):
     xmltree = ET.parse(settings.rulesConfig)
     rule = xmltree.getroot()
 
-
+    print(option)
     if option == 'R':
         print("List of all available rules")
         for r in rule:

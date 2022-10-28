@@ -47,6 +47,14 @@ elif results.recon:
         print("You must specify the target directory using -t option.\n")
         sys.exit(1)
 
+elif results.rules_filetypes != None:
+    # Current directory of the python file
+    rootDir = os.path.dirname(os.path.realpath(__file__))
+    settings.root_dir = rootDir         # initialise global root directory which is referenced in multiple code files
+
+    mlib.ListRulesFiletypes(results.rules_filetypes)
+    sys.exit(1)
+
 # Priority #1 - If '-recon' option used then only recon must be performed
 if results.recon and results.target_dir:
 
@@ -59,7 +67,6 @@ if results.recon and results.target_dir:
         sys.exit(1)
     else:
         targetdir = results.target_dir
-        # Replace this function with direct call to software recon function
         # log_filepaths = mlib.DiscoverFiles('*.*', targetdir, 2)     # mode = 2 - Software Recon
         log_filepaths = parser.recon(targetdir)
         sys.exit(1)
