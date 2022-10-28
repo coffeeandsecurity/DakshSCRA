@@ -47,11 +47,7 @@ elif results.recon:
         print("You must specify the target directory using -t option.\n")
         sys.exit(1)
 
-elif results.rules_filetypes != None:
-    # Current directory of the python file
-    rootDir = os.path.dirname(os.path.realpath(__file__))
-    settings.root_dir = rootDir         # initialise global root directory which is referenced in multiple code files
-
+elif results.rules_filetypes != None:       # List available rules and/or supported filetypes
     mlib.ListRulesFiletypes(results.rules_filetypes)
     sys.exit(1)
 
