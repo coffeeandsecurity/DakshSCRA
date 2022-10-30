@@ -1,5 +1,5 @@
 exclude
-runtime/
+runtime/*
 venv
 lib/userdef/__pycache__
 lib/userdef/*pycache*
