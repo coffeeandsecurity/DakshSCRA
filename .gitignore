@@ -1,7 +1,6 @@
-runtime
 exclude
 venv
 lib/userdef/__pycache__
 lib/userdef/*pycache*
-report/html
-report/text
+report/html/
+report/text/
