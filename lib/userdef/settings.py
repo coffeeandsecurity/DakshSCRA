@@ -36,7 +36,8 @@ inventory_Fpathext = Path(str(root_dir) + "/runtime/inventory.json")
 ## ------------- <Reports> ------------- ##
 # Output file - areas of interest
 outputAoI = Path(str(root_dir) + "/report/text/areas_of_interest.txt")
-outputAoI_Fpaths = Path(str(root_dir) + "/report/text/filepaths_aoi.txt")       # Filepaths - Areas of Interests
+# Filepaths - Areas of Interests
+outputAoI_Fpaths = Path(str(root_dir) + "/report/text/filepaths_aoi.txt")       
 
 # HTML Report file path
 htmlreport_Fpath = Path(str(root_dir) + "/report/html/report.html")
