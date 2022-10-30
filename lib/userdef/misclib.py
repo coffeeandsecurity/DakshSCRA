@@ -29,7 +29,6 @@ def DiscoverFiles(codebase, sourcepath, mode):
         filetypes = list(ft.split(","))         # Convert the comman separated string to a list
         print("[*] Filetypes Selected: " + str(filetypes))
     elif mode == 2:
-        print("\n[*] Software Composition Analysis!!")
         filetypes = '*.*'
 
     matches = []
@@ -38,7 +37,7 @@ def DiscoverFiles(codebase, sourcepath, mode):
     parentPath = settings.root_dir                               # Daksh root directory 
     print("[*] DakshSCRA Directory Path: " + settings.root_dir)      
     
-    f_filepaths = open(settings.discovered_Fpaths, "w")         # File ('discovered_Fpaths') for logging all discovered file paths
+    f_filepaths = open(settings.discovered_Fpaths, "w+")         # File ('discovered_Fpaths') for logging all discovered file paths
 
     print("[*] Identifying total files to be scanned!")
     linescount = 0
@@ -55,13 +54,13 @@ def DiscoverFiles(codebase, sourcepath, mode):
                 linescount += 1
             
                 fCnt += 1
-                #print("[*] Counter = " + str(fCnt) + " File Extension: " + GetFileExtention(filename))
+                # print("[*] Counter = " + str(fCnt) + " File Extension: " + GetFileExtention(filename))
                 # print("[*] Counter = " + str(fCnt) + " Filename: " + filename)
                 # print("[*] Counter = " + str(fCnt) + " Dictionary: " + str(FileExtentionInventory(filename)))
 
             fext.append(GetFileExtention(filename))
             
-    print("[*] Counter - Outer Loop = " + str(fCnt))
+    # print("[*] Counter - Outer Loop = " + str(fCnt))
     fCnt = 0
     f_filepaths.close()
     
@@ -95,18 +94,18 @@ def FileExtentionInventory(fpath):
     # print("Inventory: " + str(inventory))
 
 
-    with open(settings.inventory_Fpathext, "r+") as outfile:
+    with open(settings.inventory_Fpathext, "a+") as outfile:
         try:
             data = json.loads(outfile)
             data = data.append(inventory)
-            outfile.seek(0,2)
+            #outfile.seek(0,2)
             json.dump(data, outfile, indent=2)
             outfile.close
             print("Try block: ")
         
         except TypeError as e:
-            with open(settings.inventory_Fpathext, "r+") as outfile:
-                outfile.seek(0,2)
+            with open(settings.inventory_Fpathext, "a+") as outfile:
+                #outfile.seek(0,2)
                 json.dump(str(inventory), outfile, indent=2)
                 outfile.close
                 print("TypeError block: ")
@@ -146,18 +145,23 @@ def DirCleanup(dirname):
     return
 
 
+def GenReport():
+    GenHtmlReport()
+    
+    print("\n[*] Raw Text Reports:")
+    print("     [*] Areas of Interest: " + "DakshSCRA"+ str(re.split("DakshSCRA+", str(settings.outputAoI))[1]))
+    print("     [*] Project Files - Areas of Interest: " + "DakshSCRA"+ str(re.split("DakshSCRA+", str(settings.outputAoI_Fpaths))[1]))
+    print("     [*] Discovered Files Path: " + "DakshSCRA"+ str(re.split("DakshSCRA+", str(settings.discovered_Fpaths))[1]))
+    print("\n[*] HTML Report: WORK IN PROGRESS - IGNORE THIS REPORT")
+    print("     [*] HTML Report Path : "+ "DakshSCRA"+ str(re.split("DakshSCRA+", str(settings.htmlreport_Fpath))[1]))
+
+
 
 def GenHtmlReport():
 
     env = Environment( loader = FileSystemLoader(settings.htmltemplates_dir))
     template = env.get_template('template.html')
 
-    print("\n[*] HTML Report Path : "+ str(settings.htmlreport_Fpath))
-
-    print("[*] Areas of Interest (Patterns Identified): " + str(settings.outputAoI))
-    
-    print("[*] Source Files Path: " + str(settings.discovered_Fpaths))
-    
     with open(settings.htmlreport_Fpath, 'w') as fh:
         contents = open(settings.outputAoI, "r")        # Input file 'settings.outputAoI' for generating HTML report
         

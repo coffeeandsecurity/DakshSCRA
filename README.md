@@ -81,6 +81,9 @@ Note:
 
 Reports: The tool generates both HTML and TEXT-based reports. The HTML report is still a work in progress and not well formatted. However, the TEXT-based output is easy to read. 
 
-	TEXT Based Report: 	/DakshSCRA/output/areas_of_interest.txt (Areas of Interest (Patterns Identified))
-	Files Scanned Logs:	/DakshSCRA/output/filepaths.txt 	(Source Files Path)
-	HTML Report Path: 	/DakshSCRA/report/report.html 		(Work In Progress - Ignore this report)
+	RAW TEXT Based Reports: 	
+		* Areas of Interest - Identified Patterns : 	DakshSCRA/report/text/areas_of_interest.txt
+		* Areas of Interest - Enumerated Project Files: DakshSCRA/report/text/filepaths_aoi.txt
+		* Identified Project Files:	DakshSCRA/runtime/filepaths.log
+	HTML Report:
+		* DakshSCRA/report/html/report.html 	(Work In Progress - Ignore this report)

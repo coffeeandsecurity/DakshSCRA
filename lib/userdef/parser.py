@@ -139,26 +139,3 @@ def PathsParser(rule_path, targetfile, outputfile):
     return
 
 
-# Software composition analysis
-def recon(targetdir):
-    # WORK IN PROGRESS
-    '''
-    Steps:
-        *  Enum all file paths
-        *  Enum each file types and total identified number
-        *  Identify Design Pattern
-        *  Identify application type (Misc, COTS, Unknown, CMS, Mobile, APIs)
-        *  Conditional Check to identify application type (Use XML/Dict to specify conditions)
-        *  Identify Standard Libs and total number
-        *  Intelligent Enum - ON / OFF
-        *  Enum TLOC
-
-    Options:
-        *  Ignore paths based on path or keyword
-        *  Ignore files based on extentions
-        *  Effort estimation
-    ''' 
-
-    log_filepaths = mlib.DiscoverFiles('*.*', targetdir, 2)     # mode = 2 - Software Recon
-
-    return log_filepaths

@@ -1,4 +1,5 @@
 import os, re
+# import shutil
 import sys
 import time
 import argparse
@@ -10,13 +11,21 @@ from pathlib import Path    # Resolve the windows / mac / linux path issue
 # User Defined Libraries / Functions
 import lib.userdef.misclib as mlib
 import lib.userdef.parser as parser
+import lib.userdef.recon as rec
 import lib.userdef.settings as settings
 
-# Initilisation
+
+# ---- Initilisation ----- 
 # Current directory of the python file
 rootDir = os.path.dirname(os.path.realpath(__file__))
 settings.root_dir = rootDir         # initialise global root directory which is referenced at multiple locations
 
+mlib.DirCleanup("runtime")
+mlib.DirCleanup("report/html")
+mlib.DirCleanup("report/text")
+# shutil.rmtree("report/text", ignore_errors=False, onerror=None)
+# shutil.rmtree("report/text", ignore_errors=False, onerror=None)
+# ------------------------- #
 
 args = argparse.ArgumentParser()
 
@@ -47,13 +56,13 @@ elif results.recon:
         print("You must specify the target directory using -t option.\n")
         sys.exit(1)
 
-elif results.rules_filetypes != None:       # List available rules and/or supported filetypes
-    mlib.ListRulesFiletypes(results.rules_filetypes)
+elif results.rules_filetypes != None:       
+    mlib.ListRulesFiletypes(results.rules_filetypes)    # List available rules and/or supported filetypes
     sys.exit(1)
 
 # Priority #1 - If '-recon' option used then only recon must be performed
 if results.recon and results.target_dir:
-
+    print(settings.author)
     # Check if the directory path is valid
     if path.isdir(results.target_dir) == False: 
         print("\nInvalid target directory :" + results.target_dir + "\n")
@@ -64,10 +73,11 @@ if results.recon and results.target_dir:
     else:
         targetdir = results.target_dir
         # log_filepaths = mlib.DiscoverFiles('*.*', targetdir, 2)     # mode = 2 - Software Recon
-        log_filepaths = parser.recon(targetdir)
+        #log_filepaths = parser.recon(targetdir)
+        log_filepaths = rec.recon(targetdir)
         sys.exit(1)
 
-# Priority #2 - If '-recon' option used then only recon must be performed
+# Priority #2 - Check if '-r' (rule type) is set
 elif results.rule_file:
 
     if not results.file_types:        # If filetypes is not specified then default to platform specific filetypes
@@ -105,7 +115,7 @@ project_dir = os.path.join(results.target_dir, '')
 # The regex matches the last trailing slash ('/' or '\') and then reverse search until the next trailing slash is found
 settings.sourcedir = re.search(r'((?!\/|\\).)*(\/|\\)$', project_dir)[0]        # Target Source Code Directory
 
-mlib.DirCleanup("output")       
+# mlib.DirCleanup("runtime")    
 
 # Current directory of the python file
 rootDir = os.path.dirname(os.path.realpath(__file__))
@@ -151,11 +161,11 @@ parser.PathsParser(settings.rulesFpaths, f_targetfiles, f_scanout)
 f_targetfiles.close()
 f_scanout.close()
 
-# Generate HTML report
-mlib.GenHtmlReport()
+# Generate report
+mlib.GenReport()
 
 mlib.CleanFilePaths(log_filepaths)
-os.unlink(log_filepaths)
+os.unlink(log_filepaths)        # Delete the temp file paths log after the path cleanup in the above step
 
 end_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 print("\n[*] Scan End Time: " + str(end_timestamp))

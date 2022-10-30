@@ -23,33 +23,41 @@ rulesConfig = Path(str(rulesRootDir) + "/../rulesconfig.xml")
 # Files path scanning rules
 rulesFpaths = Path(str(rulesRootDir) + "/filepaths.xml")
 
-# Output file - areas of interest
-outputAoI = Path(str(root_dir) + "/output/areas_of_interest.txt")
-outputAoI_Fpaths = Path(str(root_dir) + "/output/filepaths_aoi.txt")       # Output File for reporting
 
+## ------------- <Runtime Temp Files> ------------- ##
 # Log File paths
-discovered_Fpaths = Path(str(root_dir) + "/output/filepaths.log")
+discovered_Fpaths = Path(str(root_dir) + "/runtime/filepaths.log")
 
 # Logs File paths
-inventory_Fpathext = Path(str(root_dir) + "/output/inventory.json")
+inventory_Fpathext = Path(str(root_dir) + "/runtime/inventory.json")
+## ------------- </Runtime Temp Files> ------------- ##
 
-# HTML Report template path
-htmltemplates_dir  = Path(str(root_dir) + "/report/templates/")
+
+## ------------- <Reports> ------------- ##
+# Output file - areas of interest
+outputAoI = Path(str(root_dir) + "/report/text/areas_of_interest.txt")
+outputAoI_Fpaths = Path(str(root_dir) + "/report/text/filepaths_aoi.txt")       # Filepaths - Areas of Interests
 
 # HTML Report file path
-htmlreport_Fpath = Path(str(root_dir) + "/report/report.html")
+htmlreport_Fpath = Path(str(root_dir) + "/report/html/report.html")
+
+# HTML Report template path
+htmltemplates_dir  = Path(str(root_dir) + "/resources/templates/")
+## ------------- </Reports> ------------- ##
+
+
 
 
 
 ## ----------- Banners | Credits | Console Output Decoration ----------- ##
 
 author = '''
-=======================================================
-Daksh SCRA (Source Code Review Assist) - Version 1.0
+=============================================================
+Daksh SCRA (Source Code Review Assist) - Beta Release v0.2
 
 Author:     Debasis Mohanty 
             www.coffeeandsecurity.com
             Twitter: @coffensecurity
             Email: d3basis.m0hanty@gmail.com
-========================================================'''
+============================================================='''
 
