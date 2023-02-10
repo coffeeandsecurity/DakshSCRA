@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="resources/logo.jpg" title="Daksh SCRA">
-</p>
-
 # Daksh SCRA (Source Code Review Assist) - Beta v0.2
 
 ```
