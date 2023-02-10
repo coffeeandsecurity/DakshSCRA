@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="resources/logo.jpg" width="500" title="Daksh SCRA">
+  <img src="/resources/logo.jpg" width="500" title="Daksh SCRA">
 </p>
 
 # Daksh SCRA (Source Code Review Assist) - Beta v0.2
