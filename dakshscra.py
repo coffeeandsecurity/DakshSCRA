@@ -10,6 +10,7 @@ from pathlib import Path    # Resolve the windows / mac / linux path issue
 
 # User Defined Libraries / Functions
 import lib.userdef.misclib as mlib
+import lib.userdef.reports as report
 import lib.userdef.parser as parser
 import lib.userdef.recon as rec
 import lib.userdef.settings as settings
@@ -162,7 +163,7 @@ f_targetfiles.close()
 f_scanout.close()
 
 # Generate report
-mlib.GenReport()
+report.GenReport()
 
 mlib.CleanFilePaths(log_filepaths)
 os.unlink(log_filepaths)        # Delete the temp file paths log after the path cleanup in the above step
