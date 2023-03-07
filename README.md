@@ -12,7 +12,7 @@ Author:
 ```
 
 
-> Note: The tool is still in its infancy and is still being worked on. I initially introduced this tool during the Source Code Review training at Blackhat USA 2022 (6-9) to assist the students with automating a few code review-related tasks. This tool’s purpose is to assist code reviewers in automating some tasks for findings areas of interest during the source code review for security vulnerabilities. 
+> Note: The tool is currently in the early stages of development and is being actively improved upon. It was first introduced at the Blackhat USA 2022 (6-9 August) Source Code Review training session as an aid to automate certain code review tasks for students. The primary objective of this tool is to assist code reviewers in identifying potential security vulnerabilities by automating certain areas of interest during the source code review process. 
 
 The tool currently offers the following functionalities: 
 * Options to use programming language-specific rules specific for finding areas of interests
