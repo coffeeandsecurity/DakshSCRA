@@ -4,8 +4,8 @@ from timeit import default_timer as timer
 # import time
 # from pathlib import Path    # Resolve the windows / mac / linux path issue
 
-import lib.userdef.settings as settings
-import lib.userdef.misclib as mlib
+import modules.settings as settings
+import modules.misclib as mlib
 
 '''
 This routine will search patterns loaded from the XML file and parse through all source files.

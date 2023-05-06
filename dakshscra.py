@@ -9,11 +9,11 @@ from os import path         # This lowercase path to be used only to validate wh
 from pathlib import Path    # Resolve the windows / mac / linux path issue
 
 # User Defined Libraries / Functions
-import lib.userdef.misclib as mlib
-import lib.userdef.reports as report
-import lib.userdef.parser as parser
-import lib.userdef.recon as rec
-import lib.userdef.settings as settings
+import modules.misclib as mlib
+import modules.reports as report
+import modules.parser as parser
+import modules.recon as rec
+import modules.settings as settings
 
 
 # ---- Initilisation ----- 
@@ -23,7 +23,7 @@ settings.root_dir = rootDir         # initialise global root directory which is 
 
 mlib.DirCleanup("runtime")
 mlib.DirCleanup("report/html")
-mlib.DirCleanup("report/text")
+#mlib.DirCleanup("report/text")
 mlib.DirCleanup("report/pdf")
 # shutil.rmtree("report/text", ignore_errors=False, onerror=None)
 # shutil.rmtree("report/text", ignore_errors=False, onerror=None)

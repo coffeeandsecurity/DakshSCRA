@@ -6,7 +6,7 @@ start_time = time.time()  # This time will be used to calculate total time taken
 start_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 # Program root directory -> Set the directory path to where 'dakshscra.py' is located
-root_dir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + '/../../')      # Current file directory + relative path to 'dakshscra.py' directory
+root_dir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + '/../')      # Current file directory + relative path to 'dakshscra.py' directory
 
 sourcedir = ''       # To be used for storing project directory name
 

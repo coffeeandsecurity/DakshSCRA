@@ -9,7 +9,7 @@ from tabulate import tabulate
 from pathlib import Path    # Resolve the windows / mac / linux path issue
 import xml.etree.ElementTree as ET
 
-import lib.userdef.settings as settings
+import modules.settings as settings
 
 
 # Current directory of the python file

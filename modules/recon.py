@@ -2,8 +2,8 @@ import os
 
 from pathlib import Path
 
-import lib.userdef.misclib as mlib
-import lib.userdef.settings as settings
+import modules.misclib as mlib
+import modules.settings as settings
 
 # Software composition analysis
 def recon(targetdir):

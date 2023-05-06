@@ -13,7 +13,7 @@ from pygments.formatters import HtmlFormatter
 from datetime import datetime
 from weasyprint import HTML, CSS
 
-import lib.userdef.settings as settings
+import modules.settings as settings
 
 
 
