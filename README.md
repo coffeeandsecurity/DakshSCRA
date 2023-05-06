@@ -59,8 +59,7 @@ $ python3 dakshscra.py -h		// To view avaialble options and arguments
 	-f FILE_TYPES         	Specify file types to scan
 	-v                    	specify verbosity level {'-v', '-vv'}
 	-t TARGET_DIR         	Specify target directory path
-	-l {R,RF}, --list {R,RF}
-							List rules [R] OR rules and filetypes [RF]
+	-l {R,RF}, --list {R,RF}	List rules [R] OR rules and filetypes [RF]
 	-recon                	Platform and technology reconnaissance
 
 	Supported RULE_FILE: 	alljs, angular, common, dotnet, java, php, python, rubyrails, sql_sp

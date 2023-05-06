@@ -42,7 +42,7 @@ outputAoI = Path(str(root_dir) + "/report/text/areas_of_interest.txt")
 outputAoI_Fpaths = Path(str(root_dir) + "/report/text/filepaths_aoi.txt")       
 
 # Output file - summary
-outputSumamry = Path(str(root_dir) + "/report/text/summary.txt")
+outputSummary = Path(str(root_dir) + "/report/text/summary.txt")
 
 # PDF Report file path
 pdfreport_Fpath = Path(str(root_dir) + "/report/pdf/report.pdf")

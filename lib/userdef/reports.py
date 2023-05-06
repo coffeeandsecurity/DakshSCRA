@@ -135,7 +135,7 @@ def getSummary(input_file):
 def GenReport():
     snippets = getAreasOfInterest(settings.outputAoI)
     filepaths = getFilePathsOfAOI(settings.outputAoI_Fpaths)
-    summary = getSummary(settings.outputSumamry)
+    summary = getSummary(settings.outputSummary)
 
     html_report_output_path =  settings.htmlreport_Fpath
     pdf_report_path = settings.pdfreport_Fpath
