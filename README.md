@@ -70,16 +70,17 @@ $ python3 dakshscra.py -h		// To view avaialble options and arguments
 Example Commands: 
 	dakshscra.py -r dotnet -f dotnet -t <path_to_source_dir>	# Scan dotnet specific files and apply dotnet rules
 	dakshscra.py -r common -f allfiles -t <path_to_source_dir>	# Scan all file types and apply some common checks
-Note: 
-	The rules and the language supported can found found in the rules directory. Refer to the XML files.  
-	The supported file types are mentioned in the file 'lib/userdef/misclib.py'
+
+	dakshscra.py -l RF	 	 # View the platforms and filetypes supported	
 ```
 
-Reports: The tool generates both HTML and TEXT-based reports. The HTML report is still a work in progress and not well formatted. However, the TEXT-based output is easy to read. 
+Reports: The tool generates reports in three formats: HTML, PDF, and TEXT. Although the HTML and PDF reports are still being improved, they are currently reasonably well formatted, and with every iteration, these reports will be enhanced further. 
 
 	RAW TEXT Based Reports: 	
 		* Areas of Interest - Identified Patterns : 	DakshSCRA/report/text/areas_of_interest.txt
 		* Areas of Interest - Enumerated Project Files: DakshSCRA/report/text/filepaths_aoi.txt
 		* Identified Project Files:	DakshSCRA/runtime/filepaths.log
 	HTML Report:
-		* DakshSCRA/report/html/report.html 	(Work In Progress - Ignore this report)
+		* DakshSCRA/report/html/report.html
+	PDF Report:
+		* DakshSCRA/report/html/report.pdf
