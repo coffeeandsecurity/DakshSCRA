@@ -24,6 +24,7 @@ settings.root_dir = rootDir         # initialise global root directory which is 
 mlib.DirCleanup("runtime")
 mlib.DirCleanup("report/html")
 mlib.DirCleanup("report/text")
+mlib.DirCleanup("report/pdf")
 # shutil.rmtree("report/text", ignore_errors=False, onerror=None)
 # shutil.rmtree("report/text", ignore_errors=False, onerror=None)
 # ------------------------- #

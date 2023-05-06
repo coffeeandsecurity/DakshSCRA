@@ -1,0 +1,16 @@
+<h2 class="section-title">Areas of Interest</h2>
+<p style="margin-bottom: 35px;">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quam natus doloremque eos rerum perferendis facere praesentium molestiae commodi fuga in, adipisci quo earum! Et amet ipsa quisquam officiis nulla repudiandae!</p>
+{% for snippet in snippets %}
+<div>
+    <div class="keyword-block">
+        [+] <span class="keyword-ht">Keyword Searched </span> : {{snippet["keyword"]}}
+        <hr />
+    </div>
+    {% for source in snippet["sources"] %}
+        <div class="source-file-block">
+            - <span class="source-ht">Source File </span> : {{source["source"]}}
+        </div>
+        {{source["code"]}}
+    {% endfor %}
+</div>
+{% endfor %}

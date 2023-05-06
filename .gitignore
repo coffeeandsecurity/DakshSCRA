@@ -5,3 +5,4 @@ lib/userdef/__pycache__
 lib/userdef/*pycache*
 report/html/
 report/text/
+report/pdf/

@@ -1,22 +1,82 @@
-<html>
-    <head>
-        <title>Daksh SCRA Report {% block title %}{% endblock %} </title>
-    </head>
+{# templates/base.html #}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Report</title>
+
+  <style>
+    .container{
+        padding-left: 50px;
+        padding-right: 50px;
+    }
+    pre {
+        white-space: pre-wrap;       /* Since CSS 2.1 */
+        white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+        white-space: -pre-wrap;      /* Opera 4-6 */
+        white-space: -o-pre-wrap;    /* Opera 7 */
+        word-wrap: break-word;       /* Internet Explorer 5.5+ */
+    }
+    .highlighttable {
+        overflow-wrap: break-word;
+        table-layout: fixed;
+        font-size: 14px;
+    }
+    .highlight{
+        border-radius: 4px;
+        margin-bottom: 5px;
+        margin-top: 5px;
+    }
+    .keyword-block {
+        font-size: 18px;
+        font-weight: bold;
+    }
+    .keyword-ht{
+        background-color: #73c773;
+    }
+    .source-file-block{
+        padding: 5px;
+        font-style: italic;
+        font-weight: unset;
+        font-size: 16px;
+    }
+    .source-ht{
+        background-color: #6eafff;
+    }
+    .linenodiv {
+        border-right: 1px solid grey;
+    }
+    .section-title{
+        color: #4b5db7;
+    }
+    .report-title{
+        color: #4b5db7;
+        text-align: center;
+    }
+    .report-sub-title{
+        text-align: center;
+    }
+    .report-summary-date, .report-summary-scan, .report-summary-inputs-wrap{
+        font-size: 18px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+    .summary-section, .aoi-section, .filepaths-section{
+        page-break-after: always;
+    }
+    .aoi-section, .filepaths-section{
+        margin-top: 85px;
+    }
+    .report-summary{
+        font-size: 16px;
+    }
+  </style>
+</head>
+
 <body>
-    <div class="container"></div>
-        </pre>
-            {{ keyword }}
-        </pre>
-            <ul>
-                <b>{{ fpath }}</b>
-            </ul>
+    {% block content %}
 
-            <ul>
-                </pre>
-                {{ content }}
-                </pre>
-            </ul>
-    </div>
+    {% endblock content %}
 </body>
-
 </html>

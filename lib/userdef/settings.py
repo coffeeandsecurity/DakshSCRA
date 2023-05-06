@@ -34,16 +34,25 @@ inventory_Fpathext = Path(str(root_dir) + "/runtime/inventory.json")
 
 
 ## ------------- <Reports> ------------- ##
+
 # Output file - areas of interest
 outputAoI = Path(str(root_dir) + "/report/text/areas_of_interest.txt")
+
 # Filepaths - Areas of Interests
 outputAoI_Fpaths = Path(str(root_dir) + "/report/text/filepaths_aoi.txt")       
+
+# Output file - summary
+outputSumamry = Path(str(root_dir) + "/report/text/summary.txt")
+
+# PDF Report file path
+pdfreport_Fpath = Path(str(root_dir) + "/report/pdf/report.pdf")
 
 # HTML Report file path
 htmlreport_Fpath = Path(str(root_dir) + "/report/html/report.html")
 
 # HTML Report template path
 htmltemplates_dir  = Path(str(root_dir) + "/resources/templates/")
+
 ## ------------- </Reports> ------------- ##
 
 

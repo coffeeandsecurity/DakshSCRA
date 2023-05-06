@@ -1,3 +1,5 @@
 pandas>=1.5.0
 tabulate>=0.8.10
-Jinja2>=3.0.3
+Jinja2==3.1.2
+Pygments==2.15.1
+weasyprint==58.1

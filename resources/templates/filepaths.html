@@ -1,0 +1,15 @@
+<h2 class="section-title">Parsed Paths</h2>
+<p style="margin-bottom: 35px;">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quam natus doloremque eos rerum perferendis facere praesentium molestiae commodi fuga in, adipisci quo earum! Et amet ipsa quisquam officiis nulla repudiandae!</p>
+{% for filepath in filepaths %}
+<div>
+    <div class="keyword-block">
+        [+] <span class="keyword-ht">Keyword Searched </span> : {{filepath["keyword"]}}
+        <hr />
+    </div>
+    {% for path in filepath["paths"] %}
+        <div class="source-file-block">
+            - <span class="source-ht">Source File </span> : {{path}}
+        </div>
+    {% endfor %}
+</div>
+{% endfor %}
