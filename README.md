@@ -68,10 +68,10 @@ $ python3 dakshscra.py -h		// To view avaialble options and arguments
 
 ```
 Example Commands: 
-	dakshscra.py -r dotnet -f dotnet -t <path_to_source_dir>	# Scan dotnet specific files and apply dotnet rules
-	dakshscra.py -r common -f allfiles -t <path_to_source_dir>	# Scan all file types and apply some common checks
+dakshscra.py -r dotnet -f dotnet -t <path_to_source_dir>	# Scan dotnet specific files and apply dotnet rules
+dakshscra.py -r common -f allfiles -t <path_to_source_dir>	# Scan all file types and apply some common checks
 
-	dakshscra.py -l RF	 	 # View the platforms and filetypes supported	
+dakshscra.py -l RF	 	 # View the platforms and filetypes supported	
 ```
 
 Reports: The tool generates reports in three formats: HTML, PDF, and TEXT. Although the HTML and PDF reports are still being improved, they are currently reasonably well formatted, and with every iteration, these reports will be enhanced further. 
