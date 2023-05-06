@@ -79,7 +79,7 @@ The tool generates reports in three formats: HTML, PDF, and TEXT. Although the H
 ###### RAW TEXT Based Reports: 	
 * Areas of Interest - Identified Patterns : 	DakshSCRA/report/text/areas_of_interest.txt
 * Areas of Interest - Enumerated Project Files: DakshSCRA/report/text/filepaths_aoi.txt
-* Identified Project Files:	DakshSCRA/runtime/filepaths.log	
+* Identified Project Files:	DakshSCRA/runtime/filepaths.txt	
 ###### HTML Report:
 * DakshSCRA/report/html/report.html	
 ###### PDF Report:
