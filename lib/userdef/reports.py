@@ -144,9 +144,15 @@ def GenReport():
 
     genPdfReport(htmlfile, pdf_report_path)
 
+    print("\n[*] HTML Report:")
+    print("     [*] HTML Report Path : "+ "DakshSCRA"+ str(re.split("DakshSCRA+", str(settings.htmlreport_Fpath))[1]))
+    print("\n[*] PDF Report:")
+    print("     [*] PDF Report Path : "+ "DakshSCRA"+ str(re.split("DakshSCRA+", str(settings.pdfreport_Fpath))[1]))
     print("\n[*] Raw Text Reports:")
     print("     [*] Areas of Interest: " + "DakshSCRA"+ str(re.split("DakshSCRA+", str(settings.outputAoI))[1]))
     print("     [*] Project Files - Areas of Interest: " + "DakshSCRA"+ str(re.split("DakshSCRA+", str(settings.outputAoI_Fpaths))[1]))
     print("     [*] Discovered Files Path: " + "DakshSCRA"+ str(re.split("DakshSCRA+", str(settings.discovered_Fpaths))[1]))
-    print("\n[*] HTML Report: WORK IN PROGRESS - IGNORE THIS REPORT")
-    print("     [*] HTML Report Path : "+ "DakshSCRA"+ str(re.split("DakshSCRA+", str(settings.htmlreport_Fpath))[1]))
+    print("\nNote: The tool generates reports in three formats: HTML, PDF, and TEXT. " 
+    "Although the HTML and PDF reports are still being improved, they are currently in a reasonably good state. " 
+    "With each subsequent iteration, these reports will continue to be refined and improved even further.")
+    
