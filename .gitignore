@@ -4,5 +4,6 @@ venv
 lib/userdef/__pycache__
 lib/userdef/*pycache*
 report/html/
-report/text/
+report/text/filepaths_aoi.txt
+report/text/areas_of_interest.txt
 report/pdf/

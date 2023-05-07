@@ -1,0 +1,19 @@
+Note: At the moment, the summary section is still being developed and only includes sample information. 
+While not restricted to these, the section will feature the following details. 
+
+Inputs received: 
+    [*] Rule Selected        = 'php' 
+    [*] File Types Selected  = 'php' 
+    [*] Target Directory     = '../../Code/Platform/PHP/online-book-store/' 
+    [*] Filetypes Selected: ['*.php', '*.ini', '*.txt', '*.config', '*.xml', '*.lock', '.htaccess'] 
+ 
+Detection Summary: 
+    [*] Total files scanned: 44 
+    [*] File Extentions Identified: ['.php', '.txt'] 
+    [*] Areas of interests identified: 200 
+ 
+Scan Duration:  
+    [*] Scan Start Time: 2023-04-30 12:44:53 
+    [*] Scan End Time: 2023-04-30 12:44:53 
+    [*] Total Time Taken: 2023-04-30 12:44:53 
+
