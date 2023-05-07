@@ -77,10 +77,10 @@ dakshscra.py -l RF	 	 # View the platforms and filetypes supported
 The tool generates reports in three formats: HTML, PDF, and TEXT. Although the HTML and PDF reports are still being improved, they are currently in a reasonably good state. With each subsequent iteration, these reports will continue to be refined and improved even further.
 
 ###### RAW TEXT Based Reports: 	
-* Areas of Interest - Identified Patterns : 	DakshSCRA/report/text/areas_of_interest.txt
-* Areas of Interest - Enumerated Project Files: DakshSCRA/report/text/filepaths_aoi.txt
+* Areas of Interest - Identified Patterns : 	DakshSCRA/reports/text/areas_of_interest.txt
+* Areas of Interest - Enumerated Project Files: DakshSCRA/reports/text/filepaths_aoi.txt
 * Identified Project Files:	DakshSCRA/runtime/filepaths.txt	
 ###### HTML Report:
-* DakshSCRA/report/html/report.html	
+* DakshSCRA/reports/html/report.html	
 ###### PDF Report:
-* DakshSCRA/report/html/report.pdf
+* DakshSCRA/reports/html/report.pdf

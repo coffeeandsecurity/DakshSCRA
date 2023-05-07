@@ -22,11 +22,11 @@ rootDir = os.path.dirname(os.path.realpath(__file__))
 settings.root_dir = rootDir         # initialise global root directory which is referenced at multiple locations
 
 mlib.DirCleanup("runtime")
-mlib.DirCleanup("report/html")
-#mlib.DirCleanup("report/text")
-mlib.DirCleanup("report/pdf")
-# shutil.rmtree("report/text", ignore_errors=False, onerror=None)
-# shutil.rmtree("report/text", ignore_errors=False, onerror=None)
+mlib.DirCleanup("reports/html")
+#mlib.DirCleanup("reports/text")
+mlib.DirCleanup("reports/pdf")
+# shutil.rmtree("reports/text", ignore_errors=False, onerror=None)
+# shutil.rmtree("reports/text", ignore_errors=False, onerror=None)
 # ------------------------- #
 
 args = argparse.ArgumentParser()
