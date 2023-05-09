@@ -1,7 +1,8 @@
 exclude
 runtime/*
 venv
-modules/__pycache__
+*.pyc
+modules/__pycache__/
 modules/*pycache*
 reports/html/
 reports/pdf/
