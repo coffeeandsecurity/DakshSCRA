@@ -1,3 +1,4 @@
-title: Project/Application Name
-subtitle: None
+title: Project / Application Name
+subtitle: (Change the above title and this sub-title in '/config/project.yaml')
+# subtitle: None -- Set it to 'None' if you don't want to include a sub-title in the report
 description: "Detailed description goes here"

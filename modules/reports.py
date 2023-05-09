@@ -15,6 +15,7 @@ from weasyprint import HTML, CSS
 
 import modules.settings as settings
 import yaml
+import base64
 
 def genPdfReport(html_path, pdf_path):
     try:
@@ -35,6 +36,16 @@ def genHtmlReport(summary, snippets, filepaths, filepaths_aoi, report_output_pat
             print(exc)
             return None
 
+    # Logo image
+    try:
+        # Convert the image to base64 format
+        with open(settings.staticLogo, "rb") as f:
+            encoded_logo_image = base64.b64encode(f.read())
+    
+    except Exception as exc:
+        print(exc)
+        return None
+
     env = Environment( loader = FileSystemLoader(settings.htmltemplates_dir))
     template_file = "report.html"
     template = env.get_template(template_file)
@@ -46,7 +57,7 @@ def genHtmlReport(summary, snippets, filepaths, filepaths_aoi, report_output_pat
         snippets=snippets,
         filepaths_aoi=filepaths_aoi,
         filepaths=filepaths,
-        logoImagePath=settings.staticLogo
+        logoImagePath=f"data:image/jpg;base64,{encoded_logo_image.decode('utf-8')}"
     )
 
     html_path = report_output_path
