@@ -20,8 +20,18 @@ rulesRootDir = Path(str(root_dir) + "/rules/scanning/platform")
 # Rules config path
 rulesConfig = Path(str(rulesRootDir) + "/../rulesconfig.xml")
 
+# Project config path
+projectConfig = Path(str(root_dir) + "/config/project.yaml")
+
 # Files path scanning rules
 rulesFpaths = Path(str(rulesRootDir) + "/filepaths.xml")
+
+# Static paths
+staticPdfCssFpath = Path(str(root_dir) + "/resources/static/pdf.css")
+
+# Logo
+staticLogo = Path(str(root_dir) + "/resources/static/logo_for_report.jpg")
+
 
 
 ## ------------- <Runtime Temp Files> ------------- ##
@@ -40,6 +50,10 @@ outputAoI = Path(str(root_dir) + "/reports/text/areas_of_interest.txt")
 
 # Filepaths - Areas of Interests
 outputAoI_Fpaths = Path(str(root_dir) + "/reports/text/filepaths_aoi.txt")       
+
+# FilePaths - Runtime
+output_Fpaths = Path(str(root_dir) + "/runtime/filepaths.txt")   
+
 
 # Output file - summary
 outputSummary = Path(str(root_dir) + "/reports/text/summary.txt")

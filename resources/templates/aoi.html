@@ -1,18 +1,28 @@
 <h2 class="section-title">Security - Areas of Interest</h2>
-<p style="margin-bottom: 35px;">This section lists the key areas within the source code that need to be examined for identifying potential security weaknesses. The code reviewer should carefully examine the identified areas and review any reported code snippets and file paths to validate the presence of any potential vulnerabilities.
-    The validation process should involve a thorough analysis of the code and its associated components to determine the extent of the potential security risk. Any issues identified during the validation process should be documented.
-    </p>
+
+<p class="p-justified"> 
+    This section lists the key areas within the source code that need to be examined for identifying potential security weaknesses.
+</p>
+<p class="p-justified" style="margin-bottom: 30px;">
+    The code reviewer should carefully examine the identified areas and review any reported code
+    snippets and file paths to validate the presence of any potential vulnerabilities. The validation
+    process should involve a thorough analysis of the code and its associated components to
+    determine the extent of the potential security risk. Any issues identified during the validation
+    process should be documented.
+</p>
 {% for snippet in snippets %}
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> : {{snippet["keyword"]}}
-        <hr />
-    </div>
-    {% for source in snippet["sources"] %}
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : {{source["source"]}}
+<div class="src-path-wrap">
+    {% if snippet["sources"] %}
+        <div class="keyword-block">
+            [+] <span class="keyword-ht">Keyword Searched </span> : {{snippet["keyword"]}}
+            <hr />
         </div>
-        {{source["code"]}}
-    {% endfor %}
+        {% for source in snippet["sources"] %}
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : {{source["source"]}}
+            </div>
+            {{source["code"]}}
+        {% endfor %}
+    {% endif %}
 </div>
 {% endfor %}

@@ -53,25 +53,69 @@
     .report-title{
         color: #4b5db7;
         text-align: center;
+        font-size: 34px;
+        font-weight: bold;
+        margin-top: 20px;
     }
     .report-sub-title{
+        color: #4b5db7;
         text-align: center;
+        font-size: 18px;
+        font-weight: 400;
+        margin-top: 15px;
+        margin-bottom: 20px;
     }
+    .report-desc {
+        color: #5b69b7;
+        margin-top: 45px;
+        margin-bottom: 12px;
+        font-size: 16px;
+    }
+    .report-date {
+        color: #5b69b7;
+        margin-top: 5px;
+        margin-bottom: 20px;
+        font-size: 16px;
+    }
+
     .report-summary-date, .report-summary-scan, .report-summary-inputs-wrap{
         font-size: 18px;
         margin-top: 10px;
         margin-bottom: 10px;
     }
-    .summary-section, .aoi-section, .filepaths-section{
+    .cover-section, .summary-section, .aoi-section, .filepaths-section{
         page-break-after: always;
     }
-    .aoi-section, .filepaths-section{
-        margin-top: 85px;
+    .summary-section, .aoi-section, .filepaths-section{
+        margin-top: 50px;
     }
     .report-summary{
         font-size: 16px;
     }
-  </style>
+    .src-path-wrap{
+        margin-bottom: 15px;
+    }
+    .p-justified {
+        text-align: justify;
+    }
+    .logo-block {
+        margin-top: 200px;
+    }
+    .report-title-block {
+        margin-top: 200px;
+    }
+    .logo{
+        width: auto;
+        height: 200px;
+    }
+    .cover-section{
+        text-align: center;
+    }
+</style>
+
+    <reporttitle id="rtitle">Daksh SCRA – Source Code Analysis Report</reporttitle>
+    <reportdate id="rdate">{{reportDate}}</reportdate>
+
 </head>
 
 <body>
@@ -79,4 +123,8 @@
 
     {% endblock content %}
 </body>
+<script type="text/javascript">
+    document.getElementById("rtitle").remove()
+    document.getElementById("rdate").remove()
+</script>
 </html>

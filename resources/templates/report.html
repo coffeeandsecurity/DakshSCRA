@@ -2,16 +2,17 @@
 
 {% block content %}
 <div class="container">
-
-    <h1 class="report-title">{{reportTitle}}</h1>
-    <h3 class="report-sub-title">{{reportSubTitle}}</h3>
-    <h3 class="report-sub-title">Date: {{reportDate}}</h3>
-
+    <div class="cover-section">
+        {% include 'cover.html' %}
+    </div>
     <div class="summary-section">
         {% include 'summary.html' %}
     </div>
     <div class="aoi-section">
         {% include 'aoi.html' %}
+    </div>
+    <div class="filepaths-section">
+        {% include 'filepaths_aoi.html' %}
     </div>
     <div class="filepaths-section">
         {% include 'filepaths.html' %}

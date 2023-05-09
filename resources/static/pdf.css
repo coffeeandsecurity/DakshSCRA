@@ -1,0 +1,34 @@
+reporttitle {
+    display: block; text-align: center; 
+    position: running(reportname);
+    font-size: 12px;
+}
+reportdate {
+    display: block; text-align: center;
+    position: running(reportdate);
+    font-size: 12px;
+}
+@page {
+    size: A3; margin: 0.75in;
+}
+@page{
+    @top-left{
+        content: element(reportname);
+    }
+    @top-right{
+        content: element(reportdate);
+    }
+    @bottom-center{
+        content: "Page " counter(page) " of " counter(pages);
+        font-size: 12px;
+    }
+}
+
+@page :first {
+    @top-left {
+      content: none;
+    }
+    @top-right {
+        content: none;
+    }
+  }

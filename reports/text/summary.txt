@@ -1,6 +1,3 @@
-Note: At the moment, the summary section is still being developed and only includes sample information. 
-While not restricted to these, the section will feature the following details. 
-
 Inputs received: 
     [*] Rule Selected        = 'php' 
     [*] File Types Selected  = 'php' 

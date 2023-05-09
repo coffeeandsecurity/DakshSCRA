@@ -1,0 +1,104 @@
+.container{
+    padding-left: 50px;
+    padding-right: 50px;
+}
+pre {
+    white-space: pre-wrap;       /* Since CSS 2.1 */
+    white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+    white-space: -pre-wrap;      /* Opera 4-6 */
+    white-space: -o-pre-wrap;    /* Opera 7 */
+    word-wrap: break-word;       /* Internet Explorer 5.5+ */
+}
+.highlighttable {
+    overflow-wrap: break-word;
+    table-layout: fixed;
+    font-size: 14px;
+}
+.highlight{
+    border-radius: 4px;
+    margin-bottom: 5px;
+    margin-top: 5px;
+}
+.keyword-block {
+    font-size: 18px;
+    font-weight: bold;
+}
+.keyword-ht{
+    background-color: #73c773;
+}
+.source-file-block{
+    padding: 5px;
+    font-style: italic;
+    font-weight: unset;
+    font-size: 16px;
+}
+.source-ht{
+    background-color: #6eafff;
+}
+.linenodiv {
+    border-right: 1px solid grey;
+}
+.section-title{
+    color: #4b5db7;
+}
+.report-title{
+    color: #4b5db7;
+    text-align: center;
+    font-size: 34px;
+    font-weight: bold;
+    margin-top: 20px;
+}
+.report-sub-title{
+    color: #4b5db7;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 400;
+    margin-top: 15px;
+    margin-bottom: 20px;
+}
+.report-desc {
+    color: #5b69b7;
+    margin-top: 45px;
+    margin-bottom: 12px;
+    font-size: 16px;
+}
+.report-date {
+    color: #5b69b7;
+    margin-top: 5px;
+    margin-bottom: 20px;
+    font-size: 16px;
+}
+
+.report-summary-date, .report-summary-scan, .report-summary-inputs-wrap{
+    font-size: 18px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+.cover-section, .summary-section, .aoi-section, .filepaths-section{
+    page-break-after: always;
+}
+.summary-section, .aoi-section, .filepaths-section{
+    margin-top: 50px;
+}
+.report-summary{
+    font-size: 16px;
+}
+.src-path-wrap{
+    margin-bottom: 15px;
+}
+.p-justified {
+    text-align: justify;
+}
+.logo-block {
+    margin-top: 200px;
+}
+.report-title-block {
+    margin-top: 200px;
+}
+.logo{
+    width: auto;
+    height: 200px;
+}
+.cover-section{
+    text-align: center;
+}

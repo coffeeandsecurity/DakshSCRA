@@ -1,8 +1,8 @@
 exclude
 runtime/*
 venv
-lib/userdef/__pycache__
-lib/userdef/*pycache*
+modules/__pycache__
+modules/*pycache*
 reports/html/
 reports/pdf/
 reports/text/filepaths_aoi.txt

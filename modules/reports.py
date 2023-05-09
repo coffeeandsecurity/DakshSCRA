@@ -14,31 +14,39 @@ from datetime import datetime
 from weasyprint import HTML, CSS
 
 import modules.settings as settings
-
-
+import yaml
 
 def genPdfReport(html_path, pdf_path):
     try:
-        css = CSS(string='@page { size: A3; margin: 0.75in }')
-        HTML(html_path).write_pdf(pdf_path, stylesheets=[css])
+        HTML(html_path).write_pdf(pdf_path, stylesheets=[CSS(settings.staticPdfCssFpath)])
         return pdf_path
     except Exception as e:
         print(e)
 
     return pdf_path
 
-def genHtmlReport(summary, snippets, filepaths, report_output_path):
+def genHtmlReport(summary, snippets, filepaths, filepaths_aoi, report_output_path):
+
+    # Config
+    with open(settings.projectConfig, "r") as stream:
+        try:
+            config = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+            return None
 
     env = Environment( loader = FileSystemLoader(settings.htmltemplates_dir))
     template_file = "report.html"
     template = env.get_template(template_file)
     output_text = template.render(
-        reportTitle="Report Title - Placeholder",
-        reportSubTitle="Report Sub-Title - Placeholder",
+        reportTitle=config["title"],
+        reportSubTitle=config["subtitle"] if config["subtitle"].lower() != 'none' and config["subtitle"] != "" else None,
         reportDate=datetime.now().strftime("%b %m, %Y"),
         summary=summary,
         snippets=snippets,
-        filepaths=filepaths
+        filepaths_aoi=filepaths_aoi,
+        filepaths=filepaths,
+        logoImagePath=settings.staticLogo
     )
 
     html_path = report_output_path
@@ -123,6 +131,11 @@ def getFilePathsOfAOI(input_file):
             
     return paths_of_aoi
 
+def getFilePaths(input_file):
+    # Read text file
+    f = open(input_file)
+    return f.readlines()
+     
 def getSummary(input_file):
     # Read text file
     f = open(input_file)
@@ -134,13 +147,16 @@ def getSummary(input_file):
 
 def GenReport():
     snippets = getAreasOfInterest(settings.outputAoI)
-    filepaths = getFilePathsOfAOI(settings.outputAoI_Fpaths)
+    filepaths_aoi = getFilePathsOfAOI(settings.outputAoI_Fpaths)
+    filepaths = getFilePaths(settings.output_Fpaths)
     summary = getSummary(settings.outputSummary)
 
     html_report_output_path =  settings.htmlreport_Fpath
     pdf_report_path = settings.pdfreport_Fpath
 
-    htmlfile = genHtmlReport(summary, snippets, filepaths, html_report_output_path)
+    htmlfile = genHtmlReport(summary, snippets, filepaths, filepaths_aoi, html_report_output_path)
+    if not htmlfile:
+        return None
 
     genPdfReport(htmlfile, pdf_report_path)
 

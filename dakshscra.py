@@ -163,11 +163,12 @@ parser.PathsParser(settings.rulesFpaths, f_targetfiles, f_scanout)
 f_targetfiles.close()
 f_scanout.close()
 
+mlib.CleanFilePaths(log_filepaths)
+os.unlink(log_filepaths)        # Delete the temp file paths log after the path cleanup in the above step
+
 # Generate report
 report.GenReport()
 
-mlib.CleanFilePaths(log_filepaths)
-os.unlink(log_filepaths)        # Delete the temp file paths log after the path cleanup in the above step
 
 end_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 print("\n[*] Scan End Time: " + str(end_timestamp))

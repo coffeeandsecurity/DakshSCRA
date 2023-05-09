@@ -126,7 +126,7 @@ def FileExtentionInventory(fpath):
 
 # Remove all files in the temp dir
 def DirCleanup(dirname):
-    dir = Path(parentPath + "/../../" + dirname)
+    dir = Path(parentPath + "/../" + dirname)
     if os.path.exists(dir):
         for the_file in os.listdir(dir):
             file_path = os.path.join(dir, the_file)
