@@ -53,43 +53,95 @@
     .report-title{
         color: #4b5db7;
         text-align: center;
+        font-size: 34px;
+        font-weight: bold;
+        margin-top: 20px;
     }
     .report-sub-title{
+        color: #4b5db7;
         text-align: center;
+        font-size: 18px;
+        font-weight: 400;
+        margin-top: 15px;
+        margin-bottom: 20px;
     }
+    .report-desc {
+        color: #5b69b7;
+        margin-top: 45px;
+        margin-bottom: 12px;
+        font-size: 16px;
+    }
+    .report-date {
+        color: #5b69b7;
+        margin-top: 5px;
+        margin-bottom: 20px;
+        font-size: 16px;
+    }
+
     .report-summary-date, .report-summary-scan, .report-summary-inputs-wrap{
         font-size: 18px;
         margin-top: 10px;
         margin-bottom: 10px;
     }
-    .summary-section, .aoi-section, .filepaths-section{
+    .cover-section, .summary-section, .aoi-section, .filepaths-section{
         page-break-after: always;
     }
-    .aoi-section, .filepaths-section{
-        margin-top: 85px;
+    .summary-section, .aoi-section, .filepaths-section{
+        margin-top: 50px;
     }
     .report-summary{
         font-size: 16px;
     }
-  </style>
+    .src-path-wrap{
+        margin-bottom: 15px;
+    }
+    .p-justified {
+        text-align: justify;
+    }
+    .logo-block {
+        margin-top: 200px;
+    }
+    .report-title-block {
+        margin-top: 200px;
+    }
+    .logo{
+        width: auto;
+        height: 200px;
+    }
+    .cover-section{
+        text-align: center;
+    }
+</style>
+
+    <reporttitle id="rtitle">Daksh SCRA – Source Code Analysis Report</reporttitle>
+    <reportdate id="rdate">May 05, 2023</reportdate>
+
 </head>
 
 <body>
     
 <div class="container">
+    <div class="cover-section">
+        <div class="logo-block">
+    <img src="/mnt/c/!Source/Developement/DakshSCRA/resources/static/logo_for_report.jpg" alt="logo" class="logo">
+</div>
 
-    <h1 class="report-title">Report Title - Placeholder</h1>
-    <h3 class="report-sub-title">Report Sub-Title - Placeholder</h3>
-    <h3 class="report-sub-title">Date: May 05, 2023</h3>
-
+<div class="report-title-block">
+    <div class="report-title">ABC Application</div>
+    
+    <div class="report-desc">Daksh SCRA – Source Code Analysis Report</div>
+    <div class="report-date">May 05, 2023</div>
+</div>
+    </div>
     <div class="summary-section">
         <h2 class="section-title">Scan Summary</h2>
 
 <div class="report-summary">
-    <pre>Note: At the moment, the summary section is still being developed and only includes sample information. 
-While not restricted to these, the section will feature the following details. 
-
-Inputs received: 
+    <p class="p-justified">
+        Note: At the moment, the summary section is still being developed and only includes sample
+        information. While not restricted to these, the section will feature the following details.
+    </p>
+    <pre>Inputs received: 
     [*] Rule Selected        = &#x27;php&#x27; 
     [*] File Types Selected  = &#x27;php&#x27; 
     [*] Target Directory     = &#x27;../../Code/Platform/PHP/online-book-store/&#x27; 
@@ -110,226 +162,216 @@ Scan Duration:
     </div>
     <div class="aoi-section">
         <h2 class="section-title">Security - Areas of Interest</h2>
-<p style="margin-bottom: 35px;">This section lists the key areas within the source code that need to be examined for identifying potential security weaknesses. The code reviewer should carefully examine the identified areas and review any reported code snippets and file paths to validate the presence of any potential vulnerabilities.
-    The validation process should involve a thorough analysis of the code and its associated components to determine the extent of the potential security risk. Any issues identified during the validation process should be documented.
-    </p>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  Tainted Inputs: $_REQUEST
+<p class="p-justified"> 
+    This section lists the key areas within the source code that need to be examined for identifying potential security weaknesses.
+</p>
+<p class="p-justified" style="margin-bottom: 30px;">
+    The code reviewer should carefully examine the identified areas and review any reported code
+    snippets and file paths to validate the presence of any potential vulnerabilities. The validation
+    process should involve a thorough analysis of the code and its associated components to
+    determine the extent of the potential security risk. Any issues identified during the validation
+    process should be documented.
+</p>
 
-        <hr />
-    </div>
+<div class="src-path-wrap">
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  Tainted Inputs: $_GET
-
-        <hr />
-    </div>
+<div class="src-path-wrap">
     
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/admin_delete.php
+        <div class="keyword-block">
+            [+] <span class="keyword-ht">Keyword Searched </span> :  Tainted Inputs: $_GET
 
+            <hr />
         </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">2</span><span style="color: #e6edf3">]</span>	<span style="color: #f85149">$</span><span style="color: #e6edf3">book_isbn</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #f85149">$</span><span style="color: #e6edf3">_GET[</span><span style="color: #a5d6ff">&#39;bookisbn&#39;</span><span style="color: #e6edf3">];</span>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/admin_delete.php
+
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">2</span><span style="color: #e6edf3">]</span>	<span style="color: #f85149">$</span><span style="color: #e6edf3">book_isbn</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #f85149">$</span><span style="color: #e6edf3">_GET[</span><span style="color: #a5d6ff">&#39;bookisbn&#39;</span><span style="color: #e6edf3">];</span>
 </pre></div></td></tr></table></div>
 
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/admin_edit.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/admin_edit.php
 
-        </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
 <span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">2</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">9</span><span style="color: #e6edf3">]</span>	<span style="color: #ff7b72">if</span><span style="color: #e6edf3">(isset(</span><span style="color: #f85149">$</span><span style="color: #e6edf3">_GET[</span><span style="color: #a5d6ff">&#39;bookisbn&#39;</span><span style="color: #e6edf3">])){</span>
 <span style="color: #e6edf3">[</span><span style="color: #a5d6ff">10</span><span style="color: #e6edf3">]</span>		<span style="color: #f85149">$</span><span style="color: #e6edf3">book_isbn</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #f85149">$</span><span style="color: #e6edf3">_GET[</span><span style="color: #a5d6ff">&#39;bookisbn&#39;</span><span style="color: #e6edf3">];</span>
 </pre></div></td></tr></table></div>
 
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/book.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/book.php
 
-        </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">3</span><span style="color: #e6edf3">]</span>  <span style="color: #f85149">$</span><span style="color: #e6edf3">book_isbn</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #f85149">$</span><span style="color: #e6edf3">_GET[</span><span style="color: #a5d6ff">&#39;bookisbn&#39;</span><span style="color: #e6edf3">];</span>
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">3</span><span style="color: #e6edf3">]</span>  <span style="color: #f85149">$</span><span style="color: #e6edf3">book_isbn</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #f85149">$</span><span style="color: #e6edf3">_GET[</span><span style="color: #a5d6ff">&#39;bookisbn&#39;</span><span style="color: #e6edf3">];</span>
 </pre></div></td></tr></table></div>
 
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/bookPerPub.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/bookPerPub.php
 
-        </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
 <span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">2</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">5</span><span style="color: #e6edf3">]</span>	<span style="color: #ff7b72">if</span><span style="color: #e6edf3">(isset(</span><span style="color: #f85149">$</span><span style="color: #e6edf3">_GET[</span><span style="color: #a5d6ff">&#39;pubid&#39;</span><span style="color: #e6edf3">])){</span>
 <span style="color: #e6edf3">[</span><span style="color: #a5d6ff">6</span><span style="color: #e6edf3">]</span>		<span style="color: #f85149">$</span><span style="color: #e6edf3">pubid</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #f85149">$</span><span style="color: #e6edf3">_GET[</span><span style="color: #a5d6ff">&#39;pubid&#39;</span><span style="color: #e6edf3">];</span>
 </pre></div></td></tr></table></div>
 
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/checkout.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/checkout.php
 
-        </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">6</span><span style="color: #e6edf3">]</span>				<span style="color: #e6edf3">book_isbn</span> <span style="color: #e6edf3">(get</span> <span style="color: #ff7b72">from</span> <span style="color: #f85149">$</span><span style="color: #e6edf3">_GET[</span><span style="color: #a5d6ff">&#39;book_isbn&#39;</span><span style="color: #e6edf3">])</span> <span style="color: #ff7b72; font-weight: bold">=&gt;</span> <span style="color: #e6edf3">number</span> <span style="color: #e6edf3">of</span> <span style="color: #e6edf3">books</span>
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">6</span><span style="color: #e6edf3">]</span>				<span style="color: #e6edf3">book_isbn</span> <span style="color: #e6edf3">(get</span> <span style="color: #ff7b72">from</span> <span style="color: #f85149">$</span><span style="color: #e6edf3">_GET[</span><span style="color: #a5d6ff">&#39;book_isbn&#39;</span><span style="color: #e6edf3">])</span> <span style="color: #ff7b72; font-weight: bold">=&gt;</span> <span style="color: #e6edf3">number</span> <span style="color: #e6edf3">of</span> <span style="color: #e6edf3">books</span>
 </pre></div></td></tr></table></div>
 
+        
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  Tainted Inputs: $_COOKIE
-
-        <hr />
-    </div>
+<div class="src-path-wrap">
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  Command injection (shell_exec|exec|passthru|system|backtick)
-
-        <hr />
-    </div>
+<div class="src-path-wrap">
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  PHP Execute (preg_replace with /e modifier)
-
-        <hr />
-    </div>
+<div class="src-path-wrap">
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  Serialisation Issue
-
-        <hr />
-    </div>
+<div class="src-path-wrap">
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  PHP_SELF XSS
-
-        <hr />
-    </div>
+<div class="src-path-wrap">
     
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/admin_add.php
+        <div class="keyword-block">
+            [+] <span class="keyword-ht">Keyword Searched </span> :  PHP_SELF XSS
 
+            <hr />
         </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">31</span><span style="color: #e6edf3">]</span>			<span style="color: #f85149">$</span><span style="color: #e6edf3">directory_self</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #e6edf3">str_replace(basename(</span><span style="color: #f85149">$</span><span style="color: #e6edf3">_SERVER[</span><span style="color: #a5d6ff">&#39;PHP_SELF&#39;</span><span style="color: #e6edf3">]),</span> <span style="color: #a5d6ff">&#39;&#39;</span><span style="color: #e6edf3">,</span> <span style="color: #f85149">$</span><span style="color: #e6edf3">_SERVER[</span><span style="color: #a5d6ff">&#39;PHP_SELF&#39;</span><span style="color: #e6edf3">]);</span>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/admin_add.php
+
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">31</span><span style="color: #e6edf3">]</span>			<span style="color: #f85149">$</span><span style="color: #e6edf3">directory_self</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #e6edf3">str_replace(basename(</span><span style="color: #f85149">$</span><span style="color: #e6edf3">_SERVER[</span><span style="color: #a5d6ff">&#39;PHP_SELF&#39;</span><span style="color: #e6edf3">]),</span> <span style="color: #a5d6ff">&#39;&#39;</span><span style="color: #e6edf3">,</span> <span style="color: #f85149">$</span><span style="color: #e6edf3">_SERVER[</span><span style="color: #a5d6ff">&#39;PHP_SELF&#39;</span><span style="color: #e6edf3">]);</span>
 </pre></div></td></tr></table></div>
 
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/edit_book.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/edit_book.php
 
-        </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">17</span><span style="color: #e6edf3">]</span>		<span style="color: #f85149">$</span><span style="color: #e6edf3">directory_self</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #e6edf3">str_replace(basename(</span><span style="color: #f85149">$</span><span style="color: #e6edf3">_SERVER[</span><span style="color: #a5d6ff">&#39;PHP_SELF&#39;</span><span style="color: #e6edf3">]),</span> <span style="color: #a5d6ff">&#39;&#39;</span><span style="color: #e6edf3">,</span> <span style="color: #f85149">$</span><span style="color: #e6edf3">_SERVER[</span><span style="color: #a5d6ff">&#39;PHP_SELF&#39;</span><span style="color: #e6edf3">]);</span>
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">17</span><span style="color: #e6edf3">]</span>		<span style="color: #f85149">$</span><span style="color: #e6edf3">directory_self</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #e6edf3">str_replace(basename(</span><span style="color: #f85149">$</span><span style="color: #e6edf3">_SERVER[</span><span style="color: #a5d6ff">&#39;PHP_SELF&#39;</span><span style="color: #e6edf3">]),</span> <span style="color: #a5d6ff">&#39;&#39;</span><span style="color: #e6edf3">,</span> <span style="color: #f85149">$</span><span style="color: #e6edf3">_SERVER[</span><span style="color: #a5d6ff">&#39;PHP_SELF&#39;</span><span style="color: #e6edf3">]);</span>
 </pre></div></td></tr></table></div>
 
+        
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  SELECT [*] FROM [anytable] WHERE
-
-        <hr />
-    </div>
+<div class="src-path-wrap">
     
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/admin_add.php
+        <div class="keyword-block">
+            [+] <span class="keyword-ht">Keyword Searched </span> :  SELECT [*] FROM [anytable] WHERE
 
+            <hr />
         </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">39</span><span style="color: #e6edf3">]</span>		<span style="color: #f85149">$</span><span style="color: #e6edf3">findPub</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #a5d6ff">&quot;SELECT * FROM publisher WHERE publisher_name = &#39;$publisher&#39;&quot;</span><span style="color: #e6edf3">;</span>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/admin_add.php
+
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">39</span><span style="color: #e6edf3">]</span>		<span style="color: #f85149">$</span><span style="color: #e6edf3">findPub</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #a5d6ff">&quot;SELECT * FROM publisher WHERE publisher_name = &#39;$publisher&#39;&quot;</span><span style="color: #e6edf3">;</span>
 </pre></div></td></tr></table></div>
 
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/admin_edit.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/admin_edit.php
 
-        </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">22</span><span style="color: #e6edf3">]</span>	<span style="color: #f85149">$</span><span style="color: #e6edf3">query</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #a5d6ff">&quot;SELECT * FROM books WHERE book_isbn = &#39;$book_isbn&#39;&quot;</span><span style="color: #e6edf3">;</span>
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">22</span><span style="color: #e6edf3">]</span>	<span style="color: #f85149">$</span><span style="color: #e6edf3">query</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #a5d6ff">&quot;SELECT * FROM books WHERE book_isbn = &#39;$book_isbn&#39;&quot;</span><span style="color: #e6edf3">;</span>
 </pre></div></td></tr></table></div>
 
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/book.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/book.php
 
-        </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">8</span><span style="color: #e6edf3">]</span>  <span style="color: #f85149">$</span><span style="color: #e6edf3">query</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #a5d6ff">&quot;SELECT * FROM books WHERE book_isbn = &#39;$book_isbn&#39;&quot;</span><span style="color: #e6edf3">;</span>
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">8</span><span style="color: #e6edf3">]</span>  <span style="color: #f85149">$</span><span style="color: #e6edf3">query</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #a5d6ff">&quot;SELECT * FROM books WHERE book_isbn = &#39;$book_isbn&#39;&quot;</span><span style="color: #e6edf3">;</span>
 </pre></div></td></tr></table></div>
 
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/edit_book.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/edit_book.php
 
-        </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">27</span><span style="color: #e6edf3">]</span>	<span style="color: #f85149">$</span><span style="color: #e6edf3">findPub</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #a5d6ff">&quot;SELECT * FROM publisher WHERE publisher_name = &#39;$publisher&#39;&quot;</span><span style="color: #e6edf3">;</span>
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">27</span><span style="color: #e6edf3">]</span>	<span style="color: #f85149">$</span><span style="color: #e6edf3">findPub</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #a5d6ff">&quot;SELECT * FROM publisher WHERE publisher_name = &#39;$publisher&#39;&quot;</span><span style="color: #e6edf3">;</span>
 </pre></div></td></tr></table></div>
 
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/controllers/DatabaseTalking/Take.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/controllers/DatabaseTalking/Take.php
 
-        </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">202</span><span style="color: #e6edf3">]</span>            <span style="color: #f85149">$</span><span style="color: #e6edf3">this</span><span style="color: #ff7b72; font-weight: bold">-&gt;</span><span style="color: #e6edf3">stat</span><span style="color: #ff7b72; font-weight: bold">=</span><span style="color: #f85149">$</span><span style="color: #e6edf3">this</span><span style="color: #ff7b72; font-weight: bold">-&gt;</span><span style="color: #e6edf3">conn</span><span style="color: #ff7b72; font-weight: bold">-&gt;</span><span style="color: #e6edf3">prepare(</span><span style="color: #a5d6ff">&quot;SELECT image FROM book WHERE book_id=?&quot;</span><span style="color: #e6edf3">);</span>
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">202</span><span style="color: #e6edf3">]</span>            <span style="color: #f85149">$</span><span style="color: #e6edf3">this</span><span style="color: #ff7b72; font-weight: bold">-&gt;</span><span style="color: #e6edf3">stat</span><span style="color: #ff7b72; font-weight: bold">=</span><span style="color: #f85149">$</span><span style="color: #e6edf3">this</span><span style="color: #ff7b72; font-weight: bold">-&gt;</span><span style="color: #e6edf3">conn</span><span style="color: #ff7b72; font-weight: bold">-&gt;</span><span style="color: #e6edf3">prepare(</span><span style="color: #a5d6ff">&quot;SELECT image FROM book WHERE book_id=?&quot;</span><span style="color: #e6edf3">);</span>
 </pre></div></td></tr></table></div>
 
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/controllers/DatabaseTalking/Talking.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/controllers/DatabaseTalking/Talking.php
 
-        </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
 <span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">2</span>
 <span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">3</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">514</span><span style="color: #e6edf3">]</span>            <span style="color: #e6edf3">SELECT</span> <span style="color: #ff7b72; font-weight: bold">*</span> <span style="color: #e6edf3">FROM</span> <span style="color: #e6edf3">admin</span> <span style="color: #e6edf3">WHERE</span> <span style="color: #e6edf3">user_name</span><span style="color: #ff7b72; font-weight: bold">=</span><span style="color: #f85149">?</span><span style="color: #e6edf3">;</span>
 <span style="color: #e6edf3">[</span><span style="color: #a5d6ff">562</span><span style="color: #e6edf3">]</span>            <span style="color: #e6edf3">SELECT</span> <span style="color: #ff7b72; font-weight: bold">*</span> <span style="color: #e6edf3">FROM</span> <span style="color: #e6edf3">author</span>  <span style="color: #e6edf3">WHERE</span> <span style="color: #e6edf3">name</span><span style="color: #ff7b72; font-weight: bold">=</span><span style="color: #f85149">?</span><span style="color: #e6edf3">;</span>
 <span style="color: #e6edf3">[</span><span style="color: #a5d6ff">577</span><span style="color: #e6edf3">]</span>            <span style="color: #e6edf3">SELECT</span> <span style="color: #ff7b72; font-weight: bold">*</span> <span style="color: #e6edf3">FROM</span> <span style="color: #e6edf3">genre</span>  <span style="color: #e6edf3">WHERE</span> <span style="color: #e6edf3">genre_desc</span><span style="color: #ff7b72; font-weight: bold">=</span><span style="color: #f85149">?</span><span style="color: #e6edf3">;</span>
 </pre></div></td></tr></table></div>
 
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/functions/database_functions.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/functions/database_functions.php
 
-        </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
 <span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">2</span>
 <span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">3</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">36</span><span style="color: #e6edf3">]</span>		<span style="color: #f85149">$</span><span style="color: #e6edf3">query</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #a5d6ff">&quot;SELECT orderid FROM orders WHERE customerid = &#39;$customerid&#39;&quot;</span><span style="color: #e6edf3">;</span>
 <span style="color: #e6edf3">[</span><span style="color: #a5d6ff">58</span><span style="color: #e6edf3">]</span>		<span style="color: #f85149">$</span><span style="color: #e6edf3">query</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #a5d6ff">&quot;SELECT book_price FROM books WHERE book_isbn = &#39;$isbn&#39;&quot;</span><span style="color: #e6edf3">;</span>
 <span style="color: #e6edf3">[</span><span style="color: #a5d6ff">101</span><span style="color: #e6edf3">]</span>		<span style="color: #f85149">$</span><span style="color: #e6edf3">query</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #a5d6ff">&quot;SELECT publisher_name FROM publisher WHERE publisherid = &#39;$pubid&#39;&quot;</span><span style="color: #e6edf3">;</span>
 </pre></div></td></tr></table></div>
 
+        
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  SELECT ORDERBY
-
-        <hr />
-    </div>
+<div class="src-path-wrap">
     
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/publisher_list.php
+        <div class="keyword-block">
+            [+] <span class="keyword-ht">Keyword Searched </span> :  SELECT ORDERBY
 
+            <hr />
         </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">6</span><span style="color: #e6edf3">]</span>	<span style="color: #f85149">$</span><span style="color: #e6edf3">query</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #a5d6ff">&quot;SELECT * FROM publisher ORDER BY publisherid&quot;</span><span style="color: #e6edf3">;</span>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/publisher_list.php
+
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">6</span><span style="color: #e6edf3">]</span>	<span style="color: #f85149">$</span><span style="color: #e6edf3">query</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #a5d6ff">&quot;SELECT * FROM publisher ORDER BY publisherid&quot;</span><span style="color: #e6edf3">;</span>
 </pre></div></td></tr></table></div>
 
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/controllers/DatabaseTalking/Talking.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/controllers/DatabaseTalking/Talking.php
 
-        </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
 <span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">2</span>
 <span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">3</span>
 <span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">4</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">467</span><span style="color: #e6edf3">]</span>            <span style="color: #e6edf3">SELECT</span> <span style="color: #e6edf3">publisher_id,name</span> <span style="color: #e6edf3">FROM</span> <span style="color: #e6edf3">publisher</span> <span style="color: #e6edf3">ORDER</span> <span style="color: #e6edf3">BY</span>  <span style="color: #a5d6ff">2</span> <span style="color: #a5d6ff">&quot;);</span>
@@ -338,144 +380,128 @@ Scan Duration:
 <span style="color: #e6edf3">[</span><span style="color: #a5d6ff">593</span><span style="color: #e6edf3">]</span>            <span style="color: #e6edf3">SELECT</span> <span style="color: #ff7b72; font-weight: bold">*</span> <span style="color: #e6edf3">FROM</span> <span style="color: #e6edf3">genre</span>  <span style="color: #e6edf3">ORDER</span> <span style="color: #e6edf3">BY</span> <span style="color: #e6edf3">genre_desc;</span>
 </pre></div></td></tr></table></div>
 
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/functions/database_functions.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/functions/database_functions.php
 
-        </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
 <span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">2</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">13</span><span style="color: #e6edf3">]</span>		<span style="color: #f85149">$</span><span style="color: #e6edf3">query</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #a5d6ff">&quot;SELECT book_isbn, book_image FROM books ORDER BY book_isbn DESC&quot;</span><span style="color: #e6edf3">;</span>
 <span style="color: #e6edf3">[</span><span style="color: #a5d6ff">117</span><span style="color: #e6edf3">]</span>		<span style="color: #f85149">$</span><span style="color: #e6edf3">query</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #a5d6ff">&quot;SELECT * from books ORDER BY book_isbn DESC&quot;</span><span style="color: #e6edf3">;</span>
 </pre></div></td></tr></table></div>
 
+        
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  Insecure Mitigation: SQL Injection (mysql_real_escape_string)
-
-        <hr />
-    </div>
+<div class="src-path-wrap">
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  Mitigation Identified: XSS
-
-        <hr />
-    </div>
+<div class="src-path-wrap">
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  Password
-
-        <hr />
-    </div>
+<div class="src-path-wrap">
     
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/verify.php
+        <div class="keyword-block">
+            [+] <span class="keyword-ht">Keyword Searched </span> :  Password
 
+            <hr />
         </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">11</span><span style="color: #e6edf3">]</span>	<span style="color: #f85149">$</span><span style="color: #e6edf3">query</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #a5d6ff">&quot;SELECT username, password FROM admin&quot;</span><span style="color: #e6edf3">;</span>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/verify.php
+
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">11</span><span style="color: #e6edf3">]</span>	<span style="color: #f85149">$</span><span style="color: #e6edf3">query</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #a5d6ff">&quot;SELECT username, password FROM admin&quot;</span><span style="color: #e6edf3">;</span>
 </pre></div></td></tr></table></div>
 
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/controllers/DatabaseTalking/Take.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/controllers/DatabaseTalking/Take.php
 
-        </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">48</span><span style="color: #e6edf3">]</span>           <span style="color: #f85149">$</span><span style="color: #e6edf3">this</span><span style="color: #ff7b72; font-weight: bold">-&gt;</span><span style="color: #e6edf3">stat</span><span style="color: #ff7b72; font-weight: bold">=</span><span style="color: #f85149">$</span><span style="color: #e6edf3">this</span><span style="color: #ff7b72; font-weight: bold">-&gt;</span><span style="color: #e6edf3">conn</span><span style="color: #ff7b72; font-weight: bold">-&gt;</span><span style="color: #e6edf3">prepare(</span><span style="color: #a5d6ff">&#39;INSERT INTO customer (customer_id, name, address_id, email, phone, password) VALUES (?,?,?,?,?,?)&#39;</span><span style="color: #e6edf3">);</span>
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">48</span><span style="color: #e6edf3">]</span>           <span style="color: #f85149">$</span><span style="color: #e6edf3">this</span><span style="color: #ff7b72; font-weight: bold">-&gt;</span><span style="color: #e6edf3">stat</span><span style="color: #ff7b72; font-weight: bold">=</span><span style="color: #f85149">$</span><span style="color: #e6edf3">this</span><span style="color: #ff7b72; font-weight: bold">-&gt;</span><span style="color: #e6edf3">conn</span><span style="color: #ff7b72; font-weight: bold">-&gt;</span><span style="color: #e6edf3">prepare(</span><span style="color: #a5d6ff">&#39;INSERT INTO customer (customer_id, name, address_id, email, phone, password) VALUES (?,?,?,?,?,?)&#39;</span><span style="color: #e6edf3">);</span>
 </pre></div></td></tr></table></div>
 
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/database/readme.txt.txt
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/database/readme.txt.txt
 
-        </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">6</span><span style="color: #e6edf3">]To</span> <span style="color: #e6edf3">change</span> <span style="color: #e6edf3">the</span> <span style="color: #e6edf3">localhost,</span> <span style="color: #e6edf3">username,</span> <span style="color: #e6edf3">password</span> <span style="color: #ff7b72">for</span> <span style="color: #e6edf3">connecting</span> <span style="color: #e6edf3">to</span> <span style="color: #e6edf3">database,</span> <span style="color: #e6edf3">change</span> <span style="color: #e6edf3">it</span> <span style="color: #e6edf3">only</span> <span style="color: #e6edf3">one</span> <span style="color: #e6edf3">time</span> <span style="color: #ff7b72; font-weight: bold">in</span> 
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">6</span><span style="color: #e6edf3">]To</span> <span style="color: #e6edf3">change</span> <span style="color: #e6edf3">the</span> <span style="color: #e6edf3">localhost,</span> <span style="color: #e6edf3">username,</span> <span style="color: #e6edf3">password</span> <span style="color: #ff7b72">for</span> <span style="color: #e6edf3">connecting</span> <span style="color: #e6edf3">to</span> <span style="color: #e6edf3">database,</span> <span style="color: #e6edf3">change</span> <span style="color: #e6edf3">it</span> <span style="color: #e6edf3">only</span> <span style="color: #e6edf3">one</span> <span style="color: #e6edf3">time</span> <span style="color: #ff7b72; font-weight: bold">in</span> 
 </pre></div></td></tr></table></div>
 
+        
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  Credit Card
-
-        <hr />
-    </div>
+<div class="src-path-wrap">
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  IPv4 Address
-
-        <hr />
-    </div>
+<div class="src-path-wrap">
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  Misc Modules (Admin|Administrator|CAPTCHA|Login|Authentication|Authenticated|Oauth|JWT)
-
-        <hr />
-    </div>
+<div class="src-path-wrap">
     
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/admin_add.php
+        <div class="keyword-block">
+            [+] <span class="keyword-ht">Keyword Searched </span> :  Misc Modules (Admin|Administrator|CAPTCHA|Login|Authentication|Authenticated|Oauth|JWT)
 
+            <hr />
         </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">62</span><span style="color: #e6edf3">]</span>			<span style="color: #e6edf3">header(</span><span style="color: #a5d6ff">&quot;Location: admin_book.php&quot;</span><span style="color: #e6edf3">);</span>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/admin_add.php
+
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">62</span><span style="color: #e6edf3">]</span>			<span style="color: #e6edf3">header(</span><span style="color: #a5d6ff">&quot;Location: admin_book.php&quot;</span><span style="color: #e6edf3">);</span>
 </pre></div></td></tr></table></div>
 
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/admin_delete.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/admin_delete.php
 
-        </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">13</span><span style="color: #e6edf3">]</span>	<span style="color: #e6edf3">header(</span><span style="color: #a5d6ff">&quot;Location: admin_book.php&quot;</span><span style="color: #e6edf3">);</span>
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">13</span><span style="color: #e6edf3">]</span>	<span style="color: #e6edf3">header(</span><span style="color: #a5d6ff">&quot;Location: admin_book.php&quot;</span><span style="color: #e6edf3">);</span>
 </pre></div></td></tr></table></div>
 
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/admin_verify.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/admin_verify.php
 
-        </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
 <span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">2</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">23</span><span style="color: #e6edf3">]</span>	<span style="color: #f85149">$</span><span style="color: #e6edf3">query</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #a5d6ff">&quot;SELECT name, pass from admin&quot;</span><span style="color: #e6edf3">;</span>
 <span style="color: #e6edf3">[</span><span style="color: #a5d6ff">39</span><span style="color: #e6edf3">]</span>	<span style="color: #e6edf3">header(</span><span style="color: #a5d6ff">&quot;Location: admin_book.php&quot;</span><span style="color: #e6edf3">);</span>
 </pre></div></td></tr></table></div>
 
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/edit_book.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/edit_book.php
 
-        </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">56</span><span style="color: #e6edf3">]</span>		<span style="color: #e6edf3">header(</span><span style="color: #a5d6ff">&quot;Location: admin_edit.php?bookisbn=$isbn&quot;</span><span style="color: #e6edf3">);</span>
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">56</span><span style="color: #e6edf3">]</span>		<span style="color: #e6edf3">header(</span><span style="color: #a5d6ff">&quot;Location: admin_edit.php?bookisbn=$isbn&quot;</span><span style="color: #e6edf3">);</span>
 </pre></div></td></tr></table></div>
 
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/verify.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/verify.php
 
-        </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
 <span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">2</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">11</span><span style="color: #e6edf3">]</span>	<span style="color: #f85149">$</span><span style="color: #e6edf3">query</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #a5d6ff">&quot;SELECT username, password FROM admin&quot;</span><span style="color: #e6edf3">;</span>
 <span style="color: #e6edf3">[</span><span style="color: #a5d6ff">20</span><span style="color: #e6edf3">]</span>			<span style="color: #e6edf3">echo</span> <span style="color: #a5d6ff">&quot;Welcome admin! Long time no see&quot;</span><span style="color: #e6edf3">;</span>
 </pre></div></td></tr></table></div>
 
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/controllers/DatabaseTalking/Talking.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/controllers/DatabaseTalking/Talking.php
 
-        </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
 <span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">2</span>
 <span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">3</span>
 <span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">4</span>
@@ -488,77 +514,69 @@ Scan Duration:
 <span style="color: #e6edf3">[</span><span style="color: #a5d6ff">535</span><span style="color: #e6edf3">]</span>            <span style="color: #e6edf3">SELECT</span> <span style="color: #ff7b72; font-weight: bold">*</span> <span style="color: #e6edf3">FROM</span> <span style="color: #e6edf3">admin</span> <span style="color: #e6edf3">ORDER</span> <span style="color: #e6edf3">BY</span> <span style="color: #e6edf3">admin_id;</span>
 </pre></div></td></tr></table></div>
 
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/database/readme.txt.txt
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/database/readme.txt.txt
 
-        </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
 <span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">2</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">10</span><span style="color: #e6edf3">]to</span> <span style="color: #e6edf3">connect</span> <span style="color: #e6edf3">the</span> <span style="color: #e6edf3">admin</span> <span style="color: #e6edf3">section,</span> <span style="color: #e6edf3">click</span> <span style="color: #e6edf3">the</span> <span style="color: #e6edf3">name</span> <span style="color: #e6edf3">Nghi</span> <span style="color: #e6edf3">Le</span> <span style="color: #e6edf3">Thanh</span> <span style="color: #e6edf3">at</span> <span style="color: #e6edf3">the</span> <span style="color: #e6edf3">bottom</span><span style="color: #ff7b72; font-weight: bold">.</span> 
 <span style="color: #e6edf3">[</span><span style="color: #a5d6ff">11</span><span style="color: #e6edf3">]the</span> <span style="color: #e6edf3">name</span> <span style="color: #ff7b72; font-weight: bold">and</span> <span style="color: #ff7b72">pass</span> <span style="color: #ff7b72">for</span> <span style="color: #e6edf3">log</span> <span style="color: #ff7b72; font-weight: bold">in</span> <span style="color: #ff7b72; font-weight: bold">is</span> <span style="color: #e6edf3">admin</span> <span style="color: #e6edf3">,</span> <span style="color: #e6edf3">admin</span><span style="color: #ff7b72; font-weight: bold">.</span> <span style="color: #e6edf3">Just</span> <span style="color: #e6edf3">to</span> <span style="color: #e6edf3">make</span> <span style="color: #e6edf3">it</span> <span style="color: #e6edf3">simple</span><span style="color: #ff7b72; font-weight: bold">.</span> 
 </pre></div></td></tr></table></div>
 
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/models/admin/Admin.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/models/admin/Admin.php
 
-        </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
 <span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">2</span>
 <span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">3</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">10</span><span style="color: #e6edf3">]</span><span style="color: #ff7b72">class</span> <span style="color: #f0883e; font-weight: bold">Admin</span>
 <span style="color: #e6edf3">[</span><span style="color: #a5d6ff">18</span><span style="color: #e6edf3">]</span>     <span style="color: #ff7b72; font-weight: bold">*</span> <span style="color: #e6edf3">Admin</span> <span style="color: #e6edf3">constructor</span><span style="color: #ff7b72; font-weight: bold">.</span>
 <span style="color: #e6edf3">[</span><span style="color: #a5d6ff">28</span><span style="color: #e6edf3">]</span>        <span style="color: #e6edf3">Admin::</span><span style="color: #f85149">$</span><span style="color: #e6edf3">admins;</span>
 </pre></div></td></tr></table></div>
 
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/template/footer.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/template/footer.php
 
-        </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">8</span><span style="color: #e6edf3">]</span>          		<span style="color: #ff7b72; font-weight: bold">&lt;</span><span style="color: #e6edf3">a</span> <span style="color: #e6edf3">href</span><span style="color: #ff7b72; font-weight: bold">=</span><span style="color: #a5d6ff">&quot;admin.php&quot;</span><span style="color: #ff7b72; font-weight: bold">&gt;</span><span style="color: #e6edf3">Admin</span> <span style="color: #e6edf3">Login</span><span style="color: #ff7b72; font-weight: bold">&lt;/</span><span style="color: #e6edf3">a</span><span style="color: #ff7b72; font-weight: bold">&gt;</span> <span style="color: #a5d6ff">2017</span>
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">8</span><span style="color: #e6edf3">]</span>          		<span style="color: #ff7b72; font-weight: bold">&lt;</span><span style="color: #e6edf3">a</span> <span style="color: #e6edf3">href</span><span style="color: #ff7b72; font-weight: bold">=</span><span style="color: #a5d6ff">&quot;admin.php&quot;</span><span style="color: #ff7b72; font-weight: bold">&gt;</span><span style="color: #e6edf3">Admin</span> <span style="color: #e6edf3">Login</span><span style="color: #ff7b72; font-weight: bold">&lt;/</span><span style="color: #e6edf3">a</span><span style="color: #ff7b72; font-weight: bold">&gt;</span> <span style="color: #a5d6ff">2017</span>
 </pre></div></td></tr></table></div>
 
+        
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  Information Disclosure
-
-        <hr />
-    </div>
+<div class="src-path-wrap">
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  Standard Mitigation
-
-        <hr />
-    </div>
+<div class="src-path-wrap">
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  SELECT ORDERBY
-
-        <hr />
-    </div>
+<div class="src-path-wrap">
     
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/publisher_list.php
+        <div class="keyword-block">
+            [+] <span class="keyword-ht">Keyword Searched </span> :  SELECT ORDERBY
 
+            <hr />
         </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">6</span><span style="color: #e6edf3">]</span>	<span style="color: #f85149">$</span><span style="color: #e6edf3">query</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #a5d6ff">&quot;SELECT * FROM publisher ORDER BY publisherid&quot;</span><span style="color: #e6edf3">;</span>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/publisher_list.php
+
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">6</span><span style="color: #e6edf3">]</span>	<span style="color: #f85149">$</span><span style="color: #e6edf3">query</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #a5d6ff">&quot;SELECT * FROM publisher ORDER BY publisherid&quot;</span><span style="color: #e6edf3">;</span>
 </pre></div></td></tr></table></div>
 
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/controllers/DatabaseTalking/Talking.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/controllers/DatabaseTalking/Talking.php
 
-        </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
 <span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">2</span>
 <span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">3</span>
 <span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">4</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">467</span><span style="color: #e6edf3">]</span>            <span style="color: #e6edf3">SELECT</span> <span style="color: #e6edf3">publisher_id,name</span> <span style="color: #e6edf3">FROM</span> <span style="color: #e6edf3">publisher</span> <span style="color: #e6edf3">ORDER</span> <span style="color: #e6edf3">BY</span>  <span style="color: #a5d6ff">2</span> <span style="color: #a5d6ff">&quot;);</span>
@@ -567,389 +585,561 @@ Scan Duration:
 <span style="color: #e6edf3">[</span><span style="color: #a5d6ff">593</span><span style="color: #e6edf3">]</span>            <span style="color: #e6edf3">SELECT</span> <span style="color: #ff7b72; font-weight: bold">*</span> <span style="color: #e6edf3">FROM</span> <span style="color: #e6edf3">genre</span>  <span style="color: #e6edf3">ORDER</span> <span style="color: #e6edf3">BY</span> <span style="color: #e6edf3">genre_desc;</span>
 </pre></div></td></tr></table></div>
 
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/functions/database_functions.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/functions/database_functions.php
 
-        </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span>
 <span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">2</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">13</span><span style="color: #e6edf3">]</span>		<span style="color: #f85149">$</span><span style="color: #e6edf3">query</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #a5d6ff">&quot;SELECT book_isbn, book_image FROM books ORDER BY book_isbn DESC&quot;</span><span style="color: #e6edf3">;</span>
 <span style="color: #e6edf3">[</span><span style="color: #a5d6ff">117</span><span style="color: #e6edf3">]</span>		<span style="color: #f85149">$</span><span style="color: #e6edf3">query</span> <span style="color: #ff7b72; font-weight: bold">=</span> <span style="color: #a5d6ff">&quot;SELECT * from books ORDER BY book_isbn DESC&quot;</span><span style="color: #e6edf3">;</span>
 </pre></div></td></tr></table></div>
 
+        
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  SELECT ORDERBY @InputName
-
-        <hr />
-    </div>
+<div class="src-path-wrap">
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  URLs
-
-        <hr />
-    </div>
+<div class="src-path-wrap">
     
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	  online-book-store/secure/template/footer.php
+        <div class="keyword-block">
+            [+] <span class="keyword-ht">Keyword Searched </span> :  URLs
 
+            <hr />
         </div>
-        <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">5</span><span style="color: #e6edf3">]</span>            	<span style="color: #ff7b72; font-weight: bold">&lt;</span><span style="color: #e6edf3">a</span> <span style="color: #e6edf3">href</span><span style="color: #ff7b72; font-weight: bold">=</span><span style="color: #a5d6ff">&quot;http://projectworlds.in&quot;</span> <span style="color: #e6edf3">target</span><span style="color: #ff7b72; font-weight: bold">=</span><span style="color: #a5d6ff">&quot;_blank&quot;</span><span style="color: #ff7b72; font-weight: bold">&gt;</span> <span style="color: #e6edf3">projectworlds</span> <span style="color: #ff7b72; font-weight: bold">&lt;/</span><span style="color: #e6edf3">a</span><span style="color: #ff7b72; font-weight: bold">&gt;</span>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	  online-book-store/secure/template/footer.php
+
+            </div>
+            <div class="highlight" style="background: #0d1117"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span style="color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px;">1</span></pre></div></td><td class="code"><div><pre style="line-height: 125%;"><span></span><span style="color: #e6edf3">[</span><span style="color: #a5d6ff">5</span><span style="color: #e6edf3">]</span>            	<span style="color: #ff7b72; font-weight: bold">&lt;</span><span style="color: #e6edf3">a</span> <span style="color: #e6edf3">href</span><span style="color: #ff7b72; font-weight: bold">=</span><span style="color: #a5d6ff">&quot;http://projectworlds.in&quot;</span> <span style="color: #e6edf3">target</span><span style="color: #ff7b72; font-weight: bold">=</span><span style="color: #a5d6ff">&quot;_blank&quot;</span><span style="color: #ff7b72; font-weight: bold">&gt;</span> <span style="color: #e6edf3">projectworlds</span> <span style="color: #ff7b72; font-weight: bold">&lt;/</span><span style="color: #e6edf3">a</span><span style="color: #ff7b72; font-weight: bold">&gt;</span>
 </pre></div></td></tr></table></div>
 
+        
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  TODO
-
-        <hr />
-    </div>
+<div class="src-path-wrap">
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  RSA Private Key
-
-        <hr />
-    </div>
+<div class="src-path-wrap">
     
 </div>
 
     </div>
     <div class="filepaths-section">
-        <h2 class="section-title">Project Files - Areas of Interest</h2>
-<p style="margin-bottom: 35px;">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quam natus doloremque eos rerum perferendis facere praesentium molestiae commodi fuga in, adipisci quo earum! Et amet ipsa quisquam officiis nulla repudiandae!</p>
+        <h2 class="section-title">Parsed Paths – Areas of Interest</h2>
+<p class="p-justified" style="margin-bottom: 35px;">
+    This section contains a list of file paths that have been identified by matching them with a
+predefined set of keywords. These files are typically of interest to a code reviewer, and should be
+examined for possible security vulnerabilities or insecure implementations.
+</p>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  Security Functionality
-
-        <hr />
-    </div>
+<div class="src-path-wrap"> 
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  Permissions
-
-        <hr />
-    </div>
+<div class="src-path-wrap"> 
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  Password
-
-        <hr />
-    </div>
+<div class="src-path-wrap"> 
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  Libraries | Extensions | Plugins
-
-        <hr />
-    </div>
+<div class="src-path-wrap"> 
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  Misc Modules (CAPTCHA|Login|Authentication|Authenticated|Oauth|JWT)
-
-        <hr />
-    </div>
+<div class="src-path-wrap"> 
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  Admin Section/Areas
-
-        <hr />
-    </div>
+<div class="src-path-wrap"> 
     
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/admin.php
+        <div class="keyword-block">
+            [+] <span class="keyword-ht">Keyword Searched </span> :  Admin Section/Areas
 
+            <hr />
         </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/admin_add.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/admin.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/admin_book.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/admin_add.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/admin_delete.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/admin_book.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/admin_edit.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/admin_delete.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/admin_signout.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/admin_edit.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/admin_verify.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/admin_signout.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/functions/admin.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/admin_verify.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/admin/Admin.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/functions/admin.php
 
-        </div>
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/admin/Admin.php
+
+            </div>
+        
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  File Upload
-
-        <hr />
-    </div>
+<div class="src-path-wrap"> 
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  Login/SignIn
-
-        <hr />
-    </div>
+<div class="src-path-wrap"> 
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  API
-
-        <hr />
-    </div>
+<div class="src-path-wrap"> 
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  User Section
-
-        <hr />
-    </div>
+<div class="src-path-wrap"> 
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  Payment Functionality
-
-        <hr />
-    </div>
+<div class="src-path-wrap"> 
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  Purchases | Ordering
-
-        <hr />
-    </div>
+<div class="src-path-wrap"> 
     
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/cart.php
+        <div class="keyword-block">
+            [+] <span class="keyword-ht">Keyword Searched </span> :  Purchases | Ordering
 
+            <hr />
         </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/purchase.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/cart.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/functions/cart_functions.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/purchase.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/orders/OrderDetails.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/functions/cart_functions.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/orders/Orders.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/orders/OrderDetails.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/orders/OrdersTest.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/orders/Orders.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/orders/UnAvailableOrderDetails.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/orders/OrdersTest.php
 
-        </div>
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/orders/UnAvailableOrderDetails.php
+
+            </div>
+        
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  Models
-
-        <hr />
-    </div>
+<div class="src-path-wrap"> 
     
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/admin/Admin.php
+        <div class="keyword-block">
+            [+] <span class="keyword-ht">Keyword Searched </span> :  Models
 
+            <hr />
         </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/customer/Customers.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/admin/Admin.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/goods/Address.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/customer/Customers.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/goods/Author.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/goods/Address.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/goods/Book.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/goods/Author.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/goods/BookTest.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/goods/Book.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/goods/Genre.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/goods/BookTest.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/goods/Publishers.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/goods/Genre.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/interfaces/Damage.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/goods/Publishers.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/orders/OrderDetails.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/interfaces/Damage.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/orders/Orders.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/orders/OrderDetails.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/orders/OrdersTest.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/orders/Orders.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/orders/UnAvailableOrderDetails.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/orders/OrdersTest.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/reviews/Review.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/orders/UnAvailableOrderDetails.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/serve/FileInterface.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/reviews/Review.php
 
-        </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/serve/Image.php
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/serve/FileInterface.php
 
-        </div>
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/models/serve/Image.php
+
+            </div>
+        
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  Views
-
-        <hr />
-    </div>
+<div class="src-path-wrap"> 
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  ViewModel
-
-        <hr />
-    </div>
+<div class="src-path-wrap"> 
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  Controllers
-
-        <hr />
-    </div>
+<div class="src-path-wrap"> 
     
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/controllers/DatabaseTalking/Take.php
+        <div class="keyword-block">
+            [+] <span class="keyword-ht">Keyword Searched </span> :  Controllers
 
+            <hr />
         </div>
-    
-        <div class="source-file-block">
-            - <span class="source-ht">Source File </span> : 	 online-book-store/secure/controllers/DatabaseTalking/Talking.php
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/controllers/DatabaseTalking/Take.php
 
-        </div>
+            </div>
+        
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : 	 online-book-store/secure/controllers/DatabaseTalking/Talking.php
+
+            </div>
+        
     
 </div>
 
-<div>
-    <div class="keyword-block">
-        [+] <span class="keyword-ht">Keyword Searched </span> :  Presenter
-
-        <hr />
-    </div>
+<div class="src-path-wrap"> 
     
+</div>
+
+    </div>
+    <div class="filepaths-section">
+        <h2 class="section-title">Identified Files Path</h2>
+<p class="p-justified" >
+    In this section, you’ll find a comprehensive list of project file paths that were parsed during the
+    analysis. This list was generated based on the selected file types during the scanning process and
+    was used to identify the areas of interest listed in the previous sections. It’s important to note that
+    this list includes all the files, making it a superset of the list provided in the “Parsed Paths - Areas
+    of Interest” section.
+</p>
+
+<p class="p-justified" style="margin-bottom: 35px;">
+    It is still recommended for code reviewers to review this list for any potentially interesting files
+    that may have been overlooked in the “Parsed Paths - Areas of Interest” section.
+</p>
+
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/admin.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/admin_add.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/admin_book.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/admin_delete.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/admin_edit.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/admin_signout.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/admin_verify.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/book.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/bookPerPub.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/books.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/cart.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/checkout.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/contact.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/edit_book.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/empty_session.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/index.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/process.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/publisher_list.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/purchase.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/verify.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/controllers/DatabaseTalking/Take.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/controllers/DatabaseTalking/Talking.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/database/readme.txt.txt
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/functions/admin.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/functions/cart_functions.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/functions/database_functions.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/models/admin/Admin.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/models/customer/Customers.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/models/goods/Address.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/models/goods/Author.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/models/goods/Book.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/models/goods/BookTest.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/models/goods/Genre.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/models/goods/Publishers.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/models/interfaces/Damage.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/models/orders/OrderDetails.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/models/orders/Orders.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/models/orders/OrdersTest.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/models/orders/UnAvailableOrderDetails.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/models/reviews/Review.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/models/serve/FileInterface.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/models/serve/Image.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/template/footer.php
+   
+</div>
+
+<div class="src-path-wrap"> 
+    - <span class="source-ht">Source File </span> : online-book-store/secure/template/header.php
+   
 </div>
 
     </div>
@@ -957,4 +1147,8 @@ Scan Duration:
 
 
 </body>
+<script type="text/javascript">
+    document.getElementById("rtitle").remove()
+    document.getElementById("rdate").remove()
+</script>
 </html>
