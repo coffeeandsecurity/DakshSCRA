@@ -14,7 +14,7 @@ def detectEncodingType(targetfile):
     with open(targetfile, 'rb') as f:
         result = chardet.detect(f.read(1000))
 
-    print('Detected encoding type:', result['encoding'])
+    # print('Detected encoding type:', result['encoding'])
     return result['encoding']
 
 
