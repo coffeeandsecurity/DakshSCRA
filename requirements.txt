@@ -4,3 +4,4 @@ Jinja2==3.1.2
 Pygments==2.15.1
 weasyprint==58.1
 pyyaml==6.0
+chardet>=5.1.0

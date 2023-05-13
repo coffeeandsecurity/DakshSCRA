@@ -1,11 +1,23 @@
 import re, sys
 import xml.etree.ElementTree as ET
+import chardet
 from timeit import default_timer as timer
 # import time
 # from pathlib import Path    # Resolve the windows / mac / linux path issue
 
 import modules.settings as settings
 import modules.misclib as mlib
+
+
+def detectEncodingType(targetfile):
+    # Open the file in binary mode and read the first 1000 bytes to detect the encoding type
+    with open(targetfile, 'rb') as f:
+        result = chardet.detect(f.read(1000))
+
+    print('Detected encoding type:', result['encoding'])
+    return result['encoding']
+
+
 
 '''
 This routine will search patterns loaded from the XML file and parse through all source files.
@@ -58,7 +70,9 @@ def SourceParser(rule_path, targetfile, outputfile):
             try:
                 # Code has to be written later to handle both utf8 and ISO-8859-1 encoding type
                 # fo_target = open(filepath, encoding="utf8")
-                fo_target = open(filepath, encoding="ISO-8859-1")
+                # fo_target = open(filepath, encoding="ISO-8859-1")
+                # Read the file using the detected encoding type
+                fo_target = open(filepath, 'r', encoding=detectEncodingType(filepath))
 
                 linecount = 0
                 fpath = False
