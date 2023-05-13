@@ -1,28 +1,28 @@
 <root>
     <rule>
-        <name>Express BodyParser Tempfile Creation Issue</name>
-        <regex>bodyParser()</regex>
-        <description>Detailed description goes here</description>
+        <name>Insecure Method Call: unwrap() or expect() without proper error handling</name>
+        <regex>(\.unwrap\(\))|(\.expect\(\))</regex>
+        <description>Using unwrap() or expect() without proper error handling</description>
     </rule>
     <rule>
-        <name>Handlebars Unescaped String</name>
-        <regex>handlebars.SafeString</regex>
-        <description>TBD</description>
+        <name>Insecure Type Casting or Creating Uninitialized Memory: transmute() or mem::uninitialized()</name>
+        <regex>(\.transmute\(\))|(mem::uninitialized\(\))</regex>
+        <description>Using transmute() or mem::uninitialized() to cast between different types or to create uninitialized memory.</description>
     </rule>
     <rule>
-        <name>Missing 'httpOnly' in Cookie</name>
-        <regex>httpOnly(\s)*:(\s)*true|httpOnly</regex>
-        <description>Detailed description goes here</description>
+        <name>Unsafe Declaration: unsafe keyword or .unsafe_ method calls</name>
+        <regex>(\bunsafe\b)|(\.unsafe_)</regex>
+        <description>Using unsafe blocks without proper justification or error handling.</description>
     </rule>
     <rule>
-        <name>Remote OS Command Execution - (child_process.exec())</name>
-        <regex>require( )*(\()( *)('|")child_process('|")( *)(\))</regex>
-        <description>TBD</description>
+        <name>Insecure String Parameter: Using String instead of &str for function parameters</name>
+        <regex>fn .*\((.*\bString\b.*)\)</regex>
+        <description>Matches function definitions that take a String parameter. Using String instead of &str for function parameters.</description>
     </rule>
         <rule>
-        <name>Routes</name>
-        <regex>(^|\s)(?i)route: \'.*(\s?)</regex>
-        <description>TBD</description>
+        <name>Insecure Method Calls: Using unwrap() or expect() on Option types without proper error handling</name>
+        <regex>(\.unwrap\(\))|(\.expect\(\))(\.as_ref\(\))?</regex>
+        <description>Matches .unwrap() or .expect() method calls on Option types. Using unwrap() or expect() on Option types without proper error handling:</description>
     </rule>
 </root>
 

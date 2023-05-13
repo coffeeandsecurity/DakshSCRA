@@ -15,20 +15,53 @@
         <description>Detailed description goes here</description>
     </rule>
     <rule>
-        <name>Command injection (shell_exec|exec|passthru|system|backtick)</name>
-        <regex>(^|\s|=\s?)shell_exec\(|(^|\s|=\s?)exec\(|(^|\s|=\s?)passthru\(|(^|\s|=\s?)system\(|\=\s?\`.*\`;</regex>
-        <description></description>
+        <name>Command Injection: shell_exec|exec|passthru|system|popen|backtick</name>
+        <regex>(shell_exec|exec|passthru|system|popen|`)\(</regex>
+        <!--<regex>(^|\s|=\s?)shell_exec\(|(^|\s|=\s?)exec\(|(^|\s|=\s?)passthru\(|(^|\s|=\s?)system\(|\=\s?\`.*\`;</regex>-->
+        <description>These functions execute shell commands and can also lead to code injection vulnerabilities if used with user-supplied input.</description>
     </rule>
     <rule>
-        <name>PHP Execute (preg_replace with /e modifier)</name>
+        <name>Arbitrary Code Execution: eval|exec</name>
+        <regex>\b(?:eval|exec)\b</regex>
+        <description>These functions execute arbitrary code, and are often used to execute user-supplied input, which can lead to code injection vulnerabilities.</description>
+    </rule>
+    <rule>
+        <name>Insecure Method Call: preg_replace()</name>
+        <regex>preg_replace\s*\(\s*['"](eval|assert|system|passthru|shell_exec|exec|popen|proc_open|pcntl_exec)['"]\s*,\s*\$([^\s,]*)\s*\)</regex>
+        <description>Matches preg_replace() functions that use a variable as the replacement parameter and pass one of the following strings as the search parameter: eval, assert, system, passthru, shell_exec, exec, popen, proc_open, or pcntl_exec.</description>
+    </rule>
+    <rule>
+        <name>Insecure Method Call: include() and require()</name>
+        <regex>\b(?:include|require)(_once)?\s*\(\s*(?:(?:\'[^\']*\'|\"[^\"]*\")\s*\.\s*)?\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\.\s*(?:\'[^\']*\'|\"[^\"]*\"))?\s*\)</regex>
+        <description>An insecure PHP include occurs when the include() or require() function is used to load a file based on user input without properly validating or sanitizing the input. This can allow an attacker to include a malicious file and execute arbitrary code on the server.</description>
+    </rule>
+    <rule>
+        <name>Insecure Method Call: extract()</name>
+        <regex>extract\s*\(\s*(\$_(GET|POST|REQUEST)|\$\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}?)\s*,\s*(?:\s*EXTR_(?:OVERWRITE|SKIP|PREFIX_SAME|PREFIX_ALL|IF_EXISTS|IF_DOESNT_EXIST|PREFIX_INVALID))*</regex>
+        <description>Matches calls to extract() that use a user-supplied array as the first parameter. 
+        The array can come from $_GET, $_POST, $_REQUEST, or any variable with a name that starts with an underscore (e.g. $_data). 
+        The second parameter can include flags that modify how the extraction is done, but these are optional.</description>
+    </rule>
+    <rule>
+        <name>Multiple Insecure Call: assert()</name>
+        <regex>assert\s*\(\s*(\$_(GET|POST|REQUEST)|\$\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}?)</regex>
+        <description>Using assert() with unvalidated user input can lead to code injection attacks, allowing an attacker to execute arbitrary code on the server. It's important to avoid using assert() with untrusted data.</description>
+    </rule>
+    <rule>
+        <name>Multiple Insecure Calls</name>
+        <regex>\b(header|mysql_query|mysqli_query)\b</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>PHP Execute: preg_replace with /e modifier</name>
         <regex>preg_replace\(.\W+e\W,</regex>
         <regex>preg_replace\(\$_GET</regex>
-        <description>preg_replace could be made dangerous by the use of the /e flag</description>
+        <description>This function can be used for regular expression replacements, and can be vulnerable to regular expression injection attacks if the input is not properly validated. preg_replace could be made dangerous by the use of the /e flag</description>
     </rule>
     <rule>
-        <name>Serialisation Issue</name>
-        <regex>unserialize\(</regex>
-        <description>Detailed description goes here</description>
+        <name>Serialisation Issue: unserialize|serialize</name>
+        <regex>\b(?:unserialize|serialize)\b</regex>
+        <description>These functions can be used to convert an object to a string and vice versa, and can lead to object injection vulnerabilities if the input is not properly validated.</description>
     </rule>
         <rule>
         <name>PHP_SELF XSS</name>

@@ -7,7 +7,7 @@
     <rule>
         <platform>php</platform>
         <path>/php/php.xml</path>
-        <ftypes>*.php, *.ini, *.txt, *.config, *.xml, *.lock, .htaccess</ftypes>
+        <ftypes>*.php, *.ini, *.txt, *.config, *.xml, *.lock, .htaccess, *.log</ftypes>
     </rule>
     <rule>
         <platform>java</platform>
@@ -37,7 +37,7 @@
     <rule>
         <platform>rust</platform>
         <path>/rust/rust.xml</path>
-        <ftypes>*.rs, *.toml</ftypes>
+        <ftypes>*.rs, *.toml, *.env</ftypes>
     </rule>
     <rule>
         <platform>carbon</platform>
