@@ -80,6 +80,7 @@ def genHtmlReport(summary, snippets, filepaths, filepaths_aoi, report_output_pat
     html_file.close()
     print(f"    [-] Completed at     : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"    [-] Total time taken : {time.strftime('%HHr:%MMin:%Ss', time.gmtime(time.time() - started_at))}")
+
     return html_path,output_text
 
 def _highLightCode(statements):

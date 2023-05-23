@@ -5,8 +5,8 @@
         <description>Detailed description goes here</description>
     </rule>
     <rule>
-        <name>Secrets</name>
-        <regex>(?:key|apikey|api-key|secret|token)[^\n]{0,50}:?\s*(?:[\w-]{8,}|\"[^\"]{8,}\"|\b[A-Fa-f0-9]{32,}\b|\b[A-Fa-f0-9]{40,}\b)</regex>
+        <name>Server-side Secrets Handling (E.g: Hardcoded Secrets | Assignments)</name>
+        <regex>\b(key|password|apikey|api[-_]?key|secret|token|access_token|auth_token|client_secret|private_key|encryption_key|db_password|security_key|session_key|service_account_key|passphrase|cert_key|app_secret|api_secret|jwt_secret)\s*=</regex>
         <description>Detailed description goes here</description>
     </rule>
     <rule>
