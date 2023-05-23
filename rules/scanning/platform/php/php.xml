@@ -31,6 +31,11 @@
         <description>Matches preg_replace() functions that use a variable as the replacement parameter and pass one of the following strings as the search parameter: eval, assert, system, passthru, shell_exec, exec, popen, proc_open, or pcntl_exec.</description>
     </rule>
     <rule>
+        <name>Insecure Method Call: header()</name>
+        <regex>header\s*\(\s*['\"]\s*Location\s*:\s*</regex>
+        <description>Matches instances of insecure PHP header functions with variations in spacing and quotation marks around the "Location" parameter.</description>
+    </rule>
+    <rule>
         <name>Insecure Method Call: include() and require()</name>
         <regex>\b(?:include|require)(_once)?\s*\(\s*(?:(?:\'[^\']*\'|\"[^\"]*\")\s*\.\s*)?\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\.\s*(?:\'[^\']*\'|\"[^\"]*\"))?\s*\)</regex>
         <description>An insecure PHP include occurs when the include() or require() function is used to load a file based on user input without properly validating or sanitizing the input. This can allow an attacker to include a malicious file and execute arbitrary code on the server.</description>
@@ -48,8 +53,8 @@
         <description>Using assert() with unvalidated user input can lead to code injection attacks, allowing an attacker to execute arbitrary code on the server. It's important to avoid using assert() with untrusted data.</description>
     </rule>
     <rule>
-        <name>Multiple Insecure Calls</name>
-        <regex>\b(header|mysql_query|mysqli_query)\b</regex>
+        <name>Instances of MySQL query</name>
+        <regex>\b(mysql_query|mysqli_query)\b</regex>
         <description>Detailed description goes here</description>
     </rule>
     <rule>
