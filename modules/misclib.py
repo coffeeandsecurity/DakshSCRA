@@ -1,6 +1,7 @@
 import fnmatch
 import os, sys, re
 import pandas as pd
+import chardet
 
 import json
 from json.decoder import JSONDecodeError
@@ -14,6 +15,14 @@ import modules.settings as settings
 
 # Current directory of the python file
 parentPath = os.path.dirname(os.path.realpath(__file__))
+
+# Detect file encoding type
+def detectEncodingType(targetfile):
+    # Open the file in binary mode and read the first 1000 bytes to detect the encoding type
+    with open(targetfile, 'rb') as f:
+        result = chardet.detect(f.read(1000))
+        
+    return result['encoding']
 
 
 def DiscoverFiles(codebase, sourcepath, mode):

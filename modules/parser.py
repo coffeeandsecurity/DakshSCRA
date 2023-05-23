@@ -1,21 +1,11 @@
 import re, sys
 import xml.etree.ElementTree as ET
-import chardet
 from timeit import default_timer as timer
 # import time
 # from pathlib import Path    # Resolve the windows / mac / linux path issue
 
 import modules.settings as settings
 import modules.misclib as mlib
-
-
-def detectEncodingType(targetfile):
-    # Open the file in binary mode and read the first 1000 bytes to detect the encoding type
-    with open(targetfile, 'rb') as f:
-        result = chardet.detect(f.read(1000))
-
-    # print('Detected encoding type:', result['encoding'])
-    return result['encoding']
 
 
 
@@ -72,9 +62,9 @@ def SourceParser(rule_path, targetfile, outputfile):
                 # fo_target = open(filepath, encoding="utf8")
                 # fo_target = open(filepath, encoding="ISO-8859-1")
                 # TODO: Read the file using the detected encoding type - Giving errors at some stage. Will be fixed later
-                #fo_target = open(filepath, 'r', encoding=detectEncodingType(filepath))
-                fo_target = open(filepath, 'r', encoding="utf8")    # TODO: Temporary fix. Will be replaced with autodetect encoding
-
+                # fo_target = open(filepath, 'r', encoding=mlib.detectEncodingType(filepath))
+                fo_target = open(filepath, encoding="ISO-8859-1")   # TODO: Temporary fix. Will be replaced with autodetect encoding
+                                                                    # ISO-8859-1 encoding type works on most occasions but utf8 errors out
                 linecount = 0
                 fpath = False
                 for line in fo_target:

@@ -151,7 +151,8 @@ log_filepaths = mlib.DiscoverFiles(codebase, sourcepath, 1)
 ###### [Stage 2] Rules/Pattern Matching - Parse Source Code ######
 print(" [+] [Stage 2] Rules/Pattern Matching - Parse indentified project files")
 f_scanout = open(settings.outputAoI, "w")           # settings.outputAoI -> File path for areas of interest scan output
-f_targetfiles = open(log_filepaths, encoding="utf8")
+#f_targetfiles = open(log_filepaths, encoding="utf8")
+f_targetfiles = open(log_filepaths, 'r', encoding=mlib.detectEncodingType(log_filepaths))
 
 parser.SourceParser(rules_main, f_targetfiles, f_scanout)       # Pattern matching for specific platform type
 parser.SourceParser(rules_common, f_targetfiles, f_scanout)     # Pattern matching for common rules
@@ -162,7 +163,8 @@ f_scanout.close()
 ###### [Stage 3] Parse File Paths for areas of interest ######
 print(" [+] [Stage 3] Parse file paths for areas of interest")
 f_scanout = open(settings.outputAoI_Fpaths, "w")        # settings.outputAoI_Fpaths -> Output file for areas of interest file paths scan output
-f_targetfiles = open(log_filepaths, encoding="utf8")
+#f_targetfiles = open(log_filepaths, encoding="utf8")
+f_targetfiles = open(log_filepaths, 'r', encoding=mlib.detectEncodingType(log_filepaths))
 parser.PathsParser(settings.rulesFpaths, f_targetfiles, f_scanout)
 f_targetfiles.close()
 f_scanout.close()
