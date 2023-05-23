@@ -13,10 +13,10 @@
 {% for snippet in snippets %}
 <div class="src-path-wrap">
     {% if snippet["sources"] %}
-        <div class="keyword-block">
+        <h3 class="keyword-block">
             [+] <span class="keyword-ht">Keyword Searched </span> : {{snippet["keyword"]}}
             <hr />
-        </div>
+        </h3>
         {% for source in snippet["sources"] %}
             <div class="source-file-block">
                 - <span class="source-ht">Source File </span> : {{source["source"]}}

@@ -7,10 +7,10 @@ examined for possible security vulnerabilities or insecure implementations.
 {% for filepath in filepaths_aoi %}
 <div class="src-path-wrap"> 
     {% if filepath["paths"] %}
-        <div class="keyword-block">
+        <h3 class="keyword-block">
             [+] <span class="keyword-ht">Keyword Searched </span> : {{filepath["keyword"]}}
             <hr />
-        </div>
+        </h3>
         {% for path in filepath["paths"] %}
             <div class="source-file-block">
                 - <span class="source-ht">Source File </span> : {{path}}

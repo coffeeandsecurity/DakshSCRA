@@ -10,8 +10,13 @@ except ImportError :
 from pygments import highlight
 from pygments.lexers import PythonLexer
 from pygments.formatters import HtmlFormatter
+
+from pygments_better_html import BetterHtmlFormatter
+import traceback
+
 from datetime import datetime
 from weasyprint import HTML, CSS
+import time
 
 import modules.settings as settings
 import yaml
@@ -19,14 +24,23 @@ import base64
 
 def genPdfReport(html_path, pdf_path):
     try:
+        started_at = time.time()
+        print(f"[*] PDF report generation")
+        print(f"    [-] Started at       : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         HTML(html_path).write_pdf(pdf_path, stylesheets=[CSS(settings.staticPdfCssFpath)])
+        print(f"    [-] Completed at     : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"    [-] Total time taken : {time.strftime('%HHr:%MMin:%Ss', time.gmtime(time.time() - started_at))}")
         return pdf_path
     except Exception as e:
         print(e)
+        traceback.print_exc()
 
     return pdf_path
 
 def genHtmlReport(summary, snippets, filepaths, filepaths_aoi, report_output_path):
+    started_at = time.time()
+    print(f"[*] HTML report generation")
+    print(f"    [-] Started at       : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
     # Config
     with open(settings.projectConfig, "r") as stream:
@@ -64,13 +78,14 @@ def genHtmlReport(summary, snippets, filepaths, filepaths_aoi, report_output_pat
     html_file = open(html_path, 'w')
     html_file.write(output_text)
     html_file.close()
-
-    return html_path
+    print(f"    [-] Completed at     : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"    [-] Total time taken : {time.strftime('%HHr:%MMin:%Ss', time.gmtime(time.time() - started_at))}")
+    return html_path,output_text
 
 def _highLightCode(statements):
     code = "".join(statements)
     # Make the style 'default' to show the code snippet in grey background
-    code = highlight(code, PythonLexer(), HtmlFormatter(linenos=True, noclasses=True, style='github-dark'))
+    code = highlight(code, PythonLexer(), BetterHtmlFormatter(linenos="table", noclasses=True, style='github-dark'))
     return code
 
 def getAreasOfInterest(input_file):
@@ -165,20 +180,22 @@ def GenReport():
     html_report_output_path =  settings.htmlreport_Fpath
     pdf_report_path = settings.pdfreport_Fpath
 
-    htmlfile = genHtmlReport(summary, snippets, filepaths, filepaths_aoi, html_report_output_path)
+    htmlfile, output_html = genHtmlReport(summary, snippets, filepaths, filepaths_aoi, html_report_output_path)
     if not htmlfile:
         return None
 
     genPdfReport(htmlfile, pdf_report_path)
 
+    # Display reports path but strip out the path to root directory
     print("\n[*] HTML Report:")
-    print("     [*] HTML Report Path : "+ "DakshSCRA"+ str(re.split("DakshSCRA+", str(settings.htmlreport_Fpath))[1]))
+    print("     [-] HTML Report Path : "+ re.sub(str(settings.root_dir), "", str(settings.htmlreport_Fpath)))
     print("\n[*] PDF Report:")
-    print("     [*] PDF Report Path : "+ "DakshSCRA"+ str(re.split("DakshSCRA+", str(settings.pdfreport_Fpath))[1]))
+    print("     [-] PDF Report Path : "+ re.sub(str(settings.root_dir), "", str(settings.pdfreport_Fpath)))
     print("\n[*] Raw Text Reports:")
-    print("     [*] Areas of Interest: " + "DakshSCRA"+ str(re.split("DakshSCRA+", str(settings.outputAoI))[1]))
-    print("     [*] Project Files - Areas of Interest: " + "DakshSCRA"+ str(re.split("DakshSCRA+", str(settings.outputAoI_Fpaths))[1]))
-    print("     [*] Discovered Files Path: " + "DakshSCRA"+ str(re.split("DakshSCRA+", str(settings.discovered_Fpaths))[1]))
+    print("     [-] Areas of Interest: "+ re.sub(str(settings.root_dir), "", str(settings.outputAoI)))
+    print("     [-] Project Files - Areas of Interest: "+ re.sub(str(settings.root_dir), "", str(settings.outputAoI_Fpaths)))
+    print("     [-] Discovered Files Path: "+ re.sub(str(settings.root_dir), "", str(settings.discovered_Fpaths)))
+    
     print("\nNote: The tool generates reports in three formats: HTML, PDF, and TEXT. " 
     "Although the HTML and PDF reports are still being improved, they are currently in a reasonably good state. " 
     "With each subsequent iteration, these reports will continue to be refined and improved even further.")

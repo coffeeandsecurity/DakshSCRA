@@ -141,12 +141,15 @@ sourcepath = Path(results.target_dir)
 
 settings.start_time = time.time()  # This time will be used to calculate total time taken for the scan
 settings.start_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-print("\n[*] Scan Start Time: " + str(settings.start_timestamp))
+
+print("[*] Scanner initiated!!")
 
 ###### [Stage 1] Discover file paths    ######
+print("[+] [Stage 1] Discover file paths")
 log_filepaths = mlib.DiscoverFiles(codebase, sourcepath, 1)
 
 ###### [Stage 2] Rules/Pattern Matching - Parse Source Code ######
+print(" [+] [Stage 2] Rules/Pattern Matching - Parse indentified project files")
 f_scanout = open(settings.outputAoI, "w")           # settings.outputAoI -> File path for areas of interest scan output
 f_targetfiles = open(log_filepaths, encoding="utf8")
 
@@ -157,6 +160,7 @@ f_targetfiles.close()
 f_scanout.close()
 
 ###### [Stage 3] Parse File Paths for areas of interest ######
+print(" [+] [Stage 3] Parse file paths for areas of interest")
 f_scanout = open(settings.outputAoI_Fpaths, "w")        # settings.outputAoI_Fpaths -> Output file for areas of interest file paths scan output
 f_targetfiles = open(log_filepaths, encoding="utf8")
 parser.PathsParser(settings.rulesFpaths, f_targetfiles, f_scanout)
@@ -166,12 +170,13 @@ f_scanout.close()
 mlib.CleanFilePaths(log_filepaths)
 os.unlink(log_filepaths)        # Delete the temp file paths log after the path cleanup in the above step
 
-# Generate report
-report.GenReport()
-
-
+print("\n[*] Scanning Timeline")
+print("    [-] Scan start time     : " + str(settings.start_timestamp))
 end_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-print("\n[*] Scan End Time: " + str(end_timestamp))
+print("    [-] Scan end time       : " + str(end_timestamp))
 # print("Scan completed in " + str(format((time.time() - settings.start_time), '.2f')) + " seconds.")
-print("[*] Scan completed in " + time.strftime("%HHr:%MMin:%Ss", time.gmtime(time.time() - settings.start_time)))
+print("    [-] Scan completed in   : " + time.strftime("%HHr:%MMin:%Ss", time.gmtime(time.time() - settings.start_time)))
 
+
+###### [Stage 4] Generate Reports ######
+report.GenReport()

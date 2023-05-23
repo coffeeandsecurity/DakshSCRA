@@ -22,7 +22,7 @@ def DiscoverFiles(codebase, sourcepath, mode):
     if mode == 1:
         ft = re.sub(r"\s+", "", GetRulesPathORFileTypes(codebase, "filetypes"))         # Get file types and use regex to remove any whitespaces in the string
         filetypes = list(ft.split(","))         # Convert the comman separated string to a list
-        print("[*] Filetypes Selected: " + str(filetypes))
+        print("     [-] Filetypes Selected: " + str(filetypes))
     elif mode == 2:
         filetypes = '*.*'
 
@@ -30,11 +30,11 @@ def DiscoverFiles(codebase, sourcepath, mode):
     fext = []
 
     parentPath = settings.root_dir                               # Daksh root directory 
-    print("[*] DakshSCRA Directory Path: " + settings.root_dir)      
+    print("     [-] DakshSCRA Directory Path: " + settings.root_dir)      
     
     f_filepaths = open(settings.discovered_Fpaths, "w+")         # File ('discovered_Fpaths') for logging all discovered file paths
 
-    print("[*] Identifying total files to be scanned!")
+    print("     [-] Identifying total files to be scanned!")
     linescount = 0
     filename = None     # To be removed. Temporarily added to fix - "local variable referenced before assignment" error
     fCnt = 0
@@ -60,9 +60,9 @@ def DiscoverFiles(codebase, sourcepath, mode):
     f_filepaths.close()
     
 
-    print("[*] Total files to be scanned: " + str(linescount) + "\n")
+    print("     [-] Total files to be scanned: " + str(linescount))
     fext = list(dict.fromkeys(filter(None, fext)))      # filter is used to remove empty item that gets added due to 'filename = None' above
-    print("[*] File Extentions Identified: " + str(fext) + "\n")
+    print("     [-] File Extentions Identified: " + str(fext))
 
     #cleanfilepaths(settings.discovered_Fpaths)
 

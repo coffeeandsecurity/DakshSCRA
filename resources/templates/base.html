@@ -27,6 +27,7 @@
         border-radius: 4px;
         margin-bottom: 5px;
         margin-top: 5px;
+        background: #0d1117;
     }
     .keyword-block {
         font-size: 18px;
@@ -44,9 +45,7 @@
     .source-ht{
         background-color: #6eafff;
     }
-    .linenodiv {
-        border-right: 1px solid grey;
-    }
+
     .section-title{
         color: #4b5db7;
     }
@@ -111,6 +110,25 @@
     .cover-section{
         text-align: center;
     }
+
+    .highlight table, .highlight tr, .highlight td { border-spacing: 0; border-collapse: separate; padding: 0; padding-top: 10px;padding-bottom: 10px;}
+    .highlight pre { white-space: pre-wrap; line-height: normal }
+    .highlighttable td.linenos { vertical-align: top; padding-left: 10px; padding-right: 10px; user-select: none; 
+        -webkit-user-select: none;padding-top: 3px;
+    padding-bottom: 3px; }
+    .highlighttable td.linenos code:before { content: attr(data-line-number) }
+    .highlighttable td.code { overflow-wrap: normal; border-collapse: collapse;padding-top: 3px;
+    padding-bottom: 3px;
+    padding-left: 8px; }
+    .highlighttable td.code code { overflow: unset; border: none; padding: 0; margin: 0; white-space: pre-wrap; line-height: unset; background: none }
+    .highlight .lineno.nonumber { list-style: none }
+
+    td.linenos.linenodiv {
+        border-right: 1px solid grey;
+        background-color: #0d1117 !important;
+        color: #848c99;
+    }
+
 </style>
 
     <reporttitle id="rtitle">Daksh SCRA – Source Code Analysis Report</reporttitle>

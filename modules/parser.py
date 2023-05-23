@@ -48,31 +48,32 @@ def SourceParser(rule_path, targetfile, outputfile):
         if str(settings.verbosity) == '1':
             #sys.stdout.write("\033[F")
             sys.stdout.write("\033[K")
-            print("\t[#] Searching for keyword: " + r.find("name").text, end='\r')
+            print("     [-] Searching for keyword: " + r.find("name").text, end='\r')
             #print("\n\tRegex Pattern: " + pattern)
             #sys.stdout.write("\033[F")
             #sys.stdout.write("\033[K")
         else:
             sys.stdout.write("\033[K")
-            print("\t[#] Searching for keyword: " + r.find("name").text)
+            print("     [-] Searching for keyword: " + r.find("name").text)
             #print("\tRegex Pattern: " + pattern)    
 
         for eachfilepath in f_targetfiles:  # Read each line (file path) in the file
             filepath = eachfilepath.rstrip()  # strip out '\r' or '\n' from the file paths
         
             #sys.stdout.write("\033[K") #clear line to prevent overlap of texts
-            print('\n\t[#] Parsing file: ' + "["+str(iCnt)+"] "+ mlib.GetSourceFilePath(settings.sourcedir, filepath), end='\r')
+            print('\n\t[-] Parsing file: ' + "["+str(iCnt)+"] "+ mlib.GetSourceFilePath(settings.sourcedir, filepath), end='\r')
             sys.stdout.write("\033[K") #clear line to prevent overlap of texts
             sys.stdout.write("\033[F")
             iCnt = iCnt + 1
 
             # filepath = filepath[:-1]  # Slicing is another appproach to strip out '\n' from the file paths
             try:
-                # Code has to be written later to handle both utf8 and ISO-8859-1 encoding type
+                # TODO: Both utf8 and ISO-8859-1 encoding type must be handled
                 # fo_target = open(filepath, encoding="utf8")
                 # fo_target = open(filepath, encoding="ISO-8859-1")
-                # Read the file using the detected encoding type
-                fo_target = open(filepath, 'r', encoding=detectEncodingType(filepath))
+                # TODO: Read the file using the detected encoding type - Giving errors at some stage. Will be fixed later
+                #fo_target = open(filepath, 'r', encoding=detectEncodingType(filepath))
+                fo_target = open(filepath, 'r', encoding="utf8")    # TODO: Temporary fix. Will be replaced with autodetect encoding
 
                 linecount = 0
                 fpath = False
@@ -137,8 +138,8 @@ def PathsParser(rule_path, targetfile, outputfile):
                 if pFlag == False:
                     f_scanout.write(("Pattern Name: " + pattern_name) + "\n")
                     f_scanout.write(("\tFile Path: " + filepath) + "\n")
-                    print("[*] Parsing File Paths!! FIX ME")
-                    print("[*] File path pattern match:" + pattern_name)
+                    print("     [-] Parsing File Paths!! FIX ME")
+                    print("     [-] File path pattern match:" + pattern_name)
                     # print("\t" + filepath)
                     sys.stdout.write("\033[K") #clear line to prevent overlap of texts
                     #sys.stdout.write("\033[F") #back to previous line
@@ -149,7 +150,12 @@ def PathsParser(rule_path, targetfile, outputfile):
                 
         pFlag == False
         f_targetfilepaths.seek(0, 0)
-
+    
+    #sys.stdout.write("\033[K") #clear line to prevent overlap of texts
+    #print(f"\033[K", end="\r")
+    #print("[*] File path pattern match:")
+    #sys.stdout.write("\033[K") #clear line to prevent overlap of texts
+        
     return
 
 
