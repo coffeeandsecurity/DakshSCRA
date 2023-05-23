@@ -6,7 +6,8 @@
     </rule>
     <rule>
         <name>Server-side Secrets Handling (E.g: Hardcoded Secrets | Assignments)</name>
-        <regex>\b(key|password|apikey|api[-_]?key|secret|token|access_token|auth_token|client_secret|private_key|encryption_key|db_password|security_key|session_key|service_account_key|passphrase|cert_key|app_secret|api_secret|jwt_secret)\s*=</regex>
+        <regex>\b(apikey|api[-_]?key|secret|token|access_token|auth_token|client_secret|private_key|encryption_key|db_password|security_key|session_key|service_account_key|passphrase|cert_key|app_secret|api_secret|jwt_secret)\s*=</regex>
+        <!--<regex>\b(key|password|apikey|api[-_]?key|secret|token|access_token|auth_token|client_secret|private_key|encryption_key|db_password|security_key|session_key|service_account_key|passphrase|cert_key|app_secret|api_secret|jwt_secret)\s*=</regex>-->
         <description>Detailed description goes here</description>
     </rule>
     <rule>
