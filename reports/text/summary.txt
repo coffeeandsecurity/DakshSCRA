@@ -8,9 +8,19 @@ Detection Summary:
     [*] Total files scanned: 44 
     [*] File Extentions Identified: ['.php', '.txt'] 
     [*] Areas of interests identified: 200 
- 
-Scan Duration:  
-    [*] Scan Start Time: 2023-04-30 12:44:53 
-    [*] Scan End Time: 2023-04-30 12:44:53 
-    [*] Total Time Taken: 2023-04-30 12:44:53 
 
+Timeline: 
+    [*] Scanning Timeline
+        [-] Scan start time     : 2023-05-27 19:44:08
+        [-] Scan end time       : 2023-05-27 19:46:49
+        [-] Scan completed in   : 00Hr:02Min:40s
+
+    [*] HTML report generation
+        [-] Started at       : 2023-05-27 19:46:50
+        [-] Completed at     : 2023-05-27 19:46:50
+        [-] Total time taken : 00Hr:00Min:00s
+
+    [*] PDF report generation
+        [-] Started at       : 2023-05-27 19:46:50
+        [-] Completed at     : 2023-05-27 19:47:48
+        [-] Total time taken : 00Hr:00Min:58s
