@@ -2,73 +2,129 @@
     <rule>
         <name>Password</name>
         <regex>(^|\s)(?i)(Password|password|pwd|passwd)</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects potential password-related strings in the code.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential presence of password-related strings in the code, which can lead to security risks if not handled properly.</vuln_desc>
+        <developer>Developers should follow best practices for password handling, including strong encryption, salted hashing, and enforcing secure password policies.</developer>
+        <reviewer>Reviewers should assess the password handling mechanisms and verify if proper security measures are in place.</reviewer>
     </rule>
     <rule>
         <name>Server-side Secrets Handling (E.g: Hardcoded Secrets | Assignments)</name>
         <regex>\b(apikey|api[-_]?key|secret|token|access_token|auth_token|client_secret|private_key|encryption_key|db_password|security_key|session_key|service_account_key|passphrase|cert_key|app_secret|api_secret|jwt_secret)\s*=</regex>
-        <!--<regex>\b(key|password|apikey|api[-_]?key|secret|token|access_token|auth_token|client_secret|private_key|encryption_key|db_password|security_key|session_key|service_account_key|passphrase|cert_key|app_secret|api_secret|jwt_secret)\s*=</regex>-->
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects potential server-side secrets handling vulnerabilities in the code.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential presence of server-side secrets (e.g., hardcoded secrets, assignments) in the code, which can lead to security risks if not handled properly.</vuln_desc>
+        <developer>Developers should avoid storing secrets directly in the code and instead use secure methods such as environment variables or key management systems.</developer>
+        <reviewer>Reviewers should assess the handling of server-side secrets and verify if proper security measures are in place.</reviewer>
     </rule>
     <rule>
         <name>Credit Card</name>
         <regex>((\D(6011|5[1-5]\d{2}|4\d{3}|3\d{3})\d{11,12}\D)|(^(6011|5[1-5]\d{2}|4\d{3}|3\d{3})\d{11,12}\D))</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects potential credit card numbers in the code.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential presence of credit card numbers in the code, which can lead to security risks if not handled properly.</vuln_desc>
+        <developer>Developers should follow industry best practices for handling credit card information, including encryption, compliance with PCI-DSS standards, and avoiding unnecessary storage of sensitive data.</developer>
+        <reviewer>Reviewers should assess the handling of credit card information and verify if proper security measures are in place.</reviewer>
     </rule>
     <rule>
         <name>IPv4 / IPv6 Address</name>
         <regex>\b(?:\d{1,3}\.){3}\d{1,3}\b|\b(?:(?:(?:[0-9A-Fa-f]{1,4}):){6}(?:[0-9A-Fa-f]{1,4}|(?:(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)(?:\.(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)){3})))\b</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects potential IPv4 or IPv6 addresses in the code.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential presence of IP addresses in the code, which can lead to security risks if not handled properly.</vuln_desc>
+        <developer>Developers should carefully validate and sanitize input related to IP addresses to prevent security vulnerabilities such as IP spoofing or injection attacks.</developer>
+        <reviewer>Reviewers should check for appropriate input handling and assess the implementation of input validation and sanitization techniques for IP addresses.</reviewer>
     </rule>
     <rule>
         <name>Unvalidated Redirects and Forwards</name>
         <regex>.*(?:\bredirect|forward\b).*</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects unvalidated redirects and forwards in the code.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential presence of unvalidated redirects or forwards in the code, which can lead to security risks such as phishing attacks or unauthorized access.</vuln_desc>
+        <developer>Developers should validate and sanitize all user-supplied input used for redirecting or forwarding to ensure the destination is trusted and authorized.</developer>
+        <reviewer>Reviewers should verify the implementation of proper input validation and secure handling of redirects and forwards.</reviewer>
     </rule>
     <rule>
         <name>Insecure Cryptographic Algorithms</name>
         <regex>.*(?:\bmd5\b|\bsha1\b).*</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects the usage of insecure cryptographic algorithms in the code.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential usage of insecure cryptographic algorithms (such as MD5 or SHA-1) in the code, which can lead to security vulnerabilities and compromised data.</vuln_desc>
+        <developer>Developers should use strong and modern cryptographic algorithms, such as SHA-256 or bcrypt, for secure hashing and encryption.</developer>
+        <reviewer>Reviewers should check for the usage of insecure cryptographic algorithms and recommend their replacement with more secure alternatives.</reviewer>
     </rule>
     <rule>
         <name>Misc Modules (Admin|Administrator|CAPTCHA|Login|Authentication|Authenticated|Oauth|JWT)</name>
         <regex>(^|\s)(?i)(Admin|Administrator|CAPTCHA|Login|Authentication|Authenticated|Oauth|JWT)</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects the presence of common module names related to administration, authentication, and authorization.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential presence of module names associated with administration, authentication, and authorization, which can provide attackers with valuable information about the system's functionality and increase the attack surface.</vuln_desc>
+        <developer>Developers should avoid using generic or predictable module names and ensure that access control mechanisms and authentication processes are implemented securely.</developer>
+        <reviewer>Reviewers should assess the usage of module names and verify if proper security measures are in place.</reviewer>
     </rule>
     <rule>
-        <name>Information Disclosure</name>
+        <name>Information Disclosure: Stack Trace or Error Messages</name>
         <regex>(?i)Stacktrace</regex>
-        <description>Information disclosure due to error responses.</description>
+        <rule_desc>Detects potential information disclosure due to stack traces or error messages.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential presence of stack traces or error messages in the code, which can provide valuable information to attackers and facilitate targeted attacks.</vuln_desc>
+        <developer>Developers should ensure that error handling mechanisms are properly implemented, and sensitive information is not exposed in error responses.</developer>
+        <reviewer>Reviewers should check for the presence of sensitive information in error responses and verify the implementation of proper error handling.</reviewer>
     </rule>
     <rule>
-        <name>Standard Mitigation</name>
+        <name>Standard Mitigation: CSRF, XSS, SQL Injection</name>
         <regex>\\S*(CSRF|XSS|SQLi)\\S*(\\.|\\-\\>)(ToLower|ToUpper)\\s*\\</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects standard mitigation techniques for CSRF, XSS, and SQL injection vulnerabilities.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential use of standard mitigation techniques for CSRF, XSS, and SQL injection, which may have limitations and can introduce security risks if not properly implemented.</vuln_desc>
+        <developer>Developers should consider advanced and comprehensive mitigation strategies for CSRF, XSS, and SQL injection vulnerabilities, such as using specialized security libraries and frameworks.</developer>
+        <reviewer>Reviewers should evaluate the effectiveness of the standard mitigation techniques and assess if additional measures are necessary for robust security.</reviewer>
     </rule>
     <rule>
-        <name>SELECT ORDERBY</name>
+        <name>Potential SQL Injection: SELECT Statement with ORDER BY Clause</name>
         <regex>(SELECT).*(ORDER BY).*</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects the usage of SELECT statements with ORDER BY clauses.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential use of SELECT statements with ORDER BY clauses, which can introduce the risk of SQL injection or unintended data exposure if not properly handled.</vuln_desc>
+        <developer>Developers should implement proper input validation and parameterization techniques to mitigate the risk of SQL injection when using SELECT statements with ORDER BY clauses.</developer>
+        <reviewer>Reviewers should verify the implementation of secure coding practices and assess if additional security measures are in place to prevent SQL injection.</reviewer>
     </rule>
     <rule>
-        <name>SELECT ORDERBY @InputName</name>
+        <name>Potential SQL Injection: SELECT Statement with ORDER BY and @InputName</name>
         <regex>(SELECT).*(ORDER BY).*\s(\@[a-zA-Z]+)</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects the usage of SELECT statements with ORDER BY clauses and a specified input name.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential use of SELECT statements with ORDER BY clauses and a specified input name, which can introduce the risk of SQL injection or unintended data exposure if not properly handled.</vuln_desc>
+        <developer>Developers should implement proper input validation and parameterization techniques to mitigate the risk of SQL injection when using SELECT statements with ORDER BY clauses and user-provided input names.</developer>
+        <reviewer>Reviewers should verify the implementation of secure coding practices and assess if additional security measures are in place to prevent SQL injection.</reviewer>
     </rule>
     <rule>
-        <name>URLs</name>
+        <name>Detect URLs</name>
         <regex>\bhttps?://[^\s]+</regex>
-        <!--<regex>(?i)(http|https)\:\/\/</regex>-->
-        <description>Matches URLs starting with http:// or https://</description>
+        <rule_desc>Detects URLs starting with http:// or https://</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of URLs starting with http:// or https://, which may pose security risks if not properly handled or validated.</vuln_desc>
+        <developer>Developers should implement proper URL validation and sanitization techniques to ensure the security and integrity of the application when dealing with user-provided URLs.</developer>
+        <reviewer>Reviewers should verify the implementation of secure URL handling practices and assess if additional security measures are necessary.</reviewer>
     </rule>
     <rule>
-        <name>TODO</name>
+        <name>Unvalidated Redirects and Forwards</name>
+        <regex>.*\b(redirect|forward)\b.*</regex>
+        <rule_desc>Detects potential unvalidated redirect and forward vulnerabilities.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of code patterns that may indicate vulnerabilities in unvalidated redirects and forwards, which can be exploited by attackers to redirect users to malicious websites or perform phishing attacks.</vuln_desc>
+        <developer>Developers should validate and sanitize all user-supplied input used in redirect and forward operations. They should also ensure that redirects and forwards are performed only to trusted and authorized destinations.</developer>
+        <reviewer>Reviewers should review the code for potential unvalidated redirect and forward vulnerabilities and verify if proper input validation and destination checks are implemented.</reviewer>
+    </rule>
+    <rule>
+        <name>TODO Comments</name>
         <regex>(^|\s)(?i)TODO(\s?)</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects TODO comments in the code.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of TODO comments, which might indicate unfinished or pending tasks that could lead to security vulnerabilities or incomplete code functionality.</vuln_desc>
+        <developer>Developers should regularly review and address TODO comments to ensure the completion of tasks, proper code functionality, and security of the application.</developer>
+        <reviewer>Reviewers should check for the presence of TODO comments and verify if they have been properly addressed during code reviews and inspections.</reviewer>
     </rule>
     <rule>
-        <name>RSA Private Key</name>
+        <name>Insecure Cryptographic Storage</name>
+        <regex>MD5|SHA-1|DES|RC4</regex>
+        <rule_desc>Detects the usage of insecure cryptographic algorithms or weak key lengths for storing sensitive information.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential vulnerability of using weak cryptographic algorithms or inadequate key lengths for storing sensitive information. Attackers can exploit these weaknesses to bypass encryption and gain unauthorized access to sensitive data.</vuln_desc>
+        <developer>Developers should use strong cryptographic algorithms, such as SHA-256 or AES, with appropriate key lengths for storing sensitive information. They should avoid using insecure algorithms like MD5, SHA-1, DES, or RC4, which are susceptible to cryptographic attacks. Additionally, developers should follow established cryptographic best practices and ensure the proper implementation of encryption and decryption mechanisms.</developer>
+        <reviewer>Reviewers should assess the cryptographic storage mechanisms in the codebase and verify if strong and secure algorithms are used. They should identify any usage of weak cryptographic algorithms or inadequate key lengths and recommend the adoption of stronger alternatives to ensure the confidentiality and integrity of sensitive data.</reviewer>
+    </rule>
+    <rule>
+        <name>Detect RSA Private Keys</name>
         <regex>BEGIN RSA PRIVATE KEY</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects the presence of RSA private keys.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential presence of RSA private keys, which are sensitive cryptographic assets and should be securely managed and protected.</vuln_desc>
+        <developer>Developers should ensure the proper storage, protection, and secure handling of RSA private keys, following industry best practices and cryptographic standards.</developer>
+        <reviewer>Reviewers should verify the secure handling of RSA private keys and assess if adequate measures are in place to safeguard their confidentiality and integrity.</reviewer>
     </rule>
 </root>

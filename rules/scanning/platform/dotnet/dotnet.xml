@@ -1,23 +1,67 @@
 <root>
     <rule>
-        <name>Tainted Inputs</name>
+        <name>Tainted Inputs: Request.Form</name>
+        <regex>Request\.Form</regex>
+        <rule_desc>Detects the usage of Request.Form, which can introduce tainted inputs into the code.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential vulnerability of using user input from the Request.Form collection without proper validation and sanitization. Attackers can manipulate form data to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks (SQL, OS, or LDAP), cross-site scripting (XSS), or remote code execution.</vuln_desc>
+        <developer>Developers should validate and sanitize user input received from the Request.Form collection before using it in any sensitive operations. They should implement strong input validation, ensuring that only expected and sanitized values are accepted from form submissions. Additionally, developers should be cautious about the potential risks associated with using user-supplied data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
+        <reviewer>Reviewers should ensure that proper input handling is in place for the Request.Form collection. They should verify that developers have implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related to tainted inputs. Reviewers should also assess the sensitivity of the data handled through form submissions and confirm that relevant security measures, such as output encoding and protection against injection attacks, are implemented correctly.</reviewer>
+    </rule>
+    <rule>
+        <name>Tainted Inputs: Request.QueryString</name>
         <regex>Request\.QueryString</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Identifies the usage of Request.QueryString, which may lead to tainted inputs being used in the code.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential vulnerability of using user input from the Request.QueryString collection without proper validation and sanitization. Attackers can manipulate URL query parameters to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks (SQL, OS, or LDAP), cross-site scripting (XSS), or unauthorized access to sensitive information.</vuln_desc>
+        <developer>Developers should carefully validate and sanitize user input received from the Request.QueryString collection before using it in any sensitive operations. They should implement strong input validation, ensuring that only expected and sanitized values are accepted from URL query parameters. Additionally, developers should be aware of the risks associated with using user-supplied data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
+        <reviewer>Reviewers should check for appropriate input handling for the Request.QueryString collection. They should assess if developers have implemented proper input validation and sanitization techniques to prevent security vulnerabilities related to tainted inputs. Reviewers should also verify the usage of output encoding and protection against injection attacks to ensure the secure handling of user input received through URL query parameters.</reviewer>
     </rule>
     <rule>
-        <name>Execute</name>
+        <name>SQL Injection: SqlCommand</name>
+        <regex>new SqlCommand\(.*\)</regex>
+        <rule_desc>Detects the usage of SqlCommand without parameterized queries, which can lead to SQL injection vulnerabilities.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential vulnerability of using SqlCommand with string concatenation instead of parameterized queries. Attackers can exploit SQL injection vulnerabilities by manipulating input values, potentially executing arbitrary SQL queries and gaining unauthorized access to the database.</vuln_desc>
+        <developer>Developers should use parameterized queries or stored procedures with bound parameters when constructing SQL queries. They should avoid string concatenation of user-supplied values in SQL statements to prevent SQL injection attacks. Additionally, developers should enforce strict input validation and implement appropriate security measures, such as input sanitization and output encoding, to ensure the integrity and security of database operations.</developer>
+        <reviewer>Reviewers should carefully examine the usage of SqlCommand and verify if proper parameterization techniques are employed to mitigate SQL injection vulnerabilities. They should assess the input handling and SQL query construction to ensure that user input is properly validated, sanitized, and used in a secure manner.</reviewer>
+    </rule>
+    <rule>
+        <name>Cross-Site Scripting (XSS): Response.Write</name>
+        <regex>Response\.Write\(.*\)</regex>
+        <rule_desc>Detects the usage of Response.Write without output encoding, which can lead to cross-site scripting vulnerabilities.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential vulnerability of using Response.Write without proper output encoding. Attackers can inject malicious scripts or HTML code, which may be executed by the victim's browser, leading to cross-site scripting attacks and potential theft of sensitive information.</vuln_desc>
+        <developer>Developers should use output encoding techniques, such as HTML encoding, when displaying user-generated or dynamic content in the web application. They should avoid directly outputting untrusted data without proper sanitization to prevent cross-site scripting vulnerabilities. Additionally, developers should implement content security policies and follow secure coding practices to ensure the proper handling of user input and protection against XSS attacks.</developer>
+        <reviewer>Reviewers should inspect the usage of Response.Write and verify if appropriate output encoding is applied to mitigate XSS vulnerabilities. They should assess the output handling and ensure that user-generated content or dynamic data is properly sanitized and displayed in a secure manner, preventing the execution of malicious scripts or HTML code.</reviewer>
+    </rule>
+    <rule>
+        <name>Path Traversal: Directory.GetFiles</name>
+        <regex>Directory\.GetFiles\(.*\)</regex>
+        <rule_desc>Detects the usage of Directory.GetFiles without proper input validation, which can lead to path traversal vulnerabilities.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential vulnerability of using Directory.GetFiles without validating user-supplied input. Attackers can manipulate file path inputs to traverse directories and access unauthorized files on the system, potentially exposing sensitive information or executing arbitrary code.</vuln_desc>
+        <developer>Developers should carefully validate and sanitize user input used in file path operations. They should implement input validation techniques to restrict file access to authorized directories and prevent path traversal attacks. Additionally, developers should enforce proper authorization and access control mechanisms to ensure the security and integrity of file system operations.</developer>
+        <reviewer>Reviewers should examine the usage of Directory.GetFiles and verify if proper input validation is performed to prevent path traversal vulnerabilities. They should assess the file path handling and confirm that user-supplied input is restricted to authorized directories, preventing unauthorized access to sensitive files.</reviewer>
+    </rule>
+    <rule>
+        <name>XML External Entity (XXE) Injection</name>
+        <regex>(?i)(XmlDocument\.Load|XmlDocument\.LoadXml|XmlTextReader\.Create|XmlReader\.Create|XmlSerializer\.Deserialize|XDocument\.Load|XDocument\.Parse|XElement\.Load|XElement\.Parse|XPathDocument\.Create|XPathDocument\.Load|XPathDocument\.LoadXml|XPathNavigator\.Create|XPathNavigator\.Load|XPathNavigator\.LoadXml|XslCompiledTransform\.Load|XslCompiledTransform\.LoadXml|XslTransform\.Load|XslTransform\.LoadXml|XmlSchema\.Read|XmlSchemaSet\.Add|XmlSchemaSet\.Read)</regex>
+        <description>Detects the usage of XML processing methods that can introduce XML External Entity (XXE) vulnerabilities.</description>
+        <vuln_desc>If this rule matches, it indicates the potential vulnerability of using XML processing methods without proper input validation and sanitization. Attackers can exploit XML External Entity (XXE) vulnerabilities to read arbitrary files, perform server-side request forgery (SSRF), or launch denial-of-service attacks.</vuln_desc>
+        <developer>Developers should validate and sanitize any user-provided XML data before processing it with the mentioned methods. They should consider disabling external entity resolution or implementing secure XML parsers with strict settings to prevent XXE vulnerabilities. Additionally, developers should follow secure coding practices and avoid dynamically constructing XML documents using untrusted data.</developer>
+        <reviewer>Reviewers should ensure that proper input validation and sanitization techniques are implemented for XML processing methods. They should verify that developers have taken appropriate measures to prevent XXE vulnerabilities, such as disabling external entity resolution or using secure XML parsers. Reviewers should also assess the sensitivity of the XML data processed and confirm that relevant security controls are in place.</reviewer>
+    </rule>
+    <rule>
+        <name>Command Execution</name>
         <regex>(?i)execute\s(\@|\()</regex>
-        <description>Detailed description goes here</description>
-    </rule>
-    <rule>
-        <name>Response.Write</name>
-        <regex>Response.Write\([^\)]*?(\+*|\&amp;*)\s*</regex>
-        <description>Detailed description goes here</description>
-    </rule>
-    <rule>
-        <name>URL Redirect</name>
+        <description>Detects the usage of command execution methods that can introduce security vulnerabilities.</description>
+        <vuln_desc>If this rule matches, it indicates the potential vulnerability of using command execution methods without proper input validation and sanitization. Attackers can exploit command execution vulnerabilities to execute arbitrary commands on the underlying system, leading to unauthorized access, data leakage, or system compromise.</vuln_desc>
+        <developer>Developers should carefully validate and sanitize any user-supplied input before using it in command execution methods. They should consider using safer alternatives, such as parameterized queries or prepared statements, to prevent command injection vulnerabilities. Additionally, developers should follow secure coding practices and avoid executing commands with user-controlled input directly.</developer>
+        <reviewer>Reviewers should ensure that proper input validation and sanitization techniques are implemented for command execution methods. They should verify that developers have taken appropriate measures to prevent command injection vulnerabilities, such as using parameterized queries or prepared statements. Reviewers should also assess the sensitivity of the commands executed and confirm that relevant security controls are in place.</reviewer>
+     </rule>
+     <rule>
+        <name>Open Redirect</name>
         <regex>(?i)Response\.Redirect</regex>
-        <description>Detailed description goes here</description>
+        <description>Detects the usage of open redirect methods that can introduce security vulnerabilities.</description>
+        <vuln_desc>If this rule matches, it indicates the potential vulnerability of using open redirect methods without proper validation and sanitization. Attackers can abuse open redirect vulnerabilities to trick users into visiting malicious websites or perform phishing attacks.</vuln_desc>
+        <developer>Developers should validate and sanitize any redirect URLs before using them in open redirect methods. They should ensure that the target URLs are trusted and belong to the same domain or a whitelist of allowed domains. Additionally, developers should follow secure coding practices and avoid constructing redirect URLs using untrusted or user-controlled input.</developer>
+        <reviewer>Reviewers should ensure that proper input validation and sanitization techniques are implemented for open redirect methods. They should verify that developers have taken appropriate measures to prevent open redirect vulnerabilities, such as validating and constraining redirect URLs to trusted domains. Reviewers should also assess the sensitivity of the redirect destinations and confirm that relevant security controls are in place.</reviewer>
     </rule>
         <rule>
         <name>URL Redirect</name>
