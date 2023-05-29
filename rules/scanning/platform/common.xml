@@ -145,12 +145,12 @@
         <reviewer>Reviewers should check for the presence of TODO comments and verify if they have been properly addressed during code reviews and inspections.</reviewer>
     </rule>
     <rule>
-        <name>Insecure Cryptographic Storage</name>
-        <regex>\b(MD5|SHA-1|DES|RC4)\b</regex>
-        <rule_desc>Detects the usage of insecure cryptographic algorithms or weak key lengths for storing sensitive information.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the potential vulnerability of using weak cryptographic algorithms or inadequate key lengths for storing sensitive information. Attackers can exploit these weaknesses to bypass encryption and gain unauthorized access to sensitive data.</vuln_desc>
-        <developer>Developers should use strong cryptographic algorithms, such as SHA-256 or AES, with appropriate key lengths for storing sensitive information. They should avoid using insecure algorithms like MD5, SHA-1, DES, or RC4, which are susceptible to cryptographic attacks. Additionally, developers should follow established cryptographic best practices and ensure the proper implementation of encryption and decryption mechanisms.</developer>
-        <reviewer>Reviewers should assess the cryptographic storage mechanisms in the codebase and verify if strong and secure algorithms are used. They should identify any usage of weak cryptographic algorithms or inadequate key lengths and recommend the adoption of stronger alternatives to ensure the confidentiality and integrity of sensitive data.</reviewer>
+        <name>Insecure Cryptographic Algorithm</name>
+        <regex>(?i)(MD2|MD4|MD5|SHA-1|DES|RC2|RC4|RC5|RSA)</regex>
+        <rule_desc>Detects the usage of insecure cryptographic algorithms in Java code.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential vulnerability of using insecure cryptographic algorithms. Insecure algorithms such as MD5, SHA-1, or weak encryption algorithms can be exploited by attackers to bypass security measures or recover sensitive information.</vuln_desc>
+        <developer>Developers should use secure cryptographic algorithms, such as SHA-256 or SHA-3 for hashing and AES for encryption. They should avoid using deprecated or weak algorithms that have known vulnerabilities.</developer>
+        <reviewer>Reviewers should verify that secure cryptographic algorithms are used to mitigate the risk of cryptographic vulnerabilities. They should assess if deprecated or weak algorithms are used and recommend replacing them with stronger alternatives.</reviewer>
     </rule>
     <rule>
         <name>Detect RSA Private Keys</name>
