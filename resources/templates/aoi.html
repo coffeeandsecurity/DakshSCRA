@@ -12,26 +12,27 @@
 </p>
 {% set ruleno = namespace(value=0) -%}
 {% for snippet in snippets %}
-<div class="src-path-wrap">
     {% if snippet["sources"] %}
-        {% set ruleno.value = ruleno.value + 1  %}
-        <h3 class="keyword-block">
-            {{ruleno.value}}.<span class="keyword-ht">Rule Title </span> : {{snippet["keyword"]}}
-            <hr />
-        </h3>
+        <div class="src-path-wrap">
+                {% set ruleno.value = ruleno.value + 1  %}
+                <h3 class="keyword-block">
+                    {{ruleno.value}}.<span class="keyword-ht"> Rule Title </span> : {{snippet["keyword"]}}
+                    <hr />
+                </h3>
 
-        <p><b>Rule Description</b>  : {{snippet["rule_desc"]}}</p>
-        <p><b>Issue Description</b> : {{snippet["issue_desc"]}}</p>
-        <p><b>Developer Note</b>    : {{snippet["dev_note"]}}</p>
-        <p><b>Reviewer Note</b>     : {{snippet["rev_note"]}}</p>
+                <p><b>Rule Description</b>  : {{snippet["rule_desc"]}}</p>
+                <p><b>Issue Description</b> : {{snippet["issue_desc"]}}</p>
+                <p><b>Developer Note</b>    : {{snippet["dev_note"]}}</p>
+                <p><b>Reviewer Note</b>     : {{snippet["rev_note"]}}</p>
 
-        <hr />
-        {% for source in snippet["sources"] %}
-            <div class="source-file-block">
-                - <span class="source-ht">Source File </span> : {{source["source"]}}
-            </div>
-            {{source["code"]}}
-        {% endfor %}
+                <hr />
+                {% for source in snippet["sources"] %}
+                    <div class="source-file-block">
+                        - <span class="source-ht">Source File </span> : {{source["source"]}}
+                    </div>
+                    {{source["code"]}}
+                {% endfor %}
+        </div>
     {% endif %}
-</div>
+
 {% endfor %}

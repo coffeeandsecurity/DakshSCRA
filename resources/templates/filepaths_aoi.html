@@ -6,18 +6,20 @@ examined for possible security vulnerabilities or insecure implementations.
 </p>
 {% set ruleno = namespace(value=0) -%}
 {% for filepath in filepaths_aoi %}
-<div class="src-path-wrap"> 
     {% if filepath["paths"] %}
-        {% set ruleno.value = ruleno.value + 1  %}
-        <h3 class="keyword-block">
-            {{ruleno.value}}.<span class="keyword-ht">Rule Title </span> : {{filepath["keyword"]}}
-            <hr />
-        </h3>
-        {% for path in filepath["paths"] %}
-            <div class="source-file-block">
-                - <span class="source-ht">Source File </span> : {{path}}
-            </div>
-        {% endfor %}
+
+        <div class="fpaths-aoi-wrap"> 
+                {% set ruleno.value = ruleno.value + 1  %}
+                <h3 class="keyword-block">
+                    {{ruleno.value}}.<span class="keyword-ht"> Rule Title </span> : {{filepath["keyword"]}}
+                    <hr />
+                </h3>
+                {% for path in filepath["paths"] %}
+                    <div class="source-file-block">
+                        - <span class="source-ht">Source File </span> : {{path}}
+                    </div>
+                {% endfor %}
+        </div>
     {% endif %}
-</div>
+
 {% endfor %}

@@ -131,16 +131,16 @@ def getAreasOfInterest(input_file):
 
         elif line.lstrip().startswith('Rule Description'):
             if snippet:
-                snippet["rule_desc"] = line.split(":")[1]
+                snippet["rule_desc"] = line.split(":", 1)[1]
         elif line.lstrip().startswith('Issue Description'):
              if snippet:
-                snippet["issue_desc"] = line.split(":")[1]
+                snippet["issue_desc"] = line.split(":", 1)[1]
         elif line.lstrip().startswith('Developer Note'):
              if snippet:
-                snippet["dev_note"] = line.split(":")[1]
+                snippet["dev_note"] = line.split(":", 1)[1]
         elif line.lstrip().startswith('Reviewer Note '): 
              if snippet:
-                snippet["rev_note"] = line.split(":")[1]       
+                snippet["rev_note"] = line.split(":", 1)[1]       
         else:
             if prev_snippets and len(line.strip()) != 0:
                 code = line.lstrip()
