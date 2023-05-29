@@ -29,7 +29,7 @@ def SourceParser(rule_path, targetfile, outputfile, rule_no):
 
     for r in rule:
         start_time = timer()
-        f_scanout.write(str(rule_no)+".Rule Title: " + r.find("name").text + "\n")
+        f_scanout.write(str(rule_no)+". Rule Title: " + r.find("name").text + "\n")
         rule_no += 1
         pattern = r.find("regex").text
 
@@ -50,13 +50,13 @@ def SourceParser(rule_path, targetfile, outputfile, rule_no):
         if str(settings.verbosity) == '1':
             #sys.stdout.write("\033[F")
             sys.stdout.write("\033[K")
-            print("     [-] Searching for keyword: " + r.find("name").text, end='\r')
+            print("     [-] Applying Rule: " + r.find("name").text, end='\r')
             #print("\n\tRegex Pattern: " + pattern)
             #sys.stdout.write("\033[F")
             #sys.stdout.write("\033[K")
         else:
             sys.stdout.write("\033[K")
-            print("     [-] Searching for keyword: " + r.find("name").text)
+            print("     [-] Applying Rule: " + r.find("name").text)
             #print("\tRegex Pattern: " + pattern)    
 
         for eachfilepath in f_targetfiles:  # Read each line (file path) in the file
@@ -139,7 +139,7 @@ def PathsParser(rule_path, targetfile, outputfile, rule_no):
 
             if re.findall(pattern, filepath):
                 if pFlag == False:
-                    f_scanout.write(("Pattern Name: " + pattern_name) + "\n")
+                    # f_scanout.write(("Pattern Name: " + pattern_name) + "\n")
                     f_scanout.write(("\tFile Path: " + filepath) + "\n")
                     print("     [-] Parsing File Paths!! FIX ME")
                     print("     [-] File path pattern match:" + pattern_name)

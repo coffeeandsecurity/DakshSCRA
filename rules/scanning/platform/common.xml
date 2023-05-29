@@ -48,12 +48,44 @@
         <reviewer>Reviewers should check for the usage of insecure cryptographic algorithms and recommend their replacement with more secure alternatives.</reviewer>
     </rule>
     <rule>
-        <name>Misc Modules (Admin|Administrator|CAPTCHA|Login|Authentication|Authenticated|Oauth|JWT)</name>
-        <regex>(^|\s)(?i)(Admin|Administrator|CAPTCHA|Login|Authentication|Authenticated|Oauth|JWT)</regex>
-        <rule_desc>Detects the presence of common module names related to administration, authentication, and authorization.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the potential presence of module names associated with administration, authentication, and authorization, which can provide attackers with valuable information about the system's functionality and increase the attack surface.</vuln_desc>
-        <developer>Developers should avoid using generic or predictable module names and ensure that access control mechanisms and authentication processes are implemented securely.</developer>
-        <reviewer>Reviewers should assess the usage of module names and verify if proper security measures are in place.</reviewer>
+        <name>Authentication Modules (Login|Authentication|Authenticated|Oauth|JWT)</name>
+        <regex>(^|\s)(?i)(Login|Authentication|Authenticated|Oauth|JWT)</regex>
+        <rule_desc>Detects the presence of common module names related to authentication.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential presence of module names associated with authentication, which can provide attackers with valuable information about the system's functionality and increase the attack surface.</vuln_desc>
+        <developer>Developers should ensure that the authentication processes are implemented securely.</developer>
+        <reviewer>Reviewers should verify if proper security measures are in place related to authentication.</reviewer>
+    </rule>
+    <rule>
+        <name>Authorization Modules (Authorization|Authorizing|AccessControl|RBAC|ABAC)</name>
+        <regex>(^|\s)(?i)(Authorization|Authorizing|AccessControl|RBAC|ABAC)</regex>
+        <rule_desc>Detects the presence of common module names related to authorization and access control.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential presence of module names associated with authorization and access control, which are crucial for enforcing proper permissions and protecting sensitive resources. Failure to implement secure authorization checks can result in unauthorized access and data breaches.</vuln_desc>
+        <developer>Developers should ensure that authorization mechanisms and access control policies are implemented securely to prevent unauthorized access to sensitive resources.</developer>
+        <reviewer>Reviewers should verify if proper security measures are in place related to authorization and access control to protect against potential vulnerabilities.</reviewer>
+    </rule>
+    <rule>
+        <name>Admin Modules/Section (Admin|Administrator)</name>
+        <regex>(^|\s)(?i)(Admin|Administrator|AdminFunc|AdminPage|AdminLogin)</regex>
+        <rule_desc>Detects the presence of common module names related to administration functionalities or admin login pages.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential presence of module names associated with administration functionalities or admin login pages, which can provide attackers with valuable information about the system's administration interfaces and increase the attack surface.</vuln_desc>
+        <developer>Developers should avoid using generic or predictable module names for admin functionalities or admin login pages and ensure that access control mechanisms and authentication processes are implemented securely.</developer>
+        <reviewer>Reviewers should assess the usage of module names related to administration functionalities or admin login pages and verify if proper security measures are in place to protect these critical areas of the system.</reviewer>
+    </rule>
+    <rule>
+        <name>CAPTCHA Implementation</name>
+        <regex>(^|\s)(?i)(captcha|recaptcha)(\s+(?!secure|strong|reliable|safe)\w+)*</regex>
+        <rule_desc>Detects the presence of CAPTCHA implementations that are potentially insecure or weak.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential presence of CAPTCHA implementations that may be insecure or weak, potentially allowing automated or malicious activities to bypass the CAPTCHA protection.</vuln_desc>
+        <developer>Developers should ensure that CAPTCHA implementations are secure, using reliable and robust techniques to effectively prevent automated or malicious activities. It is recommended to use well-established CAPTCHA solutions and regularly update them to stay ahead of evolving threats.</developer>
+        <reviewer>Reviewers should assess the strength and security of the CAPTCHA implementation to ensure it provides adequate protection against automated or malicious activities.</reviewer>
+    </rule>
+    <rule>
+        <name>File Upload Functionality</name>
+        <regex>(^|\s)(?i)(upload|file\s*input|file\s*upload)(\s+(?!secure|protected|restricted)\w+)*</regex>
+        <rule_desc>Detects the presence of file upload functionality.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential presence of file upload functionality that may allow unauthorized or malicious files to be uploaded, posing security risks such as arbitrary code execution or unauthorized access.</vuln_desc>
+        <developer>Developers should ensure that file upload functionality is implemented securely by validating file types, limiting file size, and applying appropriate access controls. It is recommended to use well-established file upload libraries or frameworks that have built-in security features.</developer>
+        <reviewer>Reviewers should verify the implementation of secure file upload practices, including proper file type validation, size restriction, and access control mechanisms.</reviewer>
     </rule>
     <rule>
         <name>Information Disclosure: Stack Trace or Error Messages</name>
@@ -86,14 +118,15 @@
         <vuln_desc>If this rule matches, it indicates the potential use of SELECT statements with ORDER BY clauses and a specified input name, which can introduce the risk of SQL injection or unintended data exposure if not properly handled.</vuln_desc>
         <developer>Developers should implement proper input validation and parameterization techniques to mitigate the risk of SQL injection when using SELECT statements with ORDER BY clauses and user-provided input names.</developer>
         <reviewer>Reviewers should verify the implementation of secure coding practices and assess if additional security measures are in place to prevent SQL injection.</reviewer>
-    </rule>
+    </rule>        
     <rule>
-        <name>Detect URLs</name>
-        <regex>\bhttps?://[^\s]+</regex>
-        <rule_desc>Detects URLs starting with http:// or https://</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of URLs starting with http:// or https://, which may pose security risks if not properly handled or validated.</vuln_desc>
-        <developer>Developers should implement proper URL validation and sanitization techniques to ensure the security and integrity of the application when dealing with user-provided URLs.</developer>
-        <reviewer>Reviewers should verify the implementation of secure URL handling practices and assess if additional security measures are necessary.</reviewer>
+        <name>Potentially Risky URLs</name>
+        <!--<regex>\bhttps?://[^\s]+</regex>-->
+        <regex>(?!.*DOCTYPE\shtml\sPUBLIC)\bhttps?://[^\s]+</regex>
+        <rule_desc>Detects the presence of URLs in the application that may pose security risks or indicate potential trust issues with third-party URLs.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of URLs starting with http:// or https://, which could potentially pose security risks if not properly handled or validated. These URLs might involve data exfiltration or raise concerns about trusting third-party resources without thorough validation. Developers and reviewers should investigate these URLs to ensure their purpose, legitimacy, and adherence to security practices.</vuln_desc>
+        <developer>Developers should list and carefully review all URLs used in the application. They should implement proper URL validation and sanitization techniques to ensure the security and integrity of the application when dealing with user-provided or third-party URLs. It is important to prevent any unintentional exposure of sensitive information and perform thorough taint validation on third-party URLs to mitigate trust-related security risks.</developer>
+        <reviewer>Reviewers should verify the implementation of secure URL handling practices and assess if additional security measures are necessary. They should thoroughly investigate the presence of these URLs, determine their purpose, and ensure they undergo appropriate taint validation. Reviewers should pay special attention to URLs associated with data exfiltration concerns and assess the trustworthiness of third-party URLs to mitigate potential security risks.</reviewer>
     </rule>
     <rule>
         <name>Unvalidated Redirects and Forwards</name>
@@ -113,7 +146,7 @@
     </rule>
     <rule>
         <name>Insecure Cryptographic Storage</name>
-        <regex>MD5|SHA-1|DES|RC4</regex>
+        <regex>\b(MD5|SHA-1|DES|RC4)\b</regex>
         <rule_desc>Detects the usage of insecure cryptographic algorithms or weak key lengths for storing sensitive information.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the potential vulnerability of using weak cryptographic algorithms or inadequate key lengths for storing sensitive information. Attackers can exploit these weaknesses to bypass encryption and gain unauthorized access to sensitive data.</vuln_desc>
         <developer>Developers should use strong cryptographic algorithms, such as SHA-256 or AES, with appropriate key lengths for storing sensitive information. They should avoid using insecure algorithms like MD5, SHA-1, DES, or RC4, which are susceptible to cryptographic attacks. Additionally, developers should follow established cryptographic best practices and ensure the proper implementation of encryption and decryption mechanisms.</developer>
@@ -126,5 +159,14 @@
         <vuln_desc>If this rule matches, it indicates the potential presence of RSA private keys, which are sensitive cryptographic assets and should be securely managed and protected.</vuln_desc>
         <developer>Developers should ensure the proper storage, protection, and secure handling of RSA private keys, following industry best practices and cryptographic standards.</developer>
         <reviewer>Reviewers should verify the secure handling of RSA private keys and assess if adequate measures are in place to safeguard their confidentiality and integrity.</reviewer>
+    </rule>
+    <rule>
+        <name>Backdoor Entry and Bypass Detection</name>
+        <regex>(^|\s)(?i)(backdoor|bypass|sneaky|exploit|unauthorized_access|unauthorized_entry|hidden_entry|stealthy_entry|secret_entry)</regex>
+        <!--The following keywords can be present in a backdoor code but are sometimes too noise and generates FalsePositives. Therefore excluded.(override) -->
+        <rule_desc>Detects the presence of terms related to backdoor entry, bypass, or sneaky methods to get around program restrictions.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential presence of terms associated with backdoor entry, bypass techniques, or sneaky methods to circumvent program restrictions. Such activities can lead to unauthorized access, privilege escalation, and potential security breaches.</vuln_desc>
+        <developer>Developers should implement strong access controls, proper input validation, and enforce least privilege principles to mitigate the risk of backdoor entries, bypass, or unauthorized access attempts. Regular security assessments and code reviews should also be conducted to identify and address any potential vulnerabilities.</developer>
+        <reviewer>Reviewers should assess the presence of backdoor-related terms and investigate if there are any actual backdoor entries, bypass techniques, or unauthorized access pathways in the code. They should also verify that appropriate security measures are in place to prevent such activities.</reviewer>
     </rule>
 </root>
