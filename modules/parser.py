@@ -17,7 +17,7 @@ The following parameters are expected:
     targetfile  - Target file containing enumerated filepaths withing the target source directory
     outputfile  - File for writing scan output
 '''
-def SourceParser(rule_path, targetfile, outputfile):
+def SourceParser(rule_path, targetfile, outputfile, rule_no):
     # Load rules from XML file
     xmltree = ET.parse(rule_path)
     rule = xmltree.getroot()
@@ -29,8 +29,20 @@ def SourceParser(rule_path, targetfile, outputfile):
 
     for r in rule:
         start_time = timer()
-        f_scanout.write("# Keyword Searched: " + r.find("name").text + "\n")
+        f_scanout.write(str(rule_no)+".Rule Title: " + r.find("name").text + "\n")
+        rule_no += 1
         pattern = r.find("regex").text
+
+        rule_desc = r.find("rule_desc").text
+        vuln_desc = r.find("vuln_desc").text
+        dev_note = r.find("developer").text
+        rev_note = r.find("reviewer").text
+
+        f_scanout.write(f"\n\t Rule Description  : {rule_desc}")
+        f_scanout.write(f"\n\t Issue Description : {vuln_desc}")
+        f_scanout.write(f"\n\t Developer Note    : {dev_note}")
+        f_scanout.write(f"\n\t Reviewer Note     : {rev_note} \n")
+
         if r.find('mitigation/regex'):
             pattern = r.get('mitigation/regex')
 
@@ -105,7 +117,7 @@ def SourceParser(rule_path, targetfile, outputfile):
 '''
 This routine will parse all enumerated file paths and match patterns to group them under matched category
 '''
-def PathsParser(rule_path, targetfile, outputfile):
+def PathsParser(rule_path, targetfile, outputfile, rule_no):
     # Load rules from XML file
     xmltree = ET.parse(rule_path)
     rule = xmltree.getroot()
@@ -116,7 +128,8 @@ def PathsParser(rule_path, targetfile, outputfile):
 
     for r in rule:
         start_time = timer()
-        f_scanout.write("# Keyword Searched: " + r.find("name").text + "\n")
+        f_scanout.write(str(rule_no)+".Rule Title: " + r.find("name").text + "\n")
+        rule_no += 1
         pattern = r.find("regex").text
         pattern_name = r.find("name").text
 

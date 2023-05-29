@@ -10,13 +10,22 @@
     determine the extent of the potential security risk. Any issues identified during the validation
     process should be documented.
 </p>
+{% set ruleno = namespace(value=0) -%}
 {% for snippet in snippets %}
 <div class="src-path-wrap">
     {% if snippet["sources"] %}
+        {% set ruleno.value = ruleno.value + 1  %}
         <h3 class="keyword-block">
-            [+] <span class="keyword-ht">Keyword Searched </span> : {{snippet["keyword"]}}
+            {{ruleno.value}}.<span class="keyword-ht">Rule Title </span> : {{snippet["keyword"]}}
             <hr />
         </h3>
+
+        <p><b>Rule Description</b>  : {{snippet["rule_desc"]}}</p>
+        <p><b>Issue Description</b> : {{snippet["issue_desc"]}}</p>
+        <p><b>Developer Note</b>    : {{snippet["dev_note"]}}</p>
+        <p><b>Reviewer Note</b>     : {{snippet["rev_note"]}}</p>
+
+        <hr />
         {% for source in snippet["sources"] %}
             <div class="source-file-block">
                 - <span class="source-ht">Source File </span> : {{source["source"]}}

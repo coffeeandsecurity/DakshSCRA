@@ -4,11 +4,13 @@
 predefined set of keywords. These files are typically of interest to a code reviewer, and should be
 examined for possible security vulnerabilities or insecure implementations.
 </p>
+{% set ruleno = namespace(value=0) -%}
 {% for filepath in filepaths_aoi %}
 <div class="src-path-wrap"> 
     {% if filepath["paths"] %}
+        {% set ruleno.value = ruleno.value + 1  %}
         <h3 class="keyword-block">
-            [+] <span class="keyword-ht">Keyword Searched </span> : {{filepath["keyword"]}}
+            {{ruleno.value}}.<span class="keyword-ht">Rule Title </span> : {{filepath["keyword"]}}
             <hr />
         </h3>
         {% for path in filepath["paths"] %}

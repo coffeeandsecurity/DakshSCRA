@@ -14,7 +14,7 @@ from pygments.formatters import HtmlFormatter
 from pygments_better_html import BetterHtmlFormatter
 import traceback
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from weasyprint import HTML, CSS
 import time
 
@@ -29,7 +29,12 @@ def genPdfReport(html_path, pdf_path):
         print(f"    [-] Started at       : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         HTML(html_path).write_pdf(pdf_path, stylesheets=[CSS(settings.staticPdfCssFpath)])
         print(f"    [-] Completed at     : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"    [-] Total time taken : {time.strftime('%HHr:%MMin:%Ss', time.gmtime(time.time() - started_at))}")
+
+        hours, rem = divmod(time.time() - started_at, 3600)
+        minutes, seconds = divmod(rem, 60)
+        seconds, milliseconds = str(seconds).split('.')
+        print("    [-] Total time taken : {:0>2}Hr:{:0>2}Min:{:0>2}s:{}ms".format(int(hours),int(minutes),seconds, milliseconds[:3]))
+
         return pdf_path
     except Exception as e:
         print(e)
@@ -38,10 +43,6 @@ def genPdfReport(html_path, pdf_path):
     return pdf_path
 
 def genHtmlReport(summary, snippets, filepaths, filepaths_aoi, report_output_path):
-    started_at = time.time()
-    print(f"[*] HTML report generation")
-    print(f"    [-] Started at       : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-
     # Config
     with open(settings.projectConfig, "r") as stream:
         try:
@@ -66,7 +67,7 @@ def genHtmlReport(summary, snippets, filepaths, filepaths_aoi, report_output_pat
     output_text = template.render(
         reportTitle=config["title"],
         reportSubTitle=config["subtitle"] if config["subtitle"].lower() != 'none' and config["subtitle"] != "" else None,
-        reportDate=datetime.now().strftime("%b %m, %Y"),
+        reportDate=datetime.now().strftime("%b %d, %Y"),
         summary=summary,
         snippets=snippets,
         filepaths_aoi=filepaths_aoi,
@@ -78,9 +79,6 @@ def genHtmlReport(summary, snippets, filepaths, filepaths_aoi, report_output_pat
     html_file = open(html_path, 'w')
     html_file.write(output_text)
     html_file.close()
-    print(f"    [-] Completed at     : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"    [-] Total time taken : {time.strftime('%HHr:%MMin:%Ss', time.gmtime(time.time() - started_at))}")
-
     return html_path,output_text
 
 def _highLightCode(statements):
@@ -92,12 +90,14 @@ def _highLightCode(statements):
 def getAreasOfInterest(input_file):
     # Read text file
     f = open(input_file)
+
+    snippet = None
     snippets = []
     prev_snippets = None
     for line in f.readlines():
-        if search("Keyword Searched", line):
-
-            keyword = line.replace("# Keyword Searched:", "")
+        if search("Rule Title", line):
+            keyword = re.sub("^.+Rule Title:", "", line)
+            
             keyword = html.escape(keyword)
 
             if prev_snippets:                
@@ -106,6 +106,10 @@ def getAreasOfInterest(input_file):
 
             snippet = {
                 "keyword": keyword,
+                "rule_desc": "",
+                "issue_dec": "",
+                "dev_note": "",
+                "rev_note": "",
                 "sources": [],
             }
 
@@ -124,6 +128,19 @@ def getAreasOfInterest(input_file):
                 "source": source,
                 "statements": []
             }
+
+        elif line.lstrip().startswith('Rule Description'):
+            if snippet:
+                snippet["rule_desc"] = line.split(":")[1]
+        elif line.lstrip().startswith('Issue Description'):
+             if snippet:
+                snippet["issue_desc"] = line.split(":")[1]
+        elif line.lstrip().startswith('Developer Note'):
+             if snippet:
+                snippet["dev_note"] = line.split(":")[1]
+        elif line.lstrip().startswith('Reviewer Note '): 
+             if snippet:
+                snippet["rev_note"] = line.split(":")[1]       
         else:
             if prev_snippets and len(line.strip()) != 0:
                 code = line.lstrip()
@@ -138,8 +155,8 @@ def getFilePathsOfAOI(input_file):
     path_obj = None
 
     for line in f.readlines():
-        if search("Keyword Searched", line):
-            keyword = line.replace("# Keyword Searched:", "")
+        if search("Rule Title", line):
+            keyword = re.sub("^.+Rule Title:", "", line)
             line = html.escape(keyword)
 
             path_obj = {
@@ -173,6 +190,10 @@ def getSummary(input_file):
     return content
 
 def GenReport():
+    started_at = time.time()
+    print(f"[*] HTML report generation")
+    print(f"    [-] Started at       : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
     snippets = getAreasOfInterest(settings.outputAoI)
     filepaths_aoi = getFilePathsOfAOI(settings.outputAoI_Fpaths)
     filepaths = getFilePaths(settings.output_Fpaths)
@@ -182,6 +203,14 @@ def GenReport():
     pdf_report_path = settings.pdfreport_Fpath
 
     htmlfile, output_html = genHtmlReport(summary, snippets, filepaths, filepaths_aoi, html_report_output_path)
+    
+    print(f"    [-] Completed at     : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    
+    hours, rem = divmod(time.time() - started_at, 3600)
+    minutes, seconds = divmod(rem, 60)
+    seconds, milliseconds = str(seconds).split('.')
+    print("    [-] Total time taken : {:0>2}Hr:{:0>2}Min:{:0>2}s:{}ms".format(int(hours),int(minutes),seconds, milliseconds[:3]))
+
     if not htmlfile:
         return None
 
