@@ -15,35 +15,45 @@
         <ftypes>*.java, *.jsp</ftypes>
     </rule>
     <rule>
+        <platform>javascript</platform>
+        <path>/javascript/alljs.xml</path>
+        <ftypes>*.js, *.ts, *.vue</ftypes>
+    </rule>
+    <rule>
+        <platform>angular</platform>
+        <path>/javascript/angular.xml</path>
+        <ftypes>*.js, *.ts, *.html, *.json</ftypes>
+    </rule>
+    <rule>
+        <platform>nodejs</platform>
+        <path>/javascript/nodejs.xml</path>
+        <ftypes>*.js, *.ts, *.html, *.json, *.ejs, *.yaml, *.yml</ftypes>
+    </rule>
+    <rule>
         <platform>python</platform>
         <path>/python/python.xml</path>
         <ftypes>*.py, *.conf, *.ini, *.txt, *.config, *.xml</ftypes>
     </rule>
     <rule>
         <platform>ruby</platform>
-        <path>/ruby/ruby.xml</path>
+        <path>/ruby/rubyrails.xml</path>
         <ftypes>*.rb</ftypes>
     </rule>
-    <rule>
-        <platform>javascript</platform>
-        <path>/javascript/javascript.xml</path>
-        <ftypes>*.js, *.ts, *.vue</ftypes>
-    </rule>
-    <rule>
+    <!--<rule>
         <platform>golang</platform>
         <path>/golang/golang.xml</path>
         <ftypes>*.go, *.mod, *.sum</ftypes>
-    </rule>
+    </rule>-->
     <rule>
         <platform>rust</platform>
         <path>/rust/rust.xml</path>
         <ftypes>*.rs, *.toml, *.env</ftypes>
     </rule>
-    <rule>
+    <!--<rule>
         <platform>carbon</platform>
         <path>/carbon/carbon.xml</path>
         <ftypes>*.carbon</ftypes>
-    </rule>
+    </rule>-->
     <rule>
         <platform>database</platform>
         <path>/database/database.xml</path>
