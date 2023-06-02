@@ -8,7 +8,6 @@ import modules.settings as settings
 import modules.misclib as mlib
 
 
-
 '''
 This routine will search patterns loaded from the XML file and parse through all source files.
 
@@ -81,6 +80,10 @@ def SourceParser(rule_path, targetfile, outputfile, rule_no):
                 fpath = False
                 for line in fo_target:
                     linecount += 1
+
+                    if len(line) > 500:     # Setting maximum input length of the string read from the file
+                        continue  # Skip long lines
+
                     # if re.findall(keyword, line):
                     if re.findall(pattern, line):
                         line = (line[:75] + '..') if len(line) > 300 else line

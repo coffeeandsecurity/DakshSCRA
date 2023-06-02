@@ -42,72 +42,114 @@
     <rule>
         <name>XML External Entity (XXE) Injection</name>
         <regex>(?i)(XmlDocument\.Load|XmlDocument\.LoadXml|XmlTextReader\.Create|XmlReader\.Create|XmlSerializer\.Deserialize|XDocument\.Load|XDocument\.Parse|XElement\.Load|XElement\.Parse|XPathDocument\.Create|XPathDocument\.Load|XPathDocument\.LoadXml|XPathNavigator\.Create|XPathNavigator\.Load|XPathNavigator\.LoadXml|XslCompiledTransform\.Load|XslCompiledTransform\.LoadXml|XslTransform\.Load|XslTransform\.LoadXml|XmlSchema\.Read|XmlSchemaSet\.Add|XmlSchemaSet\.Read)</regex>
-        <description>Detects the usage of XML processing methods that can introduce XML External Entity (XXE) vulnerabilities.</description>
+        <rule_desc>Detects the usage of XML processing methods in .NET that can introduce XML External Entity (XXE) vulnerabilities.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the potential vulnerability of using XML processing methods without proper input validation and sanitization. Attackers can exploit XML External Entity (XXE) vulnerabilities to read arbitrary files, perform server-side request forgery (SSRF), or launch denial-of-service attacks.</vuln_desc>
-        <developer>Developers should validate and sanitize any user-provided XML data before processing it with the mentioned methods. They should consider disabling external entity resolution or implementing secure XML parsers with strict settings to prevent XXE vulnerabilities. Additionally, developers should follow secure coding practices and avoid dynamically constructing XML documents using untrusted data.</developer>
-        <reviewer>Reviewers should ensure that proper input validation and sanitization techniques are implemented for XML processing methods. They should verify that developers have taken appropriate measures to prevent XXE vulnerabilities, such as disabling external entity resolution or using secure XML parsers. Reviewers should also assess the sensitivity of the XML data processed and confirm that relevant security controls are in place.</reviewer>
+        <developer>Developers should validate and sanitize any user-provided XML data before processing it with the mentioned methods in .NET. They should consider disabling external entity resolution or implementing secure XML parsers with strict settings to prevent XXE vulnerabilities. Additionally, developers should follow secure coding practices and avoid dynamically constructing XML documents using untrusted data.</developer>
+        <reviewer>Reviewers should ensure that proper input validation and sanitization techniques are implemented for XML processing methods in .NET. They should verify that developers have taken appropriate measures to prevent XXE vulnerabilities, such as disabling external entity resolution or using secure XML parsers. Reviewers should also assess the sensitivity of the XML data processed and confirm that relevant security controls are in place.</reviewer>
     </rule>
     <rule>
-        <name>Command Execution</name>
+        <name>Command Execution: Unsafe Methods</name>
         <regex>(?i)execute\s(\@|\()</regex>
-        <description>Detects the usage of command execution methods that can introduce security vulnerabilities.</description>
+        <rule_desc>Detects the usage of command execution methods that can introduce security vulnerabilities.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the potential vulnerability of using command execution methods without proper input validation and sanitization. Attackers can exploit command execution vulnerabilities to execute arbitrary commands on the underlying system, leading to unauthorized access, data leakage, or system compromise.</vuln_desc>
         <developer>Developers should carefully validate and sanitize any user-supplied input before using it in command execution methods. They should consider using safer alternatives, such as parameterized queries or prepared statements, to prevent command injection vulnerabilities. Additionally, developers should follow secure coding practices and avoid executing commands with user-controlled input directly.</developer>
         <reviewer>Reviewers should ensure that proper input validation and sanitization techniques are implemented for command execution methods. They should verify that developers have taken appropriate measures to prevent command injection vulnerabilities, such as using parameterized queries or prepared statements. Reviewers should also assess the sensitivity of the commands executed and confirm that relevant security controls are in place.</reviewer>
-     </rule>
-     <rule>
-        <name>Open Redirect</name>
+    </rule>
+    <rule>
+        <name>Open Redirect: Unsafe Methods</name>
         <regex>(?i)Response\.Redirect</regex>
-        <description>Detects the usage of open redirect methods that can introduce security vulnerabilities.</description>
+        <rule_desc>Detects the usage of open redirect methods that can introduce security vulnerabilities.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the potential vulnerability of using open redirect methods without proper validation and sanitization. Attackers can abuse open redirect vulnerabilities to trick users into visiting malicious websites or perform phishing attacks.</vuln_desc>
         <developer>Developers should validate and sanitize any redirect URLs before using them in open redirect methods. They should ensure that the target URLs are trusted and belong to the same domain or a whitelist of allowed domains. Additionally, developers should follow secure coding practices and avoid constructing redirect URLs using untrusted or user-controlled input.</developer>
         <reviewer>Reviewers should ensure that proper input validation and sanitization techniques are implemented for open redirect methods. They should verify that developers have taken appropriate measures to prevent open redirect vulnerabilities, such as validating and constraining redirect URLs to trusted domains. Reviewers should also assess the sensitivity of the redirect destinations and confirm that relevant security controls are in place.</reviewer>
     </rule>
-        <rule>
-        <name>URL Redirect</name>
-        <regex>(?i)Response\.Redirect</regex>
-        <regex>(?i)Response\\.Redirect\\(\\s*\\\"\\S+\\\"\\s*\\)</regex>
-        <description>Detailed description goes here</description>
-    </rule>
     <rule>
-        <name>Information Disclosure</name>
+        <name>Information Disclosure: Stack Trace</name>
         <regex>(?i)Response\.Write\s*\(.*StackTrace</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects the usage of Response.Write method that may inadvertently expose stack trace information.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential vulnerability of using Response.Write method that may inadvertently expose stack trace information. Stack trace details can provide valuable information to attackers, aiding them in identifying potential vulnerabilities or weaknesses in the application.</vuln_desc>
+        <developer>Developers should avoid using Response.Write method to output stack trace information in a production environment. Stack traces should only be displayed for debugging purposes and should be properly handled and logged in an appropriate manner. Instead of using Response.Write, developers should consider using custom error pages or appropriate logging mechanisms to capture and handle error information securely.</developer>
+        <reviewer>Reviewers should ensure that Response.Write method is not used to output stack trace information in a production environment. They should verify that developers have implemented proper error handling and logging mechanisms to prevent the inadvertent exposure of sensitive information. Reviewers should also assess the sensitivity of the information exposed and confirm that relevant security controls are in place.</reviewer>
     </rule>
     <rule>
-        <name>API Route Prefix</name>
+        <name>API Route Prefix: Improper Usage</name>
         <regex>\[RoutePrefix\("</regex>
-        <description>Find instance of -- [RoutePrefix("...")] --</description>
+        <rule_desc>Detects the usage of [RoutePrefix] attribute in an API controller, potentially indicating improper route prefix configuration.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential vulnerability of using [RoutePrefix] attribute in an API controller without proper configuration. Improper usage of route prefixes can lead to incorrect or insecure routing, potentially exposing sensitive APIs or introducing functional errors.</vuln_desc>
+        <developer>Developers should carefully configure [RoutePrefix] attribute in API controllers to ensure proper route prefixing. They should follow established routing conventions and ensure that route prefixes are correctly applied, avoiding conflicts and potential security risks. Additionally, developers should thoroughly test the routing configuration to ensure expected behavior and avoid functional errors.</developer>
+        <reviewer>Reviewers should check for the presence of [RoutePrefix] attribute in API controllers and assess the configuration for proper route prefixing. They should verify that developers have followed established routing conventions and consider any potential conflicts or security risks. Reviewers should also ensure that the routing configuration has been thoroughly tested to avoid functional errors.</reviewer>
     </rule>
     <rule>
-        <name>API Endpoints</name>
-        <regex>^.*(?i)(\"\/.*{)</regex>
-        <description>Find instance of -- ["/something/{method}"] --</description>
+        <name>Server Certificate Validation: Insecure Configuration</name>
+        <regex>ServerCertificateValidationCallback\s*?\(.*?(\=|false|true)</regex>
+        <rule_desc>Detects insecure configuration of the ServerCertificateValidationCallback, which may lead to improper validation of server certificates.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential vulnerability of insecurely configuring the ServerCertificateValidationCallback, which can result in improper validation of server certificates. Attackers can exploit this to perform man-in-the-middle attacks or bypass security measures that rely on proper certificate validation.</vuln_desc>
+        <developer>Developers should ensure that the ServerCertificateValidationCallback is securely configured to properly validate server certificates. They should follow best practices for certificate validation, including verifying the certificate's chain of trust, checking for revocation status, and validating the server's hostname. Additionally, developers should consider using well-established libraries and frameworks that provide robust certificate validation mechanisms.</developer>
+        <reviewer>Reviewers should check for the presence of insecure configuration of the ServerCertificateValidationCallback. They should assess if developers have followed best practices for certificate validation, such as verifying the certificate's chain of trust, checking for revocation status, and validating the server's hostname. Reviewers should also verify the usage of well-established libraries or frameworks that provide robust certificate validation mechanisms.</reviewer>
     </rule>
     <rule>
-        <name>Platform Specific</name>
-        <regex>ServerCertificateValidationCallback\s*?\=</regex>
-        <regex>%@\s?Page\s?.*\s?validateRequest\s?=\s?(\'|\")false(\'|\")</regex>
+        <name>Request Validation: Disabled Configuration</name>
+        <regex>%@\s?Page\s?.*\s?ValidateRequest\s?=\s?(\'|\")false(\'|\")</regex>
+        <rule_desc>Detects the disabled configuration of request validation in ASP.NET Web Forms, which may lead to security vulnerabilities.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential vulnerability of having request validation disabled in ASP.NET Web Forms. Disabling request validation can allow attackers to inject malicious content, such as HTML, JavaScript, or SQL, leading to cross-site scripting (XSS) or other security vulnerabilities.</vuln_desc>
+        <developer>Developers should ensure that request validation is enabled in ASP.NET Web Forms to protect against common web application vulnerabilities. They should avoid disabling request validation unless there is a specific requirement, in which case, proper input validation and output encoding must be implemented to mitigate the associated risks.</developer>
+        <reviewer>Reviewers should check for the presence of disabled request validation in ASP.NET Web Forms pages. They should verify if developers have provided a valid reason for disabling request validation and have implemented appropriate input validation and output encoding techniques to prevent security vulnerabilities related to user input.</reviewer>
+    </rule>
+    <rule>
+        <name>Untrusted URL Concatenation: Append Method</name>
         <regex>\.Append\(.*HttpContext\.Current\.Request\.Url</regex>
+        <rule_desc>Detects the usage of untrusted URL concatenation using the Append method, which may lead to security vulnerabilities.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential vulnerability of using untrusted URL concatenation with the Append method. Attackers can manipulate the URL concatenation process to inject malicious or unexpected content, leading to security vulnerabilities such as open redirect, cross-site scripting (XSS), or other injection attacks.</vuln_desc>
+        <developer>Developers should avoid directly concatenating untrusted user input or URL components using the Append method. Instead, they should use appropriate URL encoding and validation techniques, such as the Uri.EscapeDataString method, to ensure that the resulting URL is properly formed and secure. Developers should also implement input validation and output encoding to prevent injection attacks and other security vulnerabilities.</developer>
+        <reviewer>Reviewers should check for the presence of untrusted URL concatenation using the Append method. They should verify if developers have implemented proper URL encoding, validation, and input/output handling techniques to prevent security vulnerabilities. Reviewers should also assess the sensitivity of the URLs being concatenated and confirm the presence of appropriate security controls.</reviewer>
+    </rule>
+    <rule>
+        <name>Untrusted Data Output: HttpContext.Current.Request</name>
         <regex>\.(Append|WriteLine)\([^\)]*?HttpContext\.Current\.Request\.(Url|Form|QueryString)</regex>
+        <rule_desc>Detects the usage of untrusted data output with HttpContext.Current.Request, which may lead to security vulnerabilities.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential vulnerability of using untrusted data output with HttpContext.Current.Request. Attackers can manipulate the data output to inject malicious or unexpected content, leading to security vulnerabilities such as cross-site scripting (XSS), injection attacks, or sensitive information exposure.</vuln_desc>
+        <developer>Developers should ensure that any data output involving HttpContext.Current.Request is properly validated, sanitized, and encoded. They should avoid directly outputting untrusted data without appropriate measures in place to mitigate security risks. Developers should implement input validation, output encoding, and secure data handling practices to prevent vulnerabilities.</developer>
+        <reviewer>Reviewers should check for the presence of untrusted data output involving HttpContext.Current.Request. They should verify if developers have implemented proper input validation, output encoding, and secure data handling techniques to prevent security vulnerabilities. Reviewers should also assess the sensitivity of the output data and confirm the presence of appropriate security controls.</reviewer>
+    </rule>
+    <rule>
+        <name>Untrusted Data Output: HttpContext.Current.Request.Form</name>
         <regex>\.Append\(.*HttpContext\.Current\.Request\.Form</regex>
+        <rule_desc>Detects the usage of untrusted data output with HttpContext.Current.Request.Form, which may lead to security vulnerabilities.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential vulnerability of using untrusted data output with HttpContext.Current.Request.Form. Attackers can manipulate the data output to inject malicious or unexpected content, leading to security vulnerabilities such as cross-site scripting (XSS), injection attacks, or sensitive information exposure.</vuln_desc>
+        <developer>Developers should ensure that any data output involving HttpContext.Current.Request.Form is properly validated, sanitized, and encoded. They should avoid directly outputting untrusted data without appropriate measures in place to mitigate security risks. Developers should implement input validation, output encoding, and secure data handling practices to prevent vulnerabilities.</developer>
+        <reviewer>Reviewers should check for the presence of untrusted data output involving HttpContext.Current.Request.Form. They should verify if developers have implemented proper input validation, output encoding, and secure data handling techniques to prevent security vulnerabilities. Reviewers should also assess the sensitivity of the output data and confirm the presence of appropriate security controls.</reviewer>
+    </rule>
+    <rule>
+        <name>Untrusted Data Output: HttpContext.Current.Request.QueryString</name>
         <regex>\.Append\(.*HttpContext\.Current\.Request\.QueryString</regex>
-        <regex>\.WriteLine\(.*HttpContext\.Current\.Request\.Url</regex>
-        <regex>\.WriteLine\(.*HttpContext\.Current\.Request\.Form</regex>
-        <regex>\.WriteLine\(.*HttpContext\.Current\.Request\.QueryString</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects the usage of untrusted data output with HttpContext.Current.Request.QueryString, which may lead to security vulnerabilities.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential vulnerability of using untrusted data output with HttpContext.Current.Request.QueryString. Attackers can manipulate the data output to inject malicious or unexpected content, leading to security vulnerabilities such as cross-site scripting (XSS), injection attacks, or sensitive information exposure.</vuln_desc>
+        <developer>Developers should ensure that any data output involving HttpContext.Current.Request.QueryString is properly validated, sanitized, and encoded. They should avoid directly outputting untrusted data without appropriate measures in place to mitigate security risks. Developers should implement input validation, output encoding, and secure data handling practices to prevent vulnerabilities.</developer>
+        <reviewer>Reviewers should check for the presence of untrusted data output involving HttpContext.Current.Request.QueryString. They should verify if developers have implemented proper input validation, output encoding, and secure data handling techniques to prevent security vulnerabilities. Reviewers should also assess the sensitivity of the output data and confirm the presence of appropriate security controls.</reviewer>
     </rule>
     <rule>
-        <name>XSS Mitigagtion</name>
-        <regex>\@inject\.JavaScriptEncoder\.encoder;</regex>
-        <reference>https://docs.microsoft.com/en-us/aspnet/core/security/cross-site-scripting</reference>
-        <description>Best-Practice In Use for XSS: HTML Encoding using Razor</description>
+        <name>Untrusted Data Output: HttpContext.Current.Request</name>
+        <regex>\.WriteLine\(.*HttpContext\.Current\.Request\.Url|\.WriteLine\(.*HttpContext\.Current\.Request\.Form|\.WriteLine\(.*HttpContext\.Current\.Request\.QueryString</regex>
+        <rule_desc>Detects the usage of untrusted data output with HttpContext.Current.Request, which may lead to security vulnerabilities.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential vulnerability of using untrusted data output with HttpContext.Current.Request. Attackers can manipulate the data output to inject malicious or unexpected content, leading to security vulnerabilities such as cross-site scripting (XSS), injection attacks, or sensitive information exposure.</vuln_desc>
+        <developer>Developers should ensure that any data output involving HttpContext.Current.Request is properly validated, sanitized, and encoded. They should avoid directly outputting untrusted data without appropriate measures in place to mitigate security risks. Developers should implement input validation, output encoding, and secure data handling practices to prevent vulnerabilities.</developer>
+        <reviewer>Reviewers should check for the presence of untrusted data output involving HttpContext.Current.Request. They should verify if developers have implemented proper input validation, output encoding, and secure data handling techniques to prevent security vulnerabilities. Reviewers should also assess the sensitivity of the output data and confirm the presence of appropriate security controls.</reviewer>
     </rule>
     <rule>
-        <name>CORS Mitigation</name>
-        <regex>EnableCors("AllowSpecificOrigin")</regex>
-        <reference>https://docs.microsoft.com/en-us/aspnet/core/security/cors</reference>
-        <description>Verify whether CORS is enabled</description>
+        <name>XSS Mitigation: HTML Encoding using Razor</name>
+        <regex>\@Html\.Raw\(.*\)</regex>
+        <rule_desc>Detects the usage of HTML encoding using Razor to mitigate XSS vulnerabilities.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates that HTML encoding using Razor's `Html.Raw` method is being used to mitigate XSS vulnerabilities. This is a recommended best practice to prevent the execution of untrusted user input as HTML or script code.</vuln_desc>
+        <developer>Developers should ensure that HTML encoding using Razor's `Html.Raw` method is implemented to mitigate XSS vulnerabilities. By properly encoding user-generated or dynamic content before rendering it in HTML templates, the risk of injecting malicious code can be significantly reduced.</developer>
+        <reviewer>Reviewers should check for the presence of HTML encoding using Razor's `Html.Raw` method as a mitigation against XSS vulnerabilities. They should verify if developers have consistently applied encoding to user-generated or dynamic content and assess the effectiveness of this mitigation in preventing the injection of malicious code. Reviewers should also ensure that secure coding practices are followed in conjunction with HTML encoding to provide comprehensive protection against XSS attacks.</reviewer>
+    </rule>
+    <rule>
+        <name>CORS Mitigation: Allow Specific Origins</name>
+        <regex>\[EnableCors\s*\(\s*\"AllowSpecificOrigins\"\s*\)\]</regex>
+        <rule_desc>Detects the usage of specific origin-based CORS configuration.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential vulnerability of using a specific origin-based CORS configuration. Allowing specific origins without careful consideration can lead to insecure Cross-Origin Resource Sharing (CORS) settings and potential security vulnerabilities.</vuln_desc>
+        <developer>Developers should review and validate the specific origins allowed in CORS configurations. They should ensure that only trusted origins are explicitly permitted to access resources, and consider using other CORS-related security measures such as handling preflight requests, setting appropriate response headers, and implementing access controls based on authentication and authorization.</developer>
+        <reviewer>Reviewers should verify if the CORS configuration restricts resource access to specific origins in a secure and controlled manner. They should ensure that the list of allowed origins is reviewed and approved, and that additional CORS-related security measures are in place to prevent unauthorized cross-origin requests and protect sensitive data.</reviewer>
     </rule>
 </root>
 
