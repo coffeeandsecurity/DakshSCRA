@@ -7,5 +7,51 @@
         <developer>Developers should update to a more recent version of Express and use alternative middleware options like express.json() or express.urlencoded() instead of bodyParser(). It is important to ensure that the application handles file uploads and temporary files securely, following best practices such as proper file validation, secure file storage, and limiting file access permissions.</developer>
         <reviewer>Reviewers should verify that developers have addressed the tempfile creation issue in Express by updating to a newer version and using safer alternatives to bodyParser(). They should also assess the implementation of file handling and storage in the application to ensure that best practices are followed, minimizing the risk of file-related vulnerabilities.</reviewer>
     </rule>
+    <rule>
+        <name>Insecure Direct Object References (IDOR)</name>
+        <regex>req\.(get|post|put|delete)\('\.{2}\/api\/[a-zA-Z0-9_]*'\)</regex>
+        <rule_desc>Detects instances where Node.js code directly references sensitive backend resources or object identifiers.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the potential vulnerability of insecure direct object references. Attackers can manipulate the identifiers or endpoints in the Node.js code to access unauthorized resources or perform unauthorized actions.</vuln_desc>
+        <developer>Developers should implement proper authorization checks on the server-side to prevent unauthorized access to sensitive resources. They should avoid directly exposing sensitive identifiers or backend endpoints in Node.js code and instead use secure mechanisms to fetch and validate data from the server.</developer>
+        <reviewer>Reviewers should ensure that appropriate authorization checks are implemented on the server-side and that sensitive resources are properly protected. They should verify that the Node.js code does not directly expose sensitive identifiers or backend endpoints and that proper access controls and validation mechanisms are in place.</reviewer>
+    </rule>
+    <rule>
+        <name>Missing Output Escaping</name>
+        <regex>res\.send|res\.render|res\.write|res\.end</regex>
+        <rule_desc>Detects instances where response methods are used to send content without proper output escaping.</rule_desc>
+        <vuln_desc>If output escaping is not performed when sending content to users, it can result in cross-site scripting (XSS) vulnerabilities. Attackers can inject malicious scripts that get executed in the context of the user's browser, leading to unauthorized actions and data theft.</vuln_desc>
+        <developer>Developers should ensure that output escaping is performed when sending content to users. This can be achieved by using appropriate escaping mechanisms or libraries, such as `escape-html` or `node-esapi`. All user-generated or dynamic content displayed in the response should be properly escaped to prevent XSS vulnerabilities.</developer>
+        <reviewer>Reviewers should verify that the application correctly performs output escaping when sending content to users. They should check for instances where response methods like `res.send`, `res.render`, `res.write`, or `res.end` are used without proper output escaping. By confirming the presence of appropriate escaping mechanisms, they can ensure protection against XSS vulnerabilities.</reviewer>
+    </rule>
+    <rule>
+        <name>DNS Rebinding (CWE-346)</name>
+        <regex>--inspect</regex>
+        <rule_desc>Detects instances where Node.js applications are running with the debugging inspector enabled using the --inspect switch, making them vulnerable to DNS rebinding attacks.</rule_desc>
+        <vuln_desc>Enabling the debugging inspector with the --inspect switch can expose Node.js applications to DNS rebinding attacks. Attackers can temporarily control the origin of requests, making them appear as if they originate from a local IP address, bypassing the same-origin policy. This can lead to unauthorized access to sensitive information or compromise the application's security.</vuln_desc>
+        <developer>Developers should avoid running Node.js applications with the debugging inspector enabled in production environments. If the debugging inspector is needed, it should be disabled on the SIGUSR1 signal by attaching a process.on('SIGUSR1', ...) listener. By following this practice, the risk of DNS rebinding attacks can be mitigated.</developer>
+        <reviewer>Reviewers should ensure that Node.js applications do not have the debugging inspector enabled in production environments. They should check for instances where the --inspect switch is used. If found, reviewers should verify that proper mitigation measures, such as disabling the inspector on the SIGUSR1 signal, are implemented to protect against DNS rebinding attacks.</reviewer>
+    </rule>
+    <rule>
+        <name>HTTP Request Smuggling (CWE-444)</name>
+        <regex>insecureHTTPParser</regex>
+        <rule_desc>Detects instances where Node.js applications may be vulnerable to HTTP Request Smuggling attacks due to the use of insecure HTTP parsers.</rule_desc>
+        <vuln_desc>HTTP Request Smuggling is an attack that exploits inconsistencies in how HTTP requests are interpreted by different servers in a chain. It involves a front-end server (usually a proxy) and a Node.js application. If the front-end and Node.js interpret ambiguous HTTP requests differently, an attacker can send a malicious message that bypasses the proxy and reaches the application, potentially leading to unauthorized access or other security compromises.</vuln_desc>
+        <developer>Developers should avoid using the insecureHTTPParser option when creating an HTTP server in Node.js. By not using this insecure option, the risk of HTTP Request Smuggling vulnerabilities can be mitigated.</developer>
+        <reviewer>Reviewers should verify that Node.js applications do not use the insecureHTTPParser option when creating an HTTP server. This check helps ensure that the application is not susceptible to HTTP Request Smuggling attacks due to the use of insecure HTTP parsers.</reviewer>
+    </rule>
+    <!-- Mitigation Rules -->
+    <!--
+        If a mitigation is identified, ensure that it is implemented securely to effectively mitigate the risks. Also, verify if the mitigation is consistently applied in relevant areas throughout the application.
+
+        If a mitigation is not detected, examine whether there are pertinent sections in the code where the mitigation is not implemented.
+    -->
+    <rule>
+        <name>Mitigation: Information Exposure through Timing Attacks (CWE-208)</name>
+        <regex>timingSafeEqual|scrypt|crypto</regex>
+        <rule_desc>Detects instances where Node.js applications may be vulnerable to Information Exposure through Timing Attacks. This attack allows an attacker to learn potentially sensitive information by measuring the response time of the application. It is not specific to Node.js and can target almost all runtimes. The rule also checks if relevant mitigations are securely implemented and consistently used across the application.</rule_desc>
+        <vuln_desc>Information Exposure through Timing Attacks occurs when an attacker can deduce sensitive information by measuring the timing of certain operations, such as response times. For example, if a timing-sensitive operation is performed on a secret, such as password comparison, an attacker can infer the length and value of the secret by comparing the response times of multiple requests. This attack can lead to unauthorized access or leakage of sensitive data.</vuln_desc>
+        <developer>Developers should use the crypto API's timingSafeEqual function to compare sensitive values using a constant-time algorithm. For password comparison, the scrypt function available in the native crypto module can be used. Avoid using secrets in variable-time operations, such as branching on secrets or using secrets as memory indices, especially in scenarios where attackers could be co-located on the same infrastructure. Writing constant-time code in JavaScript can be challenging due to the JIT. For crypto applications, prefer using the built-in crypto APIs or WebAssembly for algorithms not implemented natively. If a mitigation is implemented, developers should ensure its secure implementation and consistent usage throughout the application where relevant.</developer>
+        <reviewer>Reviewers should verify that Node.js applications utilize the timingSafeEqual function from the crypto API for comparing sensitive values in a constant-time manner. They should also check if the scrypt function from the native crypto module is used for password comparison. Reviewers should ensure that secrets are not used in variable-time operations and that the recommended mitigations, such as avoiding branching on secrets and using secrets as memory indices, are followed. Additionally, reviewers should confirm the usage of built-in crypto APIs or WebAssembly for crypto applications to maintain constant-time behavior. If a mitigation is detected, reviewers should check its secure implementation and consistent usage across relevant areas of the application. If any relevant locations lack the applied mitigation, it should be identified and addressed.</reviewer>
+    </rule>
 </root>
 
