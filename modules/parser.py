@@ -4,7 +4,7 @@ from timeit import default_timer as timer
 # import time
 # from pathlib import Path    # Resolve the windows / mac / linux path issue
 
-import modules.settings as settings
+import modules.runtime as runtime
 import modules.misclib as mlib
 
 
@@ -46,7 +46,7 @@ def SourceParser(rule_path, targetfile, outputfile, rule_no):
             pattern = r.get('mitigation/regex')
 
         # stdout based on verbosity level set
-        if str(settings.verbosity) == '1':
+        if str(runtime.verbosity) == '1':
             #sys.stdout.write("\033[F")
             sys.stdout.write("\033[K")
             print("     [-] Applying Rule: " + r.find("name").text, end='\r')
@@ -62,7 +62,7 @@ def SourceParser(rule_path, targetfile, outputfile, rule_no):
             filepath = eachfilepath.rstrip()  # strip out '\r' or '\n' from the file paths
         
             #sys.stdout.write("\033[K") #clear line to prevent overlap of texts
-            print('\n\t[-] Parsing file: ' + "["+str(iCnt)+"] "+ mlib.GetSourceFilePath(settings.sourcedir, filepath), end='\r')
+            print('\n\t[-] Parsing file: ' + "["+str(iCnt)+"] "+ mlib.GetSourceFilePath(runtime.sourcedir, filepath), end='\r')
             sys.stdout.write("\033[K") #clear line to prevent overlap of texts
             sys.stdout.write("\033[F")
             iCnt = iCnt + 1
@@ -88,7 +88,7 @@ def SourceParser(rule_path, targetfile, outputfile, rule_no):
                     if re.findall(pattern, line):
                         line = (line[:75] + '..') if len(line) > 300 else line
                         if not fpath:
-                            f_scanout.write("\n\t -> Source File: " + mlib.GetSourceFilePath(settings.sourcedir, filepath) + "\n")
+                            f_scanout.write("\n\t -> Source File: " + mlib.GetSourceFilePath(runtime.sourcedir, filepath) + "\n")
                             fpath = True
                             f_scanout.write("\t\t [" + str(linecount) + "]" + line)
                         else:
@@ -138,7 +138,7 @@ def PathsParser(rule_path, targetfile, outputfile, rule_no):
 
         for eachfilepath in f_targetfilepaths:  # Read each line (file path) in the file
             filepath = eachfilepath.rstrip()  # strip out '\r' or '\n' from the file paths
-            filepath = mlib.GetSourceFilePath(settings.sourcedir, filepath)
+            filepath = mlib.GetSourceFilePath(runtime.sourcedir, filepath)
 
             if re.findall(pattern, filepath):
                 if pFlag == False:

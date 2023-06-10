@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 import modules.misclib as mlib
-import modules.settings as settings
+import modules.runtime as runtime
 
 # Software composition analysis
 def recon(targetdir):
@@ -33,8 +33,8 @@ def recon(targetdir):
 
     print("\n--- Project reconnaissance ---")
     print("\n[*] Software Composition Analysis!!")
-    if Path(settings.inventory_Fpathext).is_file():
-        os.remove(settings.inventory_Fpathext)
-    log_filepaths = mlib.DiscoverFiles('*.*', targetdir, 2)     # mode = 2 - Software Recon
+    if Path(runtime.inventory_Fpathext).is_file():
+        os.remove(runtime.inventory_Fpathext)
+    log_filepaths = mlib.discoverFiles('*.*', targetdir, 2)     # mode = 2 - Software Recon
 
     return log_filepaths

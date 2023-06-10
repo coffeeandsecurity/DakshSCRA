@@ -10,7 +10,7 @@ from tabulate import tabulate
 from pathlib import Path    # Resolve the windows / mac / linux path issue
 import xml.etree.ElementTree as ET
 
-import modules.settings as settings
+import modules.runtime as runtime
 
 
 # Current directory of the python file
@@ -25,23 +25,25 @@ def detectEncodingType(targetfile):
     return result['encoding']
 
 
-def DiscoverFiles(codebase, sourcepath, mode):
+def discoverFiles(codebase, sourcepath, mode):
 
     # mode '1' is for standard files discovery based on the filetypes/platform specified
     if mode == 1:
         ft = re.sub(r"\s+", "", GetRulesPathORFileTypes(codebase, "filetypes"))         # Get file types and use regex to remove any whitespaces in the string
         filetypes = list(ft.split(","))         # Convert the comman separated string to a list
         print("     [-] Filetypes Selected: " + str(filetypes))
+        update_scanSummary("inputs_received.file_extensions_selected", str(filetypes))
     elif mode == 2:
         filetypes = '*.*'
+        update_scanSummary("inputs_received.file_extensions_selected", str(filetypes))
 
     matches = []
     fext = []
 
-    parentPath = settings.root_dir                               # Daksh root directory 
-    print("     [-] DakshSCRA Directory Path: " + settings.root_dir)      
+    parentPath = runtime.root_dir                               # Daksh root directory 
+    print("     [-] DakshSCRA Directory Path: " + runtime.root_dir)      
     
-    f_filepaths = open(settings.discovered_Fpaths, "w+")         # File ('discovered_Fpaths') for logging all discovered file paths
+    f_filepaths = open(runtime.discovered_Fpaths, "w+")         # File ('discovered_Fpaths') for logging all discovered file paths
 
     print("     [-] Identifying total files to be scanned!")
     linescount = 0
@@ -75,7 +77,7 @@ def DiscoverFiles(codebase, sourcepath, mode):
 
     #cleanfilepaths(settings.discovered_Fpaths)
 
-    return settings.discovered_Fpaths
+    return runtime.discovered_Fpaths
 
 # Retrieve files extention from file path
 def GetFileExtention(fpath):
@@ -98,7 +100,7 @@ def FileExtentionInventory(fpath):
     # print("Inventory: " + str(inventory))
 
 
-    with open(settings.inventory_Fpathext, "a+") as outfile:
+    with open(runtime.inventory_Fpathext, "a+") as outfile:
         try:
             data = json.loads(outfile)
             data = data.append(inventory)
@@ -108,7 +110,7 @@ def FileExtentionInventory(fpath):
             print("Try block: ")
         
         except TypeError as e:
-            with open(settings.inventory_Fpathext, "a+") as outfile:
+            with open(runtime.inventory_Fpathext, "a+") as outfile:
                 #outfile.seek(0,2)
                 json.dump(str(inventory), outfile, indent=2)
                 outfile.close
@@ -165,23 +167,16 @@ def GetSourceFilePath(project_dir, source_file):
 
 # Function to replace absolute file paths with project file paths 
 # by stripping out the path before the project directory
-def CleanFilePaths(filepaths_source):
-    
+def clean_filepaths(filepaths_source):
     target_dir = os.path.dirname(filepaths_source)
-    target_dir = os.path.join(target_dir, '')
-    source_file = target_dir + "filepaths.log"
-    dest_file = target_dir + "filepaths.txt"
+    source_file = os.path.join(target_dir, "filepaths.log")
+    dest_file = os.path.join(target_dir, "filepaths.txt")
 
+    with open(source_file, "r") as h_sf, open(dest_file, "w") as h_df:
+        for eachfilepath in h_sf:  # Read each line (file path) in the file
+            filepath = eachfilepath.rstrip()  # strip out '\r' or '\n' from the file paths
+            h_df.write(GetSourceFilePath(runtime.sourcedir, filepath) + "\n")
 
-    h_sf = open(source_file, "r")
-    h_df = open(dest_file, "w")
-
-    for eachfilepath in h_sf:  # Read each line (file path) in the file
-        filepath = eachfilepath.rstrip()  # strip out '\r' or '\n' from the file paths
-        h_df.write(GetSourceFilePath(settings.sourcedir, filepath) + "\n")
-
-    h_sf.close()
-    h_df.close()
 
     #os.unlink(source_file)
 
@@ -195,7 +190,7 @@ def GetRulesPathORFileTypes(platform, option):
     retValue = ''
 
     # Load filetypes XML config file
-    xmltree = ET.parse(settings.rulesConfig)
+    xmltree = ET.parse(runtime.rulesConfig)
     rule = xmltree.getroot()
 
     if option == "filetypes":
@@ -210,9 +205,29 @@ def GetRulesPathORFileTypes(platform, option):
                 break
 
     else:
-        print("\nError: Invalid value of rulesORfiletypes!")    
+        print("Error: Invalid value of rulesORfiletypes!")
 
     return retValue
+
+
+
+def rules_count(rules_file):
+    try:
+        tree = ET.parse(rules_file)
+        root = tree.getroot()
+
+        total_rules_count = 0  # Initialise the count
+
+        # Iterate over the rule elements
+        for rule in root.findall('rule'):
+            total_rules_count += 1
+
+        return total_rules_count
+
+    except ET.ParseError as e:
+        print(f"Error parsing XML file: {str(e)}")
+        return 0
+
 
 # List/Show rules or supported filetypes or both
 def ListRulesFiletypes(option):
@@ -220,7 +235,7 @@ def ListRulesFiletypes(option):
     dict = {}
 
     # Load filetypes XML config file
-    xmltree = ET.parse(settings.rulesConfig)
+    xmltree = ET.parse(runtime.rulesConfig)
     rule = xmltree.getroot()
 
 
@@ -246,3 +261,66 @@ def ListRulesFiletypes(option):
 
 
     return retValue
+
+
+# Function to update a specific entry in the scan summary JSON file
+def update_scanSummary(key, value):
+    json_filename = runtime.scanSummary_Fpath
+
+    # Create the JSON file with default data if the file is missing. 
+    if not os.path.isfile(json_filename):
+        default_data = {
+            "inputs_received": {
+                "rule_selected": "",
+                "total_rules_loaded": 0,
+                "platform_specific_rules": 0,
+                "common_rules": 0,
+                "target_directory": "",
+                "filetypes_selected": "",
+                "file_extensions_selected": []
+            },
+            "detection_summary": {
+                "total_files_identified": 0,
+                "total_files_scanned": 0,
+                "file_extensions_identified": [],
+                "areas_of_interest_identified": 0,
+                "file_paths_areas_of_interest_identified": 0
+            },
+            "scanning_timeline": {
+                "scan_start_time": "",
+                "scan_end_time": "",
+                "scan_duration": ""
+            }
+        }
+
+        with open(json_filename, "w") as file:
+            json.dump(default_data, file, indent=4)
+
+    try:
+        with open(json_filename, "r") as file:
+            data = json.load(file)
+    except FileNotFoundError:
+        data = {}
+
+    # Split the key into nested levels
+    levels = key.split(".")
+    current = data
+
+    try:
+        # Traverse the levels to access the innermost dictionary
+        for level in levels[:-1]:
+            current = current[level]
+
+        # Update the specific entry in the dictionary
+        current[levels[-1]] = value
+
+        with open(json_filename, "w") as file:
+            json.dump(data, file, indent=4)
+
+        #print(f"Updated entry '{key}' with value '{value}'.")
+    except (KeyError, TypeError) as e:
+        print(f"An error occurred while updating entry '{key}': {str(e)}")
+        print(f"Entry '{key}' does not exist or is not accessible.")
+    except Exception as e:
+        print(f"An error occurred while updating entry '{key}': {str(e)}")
+

@@ -19,7 +19,7 @@
         <regex>fn .*\((.*\bString\b.*)\)</regex>
         <description>Matches function definitions that take a String parameter. Using String instead of &str for function parameters.</description>
     </rule>
-        <rule>
+    <rule>
         <name>Insecure Method Calls: Using unwrap() or expect() on Option types without proper error handling</name>
         <regex>(\.unwrap\(\))|(\.expect\(\))(\.as_ref\(\))?</regex>
         <description>Matches .unwrap() or .expect() method calls on Option types. Using unwrap() or expect() on Option types without proper error handling:</description>

@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 from weasyprint import HTML, CSS
 import time
 
-import modules.settings as settings
+import modules.runtime as runtime
 import yaml
 import base64
 
@@ -27,7 +27,7 @@ def genPdfReport(html_path, pdf_path):
         started_at = time.time()
         print(f"[*] PDF report generation")
         print(f"    [-] Started at       : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        HTML(html_path).write_pdf(pdf_path, stylesheets=[CSS(settings.staticPdfCssFpath)])
+        HTML(html_path).write_pdf(pdf_path, stylesheets=[CSS(runtime.staticPdfCssFpath)])
         print(f"    [-] Completed at     : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
         hours, rem = divmod(time.time() - started_at, 3600)
@@ -44,7 +44,7 @@ def genPdfReport(html_path, pdf_path):
 
 def genHtmlReport(summary, snippets, filepaths, filepaths_aoi, report_output_path):
     # Config
-    with open(settings.projectConfig, "r") as stream:
+    with open(runtime.projectConfig, "r") as stream:
         try:
             config = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
@@ -54,14 +54,14 @@ def genHtmlReport(summary, snippets, filepaths, filepaths_aoi, report_output_pat
     # Logo image
     try:
         # Convert the image to base64 format
-        with open(settings.staticLogo, "rb") as f:
+        with open(runtime.staticLogo, "rb") as f:
             encoded_logo_image = base64.b64encode(f.read())
     
     except Exception as exc:
         print(exc)
         return None
 
-    env = Environment( loader = FileSystemLoader(settings.htmltemplates_dir))
+    env = Environment( loader = FileSystemLoader(runtime.htmltemplates_dir))
     template_file = "report.html"
     template = env.get_template(template_file)
     output_text = template.render(
@@ -194,13 +194,13 @@ def GenReport():
     print(f"[*] HTML report generation")
     print(f"    [-] Started at       : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
-    snippets = getAreasOfInterest(settings.outputAoI)
-    filepaths_aoi = getFilePathsOfAOI(settings.outputAoI_Fpaths)
-    filepaths = getFilePaths(settings.output_Fpaths)
-    summary = getSummary(settings.outputSummary)
+    snippets = getAreasOfInterest(runtime.outputAoI)
+    filepaths_aoi = getFilePathsOfAOI(runtime.outputAoI_Fpaths)
+    filepaths = getFilePaths(runtime.output_Fpaths)
+    summary = getSummary(runtime.outputSummary)
 
-    html_report_output_path =  settings.htmlreport_Fpath
-    pdf_report_path = settings.pdfreport_Fpath
+    html_report_output_path =  runtime.htmlreport_Fpath
+    pdf_report_path = runtime.pdfreport_Fpath
 
     htmlfile, output_html = genHtmlReport(summary, snippets, filepaths, filepaths_aoi, html_report_output_path)
     
@@ -218,13 +218,13 @@ def GenReport():
 
     # Display reports path but strip out the path to root directory
     print("\n[*] HTML Report:")
-    print("     [-] HTML Report Path : "+ re.sub(str(settings.root_dir), "", str(settings.htmlreport_Fpath)))
+    print("     [-] HTML Report Path : "+ re.sub(str(runtime.root_dir), "", str(runtime.htmlreport_Fpath)))
     print("\n[*] PDF Report:")
-    print("     [-] PDF Report Path : "+ re.sub(str(settings.root_dir), "", str(settings.pdfreport_Fpath)))
+    print("     [-] PDF Report Path : "+ re.sub(str(runtime.root_dir), "", str(runtime.pdfreport_Fpath)))
     print("\n[*] Raw Text Reports:")
-    print("     [-] Areas of Interest: "+ re.sub(str(settings.root_dir), "", str(settings.outputAoI)))
-    print("     [-] Project Files - Areas of Interest: "+ re.sub(str(settings.root_dir), "", str(settings.outputAoI_Fpaths)))
-    print("     [-] Discovered Files Path: "+ re.sub(str(settings.root_dir), "", str(settings.discovered_Fpaths)))
+    print("     [-] Areas of Interest: "+ re.sub(str(runtime.root_dir), "", str(runtime.outputAoI)))
+    print("     [-] Project Files - Areas of Interest: "+ re.sub(str(runtime.root_dir), "", str(runtime.outputAoI_Fpaths)))
+    print("     [-] Discovered Files Path: "+ re.sub(str(runtime.root_dir), "", str(runtime.discovered_Fpaths)))
     
     print("\nNote: The tool generates reports in three formats: HTML, PDF, and TEXT. " 
     "Although the HTML and PDF reports are still being improved, they are currently in a reasonably good state. " 

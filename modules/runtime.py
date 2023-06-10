@@ -40,6 +40,9 @@ discovered_Fpaths = Path(str(root_dir) + "/runtime/filepaths.log")
 
 # Logs File paths
 inventory_Fpathext = Path(str(root_dir) + "/runtime/inventory.json")
+
+# Specify the filename of the JSON file
+scanSummary_Fpath = Path(str(root_dir) + "/runtime/scan_summary.json")
 ## ------------- </Runtime Temp Files> ------------- ##
 
 
