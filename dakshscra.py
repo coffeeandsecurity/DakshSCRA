@@ -1,13 +1,12 @@
-import os, re
-import time
+import os
+import re
 import sys
 import argparse
-
+import time
 from datetime import datetime
-from os import path         # This lowercase path to be used only to validate whether a directory exist
-from pathlib import Path    # Resolve the windows / mac / linux path issue
+from pathlib import Path        # Resolve the windows / mac / linux path issue
+from os import path             # This lowercase path to be used only to validate whether a directory exist
 
-# User Defined Libraries / Functions
 import modules.misclib as mlib
 import modules.reports as report
 import modules.parser as parser
@@ -17,8 +16,8 @@ import modules.runtime as runtime
 
 # ---- Initilisation ----- 
 # Current directory of the python file
-rootDir = os.path.dirname(os.path.realpath(__file__))
-runtime.root_dir = rootDir         # initialise global root directory which is referenced at multiple locations
+root_dir = os.path.dirname(os.path.realpath(__file__))
+runtime.root_dir = root_dir         # initialise global root directory which is referenced at multiple locations
 
 mlib.DirCleanup("runtime")
 mlib.DirCleanup("reports/html")
@@ -88,18 +87,18 @@ elif results.rule_file:
 
     if results.file_types and results.rule_file and results.target_dir:
         print(runtime.author)
-        print("\nThe following inputs received:")
-        print('[*] Rule Selected        = {!r}'.format(results.rule_file.lower()))
-        print('[*] File Types Selected  = {!r}'.format(results.file_types.lower()))
-        print('[*] Target Directory     = {!r}'.format(results.target_dir))
+        print("\nThe following inputs were received:")
+        print(f'[*] Rule Selected        = {results.rule_file.lower()!r}')
+        print(f'[*] File Types Selected  = {results.file_types.lower()!r}')
+        print(f'[*] Target Directory     = {results.target_dir}')
 
         mlib.update_scanSummary("inputs_received.rule_selected", results.rule_file.lower())
         mlib.update_scanSummary("inputs_received.filetypes_selected", results.file_types.lower())
         mlib.update_scanSummary("inputs_received.target_directory", results.target_dir)
 
-    if (str(results.verbosity) == '1') or (str(results.verbosity) == '2'):
+    if str(results.verbosity) in ('1', '2'):
         runtime.verbosity = results.verbosity
-        print('[*] Verbosity Level    = {!r}'.format(results.verbosity))
+        print(f'[*] Verbosity Level    = {results.verbosity}')
     else:
         print('[*] Default Verbosity Level [1] Set')
 
@@ -121,18 +120,18 @@ runtime.sourcedir = re.search(r'((?!\/|\\).)*(\/|\\)$', project_dir)[0]        #
 # mlib.DirCleanup("runtime")    
 
 # Current directory of the python file
-rootDir = os.path.dirname(os.path.realpath(__file__))
-runtime.root_dir = rootDir
+root_dir = os.path.dirname(os.path.realpath(__file__))
+runtime.root_dir = root_dir
 
 # codebase = 'allfiles'  # This is the list of file types to enumerate before scanning using rules
 codebase = results.file_types
 
-if (mlib.GetRulesPathORFileTypes(results.rule_file, "rules") == ''):
+# Verify if the rule name is valid
+if not (rules_main := mlib.GetRulesPathORFileTypes(results.rule_file, "rules")):
     print("\nError: Invalid rule name!")
     sys.exit()
 else:
-    rulefile = mlib.GetRulesPathORFileTypes(results.rule_file, "rules")
-    rules_main = Path(str(runtime.rulesRootDir) + rulefile)
+    rules_main = Path(str(runtime.rulesRootDir) + rules_main)
 
 
 rules_common = Path(str(runtime.rulesRootDir) + mlib.GetRulesPathORFileTypes("common", "rules"))
@@ -141,9 +140,10 @@ platform_rules_total = mlib.rules_count(rules_main)
 common_rules_total = mlib.rules_count(rules_common)
 total_rules_loaded = mlib.rules_count(rules_main) + mlib.rules_count(rules_common) 
 
-print("[*] Total {} rules loaded: {}".format(results.rule_file.lower(), platform_rules_total))
-print("[*] Total common rules loaded: {}".format(common_rules_total))
+print(f"[*] Total {results.rule_file.lower()} rules loaded: {platform_rules_total}")
+print(f"[*] Total common rules loaded: {common_rules_total}")
 
+# Update Scan Summary JSON file - Loaded rules count
 mlib.update_scanSummary("inputs_received.platform_specific_rules", str(platform_rules_total))
 mlib.update_scanSummary("inputs_received.common_rules", str(common_rules_total))
 mlib.update_scanSummary("inputs_received.total_rules_loaded", str(total_rules_loaded))
