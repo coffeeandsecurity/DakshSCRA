@@ -189,7 +189,7 @@ def getSummary(input_file):
   
     return content
 
-def GenReport():
+def genReport():
     started_at = time.time()
     print(f"[*] HTML report generation")
     print(f"    [-] Started at       : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")

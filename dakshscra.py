@@ -12,17 +12,17 @@ import modules.reports as report
 import modules.parser as parser
 import modules.recon as rec
 import modules.runtime as runtime
-
+import modules.rulesops as rops
 
 # ---- Initilisation ----- 
 # Current directory of the python file
 root_dir = os.path.dirname(os.path.realpath(__file__))
 runtime.root_dir = root_dir         # initialise global root directory which is referenced at multiple locations
 
-mlib.DirCleanup("runtime")
-mlib.DirCleanup("reports/html")
-#mlib.DirCleanup("reports/text")
-mlib.DirCleanup("reports/pdf")
+mlib.dirCleanup("runtime")
+mlib.dirCleanup("reports/html")
+#mlib.dirCleanup("reports/text")
+mlib.dirCleanup("reports/pdf")
 # ------------------------- #
 
 args = argparse.ArgumentParser()
@@ -55,7 +55,7 @@ elif results.recon:
         sys.exit(1)
 
 elif results.rules_filetypes != None:       
-    mlib.ListRulesFiletypes(results.rules_filetypes)    # List available rules and/or supported filetypes
+    rops.listRulesFiletypes(results.rules_filetypes)    # List available rules and/or supported filetypes
     sys.exit(1)
 
 # Priority #1 - If '-recon' option used then only recon must be performed
@@ -92,9 +92,9 @@ elif results.rule_file:
         print(f'[*] File Types Selected  = {results.file_types.lower()!r}')
         print(f'[*] Target Directory     = {results.target_dir}')
 
-        mlib.update_scanSummary("inputs_received.rule_selected", results.rule_file.lower())
-        mlib.update_scanSummary("inputs_received.filetypes_selected", results.file_types.lower())
-        mlib.update_scanSummary("inputs_received.target_directory", results.target_dir)
+        mlib.updateScanSummary("inputs_received.rule_selected", results.rule_file.lower())
+        mlib.updateScanSummary("inputs_received.filetypes_selected", results.file_types.lower())
+        mlib.updateScanSummary("inputs_received.target_directory", results.target_dir)
 
     if str(results.verbosity) in ('1', '2'):
         runtime.verbosity = results.verbosity
@@ -117,7 +117,7 @@ project_dir = os.path.join(results.target_dir, '')
 # The regex matches the last trailing slash ('/' or '\') and then reverse search until the next trailing slash is found
 runtime.sourcedir = re.search(r'((?!\/|\\).)*(\/|\\)$', project_dir)[0]        # Target Source Code Directory
 
-# mlib.DirCleanup("runtime")    
+# mlib.dirCleanup("runtime")    
 
 # Current directory of the python file
 root_dir = os.path.dirname(os.path.realpath(__file__))
@@ -127,26 +127,26 @@ runtime.root_dir = root_dir
 codebase = results.file_types
 
 # Verify if the rule name is valid
-if not (rules_main := mlib.GetRulesPathORFileTypes(results.rule_file, "rules")):
+if not (rules_main := rops.getRulesPath_OR_FileTypes(results.rule_file, "rules")):
     print("\nError: Invalid rule name!")
     sys.exit()
 else:
     rules_main = Path(str(runtime.rulesRootDir) + rules_main)
 
 
-rules_common = Path(str(runtime.rulesRootDir) + mlib.GetRulesPathORFileTypes("common", "rules"))
+rules_common = Path(str(runtime.rulesRootDir) + rops.getRulesPath_OR_FileTypes("common", "rules"))
 
-platform_rules_total = mlib.rules_count(rules_main)
-common_rules_total = mlib.rules_count(rules_common)
-total_rules_loaded = mlib.rules_count(rules_main) + mlib.rules_count(rules_common) 
+platform_rules_total = rops.rulesCount(rules_main)
+common_rules_total = rops.rulesCount(rules_common)
+total_rules_loaded = rops.rulesCount(rules_main) + rops.rulesCount(rules_common) 
 
 print(f"[*] Total {results.rule_file.lower()} rules loaded: {platform_rules_total}")
 print(f"[*] Total common rules loaded: {common_rules_total}")
 
 # Update Scan Summary JSON file - Loaded rules count
-mlib.update_scanSummary("inputs_received.platform_specific_rules", str(platform_rules_total))
-mlib.update_scanSummary("inputs_received.common_rules", str(common_rules_total))
-mlib.update_scanSummary("inputs_received.total_rules_loaded", str(total_rules_loaded))
+mlib.updateScanSummary("inputs_received.platform_specific_rules", str(platform_rules_total))
+mlib.updateScanSummary("inputs_received.common_rules", str(common_rules_total))
+mlib.updateScanSummary("inputs_received.total_rules_loaded", str(total_rules_loaded))
 
 
 # Source Code Dirctory Path
@@ -167,8 +167,8 @@ print("[+] [Stage 2] Rules/Pattern Matching - Parsing identified project files")
 with open(runtime.outputAoI, "w") as f_scanout:
     with open(log_filepaths, 'r', encoding=mlib.detectEncodingType(log_filepaths)) as f_targetfiles:
         rule_no = 1
-        parser.SourceParser(rules_main, f_targetfiles, f_scanout, rule_no)   # Pattern matching for specific platform type
-        parser.SourceParser(rules_common, f_targetfiles, f_scanout, rule_no)  # Pattern matching for common rules
+        parser.sourceParser(rules_main, f_targetfiles, f_scanout, rule_no)   # Pattern matching for specific platform type
+        parser.sourceParser(rules_common, f_targetfiles, f_scanout, rule_no)  # Pattern matching for common rules
 
 
 ###### [Stage 3] Parse File Paths for areas of interest ######
@@ -177,10 +177,10 @@ print("[+] [Stage 3] Parsing file paths for areas of interest")
 with open(runtime.outputAoI_Fpaths, "w") as f_scanout:
     with open(log_filepaths, 'r', encoding=mlib.detectEncodingType(log_filepaths)) as f_targetfiles:
         rule_no = 1
-        parser.PathsParser(runtime.rulesFpaths, f_targetfiles, f_scanout, rule_no)
+        parser.pathsParser(runtime.rulesFpaths, f_targetfiles, f_scanout, rule_no)
 
 
-mlib.clean_filepaths(log_filepaths)
+mlib.cleanFilePaths(log_filepaths)
 os.unlink(log_filepaths)        # Delete the temp file paths log after the path cleanup in the above step
 
 print("\n[*] Scanning Timeline")
@@ -197,9 +197,9 @@ scan_duration = "{:0>2}Hr:{:0>2}Min:{:0>2}s:{}ms".format(int(hours), int(minutes
 # print("    [-] Scan completed in   : " + time.strftime("%HHr:%MMin:%Ss", time.gmtime(time.time() - settings.start_time)))
 
 # Update Scan Summary JSON file - Timeline
-mlib.update_scanSummary("scanning_timeline.scan_start_time", runtime.start_timestamp)
-mlib.update_scanSummary("scanning_timeline.scan_end_time",  end_timestamp)
-mlib.update_scanSummary("scanning_timeline.scan_duration", scan_duration)
+mlib.updateScanSummary("scanning_timeline.scan_start_time", runtime.start_timestamp)
+mlib.updateScanSummary("scanning_timeline.scan_end_time",  end_timestamp)
+mlib.updateScanSummary("scanning_timeline.scan_duration", scan_duration)
 
 ###### [Stage 4] Generate Reports ######
-report.GenReport()
+report.genReport()

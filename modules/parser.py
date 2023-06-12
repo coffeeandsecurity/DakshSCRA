@@ -15,7 +15,7 @@ The following parameters are expected:
     targetfile  - Target file containing enumerated filepaths withing the target source directory
     outputfile  - File for writing scan output
 '''
-def SourceParser(rule_path, targetfile, outputfile, rule_no):
+def sourceParser(rule_path, targetfile, outputfile, rule_no):
     # Load rules from XML file
     xmltree = ET.parse(rule_path)
     rule = xmltree.getroot()
@@ -56,11 +56,12 @@ def SourceParser(rule_path, targetfile, outputfile, rule_no):
 
         for eachfilepath in f_targetfiles:  # Read each line (file path) in the file
             filepath = eachfilepath.rstrip()  # strip out '\r' or '\n' from the file paths
-        
-            print('\n\t[-] Parsing file: ' + "["+str(iCnt)+"] "+ mlib.GetSourceFilePath(runtime.sourcedir, filepath), end='\r')
-            sys.stdout.write("\033[K") #clear line to prevent overlap of texts
-            sys.stdout.write("\033[F")
+            
             iCnt = iCnt + 1
+            #print('\n\t[-] Parsing file: ' + "["+str(iCnt)+"] "+ mlib.getSourceFilePath(runtime.sourcedir, filepath), end='\r')
+            print('\t Parsing file: ' + "["+str(iCnt)+"] "+ mlib.getSourceFilePath(runtime.sourcedir, filepath))
+            sys.stdout.write("\033[F\033[K")  # Clear line to prevent overlap of texts
+            #sys.stdout.write("\033[K\033[F")  # Clear line to prevent overlap of texts - There is an overlap issue with this combination
 
             try:
                 # TODO: Read the file using the detected encoding type - Giving errors at some stage. Will be fixed later
@@ -80,11 +81,12 @@ def SourceParser(rule_path, targetfile, outputfile, rule_no):
                     if re.findall(pattern, line):
                         line = (line[:75] + '..') if len(line) > 300 else line
                         if not fpath:
-                            f_scanout.write("\n\t -> Source File: " + mlib.GetSourceFilePath(runtime.sourcedir, filepath) + "\n")
+                            f_scanout.write("\n\t -> Source File: " + mlib.getSourceFilePath(runtime.sourcedir, filepath) + "\n")
                             fpath = True
                             f_scanout.write("\t\t [" + str(linecount) + "]" + line)
                         else:
                             f_scanout.write("\t\t [" + str(linecount) + "]" + line)
+        
             except OSError:
                 print("OS Error occured!")
             except UnicodeDecodeError as err:
@@ -99,6 +101,8 @@ def SourceParser(rule_path, targetfile, outputfile, rule_no):
             # print("\tTime taken for the search: " + time.strftime("%HHr:%MMin:%Ss", time.gmtime(timer() - start_time)))
             f_scanout.write("\n")
             f_targetfiles.seek(0, 0)
+        
+        iCnt = 0
 
     sys.stdout.write("\033[K") #clear line to prevent overlap of texts
     return
@@ -107,7 +111,7 @@ def SourceParser(rule_path, targetfile, outputfile, rule_no):
 '''
 This routine will parse all enumerated file paths and match patterns to group them under matched category
 '''
-def PathsParser(rule_path, targetfile, outputfile, rule_no):
+def pathsParser(rule_path, targetfile, outputfile, rule_no):
     # Load rules from XML file
     xmltree = ET.parse(rule_path)
     rule = xmltree.getroot()
@@ -125,7 +129,7 @@ def PathsParser(rule_path, targetfile, outputfile, rule_no):
 
         for eachfilepath in f_targetfilepaths:  # Read each line (file path) in the file
             filepath = eachfilepath.rstrip()  # strip out '\r' or '\n' from the file paths
-            filepath = mlib.GetSourceFilePath(runtime.sourcedir, filepath)
+            filepath = mlib.getSourceFilePath(runtime.sourcedir, filepath)
 
             if re.findall(pattern, filepath):
                 if pFlag == False:

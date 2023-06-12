@@ -11,6 +11,7 @@ from pathlib import Path    # Resolve the windows / mac / linux path issue
 import xml.etree.ElementTree as ET
 
 import modules.runtime as runtime
+import modules.rulesops as rulesops
 
 
 # Current directory of the python file
@@ -29,65 +30,57 @@ def discoverFiles(codebase, sourcepath, mode):
 
     # mode '1' is for standard files discovery based on the filetypes/platform specified
     if mode == 1:
-        ft = re.sub(r"\s+", "", GetRulesPathORFileTypes(codebase, "filetypes"))         # Get file types and use regex to remove any whitespaces in the string
+        ft = re.sub(r"\s+", "", rulesops.getRulesPath_OR_FileTypes(codebase, "filetypes"))         # Get file types and use regex to remove any whitespaces in the string
         filetypes = list(ft.split(","))         # Convert the comman separated string to a list
         print("     [-] Filetypes Selected: " + str(filetypes))
-        update_scanSummary("inputs_received.file_extensions_selected", str(filetypes))
+        updateScanSummary("inputs_received.file_extensions_selected", str(filetypes))
     elif mode == 2:
         filetypes = '*.*'
-        update_scanSummary("inputs_received.file_extensions_selected", str(filetypes))
+        updateScanSummary("inputs_received.file_extensions_selected", str(filetypes))
 
     matches = []
     fext = []
-
-    parentPath = runtime.root_dir                               # Daksh root directory 
+    
     print("     [-] DakshSCRA Directory Path: " + runtime.root_dir)      
     
-    f_filepaths = open(runtime.discovered_Fpaths, "w+")         # File ('discovered_Fpaths') for logging all discovered file paths
+    with open(runtime.discovered_Fpaths, "w+") as f_filepaths:         # File ('discovered_Fpaths') for logging all discovered file paths
+        print("     [-] Identifying total files to be scanned!")
+        identified_files_count = 0      # Counter to track total platform specific project files identified
+        filename = None     # To be removed. Temporarily added to fix - "local variable referenced before assignment" error
 
-    print("     [-] Identifying total files to be scanned!")
-    linescount = 0
-    filename = None     # To be removed. Temporarily added to fix - "local variable referenced before assignment" error
-    fCnt = 0
+        # Reccursive Traversal of Directories and Files
+        for root, dirnames, filenames in os.walk(sourcepath):           # os.walk - Returns root dir, dirnames, filenames
+            for extensions in filetypes:                    # Iterate over each file extension in 'filetypes'
+                for filename in fnmatch.filter(filenames, extensions):  # Filter the filenames based on the current file extension
+                    matches.append(os.path.join(root, filename))        # Add the matched file path to the 'matches' list
+                    filename = os.path.join(root, filename)             # Get the complete file path
+                    f_filepaths.write(filename + "\n")      # Log discovered file paths
+                    identified_files_count += 1                         # Increment the count of lines
 
-    # Reccursive Traversal of Directories and Files
-    for root, dirnames, filenames in os.walk(sourcepath):           # os.walk - Returns root dir, dirnames, filenames
-        for extensions in filetypes:
-            for filename in fnmatch.filter(filenames, extensions):
-                matches.append(os.path.join(root, filename))
-                filename = os.path.join(root, filename)
-                f_filepaths.write(filename + "\n")  # Log discovered file paths
-                linescount += 1
-            
-                fCnt += 1
-                # print("[*] Counter = " + str(fCnt) + " File Extension: " + GetFileExtention(filename))
-                # print("[*] Counter = " + str(fCnt) + " Filename: " + filename)
-                # print("[*] Counter = " + str(fCnt) + " Dictionary: " + str(FileExtentionInventory(filename)))
+                fext.append(getFileExtention(filename))     # Get the file extension of the last matched filename and append it to 'fext'
 
-            fext.append(GetFileExtention(filename))
-            
-    # print("[*] Counter - Outer Loop = " + str(fCnt))
-    fCnt = 0
-    f_filepaths.close()
-    
 
-    print("     [-] Total files to be scanned: " + str(linescount))
+    print("     [-] Total files to be scanned: " + str(identified_files_count))
+    # updateScanSummary("detection_summary.total_project_files_identified", str(total_files_count))    
+    updateScanSummary("detection_summary.total_files_identified", str(identified_files_count))    
+    updateScanSummary("detection_summary.file_extensions_identified", str(fext))
     fext = list(dict.fromkeys(filter(None, fext)))      # filter is used to remove empty item that gets added due to 'filename = None' above
+    
     print("     [-] File Extentions Identified: " + str(fext))
+    updateScanSummary("detection_summary.file_extensions_identified", str(fext))
 
-    #cleanfilepaths(settings.discovered_Fpaths)
 
     return runtime.discovered_Fpaths
 
 # Retrieve files extention from file path
-def GetFileExtention(fpath):
+def getFileExtention(fpath):
     extention = Path(str(fpath)).suffix
 
     return extention
 
 
 # Discovered files extentions and count of each type
-def FileExtentionInventory(fpath):
+def fileExtentionInventory(fpath):
     extention = Path(str(fpath)).suffix
 
     inventory = {}
@@ -95,9 +88,7 @@ def FileExtentionInventory(fpath):
     inventory["extension"] = extention
 
     inventory = json.dumps(inventory)           # Convert dictionary to string object
-    inventory = json.loads(inventory)      # Take a string as input and returns a dictionary as output.
-    # print("Inventory: " + str(load_inventory))
-    # print("Inventory: " + str(inventory))
+    inventory = json.loads(inventory)           # Take a string as input and returns a dictionary as output.
 
 
     with open(runtime.inventory_Fpathext, "a+") as outfile:
@@ -116,27 +107,11 @@ def FileExtentionInventory(fpath):
                 outfile.close
                 print("TypeError block: ")
 
-    '''
-        if not data:
-            with open(settings.inventory_Fpathext, "w") as outfile:
-                json.dump(data, outfile)
-                outfile.close
-        else:
-            outfile.close
-            with open(settings.inventory_Fpathext, "w") as outfile:
-                data.append(inventory)
-                json.dump(data, outfile)
-                outfile.close   
-
-    with open(settings.inventory_Fpathext, "w") as outfile:
-            json.dump(inventory, outfile)
-            outfile.close   
-    '''
     return inventory
 
 
 # Remove all files in the temp dir
-def DirCleanup(dirname):
+def dirCleanup(dirname):
     dir = Path(parentPath + "/../" + dirname)
     if os.path.exists(dir):
         for the_file in os.listdir(dir):
@@ -152,14 +127,13 @@ def DirCleanup(dirname):
 
 
 
-def GetSourceFilePath(project_dir, source_file):
+def getSourceFilePath(project_dir, source_file):
     pattern = re.compile(project_dir + '.+')
 
     source_filepath = ''
     try:
         source_filepath = pattern.search(source_file)[0]
     except TypeError as e:      # The "'NoneType' object is not subscriptable" error occurs on windows. 
-        # print(e)              # This error handling is meant to getaround the error caused on windows os
         source_filepath = source_file
 
     return source_filepath
@@ -167,7 +141,7 @@ def GetSourceFilePath(project_dir, source_file):
 
 # Function to replace absolute file paths with project file paths 
 # by stripping out the path before the project directory
-def clean_filepaths(filepaths_source):
+def cleanFilePaths(filepaths_source):
     target_dir = os.path.dirname(filepaths_source)
     source_file = os.path.join(target_dir, "filepaths.log")
     dest_file = os.path.join(target_dir, "filepaths.txt")
@@ -175,96 +149,15 @@ def clean_filepaths(filepaths_source):
     with open(source_file, "r") as h_sf, open(dest_file, "w") as h_df:
         for eachfilepath in h_sf:  # Read each line (file path) in the file
             filepath = eachfilepath.rstrip()  # strip out '\r' or '\n' from the file paths
-            h_df.write(GetSourceFilePath(runtime.sourcedir, filepath) + "\n")
+            h_df.write(getSourceFilePath(runtime.sourcedir, filepath) + "\n")
 
 
     #os.unlink(source_file)
 
-# Function to obtain rules file path of a particular platform or the supported filetypes 
-def GetRulesPathORFileTypes(platform, option):
-
-    while option not in ["filetypes", "rules"]:
-        print("Error (GetRulesPathORFileTypes): Invalid option supplied. Allowed options are [rules or filetypes]!")
-        sys.exit()
-
-    retValue = ''
-
-    # Load filetypes XML config file
-    xmltree = ET.parse(runtime.rulesConfig)
-    rule = xmltree.getroot()
-
-    if option == "filetypes":
-        for r in rule:
-            if r.find("platform").text == platform:
-                retValue = r.find("ftypes").text        # Return file types
-                break
-    elif option == "rules":
-        for r in rule:
-            if r.find("platform").text == platform:
-                retValue = r.find("path").text          # Return rule file path
-                break
-
-    else:
-        print("Error: Invalid value of rulesORfiletypes!")
-
-    return retValue
-
-
-
-def rules_count(rules_file):
-    try:
-        tree = ET.parse(rules_file)
-        root = tree.getroot()
-
-        total_rules_count = 0  # Initialise the count
-
-        # Iterate over the rule elements
-        for rule in root.findall('rule'):
-            total_rules_count += 1
-
-        return total_rules_count
-
-    except ET.ParseError as e:
-        print(f"Error parsing XML file: {str(e)}")
-        return 0
-
-
-# List/Show rules or supported filetypes or both
-def ListRulesFiletypes(option):
-    retValue = 0
-    dict = {}
-
-    # Load filetypes XML config file
-    xmltree = ET.parse(runtime.rulesConfig)
-    rule = xmltree.getroot()
-
-
-    if option == 'R':
-        print("\nList of all available rules")
-        for r in rule:
-            print("\t" + r.find("platform").text)        # Return supported platforms
-            retValue = 1
-
-    elif option == 'RF':
-        print("\nList both available rules and filetypes")
-        for r in rule:
-            #print(tabulate([["Platform","File Types"],[r.find("platform").text, r.find("ftypes").text]], headers="firstrow", tablefmt="psql"))
-            dict[r.find("platform").text] = r.find("ftypes").text
-            retValue = 1
-    
-        df = pd.DataFrame.from_dict(dict, orient='index')
-        print("\n" + tabulate(df, headers=["Platform", "File Types"], tablefmt="grid", maxcolwidths=[None, 40]) + "\n")
-
-    else:
-        print("Invalid option")
-        retValue = 0
-
-
-    return retValue
 
 
 # Function to update a specific entry in the scan summary JSON file
-def update_scanSummary(key, value):
+def updateScanSummary(key, value):
     json_filename = runtime.scanSummary_Fpath
 
     # Create the JSON file with default data if the file is missing. 
@@ -280,8 +173,9 @@ def update_scanSummary(key, value):
                 "file_extensions_selected": []
             },
             "detection_summary": {
-                "total_files_identified": 0,
-                "total_files_scanned": 0,
+                "total_project_files_identified": 0,    # Total project files identified in the project directory
+                "total_files_identified": 0,            # Total platform specific project files identified
+                "total_files_scanned": 0,               # This should be same as "total_files_identified" unless some files were skipped during parsing or failed to scan
                 "file_extensions_identified": [],
                 "areas_of_interest_identified": 0,
                 "file_paths_areas_of_interest_identified": 0
