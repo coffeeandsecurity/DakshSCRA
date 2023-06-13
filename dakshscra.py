@@ -192,9 +192,9 @@ print("    [-] Scan end time       : " + str(end_timestamp))
 hours, rem = divmod(time.time() - runtime.start_time, 3600)
 minutes, seconds = divmod(rem, 60)
 seconds, milliseconds = str(seconds).split('.')
-print("    [-] Scan completed in   : {:0>2}Hr:{:0>2}Min:{:0>2}s:{}ms".format(int(hours),int(minutes),seconds, milliseconds[:3]))
 scan_duration = "{:0>2}Hr:{:0>2}Min:{:0>2}s:{}ms".format(int(hours), int(minutes), seconds, milliseconds[:3])
-# print("    [-] Scan completed in   : " + time.strftime("%HHr:%MMin:%Ss", time.gmtime(time.time() - settings.start_time)))
+print(f"    [-] Scan completed in   : {scan_duration}")
+# print("    [-] Scan completed in   : {:0>2}Hr:{:0>2}Min:{:0>2}s:{}ms".format(int(hours),int(minutes),seconds, milliseconds[:3]))
 
 # Update Scan Summary JSON file - Timeline
 mlib.updateScanSummary("scanning_timeline.scan_start_time", runtime.start_timestamp)

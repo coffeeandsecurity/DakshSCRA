@@ -102,7 +102,6 @@ def fileExtentionInventory(fpath):
         
         except TypeError as e:
             with open(runtime.inventory_Fpathext, "a+") as outfile:
-                #outfile.seek(0,2)
                 json.dump(str(inventory), outfile, indent=2)
                 outfile.close
                 print("TypeError block: ")

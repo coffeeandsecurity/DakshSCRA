@@ -26,9 +26,8 @@ def sourceParser(rule_path, targetfile, outputfile, rule_no):
     iCnt = 0
 
     for r in rule:
-        start_time = timer()
-        f_scanout.write(str(rule_no)+". Rule Title: " + r.find("name").text + "\n")
         rule_no += 1
+        f_scanout.write(str(rule_no)+". Rule Title: " + r.find("name").text + "\n")
         pattern = r.find("regex").text
 
         rule_desc = r.find("rule_desc").text
@@ -57,54 +56,44 @@ def sourceParser(rule_path, targetfile, outputfile, rule_no):
         for eachfilepath in f_targetfiles:  # Read each line (file path) in the file
             filepath = eachfilepath.rstrip()  # strip out '\r' or '\n' from the file paths
             
-            iCnt = iCnt + 1
-            #print('\n\t[-] Parsing file: ' + "["+str(iCnt)+"] "+ mlib.getSourceFilePath(runtime.sourcedir, filepath), end='\r')
+            iCnt += 1
             print('\t Parsing file: ' + "["+str(iCnt)+"] "+ mlib.getSourceFilePath(runtime.sourcedir, filepath))
             sys.stdout.write("\033[F\033[K")  # Clear line to prevent overlap of texts
             #sys.stdout.write("\033[K\033[F")  # Clear line to prevent overlap of texts - There is an overlap issue with this combination
 
             try:
                 # TODO: Read the file using the detected encoding type - Giving errors at some stage. Will be fixed later
-                # fo_target = open(filepath, 'r', encoding=mlib.detectEncodingType(filepath))
-                # fo_target = open(filepath, encoding="utf8")
-                fo_target = open(filepath, encoding="ISO-8859-1")   # TODO: Temporary fix. Will be replaced with autodetect encoding
-                                                                    # ISO-8859-1 encoding type works on most occasions but utf8 errors out
-                linecount = 0
-                fpath = False
-                for line in fo_target:
-                    linecount += 1
+                # with open(filepath, 'r', encoding=mlib.detectEncodingType(filepath)) as fo_target:
+                # with open(filepath, 'r', encoding='utf8') as fo_target:
+                with open(filepath, 'r', encoding='ISO-8859-1') as fo_target:       # ISO-8859-1 encoding type works on most occasions but utf8 errors out
+                    linecount = 0
+                    fpath = False
+                    for line in fo_target:
+                        linecount += 1
 
-                    if len(line) > 500:     # Setting maximum input length of the string read from the file
-                        continue  # Skip long lines
+                        if len(line) > 500:     # Setting maximum input length of the string read from the file
+                            continue  # Skip long lines
 
-                    # if re.findall(keyword, line):
-                    if re.findall(pattern, line):
-                        line = (line[:75] + '..') if len(line) > 300 else line
-                        if not fpath:
-                            f_scanout.write("\n\t -> Source File: " + mlib.getSourceFilePath(runtime.sourcedir, filepath) + "\n")
-                            fpath = True
-                            f_scanout.write("\t\t [" + str(linecount) + "]" + line)
-                        else:
-                            f_scanout.write("\t\t [" + str(linecount) + "]" + line)
+                        if re.findall(pattern, line):
+                            line = (line[:75] + '..') if len(line) > 300 else line
+                            if not fpath:
+                                f_scanout.write("\n\t -> Source File: " + mlib.getSourceFilePath(runtime.sourcedir, filepath) + "\n")
+                                fpath = True
+                                f_scanout.write("\t\t [" + str(linecount) + "]" + line)
+                            else:
+                                f_scanout.write("\t\t [" + str(linecount) + "]" + line)
         
             except OSError:
-                print("OS Error occured!")
-            except UnicodeDecodeError as err:
-                print("Error Occured: ", err)
+                print("OS Error occurred!")
+            except UnicodeError as err:
+                print("Error Occurred: ", err)
                 print(filepath)
-            except UnicodeEncodeError as err:
-                print("Error Occured: ", err)
-                print(filepath)
-            finally:
-                fo_target.close()
-        else:
-            # print("\tTime taken for the search: " + time.strftime("%HHr:%MMin:%Ss", time.gmtime(timer() - start_time)))
-            f_scanout.write("\n")
-            f_targetfiles.seek(0, 0)
         
+        f_scanout.write("\n")
+        f_targetfiles.seek(0)  # Reset the file pointer to the beginning
+             
         iCnt = 0
-
-    sys.stdout.write("\033[K") #clear line to prevent overlap of texts
+        sys.stdout.write("\033[K")  # Clear line to prevent overlap of texts
     return
 
 
@@ -121,9 +110,9 @@ def pathsParser(rule_path, targetfile, outputfile, rule_no):
     pFlag = False
 
     for r in rule:
-        start_time = timer()
+        rule_no += 1        
         f_scanout.write(f"{rule_no}. Rule Title: {r.find('name').text}\n")
-        rule_no += 1
+
         pattern = r.find("regex").text
         pattern_name = r.find("name").text
 

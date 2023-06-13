@@ -40,14 +40,6 @@
         <reviewer>Reviewers should verify the implementation of proper input validation and secure handling of redirects and forwards.</reviewer>
     </rule>
     <rule>
-        <name>Insecure Cryptographic Algorithms</name>
-        <regex>.*(?:\bmd5\b|\bsha1\b).*</regex>
-        <rule_desc>Detects the usage of insecure cryptographic algorithms in the code.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the potential usage of insecure cryptographic algorithms (such as MD5 or SHA-1) in the code, which can lead to security vulnerabilities and compromised data.</vuln_desc>
-        <developer>Developers should use strong and modern cryptographic algorithms, such as SHA-256 or bcrypt, for secure hashing and encryption.</developer>
-        <reviewer>Reviewers should check for the usage of insecure cryptographic algorithms and recommend their replacement with more secure alternatives.</reviewer>
-    </rule>
-    <rule>
         <name>Authentication Modules (Login|Authentication|Authenticated|Oauth|JWT)</name>
         <regex>(^|\s)(?i)(Login|Authentication|Authenticated|Oauth|JWT)</regex>
         <rule_desc>Detects the presence of common module names related to authentication.</rule_desc>
@@ -155,7 +147,7 @@
     </rule>
     <rule>
         <name>Insecure Cryptographic Algorithm</name>
-        <regex>(?i)(MD2|MD4|MD5|SHA-1|DES|RC2|RC4|RC5|RSA)</regex>
+        <regex>(?i)\b(MD2|MD4|MD5|SHA1|SHA-1|DES|RC2|RC4|RC5|RSA)\b</regex>
         <rule_desc>Detects the usage of insecure cryptographic algorithms in Java code.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the potential vulnerability of using insecure cryptographic algorithms. Insecure algorithms such as MD5, SHA-1, or weak encryption algorithms can be exploited by attackers to bypass security measures or recover sensitive information.</vuln_desc>
         <developer>Developers should use secure cryptographic algorithms, such as SHA-256 or SHA-3 for hashing and AES for encryption. They should avoid using deprecated or weak algorithms that have known vulnerabilities.</developer>
