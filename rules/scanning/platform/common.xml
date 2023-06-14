@@ -2,6 +2,7 @@
     <rule>
         <name>Password</name>
         <regex>(^|\s)(?i)(Password|password|pwd|passwd)</regex>
+            <exclude>\b(?:SELECT|UPDATE|INSERT|FROM)\b</exclude>
         <rule_desc>Detects potential password-related strings in the code.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the potential presence of password-related strings in the code, which can lead to security risks if not handled properly.</vuln_desc>
         <developer>Developers should follow best practices for password handling, including strong encryption, salted hashing, and enforcing secure password policies.</developer>
@@ -33,8 +34,8 @@
     </rule>
     <rule>
         <name>Unvalidated Redirects and Forwards</name>
-        <regex>.*(?:\bredirect|forward\b).*</regex>
-        <rule_desc>Detects unvalidated redirects and forwards in the code.</rule_desc>
+        <regex>.*\b(?:redirect|forward)\b.*</regex>
+        <rule_desc>Detects potential unvalidated redirects or forwards in the code.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the potential presence of unvalidated redirects or forwards in the code, which can lead to security risks such as phishing attacks or unauthorized access.</vuln_desc>
         <developer>Developers should validate and sanitize all user-supplied input used for redirecting or forwarding to ensure the destination is trusted and authorized.</developer>
         <reviewer>Reviewers should verify the implementation of proper input validation and secure handling of redirects and forwards.</reviewer>
@@ -113,8 +114,8 @@
     </rule>        
     <rule>
         <name>Potentially Risky URLs</name>
-        <!--<regex>\bhttps?://[^\s]+</regex>-->
-        <regex>(?!.*DOCTYPE\shtml\sPUBLIC)\bhttps?://[^\s]+</regex>
+        <regex>(?i)\bhttps?://[^\s]+</regex>
+            <exclude>(?i).*DOCTYPE\s+html\s+PUBLIC.*</exclude>
         <rule_desc>Detects the presence of URLs in the application that may pose security risks or indicate potential trust issues with third-party URLs.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of URLs starting with http:// or https://, which could potentially pose security risks if not properly handled or validated. These URLs might involve data exfiltration or raise concerns about trusting third-party resources without thorough validation. Developers and reviewers should investigate these URLs to ensure their purpose, legitimacy, and adherence to security practices.</vuln_desc>
         <developer>Developers should list and carefully review all URLs used in the application. They should implement proper URL validation and sanitization techniques to ensure the security and integrity of the application when dealing with user-provided or third-party URLs. It is important to prevent any unintentional exposure of sensitive information and perform thorough taint validation on third-party URLs to mitigate trust-related security risks.</developer>

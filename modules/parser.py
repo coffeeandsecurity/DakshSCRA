@@ -44,6 +44,8 @@ def sourceParser(rule_path, targetfile, outputfile, rule_no):
         if r.find('mitigation/regex'):
             pattern = r.get('mitigation/regex')
 
+        exclude = r.find("exclude").text if r.find("exclude") is not None else ""
+
         # stdout based on verbosity level set
         if str(runtime.verbosity) == '1':
             #sys.stdout.write("\033[F")
@@ -73,9 +75,21 @@ def sourceParser(rule_path, targetfile, outputfile, rule_no):
 
                         if len(line) > 500:     # Setting maximum input length of the string read from the file
                             continue  # Skip long lines
-
+                        
+                        # Check for matches excluding excluded strings
+                        # if re.findall(pattern, line) and not re.search(exclude, line, re.IGNORECASE):
                         if re.findall(pattern, line):
+                            if exclude and re.search(exclude, line, re.IGNORECASE):
+                                continue
+                    
                             line = (line[:75] + '..') if len(line) > 300 else line
+
+                            # TOTO - Include checks to skip strings when an exclude rule matches.
+                            # Example: Exclude SQL statements from matching
+                            '''
+                            if re.search(r'\b(?:SELECT|UPDATE|INSERT|FROM)\b', line, re.IGNORECASE):
+                                continue
+                            '''
                             if not fpath:
                                 f_scanout.write("\n\t -> Source File: " + mlib.getSourceFilePath(runtime.sourcedir, filepath) + "\n")
                                 fpath = True
