@@ -113,9 +113,9 @@
         <reviewer>Reviewers should verify the implementation of secure coding practices and assess if additional security measures are in place to prevent SQL injection.</reviewer>
     </rule>        
     <rule>
-        <name>Potentially Risky URLs</name>
+        <name>Trusted Or Untrusted URLs</name>
         <regex>(?i)\bhttps?://[^\s]+</regex>
-            <exclude>(?i).*DOCTYPE\s+html\s+PUBLIC.*</exclude>
+            <exclude>(?i).*DOCTYPE\s.*</exclude>
         <rule_desc>Detects the presence of URLs in the application that may pose security risks or indicate potential trust issues with third-party URLs.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of URLs starting with http:// or https://, which could potentially pose security risks if not properly handled or validated. These URLs might involve data exfiltration or raise concerns about trusting third-party resources without thorough validation. Developers and reviewers should investigate these URLs to ensure their purpose, legitimacy, and adherence to security practices.</vuln_desc>
         <developer>Developers should list and carefully review all URLs used in the application. They should implement proper URL validation and sanitization techniques to ensure the security and integrity of the application when dealing with user-provided or third-party URLs. It is important to prevent any unintentional exposure of sensitive information and perform thorough taint validation on third-party URLs to mitigate trust-related security risks.</developer>
