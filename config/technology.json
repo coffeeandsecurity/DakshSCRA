@@ -1,0 +1,95 @@
+{
+    "Frontend": [
+      {"name": "JavaScript", "regex": "<script.*?>"},
+      {"name": "TypeScript", "regex": "import.*?typescript"},
+      {"name": "React", "regex": "import.*?react"},
+      {"name": "Vue.js", "regex": "import.*?vue"},
+      {"name": "Angular", "regex": "import.*?@angular/core"},
+      {"name": "Ember.js", "regex": "import.*?ember"},
+      {"name": "Backbone.js", "regex": "import.*?backbone"}
+    ],
+    "Backend": [
+        {"name": "Node.js", "regex": "import.*?express"},
+        {"name": "PHP", "regex": "import.*?php|require.*?php"},
+        {"name": ".NET", "regex": "using\\s+System;"},
+        {"name": "Ruby on Rails", "regex": "gem.*?rails"},
+        {"name": "Java", "regex": "import.*?java"},
+        {"name": "Python", "regex": "import.*?python"},
+        {"name": "Rust", "regex": "use\\s+.*?rust"},
+        {"name": "Go", "regex": "import.*?golang"},
+        {"name": "C#", "regex": "using\\s+System\\..*?\\s*;"},
+        {"name": "Scala", "regex": "import\\s+scala\\..*?\\s*;"},
+        {"name": "Perl", "regex": "use\\s+.*?perl"},
+        {"name": "Haskell", "regex": "import\\s+qualified\\s+.*?\\s*;"},
+        {"name": "Kotlin", "regex": "import\\s+.*?kotlin"},
+        {"name": "Elixir", "regex": "alias\\s+.*?Elixir\\..*?\\s*"},
+        {"name": "Lua", "regex": "require\\s*\\(.*?\\)"},
+        {"name": "Groovy", "regex": "import\\s+.*?groovy"},
+        {"name": "Dart", "regex": "import\\s+.*?dart"},
+        {"name": "COBOL", "regex": "IDENTIFICATION\\s+DIVISION\\s*."},
+        {"name": "Fortran", "regex": "PROGRAM\\s+.*?\\s*"},
+        {"name": "PL/SQL", "regex": "DECLARE\\s+.*?BEGIN\\s*"},
+        {"name": "VB.NET", "regex": "Imports\\s+.*?\\s*"},
+        {"name": "TypeScript", "regex": "import.*?typescript"},
+        {"name": "Erlang", "regex": "-module\\(.*?\\)."}
+    ],
+    "Mobile Platforms": [
+      {"name": "React Native", "regex": "import.*?react-native"},
+      {"name": "Flutter", "regex": "import.*?flutter"},
+      {"name": "Ionic", "regex": "import.*?ionic"},
+      {"name": "Xamarin", "regex": "using\\s+Xamarin;"},
+      {"name": "NativeScript", "regex": "import.*?nativescript"},
+      {"name": "Cordova", "regex": "import.*?cordova"},
+      {"name": "Kotlin", "regex": "import.*?kotlin"},
+      {"name": "Swift", "regex": "import\\s+.*?Swift"}
+    ],
+    "Database": [
+      {"name": "MySQL", "regex": "mysql.connector"},
+      {"name": "PostgreSQL", "regex": "psycopg2"},
+      {"name": "MongoDB", "regex": "import.*?mongodb"},
+      {"name": "SQLite", "regex": "import.*?sqlite"}
+    ],
+    "System Programs": [
+      {"name": "Shell Script", "regex": ".*?/bin/(?:bash|sh|zsh)"},
+      {"name": "PowerShell", "regex": "using\\s+module\\s+.*?\\s*;"}
+    ],
+    "Design Patterns": [
+      {"name": "MVC", "regex": "class\\s+\\w+\\(.*?ModelView"},
+      {"name": "Singleton", "regex": "class\\s+\\w+\\s+\\(.*?Singleton"},
+      {"name": "Factory Method", "regex": "class\\s+\\w+\\s+\\(.*?FactoryMethod"},
+      {"name": "Observer", "regex": "class\\s+\\w+\\(.*?Observer"},
+      {"name": "Adapter", "regex": "class\\s+\\w+\\(.*?Adapter"},
+      {"name": "Decorator", "regex": "class\\s+\\w+\\(.*?Decorator"},
+      {"name": "Strategy", "regex": "class\\s+\\w+\\(.*?Strategy"},
+      {"name": "Command", "regex": "class\\s+\\w+\\(.*?Command"},
+      {"name": "Builder", "regex": "class\\s+\\w+\\(.*?Builder"},
+      {"name": "Prototype", "regex": "class\\s+\\w+\\(.*?Prototype"},
+      {"name": "Mediator", "regex": "class\\s+\\w+\\(.*?Mediator"},
+      {"name": "Visitor", "regex": "class\\s+\\w+\\(.*?Visitor"}
+    ],
+    "Libraries": [
+      {"name": "Requests", "regex": "import.*?requests"},
+      {"name": "jQuery", "regex": "import.*?jquery"},
+      {"name": "Lodash", "regex": "import.*?lodash"},
+      {"name": "TensorFlow", "regex": "import.*?tensorflow"}
+    ],
+    "Technologies": [
+      {"name": "Azure", "regex": "import.*?azure"},
+      {"name": "Office 365", "regex": "import.*?office365"},
+      {"name": "Power BI", "regex": "import.*?powerbi"},
+      {"name": "TensorFlow", "regex": "import.*?tensorflow"},
+      {"name": "AWS", "regex": "import.*?aws-sdk"},
+      {"name": "Google Cloud", "regex": "import.*?google.cloud"}
+    ],
+    "Other": [
+      {"name": "Java Spring Boot", "regex": "import.*?org.springframework.boot"},
+      {"name": "Flask", "regex": "import.*?flask"},
+      {"name": "ASP.NET", "regex": "using\\s+System.Web;"},
+      {"name": "Django", "regex": "import.*?django"},
+      {"name": "Ruby Sinatra", "regex": "require\\s+sinatra"},
+      {"name": "Go", "regex": "import\\s+\".*?go\""},
+      {"name": "Scala", "regex": "import\\s+scala\\..*?"},
+      {"name": "Haskell", "regex": "import\\s+.*?haskell"}
+    ]
+  }
+  

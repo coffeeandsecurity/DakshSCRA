@@ -96,6 +96,11 @@ elif results.rule_file:
         mlib.updateScanSummary("inputs_received.filetypes_selected", results.file_types.lower())
         mlib.updateScanSummary("inputs_received.target_directory", results.target_dir)
 
+        # Prompt the user to enter project name and subtitle
+        project_name = input("[*] Enter Project Name (E.g: XYZ Portal): ")
+        project_subtitle = input("[*] Enter Project Subtitle (E.g: v1.0.1 / XYZ Corp): ")
+        mlib.updateProjectConfig(project_name,project_subtitle)     # Update project details
+
     if str(results.verbosity) in ('1', '2'):
         runtime.verbosity = results.verbosity
         print(f'[*] Verbosity Level    = {results.verbosity}')
@@ -203,3 +208,4 @@ mlib.updateScanSummary("scanning_timeline.scan_duration", scan_duration)
 
 ###### [Stage 4] Generate Reports ######
 report.genReport()
+mlib.updateProjectConfig("","")     # Clean up project details in the config file

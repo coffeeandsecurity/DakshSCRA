@@ -84,12 +84,6 @@ def sourceParser(rule_path, targetfile, outputfile, rule_no):
                     
                             line = (line[:75] + '..') if len(line) > 300 else line
 
-                            # TOTO - Include checks to skip strings when an exclude rule matches.
-                            # Example: Exclude SQL statements from matching
-                            '''
-                            if re.search(r'\b(?:SELECT|UPDATE|INSERT|FROM)\b', line, re.IGNORECASE):
-                                continue
-                            '''
                             if not fpath:
                                 f_scanout.write("\n\t -> Source File: " + mlib.getSourceFilePath(runtime.sourcedir, filepath) + "\n")
                                 fpath = True

@@ -2,9 +2,12 @@ import fnmatch
 import os, sys, re
 import pandas as pd
 import chardet
+import string
 
 import json
 from json.decoder import JSONDecodeError
+
+import ruamel.yaml
 
 from tabulate import tabulate
 from pathlib import Path    # Resolve the windows / mac / linux path issue
@@ -12,10 +15,52 @@ import xml.etree.ElementTree as ET
 
 import modules.runtime as runtime
 import modules.rulesops as rulesops
-
+import modules.misclib as mlib
 
 # Current directory of the python file
 parentPath = os.path.dirname(os.path.realpath(__file__))
+
+
+def saveYaml(file_path, data):
+    with open(file_path, "w") as file:
+        ruamel.yaml.safe_dump(data, file)
+
+# Update project details in the config file (config/project.yaml)
+def updateProjectConfig(project_name, project_subtitle):
+    if os.path.exists(runtime.projectConfig):
+        with open(runtime.projectConfig, "r") as file:
+            config_data = ruamel.yaml.round_trip_load(file)
+
+        # Update the entries in the YAML data
+        if "title" in config_data and "subtitle" in config_data:
+            config_data["title"] = project_name
+            config_data["subtitle"] = project_subtitle
+
+        # Save the updated YAML file while preserving order and formatting
+        with open(runtime.projectConfig, "w") as file:
+            ruamel.yaml.round_trip_dump(config_data, file)
+
+
+# Check the length and allowed characters of the inputs
+def validate_input(input_string, input_type):
+    allowed_chars = string.ascii_letters + string.digits + '-_()'
+    max_length = 50
+    
+    if input_type == 'name':
+        allowed_chars = string.ascii_letters + string.digits + '-_() '
+        max_length = 50
+    elif input_type == 'path':
+        allowed_chars = string.ascii_letters + string.digits + '-_/\\'
+        max_length = 100
+    
+    if len(input_string) > max_length:
+        print(f"Input exceeds maximum length of {max_length} characters.")
+        return False
+    elif any(char not in allowed_chars for char in input_string):
+        print(f"Input contains invalid characters. Only the following characters are allowed: {allowed_chars}")
+        return False
+    else:
+        return True
 
 # Detect file encoding type
 def detectEncodingType(targetfile):
@@ -71,6 +116,44 @@ def discoverFiles(codebase, sourcepath, mode):
 
 
     return runtime.discovered_Fpaths
+
+# This is a test function and will be merged with the above function
+def reconDiscoverFiles(codebase, sourcepath, mode):
+    if mode == 1:
+        ft = re.sub(r"\s+", "", rulesops.getRulesPath_OR_FileTypes(codebase, "filetypes"))
+        filetypes = list(ft.split(","))
+        print("     [-] Filetypes Selected: " + str(filetypes))
+        updateScanSummary("inputs_received.file_extensions_selected", str(filetypes))
+    elif mode == 2:
+        filetypes = ['*.*']
+        updateScanSummary("inputs_received.file_extensions_selected", str(filetypes))
+
+    matches = []
+    fext = []
+
+    print("     [-] DakshSCRA Directory Path: " + runtime.root_dir)
+    
+    identified_files = []  # List to store discovered file paths
+
+    for root, dirnames, filenames in os.walk(sourcepath):
+        for extensions in filetypes:
+            for filename in fnmatch.filter(filenames, extensions):
+                file_path = os.path.join(root, filename)
+                matches.append(file_path)
+                identified_files.append(file_path)
+                fext.append(getFileExtention(filename))
+
+    print("     [-] Total files to be scanned: " + str(len(identified_files)))
+    updateScanSummary("detection_summary.total_files_identified", str(len(identified_files)))
+    updateScanSummary("detection_summary.file_extensions_identified", str(fext))
+    fext = list(dict.fromkeys(filter(None, fext)))
+
+    print("     [-] File Extensions Identified: " + str(fext))
+    updateScanSummary("detection_summary.file_extensions_identified", str(fext))
+
+    return identified_files
+
+
 
 # Retrieve files extention from file path
 def getFileExtention(fpath):
