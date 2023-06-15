@@ -47,8 +47,8 @@ scanSummary_Fpath = Path(str(root_dir) + "/runtime/scan_summary.json")
 
 
 ## ------------- <Recon> ------------- ##
-technologies_Fpath = Path(str(root_dir) + "/config/technology.json")
-reconOutput_Fpath = Path(str(root_dir) + "/runtime/recon_summary.json")
+technologies_Fpath = Path(str(root_dir) + "/rules/recon/technology.json")
+reconOutput_Fpath = Path(str(root_dir) + "/runtime/recon.json")
 ## ------------- </Recon> ------------- ##
 
 

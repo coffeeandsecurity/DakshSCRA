@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import re
 import chardet
@@ -7,41 +8,36 @@ from pathlib import Path
 import modules.misclib as mlib
 import modules.runtime as runtime
 
+
 # Exclusion list for file extensions
 exclusion_list = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.ico', '.tiff', '.zip',
                   '.svg', '.ttf', '.woff', '.woff2']
 
 
-# Function to analyze the source code and perform reconnaissance
-def perform_reconnaissance(source_code_path, technologies, existing_output):
-    # Read the source code file with auto-detected encoding or fallback to a default encoding
-    with open(source_code_path, 'rb') as file:
-        raw_data = file.read()
-        detection_result = chardet.detect(raw_data)
-        encoding = detection_result['encoding'] if detection_result['encoding'] else 'utf-8'
-        source_code = raw_data.decode(encoding, errors='replace')
+# Identify CMS function
+def identify_cms(technology, programming_language, file_path):
+    with open(runtime.technologies_Fpath) as file:
+        cms_data = json.load(file)
 
-    # Perform reconnaissance for each technology category
-    recon_output = {category: set() for category in technologies.keys()}
-    for category, tech_list in technologies.items():
-        for tech in tech_list:
-            # Check if the technology is already recorded in the existing output
-            if tech['name'] in existing_output.get(category, set()):
-                continue
+    cms_types = cms_data.get('Framework', {}).get(programming_language, [])
+    print("CMS Types: " + str(cms_types))
 
-            matches = re.findall(tech['regex'], source_code, re.IGNORECASE)
-            if matches:
-                recon_output[category].add(tech['name'])
-                # Update the existing output
-                existing_output.setdefault(category, set()).add(tech['name'])
+    for cms_type in cms_types:
+        print("CMS Type: " + str(cms_type))
+        regex = cms_type['regex']
+        regex_flag = cms_type['regexFlag']
+        file_extensions = cms_type['fileExtensions']
 
-    # Print the match found message if recon_output[category] is not empty
-    for category in recon_output.keys():
-        if recon_output[category]:
-            print("Match Found: " + ", ".join(recon_output[category]))
+        if any(file_path.endswith(extension) for extension in file_extensions):
+            if regex_flag == '0':
+                if re.search(regex, technology, re.IGNORECASE):
+                    return cms_type['name']
+            else:
+                if re.search(regex, technology):
+                    return cms_type['name']
 
-    # Return the reconnaissance output
-    return recon_output
+    return None
+
 
 
 # Software composition analysis
@@ -59,8 +55,13 @@ def recon(targetdir):
                 log_filepaths.append(file_path)
 
     # Load technology details from JSON file
-    with open(runtime.technologies_Fpath, 'r') as json_file:
-        technologies = json.load(json_file)
+    print("Loading technology details...")
+    try:
+        with open(runtime.technologies_Fpath, 'r') as json_file:
+            technologies = json.load(json_file)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print("Error loading technology details:", str(e))
+        return []
 
     # Output file path
     output_file_path = runtime.reconOutput_Fpath
@@ -68,50 +69,113 @@ def recon(targetdir):
     # Check if the output file already exists
     if Path(output_file_path).is_file():
         # Load the existing output from the JSON file
-        with open(output_file_path, 'r') as existing_output_file:
-            existing_output = json.load(existing_output_file)
+        try:
+            with open(output_file_path, 'r') as existing_output_file:
+                existing_output = json.load(existing_output_file)
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            print("Error loading existing output:", str(e))
+            existing_output = {}
     else:
         existing_output = {}
 
     # Perform reconnaissance on each file path within log_filepaths
-    recon_output = {category: set() for category in technologies.keys()}
+    print("Performing reconnaissance...")
+    recon_output = {}  # Initialize the recon_output dictionary
     for file_path in log_filepaths:
-        file_recon_output = perform_reconnaissance(file_path, technologies, existing_output)
-        for category, tech_set in file_recon_output.items():
-            recon_output[category].update(tech_set)
-
-    # Convert sets to lists
-    recon_output = {category: list(tech_list) for category, tech_list in recon_output.items()}
+        print("Checking file:", file_path)  # Print the file path being checked
+        # Check the file extension against the identified technologies
+        _, extension = os.path.splitext(file_path)
+        for category, tech_list in technologies.items():
+            for tech in tech_list:
+                if isinstance(tech, dict):
+                    regex_flag = tech.get('regexFlag', '1')
+                    if regex_flag == '0':
+                        # Check file extension if regexFlag is 0
+                        file_extensions = tech.get('fileExtensions', [])
+                        if extension.lower() in file_extensions:
+                            # Match found based on file extension, confirm the technology
+                            print("Match found:", tech['name'], "in", category)  # Print the matched technology name and category
+                            '''
+                            cms = identify_cms(tech['name'], category, file_path)  # Identify the CMS for the technology
+                            if cms:
+                                print("Identified CMS:", cms)  # Print the identified CMS
+                                existing_output.setdefault(category, {}).setdefault(tech['name'], {}).setdefault(file_path, cms)
+                            '''
+                            recon_output.setdefault(category, {}).setdefault(tech['name'], []).append(file_path)
+                            break  # No need to continue checking other technologies
+                    else:
+                        # Perform regex matching if regexFlag is 1
+                        regex = tech.get('regex', '')
+                        if regex and re.search(regex, file_path, re.IGNORECASE):
+                            # Match found based on regex, confirm the technology
+                            print("Match found:", tech['name'], "in", category)  # Print the matched technology name and category
+                            '''
+                            cms = identify_cms(tech['name'], category, file_path)  # Identify the CMS for the technology
+                            if cms:
+                                print("Identified CMS:", cms)  # Print the identified CMS
+                                existing_output.setdefault(category, {}).setdefault(tech['name'], {}).setdefault(file_path, cms)
+                            '''
+                            recon_output.setdefault(category, {}).setdefault(tech['name'], []).append(file_path)
+                            break  # No need to continue checking other technologies
+                else:
+                    print("Invalid technology entry in", category)
 
     # Save the reconnaissance output in a JSON file, overwriting the existing output
-    with open(output_file_path, 'w') as output_file:
-        json.dump(recon_output, output_file, indent=4)
+    print("Saving reconnaissance output...")
+    try:
+        with open(output_file_path, 'w') as output_file:
+            json.dump(recon_output, output_file, indent=4)
+    except IOError as e:
+        print("Error saving reconnaissance output:", str(e))
 
     print("Reconnaissance completed. The output has been saved in 'recon_output.json'")
 
+    summariseRecon(output_file_path)
+    
     return log_filepaths
 
 
-# WORK IN PROGRESS
-wip = """
-    Note: This feature is still work in progress. 
-    The purpose of this feature is to perform a software/application level reconnaisance 
-    to identify various useful details related to the target project. The reconnaisance would 
-    include multiple sub-features and one such feature is automated software composition analysis. 
+'''
+Function to list directories grouped by file extensions or technology type, 
+along with the count of each file type within each directory. 
+It takes the path to the initial recon JSON output file, reads and analyses the details, 
+and dumps the output in a JSON format within the same directory as the input JSON file.
+'''
+def summariseRecon(json_file_path):
+    with open(json_file_path, 'r') as file:
+        data = json.load(file)
 
-    Steps:
-        *  Enum all file paths
-        *  Enum each file types and total identified number
-        *  Identify Design Pattern
-        *  Identify application type (Misc, COTS, Unknown, CMS, Mobile, APIs)
-        *  Conditional Check to identify application type (Use XML/Dict to specify conditions)
-        *  Identify Standard Libs and total number
-        *  Intelligent Enum - ON / OFF
-        *  Enum TLOC
+    summary = {}
 
-    Options:
-        *  Ignore paths based on path or keyword
-        *  Ignore files based on extentions
-    """
+    for category, files in data.items():
+        category_summary = {}
+        for file_type, file_paths in files.items():
+            directory_counts = {}
 
-#print(wip)
+            for file_path in file_paths:
+                directory_path = '/'.join(file_path.split('/')[:-1])
+                directory_counts[directory_path] = directory_counts.get(directory_path, 0) + 1
+
+            file_type_summary = []
+            for directory, count in directory_counts.items():
+                file_type_summary.append({"directory": directory, "fileCount": count})
+
+            category_summary[file_type] = {
+                "directories": file_type_summary,
+                "totalFiles": len(file_paths),
+                "totalDirectories": len(directory_counts)
+            }
+
+        summary[category] = category_summary
+
+    # Write the output to a JSON file "recon_summary.json" in the same folder as the input JSON file
+    output_file_path = os.path.join(os.path.dirname(json_file_path), "recon_summary.json")
+    with open(output_file_path, 'w') as output_file:
+        json.dump(summary, output_file, indent=4)
+
+    print("Summary data has been written to 'recon_summary.json'.")
+
+
+
+
+
