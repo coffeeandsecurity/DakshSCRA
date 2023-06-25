@@ -6,4 +6,4 @@ modules/__pycache__/
 modules/*pycache*
 reports/html/
 reports/pdf/
-reports/text/
+reports/text/*
