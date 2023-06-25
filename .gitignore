@@ -6,5 +6,4 @@ modules/__pycache__/
 modules/*pycache*
 reports/html/
 reports/pdf/
-reports/text/filepaths_aoi.txt
-reports/text/areas_of_interest.txt
+reports/text/

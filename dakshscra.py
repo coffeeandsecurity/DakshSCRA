@@ -21,7 +21,7 @@ runtime.root_dir = root_dir         # initialise global root directory which is 
 
 mlib.dirCleanup("runtime")
 mlib.dirCleanup("reports/html")
-#mlib.dirCleanup("reports/text")
+mlib.dirCleanup("reports/text")
 mlib.dirCleanup("reports/pdf")
 # ------------------------- #
 
@@ -163,11 +163,15 @@ runtime.start_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 print("[*] Scanner initiated!!")
 
 ###### [Stage 1] Discover file paths    ######
-print("[+] [Stage 1] Discover file paths")
+print("[*] [Stage 1] Discover file paths")
 log_filepaths = mlib.discoverFiles(codebase, sourcepath, 1)
 
 ###### [Stage 2] Rules/Pattern Matching - Parse Source Code ######
-print("[+] [Stage 2] Rules/Pattern Matching - Parsing identified project files")
+print("[*] [Stage 2] Rules/Pattern Matching - Parsing identified project files")
+
+# Ensure the directory structure exists. If it doesn't then create necessary directory structure.
+output_directory = os.path.dirname(runtime.outputAoI)
+os.makedirs(output_directory, exist_ok=True)
 
 with open(runtime.outputAoI, "w") as f_scanout:
     with open(log_filepaths, 'r', encoding=mlib.detectEncodingType(log_filepaths)) as f_targetfiles:
@@ -175,9 +179,11 @@ with open(runtime.outputAoI, "w") as f_scanout:
         parser.sourceParser(rules_main, f_targetfiles, f_scanout, rule_no)   # Pattern matching for specific platform type
         parser.sourceParser(rules_common, f_targetfiles, f_scanout, rule_no)  # Pattern matching for common rules
 
+print("     [-] Total Files Scanned:", str(runtime.totalFilesIdentified - runtime.parseErrorCnt))
+mlib.updateScanSummary("detection_summary.total_files_scanned", str(runtime.totalFilesIdentified - runtime.parseErrorCnt))
 
 ###### [Stage 3] Parse File Paths for areas of interest ######
-print("[+] [Stage 3] Parsing file paths for areas of interest")
+print("[*] [Stage 3] Parsing file paths for areas of interest")
 
 with open(runtime.outputAoI_Fpaths, "w") as f_scanout:
     with open(log_filepaths, 'r', encoding=mlib.detectEncodingType(log_filepaths)) as f_targetfiles:
@@ -205,6 +211,11 @@ print(f"    [-] Scan completed in   : {scan_duration}")
 mlib.updateScanSummary("scanning_timeline.scan_start_time", runtime.start_timestamp)
 mlib.updateScanSummary("scanning_timeline.scan_end_time",  end_timestamp)
 mlib.updateScanSummary("scanning_timeline.scan_duration", scan_duration)
+
+# Parse the JSON Summary file and write output to a text file
+parser.genScanSummaryText(runtime.scanSummary_Fpath)
+
+
 
 ###### [Stage 4] Generate Reports ######
 report.genReport()

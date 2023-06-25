@@ -12,6 +12,8 @@ sourcedir = ''       # To be used for storing project directory name
 
 verbosity = '1'
 
+rCnt = 0    # Counter to keep track of matched rules
+
 ## ----------- Initialize - File Paths ----------- ##
 # Directory path to platform specific rules
 # rulesRootDir = Path(os.path.abspath('') + "/rules/scanning/platform")
@@ -32,22 +34,28 @@ staticPdfCssFpath = Path(str(root_dir) + "/resources/static/pdf.css")
 # Logo
 staticLogo = Path(str(root_dir) + "/resources/static/logo_for_report.jpg")
 
+## ------------- <Counters> ------------- ##
+totalFilesIdentified = 0
+parseErrorCnt = 0           # Keep track of file parsing errors
+## ------------- </Counters> ------------- ##
 
 
-## ------------- <Runtime Temp Files> ------------- ##
+## ------------- <Temp Files> ------------- ##
 # Log File paths
 discovered_Fpaths = Path(str(root_dir) + "/runtime/filepaths.log")
+discovered_clean_Fpaths = Path(str(root_dir) + "/runtime/filepaths.txt")
 
 # Logs File paths
 inventory_Fpathext = Path(str(root_dir) + "/runtime/inventory.json")
 
 # Specify the filename of the JSON file
 scanSummary_Fpath = Path(str(root_dir) + "/runtime/scan_summary.json")
-## ------------- </Runtime Temp Files> ------------- ##
+## ------------- </Temp Files> ------------- ##
 
 
 ## ------------- <Recon> ------------- ##
 technologies_Fpath = Path(str(root_dir) + "/rules/recon/technology.json")
+framework_Fpath = Path(str(root_dir) + "/rules/recon/frameworks.json")
 reconOutput_Fpath = Path(str(root_dir) + "/runtime/recon.json")
 ## ------------- </Recon> ------------- ##
 
@@ -94,3 +102,31 @@ Author:     Debasis Mohanty
             Email: d3basis.m0hanty@gmail.com
 ============================================================='''
 
+
+# NOT-IN-USE - To be used later after some improvements
+def print_banner():
+    starfish = r'''
+                 \\|//
+               <((((())>
+                 //|\\
+               '''
+    banner = '''
+=============================================================
+Daksh SCRA (Source Code Review Assist) - Beta Release v0.2
+
+Author:     Debasis Mohanty
+            www.coffeeandsecurity.com
+            Twitter: @coffensecurity
+            Email: d3basis.m0hanty@gmail.com
+=============================================================
+'''
+    # Get the width of the terminal window
+    _, columns = os.popen('stty size', 'r').read().split()
+
+    # Calculate the padding based on the terminal width
+    padding = int(columns) - len(starfish.split('\n')[1]) - 2
+
+    # Print the banner with starfish and centered text
+    print(starfish.center(int(columns)))
+    print(banner.center(int(columns)))
+    print(''.center(int(columns), '-'))

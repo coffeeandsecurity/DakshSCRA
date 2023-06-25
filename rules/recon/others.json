@@ -1,0 +1,31 @@
+{
+    "Design Patterns": [
+      {"name": "MVC", "regex": "class\\s+\\w+\\(.*?ModelView"},
+      {"name": "Singleton", "regex": "class\\s+\\w+\\s+\\(.*?Singleton"},
+      {"name": "Factory Method", "regex": "class\\s+\\w+\\s+\\(.*?FactoryMethod"},
+      {"name": "Observer", "regex": "class\\s+\\w+\\(.*?Observer"},
+      {"name": "Adapter", "regex": "class\\s+\\w+\\(.*?Adapter"},
+      {"name": "Decorator", "regex": "class\\s+\\w+\\(.*?Decorator"},
+      {"name": "Strategy", "regex": "class\\s+\\w+\\(.*?Strategy"},
+      {"name": "Command", "regex": "class\\s+\\w+\\(.*?Command"},
+      {"name": "Builder", "regex": "class\\s+\\w+\\(.*?Builder"},
+      {"name": "Prototype", "regex": "class\\s+\\w+\\(.*?Prototype"},
+      {"name": "Mediator", "regex": "class\\s+\\w+\\(.*?Mediator"},
+      {"name": "Visitor", "regex": "class\\s+\\w+\\(.*?Visitor"}
+    ],
+    "Libraries": [
+      {"name": "Requests", "regex": "import.*?requests"},
+      {"name": "jQuery", "regex": "import.*?jquery"},
+      {"name": "Lodash", "regex": "import.*?lodash"},
+      {"name": "TensorFlow", "regex": "import.*?tensorflow"}
+    ],
+    "Cloud Services": [
+      {"name": "Azure", "regex": "import.*?azure"},
+      {"name": "Office 365", "regex": "import.*?office365"},
+      {"name": "Power BI", "regex": "import.*?powerbi"},
+      {"name": "TensorFlow", "regex": "import.*?tensorflow"},
+      {"name": "AWS", "regex": "import.*?aws-sdk"},
+      {"name": "Google Cloud", "regex": "import.*?google.cloud"}
+    ]
+  }
+  

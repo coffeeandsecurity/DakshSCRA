@@ -4,37 +4,43 @@ import json
 import re
 import chardet
 from pathlib import Path
+from collections import Counter
 
 import modules.misclib as mlib
 import modules.runtime as runtime
-
 
 # Exclusion list for file extensions
 exclusion_list = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.ico', '.tiff', '.zip',
                   '.svg', '.ttf', '.woff', '.woff2']
 
 
-# Identify CMS function
-def identify_cms(technology, programming_language, file_path):
-    with open(runtime.technologies_Fpath) as file:
-        cms_data = json.load(file)
+def detectFramework(language, file_path):
+    # Load the JSON data from a file
+    with open(runtime.framework_Fpath) as json_file:
+        data = json.load(json_file)
 
-    cms_types = cms_data.get('Framework', {}).get(programming_language, [])
-    print("CMS Types: " + str(cms_types))
+    # Check if the language exists in the JSON data
+    if language in data:
+        frameworks = data[language]
+        for framework in frameworks:
+            regex_pattern = framework['regex']
+            file_extensions = framework['fileExtensions']
 
-    for cms_type in cms_types:
-        print("CMS Type: " + str(cms_type))
-        regex = cms_type['regex']
-        regex_flag = cms_type['regexFlag']
-        file_extensions = cms_type['fileExtensions']
+            # Check if the file extension matches
+            if file_path.endswith(tuple(file_extensions)):
+                # Read the file content and detect the encoding
+                with open(file_path, 'rb') as file_handle:
+                    content = file_handle.read()
+                    result = chardet.detect(content)
+                    encoding = result['encoding'] if result['encoding'] is not None else 'ISO-8859-1'   # ISO-8859-1 encoding type works on most occasions including those where utf8 cause errors
 
-        if any(file_path.endswith(extension) for extension in file_extensions):
-            if regex_flag == '0':
-                if re.search(regex, technology, re.IGNORECASE):
-                    return cms_type['name']
-            else:
-                if re.search(regex, technology):
-                    return cms_type['name']
+                # Decode the file content using the detected encoding
+                content = content.decode(encoding, errors='ignore')
+
+                # Match the regex pattern
+                match = re.search(regex_pattern, content, re.IGNORECASE)
+                if match:
+                    return framework['name']
 
     return None
 
@@ -95,13 +101,11 @@ def recon(targetdir):
                         if extension.lower() in file_extensions:
                             # Match found based on file extension, confirm the technology
                             print("Match found:", tech['name'], "in", category)  # Print the matched technology name and category
-                            '''
-                            cms = identify_cms(tech['name'], category, file_path)  # Identify the CMS for the technology
-                            if cms:
-                                print("Identified CMS:", cms)  # Print the identified CMS
-                                existing_output.setdefault(category, {}).setdefault(tech['name'], {}).setdefault(file_path, cms)
-                            '''
+                            #print(f"Framework: {detectFramework(tech['name'], file_path)}")
+
                             recon_output.setdefault(category, {}).setdefault(tech['name'], []).append(file_path)
+                            if detectFramework(tech['name'], file_path) is not None:
+                                recon_output.setdefault("Framework", {}).setdefault(detectFramework(tech['name'], file_path), []).append(file_path)
                             break  # No need to continue checking other technologies
                     else:
                         # Perform regex matching if regexFlag is 1
@@ -109,13 +113,11 @@ def recon(targetdir):
                         if regex and re.search(regex, file_path, re.IGNORECASE):
                             # Match found based on regex, confirm the technology
                             print("Match found:", tech['name'], "in", category)  # Print the matched technology name and category
-                            '''
-                            cms = identify_cms(tech['name'], category, file_path)  # Identify the CMS for the technology
-                            if cms:
-                                print("Identified CMS:", cms)  # Print the identified CMS
-                                existing_output.setdefault(category, {}).setdefault(tech['name'], {}).setdefault(file_path, cms)
-                            '''
                             recon_output.setdefault(category, {}).setdefault(tech['name'], []).append(file_path)
+                            # print(f"Framework: {detectFramework(tech['name'], file_path)}")
+                            if detectFramework(tech['name'], file_path) is not None:
+                                recon_output.setdefault("Framework", {}).setdefault(detectFramework(tech['name'], file_path), []).append(file_path)
+
                             break  # No need to continue checking other technologies
                 else:
                     print("Invalid technology entry in", category)
@@ -124,7 +126,7 @@ def recon(targetdir):
     print("Saving reconnaissance output...")
     try:
         with open(output_file_path, 'w') as output_file:
-            json.dump(recon_output, output_file, indent=4)
+            json.dump(recon_output, output_file, indent=4, sort_keys=True)
     except IOError as e:
         print("Error saving reconnaissance output:", str(e))
 
@@ -140,6 +142,7 @@ Function to list directories grouped by file extensions or technology type,
 along with the count of each file type within each directory. 
 It takes the path to the initial recon JSON output file, reads and analyses the details, 
 and dumps the output in a JSON format within the same directory as the input JSON file.
+'''
 '''
 def summariseRecon(json_file_path):
     with open(json_file_path, 'r') as file:
@@ -171,7 +174,80 @@ def summariseRecon(json_file_path):
     # Write the output to a JSON file "recon_summary.json" in the same folder as the input JSON file
     output_file_path = os.path.join(os.path.dirname(json_file_path), "recon_summary.json")
     with open(output_file_path, 'w') as output_file:
-        json.dump(summary, output_file, indent=4)
+        json.dump(summary, output_file, indent=4, sort_keys=True)
+
+    print("Summary data has been written to 'recon_summary.json'.")
+'''
+
+'''
+This function takes a list of file_paths as input. It extracts the project folder names from the file paths and 
+finds the most common project folder name using the Counter class. Then, it iterates over the file paths, extracts 
+the parent directories, and checks if the parent directory's name matches the most common project folder name. 
+If it matches, the parent directory is added to the parent_directories set. 
+Finally, the function returns a list of all the extracted parent directories.
+'''
+def extractParentDirectory(file_paths):
+    print("filepaths: "+str(file_paths))
+    # Extract project folder names from file paths
+    project_folder_names = [os.path.basename(os.path.dirname(file_path)) for file_path in file_paths]
+
+    # Find the most common project folder name
+    common_project_folder = Counter(project_folder_names).most_common(1)
+
+    if common_project_folder:
+        # Get the most common project folder name
+        most_common_folder = common_project_folder[0][0]
+
+        # Extract parent directories using the most common project folder name
+        parent_directories = set()
+        for file_path in file_paths:
+            directory_path = os.path.dirname(file_path)
+            parent_directory = os.path.dirname(directory_path)
+            if os.path.basename(parent_directory) == most_common_folder:
+                parent_directories.add(parent_directory)
+
+        return list(parent_directories)
+
+    return []
+
+
+
+def summariseRecon(json_file_path):
+    with open(json_file_path, 'r') as file:
+        data = json.load(file)
+
+    summary = {}
+
+    for category, files in data.items():
+        category_summary = {}
+        for file_type, file_paths in files.items():
+            directory_counts = {}
+
+            for file_path in file_paths:
+                directory_path = '/'.join(file_path.split('/')[:-1])
+                directory_counts[directory_path] = directory_counts.get(directory_path, 0) + 1
+
+            file_type_summary = []
+            for directory, count in directory_counts.items():
+                file_type_summary.append({"directory": directory, "fileCount": count})
+
+            category_summary[file_type] = {
+                "directories": file_type_summary,
+                "totalFiles": len(file_paths),
+                "totalDirectories": len(directory_counts)
+            }
+
+        # Check if the category is "Framework"
+        if category == "Framework":
+            parent_directories = extractParentDirectory(file_paths)
+            category_summary["ParentDirectory"] = parent_directories
+
+        summary[category] = category_summary
+
+    # Write the output to a JSON file "recon_summary.json" in the same folder as the input JSON file
+    output_file_path = os.path.join(os.path.dirname(json_file_path), "recon_summary.json")
+    with open(output_file_path, 'w') as output_file:
+        json.dump(summary, output_file, indent=4, sort_keys=True)
 
     print("Summary data has been written to 'recon_summary.json'.")
 

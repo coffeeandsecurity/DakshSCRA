@@ -1,0 +1,50 @@
+{
+    "Python": [
+      {"name": "Django", "regex": "django", "regexFlag": "1", "fileExtensions": [".py"]},
+      {"name": "Flask", "regex": "(?i)\\bimport\\s+.*?flask\\b|flask\\b", "regexFlag": "1", "fileExtensions": [".py"]}
+    ],
+    "Ruby": [
+      {"name": "Ruby on Rails", "regex": "rails", "regexFlag": "1", "fileExtensions": [".rb"]},
+      {"name": "Ruby Sinatra", "regex": "require\\s+['\"]sinatra['\"]", "regexFlag": "1", "fileExtensions": [".rb"]},
+      {"name": "Ruby Hanami", "regex": "require\\s+['\"]hanami['\"]", "regexFlag": "1", "fileExtensions": [".rb"]}
+    ],
+    "JavaScript": [
+      {"name": "Ghost", "regex": "ghost", "regexFlag": "1", "fileExtensions": [".js"]},
+      {"name": "KeystoneJS", "regex": "keystone", "regexFlag": "1", "fileExtensions": [".js"]},
+      {"name": "Strapi", "regex": "strapi", "regexFlag": "1", "fileExtensions": [".js"]}
+    ],
+    "Java": [
+      {"name": "Liferay", "regex": "liferay", "regexFlag": "1", "fileExtensions": [".java"]},
+      {"name": "Magnolia", "regex": "magnolia", "regexFlag": "1", "fileExtensions": [".java"]}
+    ],
+    "PHP": [
+      {"name": "WordPress", "regex": "wp-config.php", "regexFlag": "1", "fileExtensions": [".php"]},
+      {"name": "Drupal", "regex": "drupal", "regexFlag": "1", "fileExtensions": [".php"]},
+      {"name": "Joomla", "regex": "joomla", "regexFlag": "1", "fileExtensions": [".php"]},
+      {"name": "Laravel", "regex": "laravel", "regexFlag": "1", "fileExtensions": [".php"]},
+      {"name": "Code Igniter", "regex": "codeigniter", "regexFlag": "1", "fileExtensions": [".php"]},
+      {"name": "Magento", "regex": "magento", "regexFlag": "1", "fileExtensions": [".php"]},
+      {"name": "PrestaShop", "regex": "prestashop", "regexFlag": "1", "fileExtensions": [".php"]},
+      {"name": "Shopify", "regex": "shopify", "regexFlag": "1", "fileExtensions": [".php"]},
+      {"name": "Symfony", "regex": "symfony", "regexFlag": "1", "fileExtensions": [".php"]}
+    ],
+    "C#": [
+      {"name": "ASP.NET", "regex": "using\\s+System.Web;", "regexFlag": "1", "fileExtensions": [".cs"]},
+      {"name": "DotNetNuke", "regex": "DotNetNuke", "regexFlag": "1", "fileExtensions": [".cs"]},
+      {"name": "Umbraco", "regex": "umbraco", "regexFlag": "1", "fileExtensions": [".cs"]}
+    ],
+    "Go": [
+      {"name": "Gin", "regex": "import\\s+.*?gin", "regexFlag": "1", "fileExtensions": [".go"]},
+      {"name": "Echo", "regex": "import\\s+.*?echo", "regexFlag": "1", "fileExtensions": [".go"]}
+    ],
+    "Rust": [
+      {"name": "Rocket", "regex": "rocket", "regexFlag": "1", "fileExtensions": [".rs"]},
+      {"name": "Actix", "regex": "actix", "regexFlag": "1", "fileExtensions": [".rs"]}
+    ],
+    ".NET": [
+      {"name": "ASP.NET Core", "regex": "using\\s+Microsoft\\.AspNetCore;", "regexFlag": "1", "fileExtensions": [".cs"]},
+      {"name": "Entity Framework", "regex": "using\\s+Microsoft\\.EntityFrameworkCore;", "regexFlag": "1", "fileExtensions": [".cs"]},
+      {"name": "Nancy", "regex": "using\\s+Nancy", "regexFlag": "1", "fileExtensions": [".cs"]}
+    ]
+}
+  

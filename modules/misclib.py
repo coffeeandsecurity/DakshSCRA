@@ -85,30 +85,36 @@ def discoverFiles(codebase, sourcepath, mode):
 
     matches = []
     fext = []
-    
+    total_files_count = 0           # Counter to track total project files identified within the project directory
+    identified_files_count = 0      # Counter to track total platform specific project files identified
+
     print("     [-] DakshSCRA Directory Path: " + runtime.root_dir)      
     
     with open(runtime.discovered_Fpaths, "w+") as f_filepaths:         # File ('discovered_Fpaths') for logging all discovered file paths
         print("     [-] Identifying total files to be scanned!")
-        identified_files_count = 0      # Counter to track total platform specific project files identified
-        filename = None     # To be removed. Temporarily added to fix - "local variable referenced before assignment" error
+        #filename = None     # To be removed. Temporarily added to fix - "local variable referenced before assignment" error
 
         # Reccursive Traversal of Directories and Files
         for root, dirnames, filenames in os.walk(sourcepath):           # os.walk - Returns root dir, dirnames, filenames
+            total_files_count += len(filenames)             #  Obtain the total number of files present in the current directory during the traversal process
+
             for extensions in filetypes:                    # Iterate over each file extension in 'filetypes'
                 for filename in fnmatch.filter(filenames, extensions):  # Filter the filenames based on the current file extension
                     matches.append(os.path.join(root, filename))        # Add the matched file path to the 'matches' list
                     filename = os.path.join(root, filename)             # Get the complete file path
                     f_filepaths.write(filename + "\n")      # Log discovered file paths
                     identified_files_count += 1                         # Increment the count of lines
+                    fext.append(getFileExtention(filename))     # Get the file extension of the last matched filename and append it to 'fext'
+                
+                #fext.append(getFileExtention(filename))     # Get the file extension of the last matched filename and append it to 'fext'
 
-                fext.append(getFileExtention(filename))     # Get the file extension of the last matched filename and append it to 'fext'
-
-
+    print("     [-] Total project files in the directory: " + str(total_files_count))
     print("     [-] Total files to be scanned: " + str(identified_files_count))
-    # updateScanSummary("detection_summary.total_project_files_identified", str(total_files_count))    
+    updateScanSummary("detection_summary.total_project_files_identified", str(total_files_count))    
     updateScanSummary("detection_summary.total_files_identified", str(identified_files_count))    
     updateScanSummary("detection_summary.file_extensions_identified", str(fext))
+    
+    runtime.totalFilesIdentified = identified_files_count
     fext = list(dict.fromkeys(filter(None, fext)))      # filter is used to remove empty item that gets added due to 'filename = None' above
     
     print("     [-] File Extentions Identified: " + str(fext))
@@ -146,6 +152,9 @@ def reconDiscoverFiles(codebase, sourcepath, mode):
     print("     [-] Total files to be scanned: " + str(len(identified_files)))
     updateScanSummary("detection_summary.total_files_identified", str(len(identified_files)))
     updateScanSummary("detection_summary.file_extensions_identified", str(fext))
+
+    runtime.totalFilesIdentified = str(len(identified_files))
+
     fext = list(dict.fromkeys(filter(None, fext)))
 
     print("     [-] File Extensions Identified: " + str(fext))
@@ -233,7 +242,7 @@ def cleanFilePaths(filepaths_source):
             filepath = eachfilepath.rstrip()  # strip out '\r' or '\n' from the file paths
             h_df.write(getSourceFilePath(runtime.sourcedir, filepath) + "\n")
 
-
+    runtime.discovered_clean_Fpaths = dest_file
     #os.unlink(source_file)
 
 
@@ -299,4 +308,5 @@ def updateScanSummary(key, value):
         print(f"Entry '{key}' does not exist or is not accessible.")
     except Exception as e:
         print(f"An error occurred while updating entry '{key}': {str(e)}")
+
 

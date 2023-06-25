@@ -224,7 +224,7 @@ def genReport():
     print("\n[*] Raw Text Reports:")
     print("     [-] Areas of Interest: "+ re.sub(str(runtime.root_dir), "", str(runtime.outputAoI)))
     print("     [-] Project Files - Areas of Interest: "+ re.sub(str(runtime.root_dir), "", str(runtime.outputAoI_Fpaths)))
-    print("     [-] Discovered Files Path: "+ re.sub(str(runtime.root_dir), "", str(runtime.discovered_Fpaths)))
+    print("     [-] Discovered Files Path: "+ re.sub(str(runtime.root_dir), "", str(runtime.discovered_clean_Fpaths)))
     
     print("\nNote: The tool generates reports in three formats: HTML, PDF, and TEXT. " 
     "Although the HTML and PDF reports are still being improved, they are currently in a reasonably good state. " 
