@@ -77,7 +77,7 @@ def sourceParser(rule_path, targetfile, outputfile, rule_no):
                             continue  # Skip long lines
                         
                         if re.findall(pattern, line):
-                            if exclude and re.search(exclude, line, re.IGNORECASE): 
+                            if exclude and re.search(exclude, line, re.IGNORECASE):
                                 continue        # Skip current iteration if exclude rule matches
                     
                             line = (line[:75] + '..') if len(line) > 300 else line
@@ -156,7 +156,7 @@ def pathsParser(rule_path, targetfile, outputfile, rule_no):
             filepath = eachfilepath.rstrip()    # strip out '\r' or '\n' from the file paths
             filepath = mlib.getSourceFilePath(runtime.sourcedir, filepath)
 
-            if re.findall(pattern, filepath):   # If there is a match
+            if re.findall(pattern, filepath, flags=re.IGNORECASE):   # If there is a match
                 if pFlag == False:
                     rule_no += 1
                     runtime.rulesPathsMatchCnt += 1
