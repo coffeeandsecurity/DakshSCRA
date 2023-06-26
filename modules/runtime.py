@@ -37,6 +37,8 @@ staticLogo = Path(str(root_dir) + "/resources/static/logo_for_report.jpg")
 ## ------------- <Counters> ------------- ##
 totalFilesIdentified = 0
 parseErrorCnt = 0           # Keep track of file parsing errors
+rulesMatchCnt = 0
+rulesPathsMatchCnt = 0
 ## ------------- </Counters> ------------- ##
 
 

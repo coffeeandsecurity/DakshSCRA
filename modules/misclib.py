@@ -275,6 +275,14 @@ def updateScanSummary(key, value):
                 "scan_start_time": "",
                 "scan_end_time": "",
                 "scan_duration": ""
+            },
+            "source_files_scanning_summary": {
+                "matched_rules": [],
+                "unmatched_rules": []
+            },
+            "paths_scanning_summary": {
+                "matched_rules": [],
+                "unmatched_rules": []
             }
         }
 
@@ -302,7 +310,6 @@ def updateScanSummary(key, value):
         with open(json_filename, "w") as file:
             json.dump(data, file, indent=4)
 
-        #print(f"Updated entry '{key}' with value '{value}'.")
     except (KeyError, TypeError) as e:
         print(f"An error occurred while updating entry '{key}': {str(e)}")
         print(f"Entry '{key}' does not exist or is not accessible.")

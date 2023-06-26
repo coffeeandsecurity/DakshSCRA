@@ -2,7 +2,7 @@
     <rule>
         <platform>dotnet</platform>
         <path>/dotnet/dotnet.xml</path>
-        <ftypes>*.aspx*, *.cs, *.vb, *.asax*, *.asp, *.sln, *.svc, *.cshtml, *.rdl, *.sql, *.edmx, *.config</ftypes>
+        <ftypes>*.aspx, *.cs, *.vb, *.asax, *.asp, *.sln, *.svc, *.cshtml, *.rdl, *.sql, *.edmx, *.config</ftypes>
     </rule>
     <rule>
         <platform>php</platform>

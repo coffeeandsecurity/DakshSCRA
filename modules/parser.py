@@ -28,6 +28,8 @@ def sourceParser(rule_path, targetfile, outputfile, rule_no):
     iCnt = 0
     rule_no = runtime.rCnt
     error_count = 0  # Counter for error occurrences
+    unmatched_rules = []     # List to store unmatched patterns
+    matched_rules = []       # List to store matched patterns
 
     for r in rule:
         flag_title_desc = False
@@ -86,6 +88,8 @@ def sourceParser(rule_path, targetfile, outputfile, rule_no):
                                 
                                 flag_title_desc = True
                                 rule_no += 1
+                                runtime.rulesMatchCnt += 1
+                                matched_rules.append(rule_title)  # Add matched rules to the list
                                 f_scanout.write(str(rule_no)+". Rule Title: " + rule_title + "\n")
                                 f_scanout.write(f"\n\t Rule Description  : {rule_desc}"
                                                         f"\n\t Issue Description : {vuln_desc}"
@@ -98,7 +102,9 @@ def sourceParser(rule_path, targetfile, outputfile, rule_no):
                                 f_scanout.write("\t\t [" + str(linecount) + "]" + line)
                             else:
                                 f_scanout.write("\t\t [" + str(linecount) + "]" + line)
-                    
+                        
+                if rule_title not in matched_rules:
+                    unmatched_rules.append(rule_title)
 
             except OSError:
                 print("OS Error occurred!")
@@ -116,7 +122,11 @@ def sourceParser(rule_path, targetfile, outputfile, rule_no):
         sys.stdout.write("\033[K")  # Clear line to prevent overlap of texts
     
     runtime.parseErrorCnt += error_count
-    return
+    # Remove duplicates from matched_rules and unmatched_rules lists
+    matched_rules = list(set(matched_rules))
+    unmatched_rules = list(set(unmatched_rules))
+    
+    return matched_rules, unmatched_rules
 
 
 '''
@@ -132,7 +142,8 @@ def pathsParser(rule_path, targetfile, outputfile, rule_no):
     pFlag = False
 
     rule_no = 0
-    unmatched_patterns = []  # List to store unmatched patterns
+    unmatched_rules = []     # List to store unmatched patterns
+    matched_rules = []       # List to store matched patterns
 
     for r in rule:
         #rule_no += 1
@@ -148,6 +159,8 @@ def pathsParser(rule_path, targetfile, outputfile, rule_no):
             if re.findall(pattern, filepath):   # If there is a match
                 if pFlag == False:
                     rule_no += 1
+                    runtime.rulesPathsMatchCnt += 1
+                    matched_rules.append(pattern_name)  # Add matched patterns to the list
                     f_scanout.write(f"{rule_no}. Rule Title: {r.find('name').text}\n")
                     f_scanout.write(("\tFile Path: " + filepath) + "\n")
                     print("     [-] File path pattern match:" + pattern_name)
@@ -160,21 +173,22 @@ def pathsParser(rule_path, targetfile, outputfile, rule_no):
                     f_scanout.write(("\tFile Path: " + filepath) + "\n")             
                 
             else:
-                unmatched_patterns.append(pattern_name)  # Add unmatched items to the list
+                unmatched_rules.append(pattern_name)  # Add unmatched items to the list
 
         pFlag = False
         f_targetfilepaths.seek(0, 0)
 
     # Remove duplicates from unmatched items list
-    unmatched_patterns = list(set(unmatched_patterns))
-
+    unmatched_rules = list(set(unmatched_rules))
+    '''
     # Print unmatched patterns
     if unmatched_patterns:
         print("Unmatched Patterns:")
         for item in unmatched_patterns:
             print("     [-]" + item)
-    
-    return
+    '''
+
+    return matched_rules, unmatched_rules
 
 
 # Generate scan summary output in text file
@@ -207,6 +221,7 @@ def genScanSummaryText(file_path):
     # Inputs Received
     inputs_received = json_data.get('inputs_received', {})
     output += "[+] Inputs Selected:\n"
+    output += format_key_value("Target Directory", inputs_received.get('target_directory'), indent_level=1, is_sub_key=True)
     output += format_key_value("Rule Selected", inputs_received.get('rule_selected'), indent_level=1, is_sub_key=True)
     output += format_key_value("Total Rules Loaded", inputs_received.get('total_rules_loaded'), indent_level=1, is_sub_key=True)
     output += format_key_value("Platform Specific Rules", inputs_received.get('platform_specific_rules'), indent_level=2, is_sub_key=True)
@@ -220,10 +235,13 @@ def genScanSummaryText(file_path):
         formatted_file_extensions_selected = format_file_extensions(file_extensions_selected_list)
         output += format_key_value("File Extensions Selected", formatted_file_extensions_selected, indent_level=1, is_sub_key=True)
     #output += format_key_value("File Extensions Selected", inputs_received.get('file_extensions_selected'), indent_level=1, is_sub_key=True)
-    
+    '''
+    # Resolves the issue of two '\n' before the target directory
+    output = output.rstrip()    # Remove trailing whitespace
+    output += "\n"
     output += format_key_value("Target Directory", inputs_received.get('target_directory'), indent_level=1, is_sub_key=True)
     output += "\n"
-
+    '''
     # Detection Summary
     detection_summary = json_data.get('detection_summary', {})
     output += "[+] Detection Summary:\n"
@@ -240,8 +258,8 @@ def genScanSummaryText(file_path):
     
     #output += format_key_value("File Extensions Identified (Based on Selected Rule)", detection_summary.get('file_extensions_identified'), indent_level=1, is_sub_key=True)
     
-    output += format_key_value("Areas-of-Interests Identified", detection_summary.get('areas_of_interest_identified'), indent_level=1, is_sub_key=True)
-    output += format_key_value("File Paths Areas-of-Interests Identified", detection_summary.get('file_paths_areas_of_interest_identified'), indent_level=1, is_sub_key=True)
+    output += format_key_value("Code Files - Areas-of-Interests (Rules Matched)", detection_summary.get('areas_of_interest_identified'), indent_level=1, is_sub_key=True)
+    output += format_key_value("File Paths - Areas-of-Interests (Rules Matched)", detection_summary.get('file_paths_areas_of_interest_identified'), indent_level=1, is_sub_key=True)
     output += "\n"
 
     # Scanning Timeline

@@ -173,14 +173,29 @@ print("[*] [Stage 2] Rules/Pattern Matching - Parsing identified project files")
 output_directory = os.path.dirname(runtime.outputAoI)
 os.makedirs(output_directory, exist_ok=True)
 
+source_matched_rules = []
+source_unmatched_rules = []
 with open(runtime.outputAoI, "w") as f_scanout:
     with open(log_filepaths, 'r', encoding=mlib.detectEncodingType(log_filepaths)) as f_targetfiles:
         rule_no = 1
-        parser.sourceParser(rules_main, f_targetfiles, f_scanout, rule_no)   # Pattern matching for specific platform type
-        parser.sourceParser(rules_common, f_targetfiles, f_scanout, rule_no)  # Pattern matching for common rules
+        source_matched_rules, source_unmatched_rules = parser.sourceParser(rules_main, f_targetfiles, f_scanout, rule_no)   # Pattern matching for specific platform type
+        common_matched_rules, common_unmatched_rules = parser.sourceParser(rules_common, f_targetfiles, f_scanout, rule_no)  # Pattern matching for common rules
+
+        # Extend the original lists with the results from the second call
+        source_matched_rules.extend(common_matched_rules)
+        source_unmatched_rules.extend(common_unmatched_rules)
+
+    # Update the scan summary JSON file with the matched and unmatched patterns
+    mlib.updateScanSummary("source_files_scanning_summary.matched_rules", source_matched_rules)
+    mlib.updateScanSummary("source_files_scanning_summary.unmatched_rules", source_unmatched_rules)
+
 
 print("     [-] Total Files Scanned:", str(runtime.totalFilesIdentified - runtime.parseErrorCnt))
 mlib.updateScanSummary("detection_summary.total_files_scanned", str(runtime.totalFilesIdentified - runtime.parseErrorCnt))
+mlib.updateScanSummary("detection_summary.areas_of_interest_identified", str(runtime.rulesMatchCnt))
+
+print("     [-] Total matched rules:", len(source_matched_rules))
+print("     [-] Total unmatched rules:", len(source_unmatched_rules))
 
 ###### [Stage 3] Parse File Paths for areas of interest ######
 print("[*] [Stage 3] Parsing file paths for areas of interest")
@@ -188,8 +203,28 @@ print("[*] [Stage 3] Parsing file paths for areas of interest")
 with open(runtime.outputAoI_Fpaths, "w") as f_scanout:
     with open(log_filepaths, 'r', encoding=mlib.detectEncodingType(log_filepaths)) as f_targetfiles:
         rule_no = 1
-        parser.pathsParser(runtime.rulesFpaths, f_targetfiles, f_scanout, rule_no)
+        matched_rules, unmatched_rules = parser.pathsParser(runtime.rulesFpaths, f_targetfiles, f_scanout, rule_no)
 
+    
+    print("     [-] Total matched rules:", len(matched_rules))
+    print("     [-] Total unmatched rules:", len(unmatched_rules))
+
+    # Update the scan summary JSON file with the matched and unmatched patterns
+    mlib.updateScanSummary("paths_scanning_summary.matched_rules", matched_rules)
+    mlib.updateScanSummary("paths_scanning_summary.unmatched_rules", unmatched_rules)
+
+'''
+# Print the filepaths matched patterns
+print("Matched Patterns:")
+for pattern in matched_patterns:
+    print("     [-]", pattern)
+
+# Print the filepaths unmatched patterns
+print("Unmatched Patterns:")
+for pattern in unmatched_patterns:
+    print("     [-]", pattern)
+'''
+mlib.updateScanSummary("detection_summary.file_paths_areas_of_interest_identified", str(runtime.rulesPathsMatchCnt))
 
 mlib.cleanFilePaths(log_filepaths)
 os.unlink(log_filepaths)        # Delete the temp file paths log after the path cleanup in the above step
