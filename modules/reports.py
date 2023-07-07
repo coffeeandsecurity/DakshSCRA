@@ -27,7 +27,14 @@ def genPdfReport(html_path, pdf_path):
         started_at = time.time()
         print(f"[*] PDF report generation")
         print(f"    [-] Started at       : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        print("    [-] Be patient! PDF report generation takes time.")
+        
+
         HTML(html_path).write_pdf(pdf_path, stylesheets=[CSS(runtime.staticPdfCssFpath)])
+
+        sys.stdout.write("\033[F") #back to previous line
+        sys.stdout.write("\033[K") #clear line to prevent overlap of texts
         print(f"    [-] Completed at     : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
         hours, rem = divmod(time.time() - started_at, 3600)
@@ -227,6 +234,6 @@ def genReport():
     print("     [-] Discovered Files Path: "+ re.sub(str(runtime.root_dir), "", str(runtime.discovered_clean_Fpaths)))
     
     print("\nNote: The tool generates reports in three formats: HTML, PDF, and TEXT. " 
-    "Although the HTML and PDF reports are still being improved, they are currently in a reasonably good state. " 
-    "With each subsequent iteration, these reports will continue to be refined and improved even further.")
+    "While the HTML and PDF reports are currently in a reasonably good state, " 
+    "they will undergo continuous refinement and improvement with each subsequent iteration.")
     

@@ -47,9 +47,10 @@ def detectFramework(language, file_path):
 
 
 # Software composition analysis
-def recon(targetdir):
-    print("\n--- Project reconnaissance ---")
-    print("\n[*] Software Composition Analysis!!")
+def recon(targetdir, flag=False):
+    if flag == False:
+        print("\n[*] Reconnaissance (a.k.a Software Composition Analysis)")
+    
     if Path(runtime.inventory_Fpathext).is_file():
         os.remove(runtime.inventory_Fpathext)
     log_filepaths = []
@@ -61,7 +62,6 @@ def recon(targetdir):
                 log_filepaths.append(file_path)
 
     # Load technology details from JSON file
-    print("Loading technology details...")
     try:
         with open(runtime.technologies_Fpath, 'r') as json_file:
             technologies = json.load(json_file)
@@ -85,10 +85,12 @@ def recon(targetdir):
         existing_output = {}
 
     # Perform reconnaissance on each file path within log_filepaths
-    print("Performing reconnaissance...")
+    print("     [-] Performing reconnaissance...")
     recon_output = {}  # Initialize the recon_output dictionary
     for file_path in log_filepaths:
-        print("Checking file:", file_path)  # Print the file path being checked
+        #sys.stdout.write("\033[K")
+        #print("         [-] Checking file:", file_path, end='\r')  # Print the file path being checked
+
         # Check the file extension against the identified technologies
         _, extension = os.path.splitext(file_path)
         for category, tech_list in technologies.items():
@@ -100,7 +102,8 @@ def recon(targetdir):
                         file_extensions = tech.get('fileExtensions', [])
                         if extension.lower() in file_extensions:
                             # Match found based on file extension, confirm the technology
-                            print("Match found:", tech['name'], "in", category)  # Print the matched technology name and category
+                            sys.stdout.write("\033[K") #clear line to prevent overlap of texts
+                            print("     [-] Match found:", tech['name'], "in", category, end='\r')  # Print the matched technology name and category
                             #print(f"Framework: {detectFramework(tech['name'], file_path)}")
 
                             recon_output.setdefault(category, {}).setdefault(tech['name'], []).append(file_path)
@@ -112,7 +115,8 @@ def recon(targetdir):
                         regex = tech.get('regex', '')
                         if regex and re.search(regex, file_path, re.IGNORECASE):
                             # Match found based on regex, confirm the technology
-                            print("Match found:", tech['name'], "in", category)  # Print the matched technology name and category
+                            sys.stdout.write("\033[K") #clear line to prevent overlap of texts
+                            print("     [-] Match found:", tech['name'], "in", category, end='\r')  # Print the matched technology name and category
                             recon_output.setdefault(category, {}).setdefault(tech['name'], []).append(file_path)
                             # print(f"Framework: {detectFramework(tech['name'], file_path)}")
                             if detectFramework(tech['name'], file_path) is not None:
@@ -123,17 +127,19 @@ def recon(targetdir):
                     print("Invalid technology entry in", category)
 
     # Save the reconnaissance output in a JSON file, overwriting the existing output
-    print("Saving reconnaissance output...")
     try:
         with open(output_file_path, 'w') as output_file:
             json.dump(recon_output, output_file, indent=4, sort_keys=True)
     except IOError as e:
-        print("Error saving reconnaissance output:", str(e))
+        print("     [-] Error saving reconnaissance output:", str(e))
+    
+    sys.stdout.write("\033[K") #clear line to prevent overlap of texts
+    print("     [-] Reconnaissance completed.")     # The output has been saved in 'recon.json'
 
-    print("Reconnaissance completed. The output has been saved in 'recon_output.json'")
-
+    # Summarise recon info
     summariseRecon(output_file_path)
     
+    # log_filepaths - is a list comprising of all the enumerated file paths. To be used later
     return log_filepaths
 
 
@@ -187,7 +193,7 @@ If it matches, the parent directory is added to the parent_directories set.
 Finally, the function returns a list of all the extracted parent directories.
 '''
 def extractParentDirectory(file_paths):
-    print("filepaths: "+str(file_paths))
+    #print("filepaths: "+str(file_paths))
     # Extract project folder names from file paths
     project_folder_names = [os.path.basename(os.path.dirname(file_path)) for file_path in file_paths]
 
@@ -211,7 +217,9 @@ def extractParentDirectory(file_paths):
     return []
 
 
-
+'''
+This function generates the recon_summary.json
+'''
 def summariseRecon(json_file_path):
     with open(json_file_path, 'r') as file:
         data = json.load(file)
@@ -238,20 +246,44 @@ def summariseRecon(json_file_path):
             }
 
         # Check if the category is "Framework"
+        '''
         if category == "Framework":
             parent_directories = extractParentDirectory(file_paths)
             category_summary["ParentDirectory"] = parent_directories
-
+        '''
         summary[category] = category_summary
 
     # Write the output to a JSON file "recon_summary.json" in the same folder as the input JSON file
-    output_file_path = os.path.join(os.path.dirname(json_file_path), "recon_summary.json")
+    output_file_path = os.path.join(os.path.dirname(json_file_path), runtime.reconSummary_Fpath)
     with open(output_file_path, 'w') as output_file:
         json.dump(summary, output_file, indent=4, sort_keys=True)
 
-    print("Summary data has been written to 'recon_summary.json'.")
+    print("     [-] Recon summary has been written to 'recon_summary.json'.")
+    reconSummaryTextReport(runtime.reconSummary_Fpath, runtime.outputRecSummary)
 
 
 
+'''
+Parse the generated recon summary JSON file and generate the text based recon summary report. 
+'''
+def reconSummaryTextReport(json_file_path, output_file_path):
+    with open(json_file_path, 'r') as json_file:
+        data = json.load(json_file)
 
+    with open(output_file_path, 'w') as text_file:
+        for root_title, root_content in data.items():
+            text_file.write(f"{root_title}:\n")
+            for sub_title, sub_content in root_content.items():
+                if isinstance(sub_content, dict):
+                    text_file.write(f"  {sub_title}:\n")
+                    common_root = os.path.commonpath([directory_info['directory'] for directory_info in sub_content['directories']])
+                    text_file.write(f"    Common Root Directory: {common_root}{os.path.sep}\n")
+                    for directory_info in sub_content['directories']:
+                        relative_path = os.path.relpath(directory_info['directory'], common_root)
+                        if relative_path == '.':
+                            relative_path = ''
+                        text_file.write(f"      {relative_path}{os.path.sep} - file count: {directory_info['fileCount']}\n")
+            text_file.write("\n")
+
+    print(f"     [-] Content written to {output_file_path}")
 

@@ -1,12 +1,18 @@
 <root>
     <rule>
-        <name>Insecure CSRF Mitigation</name>
-        <regex>protect_from_forgery</regex>
-        <description>Detailed description goes here</description>
+        <name>Command Injection</name>
+        <regex>(^|\s|=\s?)eval\(|(^|\s|=\s?)system\(|(^|\s|=\s?)kernel\(|(^|\s|=\s?)open\(|\=\s?\`.*\`;</regex>
+        <rule_desc>Detects command injection vulnerabilities.</rule_desc>
+        <vuln_desc>This rule matches potential command injection vulnerabilities in the code. Command injection occurs when user-supplied input is executed as a command on the underlying operating system. Attackers can exploit command injection to execute arbitrary commands, leading to unauthorized access, data breaches, or system compromise.</vuln_desc>
+        <developer>Developers should ensure that user input is properly validated and sanitized before using it in command execution. It is recommended to use parameterized queries or prepared statements to mitigate command injection attacks. Additionally, developers should implement proper input validation, restrict user input to expected values, and apply appropriate output encoding.</developer>
+        <reviewer>Reviewers should verify whether the code implements sufficient measures to prevent command injection vulnerabilities. They should check whether the user input used in command execution is properly validated, sanitized, and restricted to expected values.</reviewer>
     </rule>
     <rule>
-        <name>Command Injection</name>
-        <name>Command injection (eval|system|backtick|kernel.exec|open)</name>
-        <regex>(^|\s|=\s?)eval\(|(^|\s|=\s?)system\(|(^|\s|=\s?)kernel\(|(^|\s|=\s?)open\(|\=\s?\`.*\`;</regex>
+        <name>Insecure CSRF Mitigation</name>
+        <regex>protect_from_forgery</regex>
+        <rule_desc>Detects insecure Cross-Site Request Forgery (CSRF) mitigation.</rule_desc>
+        <vuln_desc>This rule detects insecure Cross-Site Request Forgery (CSRF) mitigation techniques. CSRF is an attack that tricks the victim into submitting a malicious request, leading to unauthorized actions on their behalf. Insecure CSRF mitigation can enable attackers to forge requests and perform actions on behalf of legitimate users.</vuln_desc>
+        <developer>Developers should implement strong and secure CSRF mitigation techniques. This may include using anti-CSRF tokens, checking the referer header, or implementing double-submit cookies. Developers should follow industry best practices and ensure that the implemented CSRF mitigation is effective against potential attacks.</developer>
+        <reviewer>Reviewers should verify whether the implemented CSRF mitigation techniques are secure and effective. They should assess the strength of anti-CSRF measures, the presence of referer header checks, or the use of double-submit cookies. Reviewers should confirm that the implemented mitigation adequately protects against CSRF attacks and prevents unauthorized actions on behalf of users.</reviewer>
     </rule>
 </root>

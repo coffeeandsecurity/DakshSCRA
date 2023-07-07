@@ -58,7 +58,9 @@ scanSummary_Fpath = Path(str(root_dir) + "/runtime/scan_summary.json")
 ## ------------- <Recon> ------------- ##
 technologies_Fpath = Path(str(root_dir) + "/rules/recon/technology.json")
 framework_Fpath = Path(str(root_dir) + "/rules/recon/frameworks.json")
+
 reconOutput_Fpath = Path(str(root_dir) + "/runtime/recon.json")
+reconSummary_Fpath = Path(str(root_dir) + "/runtime/recon_summary.json")
 ## ------------- </Recon> ------------- ##
 
 
@@ -73,9 +75,11 @@ outputAoI_Fpaths = Path(str(root_dir) + "/reports/text/filepaths_aoi.txt")
 # FilePaths - Runtime
 output_Fpaths = Path(str(root_dir) + "/runtime/filepaths.txt")   
 
-
 # Output file - summary
 outputSummary = Path(str(root_dir) + "/reports/text/summary.txt")
+
+# Output file - Recon summary
+outputRecSummary = Path(str(root_dir) + "/reports/text/recon.txt")
 
 # PDF Report file path
 pdfreport_Fpath = Path(str(root_dir) + "/reports/pdf/report.pdf")

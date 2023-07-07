@@ -58,8 +58,8 @@ elif results.rules_filetypes != None:
     rops.listRulesFiletypes(results.rules_filetypes)    # List available rules and/or supported filetypes
     sys.exit(1)
 
-# Priority #1 - If '-recon' option used then only recon must be performed
-if results.recon and results.target_dir:
+# Priority #1 - If '-recon' option used but no rule file is specified then only recon must be performed
+if results.recon and results.target_dir and not results.rule_file:
     print(runtime.author)
     # Check if the directory path is valid
     if path.isdir(results.target_dir) == False: 
@@ -70,9 +70,7 @@ if results.recon and results.target_dir:
         sys.exit(1)
     else:
         targetdir = results.target_dir
-        # log_filepaths = mlib.discoverFiles('*.*', targetdir, 2)     # mode = 2 - Software Recon
-        #log_filepaths = parser.recon(targetdir)
-        log_filepaths = rec.recon(targetdir)
+        log_filepaths = rec.recon(targetdir, False)
         sys.exit(1)
 
 # Priority #2 - Check if '-r' (rule type) is set
@@ -160,14 +158,26 @@ sourcepath = Path(results.target_dir)
 runtime.start_time = time.time()  # This time will be used to calculate total time taken for the scan
 runtime.start_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
+sCnt = 0    # Stage counter
 print("[*] Scanner initiated!!")
 
-###### [Stage 1] Discover file paths    ######
-print("[*] [Stage 1] Discover file paths")
-log_filepaths = mlib.discoverFiles(codebase, sourcepath, 1)
+###### [Stage #] Discover file paths    ######
+sCnt+=1
+if results.recon:
+        print(f"[*] [Stage {sCnt}] Reconnaissance (a.k.a Software Composition Analysis)")         # Stage 1
+        targetdir = results.target_dir
+        rec.recon(targetdir, True)
 
-###### [Stage 2] Rules/Pattern Matching - Parse Source Code ######
-print("[*] [Stage 2] Rules/Pattern Matching - Parsing identified project files")
+        sCnt+=1
+        print(f"[*] [Stage {sCnt}] Discover file paths")    # Stage 2
+        log_filepaths = mlib.discoverFiles(codebase, sourcepath, 1)
+else: 
+    print(f"[*] [Stage {sCnt}] Discover file paths")        # Stage 1
+    log_filepaths = mlib.discoverFiles(codebase, sourcepath, 1)
+
+###### [Stage 2 or 3] Rules/Pattern Matching - Parse Source Code ######
+sCnt+=1
+print(f"[*] [Stage {sCnt}] Rules/Pattern Matching - Parsing identified project files")
 
 # Ensure the directory structure exists. If it doesn't then create necessary directory structure.
 output_directory = os.path.dirname(runtime.outputAoI)
@@ -197,8 +207,9 @@ mlib.updateScanSummary("detection_summary.areas_of_interest_identified", str(run
 print("     [-] Total matched rules:", len(source_matched_rules))
 print("     [-] Total unmatched rules:", len(source_unmatched_rules))
 
-###### [Stage 3] Parse File Paths for areas of interest ######
-print("[*] [Stage 3] Parsing file paths for areas of interest")
+###### [Stage 3 or 4] Parse File Paths for areas of interest ######
+sCnt+=1
+print(f"[*] [Stage {sCnt}] Parsing file paths for areas of interest")
 
 with open(runtime.outputAoI_Fpaths, "w") as f_scanout:
     with open(log_filepaths, 'r', encoding=mlib.detectEncodingType(log_filepaths)) as f_targetfiles:

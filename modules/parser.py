@@ -20,7 +20,7 @@ The following parameters are expected:
 def sourceParser(rule_path, targetfile, outputfile, rule_no):
     # Load rules from XML file
     xmltree = ET.parse(rule_path)
-    rule = xmltree.getroot()
+    root = xmltree.getroot()
 
     f_scanout = outputfile
     f_targetfiles = targetfile
@@ -31,100 +31,106 @@ def sourceParser(rule_path, targetfile, outputfile, rule_no):
     unmatched_rules = []     # List to store unmatched patterns
     matched_rules = []       # List to store matched patterns
 
-    for r in rule:
-        flag_title_desc = False
-            
-        # f_scanout.write(str(rule_no)+". Rule Title: " + r.find("name").text + "\n")
-        
-        rule_title = r.find("name").text
-        pattern = r.find("regex").text
 
-        rule_desc = r.find("rule_desc").text
-        vuln_desc = r.find("vuln_desc").text
-        dev_note = r.find("developer").text
-        rev_note = r.find("reviewer").text
+    for category in root:
+        category_name = category.get('name')
+        if category_name:
+            print("     [-] Category: " + category_name)
 
-        if r.find('mitigation/regex'):
-            pattern = r.get('mitigation/regex')
+            for rule in category:
+                r = rule
+                flag_title_desc = False
+                
+                # f_scanout.write(str(rule_no)+". Rule Title: " + r.find("name").text + "\n")
+                rule_title = r.find("name").text
+                pattern = r.find("regex").text
 
-        exclude = r.find("exclude").text if r.find("exclude") is not None else ""
+                rule_desc = r.find("rule_desc").text
+                vuln_desc = r.find("vuln_desc").text
+                dev_note = r.find("developer").text
+                rev_note = r.find("reviewer").text
 
-        # stdout based on verbosity level set
-        if str(runtime.verbosity) == '1':
-            #sys.stdout.write("\033[F")
-            sys.stdout.write("\033[K")
-            print("     [-] Applying Rule: " + r.find("name").text, end='\r')
-        else:
-            sys.stdout.write("\033[K")
-            print("     [-] Applying Rule: " + r.find("name").text)
+                if r.find('mitigation/regex'):
+                    pattern = r.get('mitigation/regex')
 
-        for eachfilepath in f_targetfiles:  # Read each line (file path) in the file
-            filepath = eachfilepath.rstrip()  # strip out '\r' or '\n' from the file paths
-            
-            iCnt += 1
-            print('\t Parsing file: ' + "["+str(iCnt)+"] "+ mlib.getSourceFilePath(runtime.sourcedir, filepath))
-            sys.stdout.write("\033[F\033[K")  # Clear line to prevent overlap of texts
+                exclude = r.find("exclude").text if r.find("exclude") is not None else ""
 
-            try:
-                # with open(filepath, 'r', encoding='utf8') as fo_target:
-                with open(filepath, 'r', encoding='ISO-8859-1') as fo_target:       # ISO-8859-1 encoding type works on most occasions including those where utf8 cause errors
-                    linecount = 0
-                    flag_fpath = False
-                    for line in fo_target:
-                        linecount += 1
+                # stdout based on verbosity level set
+                if str(runtime.verbosity) == '1':
+                    #sys.stdout.write("\033[F")
+                    sys.stdout.write("\033[K")
+                    print("         [-] Applying Rule: " + r.find("name").text, end='\r')
+                else:
+                    sys.stdout.write("\033[K")
+                    print("         [-] Applying Rule: " + r.find("name").text)
 
-                        if len(line) > 500:     # Setting maximum input length of the string read from the file
-                            continue  # Skip long lines
-                        
-                        if re.findall(pattern, line):
-                            if exclude and re.search(exclude, line, re.IGNORECASE):
-                                continue        # Skip current iteration if exclude rule matches
+                for eachfilepath in f_targetfiles:  # Read each line (file path) in the file
+                    filepath = eachfilepath.rstrip()  # strip out '\r' or '\n' from the file paths
                     
-                            line = (line[:75] + '..') if len(line) > 300 else line
-                            
-                            if not flag_title_desc:
-                                if rule_no > 0:                 # This check ensures there is no new line before the first entry in the txt report
-                                    f_scanout.write("\n\n")     # Insert new lines before the entry of each matched rule title 
+                    iCnt += 1
+                    print('\t Parsing file: ' + "["+str(iCnt)+"] "+ mlib.getSourceFilePath(runtime.sourcedir, filepath))
+                    sys.stdout.write("\033[F\033[K")  # Clear line to prevent overlap of texts
+
+                    try:
+                        # with open(filepath, 'r', encoding='utf8') as fo_target:
+                        with open(filepath, 'r', encoding='ISO-8859-1') as fo_target:       # ISO-8859-1 encoding type works on most occasions including those where utf8 cause errors
+                            linecount = 0
+                            flag_fpath = False
+                            for line in fo_target:
+                                linecount += 1
+
+                                if len(line) > 500:     # Setting maximum input length of the string read from the file
+                                    continue  # Skip long lines
                                 
-                                flag_title_desc = True
-                                rule_no += 1
-                                runtime.rulesMatchCnt += 1
-                                matched_rules.append(rule_title)  # Add matched rules to the list
-                                f_scanout.write(str(rule_no)+". Rule Title: " + rule_title + "\n")
-                                f_scanout.write(f"\n\t Rule Description  : {rule_desc}"
-                                                        f"\n\t Issue Description : {vuln_desc}"
-                                                        f"\n\t Developer Note    : {dev_note}"
-                                                        f"\n\t Reviewer Note     : {rev_note} \n")
+                                if re.findall(pattern, line):
+                                    if exclude and re.search(exclude, line, re.IGNORECASE):
+                                        continue        # Skip current iteration if exclude rule matches
+                            
+                                    line = (line[:75] + '..') if len(line) > 300 else line
+                                    
+                                    if not flag_title_desc:
+                                        if rule_no > 0:                 # This check ensures there is no new line before the first entry in the txt report
+                                            f_scanout.write("\n\n")     # Insert new lines before the entry of each matched rule title 
+                                        
+                                        flag_title_desc = True
+                                        rule_no += 1
+                                        runtime.rulesMatchCnt += 1
+                                        matched_rules.append(rule_title)  # Add matched rules to the list
+                                        f_scanout.write(str(rule_no)+". Rule Title: " + rule_title + "\n")
+                                        f_scanout.write(f"\n\t Rule Description  : {rule_desc}"
+                                                                f"\n\t Issue Description : {vuln_desc}"
+                                                                f"\n\t Developer Note    : {dev_note}"
+                                                                f"\n\t Reviewer Note     : {rev_note} \n")
 
-                            if not flag_fpath:
-                                flag_fpath = True
-                                f_scanout.write("\n\t -> Source File: " + mlib.getSourceFilePath(runtime.sourcedir, filepath) + "\n")
-                                f_scanout.write("\t\t [" + str(linecount) + "]" + line)
-                            else:
-                                f_scanout.write("\t\t [" + str(linecount) + "]" + line)
-                        
-                if rule_title not in matched_rules:
-                    unmatched_rules.append(rule_title)
+                                    if not flag_fpath:
+                                        flag_fpath = True
+                                        f_scanout.write("\n\t -> Source File: " + mlib.getSourceFilePath(runtime.sourcedir, filepath) + "\n")
+                                        f_scanout.write("\t\t [" + str(linecount) + "]" + line)
+                                    else:
+                                        f_scanout.write("\t\t [" + str(linecount) + "]" + line)
+                                
+                        if rule_title not in matched_rules:
+                            unmatched_rules.append(rule_title)
 
-            except OSError:
-                print("OS Error occurred!")
-                error_count += 1
-            except UnicodeError as err:
-                print("Error Occurred: ", err)
-                print(filepath)
-                error_count += 1
+                    except OSError:
+                        print("OS Error occurred!")
+                        error_count += 1
+                    except UnicodeError as err:
+                        print("Error Occurred: ", err)
+                        print(filepath)
+                        error_count += 1
+                
+                #f_scanout.write("\n")
+                f_targetfiles.seek(0)  # Reset the file pointer to the beginning
+
+                runtime.rCnt = rule_no     
+                iCnt = 0
+                sys.stdout.write("\033[K")  # Clear line to prevent overlap of texts
         
-        #f_scanout.write("\n")
-        f_targetfiles.seek(0)  # Reset the file pointer to the beginning
-
-        runtime.rCnt = rule_no     
-        iCnt = 0
-        sys.stdout.write("\033[K")  # Clear line to prevent overlap of texts
-    
-    runtime.parseErrorCnt += error_count
-    # Remove duplicates from matched_rules and unmatched_rules lists
-    matched_rules = list(set(matched_rules))
-    unmatched_rules = list(set(unmatched_rules))
+            runtime.parseErrorCnt += error_count
+            # Remove duplicates from matched_rules and unmatched_rules lists
+            matched_rules = list(set(matched_rules))
+            unmatched_rules = list(set(unmatched_rules))
     
     return matched_rules, unmatched_rules
 

@@ -28,17 +28,35 @@ def getRulesPath_OR_FileTypes(platform, option):
 
     return ret_value
 
+'''
+    for category in root:
+        category_name = category.get('name')
+        if category_name:
+            print("     [-] Category: " + category_name)
+
+            for rule in category:
+                r = rule
+'''
+
+
 
 def rulesCount(rules_file):
     try:
         tree = ET.parse(rules_file)
         root = tree.getroot()
 
-        total_rules_count = 0  # Initialise the count
+        total_rules_count = 0  # Initialize the count
 
-        # Iterate over the rule elements
-        for rule in root.findall('rule'):
-            total_rules_count += 1
+        # Check if there are categories
+        if root.findall('category'):
+            # Iterate over the rule elements within categories
+            for category in root.findall('category'):
+                for rule in category.findall('rule'):
+                    total_rules_count += 1
+        else:
+            # Iterate over the rule elements directly if no categories are present
+            for rule in root.findall('rule'):
+                total_rules_count += 1
 
         return total_rules_count
 

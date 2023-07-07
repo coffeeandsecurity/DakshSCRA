@@ -16,7 +16,7 @@
     </rule>
     <rule>
         <platform>javascript</platform>
-        <path>/javascript/alljs.xml</path>
+        <path>/javascript/javascript.xml</path>
         <ftypes>*.js, *.ts, *.vue</ftypes>
     </rule>
     <rule>

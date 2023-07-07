@@ -1,42 +1,32 @@
 <root>
     <rule>
+        <name>Authentication</name>
+        <regex>(?i)(Login|Signin|Authentication|Authenticated|Oauth|JWT)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Admin Section</name>
+        <regex>(?i)(Admin|Administrator)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>User Section</name>
+        <regex>(?i)(user)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Password Related Functionality</name>
+        <regex>(?i)(Password|password|pwd|passwd|forgotpassword)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
         <name>Security Functionality</name>
         <regex>(?i)security</regex>
         <description>Security Functionality</description>
     </rule>
     <rule>
-        <name>Permissions</name>
+        <name>Permission Management or Handling</name>
         <regex>(?i)Permission</regex>
-        <description>Permissions</description>
-    </rule>
-    <rule>
-        <name>Password</name>
-        <regex>(?i)(Password|password|pwd|passwd|forgotpassword)</regex>
-        <description>Detailed description goes here</description>
-    </rule>
-    <rule>
-        <name>Libraries | Extensions | Plugins</name>
-        <regex>(?i)(Libraries|Extension|Plugin)</regex>
-        <description>Detailed description goes here</description>
-    </rule>
-    <rule>
-        <name>Misc Modules (CAPTCHA|Login|Authentication|Authenticated|Oauth|JWT)</name>
-        <regex>(?i)(CAPTCHA|Login|Authentication|Authenticated|Oauth|JWT)</regex>
-        <description>Detailed description goes here</description>
-    </rule>
-    <rule>
-        <name>Admin Section/Areas</name>
-        <regex>(?i)(Admin|Administrator)</regex>
-        <description>Admin Section/Areas</description>
-    </rule>
-    <rule>
-        <name>File Upload</name>
-        <regex>(?i)Upload</regex>
-        <description>File Upload</description>
-    </rule>
-    <rule>
-        <name>Login/SignIn</name>
-        <regex>(?i)(Login|Signin)</regex>
         <description>Detailed description goes here</description>
     </rule>
     <rule>
@@ -45,9 +35,19 @@
         <description>Detailed description goes here</description>
     </rule>
     <rule>
-        <name>User Section</name>
-        <regex>(?i)(user)</regex>
+        <name>Libraries | Extensions | Plugins</name>
+        <regex>(?i)(Libraries|Extension|Plugin)</regex>
         <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>CAPTCHA</name>
+        <regex>(?i)(CAPTCHA)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>File Upload</name>
+        <regex>(?i)Upload</regex>
+        <description>File Upload</description>
     </rule>
     <rule>
         <name>Payment Functionality</name>
