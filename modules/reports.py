@@ -34,7 +34,7 @@ def genPdfReport(html_path, pdf_path):
 
         HTML(html_path).write_pdf(pdf_path, stylesheets=[CSS(runtime.staticPdfCssFpath)])
 
-        sys.stdout.write("\033[F") #back to previous line
+        sys.stdout.write("\033[F") #back to previous line        
         sys.stdout.write("\033[K") #clear line to prevent overlap of texts
         print(f"    [-] Completed at     : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 

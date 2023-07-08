@@ -170,7 +170,7 @@ def pathsParser(rule_path, targetfile, outputfile, rule_no):
                     matched_rules.append(pattern_name)  # Add matched patterns to the list
                     f_scanout.write(f"{rule_no}. Rule Title: {r.find('name').text}\n")
                     f_scanout.write(("\tFile Path: " + filepath) + "\n")
-                    print("     [-] File path pattern match:" + pattern_name)
+                    print("     [-] File Path Rule:" + pattern_name)
 
                     sys.stdout.write("\033[F") #back to previous line
                     sys.stdout.write("\033[K") #clear line to prevent overlap of texts
