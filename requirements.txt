@@ -6,3 +6,4 @@ git+https://github.com/Kozea/WeasyPrint.git@master
 pyyaml==6.0
 pygments-better-html==0.1.4
 ruamel.yaml>=0.17.31
+chardet>=5.1.0
