@@ -15,7 +15,8 @@
     ],
     "Java": [
       {"name": "Liferay", "regex": "liferay", "regexFlag": "1", "fileExtensions": [".java"]},
-      {"name": "Magnolia", "regex": "magnolia", "regexFlag": "1", "fileExtensions": [".java"]}
+      {"name": "Magnolia", "regex": "magnolia", "regexFlag": "1", "fileExtensions": [".java"]},
+      {"name": "Spring", "regex": "import\\s+org\\.springframework\\.", "regexFlag": "1", "fileExtensions": [".java"]}
     ],
     "PHP": [
       {"name": "WordPress", "regex": "wp-config.php", "regexFlag": "1", "fileExtensions": [".php"]},

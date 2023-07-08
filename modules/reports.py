@@ -1,5 +1,6 @@
 import sys, re
 import html
+import os
 from re import search
 
 try :
@@ -229,9 +230,21 @@ def genReport():
     print("\n[*] PDF Report:")
     print("     [-] PDF Report Path : "+ re.sub(str(runtime.root_dir), "", str(runtime.pdfreport_Fpath)))
     print("\n[*] Raw Text Reports:")
-    print("     [-] Areas of Interest: "+ re.sub(str(runtime.root_dir), "", str(runtime.outputAoI)))
-    print("     [-] Project Files - Areas of Interest: "+ re.sub(str(runtime.root_dir), "", str(runtime.outputAoI_Fpaths)))
-    print("     [-] Discovered Files Path: "+ re.sub(str(runtime.root_dir), "", str(runtime.discovered_clean_Fpaths)))
+
+    aoi_path = re.sub(str(runtime.root_dir), "", str(runtime.outputAoI))
+    aoi_fpaths_path = re.sub(str(runtime.root_dir), "", str(runtime.outputAoI_Fpaths))
+    discovered_files_path = re.sub(str(runtime.root_dir), "", str(runtime.discovered_clean_Fpaths))
+    recon_path = re.sub(str(runtime.root_dir), "", str(runtime.outputRecSummary))
+
+    if os.path.isfile(runtime.outputRecSummary):
+        print("     [-] Reconnaissance Summary:", recon_path)
+    if os.path.isfile(runtime.outputAoI):
+        print("     [-] Areas of Interest:", aoi_path)
+    if os.path.isfile(runtime.outputAoI_Fpaths):
+        print("     [-] Project Files - Areas of Interest:", aoi_fpaths_path)
+    if os.path.isfile(runtime.discovered_clean_Fpaths):
+        print("     [-] Discovered Files Path:", discovered_files_path)
+
     
     print("\nNote: The tool generates reports in three formats: HTML, PDF, and TEXT. " 
     "While the HTML and PDF reports are currently in a reasonably good state, " 

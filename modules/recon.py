@@ -143,47 +143,7 @@ def recon(targetdir, flag=False):
     return log_filepaths
 
 
-'''
-Function to list directories grouped by file extensions or technology type, 
-along with the count of each file type within each directory. 
-It takes the path to the initial recon JSON output file, reads and analyses the details, 
-and dumps the output in a JSON format within the same directory as the input JSON file.
-'''
-'''
-def summariseRecon(json_file_path):
-    with open(json_file_path, 'r') as file:
-        data = json.load(file)
 
-    summary = {}
-
-    for category, files in data.items():
-        category_summary = {}
-        for file_type, file_paths in files.items():
-            directory_counts = {}
-
-            for file_path in file_paths:
-                directory_path = '/'.join(file_path.split('/')[:-1])
-                directory_counts[directory_path] = directory_counts.get(directory_path, 0) + 1
-
-            file_type_summary = []
-            for directory, count in directory_counts.items():
-                file_type_summary.append({"directory": directory, "fileCount": count})
-
-            category_summary[file_type] = {
-                "directories": file_type_summary,
-                "totalFiles": len(file_paths),
-                "totalDirectories": len(directory_counts)
-            }
-
-        summary[category] = category_summary
-
-    # Write the output to a JSON file "recon_summary.json" in the same folder as the input JSON file
-    output_file_path = os.path.join(os.path.dirname(json_file_path), "recon_summary.json")
-    with open(output_file_path, 'w') as output_file:
-        json.dump(summary, output_file, indent=4, sort_keys=True)
-
-    print("Summary data has been written to 'recon_summary.json'.")
-'''
 
 '''
 This function takes a list of file_paths as input. It extracts the project folder names from the file paths and 
@@ -271,6 +231,34 @@ def reconSummaryTextReport(json_file_path, output_file_path):
         data = json.load(json_file)
 
     with open(output_file_path, 'w') as text_file:
+        # Summarised Software Composition Analysis Output
+        text_file.write("Software Composition Analysis Summary:\n")
+        text_file.write("Below is a concise overview of the technologies, platforms, and frameworks identified in the overall solution.\n\n")
+
+        sections = {
+            "Backend": data.get("Backend", {}),
+            "Frontend": data.get("Frontend", {}),
+            "Mobile Platforms": data.get("Mobile Platforms", {}),
+            "Database": data.get("Database", {}),
+            "Shell Scripts": data.get("Shell Scripts", {}),
+            "System Programs": data.get("System Programs", {}),
+            "Framework": data.get("Framework", {}),
+            "Design Patterns": data.get("Design Patterns", {}),
+            "Libraries": data.get("Libraries", {}),
+            "Cloud Services": data.get("Cloud Services", {})
+        }
+
+        for section_title, section_content in sections.items():
+            if section_content:
+                text_file.write(f"[*] {section_title}:\n")
+                for sub_title in section_content:
+                    text_file.write(f"    [-] {sub_title}\n")
+
+
+        # Detailed Software Composition Analysis Output
+        text_file.write("\nDetailed Software Composition Analysis:\n")
+        text_file.write("Below is a detailed overview of the technologies, platforms, and frameworks identified in the overall solution.\n\n")
+
         for root_title, root_content in data.items():
             text_file.write(f"{root_title}:\n")
             for sub_title, sub_content in root_content.items():
@@ -285,5 +273,6 @@ def reconSummaryTextReport(json_file_path, output_file_path):
                         text_file.write(f"      {relative_path}{os.path.sep} - file count: {directory_info['fileCount']}\n")
             text_file.write("\n")
 
-    print(f"     [-] Content written to {output_file_path}")
+    print(f"     [-] Reconnaissance file saved at {output_file_path}")
+
 

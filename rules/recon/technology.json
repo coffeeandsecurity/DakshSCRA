@@ -44,7 +44,8 @@
     {"name": "Cordova", "regex": "import.*?cordova", "regexFlag": "1", "fileExtensions": [".js"]},
     {"name": "Kotlin", "regex": "import.*?kotlin", "regexFlag": "1", "fileExtensions": [".kt"]},
     {"name": "Swift", "regex": "import\\s+.*?Swift", "regexFlag": "0", "fileExtensions": [".swift"]},
-    {"name": "Objective-C", "regex": "#import\\s+<Foundation/Foundation.h>", "regexFlag": "1", "fileExtensions": [".h", ".m"]}
+    {"name": "Objective-C", "regex": "#import\\s+<Foundation/Foundation.h>", "regexFlag": "1", "fileExtensions": [".h", ".m"]},
+    {"name": "Android", "regex": "androidx/|android/", "regexFlag": "1", "fileExtensions": [".java", ".kt"]}
   ],
   "Database": [
     {"name": "MySQL", "regex": "mysql.connector", "regexFlag": "1", "fileExtensions": [".sql"]},
