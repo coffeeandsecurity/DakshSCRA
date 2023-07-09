@@ -10,7 +10,7 @@ from os import path             # This lowercase path to be used only to validat
 import modules.misclib as mlib
 import modules.reports as report
 import modules.parser as parser
-import modules.recon as rec
+import exclude.backup.recon as rec
 import modules.runtime as runtime
 import modules.rulesops as rops
 
