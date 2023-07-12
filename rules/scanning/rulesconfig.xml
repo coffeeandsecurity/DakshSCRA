@@ -17,7 +17,7 @@
     <rule>
         <platform>javascript</platform>
         <path>/javascript/javascript.xml</path>
-        <ftypes>*.js, *.ts, *.vue</ftypes>
+        <ftypes>*.js, *.ts</ftypes>
     </rule>
     <rule>
         <platform>angular</platform>

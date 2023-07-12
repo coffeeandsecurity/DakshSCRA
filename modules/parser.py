@@ -56,7 +56,7 @@ def sourceParser(rule_path, targetfile, outputfile, rule_no):
                 exclude = r.find("exclude").text if r.find("exclude") is not None else ""
 
                 # stdout based on verbosity level set
-                if str(runtime.verbosity) == '1':
+                if str(runtime.verbosity) == '1' or str(runtime.verbosity) == '2':
                     #sys.stdout.write("\033[F")      # move the cursor up one line 
                     #sys.stdout.write("\033[K")     # clear line to prevent overlap of texts
                     print("         [-] Applying Rule: " + r.find("name").text, end='\r')
@@ -68,7 +68,15 @@ def sourceParser(rule_path, targetfile, outputfile, rule_no):
                     filepath = eachfilepath.rstrip()  # strip out '\r' or '\n' from the file paths
                     
                     iCnt += 1
-                    print('\t Parsing file: ' + "["+str(iCnt)+"] "+ mlib.getSourceFilePath(runtime.sourcedir, filepath), end='\r')
+
+                    if str(runtime.verbosity) == '1':
+                        if len(filepath) > 60:
+                            print('\t Parsing file: ' + "["+str(iCnt)+"] "+ mlib.getShortPath(filepath), end='\r')
+                        else:
+                            print('\t Parsing file: ' + "["+str(iCnt)+"] "+ filepath, end='\r')
+                    else:
+                        print('\t Parsing file: ' + "["+str(iCnt)+"] "+ mlib.getSourceFilePath(runtime.sourcedir, filepath), end='\r')
+                    
                     sys.stdout.write("\033[K")     # clear line to prevent overlap of texts
                     #sys.stdout.write("\033[F\033[K")  # move the cursor up one line and clear line to prevent overlap of texts
 

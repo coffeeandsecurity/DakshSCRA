@@ -29,7 +29,7 @@ args = argparse.ArgumentParser()
 
 args.add_argument('-r', type=str, action='store', dest='rule_file', required=False, help='Specify platform specific rule name')
 args.add_argument('-f', type=str, action='store', dest='file_types', required=False, help='Specify file types to scan')
-args.add_argument('-v', action='count', dest='verbosity', default=0, help="specify verbosity level {'-v', '-vv'}")
+args.add_argument('-v', action='count', dest='verbosity', default=0, help="specify verbosity level {'-v', '-vv', '-vvv'}")
 args.add_argument('-t', type=str, action='store', dest='target_dir', required=False, help='Specify target directory path')
 args.add_argument('-l', '--list', type=str, action='store', dest='rules_filetypes', required=False, choices=['R','RF'], help='List rules [R] OR rules and filetypes [RF]')
 args.add_argument('-recon', action='store_true', dest='recon', help="platform and technology reconnaissance")
@@ -99,7 +99,7 @@ elif results.rule_file:
         project_subtitle = input("[*] Enter Project Subtitle (E.g: v1.0.1 / XYZ Corp): ")
         mlib.updateProjectConfig(project_name,project_subtitle)     # Update project details
 
-    if str(results.verbosity) in ('1', '2'):
+    if str(results.verbosity) in ('1', '2', '3'):
         runtime.verbosity = results.verbosity
         print(f'[*] Verbosity Level    = {results.verbosity}')
     else:

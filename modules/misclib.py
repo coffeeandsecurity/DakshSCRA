@@ -230,6 +230,13 @@ def getSourceFilePath(project_dir, source_file):
     return source_filepath
 
 
+def getShortPath(file_path):
+    short_file_path = getSourceFilePath(runtime.sourcedir, file_path)
+
+    directory, filename = os.path.split(file_path)
+    shortened = '..[SHORTENED]..'
+    return f"{os.sep}{directory.split(os.sep)[1]}{os.sep}{shortened}{os.sep}{filename}"
+
 # Function to replace absolute file paths with project file paths 
 # by stripping out the path before the project directory
 def cleanFilePaths(filepaths_source):
