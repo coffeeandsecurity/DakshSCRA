@@ -48,12 +48,13 @@ def detectFramework(language, file_path):
 
 # Software composition analysis
 def recon(targetdir, flag=False):
-    if flag == False:
+    if flag == False:       # True is used when recon option is used along with source code scanning
         print("\n[*] Reconnaissance (a.k.a Software Composition Analysis)")
     
     if Path(runtime.inventory_Fpathext).is_file():
         os.remove(runtime.inventory_Fpathext)
     log_filepaths = []
+    print("     [-] Enumerating project files and directories")
     for root, _, files in os.walk(targetdir):
         for file in files:
             file_path = os.path.join(root, file)
