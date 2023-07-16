@@ -100,7 +100,7 @@ htmltemplates_dir  = Path(str(root_dir) + "/resources/templates/")
 
 author = '''
 =============================================================
-Daksh SCRA (Source Code Review Assist) - Beta Release v0.3
+Daksh SCRA (Source Code Review Assist) - Beta Release v0.4
 
 Author:     Debasis Mohanty 
             www.coffeeandsecurity.com
