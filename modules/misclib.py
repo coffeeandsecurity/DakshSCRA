@@ -162,6 +162,26 @@ def reconDiscoverFiles(codebase, sourcepath, mode):
 
     return identified_files
 
+# Return relative paths related to reports - Temp option. Will be removed later
+def getRelativePath(fpath):
+    # Convert PosixPath object to string
+    fpath = str(fpath)
+
+    # Check if the path is relative
+    if not os.path.isabs(fpath):
+        return fpath  # Return full path if it is relative
+
+    # Get the index of the '/reports' directory in the full file path
+    reports_index = fpath.find('/reports')
+
+    # Check if '/reports' directory exists in the path
+    if reports_index == -1:
+        return None  # Return None if '/reports' directory is not found
+
+    # Extract the relative path from the '/reports' directory onwards
+    relative_path = fpath[reports_index:]
+
+    return relative_path
 
 
 # Retrieve files extention from file path

@@ -218,7 +218,7 @@ def summariseRecon(json_file_path):
     with open(output_file_path, 'w') as output_file:
         json.dump(summary, output_file, indent=4, sort_keys=True)
 
-    print("     [-] Recon summary has been written to 'recon_summary.json'.")
+    #print("     [-] Recon summary has been written to 'recon_summary.json'.")
     reconSummaryTextReport(runtime.reconSummary_Fpath, runtime.outputRecSummary)
 
 
@@ -233,6 +233,7 @@ def reconSummaryTextReport(json_file_path, output_file_path):
     with open(output_file_path, 'w') as text_file:
         # Summarised Software Composition Analysis Output
         text_file.write("Software Composition Analysis Summary:\n")
+        text_file.write("--------------------------------------\n")
         text_file.write("Below is a concise overview of the technologies, platforms, and frameworks identified in the overall solution.\n\n")
 
         sections = {
@@ -257,7 +258,12 @@ def reconSummaryTextReport(json_file_path, output_file_path):
 
         # Detailed Software Composition Analysis Output
         text_file.write("\nDetailed Software Composition Analysis:\n")
-        text_file.write("Below is a detailed overview of the technologies, platforms, and frameworks identified in the overall solution.\n\n")
+        text_file.write("---------------------------------------\n")
+        #text_file.write("Below is a detailed overview of the technologies, platforms, and frameworks identified in the overall solution.\n\n")
+        text_file.write("Below is a detailed overview of the technologies, platforms, and frameworks "
+                "discovered within the overall solution, along with the associated directories and "
+                "file counts related to the identified platforms.\n\n")
+
 
         for root_title, root_content in data.items():
             text_file.write(f"{root_title}:\n")
@@ -273,6 +279,7 @@ def reconSummaryTextReport(json_file_path, output_file_path):
                         text_file.write(f"      {relative_path}{os.path.sep} - file count: {directory_info['fileCount']}\n")
             text_file.write("\n")
 
-    print(f"     [-] Reconnaissance file saved at {output_file_path}")
+    print("     [-] Reconnaissance summary saved at " + str(mlib.getRelativePath(output_file_path)))
+    #print(f"     [-] Reconnaissance summary saved at {output_file_path}")
 
 
