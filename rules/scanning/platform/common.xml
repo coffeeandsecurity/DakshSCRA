@@ -63,6 +63,14 @@
             <developer>Developers should follow industry best practices for handling credit card information, including encryption, compliance with PCI-DSS standards, and avoiding unnecessary storage of sensitive data.</developer>
             <reviewer>Reviewers should assess the handling of credit card information and verify if proper security measures are in place.</reviewer>
         </rule>
+        <rule>
+            <name>Detect RSA Private Keys</name>
+            <regex>BEGIN RSA PRIVATE KEY</regex>
+            <rule_desc>Detects the presence of RSA private keys.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential presence of RSA private keys, which are sensitive cryptographic assets and should be securely managed and protected.</vuln_desc>
+            <developer>Developers should ensure the proper storage, protection, and secure handling of RSA private keys, following industry best practices and cryptographic standards.</developer>
+            <reviewer>Reviewers should verify the secure handling of RSA private keys and assess if adequate measures are in place to safeguard their confidentiality and integrity.</reviewer>
+        </rule>
     </category>
     <category name="Information Disclosure">
         <rule>
@@ -92,6 +100,78 @@
             <reviewer>Reviewers should verify the implementation of secure coding practices and assess if additional security measures are in place to prevent SQL injection.</reviewer>
         </rule>
     </category>
+    <category name="Trust-boundary Validation or 3rd-Party Interactions">
+        <rule>
+            <name>IPv4 / IPv6 Address</name>
+            <regex>\b(?:\b(?:[1-9]|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.(?:\d{1,3}\.){2}\d{1,3}\b|\b(?:(?:(?:[0-9A-Fa-f]{1,4}):){6}(?:[0-9A-Fa-f]{1,4}|(?:(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)(?:\.(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)){3})))\b)</regex>
+                <exclude>(?i)\b\w*(?:version|release|dotnet)\w*\b</exclude>
+            <rule_desc>Detects potential IPv4 or IPv6 addresses in the code.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential presence of IP addresses in the code, which can lead to security risks if not handled properly.</vuln_desc>
+            <developer>Developers should carefully validate and sanitize input related to IP addresses to prevent security vulnerabilities such as IP spoofing or injection attacks.</developer>
+            <reviewer>Reviewers should check for appropriate input handling and assess the implementation of input validation and sanitization techniques for IP addresses.</reviewer>
+        </rule>
+        <rule>
+            <name>Trusted Or Untrusted URLs</name>
+            <regex>(?i)\bhttps?://[^\s]+</regex>
+                <exclude>(?i).*DOCTYPE\s.*</exclude>
+            <rule_desc>Detects the presence of URLs in the application that may pose security risks or indicate potential trust issues with third-party URLs.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the presence of URLs starting with http:// or https://, which could potentially pose security risks if not properly handled or validated. These URLs might involve data exfiltration or raise concerns about trusting third-party resources without thorough validation. Developers and reviewers should investigate these URLs to ensure their purpose, legitimacy, and adherence to security practices.</vuln_desc>
+            <developer>Developers should list and carefully review all URLs used in the application. They should implement proper URL validation and sanitization techniques to ensure the security and integrity of the application when dealing with user-provided or third-party URLs. It is important to prevent any unintentional exposure of sensitive information and perform thorough taint validation on third-party URLs to mitigate trust-related security risks.</developer>
+            <reviewer>Reviewers should verify the implementation of secure URL handling practices and assess if additional security measures are necessary. They should thoroughly investigate the presence of these URLs, determine their purpose, and ensure they undergo appropriate taint validation. Reviewers should pay special attention to URLs associated with data exfiltration concerns and assess the trustworthiness of third-party URLs to mitigate potential security risks.</reviewer>
+        </rule>
+    </category>
+    <category name="Redirection and Forwarding Security">
+        <rule>
+            <name>Unvalidated Redirects and Forwards</name>
+            <regex>.*\b(redirect|forward)\b.*</regex>
+            <rule_desc>Detects potential unvalidated redirect and forward vulnerabilities.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the presence of code patterns that may indicate vulnerabilities in unvalidated redirects and forwards, which can be exploited by attackers to redirect users to malicious websites or perform phishing attacks.</vuln_desc>
+            <developer>Developers should validate and sanitize all user-supplied input used in redirect and forward operations. They should also ensure that redirects and forwards are performed only to trusted and authorized destinations.</developer>
+            <reviewer>Reviewers should review the code for potential unvalidated redirect and forward vulnerabilities and verify if proper input validation and destination checks are implemented.</reviewer>
+        </rule>
+    </category>
+    <category name="APIs and Endpoints">
+        <rule>
+            <name>API Endpoint Detection</name>
+            <regex>(["'])(\/\w+\/{[^{}]+})\1</regex>
+            <description>Detects potential API endpoints in source code.</description>
+            <rule_desc>Detects the usage of potential API endpoints in source code files, which may require special handling and validation.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential presence of API endpoints in the source code. API endpoints often involve data extraction, processing, and may expose sensitive information if not handled securely. Developers should be aware of the specific requirements for handling API endpoints and implement appropriate validation, authentication, and authorization mechanisms.</vuln_desc>
+            <developer>Developers should carefully review and validate the identified API endpoints. They should follow best practices for handling API endpoints, including input validation, authentication, authorization, and proper data handling. Additionally, developers should consider implementing rate limiting, input/output validation, and strong security controls to protect the API endpoints.</developer>
+            <reviewer>Reviewers should check for the presence of API endpoints in the source code. They should verify if developers have implemented appropriate security measures for handling API endpoints, such as input validation, authentication, authorization, rate limiting, and secure data handling. Reviewers should also assess the sensitivity of the data handled by the API endpoints and confirm the presence of relevant security controls.</reviewer>
+        </rule>
+    </category>
+    <category name="Code Quality and Documentation">
+        <rule>
+            <name>TODO Comments</name>
+            <regex>(^|\s)(?i)TODO(\s?)</regex>
+            <rule_desc>Detects TODO comments in the code.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the presence of TODO comments, which might indicate unfinished or pending tasks that could lead to security vulnerabilities or incomplete code functionality.</vuln_desc>
+            <developer>Developers should regularly review and address TODO comments to ensure the completion of tasks, proper code functionality, and security of the application.</developer>
+            <reviewer>Reviewers should check for the presence of TODO comments and verify if they have been properly addressed during code reviews and inspections.</reviewer>
+        </rule>
+    </category>
+    <category name="Cryptographic Issues">
+        <rule>
+            <name>Insecure Cryptographic Algorithm</name>
+            <regex>(?i)\b(MD2|MD4|MD5|SHA1|SHA-1|DES|RC2|RC4|RC5|RSA)\b</regex>
+            <rule_desc>Detects the usage of insecure cryptographic algorithms in Java code.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using insecure cryptographic algorithms. Insecure algorithms such as MD5, SHA-1, or weak encryption algorithms can be exploited by attackers to bypass security measures or recover sensitive information.</vuln_desc>
+            <developer>Developers should use secure cryptographic algorithms, such as SHA-256 or SHA-3 for hashing and AES for encryption. They should avoid using deprecated or weak algorithms that have known vulnerabilities.</developer>
+            <reviewer>Reviewers should verify that secure cryptographic algorithms are used to mitigate the risk of cryptographic vulnerabilities. They should assess if deprecated or weak algorithms are used and recommend replacing them with stronger alternatives.</reviewer>
+        </rule>
+    </category>
+    <category name="Malicious Code or Backdoor Detection">
+        <rule>
+            <name>Backdoor Entry and Bypass Detection</name>
+            <regex>(^|\s)(?i)(backdoor|bypass|sneaky|exploit|unauthorized_access|unauthorized_entry|hidden_entry|stealthy_entry|secret_entry)</regex>
+            <!--The following keywords can be present in a backdoor code but are sometimes too noise and generates FalsePositives. Therefore excluded.(override) -->
+            <rule_desc>Detects the presence of terms related to backdoor entry, bypass, or sneaky methods to get around program restrictions.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential presence of terms associated with backdoor entry, bypass techniques, or sneaky methods to circumvent program restrictions. Such activities can lead to unauthorized access, privilege escalation, and potential security breaches.</vuln_desc>
+            <developer>Developers should implement strong access controls, proper input validation, and enforce least privilege principles to mitigate the risk of backdoor entries, bypass, or unauthorized access attempts. Regular security assessments and code reviews should also be conducted to identify and address any potential vulnerabilities.</developer>
+            <reviewer>Reviewers should assess the presence of backdoor-related terms and investigate if there are any actual backdoor entries, bypass techniques, or unauthorized access pathways in the code. They should also verify that appropriate security measures are in place to prevent such activities.</reviewer>
+        </rule>
+    </category>
     <category name="Common Mitigations">
         <rule>
             <name>CAPTCHA Implementation</name>
@@ -110,80 +190,4 @@
             <reviewer>Reviewers should evaluate the effectiveness of the standard mitigation techniques and assess if additional measures are necessary for robust security.</reviewer>
         </rule>
     </category>
-    <rule>
-        <name>IPv4 / IPv6 Address</name>
-        <regex>\b(?:\b(?:[1-9]|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.(?:\d{1,3}\.){2}\d{1,3}\b|\b(?:(?:(?:[0-9A-Fa-f]{1,4}):){6}(?:[0-9A-Fa-f]{1,4}|(?:(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)(?:\.(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)){3})))\b)</regex>
-            <exclude>(?i)\b\w*(?:version|release|dotnet)\w*\b</exclude>
-        <rule_desc>Detects potential IPv4 or IPv6 addresses in the code.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the potential presence of IP addresses in the code, which can lead to security risks if not handled properly.</vuln_desc>
-        <developer>Developers should carefully validate and sanitize input related to IP addresses to prevent security vulnerabilities such as IP spoofing or injection attacks.</developer>
-        <reviewer>Reviewers should check for appropriate input handling and assess the implementation of input validation and sanitization techniques for IP addresses.</reviewer>
-    </rule>
-    <rule>
-        <name>Unvalidated Redirects and Forwards</name>
-        <regex>.*\b(?:redirect|forward)\b.*</regex>
-        <rule_desc>Detects potential unvalidated redirects or forwards in the code.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the potential presence of unvalidated redirects or forwards in the code, which can lead to security risks such as phishing attacks or unauthorized access.</vuln_desc>
-        <developer>Developers should validate and sanitize all user-supplied input used for redirecting or forwarding to ensure the destination is trusted and authorized.</developer>
-        <reviewer>Reviewers should verify the implementation of proper input validation and secure handling of redirects and forwards.</reviewer>
-    </rule>
-    <rule>
-        <name>Trusted Or Untrusted URLs</name>
-        <regex>(?i)\bhttps?://[^\s]+</regex>
-            <exclude>(?i).*DOCTYPE\s.*</exclude>
-        <rule_desc>Detects the presence of URLs in the application that may pose security risks or indicate potential trust issues with third-party URLs.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of URLs starting with http:// or https://, which could potentially pose security risks if not properly handled or validated. These URLs might involve data exfiltration or raise concerns about trusting third-party resources without thorough validation. Developers and reviewers should investigate these URLs to ensure their purpose, legitimacy, and adherence to security practices.</vuln_desc>
-        <developer>Developers should list and carefully review all URLs used in the application. They should implement proper URL validation and sanitization techniques to ensure the security and integrity of the application when dealing with user-provided or third-party URLs. It is important to prevent any unintentional exposure of sensitive information and perform thorough taint validation on third-party URLs to mitigate trust-related security risks.</developer>
-        <reviewer>Reviewers should verify the implementation of secure URL handling practices and assess if additional security measures are necessary. They should thoroughly investigate the presence of these URLs, determine their purpose, and ensure they undergo appropriate taint validation. Reviewers should pay special attention to URLs associated with data exfiltration concerns and assess the trustworthiness of third-party URLs to mitigate potential security risks.</reviewer>
-    </rule>
-    <rule>
-        <name>API Endpoint Detection</name>
-        <regex>(["'])(\/\w+\/{[^{}]+})\1</regex>
-        <description>Detects potential API endpoints in source code.</description>
-        <rule_desc>Detects the usage of potential API endpoints in source code files, which may require special handling and validation.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the potential presence of API endpoints in the source code. API endpoints often involve data extraction, processing, and may expose sensitive information if not handled securely. Developers should be aware of the specific requirements for handling API endpoints and implement appropriate validation, authentication, and authorization mechanisms.</vuln_desc>
-        <developer>Developers should carefully review and validate the identified API endpoints. They should follow best practices for handling API endpoints, including input validation, authentication, authorization, and proper data handling. Additionally, developers should consider implementing rate limiting, input/output validation, and strong security controls to protect the API endpoints.</developer>
-        <reviewer>Reviewers should check for the presence of API endpoints in the source code. They should verify if developers have implemented appropriate security measures for handling API endpoints, such as input validation, authentication, authorization, rate limiting, and secure data handling. Reviewers should also assess the sensitivity of the data handled by the API endpoints and confirm the presence of relevant security controls.</reviewer>
-    </rule>
-    <rule>
-        <name>Unvalidated Redirects and Forwards</name>
-        <regex>.*\b(redirect|forward)\b.*</regex>
-        <rule_desc>Detects potential unvalidated redirect and forward vulnerabilities.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of code patterns that may indicate vulnerabilities in unvalidated redirects and forwards, which can be exploited by attackers to redirect users to malicious websites or perform phishing attacks.</vuln_desc>
-        <developer>Developers should validate and sanitize all user-supplied input used in redirect and forward operations. They should also ensure that redirects and forwards are performed only to trusted and authorized destinations.</developer>
-        <reviewer>Reviewers should review the code for potential unvalidated redirect and forward vulnerabilities and verify if proper input validation and destination checks are implemented.</reviewer>
-    </rule>
-    <rule>
-        <name>TODO Comments</name>
-        <regex>(^|\s)(?i)TODO(\s?)</regex>
-        <rule_desc>Detects TODO comments in the code.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of TODO comments, which might indicate unfinished or pending tasks that could lead to security vulnerabilities or incomplete code functionality.</vuln_desc>
-        <developer>Developers should regularly review and address TODO comments to ensure the completion of tasks, proper code functionality, and security of the application.</developer>
-        <reviewer>Reviewers should check for the presence of TODO comments and verify if they have been properly addressed during code reviews and inspections.</reviewer>
-    </rule>
-    <rule>
-        <name>Insecure Cryptographic Algorithm</name>
-        <regex>(?i)\b(MD2|MD4|MD5|SHA1|SHA-1|DES|RC2|RC4|RC5|RSA)\b</regex>
-        <rule_desc>Detects the usage of insecure cryptographic algorithms in Java code.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the potential vulnerability of using insecure cryptographic algorithms. Insecure algorithms such as MD5, SHA-1, or weak encryption algorithms can be exploited by attackers to bypass security measures or recover sensitive information.</vuln_desc>
-        <developer>Developers should use secure cryptographic algorithms, such as SHA-256 or SHA-3 for hashing and AES for encryption. They should avoid using deprecated or weak algorithms that have known vulnerabilities.</developer>
-        <reviewer>Reviewers should verify that secure cryptographic algorithms are used to mitigate the risk of cryptographic vulnerabilities. They should assess if deprecated or weak algorithms are used and recommend replacing them with stronger alternatives.</reviewer>
-    </rule>
-    <rule>
-        <name>Detect RSA Private Keys</name>
-        <regex>BEGIN RSA PRIVATE KEY</regex>
-        <rule_desc>Detects the presence of RSA private keys.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the potential presence of RSA private keys, which are sensitive cryptographic assets and should be securely managed and protected.</vuln_desc>
-        <developer>Developers should ensure the proper storage, protection, and secure handling of RSA private keys, following industry best practices and cryptographic standards.</developer>
-        <reviewer>Reviewers should verify the secure handling of RSA private keys and assess if adequate measures are in place to safeguard their confidentiality and integrity.</reviewer>
-    </rule>
-    <rule>
-        <name>Backdoor Entry and Bypass Detection</name>
-        <regex>(^|\s)(?i)(backdoor|bypass|sneaky|exploit|unauthorized_access|unauthorized_entry|hidden_entry|stealthy_entry|secret_entry)</regex>
-        <!--The following keywords can be present in a backdoor code but are sometimes too noise and generates FalsePositives. Therefore excluded.(override) -->
-        <rule_desc>Detects the presence of terms related to backdoor entry, bypass, or sneaky methods to get around program restrictions.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the potential presence of terms associated with backdoor entry, bypass techniques, or sneaky methods to circumvent program restrictions. Such activities can lead to unauthorized access, privilege escalation, and potential security breaches.</vuln_desc>
-        <developer>Developers should implement strong access controls, proper input validation, and enforce least privilege principles to mitigate the risk of backdoor entries, bypass, or unauthorized access attempts. Regular security assessments and code reviews should also be conducted to identify and address any potential vulnerabilities.</developer>
-        <reviewer>Reviewers should assess the presence of backdoor-related terms and investigate if there are any actual backdoor entries, bypass techniques, or unauthorized access pathways in the code. They should also verify that appropriate security measures are in place to prevent such activities.</reviewer>
-    </rule>
 </root>
