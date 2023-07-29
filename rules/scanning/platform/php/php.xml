@@ -1,28 +1,28 @@
 <root>
-    <category name="Tainted Input Handling or Injection Flaws">
+    <category name="Untrusted Input Handling or Injection Flaws">
         <rule>
-            <name>Tainted Inputs: $_REQUEST</name>
+            <name>Untrusted Inputs: $_REQUEST</name>
             <regex>\$_REQUEST</regex>
-            <rule_desc>Detects the usage of the $_REQUEST superglobal, which can introduce tainted inputs into the code.</rule_desc>
+            <rule_desc>Detects the usage of the $_REQUEST superglobal, which can introduce untrusted inputs into the code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using user input from the $_REQUEST superglobal without proper validation and sanitization. Attackers can manipulate request parameters to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks (SQL, OS, or LDAP), cross-site scripting (XSS), or remote code execution.</vuln_desc>
             <developer>Developers should validate and sanitize user input received from the $_REQUEST superglobal before using it in any sensitive operations. They should implement strong input validation, ensuring that only expected and sanitized values are accepted from requests. Additionally, developers should be cautious about the potential risks associated with using user-supplied data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
-            <reviewer>Reviewers should ensure that proper input handling is in place for the $_REQUEST superglobal. They should verify that developers have implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related to tainted inputs. Reviewers should also assess the sensitivity of the data handled through requests and confirm that relevant security measures, such as output encoding and protection against injection attacks, are implemented correctly.</reviewer>
+            <reviewer>Reviewers should ensure that proper input handling is in place for the $_REQUEST superglobal. They should verify that developers have implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. Reviewers should also assess the sensitivity of the data handled through requests and confirm that relevant security measures, such as output encoding and protection against injection attacks, are implemented correctly.</reviewer>
         </rule>
         <rule>
-            <name>Tainted Inputs: $_GET</name>
+            <name>Untrusted Inputs: $_GET</name>
             <regex>\$_GET</regex>
-            <rule_desc>Identifies the usage of the $_GET superglobal, which may lead to tainted inputs being used in the code.</rule_desc>
+            <rule_desc>Identifies the usage of the $_GET superglobal, which may lead to untrusted inputs being used in the code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using user input from the $_GET superglobal without proper validation and sanitization. Attackers can manipulate URL parameters to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks (SQL, OS, or LDAP), cross-site scripting (XSS), or unauthorized access to sensitive information.</vuln_desc>
             <developer>Developers should carefully validate and sanitize user input received from the $_GET superglobal before using it in any sensitive operations. They should implement strong input validation, ensuring that only expected and sanitized values are accepted from URL parameters. Additionally, developers should be aware of the risks associated with using user-supplied data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
-            <reviewer>Reviewers should check for appropriate input handling for the $_GET superglobal. They should assess if developers have implemented proper input validation and sanitization techniques to prevent security vulnerabilities related to tainted inputs. Reviewers should also verify the usage of output encoding and protection against injection attacks to ensure the secure handling of user input received through URL parameters.</reviewer>
+            <reviewer>Reviewers should check for appropriate input handling for the $_GET superglobal. They should assess if developers have implemented proper input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. Reviewers should also verify the usage of output encoding and protection against injection attacks to ensure the secure handling of user input received through URL parameters.</reviewer>
         </rule>
         <rule>
-            <name>Tainted Inputs: $_COOKIE</name>
+            <name>Untrusted Inputs: $_COOKIE</name>
             <regex>\$_COOKIE</regex>
-            <rule_desc>Detects the usage of the $_COOKIE superglobal, which can introduce tainted inputs into the code.</rule_desc>
+            <rule_desc>Detects the usage of the $_COOKIE superglobal, which can introduce untrusted inputs into the code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using user input from the $_COOKIE superglobal without proper validation and sanitization. Attackers can manipulate cookies to provide malicious or unexpected values, potentially leading to security vulnerabilities such as session hijacking, privilege escalation, or information disclosure.</vuln_desc>
             <developer>Developers should validate and sanitize user input received from the $_COOKIE superglobal before using it in any sensitive operations. They should implement strong input validation, ensuring that only expected and sanitized values are accepted from cookies. Additionally, developers should be cautious about the potential risks associated with using cookies for sensitive data or session management and follow secure coding practices and guidelines.</developer>
-            <reviewer>Reviewers should ensure that proper input handling is in place for the $_COOKIE superglobal. They should verify that developers have implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related to tainted inputs. Reviewers should also assess the sensitivity of the data handled through cookies and confirm that relevant security measures, such as secure session management, are implemented correctly.</reviewer>
+            <reviewer>Reviewers should ensure that proper input handling is in place for the $_COOKIE superglobal. They should verify that developers have implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. Reviewers should also assess the sensitivity of the data handled through cookies and confirm that relevant security measures, such as secure session management, are implemented correctly.</reviewer>
         </rule>
         <rule>
             <name>Command Injection: shell_exec|exec|passthru|system|popen|backtick</name>
@@ -63,22 +63,6 @@
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of cross-site scripting (XSS). Attackers can exploit the PHP_SELF variable to inject malicious scripts into web pages and potentially steal sensitive user information or perform unauthorized actions on behalf of the user.</vuln_desc>
             <developer>Developers should avoid directly using the PHP_SELF variable to generate URLs or include it in output without proper sanitization and encoding to mitigate cross-site scripting (XSS) vulnerabilities. It is recommended to use alternative methods, such as carefully constructing URLs or relying on server-side frameworks that handle URL generation securely.</developer>
             <reviewer>Reviewers should verify that the PHP_SELF variable is not directly used in generating URLs or output without proper sanitization and encoding. They should also ensure that other security measures, such as input validation and output escaping, are implemented to prevent XSS vulnerabilities in the codebase.</reviewer>
-        </rule>
-        <rule>
-            <name>SELECT [*] FROM [anytable] WHERE</name>
-            <regex>SELECT\s+?[^\s]+?\s+?FROM\s+?[^\s]+?\s+?WHERE.*</regex>
-            <rule_desc>Detects instances of SELECT statements in SQL queries that retrieve data from a table with a WHERE clause.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of SQL injection. Attackers can exploit this vulnerability to manipulate the WHERE clause and perform unauthorized data retrieval or modification.</vuln_desc>
-            <developer>Developers should ensure that SQL queries using SELECT statements with a WHERE clause are properly parameterized or sanitized to prevent SQL injection attacks.</developer>
-            <reviewer>Reviewers should verify the presence of secure coding practices, such as parameterized queries or proper input validation and sanitization, to mitigate the risk of SQL injection vulnerabilities in SELECT statements with a WHERE clause.</reviewer>
-        </rule>
-        <rule>
-            <name>SELECT ORDERBY</name>
-            <regex>(SELECT).*(ORDER BY).*</regex>
-            <rule_desc>Detects instances of SELECT statements in SQL queries that include an ORDER BY clause.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of SQL injection. Attackers can exploit this vulnerability to manipulate the ORDER BY clause and potentially alter the query results or introduce additional malicious functionality.</vuln_desc>
-            <developer>Developers should ensure that SQL queries using SELECT statements with an ORDER BY clause are properly parameterized or sanitized to prevent SQL injection attacks.</developer>
-            <reviewer>Reviewers should verify the presence of secure coding practices, such as parameterized queries or proper input validation and sanitization, specifically for SELECT statements that include an ORDER BY clause, to mitigate the risk of SQL injection vulnerabilities.</reviewer>
         </rule>
     </category>
     <category name="Insecure Method/Function Call">
@@ -151,6 +135,24 @@
             <vuln_desc>This rule checks if the "htmlentities" function is utilized as a recommended mitigation technique against Cross-Site Scripting (XSS) vulnerabilities. XSS vulnerabilities arise when untrusted data is displayed on a web page without proper sanitization, enabling attackers to inject malicious scripts. By employing the "htmlentities" function, special characters are encoded to prevent script execution.</vuln_desc>
             <developer>Ensure that the implementation of the "htmlentities" function is thorough and consistent across the application to effectively mitigate XSS vulnerabilities. Verify that all user-supplied data displayed in HTML context undergoes proper sanitization using this function to encode special characters and thwart script injection attempts.</developer>
             <reviewer>Verify if the "htmlentities" function is adequately implemented and consistently applied throughout the application to mitigate XSS vulnerabilities. Assess its usage on user-supplied data displayed in HTML context, and evaluate the effectiveness of this mitigation approach in preventing script injection attacks.</reviewer>
+        </rule>
+    </category>
+    <category name="SQL Queries">
+        <rule>
+            <name>SQL Query: SELECT [*] FROM [anytable] WHERE</name>
+            <regex>SELECT\s+?[^\s]+?\s+?FROM\s+?[^\s]+?\s+?WHERE.*</regex>
+            <rule_desc>Detects instances of SELECT statements in SQL queries that retrieve data from a table with a WHERE clause.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential vulnerability of SQL injection. Attackers can exploit this vulnerability to manipulate the WHERE clause and perform unauthorized data retrieval or modification.</vuln_desc>
+            <developer>Developers should ensure that SQL queries using SELECT statements with a WHERE clause are properly parameterized or sanitized to prevent SQL injection attacks.</developer>
+            <reviewer>Reviewers should verify the presence of secure coding practices, such as parameterized queries or proper input validation and sanitization, to mitigate the risk of SQL injection vulnerabilities in SELECT statements with a WHERE clause.</reviewer>
+        </rule>
+        <rule>
+            <name>SQL Query: SELECT ORDERBY</name>
+            <regex>(SELECT).*(ORDER BY).*</regex>
+            <rule_desc>Detects instances of SELECT statements in SQL queries that include an ORDER BY clause.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential vulnerability of SQL injection. Attackers can exploit this vulnerability to manipulate the ORDER BY clause and potentially alter the query results or introduce additional malicious functionality.</vuln_desc>
+            <developer>Developers should ensure that SQL queries using SELECT statements with an ORDER BY clause are properly parameterized or sanitized to prevent SQL injection attacks.</developer>
+            <reviewer>Reviewers should verify the presence of secure coding practices, such as parameterized queries or proper input validation and sanitization, specifically for SELECT statements that include an ORDER BY clause, to mitigate the risk of SQL injection vulnerabilities.</reviewer>
         </rule>
     </category>
 </root>

@@ -1,0 +1,29 @@
+<category name="Untrusted Input Handling or Injection Flaws">
+    <name>Untrusted Input: Request.Form</name>
+    <name>Untrusted Input: Request.QueryString</name>
+    <name>Untrusted Input Handling in HTLM Output: Response.Write</name>
+    <name>Untrusted Input Handling in SQL Query: SqlCommand</name>
+    <name>Untrusted Input Handling in XML Query</name>
+    <name>Untrusted URL Concatenation: Append Method</name>
+    <name>Untrusted Data Output: HttpContext.Current.Request</name>
+    <name>Untrusted Data Output: HttpContext.Current.Request.Form</name>
+    <name>Untrusted Data Output: HttpContext.Current.Request.QueryString</name>
+    <name>Path Traversal: Directory.GetFiles</name>
+<category name="Insecure Method/Function Call">
+<category name="Deprecated Functions">
+<category name="SQL Queries">
+<category name="Information Disclosure">
+<category name="File System Vulnerabilities">
+    <name>Path Traversal: Directory.GetFiles</name>
+    <name>Insecure File Permissions</name>
+    <name>Insecure Temporary File Usage</name>
+    <name>Symbolic Link (Symlink) Following</name>
+    <name>Race Condition</name>
+    <name>Uncontrolled File Upload</name>
+    <name>File Inclusion Vulnerabilities</name>
+</category>
+<category name="Insecure Configuration">
+
+<category name="Disabled/Missing Security Controls">
+<category name="Insecure Mitigations">
+<category name="Effective/Standard Mitigations Implemented">

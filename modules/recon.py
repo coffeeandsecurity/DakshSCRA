@@ -8,6 +8,7 @@ from collections import Counter
 
 import modules.misclib as mlib
 import modules.runtime as runtime
+import modules.estimator as estimate
 
 # Exclusion list for file extensions
 exclusion_list = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.ico', '.tiff', '.zip',
@@ -221,6 +222,7 @@ def summariseRecon(json_file_path):
 
     #print("     [-] Recon summary has been written to 'recon_summary.json'.")
     reconSummaryTextReport(runtime.reconSummary_Fpath, runtime.outputRecSummary)
+    estimate.effortEstimator(output_file_path)
 
 
 

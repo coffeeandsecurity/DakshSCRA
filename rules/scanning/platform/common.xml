@@ -1,29 +1,115 @@
 <root>
-    <rule>
-        <name>Password</name>
-        <regex>(^|\s)(?i)(Password|password|pwd|passwd)</regex>
-            <exclude>\b(?:SELECT|UPDATE|INSERT|FROM)\b</exclude>
-        <rule_desc>Detects potential password-related strings in the code.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the potential presence of password-related strings in the code, which can lead to security risks if not handled properly.</vuln_desc>
-        <developer>Developers should follow best practices for password handling, including strong encryption, salted hashing, and enforcing secure password policies.</developer>
-        <reviewer>Reviewers should assess the password handling mechanisms and verify if proper security measures are in place.</reviewer>
-    </rule>
-    <rule>
-        <name>Server-side Secrets Handling (E.g: Hardcoded Secrets | Assignments)</name>
-        <regex>\b(apikey|api[-_]?key|secret|token|access_token|auth_token|client_secret|private_key|encryption_key|db_password|security_key|session_key|service_account_key|passphrase|cert_key|app_secret|api_secret|jwt_secret)\s*=</regex>
-        <rule_desc>Detects potential server-side secrets handling vulnerabilities in the code.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the potential presence of server-side secrets (e.g., hardcoded secrets, assignments) in the code, which can lead to security risks if not handled properly.</vuln_desc>
-        <developer>Developers should avoid storing secrets directly in the code and instead use secure methods such as environment variables or key management systems.</developer>
-        <reviewer>Reviewers should assess the handling of server-side secrets and verify if proper security measures are in place.</reviewer>
-    </rule>
-    <rule>
-        <name>Credit Card</name>
-        <regex>((\D(6011|5[1-5]\d{2}|4\d{3}|3\d{3})\d{11,12}\D)|(^(6011|5[1-5]\d{2}|4\d{3}|3\d{3})\d{11,12}\D))</regex>
-        <rule_desc>Detects potential credit card numbers in the code.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the potential presence of credit card numbers in the code, which can lead to security risks if not handled properly.</vuln_desc>
-        <developer>Developers should follow industry best practices for handling credit card information, including encryption, compliance with PCI-DSS standards, and avoiding unnecessary storage of sensitive data.</developer>
-        <reviewer>Reviewers should assess the handling of credit card information and verify if proper security measures are in place.</reviewer>
-    </rule>
+    <category name="Authentication or Authorization Functionalities">
+        <rule>
+            <name>Authentication Modules</name>
+            <regex>(^|\s)(?i)(Login|Authentication|Authenticated|Oauth|JWT)</regex>
+            <rule_desc>Detects common module names associated with authentication, such as 'Login', 'Authentication', 'Authenticated', 'Oauth', and 'JWT'.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential presence of module names associated with authentication, which can provide attackers with valuable information about the system's functionality and increase the attack surface.</vuln_desc>
+            <developer>Developers should ensure that the authentication processes are implemented securely.</developer>
+            <reviewer>Reviewers should verify if proper security measures are in place related to authentication.</reviewer>
+        </rule>
+        <rule>
+            <name>Authorization Modules (Authorization|Authorizing|AccessControl|RBAC|ABAC)</name>
+            <regex>(^|\s)(?i)(Authorization|Authorizing|AccessControl|RBAC|ABAC)</regex>
+            <rule_desc>Detects the presence of common module names related to authorization and access control.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential presence of module names associated with authorization and access control, which are crucial for enforcing proper permissions and protecting sensitive resources. Failure to implement secure authorization checks can result in unauthorized access and data breaches.</vuln_desc>
+            <developer>Developers should ensure that authorization mechanisms and access control policies are implemented securely to prevent unauthorized access to sensitive resources.</developer>
+            <reviewer>Reviewers should verify if proper security measures are in place related to authorization and access control to protect against potential vulnerabilities.</reviewer>
+        </rule>
+    </category>
+    <category name="Privileged User or Management Functionalities">
+        <rule>
+            <name>Admin Modules/Section</name>
+            <regex>(^|\s)(?i)(Admin|Administrator|AdminFunc|AdminPage|AdminLogin)</regex>
+            <rule_desc>Detects the presence of common module names related to administration functionalities or admin login pages.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential presence of module names associated with administration functionalities or admin login pages, which can provide attackers with valuable information about the system's administration interfaces and increase the attack surface.</vuln_desc>
+            <developer>Developers should avoid using generic or predictable module names for admin functionalities or admin login pages and ensure that access control mechanisms and authentication processes are implemented securely.</developer>
+            <reviewer>Reviewers should assess the usage of module names related to administration functionalities or admin login pages and verify if proper security measures are in place to protect these critical areas of the system.</reviewer>
+        </rule>
+    </category>
+    <category name="Commonly Targeted Functionalities">
+        <rule>
+            <name>File Upload Functionality</name>
+            <regex>(^|\s)(?i)(upload|file\s*input|file\s*upload)(\s+(?!secure|protected|restricted)\w+)*</regex>
+            <rule_desc>Detects the presence of file upload functionality.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential presence of file upload functionality that may allow unauthorized or malicious files to be uploaded, posing security risks such as arbitrary code execution or unauthorized access.</vuln_desc>
+            <developer>Developers should ensure that file upload functionality is implemented securely by validating file types, limiting file size, and applying appropriate access controls. It is recommended to use well-established file upload libraries or frameworks that have built-in security features.</developer>
+            <reviewer>Reviewers should verify the implementation of secure file upload practices, including proper file type validation, size restriction, and access control mechanisms.</reviewer>
+        </rule>
+    </category>
+    <category name="Hardcoded Secrets or Sensitive Info">
+        <rule>
+            <name>Password</name>
+            <regex>(^|\s)(?i)(Password|password|pwd|passwd)</regex>
+                <exclude>\b(?:SELECT|UPDATE|INSERT|FROM)\b</exclude>
+            <rule_desc>Detects potential password-related strings in the code.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential presence of password-related strings in the code, which can lead to security risks if not handled properly.</vuln_desc>
+            <developer>Developers should follow best practices for password handling, including strong encryption, salted hashing, and enforcing secure password policies.</developer>
+            <reviewer>Reviewers should assess the password handling mechanisms and verify if proper security measures are in place.</reviewer>
+        </rule>
+        <rule>
+            <name>Server-side Secrets Handling</name>
+            <regex>\b(apikey|api[-_]?key|secret|token|access_token|auth_token|client_secret|private_key|encryption_key|db_password|security_key|session_key|service_account_key|passphrase|cert_key|app_secret|api_secret|jwt_secret)\s*=</regex>
+            <rule_desc>Detects potential server-side secrets handling vulnerabilities in the code.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential presence of server-side secrets (e.g., hardcoded secrets, assignments) in the code, which can lead to security risks if not handled properly.</vuln_desc>
+            <developer>Developers should avoid storing secrets directly in the code and instead use secure methods such as environment variables or key management systems.</developer>
+            <reviewer>Reviewers should assess the handling of server-side secrets and verify if proper security measures are in place.</reviewer>
+        </rule>
+        <rule>
+            <name>Credit Card</name>
+            <regex>((\D(6011|5[1-5]\d{2}|4\d{3}|3\d{3})\d{11,12}\D)|(^(6011|5[1-5]\d{2}|4\d{3}|3\d{3})\d{11,12}\D))</regex>
+            <rule_desc>Detects potential credit card numbers in the code.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential presence of credit card numbers in the code, which can lead to security risks if not handled properly.</vuln_desc>
+            <developer>Developers should follow industry best practices for handling credit card information, including encryption, compliance with PCI-DSS standards, and avoiding unnecessary storage of sensitive data.</developer>
+            <reviewer>Reviewers should assess the handling of credit card information and verify if proper security measures are in place.</reviewer>
+        </rule>
+    </category>
+    <category name="Information Disclosure">
+        <rule>
+            <name>Information Disclosure: Stack Trace or Error Messages</name>
+            <regex>(?i)Stacktrace</regex>
+            <rule_desc>Detects potential information disclosure due to stack traces or error messages.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential presence of stack traces or error messages in the code, which can provide valuable information to attackers and facilitate targeted attacks.</vuln_desc>
+            <developer>Developers should ensure that error handling mechanisms are properly implemented, and sensitive information is not exposed in error responses.</developer>
+            <reviewer>Reviewers should check for the presence of sensitive information in error responses and verify the implementation of proper error handling.</reviewer>
+        </rule>
+    </category>
+    <category name="Dynamic SQL Queries">
+        <rule>
+            <name>SQL Query: SELECT Statement with ORDER BY Clause</name>
+            <regex>(SELECT).*(ORDER BY).*</regex>
+            <rule_desc>Detects the usage of SELECT statements with ORDER BY clauses.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential use of SELECT statements with ORDER BY clauses, which can introduce the risk of SQL injection or unintended data exposure if not properly handled.</vuln_desc>
+            <developer>Developers should implement proper input validation and parameterization techniques to mitigate the risk of SQL injection when using SELECT statements with ORDER BY clauses.</developer>
+            <reviewer>Reviewers should verify the implementation of secure coding practices and assess if additional security measures are in place to prevent SQL injection.</reviewer>
+        </rule>
+        <rule>
+            <name>SQL Query: SELECT Statement with ORDER BY and @InputName</name>
+            <regex>(SELECT).*(ORDER BY).*\s(\@[a-zA-Z]+)</regex>
+            <rule_desc>Detects the usage of SELECT statements with ORDER BY clauses and a specified input name.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential use of SELECT statements with ORDER BY clauses and a specified input name, which can introduce the risk of SQL injection or unintended data exposure if not properly handled.</vuln_desc>
+            <developer>Developers should implement proper input validation and parameterization techniques to mitigate the risk of SQL injection when using SELECT statements with ORDER BY clauses and user-provided input names.</developer>
+            <reviewer>Reviewers should verify the implementation of secure coding practices and assess if additional security measures are in place to prevent SQL injection.</reviewer>
+        </rule>
+    </category>
+    <category name="Common Mitigations">
+        <rule>
+            <name>CAPTCHA Implementation</name>
+            <regex>(^|\s)(?i)(captcha|recaptcha)(\s+(?!secure|strong|reliable|safe)\w+)*</regex>
+            <rule_desc>Detects the presence of CAPTCHA implementations that are potentially insecure or weak.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential presence of CAPTCHA implementations that may be insecure or weak, potentially allowing automated or malicious activities to bypass the CAPTCHA protection.</vuln_desc>
+            <developer>Developers should ensure that CAPTCHA implementations are secure, using reliable and robust techniques to effectively prevent automated or malicious activities. It is recommended to use well-established CAPTCHA solutions and regularly update them to stay ahead of evolving threats.</developer>
+            <reviewer>Reviewers should assess the strength and security of the CAPTCHA implementation to ensure it provides adequate protection against automated or malicious activities.</reviewer>
+        </rule>
+        <rule>
+            <name>Miscellaneous Webapp Mitigations: CSRF, XSS, SQL Injection</name>
+            <regex>\\S*(CSRF|XSS|SQLi)\\S*(\\.|\\-\\>)(ToLower|ToUpper)\\s*\\</regex>
+            <rule_desc>Detects standard mitigation techniques for CSRF, XSS, and SQL injection vulnerabilities.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential use of standard mitigation techniques for CSRF, XSS, and SQL injection, which may have limitations and can introduce security risks if not properly implemented.</vuln_desc>
+            <developer>Developers should consider advanced and comprehensive mitigation strategies for CSRF, XSS, and SQL injection vulnerabilities, such as using specialized security libraries and frameworks.</developer>
+            <reviewer>Reviewers should evaluate the effectiveness of the standard mitigation techniques and assess if additional measures are necessary for robust security.</reviewer>
+        </rule>
+    </category>
     <rule>
         <name>IPv4 / IPv6 Address</name>
         <regex>\b(?:\b(?:[1-9]|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.(?:\d{1,3}\.){2}\d{1,3}\b|\b(?:(?:(?:[0-9A-Fa-f]{1,4}):){6}(?:[0-9A-Fa-f]{1,4}|(?:(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)(?:\.(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)){3})))\b)</regex>
@@ -41,78 +127,6 @@
         <developer>Developers should validate and sanitize all user-supplied input used for redirecting or forwarding to ensure the destination is trusted and authorized.</developer>
         <reviewer>Reviewers should verify the implementation of proper input validation and secure handling of redirects and forwards.</reviewer>
     </rule>
-    <rule>
-        <name>Authentication Modules</name>
-        <regex>(^|\s)(?i)(Login|Authentication|Authenticated|Oauth|JWT)</regex>
-        <rule_desc>Detects common module names associated with authentication, such as 'Login', 'Authentication', 'Authenticated', 'Oauth', and 'JWT'.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the potential presence of module names associated with authentication, which can provide attackers with valuable information about the system's functionality and increase the attack surface.</vuln_desc>
-        <developer>Developers should ensure that the authentication processes are implemented securely.</developer>
-        <reviewer>Reviewers should verify if proper security measures are in place related to authentication.</reviewer>
-    </rule>
-    <rule>
-        <name>Authorization Modules (Authorization|Authorizing|AccessControl|RBAC|ABAC)</name>
-        <regex>(^|\s)(?i)(Authorization|Authorizing|AccessControl|RBAC|ABAC)</regex>
-        <rule_desc>Detects the presence of common module names related to authorization and access control.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the potential presence of module names associated with authorization and access control, which are crucial for enforcing proper permissions and protecting sensitive resources. Failure to implement secure authorization checks can result in unauthorized access and data breaches.</vuln_desc>
-        <developer>Developers should ensure that authorization mechanisms and access control policies are implemented securely to prevent unauthorized access to sensitive resources.</developer>
-        <reviewer>Reviewers should verify if proper security measures are in place related to authorization and access control to protect against potential vulnerabilities.</reviewer>
-    </rule>
-    <rule>
-        <name>Admin Modules/Section (Admin|Administrator)</name>
-        <regex>(^|\s)(?i)(Admin|Administrator|AdminFunc|AdminPage|AdminLogin)</regex>
-        <rule_desc>Detects the presence of common module names related to administration functionalities or admin login pages.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the potential presence of module names associated with administration functionalities or admin login pages, which can provide attackers with valuable information about the system's administration interfaces and increase the attack surface.</vuln_desc>
-        <developer>Developers should avoid using generic or predictable module names for admin functionalities or admin login pages and ensure that access control mechanisms and authentication processes are implemented securely.</developer>
-        <reviewer>Reviewers should assess the usage of module names related to administration functionalities or admin login pages and verify if proper security measures are in place to protect these critical areas of the system.</reviewer>
-    </rule>
-    <rule>
-        <name>CAPTCHA Implementation</name>
-        <regex>(^|\s)(?i)(captcha|recaptcha)(\s+(?!secure|strong|reliable|safe)\w+)*</regex>
-        <rule_desc>Detects the presence of CAPTCHA implementations that are potentially insecure or weak.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the potential presence of CAPTCHA implementations that may be insecure or weak, potentially allowing automated or malicious activities to bypass the CAPTCHA protection.</vuln_desc>
-        <developer>Developers should ensure that CAPTCHA implementations are secure, using reliable and robust techniques to effectively prevent automated or malicious activities. It is recommended to use well-established CAPTCHA solutions and regularly update them to stay ahead of evolving threats.</developer>
-        <reviewer>Reviewers should assess the strength and security of the CAPTCHA implementation to ensure it provides adequate protection against automated or malicious activities.</reviewer>
-    </rule>
-    <rule>
-        <name>File Upload Functionality</name>
-        <regex>(^|\s)(?i)(upload|file\s*input|file\s*upload)(\s+(?!secure|protected|restricted)\w+)*</regex>
-        <rule_desc>Detects the presence of file upload functionality.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the potential presence of file upload functionality that may allow unauthorized or malicious files to be uploaded, posing security risks such as arbitrary code execution or unauthorized access.</vuln_desc>
-        <developer>Developers should ensure that file upload functionality is implemented securely by validating file types, limiting file size, and applying appropriate access controls. It is recommended to use well-established file upload libraries or frameworks that have built-in security features.</developer>
-        <reviewer>Reviewers should verify the implementation of secure file upload practices, including proper file type validation, size restriction, and access control mechanisms.</reviewer>
-    </rule>
-    <rule>
-        <name>Information Disclosure: Stack Trace or Error Messages</name>
-        <regex>(?i)Stacktrace</regex>
-        <rule_desc>Detects potential information disclosure due to stack traces or error messages.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the potential presence of stack traces or error messages in the code, which can provide valuable information to attackers and facilitate targeted attacks.</vuln_desc>
-        <developer>Developers should ensure that error handling mechanisms are properly implemented, and sensitive information is not exposed in error responses.</developer>
-        <reviewer>Reviewers should check for the presence of sensitive information in error responses and verify the implementation of proper error handling.</reviewer>
-    </rule>
-    <rule>
-        <name>Standard Mitigation: CSRF, XSS, SQL Injection</name>
-        <regex>\\S*(CSRF|XSS|SQLi)\\S*(\\.|\\-\\>)(ToLower|ToUpper)\\s*\\</regex>
-        <rule_desc>Detects standard mitigation techniques for CSRF, XSS, and SQL injection vulnerabilities.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the potential use of standard mitigation techniques for CSRF, XSS, and SQL injection, which may have limitations and can introduce security risks if not properly implemented.</vuln_desc>
-        <developer>Developers should consider advanced and comprehensive mitigation strategies for CSRF, XSS, and SQL injection vulnerabilities, such as using specialized security libraries and frameworks.</developer>
-        <reviewer>Reviewers should evaluate the effectiveness of the standard mitigation techniques and assess if additional measures are necessary for robust security.</reviewer>
-    </rule>
-    <rule>
-        <name>Potential SQL Injection: SELECT Statement with ORDER BY Clause</name>
-        <regex>(SELECT).*(ORDER BY).*</regex>
-        <rule_desc>Detects the usage of SELECT statements with ORDER BY clauses.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the potential use of SELECT statements with ORDER BY clauses, which can introduce the risk of SQL injection or unintended data exposure if not properly handled.</vuln_desc>
-        <developer>Developers should implement proper input validation and parameterization techniques to mitigate the risk of SQL injection when using SELECT statements with ORDER BY clauses.</developer>
-        <reviewer>Reviewers should verify the implementation of secure coding practices and assess if additional security measures are in place to prevent SQL injection.</reviewer>
-    </rule>
-    <rule>
-        <name>Potential SQL Injection: SELECT Statement with ORDER BY and @InputName</name>
-        <regex>(SELECT).*(ORDER BY).*\s(\@[a-zA-Z]+)</regex>
-        <rule_desc>Detects the usage of SELECT statements with ORDER BY clauses and a specified input name.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the potential use of SELECT statements with ORDER BY clauses and a specified input name, which can introduce the risk of SQL injection or unintended data exposure if not properly handled.</vuln_desc>
-        <developer>Developers should implement proper input validation and parameterization techniques to mitigate the risk of SQL injection when using SELECT statements with ORDER BY clauses and user-provided input names.</developer>
-        <reviewer>Reviewers should verify the implementation of secure coding practices and assess if additional security measures are in place to prevent SQL injection.</reviewer>
-    </rule>        
     <rule>
         <name>Trusted Or Untrusted URLs</name>
         <regex>(?i)\bhttps?://[^\s]+</regex>

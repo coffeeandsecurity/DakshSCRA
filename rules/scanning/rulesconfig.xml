@@ -58,6 +58,7 @@
         <platform>database</platform>
         <path>/database/database.xml</path>
         <ftypes>*.sql, *.psql, *.db</ftypes>
+        <!--    
             <dbtype>
                 <platform>storedprocedure</platform>
                 <path>/database/sql/sql_sp.xml</path>
@@ -66,7 +67,7 @@
                 <platform>postgress</platform>
                 <path>/database/postgress.xml</path>
                 <ftypes>*.psql, *.dbf, *.sqr, *.sql, *.gdb, *.rbf, *.db, *.spf, *.lis, *.mkd, *.sqs</ftypes>
-            </dbtype>
+            </dbtype> -->
     </rule>
     <rule>
         <platform>common</platform>
