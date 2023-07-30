@@ -119,8 +119,6 @@
             <developer>Developers should list and carefully review all URLs used in the application. They should implement proper URL validation and sanitization techniques to ensure the security and integrity of the application when dealing with user-provided or third-party URLs. It is important to prevent any unintentional exposure of sensitive information and perform thorough taint validation on third-party URLs to mitigate trust-related security risks.</developer>
             <reviewer>Reviewers should verify the implementation of secure URL handling practices and assess if additional security measures are necessary. They should thoroughly investigate the presence of these URLs, determine their purpose, and ensure they undergo appropriate taint validation. Reviewers should pay special attention to URLs associated with data exfiltration concerns and assess the trustworthiness of third-party URLs to mitigate potential security risks.</reviewer>
         </rule>
-    </category>
-    <category name="Redirection and Forwarding Security">
         <rule>
             <name>Unvalidated Redirects and Forwards</name>
             <regex>.*\b(redirect|forward)\b.*</regex>

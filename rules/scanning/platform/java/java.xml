@@ -1,7 +1,7 @@
 <root>
     <category name="Untrusted Input Handling or Injection Flaws">
         <rule>
-            <name>Untrusted Input: requestParameters</name>
+            <name>Untrusted Input(s): requestParameters</name>
             <regex>requestParameters</regex>
             <rule_desc>Detects the usage of `requestParameters`, which can introduce untrusted inputs into the code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using user input from `requestParameters` without proper validation and sanitization. Improper handling of untrusted inputs can lead to security vulnerabilities, such as injection attacks (e.g., SQL, OS, LDAP), cross-site scripting (XSS), or remote code execution. Attackers can manipulate the `requestParameters` to provide malicious or unexpected values, potentially compromising the integrity and security of the application.</vuln_desc>
@@ -17,7 +17,7 @@
             <reviewer>Reviewers should check for appropriate input handling for the `getParameter` method. They should assess if developers have implemented proper input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. Reviewers should also verify the usage of output encoding and protection against injection attacks to ensure the secure handling of user input received through input parameters.</reviewer>
         </rule>
         <rule>
-            <name>Untrusted Inputs in Application Response</name>
+            <name>Untrusted Input in Application Response</name>
             <regex>((\bprint|out\.print(ln)?|response\.write)\(.*|response\.getWriter|out\.write)(\s)*\((\s)*("|')[^("|')]*</regex>
             <rule_desc>Detects potential untrusted inputs in Java code that are included in application responses. The identified functions can be used to print content either to a web page or to the console, depending on the code implementation and context.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the presence of potentially untrusted data being included in application responses. Untrusted data, if not properly validated or sanitized, can lead to security vulnerabilities, including cross-site scripting (XSS). It is important to ensure that all inputs are validated and properly escaped before being included in the application response to prevent potential security risks.</vuln_desc>
@@ -25,7 +25,7 @@
             <reviewer>Reviewers should assess whether the Java code implements adequate input validation, sanitization, and output encoding techniques to prevent security vulnerabilities. They should verify that untrusted data is properly handled and escaped before being included in application responses. Additionally, reviewers should evaluate the effectiveness of security controls in place to mitigate the risks of cross-site scripting attacks.</reviewer>
         </rule>
         <rule>
-            <name>Untrusted Inputs in SQL Query (PreparedStatement)</name>
+            <name>Untrusted Input in SQL Query (PreparedStatement)</name>
             <regex>PreparedStatement(\s)*(\.|->)execute( |Query|Update)</regex>
             <rule_desc>Detects potential SQL injection vulnerabilities in Java code that uses prepared statements.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of SQL injection. SQL injection attacks can occur when user-supplied data is not properly sanitized or validated before being used in database queries. Attackers can manipulate the input to execute arbitrary SQL statements, potentially leading to unauthorized access, data loss, or other security breaches.</vuln_desc>
@@ -33,7 +33,7 @@
             <reviewer>Reviewers should verify that Java code uses prepared statements or parameterized queries to prevent SQL injection. They should check if user input is properly bound as parameters and not concatenated directly into SQL queries. Reviewers should also assess the overall security of the database interactions and confirm that proper input validation and sanitization techniques are implemented.</reviewer>
         </rule>
         <rule>
-            <name>Serialization/Deserialization Vulnerability</name>
+            <name>Serialization/Deserialization Handling</name>
             <regex>\.readObject|\.writeObject|ObjectInputStream|ObjectOutputStream</regex>
             <rule_desc>Detects potential serialization/deserialization vulnerabilities in Java code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using serialization/deserialization methods or classes without proper validation and precautions. Attackers can exploit serialization/deserialization vulnerabilities to execute arbitrary code, tamper with data, or perform unauthorized actions.</vuln_desc>

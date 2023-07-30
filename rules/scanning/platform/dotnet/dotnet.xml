@@ -102,8 +102,10 @@
             <developer>Developers should carefully validate and sanitize any user-supplied input before using it in command execution methods. They should consider using safer alternatives, such as parameterized queries or prepared statements, to prevent command injection vulnerabilities. Additionally, developers should follow secure coding practices and avoid executing commands with user-controlled input directly.</developer>
             <reviewer>Reviewers should ensure that proper input validation and sanitization techniques are implemented for command execution methods. They should verify that developers have taken appropriate measures to prevent command injection vulnerabilities, such as using parameterized queries or prepared statements. Reviewers should also assess the sensitivity of the commands executed and confirm that relevant security controls are in place.</reviewer>
         </rule>
+    </category>
+    <category name="Trust-boundary Validation or 3rd-Party Interactions">
         <rule>
-            <name>Unsafe Method: Open Redirect</name>
+            <name>Unvalidated Redirects and Forwards</name>
             <regex>(?i)Response\.Redirect</regex>
             <rule_desc>Detects the usage of open redirect methods that can introduce security vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using open redirect methods without proper validation and sanitization. Attackers can abuse open redirect vulnerabilities to trick users into visiting malicious websites or perform phishing attacks.</vuln_desc>

@@ -188,9 +188,11 @@ source_unmatched_rules = []
 with open(runtime.outputAoI, "w") as f_scanout:
     with open(log_filepaths, 'r', encoding=mlib.detectEncodingType(log_filepaths)) as f_targetfiles:
         rule_no = 1
+        print("\033[92m     --- Applying platform specific rules ---\033[0m")
         source_matched_rules, source_unmatched_rules = parser.sourceParser(rules_main, f_targetfiles, f_scanout, rule_no)   # Pattern matching for specific platform type
-        print("     --- End of platform rules. Starting common rules check ---")
+        print("\033[92m     --- Applying common (platform independent) rules ---\033[0m")
         common_matched_rules, common_unmatched_rules = parser.sourceParser(rules_common, f_targetfiles, f_scanout, rule_no)  # Pattern matching for common rules
+        print("\033[92m     --- Patterns matching Summary ---\033[0m")
 
         # Extend the original lists with the results from the second call
         source_matched_rules.extend(common_matched_rules)
