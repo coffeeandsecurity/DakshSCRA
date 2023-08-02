@@ -13,6 +13,7 @@ import modules.parser as parser
 import modules.recon as rec
 import modules.runtime as runtime
 import modules.rulesops as rops
+import modules.estimator as estimate
 
 # ---- Initilisation ----- 
 # Current directory of the python file
@@ -29,24 +30,40 @@ args = argparse.ArgumentParser()
 
 args.add_argument('-r', type=str, action='store', dest='rule_file', required=False, help='Specify platform specific rule name')
 args.add_argument('-f', type=str, action='store', dest='file_types', required=False, help='Specify file types to scan')
-args.add_argument('-v', action='count', dest='verbosity', default=0, help="specify verbosity level {'-v', '-vv', '-vvv'}")
+args.add_argument('-v', action='count', dest='verbosity', default=0, help="Specify verbosity level {'-v', '-vv', '-vvv'}")
 args.add_argument('-t', type=str, action='store', dest='target_dir', required=False, help='Specify target directory path')
 args.add_argument('-l', '--list', type=str, action='store', dest='rules_filetypes', required=False, choices=['R','RF'], help='List rules [R] OR rules and filetypes [RF]')
-args.add_argument('-recon', action='store_true', dest='recon', help="platform and technology reconnaissance")
+args.add_argument('-recon', action='store_true', dest='recon', help="Detects platform, framework and programming language used")
+args.add_argument('-estimate', action='store_true', dest='estimate', help="Estimate efforts required for code review")
 
 
-results = args.parse_args(args=None if sys.argv[1:] else ['--help'])    # Display help if no argument is passed
+#results = args.parse_args(args=None if sys.argv[1:] else ['--help'])    # Display help if no argument is passed
+#results = args.parse_args()
 
+try:
+    results = args.parse_args()
+except argparse.ArgumentError as e:
+    print("\nError: Invalid option provided.")
+    args.print_help()
+    mlib.toolUsage('invalid_option')
+    sys.exit(1)
 
+'''
 if len(sys.argv) < 2:
     args.print_help()
     #args.print_usage(description="Required arguments")
     print("\nExample: python dakshsca.py -r dotnet -t /path_to_source_dir")
     print("Example: python dakshsca.py -r dotnet -f dotnet -t /path_to_source_dir\n")
-    print("To specify the verbosity level, set -v [1,2]\n")
-    print("Example: python dakshsca.py -r dotnet -f dotnet -v 2 -t /path_to_source_dir\n")
+    print("To specify the verbosity level, set -v, -vv or -vvv\n")
+    print("Example: python dakshsca.py -r dotnet -f dotnet -vvv -t /path_to_source_dir\n")
     
     sys.exit(1)
+'''
+if not results or len(sys.argv) < 2:
+    args.print_help()
+    mlib.toolUsage('invalid_option')
+    sys.exit(1)
+
 
 elif results.recon:
 
@@ -59,19 +76,29 @@ elif results.rules_filetypes != None:
     sys.exit(1)
 
 # Priority #1 - If '-recon' option used but no rule file is specified then only recon must be performed
-if results.recon and results.target_dir and not results.rule_file:
+if (results.recon or results.estimate) and results.target_dir and not results.rule_file:
     print(runtime.author)
     # Check if the directory path is valid
     if path.isdir(results.target_dir) == False: 
         print("\nInvalid target directory :" + results.target_dir + "\n")
         args.print_usage()
-        print("\nExample: python dakshsca.py -r dotnet -t /path_to_source_dir")
-        print("Example: python dakshsca.py -r dotnet -f dotnet -t /path_to_source_dir\n")
+        mlib.toolUsage("inalid_dir")
         sys.exit(1)
     else:
         targetdir = results.target_dir
-        log_filepaths = rec.recon(targetdir, False)
-        sys.exit(1)
+        
+        # Perform recon and/or estimate based on the options used
+        if results.recon and not results.estimate:
+            log_filepaths, _ = rec.recon(targetdir, False)
+            sys.exit(1)
+        elif results.estimate and not results.recon:
+            log_filepaths, recSummary = rec.recon(targetdir, False)
+            estimate.effortEstimator(recSummary)
+            sys.exit(1)
+        else:  # If both '-recon' and '-estimate' options are used
+            log_filepaths, recSummary = rec.recon(targetdir, False)
+            estimate.effortEstimator(recSummary) 
+            sys.exit(1)
 
 # Priority #2 - Check if '-r' (rule type) is set
 elif results.rule_file:
@@ -110,8 +137,7 @@ elif results.rule_file:
 if path.isdir(results.target_dir) == False: 
     print("\nInvalid target directory :" + results.target_dir + "\n")
     args.print_usage()
-    print("\nExample: python dakshsca.py -r dotnet -t /path_to_source_dir")
-    print("Example: python dakshsca.py -r dotnet -f dotnet -t /path_to_source_dir\n")
+    mlib.toolUsage("invalid_dir")
     sys.exit(1)
 
 # Add the trailing slash ('/' or '\') to the path if missing. This is required to treat it as a directory.

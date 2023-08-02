@@ -1,6 +1,8 @@
 import json
-import modules.runtime as runtime
 from jinja2 import Template
+
+import modules.runtime as runtime
+import modules.misclib as mlib
 
 # Global variable for the HTML report path
 estimation_Fpath = runtime.estimation_Fpath
@@ -105,8 +107,8 @@ def effortEstimator(json_file_path):
             <div class="language-section">
                 <h3>[-] {{ language }}</h3>
                 <p>Total files identified: {{ language_data.totalFiles }}</p>
-                <p>Estimated efforts (hours): {{ backend_hours_min }} (min) - {{ backend_hours_max }} (max) hours</p>
-                <p>Estimated efforts (days): {{ backend_days_min }} (min) - {{ backend_days_max }} (max) days</p>
+                <p>Estimated efforts (hours): {{ backend_hours_min }} (minimum) - {{ backend_hours_max }} (maximum) hours</p>
+                <p>Estimated efforts (days): {{ backend_days_min }} (minimum) - {{ backend_days_max }} (maximum) days</p>
             </div>
             {% endfor %}
 
@@ -115,14 +117,14 @@ def effortEstimator(json_file_path):
             <div class="language-section">
                 <h3>[-] {{ language }}</h3>
                 <p>Total files identified: {{ language_data.totalFiles }}</p>
-                <p>Estimated efforts (hours): {{ frontend_hours_min }} (min) - {{ frontend_hours_max }} (max) hours</p>
-                <p>Estimated efforts (days): {{ frontend_days_min }} (min) - {{ frontend_days_max }} (max) days</p>
+                <p>Estimated efforts (hours): {{ frontend_hours_min }} (minimum) - {{ frontend_hours_max }} (maximum) hours</p>
+                <p>Estimated efforts (days): {{ frontend_days_min }} (minimum) - {{ frontend_days_max }} (maximum) days</p>
             </div>
             {% endfor %}
 
             <h2>Total Efforts (for the entire code review)</h2>
-            <p>Total estimated effort (hours): {{ total_hours_min }} (min) - {{ total_hours_max }} (max) hours</p>
-            <p>Total estimated effort (days): {{ total_days_min }} (min) - {{ total_days_max }} (max) days</p>
+            <p>Total estimated effort (hours): {{ total_hours_min }} (minimum) - {{ total_hours_max }} (maximum) hours</p>
+            <p>Total estimated effort (days): {{ total_days_min }} (minimum) - {{ total_days_max }} (maximum) days</p>
         </body>
         </html>
     '''
@@ -150,7 +152,7 @@ def effortEstimator(json_file_path):
     with open(estimation_Fpath, 'w') as report_file:
         report_file.write(rendered_html)
 
-    print(f"HTML report saved to: {estimation_Fpath}")
+    print("     [-] Effort estimation report: " + str(mlib.getRelativePath(estimation_Fpath)))
 
 
 

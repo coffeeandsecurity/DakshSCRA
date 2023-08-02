@@ -346,3 +346,35 @@ def updateScanSummary(key, value):
         print(f"An error occurred while updating entry '{key}': {str(e)}")
 
 
+# Display tool's usage details in the console
+def toolUsage(option):
+    if option == 'invalid_dir':
+        print("\nExample: python dakshsca.py -r php -t /path_to_source_dir")
+        print("Example: python dakshsca.py -r php -f php -t /path_to_source_dir\n")
+
+    else:
+        print("\nExamples:")
+        
+        print(" # '-f' is optional. If not specified, it will default to the corresponding filetypes of the selected rule.")
+        print("   dakshsca.py -r php -t /source_dir_path\n")
+        
+        print(" # To override default settings, other filetypes can be specified with '-f' option.")
+        print("   dakshsca.py -r php -f dotnet -t /path_to_source_dir")
+        print("   dakshsca.py -r php -f custom -t /path_to_source_dir\n")
+        
+        print(" # Perform reconnaissance and rule based scanning if '-recon' used with '-r' option.")
+        print("   dakshsca.py  -recon -r php -t /path_to_source_dir\n")
+
+        print(" # Perform only reconnaissance if '-recon' used without the '-r' option.")
+        print("   dakshsca.py  -recon -t /path_to_source_dir\n")
+
+        print(" # Verbosity: '-v' is default, '-vvv' will display all rules check within each rule category.")
+        print("   dakshsca.py -r php -vv -t /path_to_source_dir\n")
+    
+        print("Note: You must run the tool using appropriate python environment.")
+        print("For Example: python3 dakshsca.py -r php -t /source_dir_path\n")
+    
+    return
+
+
+

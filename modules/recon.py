@@ -139,10 +139,10 @@ def recon(targetdir, flag=False):
     print("     [-] Reconnaissance completed.")     # The output has been saved in 'recon.json'
 
     # Summarise recon info
-    summariseRecon(output_file_path)
+    recSummary = summariseRecon(output_file_path)
     
     # log_filepaths - is a list comprising of all the enumerated file paths. To be used later
-    return log_filepaths
+    return log_filepaths, recSummary
 
 
 
@@ -222,8 +222,9 @@ def summariseRecon(json_file_path):
 
     #print("     [-] Recon summary has been written to 'recon_summary.json'.")
     reconSummaryTextReport(runtime.reconSummary_Fpath, runtime.outputRecSummary)
-    estimate.effortEstimator(output_file_path)
+    # estimate.effortEstimator(output_file_path)
 
+    return output_file_path
 
 
 '''
@@ -282,7 +283,7 @@ def reconSummaryTextReport(json_file_path, output_file_path):
                         text_file.write(f"      {relative_path}{os.path.sep} - file count: {directory_info['fileCount']}\n")
             text_file.write("\n")
 
-    print("     [-] Reconnaissance summary saved at " + str(mlib.getRelativePath(output_file_path)))
-    #print(f"     [-] Reconnaissance summary saved at {output_file_path}")
+    print("     [-] Reconnaissance summary report: " + str(mlib.getRelativePath(output_file_path)))
+
 
 
