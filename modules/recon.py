@@ -280,7 +280,7 @@ def reconSummaryTextReport(json_file_path, output_file_path):
                         relative_path = os.path.relpath(directory_info['directory'], common_root)
                         if relative_path == '.':
                             relative_path = ''
-                        text_file.write(f"      {relative_path}{os.path.sep} - file count: {directory_info['fileCount']}\n")
+                        text_file.write(f"      {relative_path}{os.path.sep} - file(s) count: {directory_info['fileCount']}\n")
             text_file.write("\n")
 
     print("     [-] Reconnaissance summary report: " + str(mlib.getRelativePath(output_file_path)))

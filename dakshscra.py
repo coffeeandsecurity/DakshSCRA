@@ -253,17 +253,7 @@ with open(runtime.outputAoI_Fpaths, "w") as f_scanout:
     mlib.updateScanSummary("paths_scanning_summary.matched_rules", matched_rules)
     mlib.updateScanSummary("paths_scanning_summary.unmatched_rules", unmatched_rules)
 
-'''
-# Print the filepaths matched patterns
-print("Matched Patterns:")
-for pattern in matched_patterns:
-    print("     [-]", pattern)
 
-# Print the filepaths unmatched patterns
-print("Unmatched Patterns:")
-for pattern in unmatched_patterns:
-    print("     [-]", pattern)
-'''
 mlib.updateScanSummary("detection_summary.file_paths_areas_of_interest_identified", str(runtime.rulesPathsMatchCnt))
 
 mlib.cleanFilePaths(log_filepaths)

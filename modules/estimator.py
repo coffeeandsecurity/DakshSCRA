@@ -31,8 +31,8 @@ def effortEstimator(json_file_path):
     total_backend_files = sum(language_data.get("totalFiles", 0) for language_data in backend_data.values())
 
     # Assign weights for frontend and backend files
-    frontend_weight = 1
-    backend_weight = 4
+    frontend_weight = 0.08      # Approx 5 mins per file (i.e 5/60 hr)
+    backend_weight = 0.25          # 15 mins per file (i.e. 15/60 hr)
 
     # Calculate estimated efforts based on the formula: Estimated Effort = (F * frontend_weight) + (B * backend_weight)
     estimated_frontend_effort_hours = total_frontend_files * frontend_weight * hours_per_file
@@ -136,8 +136,8 @@ def effortEstimator(json_file_path):
         frontend_days_max=estimated_frontend_effort_days[1],
         total_hours_min=total_estimated_effort_hours,
         total_hours_max=total_estimated_effort_hours,
-        total_days_min=total_estimated_effort_hours / hours_per_file,
-        total_days_max=total_estimated_effort_hours / hours_per_file
+        total_days_min=total_estimated_effort_hours / 8,
+        total_days_max=total_estimated_effort_hours / 8
     )
 
     # Save the rendered HTML report to the global path

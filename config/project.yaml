@@ -1,9 +1,11 @@
+# Below details will be used while generating main report. 
+# If no details provided, the tool will prompt to enter those details during first run
 title: ''
 subtitle: ''
-description: Detailed description goes here
+description: Description goes here
 recon_title: Software Composition Analysis Report
 recon_subtitle: Project Title
-recon_description: Detailed description goes here
+recon_description: Description goes here
 estimation_title: ''
 estimation_subtitle: ''
-estimation_description: Detailed description goes here
+estimation_description: Description goes here

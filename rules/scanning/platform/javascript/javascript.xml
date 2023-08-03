@@ -1,4 +1,30 @@
 <root>
+    <category name="Untrusted Input Handling or Injection Flaws">
+        <rule>
+            <name>Untrusted Inputs: document.getElementById().value</name>
+            <regex>document\.getElementById\(.+\)\.value</regex>
+            <rule_desc>Detects the usage of unvalidated input.</rule_desc>
+            <vuln_desc>This rule matches instances where user input obtained from `document.getElementById().value` is used without proper validation. Unvalidated input can lead to security vulnerabilities such as injection attacks, cross-site scripting (XSS), and improper data handling.</vuln_desc>
+            <developer>Developers should validate and sanitize user input obtained through `document.getElementById().value` before using it in any sensitive operations. They should implement input validation techniques appropriate for the expected input, such as data type checking, length validation, and character filtering.</developer>
+            <reviewer>Reviewers should ensure that proper input handling is in place for user input obtained through `document.getElementById().value`. They should verify that developers have implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related to unvalidated input.</reviewer>
+        </rule>
+        <rule>
+            <name>Untrusted Data in InnerHTML</name>
+            <regex>\.innerHTML\s?=\s?.+</regex>
+            <rule_desc>Detects potential security risks when assigning untrusted data to the innerHTML property.</rule_desc>
+            <vuln_desc>This rule matches instances where potentially untrusted data is assigned to the innerHTML property. Assigning untrusted data directly to innerHTML can lead to cross-site scripting (XSS) vulnerabilities if proper input validation and output encoding are not performed.</vuln_desc>
+            <developer>Developers should avoid assigning untrusted data directly to the innerHTML property. They should implement proper input validation and output encoding techniques when updating the content of elements via innerHTML to prevent XSS vulnerabilities.</developer>
+            <reviewer>Reviewers should verify if potentially untrusted data is assigned to the innerHTML property. They should assess if the code implements proper input validation and output encoding techniques to prevent XSS vulnerabilities when updating element content.</reviewer>
+        </rule>
+        <rule>
+            <name>DOM XSS Vulnerability</name>
+            <regex>document\.write\(|innerHTML\s?=\s?.+</regex>
+            <rule_desc>Detects potential DOM-based cross-site scripting (XSS) vulnerabilities.</rule_desc>
+            <vuln_desc>This rule matches instances where the `document.write()` function or the assignment of potentially untrusted values to the `innerHTML` property is performed. These actions can introduce DOM-based cross-site scripting vulnerabilities if proper input validation and output encoding are not applied.</vuln_desc>
+            <developer>Developers should avoid using `document.write()` and should implement appropriate input validation and output encoding techniques when assigning values to the `innerHTML` property. They should ensure that user-supplied data is properly sanitized and encoded to prevent XSS attacks.</developer>
+            <reviewer>Reviewers should verify if the code uses `document.write()` or assigns potentially untrusted values to the `innerHTML` property. They should assess if proper input validation and output encoding techniques are implemented to prevent DOM-based cross-site scripting vulnerabilities.</reviewer>
+        </rule>
+    </category>
     <rule>
         <name>Handlebars Unescaped String</name>
         <regex>handlebars\.SafeString</regex>
@@ -15,39 +41,6 @@
         <vuln_desc>This rule matches potential SQL injection vulnerabilities in the code. SQL injection occurs when user-supplied input is not properly sanitized or validated before being used in SQL queries. Attackers can exploit SQL injection to manipulate queries, bypass authentication, retrieve sensitive data, or modify the database.</vuln_desc>
         <developer>Developers should use parameterized queries or prepared statements to prevent SQL injection attacks. Additionally, input validation and proper escaping of user input should be implemented to ensure that only safe and sanitized values are used in SQL queries.</developer>
         <reviewer>Reviewers should verify whether the code implements proper measures to prevent SQL injection vulnerabilities. They should check if input validation and proper sanitization techniques, such as parameterized queries or prepared statements, are used to handle user input within SQL queries. Reviewers should assess the effectiveness of the implemented measures in mitigating SQL injection risks.</reviewer>
-    </rule>
-    <!--
-    <rule>
-        <name>Cross-Site Scripting (XSS)</name>
-        <regex>(<|&lt;)[\s\S]*?(script|javascript:)[\s\S]*?(>|&gt;)</regex>
-        <rule_desc>Detects potential Cross-Site Scripting (XSS) vulnerabilities.</rule_desc>
-        <vuln_desc>This rule detects potential Cross-Site Scripting (XSS) vulnerabilities in the code. XSS attacks occur when user-supplied input is improperly validated or sanitized before being included in dynamic HTML content. Attackers can inject malicious scripts that are executed in the context of other users, leading to the theft of sensitive information, session hijacking, or defacement of the website.</vuln_desc>
-        <developer>Developers should implement proper input validation and output encoding to prevent XSS attacks. All user-supplied data that is included in dynamic HTML content should be properly sanitized and encoded. Additionally, the use of Content Security Policy (CSP) and output encoding libraries/frameworks can enhance XSS mitigation.</developer>
-        <reviewer>Reviewers should verify whether the code implements sufficient measures to prevent XSS vulnerabilities. They should check if user-supplied input is properly validated, sanitized, and encoded when included in dynamic HTML content. Reviewers should assess the effectiveness of the implemented measures in mitigating XSS risks.</reviewer>
-    </rule>-->
-    <rule>
-        <name>Unvalidated Input</name>
-        <regex>document\.getElementById\(.+\)\.value</regex>
-        <rule_desc>Detects the usage of unvalidated input.</rule_desc>
-        <vuln_desc>This rule matches instances where user input obtained from `document.getElementById().value` is used without proper validation. Unvalidated input can lead to security vulnerabilities such as injection attacks, cross-site scripting (XSS), and improper data handling.</vuln_desc>
-        <developer>Developers should validate and sanitize user input obtained through `document.getElementById().value` before using it in any sensitive operations. They should implement input validation techniques appropriate for the expected input, such as data type checking, length validation, and character filtering.</developer>
-        <reviewer>Reviewers should ensure that proper input handling is in place for user input obtained through `document.getElementById().value`. They should verify that developers have implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related to unvalidated input.</reviewer>
-    </rule>
-    <rule>
-        <name>Untrusted Data in InnerHTML</name>
-        <regex>\.innerHTML\s?=\s?.+</regex>
-        <rule_desc>Detects potential security risks when assigning untrusted data to the innerHTML property.</rule_desc>
-        <vuln_desc>This rule matches instances where potentially untrusted data is assigned to the innerHTML property. Assigning untrusted data directly to innerHTML can lead to cross-site scripting (XSS) vulnerabilities if proper input validation and output encoding are not performed.</vuln_desc>
-        <developer>Developers should avoid assigning untrusted data directly to the innerHTML property. They should implement proper input validation and output encoding techniques when updating the content of elements via innerHTML to prevent XSS vulnerabilities.</developer>
-        <reviewer>Reviewers should verify if potentially untrusted data is assigned to the innerHTML property. They should assess if the code implements proper input validation and output encoding techniques to prevent XSS vulnerabilities when updating element content.</reviewer>
-    </rule>
-    <rule>
-        <name>DOM XSS Vulnerability</name>
-        <regex>document\.write\(|innerHTML\s?=\s?.+</regex>
-        <rule_desc>Detects potential DOM-based cross-site scripting (XSS) vulnerabilities.</rule_desc>
-        <vuln_desc>This rule matches instances where the `document.write()` function or the assignment of potentially untrusted values to the `innerHTML` property is performed. These actions can introduce DOM-based cross-site scripting vulnerabilities if proper input validation and output encoding are not applied.</vuln_desc>
-        <developer>Developers should avoid using `document.write()` and should implement appropriate input validation and output encoding techniques when assigning values to the `innerHTML` property. They should ensure that user-supplied data is properly sanitized and encoded to prevent XSS attacks.</developer>
-        <reviewer>Reviewers should verify if the code uses `document.write()` or assigns potentially untrusted values to the `innerHTML` property. They should assess if proper input validation and output encoding techniques are implemented to prevent DOM-based cross-site scripting vulnerabilities.</reviewer>
     </rule>
     <rule>
         <name>Remote OS Command Execution - (child_process.exec())</name>
