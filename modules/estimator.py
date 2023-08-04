@@ -1,19 +1,14 @@
 import json
+import yaml
 from jinja2 import Template
-
 import modules.runtime as runtime
 import modules.misclib as mlib
-
 
 # Global variable for the HTML report path
 estimation_Fpath = runtime.estimation_Fpath
 
 # Assumed number of hours to review one file
-hours_per_file = 0.25
-
-def get_effort_days(file_count, min_days, max_days):
-    # Effort estimation formula based on file count ranges
-    return (min(max_days, max(min_days, (file_count * hours_per_file))), max(max_days, min(min_days, (file_count * hours_per_file))))
+# hours_per_file = 0.25
 
 def effortEstimator(json_file_path):
     global estimation_Fpath
@@ -30,31 +25,34 @@ def effortEstimator(json_file_path):
     total_frontend_files = sum(language_data.get("totalFiles", 0) for language_data in frontend_data.values())
     total_backend_files = sum(language_data.get("totalFiles", 0) for language_data in backend_data.values())
 
-    # Assign weights for frontend and backend files
-    frontend_weight = 0.08      # Approx 5 mins per file (i.e 5/60 hr)
-    backend_weight = 0.25          # 15 mins per file (i.e. 15/60 hr)
-
-    # Calculate estimated efforts based on the formula: Estimated Effort = (F * frontend_weight) + (B * backend_weight)
-    estimated_frontend_effort_hours = total_frontend_files * frontend_weight * hours_per_file
-    estimated_backend_effort_hours = total_backend_files * backend_weight * hours_per_file
-    total_estimated_effort_hours = estimated_frontend_effort_hours + estimated_backend_effort_hours
-
     # Calculate estimated efforts in days for backend files based on the provided file count ranges
-    estimated_backend_effort_days = get_effort_days(total_backend_files, 0.5, 1) if total_backend_files <= 10 else \
-                                    get_effort_days(total_backend_files, 1, 2) if total_backend_files <= 20 else \
-                                    get_effort_days(total_backend_files, 2, 4) if total_backend_files <= 40 else \
-                                    get_effort_days(total_backend_files, 5, 10) if total_backend_files <= 100 else \
-                                    get_effort_days(total_backend_files, 11, 20) if total_backend_files <= 300 else \
-                                    get_effort_days(total_backend_files, 21, 40) if total_backend_files <= 1000 else \
-                                    get_effort_days(total_backend_files, 41, 60)
+    backend_effort_days = get_effort_days(total_backend_files, 'backend')
 
     # Calculate estimated efforts in days for frontend files based on the provided file count ranges
-    estimated_frontend_effort_days = get_effort_days(total_frontend_files, 0.5, 1) if total_frontend_files <= 40 else \
-                                     get_effort_days(total_frontend_files, 1, 2) if total_frontend_files <= 100 else \
-                                     get_effort_days(total_frontend_files, 2, 4) if 100 < total_frontend_files < 500 else \
-                                     get_effort_days(total_frontend_files, 3, 4) if total_frontend_files <= 1000 else \
-                                     get_effort_days(total_frontend_files, 4, 5)
+    frontend_effort_days = get_effort_days(total_frontend_files, 'frontend')
 
+    total_days = [0, 0]  # initialize
+    total_days[0] = backend_effort_days[0] + frontend_effort_days[0]
+    total_days[1] = backend_effort_days[1] + frontend_effort_days[1]
+
+    # A dictionary to encapsulate the report data
+    report_data = {
+        'backend_data': backend_data,
+        'frontend_data': frontend_data,
+        'backend_days_min': backend_effort_days[0],
+        'backend_days_max': backend_effort_days[1],
+        'frontend_days_min': frontend_effort_days[0],
+        'frontend_days_max': frontend_effort_days[1],
+        'total_days_min': total_days[0],
+        'total_days_max': total_days[1]
+    }
+
+    # Generate HTML report
+    generate_report(report_data)
+
+
+
+def generate_report(report_data):
     # Prepare data for rendering the Jinja2 template
     template_html = '''
         <!DOCTYPE html>
@@ -99,7 +97,6 @@ def effortEstimator(json_file_path):
             <div class="language-section">
                 <h3>{{ language }}</h3>
                 <p>Total files identified: {{ language_data.totalFiles }}</p>
-                <p>Estimated efforts (hours): {{ backend_hours_min }} (minimum) - {{ backend_hours_max }} (maximum) hours</p>
                 <p>Estimated efforts (days): {{ backend_days_min }} (minimum) - {{ backend_days_max }} (maximum) days</p>
             </div>
             {% endfor %}
@@ -109,13 +106,11 @@ def effortEstimator(json_file_path):
             <div class="language-section">
                 <h3>{{ language }}</h3>
                 <p>Total files identified: {{ language_data.totalFiles }}</p>
-                <p>Estimated efforts (hours): {{ frontend_hours_min }} (minimum) - {{ frontend_hours_max }} (maximum) hours</p>
                 <p>Estimated efforts (days): {{ frontend_days_min }} (minimum) - {{ frontend_days_max }} (maximum) days</p>
             </div>
             {% endfor %}
 
             <h2>Total Efforts (for the entire code review)</h2>
-            <p>Total estimated effort (hours): {{ total_hours_min }} (minimum) - {{ total_hours_max }} (maximum) hours</p>
             <p>Total estimated effort (days): {{ total_days_min }} (minimum) - {{ total_days_max }} (maximum) days</p>
         </body>
         </html>
@@ -123,22 +118,7 @@ def effortEstimator(json_file_path):
 
     # Render the Jinja2 template with the data
     template = Template(template_html)
-    rendered_html = template.render(
-        backend_data=backend_data,
-        frontend_data=frontend_data,
-        backend_hours_min=estimated_backend_effort_days[0],
-        backend_hours_max=estimated_backend_effort_days[1],
-        backend_days_min=estimated_backend_effort_days[0],
-        backend_days_max=estimated_backend_effort_days[1],
-        frontend_hours_min=estimated_frontend_effort_days[0],
-        frontend_hours_max=estimated_frontend_effort_days[1],
-        frontend_days_min=estimated_frontend_effort_days[0],
-        frontend_days_max=estimated_frontend_effort_days[1],
-        total_hours_min=total_estimated_effort_hours,
-        total_hours_max=total_estimated_effort_hours,
-        total_days_min=total_estimated_effort_hours / 8,
-        total_days_max=total_estimated_effort_hours / 8
-    )
+    rendered_html = template.render(**report_data)
 
     # Save the rendered HTML report to the global path
     with open(estimation_Fpath, 'w') as report_file:
@@ -148,11 +128,73 @@ def effortEstimator(json_file_path):
 
 
 
+def get_effort_days(file_count, tech):
+    try:
+        file_count = int(file_count)
+    except ValueError:
+        raise ValueError("Invalid value for 'file_count'. It must be an integer.")
+
+    if not isinstance(tech, str) or tech.lower() not in ['backend', 'frontend']:
+        raise ValueError("Invalid value for 'tech'. It must be either 'backend' or 'frontend'.")
+
+    # Load data from the config file
+    with open(runtime.estimateConfig, 'r') as config_file:
+        config_data = yaml.safe_load(config_file)
+
+    # Determine the corresponding data for the specified tech (backend or frontend)
+    tech_data = config_data['estimation_days_ranges'][f'{tech}_data']
+
+    for data in tech_data:
+        if data['files_range'][0] <= file_count <= data['files_range'][1]:
+            return data['effort_range']
+
+    raise ValueError(f"No effort range found for file count {file_count} and tech {tech}.")
 
 
 
+'''
+def get_effort_days(file_count, tech):
+    try:
+        file_count = int(file_count)
+    except ValueError:
+        raise ValueError("Invalid value for 'file_count'. It must be an integer.")
 
+    if not isinstance(tech, str) or tech.lower() not in ['backend', 'frontend']:
+        raise ValueError("Invalid value for 'tech'. It must be either 'backend' or 'frontend'.")
 
+    if tech.lower() == 'backend':
+        # Calculate estimated efforts in days for backend files based on the provided file count ranges
+        if file_count <= 10:
+            return [0.5, 1]
+        elif file_count <= 20:
+            return [1, 2]
+        elif file_count <= 40:
+            return [2, 4]
+        elif file_count <= 100:
+            return [5, 10]
+        elif file_count <= 300:
+            return [11, 20]
+        elif file_count <= 1000:
+            return [21, 40]
+        else:
+            return [41, 60]
+    
+    elif tech.lower() == 'frontend':
+        # Calculate estimated efforts in days for frontend files based on the provided file count ranges
+        if file_count <= 40:
+            return [0.5, 1]
+        elif file_count <= 100:
+            return [1, 2]
+        elif 100 < file_count < 500:
+            return [2, 4]
+        elif file_count <= 1000:
+            return [3, 4]
+        else:
+            return [4, 5]
+
+    else:
+        raise ValueError("Unexpected error occurred while calculating effort days.")
+'''
 
 
 

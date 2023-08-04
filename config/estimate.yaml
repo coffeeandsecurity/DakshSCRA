@@ -1,0 +1,40 @@
+efficiency_factor: 10   # percentage
+
+buffer: 2   # days
+
+estimation_days_ranges:
+  backend_data:
+    - files_range: [1, 10]
+      effort_range: [0.5, 1]
+    - files_range: [11, 20]
+      effort_range: [1, 2]
+    - files_range: [21, 40]
+      effort_range: [2, 4]
+    - files_range: [41, 100]
+      effort_range: [5, 10]
+    - files_range: [101, 300]
+      effort_range: [11, 20]
+    - files_range: [301, 1000]
+      effort_range: [21, 40]
+    - files_range: [1001, null]  # null indicates no upper bound
+      effort_range: [41, 60]
+
+  frontend_data:
+    - files_range: [1, 40]
+      effort_range: [0.5, 1]
+    - files_range: [41, 100]
+      effort_range: [1, 2]
+    - files_range: [101, 500]
+      effort_range: [2, 4]
+    - files_range: [501, 1000]
+      effort_range: [3, 4]
+    - files_range: [1001, null]  # null indicates no upper bound
+      effort_range: [4, 5]
+
+report_gen_days_ranges:
+  - findings: [1, 10]
+    effort_range: [1, 2]
+  - findings: [11, 30]
+    effort_range: [3, 5]
+  - findings: [31, 50]
+    effort_range: [6, 8]

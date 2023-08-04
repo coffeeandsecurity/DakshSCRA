@@ -25,6 +25,9 @@ rulesConfig = Path(str(rulesRootDir) + "/../rulesconfig.xml")
 # Project config path
 projectConfig = Path(str(root_dir) + "/config/project.yaml")
 
+# Estimation config path
+estimateConfig = Path(str(root_dir) + "/config/estimate.yaml")
+
 # Files path scanning rules
 rulesFpaths = Path(str(rulesRootDir) + "/filepaths.xml")
 
@@ -101,7 +104,7 @@ estimation_Fpath = Path(str(root_dir) + "/reports/html/estimation.html")
 
 author = '''
 =============================================================
-Daksh SCRA (Source Code Review Assist) - Beta Release v0.6
+Daksh SCRA (Source Code Review Assist) - Beta Release v0.7
 
 Author:     Debasis Mohanty 
             www.coffeeandsecurity.com
