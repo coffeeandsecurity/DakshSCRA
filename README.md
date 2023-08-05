@@ -1,5 +1,6 @@
 # Daksh SCRA (Source Code Review Assist)
 
+
 ```
 Author: 	
 	Debasis Mohanty (d3basis.m0hanty@gmail.com)
@@ -8,17 +9,16 @@ Author:
 ```
 
 
-> Note: The tool is currently in the early stages of development and is being actively improved upon. It was first introduced at the Blackhat USA 2022 (6-9 August) Source Code Review training session as an aid to automate certain code review tasks for students. The primary objective of this tool is to assist code reviewers in identifying potential security vulnerabilities by automating certain areas of interest during the source code review process. 
+> **Note:** This tool is still in its initial development phases and is undergoing active enhancements. It made its debut at the Blackhat USA 2022 Source Code Review training session from 6th to 9th August, serving as a valuable aid for automating select code review tasks tailored for students. The tool's main goal is to streamline the source code review process by automatically pinpointing areas of potential security vulnerabilities for the reviewers. 
 
 The tool currently offers the following functionalities: 
 * Options to use programming language-specific rules specific for finding areas of interests
-* Option to extend or add new rules for any new or existing languages
+* Options to extend or add new rules for any new or existing languages
 * Generate a raw output both in text and HTML format for inspection
 
 Feel free to contribute towards updating or adding new rules and future development.
 
 If you find any bugs, report them to d3basis.m0hanty@gmail.com.
-
 
 
 # HOWTO
@@ -93,11 +93,25 @@ $ python3 dakshscra.py		// To view tool usage along with examples
 The tool generates reports in three formats: HTML, PDF, and TEXT. Although the HTML and PDF reports are still being improved, they are currently in a reasonably good state. With each subsequent iteration, these reports will continue to be refined and improved even further.
 
 ### Vulnerability Scanning Report
-###### RAW TEXT Based Reports: 	
-* Areas of Interest - Identified Patterns : 	DakshSCRA/reports/text/areas_of_interest.txt
-* Areas of Interest - Enumerated Project Files: DakshSCRA/reports/text/filepaths_aoi.txt
-* Identified Project Files:	DakshSCRA/runtime/filepaths.txt	
 ###### HTML Report:
 * DakshSCRA/reports/html/report.html	
 ###### PDF Report:
 * DakshSCRA/reports/html/report.pdf
+###### RAW TEXT Based Reports: 	
+* Areas of Interest - Identified Patterns : 	DakshSCRA/reports/text/areas_of_interest.txt
+* Areas of Interest - Project Files: 	DakshSCRA/reports/text/filepaths_aoi.txt
+* Identified Project Files:		DakshSCRA/runtime/filepaths.txt	
+
+### Reconnaissance (Recon) Report
+* Reconnaissance Summary: /reports/text/recon.txt
+
+Note: Currently, the reconnaissance report is created in a text format. However, in upcoming releases, the plan is to incorporate it into the vulnerability scanning report, which will be available in both HTML and PDF formats.
+
+
+### Code Review Effort Estimation Report
+* Effort estimation report: /reports/html/estimation.html
+
+Note: At present, the effort estimation for the source code review is in its early stages. It is considered experimental and will be developed and refined through several iterations. Improvements will be made over multiple releases, as the formula and the concept are new and require time to be honed to achieve accuracy or reasonable estimation.
+
+Currently, the report is generated in HTML format. However, in future releases, there are plans to also provide it in PDF format.
+
