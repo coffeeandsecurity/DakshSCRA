@@ -2,7 +2,7 @@
     <category name="Authentication or Authorization Functionalities">
         <rule>
             <name>Authentication Modules</name>
-            <regex>(^|\s)(?i)(Login|Authentication|Authenticated|Oauth|JWT)</regex>
+            <regex>(?i)(Login|Authentication|Authenticated|Oauth|JWT)</regex>
             <rule_desc>Detects common module names associated with authentication, such as 'Login', 'Authentication', 'Authenticated', 'Oauth', and 'JWT'.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential presence of module names associated with authentication, which can provide attackers with valuable information about the system's functionality and increase the attack surface.</vuln_desc>
             <developer>Developers should ensure that the authentication processes are implemented securely.</developer>
@@ -10,7 +10,7 @@
         </rule>
         <rule>
             <name>Authorization Modules (Authorization|Authorizing|AccessControl|RBAC|ABAC)</name>
-            <regex>(^|\s)(?i)(Authorization|Authorizing|AccessControl|RBAC|ABAC)</regex>
+            <regex>(?i)(Authorization|Authorizing|AccessControl|RBAC|ABAC)</regex>
             <rule_desc>Detects the presence of common module names related to authorization and access control.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential presence of module names associated with authorization and access control, which are crucial for enforcing proper permissions and protecting sensitive resources. Failure to implement secure authorization checks can result in unauthorized access and data breaches.</vuln_desc>
             <developer>Developers should ensure that authorization mechanisms and access control policies are implemented securely to prevent unauthorized access to sensitive resources.</developer>
@@ -20,7 +20,7 @@
     <category name="Privileged User or Management Functionalities">
         <rule>
             <name>Admin Modules/Section</name>
-            <regex>(^|\s)(?i)(Admin|Administrator|AdminFunc|AdminPage|AdminLogin)</regex>
+            <regex>(?i)(Admin|Administrator|AdminFunc|AdminPage|AdminLogin)</regex>
             <rule_desc>Detects the presence of common module names related to administration functionalities or admin login pages.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential presence of module names associated with administration functionalities or admin login pages, which can provide attackers with valuable information about the system's administration interfaces and increase the attack surface.</vuln_desc>
             <developer>Developers should avoid using generic or predictable module names for admin functionalities or admin login pages and ensure that access control mechanisms and authentication processes are implemented securely.</developer>
@@ -30,7 +30,7 @@
     <category name="Commonly Targeted Functionalities">
         <rule>
             <name>File Upload Functionality</name>
-            <regex>(^|\s)(?i)(upload|file\s*input|file\s*upload)(\s+(?!secure|protected|restricted)\w+)*</regex>
+            <regex>(?i)(upload|file\s*input|file\s*upload)(\s+(?!secure|protected|restricted)\w+)*</regex>
             <rule_desc>Detects the presence of file upload functionality.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential presence of file upload functionality that may allow unauthorized or malicious files to be uploaded, posing security risks such as arbitrary code execution or unauthorized access.</vuln_desc>
             <developer>Developers should ensure that file upload functionality is implemented securely by validating file types, limiting file size, and applying appropriate access controls. It is recommended to use well-established file upload libraries or frameworks that have built-in security features.</developer>
@@ -40,7 +40,7 @@
     <category name="Hardcoded Secrets or Sensitive Info">
         <rule>
             <name>Password</name>
-            <regex>(^|\s)(?i)(Password|password|pwd|passwd)</regex>
+            <regex>(?i)(Password|password|pwd|passwd)</regex>
                 <exclude>\b(?:SELECT|UPDATE|INSERT|FROM)\b</exclude>
             <rule_desc>Detects potential password-related strings in the code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential presence of password-related strings in the code, which can lead to security risks if not handled properly.</vuln_desc>
@@ -142,7 +142,7 @@
     <category name="Code Quality and Documentation">
         <rule>
             <name>TODO Comments</name>
-            <regex>(^|\s)(?i)TODO(\s?)</regex>
+            <regex>(?i)TODO(\s?)</regex>
             <rule_desc>Detects TODO comments in the code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the presence of TODO comments, which might indicate unfinished or pending tasks that could lead to security vulnerabilities or incomplete code functionality.</vuln_desc>
             <developer>Developers should regularly review and address TODO comments to ensure the completion of tasks, proper code functionality, and security of the application.</developer>
@@ -162,7 +162,7 @@
     <category name="Malicious Code or Backdoor Detection">
         <rule>
             <name>Backdoor Entry and Bypass Detection</name>
-            <regex>(^|\s)(?i)(backdoor|bypass|sneaky|exploit|unauthorized_access|unauthorized_entry|hidden_entry|stealthy_entry|secret_entry)</regex>
+            <regex>(?i)(backdoor|bypass|sneaky|exploit|unauthorized_access|unauthorized_entry|hidden_entry|stealthy_entry|secret_entry)</regex>
             <!--The following keywords can be present in a backdoor code but are sometimes too noise and generates FalsePositives. Therefore excluded.(override) -->
             <rule_desc>Detects the presence of terms related to backdoor entry, bypass, or sneaky methods to get around program restrictions.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential presence of terms associated with backdoor entry, bypass techniques, or sneaky methods to circumvent program restrictions. Such activities can lead to unauthorized access, privilege escalation, and potential security breaches.</vuln_desc>
@@ -173,7 +173,7 @@
     <category name="Common Mitigations">
         <rule>
             <name>CAPTCHA Implementation</name>
-            <regex>(^|\s)(?i)(captcha|recaptcha)(\s+(?!secure|strong|reliable|safe)\w+)*</regex>
+            <regex>(?i)(captcha|recaptcha)(\s+(?!secure|strong|reliable|safe)\w+)*</regex>
             <rule_desc>Detects the presence of CAPTCHA implementations that are potentially insecure or weak.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential presence of CAPTCHA implementations that may be insecure or weak, potentially allowing automated or malicious activities to bypass the CAPTCHA protection.</vuln_desc>
             <developer>Developers should ensure that CAPTCHA implementations are secure, using reliable and robust techniques to effectively prevent automated or malicious activities. It is recommended to use well-established CAPTCHA solutions and regularly update them to stay ahead of evolving threats.</developer>

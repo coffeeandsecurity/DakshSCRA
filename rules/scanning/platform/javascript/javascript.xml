@@ -100,7 +100,7 @@
     </rule>
     <rule>
         <name>Missing Cookie Security Flags</name>
-        <regex>(^|\s)(httpOnly(\s)*:(\s)*true|httpOnly)| (secure(\s)*:(\s)*true|secure)| (SameSite(\s)*=(\s)*(Lax|Strict))| (SameSite(\s)*=(\s)*(None|lax))| (Domain(\s)*=(\s)*.*[;\s])| (Domain(\s)*=(\s)*(localhost|\.local))</regex>
+        <regex>(httpOnly(\s)*:(\s)*true|httpOnly)| (secure(\s)*:(\s)*true|secure)| (SameSite(\s)*=(\s)*(Lax|Strict))| (SameSite(\s)*=(\s)*(None|lax))| (Domain(\s)*=(\s)*.*[;\s])| (Domain(\s)*=(\s)*(localhost|\.local))</regex>
         <rule_desc>Detects the absence of important security flags in a cookie, such as 'httpOnly', 'secure', 'SameSite', and 'Domain' attributes.</rule_desc>
         <vuln_desc>If this rule matches, it indicates that one or more security flags are missing in a cookie. The absence of these flags can lead to security vulnerabilities, including cross-site scripting (XSS) attacks and information leakage.</vuln_desc>
         <developer>Developers should ensure that cookies containing sensitive information have the necessary security flags set. This includes enabling the 'httpOnly' attribute, setting the 'secure' attribute for secure connections, and specifying appropriate values for the 'SameSite' and 'Domain' attributes. These measures help protect against various security risks, such as XSS attacks and cookie tampering.</developer>
@@ -108,7 +108,7 @@
     </rule>
     <rule>
         <name>Routes</name>
-        <regex>(^|\s)(?i)route:\s+'.*(\s?)</regex>
+        <regex>(?i)route:\s+'.*(\s?)</regex>
         <rule_desc>Detects the presence of hardcoded routes in JavaScript code, which may expose sensitive information or introduce security risks.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of hardcoded routes in the JavaScript code. Hardcoded routes may expose sensitive information, such as internal URLs, API endpoints, or authentication routes, to potential attackers. Hardcoded routes can also lead to security vulnerabilities, such as insufficient access control, information disclosure, or bypassing security mechanisms.</vuln_desc>
         <developer>Developers should avoid hardcoding routes in JavaScript code and instead consider using configuration files or dynamic route handling mechanisms. Hardcoding routes can introduce security risks and make the codebase less maintainable. By implementing dynamic routing solutions, developers can improve flexibility, allow for easier configuration changes, and minimize the exposure of sensitive information.</developer>
