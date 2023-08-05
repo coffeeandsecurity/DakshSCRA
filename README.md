@@ -90,23 +90,23 @@ $ python3 dakshscra.py		// To view tool usage along with examples
 
 ```
 Example Commands: 
-	# dakshscra.py -l RF	 	 # View the platforms and filetypes supported	
+# dakshscra.py -l RF	 	 # View the platforms and filetypes supported	
 
-	# '-f' is optional. If not specified, it will default to the corresponding filetypes of the selected rule.
-	dakshsca.py -r php -t /source_dir_path
+# '-f' is optional. If not specified, it will default to the corresponding filetypes of the selected rule.
+dakshsca.py -r php -t /source_dir_path
 
-	# To override default settings, other filetypes can be specified with '-f' option.
-	dakshsca.py -r php -f dotnet -t /path_to_source_dir
-	dakshsca.py -r php -f custom -t /path_to_source_dir
+# To override default settings, other filetypes can be specified with '-f' option.
+dakshsca.py -r php -f dotnet -t /path_to_source_dir
+dakshsca.py -r php -f custom -t /path_to_source_dir
 
-	# Perform reconnaissance and rule based scanning if '-recon' used with '-r' option.
-	dakshsca.py  -recon -r php -t /path_to_source_dir
+# Perform reconnaissance and rule based scanning if '-recon' used with '-r' option.
+dakshsca.py  -recon -r php -t /path_to_source_dir
 
-	# Perform only reconnaissance if '-recon' used without the '-r' option.
-	dakshsca.py  -recon -t /path_to_source_dir
+# Perform only reconnaissance if '-recon' used without the '-r' option.
+dakshsca.py  -recon -t /path_to_source_dir
 
-	# Verbosity: '-v' is default, '-vvv' will display all rules check within each rule category.
-	dakshsca.py -r php -vv -t /path_to_source_dir
+# Verbosity: '-v' is default, '-vvv' will display all rules check within each rule category.
+dakshsca.py -r php -vv -t /path_to_source_dir
 ```
 
 ## Reports
