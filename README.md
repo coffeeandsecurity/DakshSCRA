@@ -92,7 +92,7 @@ $ python3 dakshscra.py		// To view tool usage along with examples
 ## Reports
 The tool generates reports in three formats: HTML, PDF, and TEXT. Although the HTML and PDF reports are still being improved, they are currently in a reasonably good state. With each subsequent iteration, these reports will continue to be refined and improved even further.
 
-#### Vulnerability Scanning Report
+### Vulnerability Scanning Report
 ###### RAW TEXT Based Reports: 	
 * Areas of Interest - Identified Patterns : 	DakshSCRA/reports/text/areas_of_interest.txt
 * Areas of Interest - Enumerated Project Files: DakshSCRA/reports/text/filepaths_aoi.txt
