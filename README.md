@@ -51,16 +51,39 @@ Once the above step successfully installs all the required libraries, refer to t
 
 $ python3 dakshscra.py -h		// To view avaialble options and arguments
 
-	usage: dakshscra.py [-h] [-r RULE_FILE] [-f FILE_TYPES] [-v] [-t TARGET_DIR] [-l {R,RF}] [-recon]
+	usage: dakshscra.py [-h] [-r RULE_FILE] [-f FILE_TYPES] [-v] [-t TARGET_DIR] [-l {R,RF}] [-recon] [-estimate]
 
 	options:
-	-h, --help            	Show this help message and exit
-	-r RULE_FILE          	Specify platform specific rule name
-	-f FILE_TYPES         	Specify file types to scan
-	-v                    	specify verbosity level {'-v', '-vv'}
-	-t TARGET_DIR         	Specify target directory path
-	-l {R,RF}, --list {R,RF}	List rules [R] OR rules and filetypes [RF]
-	-recon                	Platform and technology reconnaissance
+	-h, --help            show this help message and exit
+	-r RULE_FILE          Specify platform specific rule name
+	-f FILE_TYPES         Specify file types to scan
+	-v                    Specify verbosity level {'-v', '-vv', '-vvv'}
+	-t TARGET_DIR         Specify target directory path
+	-l {R,RF}, --list {R,RF}
+							List rules [R] OR rules and filetypes [RF]
+	-recon                Detects platform, framework and programming language used
+	-estimate             Estimate efforts required for code review
+
+### Example Usage
+$ python3 dakshscra.py		// To view tool usage along with examples
+
+	Examples:
+	# '-f' is optional. If not specified, it will default to the corresponding filetypes of the selected rule.
+	dakshsca.py -r php -t /source_dir_path
+
+	# To override default settings, other filetypes can be specified with '-f' option.
+	dakshsca.py -r php -f dotnet -t /path_to_source_dir
+	dakshsca.py -r php -f custom -t /path_to_source_dir
+
+	# Perform reconnaissance and rule based scanning if '-recon' used with '-r' option.
+	dakshsca.py  -recon -r php -t /path_to_source_dir
+
+	# Perform only reconnaissance if '-recon' used without the '-r' option.
+	dakshsca.py  -recon -t /path_to_source_dir
+
+	# Verbosity: '-v' is default, '-vvv' will display all rules check within each rule category.
+	dakshsca.py -r php -vv -t /path_to_source_dir
+
 
 	Supported RULE_FILE: 	alljs, angular, common, dotnet, java, php, python, rubyrails, sql_sp
 	Supported FILE_TYPES:	alljs, angular, customlist, dotnet, php, python, java, rubyrails, silverstrip, allfiles
