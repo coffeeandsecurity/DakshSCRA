@@ -19,7 +19,7 @@
         <path>/javascript/javascript.xml</path>
         <ftypes>*.js, *.ts</ftypes>
     </rule>
-    <rule>
+    <!--<rule>
         <platform>angular</platform>
         <path>/javascript/angular.xml</path>
         <ftypes>*.js, *.ts, *.html, *.json</ftypes>
@@ -39,26 +39,25 @@
         <path>/ruby/rubyrails.xml</path>
         <ftypes>*.rb</ftypes>
     </rule>
-    <!--<rule>
+    <rule>
         <platform>golang</platform>
         <path>/golang/golang.xml</path>
         <ftypes>*.go, *.mod, *.sum</ftypes>
-    </rule>-->
+    </rule>
     <rule>
         <platform>rust</platform>
         <path>/rust/rust.xml</path>
         <ftypes>*.rs, *.toml, *.env</ftypes>
     </rule>
-    <!--<rule>
+    <rule>
         <platform>carbon</platform>
         <path>/carbon/carbon.xml</path>
         <ftypes>*.carbon</ftypes>
-    </rule>-->
+    </rule>
     <rule>
         <platform>database</platform>
         <path>/database/database.xml</path>
         <ftypes>*.sql, *.psql, *.db</ftypes>
-        <!--    
             <dbtype>
                 <platform>storedprocedure</platform>
                 <path>/database/sql/sql_sp.xml</path>
@@ -67,8 +66,8 @@
                 <platform>postgress</platform>
                 <path>/database/postgress.xml</path>
                 <ftypes>*.psql, *.dbf, *.sqr, *.sql, *.gdb, *.rbf, *.db, *.spf, *.lis, *.mkd, *.sqs</ftypes>
-            </dbtype> -->
-    </rule>
+            </dbtype>
+    </rule>-->
     <rule>
         <platform>common</platform>
         <path>/common.xml</path>
