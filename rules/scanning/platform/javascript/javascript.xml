@@ -1,7 +1,7 @@
 <root>
     <category name="Untrusted Input Handling or Injection Flaws">
         <rule>
-            <name>Untrusted Inputs: document.getElementById().value</name>
+            <name>Untrusted Data in 'document.getElementById().value'</name>
             <regex>document\.getElementById\(.+\)\.value</regex>
             <rule_desc>Detects the usage of unvalidated input.</rule_desc>
             <vuln_desc>This rule matches instances where user input obtained from `document.getElementById().value` is used without proper validation. Unvalidated input can lead to security vulnerabilities such as injection attacks, cross-site scripting (XSS), and improper data handling.</vuln_desc>
@@ -17,7 +17,7 @@
             <reviewer>Reviewers should verify if potentially untrusted data is assigned to the innerHTML property. They should assess if the code implements proper input validation and output encoding techniques to prevent XSS vulnerabilities when updating element content.</reviewer>
         </rule>
         <rule>
-            <name>DOM XSS Vulnerability</name>
+            <name>Untrusted Data in 'document.write'</name>
             <regex>document\.write\(|innerHTML\s?=\s?.+</regex>
             <rule_desc>Detects potential DOM-based cross-site scripting (XSS) vulnerabilities.</rule_desc>
             <vuln_desc>This rule matches instances where the `document.write()` function or the assignment of potentially untrusted values to the `innerHTML` property is performed. These actions can introduce DOM-based cross-site scripting vulnerabilities if proper input validation and output encoding are not applied.</vuln_desc>
@@ -25,110 +25,116 @@
             <reviewer>Reviewers should verify if the code uses `document.write()` or assigns potentially untrusted values to the `innerHTML` property. They should assess if proper input validation and output encoding techniques are implemented to prevent DOM-based cross-site scripting vulnerabilities.</reviewer>
         </rule>
     </category>
-    <rule>
-        <name>Handlebars Unescaped String</name>
-        <regex>handlebars\.SafeString</regex>
-        <description>Detects unescaped Handlebars strings in code.</description>
-        <rule_desc>Detects instances of unescaped Handlebars strings in the code, which can indicate a potential security vulnerability.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the potential vulnerability of unescaped Handlebars strings in the code. Unescaped strings can lead to cross-site scripting (XSS) vulnerabilities if user input is not properly escaped or sanitized before rendering.</vuln_desc>
-        <developer>Developers should ensure that user input used with Handlebars strings is properly sanitized or escaped to prevent XSS attacks. Handlebars provides built-in mechanisms for escaping user input. Developers should follow these secure coding practices and sanitize or escape user-generated content before using it in Handlebars strings.</developer>
-        <reviewer>Reviewers should verify that proper input sanitization techniques are applied when using Handlebars strings. They should ensure that developers use Handlebars' built-in escaping mechanisms or equivalent custom sanitization methods to mitigate the risk of XSS vulnerabilities. Reviewers should also assess the implementation of output encoding and confirm that user input is properly sanitized before rendering it in the application.</reviewer>
-    </rule>
-    <rule>
-        <name>SQL Injection</name>
-        <regex>(SELECT|INSERT|UPDATE|DELETE|DROP)[\s\S]*?FROM[\s\S]*?</regex>
-        <rule_desc>Detects potential SQL injection vulnerabilities.</rule_desc>
-        <vuln_desc>This rule matches potential SQL injection vulnerabilities in the code. SQL injection occurs when user-supplied input is not properly sanitized or validated before being used in SQL queries. Attackers can exploit SQL injection to manipulate queries, bypass authentication, retrieve sensitive data, or modify the database.</vuln_desc>
-        <developer>Developers should use parameterized queries or prepared statements to prevent SQL injection attacks. Additionally, input validation and proper escaping of user input should be implemented to ensure that only safe and sanitized values are used in SQL queries.</developer>
-        <reviewer>Reviewers should verify whether the code implements proper measures to prevent SQL injection vulnerabilities. They should check if input validation and proper sanitization techniques, such as parameterized queries or prepared statements, are used to handle user input within SQL queries. Reviewers should assess the effectiveness of the implemented measures in mitigating SQL injection risks.</reviewer>
-    </rule>
-    <rule>
-        <name>Remote OS Command Execution - (child_process.exec())</name>
-        <regex>(^|\s|=\s?)require\(\s*('|")child_process('|")\s*\)(\s*\.(\s*\w+\s*)*\()?\s*\)</regex>
-        <rule_desc>Detects the usage of the `require('child_process')` statement with the `exec()` function, which can introduce remote OS command execution vulnerabilities.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the potential vulnerability of using the `child_process.exec()` function to execute operating system commands. Attackers can manipulate user input or crafted data to execute arbitrary commands on the host system, leading to unauthorized access, data breaches, or system compromise.</vuln_desc>
-        <developer>Developers should exercise caution when using the `child_process.exec()` function and ensure that any user input passed to it is properly validated, sanitized, and restricted to prevent command injection vulnerabilities. It is recommended to use safer alternatives, such as using predefined functions or libraries specifically designed for safe command execution or employing proper input validation and sanitization techniques.</developer>
-        <reviewer>Reviewers should verify whether the code implements sufficient measures to prevent remote OS command execution vulnerabilities. They should check whether the usage of `child_process.exec()` is necessary, and if so, ensure that proper input validation, sanitization, and command parameterization techniques are implemented to prevent command injection attacks. Reviewers should also assess the context in which this function is used and verify that security best practices are followed to mitigate any potential risks.</reviewer>
-    </rule>
-    <rule>
-        <name>Eval Function</name>
-        <regex>\b(eval|setTimeout|setInterval)\(.+\)</regex>
-        <rule_desc>Detects the usage of the `eval`, `setTimeout`, and `setInterval` functions.</rule_desc>
-        <vuln_desc>This rule matches instances where the `eval`, `setTimeout`, or `setInterval` functions are used. These functions can introduce security vulnerabilities if not used carefully, as they can execute arbitrary code and lead to code injection or unintended consequences.</vuln_desc>
-        <developer>Developers should avoid using the `eval`, `setTimeout`, and `setInterval` functions whenever possible. If their usage is necessary, developers should carefully validate and sanitize any input used within these functions to prevent code injection vulnerabilities.</developer>
-        <reviewer>Reviewers should verify whether the code uses the `eval`, `setTimeout`, or `setInterval` functions. They should assess if the usage is justified and if proper input validation and sanitization techniques are implemented to prevent code injection vulnerabilities.</reviewer>
-    </rule>
-    <rule>
-        <name>Weak Cryptography</name>
-        <regex>(CryptoJS\.DES\.encrypt|CryptoJS\.AES\.encrypt|MD5|SHA-1|RC4)\(.+\)</regex>
-        <rule_desc>Detects the usage of weak cryptographic functions.</rule_desc>
-        <vuln_desc>This rule matches instances where weak cryptographic functions, such as `CryptoJS.DES.encrypt`, `CryptoJS.AES.encrypt`, `MD5`, `SHA-1`, or `RC4`, are used. These functions are considered weak and can lead to security vulnerabilities in cryptographic operations.</vuln_desc>
-        <developer>Developers should use stronger and more secure cryptographic functions and algorithms, such as AES-256 or SHA-256, for encryption and hashing operations. They should also follow best practices for key management and encryption protocols.</developer>
-        <reviewer>Reviewers should verify if weak cryptographic functions are used in the code. They should assess if the code uses secure cryptographic algorithms and if best practices for encryption and hashing are followed.</reviewer>
-    </rule>
-    <rule>
-        <name>Insecure Direct Object References (IDOR)</name>
-        <regex>(req\.params|req\.query|req\.body)[\s\S]*?(\[|\.)[\s\S]*?</regex>
-        <rule_desc>Detects potential Insecure Direct Object References (IDOR).</rule_desc>
-        <vuln_desc>This rule matches potential Insecure Direct Object References (IDOR) vulnerabilities in the code. IDOR occurs when user-supplied input is used directly to access internal resources or sensitive objects without proper authorization or validation. Attackers can manipulate the input to access unauthorized resources, view sensitive data, or perform actions they are not allowed to.</vuln_desc>
-        <developer>Developers should implement proper authorization and access control mechanisms to prevent IDOR vulnerabilities. User input used to access resources should be validated, sanitized, and authorized based on the user's privileges. Additionally, developers should use indirect references or randomized identifiers to obfuscate direct object references.</developer>
-        <reviewer>Reviewers should verify whether the code implements proper authorization and access control mechanisms to prevent IDOR vulnerabilities. They should check if user input used to access resources is properly validated, sanitized, and authorized. Reviewers should assess the effectiveness of the implemented measures in mitigating IDOR risks.</reviewer>
-    </rule>
-    <rule>
-        <name>Server-Side Request Forgery (SSRF)</name>
-        <regex>XMLHttpRequest\.open\(|fetch\(|axios\.get\(|http\.request\(|https\.request\(|http\.get\(|https\.get\(|http\.post\(|https\.post\(|http\.put\(|https\.put\(|http\.delete\(|https\.delete\(|\$.ajax\({\s*url:\s*['"].+['"]</regex>
-        <rule_desc>Detects potential server-side request forgery (SSRF) vulnerabilities.</rule_desc>
-        <vuln_desc>This rule matches instances where XMLHttpRequest, fetch, axios, http.request, https.request, http.get, https.get, http.post, https.post, http.put, https.put, http.delete, https.delete, or $.ajax functions are used with potentially untrusted URLs. Improper usage of these functions can lead to SSRF vulnerabilities, allowing attackers to make unauthorized requests to internal resources.</vuln_desc>
-        <developer>Developers should implement proper input validation and sanitization when using XMLHttpRequest, fetch, axios, http.request, https.request, http.get, https.get, http.post, https.post, http.put, https.put, http.delete, https.delete, or $.ajax functions. They should validate and restrict the URLs to trusted sources to prevent SSRF attacks.</developer>
-        <reviewer>Reviewers should verify if XMLHttpRequest, fetch, axios, http.request, https.request, http.get, https.get, http.post, https.post, http.put, https.put, http.delete, https.delete, or $.ajax functions are used with potentially untrusted URLs. They should assess if proper input validation and URL restriction mechanisms are implemented to mitigate SSRF vulnerabilities.</reviewer>
-    </rule>
-    <rule>
-        <name>Prototype Pollution</name>
-        <regex>(\b__proto__\b|Object\.prototype\.(?!hasOwnProperty)[a-zA-Z]+\s?=)</regex>
-        <rule_desc>Detects potential prototype pollution vulnerabilities.</rule_desc>
-        <vuln_desc>This rule matches instances where the `__proto__` property or assignment to properties of `Object.prototype` (excluding `hasOwnProperty`) is performed. These actions can lead to prototype pollution vulnerabilities, allowing attackers to modify the behavior of objects and potentially compromise the application's security.</vuln_desc>
-        <developer>Developers should avoid using or modifying the `__proto__` property directly, and they should exercise caution when extending or modifying properties of `Object.prototype`. They should use safer alternatives, such as `Object.create()` or creating new objects with specific prototypes.</developer>
-        <reviewer>Reviewers should verify if the code directly uses or modifies the `__proto__` property or assigns values to properties of `Object.prototype` (excluding `hasOwnProperty`). They should assess if proper precautions are taken to prevent prototype pollution vulnerabilities.</reviewer>
-    </rule>
-    <rule>
-        <name>Weak Random Number Generation</name>
-        <regex>(Math\.random|crypto\.getRandomValues)\(.*\)</regex>
-        <rule_desc>Detects the usage of weak random number generation.</rule_desc>
-        <vuln_desc>This rule matches instances where weak random number generation functions, such as `Math.random()` or `crypto.getRandomValues()`, are used. Weak random number generation can lead to predictable values, compromising the security of cryptographic operations or session tokens.</vuln_desc>
-        <developer>Developers should use strong and cryptographically secure random number generation functions, such as `crypto.getRandomValues()`, for any security-critical operations. They should avoid using `Math.random()` for generating random values that require high entropy.</developer>
-        <reviewer>Reviewers should verify if weak random number generation functions, such as `Math.random()`, are used. They should assess if the code relies on secure random number generation functions for cryptographic operations or generating unpredictable values.</reviewer>
-    </rule>
-    <rule>
-        <name>Missing Cookie Security Flags</name>
-        <regex>(httpOnly(\s)*:(\s)*true|httpOnly)| (secure(\s)*:(\s)*true|secure)| (SameSite(\s)*=(\s)*(Lax|Strict))| (SameSite(\s)*=(\s)*(None|lax))| (Domain(\s)*=(\s)*.*[;\s])| (Domain(\s)*=(\s)*(localhost|\.local))</regex>
-        <rule_desc>Detects the absence of important security flags in a cookie, such as 'httpOnly', 'secure', 'SameSite', and 'Domain' attributes.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates that one or more security flags are missing in a cookie. The absence of these flags can lead to security vulnerabilities, including cross-site scripting (XSS) attacks and information leakage.</vuln_desc>
-        <developer>Developers should ensure that cookies containing sensitive information have the necessary security flags set. This includes enabling the 'httpOnly' attribute, setting the 'secure' attribute for secure connections, and specifying appropriate values for the 'SameSite' and 'Domain' attributes. These measures help protect against various security risks, such as XSS attacks and cookie tampering.</developer>
-        <reviewer>Reviewers should verify whether the code correctly applies the necessary security flags to cookies. They should check for the presence of 'httpOnly', 'secure', 'SameSite', and 'Domain' attributes and confirm that they are set appropriately. Reviewers should assess the impact of missing security flags on the overall security posture of the application and provide recommendations for remediation.</reviewer>
-    </rule>
-    <rule>
-        <name>Routes</name>
-        <regex>(?i)route:\s+'.*(\s?)</regex>
-        <rule_desc>Detects the presence of hardcoded routes in JavaScript code, which may expose sensitive information or introduce security risks.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of hardcoded routes in the JavaScript code. Hardcoded routes may expose sensitive information, such as internal URLs, API endpoints, or authentication routes, to potential attackers. Hardcoded routes can also lead to security vulnerabilities, such as insufficient access control, information disclosure, or bypassing security mechanisms.</vuln_desc>
-        <developer>Developers should avoid hardcoding routes in JavaScript code and instead consider using configuration files or dynamic route handling mechanisms. Hardcoding routes can introduce security risks and make the codebase less maintainable. By implementing dynamic routing solutions, developers can improve flexibility, allow for easier configuration changes, and minimize the exposure of sensitive information.</developer>
-        <reviewer>Reviewers should verify whether the code contains hardcoded routes and assess the potential security implications. They should ensure that sensitive information, such as internal URLs, API endpoints, or authentication routes, is not exposed through hardcoded routes. Reviewers should also check if the code implements appropriate access control measures and adheres to secure coding practices, such as using configuration files or dynamic routing mechanisms.</reviewer>
-    </rule>
-    <rule>
-        <name>Deprecated JavaScript Function</name>
-        <regex>\b(escape|unescape|eval)\b</regex>
-        <rule_desc>Detects usage of deprecated JavaScript functions.</rule_desc>
-        <vuln_desc>This rule matches instances where deprecated JavaScript functions (such as escape, unescape, or eval) are used. Deprecated functions may have security vulnerabilities or compatibility issues and should be replaced with modern, safer alternatives.</vuln_desc>
-        <developer>Developers should avoid using deprecated JavaScript functions as they may introduce security vulnerabilities. They should update their code to use modern alternatives and follow best practices to ensure the security and compatibility of their applications.</developer>
-        <reviewer>Reviewers should check for the usage of deprecated JavaScript functions and recommend replacing them with safer alternatives. They should assess if the codebase follows best practices and avoids deprecated functions that may pose security risks.</reviewer>
-    </rule>
-    <rule>
-        <name>Weak Mitigation</name>
-        <regex>\b(disable|bypass|ignore|suppress|unsafe)\b</regex>
-        <rule_desc>Detects weak or inadequate security mitigations.</rule_desc>
-        <vuln_desc>This rule matches instances where weak or inadequate security mitigations (such as disable, bypass, ignore, suppress, or unsafe) are used. Weak mitigations can lead to security vulnerabilities or provide a false sense of security, leaving the application exposed to attacks.</vuln_desc>
-        <developer>Developers should avoid using weak or inadequate security mitigations as they can create vulnerabilities in the application. They should implement strong and effective security measures that follow established best practices and standards.</developer>
-        <reviewer>Reviewers should identify weak or inadequate security mitigations in the code and recommend implementing stronger security measures. They should assess if the application applies appropriate security controls and avoids relying on weak mitigations that may be easily bypassed by attackers.</reviewer>
-    </rule>
+    <category name="Untrusted Input in Web/API Response">
+        <rule>
+            <name>Handlebars Unescaped String</name>
+            <regex>\{\{\{.*?\}\}\}</regex>
+            <description>Detects unescaped Handlebars strings in code.</description>
+            <rule_desc>Detects instances of unescaped Handlebars strings in the code, which can indicate a potential security vulnerability.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential vulnerability of unescaped Handlebars strings in the code. Unescaped strings can lead to cross-site scripting (XSS) vulnerabilities if user input is not properly escaped or sanitized before rendering.</vuln_desc>
+            <developer>Developers should ensure that user input used with Handlebars strings is properly sanitized or escaped to prevent XSS attacks. Handlebars provides built-in mechanisms for escaping user input, but triple curly braces can bypass this. Developers should follow secure coding practices and sanitize or escape user-generated content before using it in Handlebars strings.</developer>
+            <reviewer>Reviewers should verify that proper input sanitization techniques are applied when using Handlebars strings. They should ensure that developers use Handlebars' built-in escaping mechanisms or equivalent custom sanitization methods to mitigate the risk of XSS vulnerabilities. Reviewers should also assess the implementation of output encoding and confirm that user input is properly sanitized before rendering it in the application.</reviewer>
+        </rule>
+    </category>
+    <category name="Insecure Method/Function Call">
+        <rule>
+            <name>Insecure Method Call: child_process.exec()</name>
+            <regex>(^|\s|=\s?)require\(\s*('|")child_process('|")\s*\)(\s*\.(\s*\w+\s*)*\()?\s*\)</regex>
+            <rule_desc>Detects the usage of the `require('child_process')` statement with the `exec()` function, which can introduce remote OS command execution vulnerabilities.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using the `child_process.exec()` function to execute operating system commands. Attackers can manipulate user input or crafted data to execute arbitrary commands on the host system, leading to unauthorized access, data breaches, or system compromise.</vuln_desc>
+            <developer>Developers should exercise caution when using the `child_process.exec()` function and ensure that any user input passed to it is properly validated, sanitized, and restricted to prevent command injection vulnerabilities. It is recommended to use safer alternatives, such as using predefined functions or libraries specifically designed for safe command execution or employing proper input validation and sanitization techniques.</developer>
+            <reviewer>Reviewers should verify whether the code implements sufficient measures to prevent remote OS command execution vulnerabilities. They should check whether the usage of `child_process.exec()` is necessary, and if so, ensure that proper input validation, sanitization, and command parameterization techniques are implemented to prevent command injection attacks. Reviewers should also assess the context in which this function is used and verify that security best practices are followed to mitigate any potential risks.</reviewer>
+        </rule>
+        <rule>
+            <name>Insecure Method Call: eval|setTimeout|setInterval</name>
+            <regex>\b(eval|setTimeout|setInterval)\(.+\)</regex>
+            <rule_desc>Detects the usage of the `eval`, `setTimeout`, and `setInterval` functions.</rule_desc>
+            <vuln_desc>This rule matches instances where the `eval`, `setTimeout`, or `setInterval` functions are used. These functions can introduce security vulnerabilities if not used carefully, as they can execute arbitrary code and lead to code injection or unintended consequences.</vuln_desc>
+            <developer>Developers should avoid using the `eval`, `setTimeout`, and `setInterval` functions whenever possible. If their usage is necessary, developers should carefully validate and sanitize any input used within these functions to prevent code injection vulnerabilities.</developer>
+            <reviewer>Reviewers should verify whether the code uses the `eval`, `setTimeout`, or `setInterval` functions. They should assess if the usage is justified and if proper input validation and sanitization techniques are implemented to prevent code injection vulnerabilities.</reviewer>
+        </rule>
+    </category>
+    <category name="Cryptographic Issues">
+        <rule>
+            <name>Weak Cryptography</name>
+            <regex>(CryptoJS\.DES\.encrypt|CryptoJS\.AES\.encrypt|MD5|SHA-1|RC4)\(.+\)</regex>
+            <rule_desc>Detects the usage of weak cryptographic functions.</rule_desc>
+            <vuln_desc>This rule matches instances where weak cryptographic functions, such as `CryptoJS.DES.encrypt`, `CryptoJS.AES.encrypt`, `MD5`, `SHA-1`, or `RC4`, are used. These functions are considered weak and can lead to security vulnerabilities in cryptographic operations.</vuln_desc>
+            <developer>Developers should use stronger and more secure cryptographic functions and algorithms, such as AES-256 or SHA-256, for encryption and hashing operations. They should also follow best practices for key management and encryption protocols.</developer>
+            <reviewer>Reviewers should verify if weak cryptographic functions are used in the code. They should assess if the code uses secure cryptographic algorithms and if best practices for encryption and hashing are followed.</reviewer>
+        </rule>
+        <rule>
+            <name>Weak Random Number Generation</name>
+            <regex>(Math\.random|crypto\.getRandomValues)\(.*\)</regex>
+            <rule_desc>Detects the usage of weak random number generation.</rule_desc>
+            <vuln_desc>This rule matches instances where weak random number generation functions, such as `Math.random()` or `crypto.getRandomValues()`, are used. Weak random number generation can lead to predictable values, compromising the security of cryptographic operations or session tokens.</vuln_desc>
+            <developer>Developers should use strong and cryptographically secure random number generation functions, such as `crypto.getRandomValues()`, for any security-critical operations. They should avoid using `Math.random()` for generating random values that require high entropy.</developer>
+            <reviewer>Reviewers should verify if weak random number generation functions, such as `Math.random()`, are used. They should assess if the code relies on secure random number generation functions for cryptographic operations or generating unpredictable values.</reviewer>
+        </rule>
+    </category>
+    <category name="Information Disclosure">
+        <rule>
+            <name>Routes</name>
+            <regex>(?i)route:\s+'.*(\s?)</regex>
+            <rule_desc>Detects the presence of hardcoded routes in JavaScript code, which may expose sensitive information or introduce security risks.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the presence of hardcoded routes in the JavaScript code. Hardcoded routes may expose sensitive information, such as internal URLs, API endpoints, or authentication routes, to potential attackers. Hardcoded routes can also lead to security vulnerabilities, such as insufficient access control, information disclosure, or bypassing security mechanisms.</vuln_desc>
+            <developer>Developers should avoid hardcoding routes in JavaScript code and instead consider using configuration files or dynamic route handling mechanisms. Hardcoding routes can introduce security risks and make the codebase less maintainable. By implementing dynamic routing solutions, developers can improve flexibility, allow for easier configuration changes, and minimize the exposure of sensitive information.</developer>
+            <reviewer>Reviewers should verify whether the code contains hardcoded routes and assess the potential security implications. They should ensure that sensitive information, such as internal URLs, API endpoints, or authentication routes, is not exposed through hardcoded routes. Reviewers should also check if the code implements appropriate access control measures and adheres to secure coding practices, such as using configuration files or dynamic routing mechanisms.</reviewer>
+        </rule>
+    </category>
+    <category name="Insecure/Weak Mitigations">
+        <rule>
+            <name>Weak Mitigation: Using disable|bypass|ignore|suppress|unsafe</name>
+            <regex>\b(disable|bypass|ignore|suppress|unsafe)\b</regex>
+            <rule_desc>Detects weak or inadequate security mitigations.</rule_desc>
+            <vuln_desc>This rule matches instances where weak or inadequate security mitigations (such as disable, bypass, ignore, suppress, or unsafe) are used. Weak mitigations can lead to security vulnerabilities or provide a false sense of security, leaving the application exposed to attacks.</vuln_desc>
+            <developer>Developers should avoid using weak or inadequate security mitigations as they can create vulnerabilities in the application. They should implement strong and effective security measures that follow established best practices and standards.</developer>
+            <reviewer>Reviewers should identify weak or inadequate security mitigations in the code and recommend implementing stronger security measures. They should assess if the application applies appropriate security controls and avoids relying on weak mitigations that may be easily bypassed by attackers.</reviewer>
+        </rule>
+    </category>
+    <category name="Deprecated Functions">
+        <rule>
+            <name>Deprecated JS Function: escape|unescape|eval</name>
+            <regex>\b(escape|unescape|eval)\b</regex>
+            <rule_desc>Detects usage of deprecated JavaScript functions.</rule_desc>
+            <vuln_desc>This rule matches instances where deprecated JavaScript functions (such as escape, unescape, or eval) are used. Deprecated functions may have security vulnerabilities or compatibility issues and should be replaced with modern, safer alternatives.</vuln_desc>
+            <developer>Developers should avoid using deprecated JavaScript functions as they may introduce security vulnerabilities. They should update their code to use modern alternatives and follow best practices to ensure the security and compatibility of their applications.</developer>
+            <reviewer>Reviewers should check for the usage of deprecated JavaScript functions and recommend replacing them with safer alternatives. They should assess if the codebase follows best practices and avoids deprecated functions that may pose security risks.</reviewer>
+        </rule>
+    </category>
+    <category name="MISC Checks">
+        <rule>
+            <name>Insecure Direct Object References (IDOR)</name>
+            <regex>(req\.params|req\.query|req\.body)[\s\S]*?(\[|\.)[\s\S]*?</regex>
+            <rule_desc>Detects potential Insecure Direct Object References (IDOR).</rule_desc>
+            <vuln_desc>This rule matches potential Insecure Direct Object References (IDOR) vulnerabilities in the code. IDOR occurs when user-supplied input is used directly to access internal resources or sensitive objects without proper authorization or validation. Attackers can manipulate the input to access unauthorized resources, view sensitive data, or perform actions they are not allowed to.</vuln_desc>
+            <developer>Developers should implement proper authorization and access control mechanisms to prevent IDOR vulnerabilities. User input used to access resources should be validated, sanitized, and authorized based on the user's privileges. Additionally, developers should use indirect references or randomized identifiers to obfuscate direct object references.</developer>
+            <reviewer>Reviewers should verify whether the code implements proper authorization and access control mechanisms to prevent IDOR vulnerabilities. They should check if user input used to access resources is properly validated, sanitized, and authorized. Reviewers should assess the effectiveness of the implemented measures in mitigating IDOR risks.</reviewer>
+        </rule>
+        <rule>
+            <name>Server-Side Request Forgery (SSRF)</name>
+            <regex>XMLHttpRequest\.open\(|fetch\(|axios\.get\(|http\.request\(|https\.request\(|http\.get\(|https\.get\(|http\.post\(|https\.post\(|http\.put\(|https\.put\(|http\.delete\(|https\.delete\(|\$.ajax\({\s*url:\s*['"].+['"]</regex>
+            <rule_desc>Detects potential server-side request forgery (SSRF) vulnerabilities.</rule_desc>
+            <vuln_desc>This rule matches instances where XMLHttpRequest, fetch, axios, http.request, https.request, http.get, https.get, http.post, https.post, http.put, https.put, http.delete, https.delete, or $.ajax functions are used with potentially untrusted URLs. Improper usage of these functions can lead to SSRF vulnerabilities, allowing attackers to make unauthorized requests to internal resources.</vuln_desc>
+            <developer>Developers should implement proper input validation and sanitization when using XMLHttpRequest, fetch, axios, http.request, https.request, http.get, https.get, http.post, https.post, http.put, https.put, http.delete, https.delete, or $.ajax functions. They should validate and restrict the URLs to trusted sources to prevent SSRF attacks.</developer>
+            <reviewer>Reviewers should verify if XMLHttpRequest, fetch, axios, http.request, https.request, http.get, https.get, http.post, https.post, http.put, https.put, http.delete, https.delete, or $.ajax functions are used with potentially untrusted URLs. They should assess if proper input validation and URL restriction mechanisms are implemented to mitigate SSRF vulnerabilities.</reviewer>
+        </rule>
+        <rule>
+            <name>Prototype Pollution</name>
+            <regex>(\b__proto__\b|Object\.prototype\.(?!hasOwnProperty)[a-zA-Z]+\s?=)</regex>
+            <rule_desc>Detects potential prototype pollution vulnerabilities.</rule_desc>
+            <vuln_desc>This rule matches instances where the `__proto__` property or assignment to properties of `Object.prototype` (excluding `hasOwnProperty`) is performed. These actions can lead to prototype pollution vulnerabilities, allowing attackers to modify the behavior of objects and potentially compromise the application's security.</vuln_desc>
+            <developer>Developers should avoid using or modifying the `__proto__` property directly, and they should exercise caution when extending or modifying properties of `Object.prototype`. They should use safer alternatives, such as `Object.create()` or creating new objects with specific prototypes.</developer>
+            <reviewer>Reviewers should verify if the code directly uses or modifies the `__proto__` property or assigns values to properties of `Object.prototype` (excluding `hasOwnProperty`). They should assess if proper precautions are taken to prevent prototype pollution vulnerabilities.</reviewer>
+        </rule>
+        <rule>
+            <name>Missing Cookie Security Flags</name>
+            <regex>(httpOnly(\s)*:(\s)*true|httpOnly)| (secure(\s)*:(\s)*true|secure)| (SameSite(\s)*=(\s)*(Lax|Strict))| (SameSite(\s)*=(\s)*(None|lax))| (Domain(\s)*=(\s)*.*[;\s])| (Domain(\s)*=(\s)*(localhost|\.local))</regex>
+            <rule_desc>Detects the absence of important security flags in a cookie, such as 'httpOnly', 'secure', 'SameSite', and 'Domain' attributes.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates that one or more security flags are missing in a cookie. The absence of these flags can lead to security vulnerabilities, including cross-site scripting (XSS) attacks and information leakage.</vuln_desc>
+            <developer>Developers should ensure that cookies containing sensitive information have the necessary security flags set. This includes enabling the 'httpOnly' attribute, setting the 'secure' attribute for secure connections, and specifying appropriate values for the 'SameSite' and 'Domain' attributes. These measures help protect against various security risks, such as XSS attacks and cookie tampering.</developer>
+            <reviewer>Reviewers should verify whether the code correctly applies the necessary security flags to cookies. They should check for the presence of 'httpOnly', 'secure', 'SameSite', and 'Domain' attributes and confirm that they are set appropriately. Reviewers should assess the impact of missing security flags on the overall security posture of the application and provide recommendations for remediation.</reviewer>
+        </rule>
+    </category>
 </root>
 

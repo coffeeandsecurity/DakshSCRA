@@ -9,10 +9,11 @@ Author:
 ```
 
 
-> **Note:** This tool is still in its initial development phases and is undergoing active enhancements. It made its debut at the Blackhat USA 2022 Source Code Review training session from 6th to 9th August, serving as a valuable aid for automating select code review tasks tailored for students. The tool's main goal is to streamline the source code review process by automatically pinpointing areas of potential security vulnerabilities for the reviewers. 
+> **Note:** > Note: This tool is still in its initial development phases and is undergoing active enhancements. It made its debut at the Blackhat USA 2022 Source Code Review training session from 6th to 9th August, serving as a valuable aid for automating select code review tasks tailored for students. The tool's main goal is to streamline the source code review process by automatically pinpointing areas of potential security vulnerabilities for the reviewers.
+
 
 The tool currently offers the following functionalities: 
-* Options to use programming language-specific rules specific for finding areas of interests
+* Options to use platform-specific rules specific for finding areas of interests
 * Options to extend or add new rules for any new or existing languages
 * Generate a raw output both in text and HTML format for inspection
 

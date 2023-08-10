@@ -99,6 +99,22 @@
             <developer>Developers should implement proper input validation and parameterization techniques to mitigate the risk of SQL injection when using SELECT statements with ORDER BY clauses and user-provided input names.</developer>
             <reviewer>Reviewers should verify the implementation of secure coding practices and assess if additional security measures are in place to prevent SQL injection.</reviewer>
         </rule>
+        <!--<rule>
+            <name>SQL Query: Using INSERT|UPDATE|DELETE|DROP</name>
+            <regex>(SELECT|INSERT|UPDATE|DELETE|DROP)[\s\S]*?FROM[\s\S]*?</regex>
+            <rule_desc>Detects potential SQL injection vulnerabilities.</rule_desc>
+            <vuln_desc>This rule matches potential SQL injection vulnerabilities in the code. SQL injection occurs when user-supplied input is not properly sanitized or validated before being used in SQL queries. Attackers can exploit SQL injection to manipulate queries, bypass authentication, retrieve sensitive data, or modify the database.</vuln_desc>
+            <developer>Developers should use parameterized queries or prepared statements to prevent SQL injection attacks. Additionally, input validation and proper escaping of user input should be implemented to ensure that only safe and sanitized values are used in SQL queries.</developer>
+            <reviewer>Reviewers should verify whether the code implements proper measures to prevent SQL injection vulnerabilities. They should check if input validation and proper sanitization techniques, such as parameterized queries or prepared statements, are used to handle user input within SQL queries. Reviewers should assess the effectiveness of the implemented measures in mitigating SQL injection risks.</reviewer>
+        </rule>-->
+        <rule>
+            <name>SQL Query: Using INSERT, UPDATE, DELETE, or DROP</name>
+            <regex>(INSERT|UPDATE|DELETE|DROP).*\$\{[a-zA-Z0-9_]+\}.*</regex>
+            <rule_desc>This pattern would match queries containing variables in a format like ${variableName}, indicating the usage of dynamic SQL queries involving INSERT, UPDATE, DELETE, or DROP commands.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential use of dynamic SQL queries with INSERT, UPDATE, DELETE, or DROP commands, which can introduce the risk of SQL injection or unintended modifications to the database if not properly handled.</vuln_desc>
+            <developer>Developers should check for the use of dynamic queries with these commands and verify proper input handling. If detected, implement proper input validation, parameterization techniques, and use prepared statements to mitigate the risk of SQL injection or unauthorized database changes.</developer>
+            <reviewer>Reviewers should check for the presence of dynamic queries with INSERT, UPDATE, DELETE, or DROP commands and assess proper input handling and parameterization. They should verify that appropriate measures are in place to prevent SQL injection or unauthorized changes, including input validation and restrictions on executing harmful commands.</reviewer>
+        </rule>
     </category>
     <category name="Trust-boundary Validation or 3rd-Party Interactions">
         <rule>
