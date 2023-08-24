@@ -35,12 +35,12 @@ If you find any bugs, report them to d3basis.m0hanty@gmail.com.
 
 Refer to the wiki for the tool setup and usage details - https://github.com/coffeeandsecurity/DakshSCRA/wiki
 
-# HOWTO
+## Tool Setup
 
-## Pre-requisites
+### Pre-requisites
 Python3 and all the libraries listed in requirements.txt
 
-## Setting up environment to run this tool
+### Setting up environment to run this tool
 
 #### 1. Setup a virtual environment
 	$ pip install virtualenv
@@ -106,7 +106,7 @@ $ python3 dakshscra.py		// To view tool usage along with examples
 ## Reports
 The tool generates reports in three formats: HTML, PDF, and TEXT. Although the HTML and PDF reports are still being improved, they are currently in a reasonably good state. With each subsequent iteration, these reports will continue to be refined and improved even further.
 
-### Vulnerability Scanning Report
+### Scanning Report
 ###### HTML Report:
 * DakshSCRA/reports/html/report.html	
 ###### PDF Report:
