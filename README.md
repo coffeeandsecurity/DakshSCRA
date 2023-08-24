@@ -9,7 +9,17 @@ Author:
 ```
 
 
-> **Note:** > Note: This tool is still in its initial development phases and is undergoing active enhancements. It made its debut at the Blackhat USA 2022 Source Code Review training session from 6th to 9th August, serving as a valuable aid for automating select code review tasks tailored for students. The tool's main goal is to streamline the source code review process by automatically pinpointing areas of potential security vulnerabilities for the reviewers.
+> **Background:** Although this tool has progressed beyond its early stages, it has reached a functional state that is quite usable and delivers on its promised capabilities. Nevertheless, active enhancements are currently underway, and there are multiple new features and improvements expected to be added in the upcoming months.
+
+It was initially introduced during a source code review training session I conducted at Black Hat USA 2022 (August 6 - 9), where it was subtly presented to a specific audience. However, this introduction was carried out with a low-profile approach, avoiding any major announcements.
+
+While this tool was quietly published on GitHub after the 2022 training, its official public debut took place at Black Hat USA 2023 in Las Vegas.
+
+> **About Daksh SCRA** Daksh SCRA is built to enhance the efficiency of the source code review process, providing a well-structured and organized approach for code reviewers.
+
+Rather than indiscriminately flagging everything as a potential issue, Daksh SCRA promotes thoughtful analysis, urging the investigation and confirmation of potential problems. This approach mitigates the scramble to tag every potential concern as a bug, cutting back on the confusion and wasted time spent on false positives.
+
+What sets Daksh SCRA apart is its emphasis on avoiding unnecessary bug tagging. Unlike conventional methods, it advocates for thorough investigation and confirmation of potential issues before tagging them as bugs. This approach helps mitigate the issue of false positives, which often consume valuable time and resources, thereby fostering a more productive and efficient code review process.
 
 
 The tool currently offers the following functionalities: 
