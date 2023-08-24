@@ -23,7 +23,7 @@ While this tool was quietly published on GitHub after the 2022 training, its off
 ## Features and Functionalities
 
 ### Distinctive Features (Multiple World’s First)
-* Identifies Areas of Interest in Source Code: Encourage focused investigation and confirmation rather than indiscriminately labeling everything as a bug. 
+* **Identifies Areas of Interest in Source Code:** Encourage focused investigation and confirmation rather than indiscriminately labeling everything as a bug. 
 
 * Identifies Areas of Interest in File Paths (world’s first): Recognises patterns in file paths to pinpoint relevant sections for review.
 
