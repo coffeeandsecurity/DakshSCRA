@@ -69,21 +69,37 @@ def generate_report(report_data):
                 h1 {
                     color: #0066cc;
                     text-align: center;
+                    margin-top: 5px; 
+                    margin-bottom: 5px; 
                 }
                 h2 {
+                    color: #0066cc;
+                    text-align: left;
+                    margin-top: 5px; 
+                    margin-bottom: 5px;
+                }
+                h3 {
                     color: #000000;
                     margin: 5px 0;
                     text-align: left;
                 }
-                h3 {
+                .section-title {
+                    color: #000000;
+                    font-size: 1.5em;
+                    margin-top: 10px;
+                    margin-bottom: 5px;
+                }
+                .subsection-title {
                     color: #2F4F4F;
-                    margin: 5px 0;
-                    text-align: left;
+                    font-size: 1.2em;
+                    margin-top: 5px;
+                    margin-bottom: 5px;
                 }
                 p {
                     margin: 5px 0;
                 }
                 .notes {
+                    font-size: 14px;
                     background-color: #f5f5f5; /* Light gray background */
                     padding: 10px; /* Add padding around the Notes section */
                 }
@@ -101,35 +117,37 @@ def generate_report(report_data):
         </head>
         <body>
             <h1>Code Review Effort Estimation Report</h1>
-            <h2 class="center-text">Generated using Daksh SCRA</h2>
+            <h2 class="center-text">Generated Using Daksh SCRA</h2>
+            <h3 class="center-text">World's First Scientific Approach To Automated Code Review Effort Estimation</h3>
+            <br>
             <div class="notes">
                 <p>Note: This report offers approximate effort estimation figures for conducting source code reviews. 
-                These figures should be considered as guidance to formulate an estimate that satisfies all stakeholders.</p> 
-                <p>For organizations seeking code review services, this report offers benchmark figures that can be utilized to verify estimates provided by third-party companies. 
+                These figures should be considered as guidance to formulate an estimate that satisfies all stakeholders. 
+                For organizations seeking code review services, this report offers benchmark figures that can be utilized to verify estimates provided by third-party companies. 
                 Similarly, for security consulting firms, these estimated figures serve as supporting evidence for code review proposals put forth to clients.</p> 
                 <p>It's important to note that the current version of this tool focuses solely on estimating efforts for web applications. 
                 Nevertheless, as the estimation module undergoes multiple updates in the forthcoming months, support for all other types of applications will also be incorporated.</p>
             </div>
             <br>
-            <h2>Backend</h2>
+            <div class="section-title">Backend</div>
             {% for language, language_data in backend_data.items() %}
             <div class="language-section">
-                <h3>{{ language }}</h3>
+                <div class="subsection-title">{{ language }}</div>
                     <li>Total files identified: {{ language_data.totalFiles }}</li>
                     <li>Estimated efforts (days): {{ backend_days_min }} (minimum) - {{ backend_days_max }} (maximum) days</li>
             </div>
             {% endfor %}
 
-            <h2>Frontend</h2>
+            <div class="section-title">Frontend</div>
             {% for language, language_data in frontend_data.items() %}
             <div class="language-section">
-                <h3>{{ language }}</h3>
+                <div class="subsection-title">{{ language }}</div>
                     <li>Total files identified: {{ language_data.totalFiles }}</li>
                     <li>Estimated efforts (days): {{ frontend_days_min }} (minimum) - {{ frontend_days_max }} (maximum) days</li>
             </div>
             {% endfor %}
-
-            <h2>Total Efforts (for the entire code review)</h2>
+            <br>
+            <div class="section-title"><b>Total Efforts</b> (for the entire code review)</div>
             <p>Total estimated effort (days): {{ total_days_min }} (minimum) - {{ total_days_max }} (maximum) days</p>
         </body>
         </html>
@@ -171,61 +189,10 @@ def get_effort_days(file_count, tech):
 
 
 
-'''
-def get_effort_days(file_count, tech):
-    try:
-        file_count = int(file_count)
-    except ValueError:
-        raise ValueError("Invalid value for 'file_count'. It must be an integer.")
-
-    if not isinstance(tech, str) or tech.lower() not in ['backend', 'frontend']:
-        raise ValueError("Invalid value for 'tech'. It must be either 'backend' or 'frontend'.")
-
-    if tech.lower() == 'backend':
-        # Calculate estimated efforts in days for backend files based on the provided file count ranges
-        if file_count <= 10:
-            return [0.5, 1]
-        elif file_count <= 20:
-            return [1, 2]
-        elif file_count <= 40:
-            return [2, 4]
-        elif file_count <= 100:
-            return [5, 10]
-        elif file_count <= 300:
-            return [11, 20]
-        elif file_count <= 1000:
-            return [21, 40]
-        else:
-            return [41, 60]
-    
-    elif tech.lower() == 'frontend':
-        # Calculate estimated efforts in days for frontend files based on the provided file count ranges
-        if file_count <= 40:
-            return [0.5, 1]
-        elif file_count <= 100:
-            return [1, 2]
-        elif 100 < file_count < 500:
-            return [2, 4]
-        elif file_count <= 1000:
-            return [3, 4]
-        else:
-            return [4, 5]
-
-    else:
-        raise ValueError("Unexpected error occurred while calculating effort days.")
-'''
-
-
-
 
 '''
 Title : World's first Scientific approach to automated effort estimation for code review
 
-This report offers approximate effort estimation figures for conducting source code reviews. 
-These figures should be considered as guidance to formulate an estimate that satisfies all stakeholders. 
-For companies in search of code reviews, this report provides reference numbers that can be used to validate 
-estimates offered by third-party firms. Similarly, for security consulting firms, these estimated figures serve as 
-supporting evidence for code review proposals put forth to clients. 
 
 Consider following for estimation: 
 * Resources
