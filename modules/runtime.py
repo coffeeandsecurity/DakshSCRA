@@ -104,7 +104,7 @@ estimation_Fpath = Path(str(root_dir) + "/reports/html/estimation.html")
 
 author = '''
 =============================================================
-Daksh SCRA (Source Code Review Assist) - Beta Release v0.9
+Daksh SCRA (Source Code Review Assist) - Beta Release v0.10
 
 Author:     Debasis Mohanty 
             www.coffeeandsecurity.com

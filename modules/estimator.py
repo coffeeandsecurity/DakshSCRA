@@ -10,6 +10,8 @@ estimation_Fpath = runtime.estimation_Fpath
 # Assumed number of hours to review one file
 # hours_per_file = 0.25
 
+
+
 def effortEstimator(json_file_path):
     global estimation_Fpath
 
@@ -32,8 +34,8 @@ def effortEstimator(json_file_path):
     frontend_effort_days = get_effort_days(total_frontend_files, 'frontend')
 
     total_days = [0, 0]  # initialize
-    total_days[0] = backend_effort_days[0] + frontend_effort_days[0]
-    total_days[1] = backend_effort_days[1] + frontend_effort_days[1]
+    total_days[0] = backend_effort_days[0] + frontend_effort_days[0]    # minimum days
+    total_days[1] = backend_effort_days[1] + frontend_effort_days[1]    # maximum days
 
     # A dictionary to encapsulate the report data
     report_data = {
@@ -53,6 +55,7 @@ def effortEstimator(json_file_path):
 
 
 def generate_report(report_data):
+
     # Prepare data for rendering the Jinja2 template
     template_html = '''
         <!DOCTYPE html>
@@ -80,24 +83,40 @@ def generate_report(report_data):
                 p {
                     margin: 5px 0;
                 }
+                .notes {
+                    background-color: #f5f5f5; /* Light gray background */
+                    padding: 10px; /* Add padding around the Notes section */
+                }
                 .language-section {
                     margin-left: 20px;
                 }
                 .center-text {
                     text-align: center;
                 }
+                li {
+                margin-left: 20px; /* Adjust the indentation as needed */
+                padding: 3px 0; /* Add padding before and after the text */
+                }
             </style>
         </head>
         <body>
             <h1>Code Review Effort Estimation Report</h1>
             <h2 class="center-text">Generated using Daksh SCRA</h2>
-
+            <div class="notes">
+                <p>Note: This report offers approximate effort estimation figures for conducting source code reviews. 
+                These figures should be considered as guidance to formulate an estimate that satisfies all stakeholders.</p> 
+                <p>For organizations seeking code review services, this report offers benchmark figures that can be utilized to verify estimates provided by third-party companies. 
+                Similarly, for security consulting firms, these estimated figures serve as supporting evidence for code review proposals put forth to clients.</p> 
+                <p>It's important to note that the current version of this tool focuses solely on estimating efforts for web applications. 
+                Nevertheless, as the estimation module undergoes multiple updates in the forthcoming months, support for all other types of applications will also be incorporated.</p>
+            </div>
+            <br>
             <h2>Backend</h2>
             {% for language, language_data in backend_data.items() %}
             <div class="language-section">
                 <h3>{{ language }}</h3>
-                <p>Total files identified: {{ language_data.totalFiles }}</p>
-                <p>Estimated efforts (days): {{ backend_days_min }} (minimum) - {{ backend_days_max }} (maximum) days</p>
+                    <li>Total files identified: {{ language_data.totalFiles }}</li>
+                    <li>Estimated efforts (days): {{ backend_days_min }} (minimum) - {{ backend_days_max }} (maximum) days</li>
             </div>
             {% endfor %}
 
@@ -105,8 +124,8 @@ def generate_report(report_data):
             {% for language, language_data in frontend_data.items() %}
             <div class="language-section">
                 <h3>{{ language }}</h3>
-                <p>Total files identified: {{ language_data.totalFiles }}</p>
-                <p>Estimated efforts (days): {{ frontend_days_min }} (minimum) - {{ frontend_days_max }} (maximum) days</p>
+                    <li>Total files identified: {{ language_data.totalFiles }}</li>
+                    <li>Estimated efforts (days): {{ frontend_days_min }} (minimum) - {{ frontend_days_max }} (maximum) days</li>
             </div>
             {% endfor %}
 
@@ -202,9 +221,11 @@ def get_effort_days(file_count, tech):
 '''
 Title : World's first Scientific approach to automated effort estimation for code review
 
-This report is support to be a guidance to come up with an estimate that works for all stake holders.
-If you are a company seeking for code review then this report gets you some number to validate
-If you are a consulting firm then you have some mechanism to substantiate
+This report offers approximate effort estimation figures for conducting source code reviews. 
+These figures should be considered as guidance to formulate an estimate that satisfies all stakeholders. 
+For companies in search of code reviews, this report provides reference numbers that can be used to validate 
+estimates offered by third-party firms. Similarly, for security consulting firms, these estimated figures serve as 
+supporting evidence for code review proposals put forth to clients. 
 
 Consider following for estimation: 
 * Resources
