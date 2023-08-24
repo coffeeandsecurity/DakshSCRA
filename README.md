@@ -3,9 +3,9 @@
 
 ```
 Author: 	
-	Debasis Mohanty (d3basis.m0hanty@gmail.com)
-	Twitter: @coffeensecurity
-	www.coffeeandsecurity.com
+- Debasis Mohanty (d3basis.m0hanty@gmail.com)
+- Twitter: @coffeensecurity
+- www.coffeeandsecurity.com
 ```
 
 ## About Daksh SCRA
