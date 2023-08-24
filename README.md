@@ -23,6 +23,7 @@ Rather than indiscriminately flagging everything as a potential issue, Daksh SCR
 
 What sets Daksh SCRA apart is its emphasis on avoiding unnecessary bug tagging. Unlike conventional methods, it advocates for thorough investigation and confirmation of potential issues before tagging them as bugs. This approach helps mitigate the issue of false positives, which often consume valuable time and resources, thereby fostering a more productive and efficient code review process.
 
+> Although this tool has progressed beyond its early stages, it has reached a functional state that is quite usable and delivers on its promised capabilities. Nevertheless, active enhancements are currently underway, and there are multiple new features and improvements expected to be added in the upcoming months.
 
 The tool currently offers the following functionalities: 
 * Options to use platform-specific rules specific for finding areas of interests
