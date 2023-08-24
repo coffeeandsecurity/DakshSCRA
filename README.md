@@ -21,6 +21,20 @@ Daksh SCRA was initially introduced during a source code review training session
 While this tool was quietly published on GitHub after the 2022 training, its official public debut took place at Black Hat USA 2023 in Las Vegas.
 
 ## Features and Functionalities
+
+### Distinctive Features
+* Identifies Areas of Interest in Source Code
+Encourage focused investigation and confirmation rather than indiscriminately labeling everything as a bug. 
+
+* Identifies Areas of Interest in File Paths (world’s first)
+Recognises patterns in file paths to pinpoint relevant sections for review.
+
+* Software-Level Reconnaissance to Identify Technologies Utilised
+Identifies project technologies, enabling code reviewers to conduct precise scans with appropriate rules. 
+
+* Automated Scientific Effort Estimation for Code Review (world’s first)
+Providing a measurable approach for estimating efforts required for a code review process.
+
 > Although this tool has progressed beyond its early stages, it has reached a functional state that is quite usable and delivers on its promised capabilities. Nevertheless, active enhancements are currently underway, and there are multiple new features and improvements expected to be added in the upcoming months.
 
 The tool currently offers the following functionalities: 
