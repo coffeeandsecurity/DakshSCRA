@@ -22,7 +22,7 @@ While this tool was quietly published on GitHub after the 2022 training, its off
 
 ## Features and Functionalities
 
-### Distinctive Features
+### Distinctive Features (Multiple World’s First)
 * Identifies Areas of Interest in Source Code: Encourage focused investigation and confirmation rather than indiscriminately labeling everything as a bug. 
 
 * Identifies Areas of Interest in File Paths (world’s first): Recognises patterns in file paths to pinpoint relevant sections for review.
@@ -33,17 +33,17 @@ While this tool was quietly published on GitHub after the 2022 training, its off
 
 > Although this tool has progressed beyond its early stages, it has reached a functional state that is quite usable and delivers on its promised capabilities. Nevertheless, active enhancements are currently underway, and there are multiple new features and improvements expected to be added in the upcoming months.
 
-The tool currently offers the following functionalities: 
+Additionally, the tool also offers the following functionalities: 
 * Options to use platform-specific rules specific for finding areas of interests
 * Options to extend or add new rules for any new or existing languages
-* Generate a raw output both in text and HTML format for inspection
+* Generates report in text, HTML and PDF format for inspection
+
+
+Refer to the wiki for the tool setup and usage details - https://github.com/coffeeandsecurity/DakshSCRA/wiki
 
 Feel free to contribute towards updating or adding new rules and future development.
 
 If you find any bugs, report them to d3basis.m0hanty@gmail.com.
-
-
-Refer to the wiki for the tool setup and usage details - https://github.com/coffeeandsecurity/DakshSCRA/wiki
 
 ## Tool Setup
 
