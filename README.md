@@ -106,7 +106,7 @@ $ python3 dakshscra.py		// To view tool usage along with examples
 ## Reports
 The tool generates reports in three formats: HTML, PDF, and TEXT. Although the HTML and PDF reports are still being improved, they are currently in a reasonably good state. With each subsequent iteration, these reports will continue to be refined and improved even further.
 
-### Scanning Report
+### Scanning (Areas of Security Concerns) Report
 ###### HTML Report:
 * DakshSCRA/reports/html/report.html	
 ###### PDF Report:
