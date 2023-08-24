@@ -33,6 +33,8 @@ Feel free to contribute towards updating or adding new rules and future developm
 If you find any bugs, report them to d3basis.m0hanty@gmail.com.
 
 
+Refer to the wiki for the tool setup and usage details - https://github.com/coffeeandsecurity/DakshSCRA/wiki
+
 # HOWTO
 
 ## Pre-requisites
