@@ -15,13 +15,13 @@ Rather than indiscriminately flagging everything as a potential issue, Daksh SCR
 
 What sets Daksh SCRA apart is its emphasis on avoiding unnecessary bug tagging. Unlike conventional methods, it advocates for thorough investigation and confirmation of potential issues before tagging them as bugs. This approach helps mitigate the issue of false positives, which often consume valuable time and resources, thereby fostering a more productive and efficient code review process.
 
-## Debut:
+## Debut
 Daksh SCRA was initially introduced during a source code review training session I conducted at Black Hat USA 2022 (August 6 - 9), where it was subtly presented to a specific audience. However, this introduction was carried out with a low-profile approach, avoiding any major announcements.
 
 While this tool was quietly published on GitHub after the 2022 training, its official public debut took place at Black Hat USA 2023 in Las Vegas.
 
 ## Features and Functionalities
->> Although this tool has progressed beyond its early stages, it has reached a functional state that is quite usable and delivers on its promised capabilities. Nevertheless, active enhancements are currently underway, and there are multiple new features and improvements expected to be added in the upcoming months.
+> Although this tool has progressed beyond its early stages, it has reached a functional state that is quite usable and delivers on its promised capabilities. Nevertheless, active enhancements are currently underway, and there are multiple new features and improvements expected to be added in the upcoming months.
 
 The tool currently offers the following functionalities: 
 * Options to use platform-specific rules specific for finding areas of interests
