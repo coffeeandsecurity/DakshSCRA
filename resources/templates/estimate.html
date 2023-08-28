@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Code Review Effort Estimation Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            color: #0066cc;
+            text-align: center;
+            margin-top: 5px; 
+            margin-bottom: 5px; 
+        }
+        h2 {
+            color: #0066cc;
+            text-align: left;
+            margin-top: 5px; 
+            margin-bottom: 5px;
+        }
+        h3 {
+            color: #000000;
+            margin: 5px 0;
+            text-align: left;
+        }
+        .section-title {
+            color: #000000;
+            font-size: 1.5em;
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+        .subsection-title {
+            color: #2F4F4F;
+            font-size: 1.2em;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+        p {
+            margin: 5px 0;
+        }
+        .notes {
+            font-size: 14px;
+            background-color: #f5f5f5; /* Light gray background */
+            padding: 10px; /* Add padding around the Notes section */
+        }
+        .todo-notes {
+            font-size: 14px;
+            background-color: #f5f5f5;
+            padding: 10px;
+        }
+        .language-section {
+            margin-left: 20px;
+        }
+        .center-text {
+            text-align: center;
+        }
+        li {
+            margin-left: 20px; /* Adjust the indentation as needed */
+            padding: 3px 0; /* Add padding before and after the text */
+        }
+    </style>
+</head>
+<body>
+    <h1>Code Review Effort Estimation Report</h1>
+    <h2 class="center-text">Generated Using Daksh SCRA</h2>
+    <h3 class="center-text">World's First Scientific Approach To Automated Code Review Effort Estimation</h3>
+    <br>
+    <div class="notes">
+        <p>Note: This report offers approximate effort estimation figures for conducting source code reviews. 
+        These figures should be considered as guidance to formulate an estimate that satisfies all stakeholders. 
+        For organizations seeking code review services, this report offers benchmark figures that can be utilized to verify estimates provided by third-party companies. 
+        Similarly, for security consulting firms, these estimated figures serve as supporting evidence for code review proposals put forth to clients.</p> 
+        <p>It's important to note that the current version of this tool focuses solely on estimating efforts for web applications. 
+        Nevertheless, as the estimation module undergoes multiple updates in the forthcoming months, support for all other types of applications will also be incorporated.</p>
+    </div>
+    <br>
+    <div class="section-title">Backend</div>
+    {% for info in backend_data %}
+    <div class="language-section">
+        <div class="subsection-title">{{ info['language'] }}</div>
+            <li>Total files identified: {{ info['total_files'] }}</li>
+            <li>Estimated efforts (days): {{ info['effort_days_min'] }} (minimum) - {{ info['effort_days_max'] }} (maximum) days</li>
+    </div>
+    {% endfor %}
+
+    <div class="section-title">Frontend</div>
+    {% for info in frontend_data %}
+    <div class="language-section">
+        <div class="subsection-title">{{ info['language'] }}</div>
+            <li>Total files identified: {{ info['total_files'] }}</li>
+            <li>Estimated efforts (days): {{ info['effort_days_min'] }} (minimum) - {{ info['effort_days_max'] }} (maximum) days</li>
+    </div>
+    {% endfor %}
+    <br>
+    <div class="section-title"><b>Total Efforts</b> (for the entire code review)</div>
+    <p>Total estimated effort (days): {{ total_days_min }} (minimum) - {{ total_days_max }} (maximum) days</p>
+    <br>
+    <br>
+
+    <!-- Adding the TODO section -->
+    <div class="todo-notes">
+        <p>
+            Note: The effort estimator module is currently in its initial developmental phase and is actively being worked on. 
+            The following list encompasses the areas that will be taken into account for the purpose of effort estimation. 
+            The estimation report will encompass a wide spectrum of estimates contingent on several factors enumerated below. 
+            This approach ensures that users can refer to the most appropriate estimate available.
+        </p>
+        <p>
+            Nevertheless, it's important to note that the subsequent aspects have not been integrated yet and will gradually 
+            be incorporated over a series of future release iterations.
+        </p>
+        <ul>
+            <li>Factors to be taken into account for estimation include:</li>
+            <ul>
+                <li>Total resources</li>
+                <li>Usage of automated tools</li>
+                <li>Total files and corresponding lines of codes</li>
+                <li>Functionalities (Total functions)</li>
+                <li>Workflow and UseCases</li>
+                <li>Routes</li>
+                <li>Framework</li>
+                <li>Technology</li>
+                <li>Reports:
+                    <ul>
+                        <li>Manually prepared</li>
+                        <li>Automated report generation</li>
+                    </ul>
+                </li>
+            </ul>
+        </ul>
+        <ul>
+            <li>Estimation will include the following:</li>
+            <ul>
+                <li>Targeted</li>
+                <li>Thorough and Comprehensive</li>
+                <li>Manual Only</li>
+                <li>Hybrid Scan</li>
+                <li>Ball Park - High and Low</li>
+            </ul>
+        </ul>
+        <ul>
+            <li>Estimation using config File:</li>
+            <ul>
+                <li>Organisation can provide details such as:</li>
+                <ul>
+                    <li>Total Functions/Methods (Add User, Delete User)</li>
+                    <li>Total Workflows (User Registration, Password Reset)</li>
+                    <li>Technologies (C#,Java etc)</li>
+                    <li>Framework</li>
+                </ul>
+            </ul>
+        </ul>
+    </div>
+
+</body>
+</html>

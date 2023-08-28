@@ -93,6 +93,9 @@ htmlreport_Fpath = Path(str(root_dir) + "/reports/html/report.html")
 # HTML Report template path
 htmltemplates_dir  = Path(str(root_dir) + "/resources/templates/")
 
+# Effort estimation - Report template
+estimation_template = Path(str(root_dir) + "/resources/templates/estimate.html")
+
 # Effort estimation - HTML Report file path
 estimation_Fpath = Path(str(root_dir) + "/reports/html/estimation.html")
 
