@@ -24,29 +24,66 @@ def effortEstimator(json_file_path):
     frontend_data = data.get("Frontend", {})
 
     # Calculate total frontend and backend files count
-    total_frontend_files = sum(language_data.get("totalFiles", 0) for language_data in frontend_data.values())
-    total_backend_files = sum(language_data.get("totalFiles", 0) for language_data in backend_data.values())
+    total_frontend_min = 0
+    total_frontend_max = 0
+    total_backend_min = 0
+    total_backend_max = 0
 
-    # Calculate estimated efforts in days for backend files based on the provided file count ranges
-    backend_effort_days = get_effort_days(total_backend_files, 'backend')
+    frontend_info = []  # List to store frontend language information
+    backend_info = []  # List to store backend language information
 
-    # Calculate estimated efforts in days for frontend files based on the provided file count ranges
-    frontend_effort_days = get_effort_days(total_frontend_files, 'frontend')
+    for language, language_data in frontend_data.items():
+        total_files = language_data.get("totalFiles", 0)
+        # Calculate estimated efforts in days for frontend files based on the file count
+        frontend_effort_days = get_effort_days(total_files, 'frontend')
 
-    total_days = [0, 0]  # initialize
-    total_days[0] = backend_effort_days[0] + frontend_effort_days[0]    # minimum days
-    total_days[1] = backend_effort_days[1] + frontend_effort_days[1]    # maximum days
+        total_frontend_min += frontend_effort_days[0]  # minimum days
+        total_frontend_max += frontend_effort_days[1]  # maximum days
+
+        frontend_info.append({
+            'language': language,
+            'total_files': total_files,
+            'effort_days_min': frontend_effort_days[0],
+            'effort_days_max': frontend_effort_days[1]
+        })
+
+
+    for language, language_data in backend_data.items():
+        total_files = language_data.get("totalFiles", 0)
+        # Calculate estimated efforts in days for backend files based on the file count
+        backend_effort_days = get_effort_days(total_files, 'backend')
+
+        total_backend_min += backend_effort_days[0]  # minimum days
+        total_backend_max += backend_effort_days[1]  # maximum days
+
+        backend_info.append({
+            'language': language,
+            'total_files': total_files,
+            'effort_days_min': backend_effort_days[0],
+            'effort_days_max': backend_effort_days[1]
+        })
+
+    '''
+    # Print the stored language information
+    for info in backend_language_info:
+        print(f"Backend Language: {info['language']}")
+        print(f"Backend Total Files: {info['total_files']}")
+        print(f"    - Total Efforts (min): {info['effort_days_min']} days")
+        print(f"    - Total Efforts (max): {info['effort_days_max']} days")
+        
+    print(f"Total Backend Efforts (min): {total_backend_min} days")
+    print(f"Total Backend Efforts (max): {total_backend_max} days")
+    '''
+
+    total_days_min = total_frontend_min + total_backend_min
+    total_days_max = total_frontend_max + total_backend_max
 
     # A dictionary to encapsulate the report data
     report_data = {
-        'backend_data': backend_data,
-        'frontend_data': frontend_data,
-        'backend_days_min': backend_effort_days[0],
-        'backend_days_max': backend_effort_days[1],
-        'frontend_days_min': frontend_effort_days[0],
-        'frontend_days_max': frontend_effort_days[1],
-        'total_days_min': total_days[0],
-        'total_days_max': total_days[1]
+        'backend_data': backend_info,
+        'frontend_data': frontend_info,
+        'total_days_min': total_days_min,
+        'total_days_max': total_days_max
     }
 
     # Generate HTML report
@@ -130,20 +167,20 @@ def generate_report(report_data):
             </div>
             <br>
             <div class="section-title">Backend</div>
-            {% for language, language_data in backend_data.items() %}
+            {% for info in backend_data %}
             <div class="language-section">
-                <div class="subsection-title">{{ language }}</div>
-                    <li>Total files identified: {{ language_data.totalFiles }}</li>
-                    <li>Estimated efforts (days): {{ backend_days_min }} (minimum) - {{ backend_days_max }} (maximum) days</li>
+                <div class="subsection-title">{{ info['language'] }}</div>
+                    <li>Total files identified: {{ info['total_files'] }}</li>
+                    <li>Estimated efforts (days): {{ info['effort_days_min'] }} (minimum) - {{ info['effort_days_max'] }} (maximum) days</li>
             </div>
             {% endfor %}
 
             <div class="section-title">Frontend</div>
-            {% for language, language_data in frontend_data.items() %}
+            {% for info in frontend_data %}
             <div class="language-section">
-                <div class="subsection-title">{{ language }}</div>
-                    <li>Total files identified: {{ language_data.totalFiles }}</li>
-                    <li>Estimated efforts (days): {{ frontend_days_min }} (minimum) - {{ frontend_days_max }} (maximum) days</li>
+                <div class="subsection-title">{{ info['language'] }}</div>
+                    <li>Total files identified: {{ info['total_files'] }}</li>
+                    <li>Estimated efforts (days): {{ info['effort_days_min'] }} (minimum) - {{ info['effort_days_max'] }} (maximum) days</li>
             </div>
             {% endfor %}
             <br>
@@ -182,10 +219,16 @@ def get_effort_days(file_count, tech):
     tech_data = config_data['estimation_days_ranges'][f'{tech}_data']
 
     for data in tech_data:
-        if data['files_range'][0] <= file_count <= data['files_range'][1]:
+        lower_bound, upper_bound = data['files_range']
+        
+        if lower_bound <= file_count <= (upper_bound if upper_bound != 999999 else 999999):
+            if upper_bound == 999999:
+                print("Maximum range exceeded!")
             return data['effort_range']
-
+        
     raise ValueError(f"No effort range found for file count {file_count} and tech {tech}.")
+
+
 
 
 

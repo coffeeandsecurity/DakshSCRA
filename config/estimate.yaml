@@ -16,8 +16,14 @@ estimation_days_ranges:
       effort_range: [11, 20]
     - files_range: [301, 1000]
       effort_range: [21, 40]
-    - files_range: [1001, null]  # null indicates no upper bound
+    - files_range: [1001, 10000]
       effort_range: [41, 60]
+    - files_range: [10001, 30000]
+      effort_range: [61, 90]
+    - files_range: [30001, 50000]
+      effort_range: [91, 180]
+    - files_range: [50001, 999999]  # Range with '999999' upper bound indicates maximum limit exceeded
+      effort_range: [181, 270]
 
   frontend_data:
     - files_range: [1, 40]
@@ -27,9 +33,11 @@ estimation_days_ranges:
     - files_range: [101, 500]
       effort_range: [2, 4]
     - files_range: [501, 1000]
-      effort_range: [3, 4]
-    - files_range: [1001, null]  # null indicates no upper bound
       effort_range: [4, 5]
+    - files_range: [1001, 10000]
+      effort_range: [5, 6]
+    - files_range: [10001, 999999]  # Range with '999999' upper bound indicates maximum limit exceeded
+      effort_range: [6, 10]
 
 report_gen_days_ranges:
   - findings: [1, 10]
