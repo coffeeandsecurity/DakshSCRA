@@ -19,7 +19,30 @@
         <path>/javascript/javascript.xml</path>
         <ftypes>*.js, *.ts</ftypes>
     </rule>
-    <!--<rule>
+    <rule>
+        <platform>python</platform>
+        <path>/python/python.xml</path>
+        <ftypes>*.py, *.yml, *.yaml, *.config, *.xml</ftypes>
+    </rule>
+    <rule>
+        <platform>common</platform>
+        <path>/common.xml</path>
+        <ftypes>*.sql, *.ini, *.txt, *.conf, *.config, *.yml, *.yaml, *.properties, *.xml, *.json</ftypes>
+    </rule>
+    <rule>
+        <platform>custom</platform>
+        <path>/custom/custom.xml</path>
+        <ftypes>*.java, *.jsp, *.js, *.php, *.sql, *.html, *.conf, *.ini, *.txt, *.config, *.cache, *.xsdconfig, *.xml, *.ppk, *.pub, *.key, *.properties, *.lock, *.json</ftypes>
+    </rule>
+    <rule>
+        <platform>allfiles</platform>
+        <path>/common.xml</path>
+        <ftypes>*.*</ftypes>
+    </rule>
+</root>
+
+
+<!--<rule>
         <platform>angular</platform>
         <path>/javascript/angular.xml</path>
         <ftypes>*.js, *.ts, *.html, *.json</ftypes>
@@ -28,11 +51,6 @@
         <platform>nodejs</platform>
         <path>/javascript/nodejs.xml</path>
         <ftypes>*.js, *.ts, *.html, *.json, *.ejs, *.yaml, *.yml</ftypes>
-    </rule>
-    <rule>
-        <platform>python</platform>
-        <path>/python/python.xml</path>
-        <ftypes>*.py, *.conf, *.ini, *.txt, *.config, *.xml</ftypes>
     </rule>
     <rule>
         <platform>ruby</platform>
@@ -68,19 +86,3 @@
                 <ftypes>*.psql, *.dbf, *.sqr, *.sql, *.gdb, *.rbf, *.db, *.spf, *.lis, *.mkd, *.sqs</ftypes>
             </dbtype>
     </rule>-->
-    <rule>
-        <platform>common</platform>
-        <path>/common.xml</path>
-        <ftypes>*.sql, *.ini, *.txt, *.conf, *.config, *.yml, *.yaml, *.properties, *.xml, *.json</ftypes>
-    </rule>
-    <rule>
-        <platform>custom</platform>
-        <path>/custom/custom.xml</path>
-        <ftypes>*.java, *.jsp, *.js, *.php, *.sql, *.html, *.conf, *.ini, *.txt, *.config, *.cache, *.xsdconfig, *.xml, *.ppk, *.pub, *.key, *.properties, *.lock, *.json</ftypes>
-    </rule>
-    <rule>
-        <platform>allfiles</platform>
-        <path>/common.xml</path>
-        <ftypes>*.*</ftypes>
-    </rule>
-</root>

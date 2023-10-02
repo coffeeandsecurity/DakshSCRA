@@ -78,6 +78,7 @@ elif results.rules_filetypes != None:
 # Priority #1 - If '-recon' option used but no rule file is specified then only recon must be performed
 if (results.recon or results.estimate) and results.target_dir and not results.rule_file:
     print(runtime.author)
+
     # Check if the directory path is valid
     if path.isdir(results.target_dir) == False: 
         print("\nInvalid target directory :" + results.target_dir + "\n")
