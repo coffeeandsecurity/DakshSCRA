@@ -172,6 +172,14 @@
             <developer>Developers should regularly review and address TODO comments to ensure the completion of tasks, proper code functionality, and security of the application.</developer>
             <reviewer>Reviewers should check for the presence of TODO comments and verify if they have been properly addressed during code reviews and inspections.</reviewer>
         </rule>
+        <rule>
+            <name>Monkey Patched Code</name>
+            <regex>(?i)(monkey_patch|patched_code|custom_patch)[\s\S]*?\(\s*\*?\w+\s*\*?\)</regex>
+            <rule_desc>Detects the presence of monkey patched code in a project.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the presence of monkey patched code in the project. While monkey patches themselves may not inherently contain security issues, they introduce potential maintenance challenges and risks. Ensure that these patches are well-documented, periodically reviewed for necessity, and that they do not introduce security vulnerabilities or regressions.</vuln_desc>
+            <developer>Developers should carefully review and document any monkey patched code in the project. Ensure that the patches are correctly applied and do not introduce compatibility issues or security vulnerabilities. Consider alternatives to monkey patching when possible to maintain code stability and security.</developer>
+            <reviewer>Reviewers should verify the presence of monkey patched code in the project and assess its impact on code stability and security. Particular attention should be paid to patches affecting security-critical components like authentication, authorization, or database queries.</reviewer>
+        </rule>
     </category>
     <category name="Cryptographic Issues">
         <rule>

@@ -2,88 +2,145 @@
     <rule>
         <name>Authentication</name>
         <regex>(?i)(Login|Signin|Authentication|Authenticated|Oauth|JWT)</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects file paths related to authentication functionality.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of authentication-related code files in the project.</vuln_desc>
+        <developer>Developers should review and document authentication-related code, ensuring they are correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and correctness of authentication-related code.</reviewer>
     </rule>
     <rule>
         <name>Admin Section</name>
         <regex>(?i)(Admin|Administrator)</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects file paths related to admin section functionality.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of admin section-related code paths in the project.</vuln_desc>
+        <developer>Developers should review and document admin section-related code paths, ensuring they are correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and correctness of admin section-related code paths.</reviewer>
     </rule>
     <rule>
         <name>User Section</name>
         <regex>(?i)(user)</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects file paths related to user section functionality.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of user section-related code paths in the project.</vuln_desc>
+        <developer>Developers should review and document user section-related code paths, ensuring they are correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and correctness of user section-related code paths.</reviewer>
     </rule>
     <rule>
         <name>Password Related Functionality</name>
         <regex>(?i)(Password|password|pwd|passwd|forgotpassword)</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects file paths related to password-related functionality.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of password-related code paths in the project.</vuln_desc>
+        <developer>Developers should review and document password-related code paths, ensuring they are correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and correctness of password-related code paths.</reviewer>
     </rule>
     <rule>
         <name>Security Functionality</name>
         <regex>(?i)security</regex>
-        <description>Security Functionality</description>
+        <rule_desc>Detects file paths related to security functionality.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of security-related code paths in the project.</vuln_desc>
+        <developer>Developers should review and document security-related code paths, ensuring they are correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and correctness of security-related code paths.</reviewer>
     </rule>
     <rule>
         <name>Permission Management or Handling</name>
         <regex>(?i)Permission</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects file paths related to permission management or handling functionality.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of permission management or handling-related code paths in the project.</vuln_desc>
+        <developer>Developers should review and document permission management or handling-related code paths, ensuring they are correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and correctness of permission management or handling-related code paths.</reviewer>
     </rule>
     <rule>
         <name>API</name>
         <regex>(?i)(api)</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects file paths related to API functionality.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of API-related code paths in the project.</vuln_desc>
+        <developer>Developers should review and document API-related code paths, ensuring they are correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and correctness of API-related code paths.</reviewer>
     </rule>
     <rule>
         <name>Libraries | Extensions | Plugins</name>
         <regex>(?i)(Libraries|Extension|Plugin)</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects file paths related to libraries, extensions, or plugins.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of code paths related to libraries, extensions, or plugins in the project.</vuln_desc>
+        <developer>Developers should review and document code paths related to libraries, extensions, or plugins, ensuring they are correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and correctness of code paths related to libraries, extensions, or plugins.</reviewer>
+    </rule>
+    <rule>
+        <name>Monkey Patched Code Files</name>
+        <regex>(?i)(?:monkey_patch|patched_code|custom_patch)</regex>
+        <rule_desc>Detects the presence of monkey patched code in a project.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of monkey patched code in the project. While monkey patches themselves may not inherently contain security issues, they introduce potential maintenance challenges and risks. Ensure that these patches are well-documented, periodically reviewed for necessity, and that they do not introduce security vulnerabilities or regressions.</vuln_desc>
+        <developer>Developers should carefully review and document any monkey patched code in the project. Ensure that the patches are correctly applied and do not introduce compatibility issues or security vulnerabilities. Consider alternatives to monkey patching when possible to maintain code stability and security.</developer>
+        <reviewer>Reviewers should verify the presence of monkey patched code in the project and assess its impact on code stability and security. Particular attention should be paid to patches affecting security-critical components like authentication, authorization, or database queries.</reviewer>
     </rule>
     <rule>
         <name>CAPTCHA</name>
         <regex>(?i)(CAPTCHA)</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects file paths related to CAPTCHA functionality.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of code paths related to CAPTCHA functionality in the project.</vuln_desc>
+        <developer>Developers should review and document code paths related to CAPTCHA functionality, ensuring they are correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and correctness of code paths related to CAPTCHA functionality.</reviewer>
     </rule>
     <rule>
         <name>File Upload</name>
         <regex>(?i)Upload</regex>
-        <description>File Upload</description>
+        <rule_desc>Detects file paths related to file upload functionality.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of code paths related to file upload functionality in the project.</vuln_desc>
+        <developer>Developers should review and document code paths related to file upload functionality, ensuring they are correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and correctness of code paths related to file upload functionality.</reviewer>
     </rule>
     <rule>
         <name>Payment Functionality</name>
         <regex>(?i)(payment|pay)</regex>
-        <description>Payment related functionality</description>
+        <rule_desc>Detects file paths related to payment functionality.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of code paths related to payment functionality in the project.</vuln_desc>
+        <developer>Developers should review and document code paths related to payment functionality, ensuring they are correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and correctness of code paths related to payment functionality.</reviewer>
     </rule>
     <rule>
         <name>Purchases | Ordering</name>
         <regex>(?i)(purchase|order|cart)</regex>
-        <description>Purchasing / Ordering functionality</description>
+        <rule_desc>Detects file paths related to purchasing or ordering functionality.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of code paths related to purchasing or ordering functionality in the project.</vuln_desc>
+        <developer>Developers should review and document code paths related to purchasing or ordering functionality, ensuring they are correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and correctness of code paths related to purchasing or ordering functionality.</reviewer>
     </rule>
     <rule>
         <name>Models</name>
         <regex>(?i)\/(Models)\/</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects file paths related to models.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of code paths related to models in the project.</vuln_desc>
+        <developer>Developers should review and document code paths related to models, ensuring they are correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and correctness of code paths related to models.</reviewer>
     </rule>
     <rule>
         <name>Views</name>
         <regex>(?i)\/(Views|View)\/</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects file paths related to views.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of code paths related to views in the project.</vuln_desc>
+        <developer>Developers should review and document code paths related to views, ensuring they are correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and correctness of code paths related to views.</reviewer>
     </rule>
     <rule>
         <name>ViewModel</name>
         <regex>(?i)\/(ViewModel)\/</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects file paths related to view models.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of code paths related to view models in the project.</vuln_desc>
+        <developer>Developers should review and document code paths related to view models, ensuring they are correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and correctness of code paths related to view models.</reviewer>
     </rule>
     <rule>
         <name>Controllers</name>
         <regex>(?i)\/(Controllers|Controller)\/</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects file paths related to controllers.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of code paths related to controllers in the project.</vuln_desc>
+        <developer>Developers should review and document code paths related to controllers, ensuring they are correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and correctness of code paths related to controllers.</reviewer>
     </rule>
     <rule>
         <name>Presenter</name>
         <regex>(?i)\/(Presenter)\/</regex>
-        <description>Detailed description goes here</description>
+        <rule_desc>Detects file paths related to presenters.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of code paths related to presenters in the project.</vuln_desc>
+        <developer>Developers should review and document code paths related to presenters, ensuring they are correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and correctness of code paths related to presenters.</reviewer>
     </rule>
 </root>
-
-

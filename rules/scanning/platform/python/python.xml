@@ -1,6 +1,30 @@
 <root>
     <category name="Untrusted Input Handling or Injection Flaws">
         <rule>
+            <name>Untrusted Inputs: request.GET</name>
+            <regex>request\.GET</regex>
+            <rule_desc>Detects the usage of request.GET, which may contain untrusted inputs.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates a potential vulnerability related to using user input from request.GET without proper validation and sanitization. Attackers can manipulate URL parameters to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks (SQL, OS, or LDAP), cross-site scripting (XSS), or unauthorized access to sensitive information.</vuln_desc>
+            <developer>Developers should carefully validate and sanitize user input received from request.GET before using it in any sensitive operations. They should implement strong input validation, ensuring that only expected and sanitized values are accepted from URL parameters. Additionally, developers should be aware of the risks associated with using user-supplied data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
+            <reviewer>Reviewers should check for appropriate input handling for request.GET. They should assess if developers have implemented proper input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. Reviewers should also verify the usage of output encoding and protection against injection attacks to ensure the secure handling of user input received through URL parameters.</reviewer>
+        </rule>
+        <rule>
+            <name>Untrusted Inputs: request.POST</name>
+            <regex>request\.POST</regex>
+            <rule_desc>Detects the usage of request.POST, which may contain untrusted inputs.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates a potential vulnerability related to using user input from request.POST without proper validation and sanitization. Attackers can manipulate form data to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks (SQL, OS, or LDAP), cross-site scripting (XSS), or unauthorized access to sensitive information.</vuln_desc>
+            <developer>Developers should carefully validate and sanitize user input received from request.POST before using it in any sensitive operations. They should implement strong input validation, ensuring that only expected and sanitized values are accepted from form submissions. Additionally, developers should be aware of the risks associated with using user-supplied data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
+            <reviewer>Reviewers should check for appropriate input handling for request.POST. They should assess if developers have implemented proper input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. Reviewers should also verify the usage of output encoding and protection against injection attacks to ensure the secure handling of user input received through form submissions.</reviewer>
+        </rule>
+        <rule>
+            <name>Untrusted Inputs: Request Usage with require_GET or require_POST Decorator</name>
+            <regex>@require_(GET|POST)[\s\S]*?def\s+(\w+)\(.*?request.*?:</regex>
+            <rule_desc>Detects instances where either the require_GET or require_POST decorator is used and the request object is accessed in the view function.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential use of the require_GET or require_POST decorator in conjunction with the request object. This may suggest that the view function expects specific HTTP request methods and should handle them accordingly.</vuln_desc>
+            <developer>Developers should ensure that view functions decorated with require_GET or require_POST handle the respective HTTP request methods correctly and securely. It's essential to validate user input and perform necessary security checks when using the request object.</developer>
+            <reviewer>Reviewers should verify that view functions decorated with require_GET or require_POST correctly handle the associated HTTP request methods and that the request object is used securely to prevent vulnerabilities.</reviewer>
+        </rule>
+        <rule>
             <name>Untrusted Inputs: user_input_variable</name>
             <regex>user_input_variable</regex>
             <rule_desc>Detects the usage of user_input_variable, which can introduce untrusted inputs into the code.</rule_desc>
@@ -27,6 +51,7 @@
         <rule>
             <name>Network Calls: urllib2 and socket</name>
             <regex>(?i)(urllib2|socket)</regex>
+                <exclude>(?i).*import\s.*</exclude>
             <rule_desc>Detects the usage of network-related modules urllib2 and socket in Python code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a potential security concern related to network operations. The use of urllib2 and socket modules can introduce security risks if not handled securely. Developers should ensure proper input validation and consider security best practices when making network calls using these modules.</vuln_desc>
             <developer>Developers should carefully validate and sanitize any user input used in network-related operations. Additionally, they should follow security best practices when using urllib2 and socket to mitigate potential security risks associated with network calls.</developer>

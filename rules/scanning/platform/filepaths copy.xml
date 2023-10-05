@@ -1,0 +1,94 @@
+<root>
+    <rule>
+        <name>Authentication</name>
+        <regex>(?i)(Login|Signin|Authentication|Authenticated|Oauth|JWT)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Admin Section</name>
+        <regex>(?i)(Admin|Administrator)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>User Section</name>
+        <regex>(?i)(user)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Password Related Functionality</name>
+        <regex>(?i)(Password|password|pwd|passwd|forgotpassword)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Security Functionality</name>
+        <regex>(?i)security</regex>
+        <description>Security Functionality</description>
+    </rule>
+    <rule>
+        <name>Permission Management or Handling</name>
+        <regex>(?i)Permission</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>API</name>
+        <regex>(?i)(api)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Libraries | Extensions | Plugins</name>
+        <regex>(?i)(Libraries|Extension|Plugin)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Monkey Patched</name>
+        <regex>(?i)(monkey_patch|patched_code|custom_patch)</regex>
+        <description>Detects the presence of monkey patched code in a project. If this rule matches, it indicates the presence of monkey patched code in the project. While monkey patches themselves may not inherently contain security issues, they introduce potential maintenance challenges and risks. Ensure that these patches are well-documented, periodically reviewed for necessity, and that they do not introduce security vulnerabilities or regressions.</description>
+    </rule>
+    <rule>
+        <name>CAPTCHA</name>
+        <regex>(?i)(CAPTCHA)</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>File Upload</name>
+        <regex>(?i)Upload</regex>
+        <description>File Upload</description>
+    </rule>
+    <rule>
+        <name>Payment Functionality</name>
+        <regex>(?i)(payment|pay)</regex>
+        <description>Payment related functionality</description>
+    </rule>
+    <rule>
+        <name>Purchases | Ordering</name>
+        <regex>(?i)(purchase|order|cart)</regex>
+        <description>Purchasing / Ordering functionality</description>
+    </rule>
+    <rule>
+        <name>Models</name>
+        <regex>(?i)\/(Models)\/</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Views</name>
+        <regex>(?i)\/(Views|View)\/</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>ViewModel</name>
+        <regex>(?i)\/(ViewModel)\/</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Controllers</name>
+        <regex>(?i)\/(Controllers|Controller)\/</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+    <rule>
+        <name>Presenter</name>
+        <regex>(?i)\/(Presenter)\/</regex>
+        <description>Detailed description goes here</description>
+    </rule>
+</root>
+
+
