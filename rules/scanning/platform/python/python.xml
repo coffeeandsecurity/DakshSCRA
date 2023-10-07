@@ -87,15 +87,8 @@
     <category name="Database Queries">
         <rule>
             <name>Insecure SQL Queries: raw and extra</name>
-            <regex>(?i)(?&lt;![a-zA-Z0-9_])\s*(raw|extra)\s*\(\s*</regex>
-            <rule_desc>Detects insecure SQL queries using the "raw" and "extra" methods in Python.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates a potential security concern related to insecure SQL queries. The use of "raw" and "extra" methods can lead to SQL injection vulnerabilities if user input is not properly validated or sanitized. Developers should ensure secure handling of SQL queries to prevent such vulnerabilities.</vuln_desc>
-            <developer>Developers should avoid using "raw" and "extra" methods for SQL queries, especially with unvalidated user input. Instead, they should use parameterized queries or other secure methods to prevent SQL injection vulnerabilities.</developer>
-            <reviewer>Reviewers should check for the usage of "raw" and "extra" methods in SQL queries and assess if proper input validation and sanitization are applied to mitigate the risk of SQL injection vulnerabilities. They should recommend using parameterized queries or secure SQL query-building methods.</reviewer>
-        </rule>
-        <rule>
-            <name>Insecure SQL Queries: raw and extra</name>
-            <regex><![CDATA[(?i)(?<![a-zA-Z0-9_])\s*(raw|extra)\s*\(\s*]]></regex>
+            <!--<regex><![CDATA[(?i)(?<![a-zA-Z0-9_])\s*(raw|extra)\s*\(\s*]]></regex>-->
+            <regex><![CDATA[(?i)^[^#]*\.\s*(raw|extra)\s*\(\s*]]></regex>
             <rule_desc>Detects insecure SQL queries using the "raw" and "extra" methods in Python.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a potential security concern related to insecure SQL queries. The use of "raw" and "extra" methods can lead to SQL injection vulnerabilities if user input is not properly validated or sanitized. Developers should ensure secure handling of SQL queries to prevent such vulnerabilities.</vuln_desc>
             <developer>Developers should avoid using "raw" and "extra" methods for SQL queries, especially with unvalidated user input. Instead, they should use parameterized queries or other secure methods to prevent SQL injection vulnerabilities.</developer>
@@ -158,16 +151,46 @@
             <reviewer>Reviewers should identify and flag the use of deprecated Python functions or modules in the codebase and recommend updating them to modern alternatives.</reviewer>
         </rule>
     </category>
-    <category name="Missing Mitigations">
+    <category name="Insecure Implementation or Permissions">
+        <!--    # This rule is extreamly verbose. Use it only if you know how to filter out what you need.
         <rule>
-            <name>Missing CSRF Protection</name>
-            <regex>(?i)(csrf_exempt|csrf_exempt\(\))</regex>
-            <rule_desc>Detects the use of @csrf_exempt decorator or function without proper CSRF protection, potentially exposing the application to CSRF attacks.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of missing CSRF protection. Without CSRF protection, the application may be vulnerable to cross-site request forgery attacks.</vuln_desc>
-            <developer>Developers should ensure that sensitive views and functions are protected against CSRF attacks using Django's built-in CSRF protection mechanisms.</developer>
-            <reviewer>Reviewers should verify that CSRF protection is correctly implemented for sensitive views and functions to prevent CSRF attacks.</reviewer>
+            <name>Decorators Usage and Placement</name>
+            <regex>@\w+\s*(\([^)]*\))?\s*(def\s+\w+\s*\()?</regex>
+            <rule_desc>Identifies decorators used in the code and checks their placement.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the presence of decorators in the code. Review the usage and placement of decorators to ensure they are correctly applied where needed and not missed where they are required. Additionally, check for decorators that apply exceptions and review them for potential security issues.</vuln_desc>
+            <developer>Developers should use decorators judiciously and ensure they are correctly placed on functions or methods where they are needed. Carefully review decorators that apply exceptions to ensure they do not introduce security vulnerabilities.</developer>
+            <reviewer>Reviewers should verify the usage and placement of decorators in the codebase. Ensure that decorators are correctly applied where needed and not omitted where required. Pay special attention to decorators that apply exceptions and assess them for potential security concerns.</reviewer>
+        </rule> -->
+        <rule>
+            <name>HTTP Decorators: Insecure or Commonly Abused Methods</name>
+            <regex>(@require_http_methods\s*\(\s*\["(?:GET|PUT|DELETE|.*?)"\]\))|(@require_GET)</regex>
+            <rule_desc>Detects the usage of insecure or commonly abused HTTP decorators.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates either the usage of the @require_http_methods decorator permitting insecure HTTP methods (e.g., GET, PUT, DELETE) or the presence of @require_GET. Review the usage of these decorators to ensure they are applied correctly and consider whether security measures are in place, especially when sensitive information is transmitted via GET requests.</vuln_desc>
+            <developer>Developers should use the @require_http_methods decorator judiciously and only permit insecure HTTP methods when absolutely necessary. Ensure that it is applied to views where it is needed to restrict or specify the allowed HTTP methods, and consider the security implications of permitting insecure methods. When using @require_GET, take care to implement additional security measures if required.</developer>
+            <reviewer>Reviewers should verify the correct usage of the @require_http_methods decorator and the presence of @require_GET in the codebase. Ensure that these decorators are applied appropriately to restrict or specify the allowed HTTP methods for views. Pay particular attention to the security implications of permitting insecure methods (GET, PUT, DELETE) and assess whether additional security measures are in place to mitigate risks.</reviewer>
+        </rule>
+        <rule>
+            <name>CSRF Exempt Decorators</name>
+            <regex>@(csrf_exempt)</regex>
+            <rule_desc>Detects decorators that exempt views from CSRF protection.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the presence of decorators that exempt views from CSRF protection. Review these decorators to ensure they are used judiciously and do not introduce security vulnerabilities.</vuln_desc>
+            <developer>Developers should use CSRF exempt decorators sparingly and ensure they are applied only where necessary. Carefully review the purpose and security implications of each exemption applied by these decorators.</developer>
+            <reviewer>Reviewers should verify the usage of CSRF exempt decorators in the codebase. Ensure that these decorators are correctly applied and consider their impact on security. Pay particular attention to exemptions that may introduce security risks.</reviewer>
         </rule>
     </category>
+    <category name="Software and Library Version Detection">
+        <rule>
+            <name>Library Version Check</name>
+            <regex>@\w+_version</regex>
+            <rule_desc>Detects the version of the software and various libraries used in the code.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the presence of version information for a library. Review the library versions to ensure they are current and not outdated or End of Life (EoL).</vuln_desc>
+            <developer>Developers should regularly check and update libraries to the latest versions to ensure security and stability. Avoid using outdated or EoL library versions whenever possible.</developer>
+            <reviewer>Reviewers should verify the library versions used in the codebase and check if they are up-to-date. Identify and report any outdated or EoL library versions that may pose security or compatibility risks.</reviewer>
+        </rule>
+    </category>
+    <!--
+    <category name="Missing Mitigations">
+    </category> -->
     <category name="Insecure Mitigations">
         <rule>
             <name>Insecure Mitigation: Django Safe Filter django.utils.safestring</name>

@@ -23,7 +23,6 @@
     <name>File Inclusion Vulnerabilities</name>
 </category>
 <category name="Insecure Configuration">
-
 <category name="Disabled/Missing Security Controls">
 <category name="Insecure Mitigations">
 <category name="Effective/Standard Mitigations Implemented">
