@@ -109,8 +109,8 @@ $ python3 dakshscra.py		// To view tool usage along with examples
 	dakshsca.py -r php -vv -t /path_to_source_dir
 
 
-	Supported RULE_FILE: 	dotnet, java, php, javascript
-	Supported FILE_TYPES:	dotnet, php, java, custom, allfiles
+	Supported RULE_FILE: 	dotnet, java, php, python, javascript
+	Supported FILE_TYPES:	dotnet, java, php, python, javascript, custom, allfiles
 
 
 ## Reports

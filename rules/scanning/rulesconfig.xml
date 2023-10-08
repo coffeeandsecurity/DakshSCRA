@@ -27,13 +27,14 @@
     <rule>
         <platform>common</platform>
         <path>/common.xml</path>
-        <ftypes>*.sql, *.ini, *.txt, *.conf, *.config, *.yml, *.yaml, *.properties, *.xml, *.json</ftypes>
+        <ftypes>*.aspx, *.cs, *.vb, *.asax, *.asp, *.php, *.java, *.jsp, *.js, *.ts, *.py, *.yml, *.yaml, *.config, *.xml, *.sql, *.ini, *.txt, *.conf, *.properties, *.json</ftypes>
     </rule>
+    <!-- # Enable this rule when you want to create a custom rules file and also scan for custom file types list
     <rule>
         <platform>custom</platform>
         <path>/custom/custom.xml</path>
-        <ftypes>*.java, *.jsp, *.js, *.php, *.sql, *.html, *.conf, *.ini, *.txt, *.config, *.cache, *.xsdconfig, *.xml, *.ppk, *.pub, *.key, *.properties, *.lock, *.json</ftypes>
-    </rule>
+        <ftypes>*.java, *.jsp, *.js, *.php</ftypes>
+    </rule>-->
     <rule>
         <platform>allfiles</platform>
         <path>/common.xml</path>
