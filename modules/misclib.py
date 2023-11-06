@@ -8,6 +8,7 @@ import json
 from json.decoder import JSONDecodeError
 
 import ruamel.yaml
+from ruamel.yaml import YAML
 
 from tabulate import tabulate
 from pathlib import Path    # Resolve the windows / mac / linux path issue
@@ -28,8 +29,13 @@ def saveYaml(file_path, data):
 # Update project details in the config file (config/project.yaml)
 def updateProjectConfig(project_name, project_subtitle):
     if os.path.exists(runtime.projectConfig):
+        '''
         with open(runtime.projectConfig, "r") as file:
             config_data = ruamel.yaml.round_trip_load(file)
+        '''
+        yaml = ruamel.yaml.YAML()
+        with open(runtime.projectConfig, "r") as file:
+            config_data = yaml.load(file)
 
         # Update the entries in the YAML data
         if "title" in config_data and "subtitle" in config_data:
