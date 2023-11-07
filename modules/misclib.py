@@ -29,11 +29,12 @@ def saveYaml(file_path, data):
 # Update project details in the config file (config/project.yaml)
 def updateProjectConfig(project_name, project_subtitle):
     if os.path.exists(runtime.projectConfig):
-        '''
+        ''' <-- To be removed - deprecated -->
         with open(runtime.projectConfig, "r") as file:
             config_data = ruamel.yaml.round_trip_load(file)
         '''
         yaml = ruamel.yaml.YAML()
+        
         with open(runtime.projectConfig, "r") as file:
             config_data = yaml.load(file)
 
@@ -44,7 +45,8 @@ def updateProjectConfig(project_name, project_subtitle):
 
         # Save the updated YAML file while preserving order and formatting
         with open(runtime.projectConfig, "w") as file:
-            ruamel.yaml.round_trip_dump(config_data, file)
+            # ruamel.yaml.round_trip_dump(config_data, file)        <-- To be removed - deprecated
+            yaml.dump(config_data, file)
 
 
 # Check the length and allowed characters of the inputs
