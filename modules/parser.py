@@ -121,14 +121,21 @@ def sourceParser(rule_path, targetfile, outputfile, rule_no):
                         if rule_title not in matched_rules:
                             unmatched_rules.append(rule_title)
 
+                    except FileNotFoundError:
+                        print("File not found:", filepath)
+                        error_count += 1
+                    except PermissionError:
+                        print("Permission denied:", filepath)
+                        error_count += 1
+                    except UnicodeError as err:
+                        print("UnicodeError occurred while decoding with encoding:", err.encoding)
+                        print("File:", filepath)
+                        error_count += 1
+                    '''
                     except OSError:
                         print("OS Error occurred!")
                         error_count += 1
-                    except UnicodeError as err:
-                        print("Error Occurred: ", err)
-                        print(filepath)
-                        error_count += 1
-                
+                    '''
                 #f_scanout.write("\n")
                 f_targetfiles.seek(0)  # Reset the file pointer to the beginning
 

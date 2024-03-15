@@ -8,6 +8,38 @@
         <reviewer>Reviewers should verify the presence and correctness of authentication-related code.</reviewer>
     </rule>
     <rule>
+        <name>Authorization</name>
+        <regex>(?i)(authorization|authz|access_control)</regex>
+        <rule_desc>Detects file paths related to authorization functionality.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of code paths related to authorization in the project.</vuln_desc>
+        <developer>Developers should review and document authorization-related code, ensuring they are correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and secure implementation of authorization-related code.</reviewer>
+    </rule>
+    <rule>
+        <name>Session Management</name>
+        <regex>(?i)(session|cookie|token)</regex>
+        <rule_desc>Detects file paths related to session management functionality.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of code paths related to session management in the project.</vuln_desc>
+        <developer>Developers should review and document session management-related code, ensuring they are correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and correctness of session management-related code.</reviewer>
+    </rule>
+    <rule>
+        <name>Permission Management or Handling</name>
+        <regex>(?i)Permission</regex>
+        <rule_desc>Detects file paths related to permission management or handling functionality.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of permission management or handling-related code paths in the project.</vuln_desc>
+        <developer>Developers should review and document permission management or handling-related code paths, ensuring they are correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and correctness of permission management or handling-related code paths.</reviewer>
+    </rule>
+    <rule>
+        <name>Multi-Factor Validation</name>
+        <regex>(?i)(mfa|multi_factor|2fa|otp)</regex>
+        <rule_desc>Detects file paths that may indicate the implementation or handling of Multi-Factor Validation.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of code paths related to Multi-Factor Validation in the project.</vuln_desc>
+        <developer>Developers should thoroughly review and document code paths related to Multi-Factor Validation, ensuring they are correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and secure implementation related to Multi-Factor Validation.</reviewer>
+    </rule>
+    <rule>
         <name>Admin Section</name>
         <regex>(?i)(Admin|Administrator)</regex>
         <rule_desc>Detects file paths related to admin section functionality.</rule_desc>
@@ -25,11 +57,19 @@
     </rule>
     <rule>
         <name>Password Related Functionality</name>
-        <regex>(?i)(Password|password|pwd|passwd|forgotpassword)</regex>
+        <regex>(?i)(Password|password|pwd|passwd|credential|forgotpassword)</regex>
         <rule_desc>Detects file paths related to password-related functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of password-related code paths in the project.</vuln_desc>
         <developer>Developers should review and document password-related code paths, ensuring they are correctly implemented.</developer>
         <reviewer>Reviewers should verify the presence and correctness of password-related code paths.</reviewer>
+    </rule>
+    <rule>
+        <name>Sensitive Data Handling</name>
+        <regex>(?i)(sensitive|secret|private_key)</regex>
+        <rule_desc>Detects file paths related to sensitive data handling functionality.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of code paths related to sensitive data handling in the project.</vuln_desc>
+        <developer>Developers should review and document code paths related to sensitive data handling, ensuring they are correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and correctness of code paths related to sensitive data handling.</reviewer>
     </rule>
     <rule>
         <name>Security Functionality</name>
@@ -40,12 +80,12 @@
         <reviewer>Reviewers should verify the presence and correctness of security-related code paths.</reviewer>
     </rule>
     <rule>
-        <name>Permission Management or Handling</name>
-        <regex>(?i)Permission</regex>
-        <rule_desc>Detects file paths related to permission management or handling functionality.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of permission management or handling-related code paths in the project.</vuln_desc>
-        <developer>Developers should review and document permission management or handling-related code paths, ensuring they are correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and correctness of permission management or handling-related code paths.</reviewer>
+        <name>Input Validation</name>
+        <regex>(?i)(validation|sanitize|input)</regex>
+        <rule_desc>Detects file paths related to input validation functionality.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of code paths related to input validation in the project.</vuln_desc>
+        <developer>Developers should review and document input validation-related code, ensuring they are correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and correctness of input validation-related code.</reviewer>
     </rule>
     <rule>
         <name>API</name>
@@ -142,5 +182,30 @@
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to presenters in the project.</vuln_desc>
         <developer>Developers should review and document code paths related to presenters, ensuring they are correctly implemented.</developer>
         <reviewer>Reviewers should verify the presence and correctness of code paths related to presenters.</reviewer>
+    </rule>
+    <rule>
+        <name>Logging</name>
+        <regex>(?i)(log|logging|logger)</regex>
+            <exclude>(?i)(blog|blogging)</exclude>
+        <rule_desc>Detects file paths related to logging functionality.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of code paths related to logging in the project.</vuln_desc>
+        <developer>Developers should review logging functionality, ensuring it is correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and secure implementation of logging functionality.</reviewer>
+    </rule>
+    <rule>
+        <name>Exception Handling</name>
+        <regex>(?i)(exception|error_handling)</regex>
+        <rule_desc>Detects file paths related to exception handling functionality.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of code paths related to exception handling in the project.</vuln_desc>
+        <developer>Developers should review exception handling functionality, ensuring it is correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and secure implementation of exception handling functionality.</reviewer>
+    </rule>
+    <rule>
+        <name>Database Interaction</name>
+        <regex>(?i)(database|db|sql)</regex>
+        <rule_desc>Detects file paths related to database interaction functionality.</rule_desc>
+        <vuln_desc>If this rule matches, it indicates the presence of code paths related to database interaction in the project.</vuln_desc>
+        <developer>Developers should review database interaction functionality, ensuring it is correctly implemented.</developer>
+        <reviewer>Reviewers should verify the presence and secure implementation of database interaction functionality.</reviewer>
     </rule>
 </root>

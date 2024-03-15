@@ -96,7 +96,7 @@ def discoverFiles(codebase, sourcepath, mode):
     total_files_count = 0           # Counter to track total project files identified within the project directory
     identified_files_count = 0      # Counter to track total platform specific project files identified
 
-    print("     [-] DakshSCRA Directory Path: " + runtime.root_dir)      
+    # print("     [-] DakshSCRA Directory Path: " + runtime.root_dir)      
     
     with open(runtime.discovered_Fpaths, "w+") as f_filepaths:         # File ('discovered_Fpaths') for logging all discovered file paths
         print("     [-] Identifying total files to be scanned!")
@@ -145,7 +145,7 @@ def reconDiscoverFiles(codebase, sourcepath, mode):
     matches = []
     fext = []
 
-    print("     [-] DakshSCRA Directory Path: " + runtime.root_dir)
+    # print("     [-] DakshSCRA Directory Path: " + runtime.root_dir)
     
     identified_files = []  # List to store discovered file paths
 
