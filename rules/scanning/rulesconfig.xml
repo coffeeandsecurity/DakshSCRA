@@ -20,9 +20,19 @@
         <ftypes>*.js, *.ts</ftypes>
     </rule>
     <rule>
+        <platform>kotlin</platform>
+        <path>/mobile/android/kotlin.xml</path>
+        <ftypes>*.kt, *.java, *.xml</ftypes>
+    </rule>
+    <rule>
         <platform>python</platform>
         <path>/python/python.xml</path>
         <ftypes>*.py, *.yml, *.yaml, *.config, *.xml</ftypes>
+    </rule>
+    <rule>
+        <platform>android</platform>
+        <path>/mobile/android/android.xml</path>
+        <ftypes>*.java, *.kt, *.groovy, *.xml</ftypes>
     </rule>
     <rule>
         <platform>common</platform>

@@ -1,0 +1,68 @@
+<root>
+    <category name="AndroidManifest.xml - Insecure Misconfiguration">
+        <rule>
+            <name>Insecure Permissions</name>
+            <regex>android\.permission\.(WRITE_EXTERNAL_STORAGE|READ_EXTERNAL_STORAGE|INTERNET|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION)</regex>
+            <rule_desc>Detects insecure permissions that can pose security risks.</rule_desc>
+            <vuln_desc>Granting unnecessary permissions or overly broad permissions, such as WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE, INTERNET, ACCESS_FINE_LOCATION, or ACCESS_COARSE_LOCATION, can lead to security vulnerabilities. Malicious apps or attackers can exploit these permissions to access sensitive user data, track user location, or perform unauthorized actions.</vuln_desc>
+            <developer>Developers should carefully review and minimize the permissions requested by the application. Only request permissions that are necessary for the app's functionality and follow the principle of least privilege.</developer>
+            <reviewer>Reviewers should verify that the AndroidManifest.xml file requests only the permissions necessary for the application's functionality. They should ensure that unnecessary or overly broad permissions are not granted, as they can pose security risks.</reviewer>
+        </rule>
+        <rule>
+            <name>Content Providers with No Permissions</name>
+            <regex>android:authorities\s*=|android:permission\s*=\s*"(?!android\.)</regex>
+            <rule_desc>Detects content providers without specific permissions.</rule_desc>
+            <vuln_desc>Content providers without specific permissions may expose sensitive data to unauthorized applications or components. Without proper permission checks, other applications can potentially access or modify the data managed by the content provider, leading to security vulnerabilities.</vuln_desc>
+            <developer>Developers should specify appropriate permissions for content providers to restrict access to authorized applications or components. They should review the android:permission attribute and ensure that sensitive data is protected from unauthorized access.</developer>
+            <reviewer>Reviewers should verify that content providers have appropriate permissions set to restrict access to authorized applications or components. They should ensure that sensitive data managed by content providers is protected from unauthorized access.</reviewer>
+        </rule>
+        <rule>
+            <name>Exported Components</name>
+            <regex>android:exported\s*=\s*"(true|TRUE)"</regex>
+            <rule_desc>Detects exported components that can pose security risks.</rule_desc>
+            <vuln_desc>Exported components, such as activities, services, or broadcast receivers, that are marked as exported="true" can be accessed by other applications or components. This can lead to security vulnerabilities if sensitive functionality or data is exposed to unauthorized entities.</vuln_desc>
+            <developer>Developers should review the exported components in the AndroidManifest.xml file and ensure that only necessary components are exported. Components that do not need to be accessed by other applications should not be exported.</developer>
+            <reviewer>Reviewers should verify that only necessary components are marked as exported in the AndroidManifest.xml file. They should ensure that sensitive functionality or data is not exposed to unauthorized entities through exported components.</reviewer>
+        </rule>
+        <rule>
+            <name>Allow Backup</name>
+            <regex>android:allowBackup\s*=\s*"(true|TRUE)"</regex>
+            <rule_desc>Detects the use of allowBackup="true" in the application's manifest.</rule_desc>
+            <vuln_desc>The allowBackup attribute, when set to "true", allows the application's data to be backed up to external storage. This can lead to security risks if sensitive data is stored insecurely or if the backup is accessible to unauthorized entities.</vuln_desc>
+            <developer>Developers should carefully consider whether allowing backup of application data is necessary. If sensitive data is stored, it should be encrypted or excluded from backup using the android:allowBackup attribute set to "false".</developer>
+            <reviewer>Reviewers should verify that sensitive data is not being backed up insecurely by checking the value of the allowBackup attribute in the AndroidManifest.xml file. They should ensure that sensitive data is properly protected and not exposed to unauthorized access through backup mechanisms.</reviewer>
+        </rule>
+        <rule>
+            <name>Unprotected Components</name>
+            <regex>android:permission\s*=\s*"(?!android\.)</regex>
+            <rule_desc>Detects components that do not require specific permissions.</rule_desc>
+            <vuln_desc>Components without the android:permission attribute or with a permission that does not start with "android." may not be properly protected. This can allow unauthorized applications or components to access the functionality provided by the component, leading to security vulnerabilities.</vuln_desc>
+            <developer>Developers should specify appropriate permissions for components to ensure that only authorized entities can access them. Components that require specific permissions should have the android:permission attribute set accordingly.</developer>
+            <reviewer>Reviewers should verify that components requiring specific permissions have the android:permission attribute set appropriately in the AndroidManifest.xml file. They should ensure that sensitive functionality is protected from unauthorized access.</reviewer>
+        </rule>
+        <rule>
+            <name>Debuggable Application</name>
+            <regex>android:debuggable\s*=\s*"(true|TRUE)"</regex>
+            <rule_desc>Detects debuggable applications.</rule_desc>
+            <vuln_desc>Setting android:debuggable="true" in the application's manifest allows debugging of the application, potentially exposing sensitive information or vulnerabilities to attackers. Debuggable applications may leak information or have security weaknesses that could be exploited.</vuln_desc>
+            <developer>Developers should ensure that the android:debuggable attribute is set to "false" in release builds to prevent exposing sensitive information or vulnerabilities. Debugging features should be disabled in production builds.</developer>
+            <reviewer>Reviewers should verify that the android:debuggable attribute is set to "false" in release builds of the application to prevent exposing sensitive information or vulnerabilities. They should ensure that debugging features are disabled in production builds.</reviewer>
+        </rule>
+        <rule>
+            <name>Unsafe Intent Filters</name>
+            <regex>android.intent.action.VIEW</regex>
+            <rule_desc>Detects unsafe intent filters.</rule_desc>
+            <vuln_desc>Intent filters with actions like "android.intent.action.VIEW" can potentially expose the application to security risks if not properly configured. Malicious applications or links can exploit these intent filters to launch activities in the application or manipulate data.</vuln_desc>
+            <developer>Developers should carefully configure intent filters to only allow expected data and actions. They should validate input and sanitize data to prevent unintended behavior or exploitation.</developer>
+            <reviewer>Reviewers should verify that intent filters are properly configured to restrict access and prevent unintended behavior. They should ensure that input validation and data sanitization are implemented to mitigate potential security risks.</reviewer>
+        </rule>
+        <rule>
+            <name>Unsafe Broadcast Receivers</name>
+            <regex>android.intent.action.BOOT_COMPLETED</regex>
+            <rule_desc>Detects unsafe broadcast receivers.</rule_desc>
+            <vuln_desc>Broadcast receivers listening for sensitive actions like "android.intent.action.BOOT_COMPLETED" can be exploited by malicious applications to execute arbitrary code or perform unauthorized actions when certain system events occur. This can lead to security risks such as privilege escalation or denial of service.</vuln_desc>
+            <developer>Developers should carefully review broadcast receivers and ensure that they handle sensitive actions securely. They should implement appropriate permission checks and validation to prevent unauthorized access or execution of malicious code.</developer>
+            <reviewer>Reviewers should verify that broadcast receivers handling sensitive actions are securely implemented to prevent unauthorized access or execution of malicious code. They should ensure that appropriate permission checks and validation are in place to mitigate potential security risks.</reviewer>
+        </rule>
+    </category>
+</root>

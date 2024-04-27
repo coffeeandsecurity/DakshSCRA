@@ -1,0 +1,106 @@
+<root>
+    <category name="Untrusted Input Handling or Injection Flaws">
+        <rule>
+            <name>Untrusted Inputs: Intent Extras</name>
+            <regex>Intent\.get.*Extra\(".*"</regex>
+            <rule_desc>Detects the usage of Intent extras, which may contain untrusted inputs.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using Intent extras without proper validation and sanitization. Attackers can manipulate Intent extras to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks (SQL, OS, or other), data tampering, or unauthorized access.</vuln_desc>
+            <developer>Developers should validate and sanitize Intent extras before using them in any sensitive operations. They should implement strong input validation, ensuring that only expected and sanitized values are accepted from Intent extras. Additionally, developers should be cautious about the potential risks associated with using untrusted data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
+            <reviewer>Reviewers should ensure that proper input handling is in place for Intent extras. They should verify that developers have implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. Reviewers should also assess the sensitivity of the data handled through Intent extras and confirm that relevant security measures, such as output encoding and protection against injection attacks, are implemented correctly.</reviewer>
+        </rule>
+        <rule>
+            <name>Untrusted Inputs: Shared Preferences</name>
+            <regex>SharedPreferences\.get.*\(".*"</regex>
+            <rule_desc>Identifies the usage of Shared Preferences, which may contain untrusted inputs.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using Shared Preferences without proper validation and sanitization. Attackers can manipulate Shared Preferences to provide malicious or unexpected values, potentially leading to security vulnerabilities such as data tampering, information disclosure, or unauthorized access.</vuln_desc>
+            <developer>Developers should carefully validate and sanitize data retrieved from Shared Preferences before using it in any sensitive operations. They should implement strong input validation, ensuring that only expected and sanitized values are accepted from Shared Preferences. Additionally, developers should be aware of the risks associated with using untrusted data and follow secure coding practices, such as input validation, output encoding, and appropriate data encryption techniques.</developer>
+            <reviewer>Reviewers should check for appropriate input handling for data retrieved from Shared Preferences. They should assess if developers have implemented proper input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. Reviewers should also verify the usage of output encoding and protection against data tampering to ensure the secure handling of data retrieved from Shared Preferences.</reviewer>
+        </rule>
+        <rule>
+            <name>Untrusted Inputs: User Input Fields</name>
+            <regex>EditText\.getText\(\)</regex>
+            <rule_desc>Detects the usage of user input fields, such as EditTexts, which may contain untrusted inputs.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using user input fields without proper validation and sanitization. Attackers can manipulate user input fields to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks (SQL, OS, or other), cross-site scripting (XSS), or unauthorized access.</vuln_desc>
+            <developer>Developers should validate and sanitize user input retrieved from EditTexts or other user input fields before using it in any sensitive operations. They should implement strong input validation, ensuring that only expected and sanitized values are accepted from user input fields. Additionally, developers should be cautious about the potential risks associated with using untrusted data and follow secure coding practices, such as input validation, output encoding, and appropriate data filtering techniques.</developer>
+            <reviewer>Reviewers should ensure that proper input handling is in place for user input fields. They should verify that developers have implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. Reviewers should also assess the sensitivity of the data retrieved from user input fields and confirm that relevant security measures, such as output encoding and protection against injection attacks, are implemented correctly.</reviewer>
+        </rule>
+        <rule>
+            <name>SQL Injection: Room Database Queries</name>
+            <regex>Room\.databaseBuilder\(.*\)</regex>
+            <rule_desc>Detects the usage of Room database queries, which may be vulnerable to SQL injection.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using Room database queries without proper parameterization or validation. Attackers can exploit SQL injection vulnerabilities to manipulate database operations, retrieve unauthorized data, or perform malicious actions.</vuln_desc>
+            <developer>Developers should ensure that Room database queries are properly parameterized or sanitized to prevent SQL injection attacks. They should use Room's built-in support for parameterized queries or sanitize user input before incorporating it into database queries.</developer>
+            <reviewer>Reviewers should verify the presence of secure coding practices, such as parameterized queries or proper input validation and sanitization, to mitigate the risk of SQL injection vulnerabilities in Room database queries. They should also assess the sensitivity of the data retrieved from Room queries and confirm that relevant security measures are implemented correctly.</reviewer>
+        </rule>
+    </category>
+    <category name="Insecure Method/Function Call">
+        <rule>
+            <name>Insecure Method Call: Runtime.exec()</name>
+            <regex>Runtime\.exec\(".*"\)</regex>
+            <rule_desc>Detects insecure usage of the Runtime.exec() method for executing shell commands.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential vulnerability of command injection. Attackers can exploit insecure usage of Runtime.exec() with unsanitized user input to execute arbitrary shell commands on the device, leading to unauthorized access, data loss, or other malicious activities.</vuln_desc>
+            <developer>Developers should avoid using Runtime.exec() with user-supplied input whenever possible. If its usage is necessary, it is crucial to employ strict input validation, input sanitization, and command parameterization techniques to prevent command injection attacks.</developer>
+            <reviewer>Reviewers should check for the secure usage of Runtime.exec() and assess if user input is properly validated, sanitized, and appropriately used as command parameters. They should ensure that developers have implemented strong input validation measures, command parameterization techniques, and proper context-aware security controls to mitigate command injection vulnerabilities.</reviewer>
+        </rule>
+        <rule>
+            <name>Insecure Method Call: WebView.loadUrl()</name>
+            <regex>WebView\.loadUrl\(".*"\)</regex>
+            <rule_desc>Detects insecure usage of WebView.loadUrl() method, which may lead to JavaScript injection vulnerabilities.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential vulnerability of JavaScript injection. Attackers can exploit insecure usage of WebView.loadUrl() with unsanitized user input to inject malicious JavaScript code into web pages loaded by the WebView, leading to cross-site scripting (XSS) vulnerabilities.</vuln_desc>
+            <developer>Developers should avoid using WebView.loadUrl() with untrusted user input directly concatenated into the URL string. Instead, they should use proper input validation, output encoding, and secure mechanisms for injecting dynamic content into web pages loaded by WebView.</developer>
+            <reviewer>Reviewers should verify that WebView.loadUrl() is used securely and that any user input incorporated into URL strings is properly validated, sanitized, and encoded to prevent JavaScript injection vulnerabilities. They should also ensure that developers follow best practices for securely loading and displaying web content in WebView.</reviewer>
+        </rule>
+        <rule>
+            <name>Insecure Method Call: ContentResolver.query()</name>
+            <regex>ContentResolver\.query\(".*"\)</regex>
+            <rule_desc>Detects insecure usage of ContentResolver.query() method, which may lead to SQL injection vulnerabilities.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential vulnerability of SQL injection. Attackers can exploit insecure usage of ContentResolver.query() with unsanitized user input to inject malicious SQL code into content provider queries, leading to unauthorized data access or data manipulation.</vuln_desc>
+            <developer>Developers should ensure that ContentResolver.query() is used securely by properly parameterizing queries or sanitizing user input before incorporating it into content provider queries. They should also follow best practices for securely accessing and querying content providers.</developer>
+            <reviewer>Reviewers should verify that ContentResolver.query() is used securely and that any user input incorporated into query parameters is properly validated, sanitized, and parameterized to prevent SQL injection vulnerabilities. They should also ensure that developers follow best practices for securely accessing and querying content providers.</reviewer>
+        </rule>
+        <rule>
+            <name>Insecure Method Call: SharedPreferences</name>
+            <regex>getSharedPreferences\(\s*[^,]+,\s*Context\.MODE_PRIVATE\s*\)</regex>
+            <rule_desc>Detects insecure usage of SharedPreferences without proper encryption or secure storage.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential vulnerability of storing sensitive data in SharedPreferences without proper encryption or secure storage mechanisms. Attackers with access to the device can potentially extract and manipulate data stored in SharedPreferences, leading to unauthorized access or data leakage.</vuln_desc>
+            <developer>Developers should avoid storing sensitive data, such as authentication tokens or user credentials, directly in SharedPreferences without proper encryption or secure storage mechanisms. Consider using encrypted storage solutions provided by Android APIs or third-party libraries to protect sensitive data.</developer>
+            <reviewer>Reviewers should verify if sensitive data is stored in SharedPreferences without proper encryption or secure storage. They should ensure that developers have implemented appropriate security measures, such as encryption or secure storage solutions, to protect sensitive data stored on the device.</reviewer>
+        </rule>
+        <rule>
+            <name>Insecure Method Call: viewModelScope.launch</name>
+            <regex>viewModelScope\.launch\s*{[^}]*}</regex>
+            <rule_desc>Detects insecure usage of viewModelScope.launch without proper error handling or exception logging.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential vulnerability of not properly handling exceptions or errors that occur within the coroutine launched by viewModelScope.launch. Unhandled exceptions or errors can lead to unexpected behavior, crashes, or security vulnerabilities in the application.</vuln_desc>
+            <developer>Developers should ensure that viewModelScope.launch is used with proper error handling mechanisms, such as try-catch blocks or error propagation, to handle exceptions or errors that occur within the coroutine. Additionally, developers should log exceptions or errors for debugging and monitoring purposes.</developer>
+            <reviewer>Reviewers should verify if viewModelScope.launch is used with proper error handling mechanisms to handle exceptions or errors that occur within the coroutine. They should ensure that developers have implemented appropriate error handling and logging mechanisms to address potential security vulnerabilities or unexpected behavior.</reviewer>
+        </rule>
+        <rule>
+            <name>Insecure Method Call: setHtmlText</name>
+            <regex>setHtmlText\s*\(.*\)</regex>
+            <rule_desc>Detects insecure usage of the setHtmlText method.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using a custom method setHtmlText, which could pose security risks if it doesn't properly sanitize or validate the input HTML content. Unsanitized or unvalidated HTML content can lead to XSS (Cross-Site Scripting) vulnerabilities, allowing attackers to execute malicious scripts within the application.</vuln_desc>
+            <developer>Developers should ensure that any custom methods for setting HTML content properly sanitize or validate the input HTML content to prevent XSS vulnerabilities. They should use secure HTML parsing libraries or built-in platform APIs for handling HTML content to mitigate security risks.</developer>
+            <reviewer>Reviewers should verify if any custom methods for setting HTML content, such as setHtmlText, properly sanitize or validate the input HTML content to prevent XSS vulnerabilities. They should ensure that developers have implemented appropriate security measures to handle HTML content securely and mitigate potential security risks.</reviewer>
+        </rule>
+    </category>
+    <category name="Insecure Mitigations">
+        <rule>
+            <name>Insecure Mitigation: WebView.addJavascriptInterface()</name>
+            <regex>WebView\.addJavascriptInterface\(".*"\)</regex>
+            <rule_desc>Detects insecure usage of WebView.addJavascriptInterface() method, which may introduce JavaScript injection vulnerabilities.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential vulnerability of JavaScript injection. Attackers can exploit insecure usage of WebView.addJavascriptInterface() with unsanitized input to inject malicious JavaScript code into web pages loaded by the WebView, leading to cross-site scripting (XSS) vulnerabilities.</vuln_desc>
+            <developer>Developers should avoid using WebView.addJavascriptInterface() with untrusted input directly passed as the interface object. Instead, they should carefully validate and sanitize any input passed to this method to prevent JavaScript injection vulnerabilities. Alternatively, consider using safer alternatives for communication between JavaScript and native code.</developer>
+            <reviewer>Reviewers should verify that WebView.addJavascriptInterface() is used securely and that any input passed as the interface object is properly validated, sanitized, and limited to trusted values to prevent JavaScript injection vulnerabilities. They should also ensure that developers follow best practices for securely communicating between JavaScript and native code.</reviewer>
+        </rule>
+    </category>
+    <category name="Effective/Standard Mitigations Implemented">
+        <rule>
+            <name>Mitigation Identified: SQL Injection (Room Database)</name>
+            <regex>Room\.createQuery\(".*"\)</regex>
+            <rule_desc>Detects the presence of Room database queries with properly parameterized or sanitized inputs to mitigate SQL injection vulnerabilities.</rule_desc>
+            <vuln_desc>This rule checks if Room database queries are constructed using Room's query builder methods, which inherently parameterize or sanitize inputs, effectively mitigating SQL injection vulnerabilities. By using Room's built-in mechanisms for query construction, developers avoid the risk of SQL injection vulnerabilities that arise from improper input handling.</vuln_desc>
+            <developer>Ensure that Room database queries are constructed using Room's query builder methods, such as createQuery(), which automatically handle input parameterization or sanitization. By leveraging these mechanisms, developers can effectively mitigate SQL injection vulnerabilities in Room database queries.</developer>
+            <reviewer>Verify if Room database queries are constructed using Room's query builder methods, such as createQuery(), to ensure proper input parameterization or sanitization, thereby mitigating SQL injection vulnerabilities. Additionally, confirm that developers consistently apply these secure coding practices throughout the application's database interactions.</reviewer>
+        </rule>
+    </category>
+</root>
