@@ -48,7 +48,8 @@ If you find any bugs, report them to d3basis.m0hanty@gmail.com.
 ## Tool Setup
 
 ### Pre-requisites
-Python3 and all the libraries listed in requirements.txt
+- Python3
+- All the libraries listed in `requirements.txt`
 
 ### Setting up environment to run this tool
 
