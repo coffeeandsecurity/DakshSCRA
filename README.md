@@ -47,16 +47,26 @@ If you find any bugs, report them to d3basis.m0hanty@gmail.com.
 
 ## Tool Setup
 
-### Pre-requisites
-Python3 and all the libraries listed in requirements.txt
+### Prerequisites
+- Python3
+- All the libraries listed in `requirements.txt`
 
-### Setting up environment to run this tool
+### Setting up the Environment to Run This Tool
 
-#### 1. Setup a virtual environment
+#### 1. Download Daksh SCRA
+Download and save the latest build from here: [Daksh SCRA GitHub](https://github.com/coffeeandsecurity/DakshSCRA). Save it to your desired folder/directory. Make sure you have unzipped it.
+
+Alternatively, navigate into your desired folder/directory and download using the `git` command:
+```bash
+$ git clone https://github.com/coffeeandsecurity/DakshSCRA.git
+
+#### 2. Setup a virtual environment
+	Note: Virtual environment can be set under any path. It need not have to under the same path as where you have extracted DakshSCRA.
+
 	$ pip install virtualenv
 
 	$ virtualenv -p python3 {name-of-virtual-env}  		// Create a virtualenv
-	Example: virtualenv -p python3 venv
+	Example: virtualenv -p python3 venv 				
 
 	$ source {name-of-virtual-env}/bin/activate 		// To activate virtual environment you just created
 	Example: source venv/bin/activate
@@ -64,8 +74,11 @@ Python3 and all the libraries listed in requirements.txt
 After running the activate command you should see the name of your virtual env at the beginning of your terminal like this:
 	(venv) $ 
 
-#### 2. Ensure all required libraries are installed within the virtual environment
-You must run the below command after activating the virtual environment as mentioned in the previous steps.
+
+#### 3. Ensure all required libraries are installed within the virtual environment
+After activating the virtual environment as mentioned in the previous steps,
+* cd (change directory) into the DakshSCRA folder/directory depending upon where you have saved or extracted it. 
+* Run the below command
 
 	pip install -r requirements.txt
 
