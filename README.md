@@ -47,18 +47,17 @@ If you find any bugs, report them to d3basis.m0hanty@gmail.com.
 
 ## Tool Setup
 
-### Prerequisites
-- Python3
-- All the libraries listed in `requirements.txt`
+### Pre-requisites
+Python3 and all the libraries listed in requirements.txt
 
-### Setting up the Environment to Run This Tool
+### Setting up environment to run this tool
 
 #### 1. Download Daksh SCRA
-Download and save the latest build from here: [Daksh SCRA GitHub](https://github.com/coffeeandsecurity/DakshSCRA). Save it to your desired folder/directory. Make sure you have unzipped it.
+	Download and save the latest build from here: https://github.com/coffeeandsecurity/DakshSCRA
+	Save it to your desired folder/directory. Must make sure you have unzipped it. 
 
-Alternatively, navigate into your desired folder/directory and download using the `git` command:
-```bash
-$ git clone https://github.com/coffeeandsecurity/DakshSCRA.git
+	Alternatively, 'cd' into your desired folder/directory and download using the 'git' command
+	$ git clone https://github.com/coffeeandsecurity/DakshSCRA.git
 
 #### 2. Setup a virtual environment
 	Note: Virtual environment can be set under any path. It need not have to under the same path as where you have extracted DakshSCRA.
