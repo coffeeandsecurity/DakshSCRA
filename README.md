@@ -57,6 +57,7 @@ Download and save the latest build from here: https://github.com/coffeeandsecuri
 Save it to your desired folder/directory. Must make sure you have unzipped it. 
 
 Alternatively, 'cd' into your desired folder/directory and download using the 'git' command
+
 	$ git clone https://github.com/coffeeandsecurity/DakshSCRA.git
 
 #### 2. Setup a virtual environment
