@@ -53,14 +53,14 @@ Python3 and all the libraries listed in requirements.txt
 ### Setting up environment to run this tool
 
 #### 1. Download Daksh SCRA
-	Download and save the latest build from here: https://github.com/coffeeandsecurity/DakshSCRA
-	Save it to your desired folder/directory. Must make sure you have unzipped it. 
+Download and save the latest build from here: https://github.com/coffeeandsecurity/DakshSCRA
+Save it to your desired folder/directory. Must make sure you have unzipped it. 
 
-	Alternatively, 'cd' into your desired folder/directory and download using the 'git' command
+Alternatively, 'cd' into your desired folder/directory and download using the 'git' command
 	$ git clone https://github.com/coffeeandsecurity/DakshSCRA.git
 
 #### 2. Setup a virtual environment
-	Note: Virtual environment can be set under any path. It need not have to under the same path as where you have extracted DakshSCRA.
+Note: Virtual environment can be set under any path. It need not have to under the same path as where you have extracted DakshSCRA.
 
 	$ pip install virtualenv
 
