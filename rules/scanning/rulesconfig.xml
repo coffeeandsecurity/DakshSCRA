@@ -30,6 +30,11 @@
         <ftypes>*.py, *.yml, *.yaml, *.config, *.xml</ftypes>
     </rule>
     <rule>
+        <platform>go</platform>
+        <path>/golang/go.xml</path>
+        <ftypes>*.go, *.mod, *.sum</ftypes>
+    </rule>
+    <rule>
         <platform>android</platform>
         <path>/mobile/android/android.xml</path>
         <ftypes>*.java, *.kt, *.groovy, *.xml</ftypes>

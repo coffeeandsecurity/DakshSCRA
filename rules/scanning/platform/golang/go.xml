@@ -1,0 +1,58 @@
+<root>
+    <category name="Untrusted Input Handling or Injection Flaws">
+        <!-- Rule to detect untrusted inputs from HTTP requests -->
+        <rule>
+            <name>Untrusted Inputs: HTTP Request Parameters</name>
+            <regex>http\.Request|http\.RequestForm|http\.FormValue</regex>
+            <rule_desc>Detects the usage of HTTP request parameters without proper validation and sanitization.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using untrusted input from HTTP requests without proper validation and sanitization. Attackers can manipulate request parameters to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks, cross-site scripting (XSS), or unauthorized access to sensitive information.</vuln_desc>
+            <developer>Developers should validate and sanitize user input received from HTTP requests before using it in any sensitive operations. They should implement strong input validation, ensuring that only expected and sanitized values are accepted from request parameters. Additionally, developers should be cautious about the potential risks associated with using user-supplied data and follow secure coding practices.</developer>
+            <reviewer>Reviewers should ensure that proper input handling is in place for HTTP request parameters. They should verify that developers have implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs.</reviewer>
+        </rule>
+        <!-- Rule to detect untrusted inputs from user-defined structures -->
+        <rule>
+            <name>Untrusted Inputs: User-Defined Structures</name>
+            <regex>struct</regex>
+            <rule_desc>Detects the usage of user-defined structures without proper validation and sanitization of fields.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using user-defined structures without validating and sanitizing the fields. Attackers can manipulate structure fields to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks or unauthorized access to sensitive information.</vuln_desc>
+            <developer>Developers should validate and sanitize fields of user-defined structures before using them in any sensitive operations. They should implement strong input validation, ensuring that only expected and sanitized values are accepted. Additionally, developers should be cautious about the potential risks associated with using user-supplied data and follow secure coding practices.</developer>
+            <reviewer>Reviewers should ensure that proper input handling is in place for user-defined structures. They should verify that developers have implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs.</reviewer>
+        </rule>
+    </category>
+    <category name="Command Injection">
+        <!-- Rule to detect command injection vulnerabilities -->
+        <rule>
+            <name>Command Injection: exec, os/exec</name>
+            <regex>os/exec\.Command|exec\.(Command|CommandContext)</regex>
+            <rule_desc>Detects instances of executing shell commands without proper validation and sanitization.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential vulnerability of command injection. Attackers can exploit shell-executing functions with unsanitized user input to execute arbitrary shell commands on the server.</vuln_desc>
+            <developer>Developers should avoid executing shell commands with user-supplied input whenever possible. If necessary, it is crucial to employ strict input validation, input sanitization, and command parameterization techniques to prevent command injection attacks.</developer>
+            <reviewer>Reviewers should check for the secure usage of shell-executing functions and assess if user input is properly validated, sanitized, and appropriately used as command parameters. They should ensure that developers have implemented strong input validation measures, command parameterization techniques, and proper context-aware security controls to mitigate command injection vulnerabilities.</reviewer>
+        </rule>
+        <!-- Add more rules for other sources of command execution if applicable -->
+    </category>
+    <category name="Arbitrary Code Execution">
+        <!-- Rule to detect arbitrary code execution vulnerabilities -->
+        <rule>
+            <name>Arbitrary Code Execution: unsafe, go:generate</name>
+            <regex>unsafe\.|go:generate</regex>
+            <rule_desc>Detects instances of unsafe code execution without proper validation.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential vulnerability of arbitrary code execution. Attackers can exploit unsafe code execution with unsanitized user input to execute arbitrary code on the server.</vuln_desc>
+            <developer>Developers should avoid using unsafe code execution mechanisms with untrusted user input whenever possible. If necessary, it is crucial to employ strict input validation and parameterization techniques to prevent arbitrary code execution vulnerabilities.</developer>
+            <reviewer>Reviewers should check for the secure usage of unsafe code execution mechanisms and assess if user input is properly validated, sanitized, and appropriately used. They should ensure that developers have implemented strong input validation measures and proper context-aware security controls to mitigate arbitrary code execution vulnerabilities.</reviewer>
+        </rule>
+    </category>
+    <category name="Effective/Standard Mitigations Implemented">
+        <!-- Rule to detect usage of html.EscapeString function for XSS mitigation -->
+        <rule>
+            <name>Mitigation Identified: XSS</name>
+            <regex>html.EscapeString</regex>
+            <rule_desc>Detects the presence of XSS mitigation using html.EscapeString function.</rule_desc>
+            <vuln_desc>This rule checks if the "html.EscapeString" function is utilized as a recommended mitigation technique against Cross-Site Scripting (XSS) vulnerabilities. XSS vulnerabilities arise when untrusted data is displayed on a web page without proper sanitization, enabling attackers to inject malicious scripts. By employing the "html.EscapeString" function, special characters are encoded to prevent script execution.</vuln_desc>
+            <developer>Ensure that the implementation of the "html.EscapeString" function is thorough and consistent across the application to effectively mitigate XSS vulnerabilities. Verify that all user-supplied data displayed in HTML context undergoes proper sanitization using this function to encode special characters and thwart script injection attempts.</developer>
+            <reviewer>Verify if the "html.EscapeString" function is adequately implemented and consistently applied throughout the application to mitigate XSS vulnerabilities. Assess its usage on user-supplied data displayed in HTML context, and evaluate the effectiveness of this mitigation approach in preventing script injection attacks.</reviewer>
+        </rule>
+    </category>
+</root>
+
+

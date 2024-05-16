@@ -91,6 +91,16 @@
         </rule>
     </category>
     <category name="Dynamic SQL Queries">
+        <!-- Unsafe string concatenation in SQL queries -->
+        <rule>
+            <name>Insecure SQL Query: Unsafe String Concatenation</name>
+            <regex>(?i)SELECT\s+\*?\s+FROM\s+([^\s;]+)\s+WHERE\s+([^\s;]+)\s*=\s*'\s*\+\s*([^;]+)\s*\+\s*'\s*;</regex>
+            <rule_desc>Detects SQL queries with unsafe string concatenation of user input.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential vulnerability of SQL injection. Attackers can manipulate the concatenated string to alter the query's logic or inject malicious SQL code.</vuln_desc>
+            <developer>Developers should use parameterized queries or prepared statements to prevent SQL injection attacks. Avoid concatenating user input directly into SQL queries.</developer>
+            <reviewer>Reviewers should verify that SQL queries use parameterized queries or prepared statements to handle user input securely. They should flag any occurrences of unsafe string concatenation in SQL queries for further review.</reviewer>
+        </rule>
+
         <rule>
             <name>SQL Query: SELECT Statement with ORDER BY Clause</name>
             <regex>(SELECT).*(ORDER BY).*</regex>
@@ -122,6 +132,15 @@
             <vuln_desc>If this rule matches, it indicates the potential use of dynamic SQL queries with INSERT, UPDATE, DELETE, or DROP commands, which can introduce the risk of SQL injection or unintended modifications to the database if not properly handled.</vuln_desc>
             <developer>Developers should check for the use of dynamic queries with these commands and verify proper input handling. If detected, implement proper input validation, parameterization techniques, and use prepared statements to mitigate the risk of SQL injection or unauthorized database changes.</developer>
             <reviewer>Reviewers should check for the presence of dynamic queries with INSERT, UPDATE, DELETE, or DROP commands and assess proper input handling and parameterization. They should verify that appropriate measures are in place to prevent SQL injection or unauthorized changes, including input validation and restrictions on executing harmful commands.</reviewer>
+        </rule>
+        <!-- Use of outdated or insecure SQL libraries -->
+        <rule>
+            <name>Insecure SQL Library Usage</name>
+            <regex>(?i)(mysql|mysqli|pg|postgresql|sqlite3)</regex>
+            <rule_desc>Detects the usage of outdated or insecure SQL libraries.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates potential security risks associated with using outdated or insecure SQL libraries. These libraries may have known vulnerabilities that could be exploited by attackers.</vuln_desc>
+            <developer>Developers should use modern and secure SQL libraries with active maintenance and regular security updates.</developer>
+            <reviewer>Reviewers should verify that secure and up-to-date SQL libraries are used in the application to mitigate the risk of known vulnerabilities.</reviewer>
         </rule>
     </category>
     <category name="Trust-boundary Validation or 3rd-Party Interactions">
