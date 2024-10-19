@@ -1,0 +1,225 @@
+<root>
+    <category name="Untrusted Input Handling and Buffer Overflow">
+        <rule>
+            <name>Unsafe String Manipulation: strcpy(), strcat(), sprintf(), etc.</name>
+            <regex>\b(strcpy|strcat|sprintf|gets|scanf)\s*\(</regex>
+            <rule_desc>Detects usage of unsafe functions such as `strcpy()`, `strcat()`, and `sprintf()`.</rule_desc>
+            <vuln_desc>These functions do not perform boundary checks and can cause buffer overflows, which attackers can exploit to corrupt memory or gain unauthorized access.</vuln_desc>
+            <developer>Developers should replace these with safer alternatives such as `strncpy()`, `snprintf()`, or `fgets()`.</developer>
+            <reviewer>Reviewers should identify instances of these functions and validate that safer alternatives are used with proper size limits.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Potential Buffer Overflow: strncpy() Misuse</name>
+            <regex>\bstrncpy\s*\(\s*\w+\s*,\s*\w+\s*,\s*\w+\s*\-\s*1\s*\)</regex>
+            <rule_desc>Detects misuse of `strncpy()` with potentially unsafe size calculations.</rule_desc>
+            <vuln_desc>If the length parameter subtracts 1 improperly, it may result in an off-by-one error, leading to buffer overflows.</vuln_desc>
+            <developer>Ensure that the length parameter accurately reflects the size of the destination buffer and that it doesn't underflow.</developer>
+            <reviewer>Reviewers should confirm proper use of `strncpy()` and size calculations to avoid off-by-one errors.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Unbounded Memory Allocation</name>
+            <regex>\bmalloc\s*\(\s*[^\)]*user_input</regex>
+            <rule_desc>Detects memory allocation functions (`malloc()`, `calloc()`) where size is influenced by user input without validation.</rule_desc>
+            <vuln_desc>If user input directly controls memory allocation size, attackers could cause memory exhaustion (DoS).</vuln_desc>
+            <developer>Developers should validate user input before using it for memory allocation.</developer>
+            <reviewer>Reviewers should ensure that memory allocations based on user input are properly constrained.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Command Injection">
+        <rule>
+            <name>Unsafe Execution Functions: system(), exec(), etc.</name>
+            <regex>\b(system|exec|popen|execl)\s*\(</regex>
+            <rule_desc>Detects usage of unsafe execution functions that may lead to command injection vulnerabilities.</rule_desc>
+            <vuln_desc>These functions, if used with unsanitized input, can allow attackers to execute arbitrary commands.</vuln_desc>
+            <developer>Developers should validate and sanitize any input passed to execution functions. Safer alternatives should be considered if possible.</developer>
+            <reviewer>Reviewers should identify instances of execution functions and verify input sanitization to prevent command injection attacks.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Use of `system()` with Hardcoded Paths</name>
+            <regex>\bsystem\s*\(\s*["'].*(/bin|/usr/bin)</regex>
+            <rule_desc>Detects the use of `system()` with hardcoded file paths that may introduce security risks.</rule_desc>
+            <vuln_desc>Using hardcoded paths in `system()` may cause unintended command execution if the paths are modified.</vuln_desc>
+            <developer>Developers should avoid hardcoding paths and use environment-safe alternatives.</developer>
+            <reviewer>Reviewers should confirm that no dangerous paths are used in `system()` calls.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Format String Vulnerabilities">
+        <rule>
+            <name>Potential Format String Attack: printf(), fprintf(), etc.</name>
+            <regex>\b(printf|fprintf|sprintf|vsprintf|snprintf)\s*\(\s*[^"]+\s*,</regex>
+            <rule_desc>Detects potentially unsafe usage of format functions where user input is passed directly as the format string.</rule_desc>
+            <vuln_desc>If untrusted input is used directly in format functions, it may result in format string vulnerabilities, potentially leading to information leakage or code execution.</vuln_desc>
+            <developer>Avoid using user input as the format string. Use fixed format strings (e.g., `"%s"`) with sanitized inputs.</developer>
+            <reviewer>Ensure format functions use proper format specifiers and do not allow direct user input as the format string.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Memory Management and Allocation">
+        <rule>
+            <name>Risky Memory Allocation: malloc() & Related Functions</name>
+            <regex>\b(malloc|calloc|realloc)\s*\(</regex>
+            <rule_desc>Detects usage of memory allocation functions.</rule_desc>
+            <vuln_desc>If external input influences the size, it can lead to denial-of-service by allocating too much memory or integer overflows, resulting in heap overflows.</vuln_desc>
+            <developer>Use `size_t` for size variables. Validate the size and check for overflow conditions using safe arithmetic checks.</developer>
+            <reviewer>Verify upper and lower limits on memory allocation and ensure overflow checks are correctly implemented.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Unsafe Memory Function: Use of malloc() Without free()</name>
+            <!-- <regex>\bmalloc\s*\(</regex> -->
+            <regex>\bmalloc\s*\(.*\)(?!.*free)</regex>
+            <rule_desc>Detects usage of `malloc()` without a corresponding `free()`.</rule_desc>
+            <vuln_desc>If dynamically allocated memory is not released properly, it can lead to memory leaks, eventually exhausting system resources.</vuln_desc>
+            <developer>Developers should ensure every `malloc()` call has a corresponding `free()` to prevent memory leaks.</developer>
+            <reviewer>Reviewers should ensure that all allocated memory is properly freed and no memory leaks are present.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Null Pointer Dereference</name>
+            <regex>\b\w+\s*=\s*NULL\s*;\s*\w+\s*\(.*\1.*\)</regex>
+            <rule_desc>Detects potential null pointer dereference errors.</rule_desc>
+            <vuln_desc>If a null pointer is dereferenced, the program may crash or expose vulnerabilities that attackers could exploit.</vuln_desc>
+            <developer>Developers should always check for null pointers before dereferencing them.</developer>
+            <reviewer>Reviewers should ensure proper null checks are in place to prevent null pointer dereference vulnerabilities.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Arithmetic and Numeric Errors">
+        <rule>
+            <name>Integer Overflow or Wraparound</name>
+            <regex>\b(int|short|unsigned)\s+\w+\s*=\s*\w+\s*\+\s*(\d{5,}|INT_MAX|UINT_MAX);</regex>
+            <rule_desc>Detects arithmetic operations prone to overflow or wraparound.</rule_desc>
+            <vuln_desc>Operations involving large constants or near boundary values may cause integer overflows.</vuln_desc>
+            <developer>Use safe arithmetic libraries and perform boundary checks.</developer>
+            <reviewer>Ensure arithmetic operations include overflow protection.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Type Safety">
+        <rule>
+            <name>Incorrect Casting of malloc() Results</name>
+            <regex>\(\s*\w+\s*\*\)\s*malloc\s*</regex>
+            <rule_desc>Detects unnecessary casting of `malloc()` results.</rule_desc>
+            <vuln_desc>Casting the result of `malloc()` can hide bugs if prototypes are missing or improperly scoped, reducing code readability.</vuln_desc>
+            <developer>Do not cast the result of `malloc()`; use proper prototypes to avoid type mismatches.</developer>
+            <reviewer>Reviewers should ensure that unnecessary casts are removed to improve readability and safety.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Loop Vulnerabilities">
+        <rule>
+            <name>Unsafe Loop Handling Over Arrays or Strings</name>
+            <regex>\b(for|while)\s*\(.*</regex>
+            <rule_desc>Detects loops iterating over arrays or strings.</rule_desc>
+            <vuln_desc>Loops may cause buffer or integer overflows if not bounded properly by array size limits.</vuln_desc>
+            <developer>Ensure loops stop when the upper or lower limit of an array or variable is reached.</developer>
+            <reviewer>Check for proper bounds checking inside loops to prevent overflows.</reviewer>
+        </rule>
+    </category>
+
+    <category name="File Handling">
+        <rule>
+            <name>Temporary Files: Use of mkstemp()</name>
+            <regex>\bmktemp\s*\(</regex>
+            <rule_desc>Detects usage of the unsafe `mktemp()` function.</rule_desc>
+            <vuln_desc>`mktemp()` is vulnerable to race conditions; it is recommended to use `mkstemp()` for safe temporary file creation.</vuln_desc>
+            <developer>Replace `mktemp()` with `mkstemp()` to avoid race conditions during temporary file creation.</developer>
+            <reviewer>Check for any usage of `mktemp()` and suggest replacements with `mkstemp()`.</reviewer>
+        </rule>
+        <rule>
+            <name>Insecure File Permissions</name>
+            <regex>\bopen\s*\(.*\bO_CREAT\b.*\)</regex>
+            <rule_desc>Detects file creation with potentially insecure permissions.</rule_desc>
+            <vuln_desc>Improper file permissions (e.g., 0644) may expose sensitive data. Use `umask(077)` to restrict permissions.</vuln_desc>
+            <developer>Use `umask()` to set restrictive default permissions and avoid exposing confidential files.</developer>
+            <reviewer>Verify that file creation follows proper permission practices, especially in privileged code.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Process Environment Issues">
+        <rule>
+            <name>Unsafe Use of Process Environment Variables</name>
+            <regex>\b(getenv|setenv|putenv|clearenv)\s*\(</regex>
+            <rule_desc>Detects the usage of functions that access or modify the process environment.</rule_desc>
+            <vuln_desc>Process environments can expose sensitive data such as passwords, as they are often accessible by other processes with the same UID. Attackers may also manipulate environment variables.</vuln_desc>
+            <developer>Use anonymous pipes, sockets, or other secure communication methods for passing secrets. Avoid relying on environment variables for sensitive data transmission.</developer>
+            <reviewer>Verify that sensitive data is not passed via the environment. If unavoidable, restrict access to the process environment properly.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Privilege Management">
+        <rule>
+            <name>Improper Privilege Dropping</name>
+            <regex>\b(setuid|setgid|initgroups)\s*\(</regex>
+            <rule_desc>Detects the usage of privilege management functions that need proper ordering for secure operation.</rule_desc>
+            <vuln_desc>Incorrect use or ordering of privilege-dropping functions (e.g., `setuid` before `setgid`) can result in improper privilege handling, leading to security issues.</vuln_desc>
+            <developer>Use `initgroups()` → `setgid()` → `setuid()` sequence to ensure secure privilege dropping, and always check return values.</developer>
+            <reviewer>Confirm that all privilege-dropping operations are performed securely and in the correct sequence with proper error handling.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Sensitive Information Handling">
+        <rule>
+            <name>Insecure Handling of Sensitive Information</name>
+            <regex>\b(memset|mlock|setrlimit|unlink|remove)\s*\(</regex>
+            <rule_desc>Detects functions used to handle or erase sensitive information improperly.</rule_desc>
+            <vuln_desc>Failure to securely erase or restrict access to sensitive information (e.g., passwords, cryptographic keys) can lead to unintended leaks.</vuln_desc>
+            <developer>Store sensitive information in heap buffers, not stack buffers. Overwrite sensitive data before deletion using `memset()`. Use `mlock()` to prevent swapping and `setrlimit()` to disable core dumps.</developer>
+            <reviewer>Ensure sensitive data is managed securely, overwritten before deletion, and not stored in plaintext unnecessarily.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Concurrency and Race Conditions">
+        <rule>
+            <name>Race Condition with Shared Resource</name>
+            <regex>\bpthread_create\s*\(.*\);\s*.*\s*=.*shared_var</regex>
+            <rule_desc>Detects potential race conditions in multi-threaded applications.</rule_desc>
+            <vuln_desc>Race conditions occur when multiple threads access shared resources simultaneously.</vuln_desc>
+            <developer>Use mutexes or semaphores to synchronize access.</developer>
+            <reviewer>Check that shared resources are properly synchronized.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Makefile Configuration Issues">
+        <rule>
+            <name>Insecure Compiler Flags</name>
+            <regex>CFLAGS\s*=.*\b(-fno-stack-protector|-z execstack)\b</regex>
+            <rule_desc>Detects insecure compiler flags that disable security protections.</rule_desc>
+            <vuln_desc>Disabling stack protection and executable stack permissions may expose the application to buffer overflow attacks.</vuln_desc>
+            <developer>Developers should avoid disabling stack protection unless absolutely necessary.</developer>
+            <reviewer>Reviewers should confirm that compiler flags do not weaken security.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Download from Insecure Sources</name>
+            <regex>wget\s+http://</regex>
+            <rule_desc>Detects downloads from insecure sources using HTTP.</rule_desc>
+            <vuln_desc>Downloading files over HTTP makes the application vulnerable to MITM attacks and tampering.</vuln_desc>
+            <developer>Developers should use HTTPS and validate file integrity with checksums.</developer>
+            <reviewer>Reviewers must ensure all external resources are securely downloaded over HTTPS.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Suppressing Compiler Warnings</name>
+            <regex>CFLAGS\s*=.*\b(-w)\b</regex>
+            <rule_desc>Detects flags that suppress compiler warnings.</rule_desc>
+            <vuln_desc>Ignoring warnings can mask potential vulnerabilities or bugs.</vuln_desc>
+            <developer>Developers should address warnings instead of suppressing them.</developer>
+            <reviewer>Reviewers should ensure that code does not suppress important warnings.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Hardcoded Secrets in Environment Variables</name>
+            <regex>export\s+\w+=.*</regex>
+            <rule_desc>Detects use of environment variables to store hardcoded secrets.</rule_desc>
+            <vuln_desc>Hardcoding secrets in environment variables may expose them to unauthorized access.</vuln_desc>
+            <developer>Developers should use secure vaults or encrypted storage for sensitive data.</developer>
+            <reviewer>Reviewers should ensure that secrets are not exposed in environment variables.</reviewer>
+        </rule>
+    </category>
+</root>

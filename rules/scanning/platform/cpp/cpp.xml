@@ -1,0 +1,170 @@
+<root>
+    <category name="Untrusted Input Handling and Buffer Overflow">
+        <rule>
+            <name>Unsafe String Manipulation: strcpy(), strcat(), sprintf()</name>
+            <regex>\b(strcpy|strcat|sprintf)\s*\(</regex>
+            <rule_desc>Detects usage of unsafe string manipulation functions that can lead to buffer overflows.</rule_desc>
+            <vuln_desc>These functions are not safe for use with untrusted input and can cause buffer overflows or memory corruption.</vuln_desc>
+            <developer>Use `std::string` or `std::snprintf()` to handle strings safely in C++.</developer>
+            <reviewer>Reviewers should look for unsafe string functions and ensure safe C++ standard library alternatives are used.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Unsafe Use of std::vector::at()</name>
+            <regex>\bstd::vector<.*>::at\(\s*\d+\s*\)</regex>
+            <rule_desc>Detects unsafe access to `std::vector` elements without boundary checks.</rule_desc>
+            <vuln_desc>Out-of-range access can cause exceptions or undefined behavior.</vuln_desc>
+            <developer>Ensure vector access is within bounds.</developer>
+            <reviewer>Check for proper error handling during vector access.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Unsafe Loop Handling Over Arrays or Vectors</name>
+            <regex>\b(for|while)\s*\(.*</regex>
+            <rule_desc>Detects loops iterating over arrays, vectors, or strings.</rule_desc>
+            <vuln_desc>Improperly bounded loops can cause buffer or integer overflows, compromising program stability.</vuln_desc>
+            <developer>Use bounds-checked loops, such as range-based `for` loops, to prevent overflows.</developer>
+            <reviewer>Ensure all loops use proper bounds to avoid access violations.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Command Injection">
+        <rule>
+            <name>Risky External Command Execution: system(), exec()</name>
+            <regex>\b(system|exec|popen)\s*\(</regex>
+            <rule_desc>Detects the usage of command execution functions that may introduce security risks.</rule_desc>
+            <vuln_desc>Using these functions without proper input sanitization can lead to command injection vulnerabilities.</vuln_desc>
+            <developer>Prefer using safer APIs or wrappers, such as `boost::process` or other platform-specific libraries.</developer>
+            <reviewer>Ensure all inputs to these functions are sanitized or escape unsafe characters appropriately.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Memory Management and Allocation">
+        <rule>
+            <name>Potential Memory Leak: Use of `new` Operator Without `delete`</name>
+            <!--<regex>\bnew\s+\w+</regex>-->
+            <regex>\bnew\s+\w+\s*\(.*\)(?!.*delete)</regex>
+            <rule_desc>Detects dynamic memory allocation with `new` but no corresponding `delete`, which can lead to memory leaks.</rule_desc>
+            <vuln_desc>Manual memory management using `new` requires explicit `delete` calls to release memory. If not handled correctly, it can result in memory leaks, degrading performance and stability.</vuln_desc>
+            <developer>Use `delete` for each `new` allocation or leverage smart pointers like `std::unique_ptr` or `std::shared_ptr` to automate memory management and prevent leaks.</developer>
+            <reviewer>Ensure dynamic allocations are either managed through smart pointers or properly released using `delete` if raw pointers are unavoidable.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Null Pointer Dereference with Smart Pointers</name>
+            <regex>\b(std::unique_ptr|std::shared_ptr)\s*<.*>\s*=\s*nullptr</regex>
+            <rule_desc>Detects potential misuse of smart pointers, leading to null pointer dereference.</rule_desc>
+            <vuln_desc>Smart pointers should be properly checked before use to avoid dereferencing null values.</vuln_desc>
+            <developer>Perform null checks on smart pointers before dereferencing them.</developer>
+            <reviewer>Ensure all smart pointers are validated before use.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Arithmetic and Numeric Errors">
+        <rule>
+            <name>Integer Overflow or Wraparound</name>
+            <regex>\b(int|short|unsigned)\s+\w+\s*=\s*\w+\s*\+\s*(\d{5,}|INT_MAX|UINT_MAX);</regex>
+            <rule_desc>Detects arithmetic operations prone to overflow or wraparound.</rule_desc>
+            <vuln_desc>Operations involving large constants or near boundary values may cause integer overflows.</vuln_desc>
+            <developer>Use safe arithmetic libraries and perform boundary checks.</developer>
+            <reviewer>Ensure arithmetic operations include overflow protection.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Exception Safety">
+        <rule>
+            <name>Resource Leak on Exception</name>
+            <regex>\btry\s*{[^}]*new\s+\w+</regex>
+            <rule_desc>Detects dynamic memory allocations inside `try` blocks that may lead to leaks if an exception is thrown.</rule_desc>
+            <vuln_desc>If an exception is thrown, allocated resources may not be released, resulting in memory leaks.</vuln_desc>
+            <developer>Use RAII (Resource Acquisition Is Initialization) patterns or smart pointers to ensure proper cleanup.</developer>
+            <reviewer>Reviewers should verify that resources are correctly released, even in exceptional cases.</reviewer>
+        </rule>
+    </category>
+
+    <category name="File Handling">
+        <rule>
+            <name>Unsafe File Creation with Incorrect Permissions</name>
+            <regex>\bstd::ofstream\s*\(</regex>
+            <rule_desc>Detects usage of `std::ofstream` for file creation.</rule_desc>
+            <vuln_desc>Files created with `std::ofstream` may have insecure default permissions, exposing sensitive data.</vuln_desc>
+            <developer>Use `umask()` or platform-specific APIs to enforce secure file permissions.</developer>
+            <reviewer>Ensure files are created with the correct permissions to protect sensitive data.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Format String Vulnerabilities">
+        <rule>
+            <name>Format String Misuse in C++ Streams</name>
+            <regex>\b(std::printf|std::fprintf)\s*\(</regex>
+            <rule_desc>Detects unsafe use of format strings with `printf`-like functions.</rule_desc>
+            <vuln_desc>Using untrusted input as a format string may introduce vulnerabilities similar to those in C.</vuln_desc>
+            <developer>Always use fixed format strings when printing user input to avoid format string vulnerabilities.</developer>
+            <reviewer>Check for any direct use of user input in format strings.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Potential Format String Attack</name>
+            <regex>\b(printf|fprintf|sprintf|vsprintf)\s*\(\s*[^"]+\s*,</regex>
+            <rule_desc>Detects usage of format functions with potentially unsafe input.</rule_desc>
+            <vuln_desc>Format string attacks can expose memory content or execute arbitrary code.</vuln_desc>
+            <developer>Use format specifiers and avoid direct user input.</developer>
+            <reviewer>Ensure input sanitization and safe usage of format functions.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Privilege Management">
+        <rule>
+            <name>Insecure Handling of Privileged Operations</name>
+            <regex>\b(setuid|setgid)\s*\(</regex>
+            <rule_desc>Detects functions that change process privileges.</rule_desc>
+            <vuln_desc>Failure to drop privileges correctly can lead to privilege escalation vulnerabilities.</vuln_desc>
+            <developer>Use a separate thread/process to handle privileged operations and drop privileges immediately.</developer>
+            <reviewer>Ensure that privilege changes are handled securely and revert correctly when no longer needed.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Process Environment Issues">
+        <rule>
+            <name>Unsafe Use of Environment Variables</name>
+            <regex>\b(std::getenv)\s*\(</regex>
+            <rule_desc>Detects use of `std::getenv()` for accessing environment variables.</rule_desc>
+            <vuln_desc>Accessing environment variables for sensitive data exposes information to risks as environment values can be manipulated or accessed by other processes.</vuln_desc>
+            <developer>Use more secure mechanisms (e.g., IPC or sockets) for sensitive data transmission. Avoid using `std::getenv()` for passwords or secrets.</developer>
+            <reviewer>Verify that environment variables are not used to store or transmit sensitive data.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Privilege Management">
+        <rule>
+            <name>Incorrect Privilege Handling in C++ Programs</name>
+            <regex>\b(setuid|setgid|initgroups)\s*\(</regex>
+            <rule_desc>Detects improper use of privilege-dropping functions in C++ programs.</rule_desc>
+            <vuln_desc>Incorrect use of privilege-dropping functions may allow unintended privilege escalation.</vuln_desc>
+            <developer>Follow the sequence: `initgroups()` → `setgid()` → `setuid()`. Ensure error codes are checked and privileges are dropped early in the program.</developer>
+            <reviewer>Review privilege management logic to ensure correct ordering and error handling.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Sensitive Information Handling">
+        <rule>
+            <name>Insecure Handling of Sensitive Data</name>
+            <regex>\b(memset|mlock|setrlimit|unlink|remove|std::string)\s*\(</regex>
+            <rule_desc>Detects the improper handling of sensitive data.</rule_desc>
+            <vuln_desc>Using immutable strings (like `std::string`) for passwords can result in sensitive data being retained in memory longer than necessary. Improper deletion may lead to information leakage.</vuln_desc>
+            <developer>Use arrays or custom data structures instead of `std::string` for sensitive information. Overwrite buffers using `memset()` before releasing memory, and apply `mlock()` to prevent swapping.</developer>
+            <reviewer>Check that sensitive data is managed using mutable structures and erased properly before releasing memory.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Concurrency and Race Conditions">
+        <rule>
+            <name>Race Condition with Shared Resource</name>
+            <regex>\bpthread_create\s*\(.*\);\s*.*\s*=.*shared_var</regex>
+            <rule_desc>Detects potential race conditions in multi-threaded applications.</rule_desc>
+            <vuln_desc>Race conditions occur when multiple threads access shared resources simultaneously.</vuln_desc>
+            <developer>Use mutexes or semaphores to synchronize access.</developer>
+            <reviewer>Check that shared resources are properly synchronized.</reviewer>
+        </rule>
+    </category>
+</root>

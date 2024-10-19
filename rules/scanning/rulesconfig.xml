@@ -35,6 +35,16 @@
         <ftypes>*.go, *.mod, *.sum</ftypes>
     </rule>
     <rule>
+        <platform>c</platform>
+        <path>/c/c.xml</path>
+        <ftypes>*.c, *.cpp, *.h, Makefile</ftypes>
+    </rule>
+    <rule>
+        <platform>cpp</platform>
+        <path>/cpp/cpp.xml</path>
+        <ftypes>*.cpp, *.cc, *.cxx, *.h, *.hpp, *.hxx, Makefile, CMakeLists.txt</ftypes>
+    </rule>
+    <rule>
         <platform>android</platform>
         <path>/mobile/android/android.xml</path>
         <ftypes>*.java, *.kt, *.groovy, *.xml</ftypes>
@@ -42,7 +52,7 @@
     <rule>
         <platform>common</platform>
         <path>/common.xml</path>
-        <ftypes>*.aspx, *.cs, *.vb, *.asax, *.asp, *.php, *.java, *.jsp, *.js, *.ts, *.py, *.yml, *.yaml, *.config, *.xml, *.sql, *.ini, *.txt, *.conf, *.properties, *.json</ftypes>
+        <ftypes>*.aspx, *.cs, *.vb, *.asax, *.asp, *.php, *.java, *.jsp, *.js, *.ts, *.py, *.yml, *.yaml, *.config, *.xml, *.sql, *.ini, *.txt, *.conf, *.properties, *.json, *.sh, *.bash, *.ps1, *.bat, *.cmd</ftypes>
     </rule>
     <!-- # Enable this rule when you want to create a custom rules file and also scan for custom file types list
     <rule>
