@@ -31,11 +31,11 @@
     <category name="Command Injection">
         <rule>
             <name>Unsafe Execution Functions: system(), exec(), etc.</name>
-            <regex>\b(system|exec|popen|execl)\s*\(</regex>
-            <rule_desc>Detects usage of unsafe execution functions that may lead to command injection vulnerabilities.</rule_desc>
-            <vuln_desc>These functions, if used with unsanitized input, can allow attackers to execute arbitrary commands.</vuln_desc>
-            <developer>Developers should validate and sanitize any input passed to execution functions. Safer alternatives should be considered if possible.</developer>
-            <reviewer>Reviewers should identify instances of execution functions and verify input sanitization to prevent command injection attacks.</reviewer>
+            <regex>^\s*(?:int|void|char|size_t|auto)?\s*\*?\s*\w+\s*=\s*\b(system|exec|popen|execl)\s*\(.*\)</regex>
+            <rule_desc>Detects unsafe usage of execution functions that may lead to command injection vulnerabilities.</rule_desc>
+            <vuln_desc>These functions can allow attackers to execute arbitrary commands if input is not properly sanitized.</vuln_desc>
+            <developer>Validate and sanitize inputs passed to these functions. Use safer alternatives such as `posix_spawn()` where possible.</developer>
+            <reviewer>Identify all instances of execution functions. Verify that input is properly sanitized and ensure only trusted data is used.</reviewer>
         </rule>
 
         <rule>
@@ -62,8 +62,8 @@
     <category name="Memory Management and Allocation">
         <rule>
             <name>Risky Memory Allocation: malloc() and Related Functions</name>
-            <regex>\b(malloc|calloc|realloc)\s*\(</regex>
-            <rule_desc>Detects usage of memory allocation functions.</rule_desc>
+            <regex>^[^*/]*\b(malloc|calloc|realloc)\s*\(</regex>
+            <rule_desc>Detects usage of memory allocation functions in code.</rule_desc>
             <vuln_desc>If external input influences the size, it can lead to denial-of-service by allocating too much memory or integer overflows, resulting in heap overflows.</vuln_desc>
             <developer>Use `size_t` for size variables. Validate the size and check for overflow conditions using safe arithmetic checks.</developer>
             <reviewer>Verify upper and lower limits on memory allocation and ensure overflow checks are correctly implemented.</reviewer>
@@ -81,7 +81,7 @@
 
         <rule>
             <name>Null Pointer Dereference</name>
-            <regex>\b\w+\s*=\s*NULL\s*;\s*\w+\s*\(.*\1.*\)</regex>
+            <regex>(\w+)\s*=\s*NULL\s*;\s*\w+\s*\(.*\1.*\)</regex>
             <rule_desc>Detects potential null pointer dereference errors.</rule_desc>
             <vuln_desc>If a null pointer is dereferenced, the program may crash or expose vulnerabilities that attackers could exploit.</vuln_desc>
             <developer>Developers should always check for null pointers before dereferencing them.</developer>
@@ -115,17 +115,17 @@
         <rule>
             <name>Unsafe Loop Handling Over Arrays or Strings</name>
             <regex>\b(for|while)\s*\(.*</regex>
-            <rule_desc>Detects loops iterating over arrays or strings.</rule_desc>
-            <vuln_desc>Loops may cause buffer or integer overflows if not bounded properly by array size limits.</vuln_desc>
-            <developer>Ensure loops stop when the upper or lower limit of an array or variable is reached.</developer>
-            <reviewer>Check for proper bounds checking inside loops to prevent overflows.</reviewer>
+            <rule_desc>Detects loops iterating over arrays, strings, or lists with potentially unsafe bounds.</rule_desc>
+            <vuln_desc>Unbounded loops or those influenced by incorrect size checks may cause buffer or integer overflows.</vuln_desc>
+            <developer>Ensure loops terminate based on array size or valid upper/lower limits.</developer>
+            <reviewer>Verify that loop bounds are safe and not influenced by external or unvalidated input.</reviewer>
         </rule>
     </category>
 
     <category name="File Handling">
         <rule>
             <name>Temporary Files: Use of mkstemp()</name>
-            <regex>\bmktemp\s*\(</regex>
+            <regex>^[^*/]*\bmktemp\s*\(</regex>
             <rule_desc>Detects usage of the unsafe `mktemp()` function.</rule_desc>
             <vuln_desc>`mktemp()` is vulnerable to race conditions; it is recommended to use `mkstemp()` for safe temporary file creation.</vuln_desc>
             <developer>Replace `mktemp()` with `mkstemp()` to avoid race conditions during temporary file creation.</developer>
@@ -155,7 +155,7 @@
     <category name="Privilege Management">
         <rule>
             <name>Improper Privilege Dropping</name>
-            <regex>\b(setuid|setgid|initgroups)\s*\(</regex>
+            <regex>^[^*/]*(setuid|setgid|initgroups)\s*\(\s*[^)]+\s*\)\s*[^/]*$</regex>
             <rule_desc>Detects the usage of privilege management functions that need proper ordering for secure operation.</rule_desc>
             <vuln_desc>Incorrect use or ordering of privilege-dropping functions (e.g., `setuid` before `setgid`) can result in improper privilege handling, leading to security issues.</vuln_desc>
             <developer>Use `initgroups()` → `setgid()` → `setuid()` sequence to ensure secure privilege dropping, and always check return values.</developer>
