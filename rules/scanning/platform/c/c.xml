@@ -61,7 +61,7 @@
 
     <category name="Memory Management and Allocation">
         <rule>
-            <name>Risky Memory Allocation: malloc() & Related Functions</name>
+            <name>Risky Memory Allocation: malloc() and Related Functions</name>
             <regex>\b(malloc|calloc|realloc)\s*\(</regex>
             <rule_desc>Detects usage of memory allocation functions.</rule_desc>
             <vuln_desc>If external input influences the size, it can lead to denial-of-service by allocating too much memory or integer overflows, resulting in heap overflows.</vuln_desc>
