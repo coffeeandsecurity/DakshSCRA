@@ -11,7 +11,7 @@
 
         <rule>
             <name>Unsafe Use of std::vector::at()</name>
-            <regex>\bstd::vector<.*>::at\(\s*\d+\s*\)</regex>
+            <regex>\bstd::vector&lt;.*&gt;::at\(\s*\d+\s*\)</regex>
             <rule_desc>Detects unsafe access to `std::vector` elements without boundary checks.</rule_desc>
             <vuln_desc>Out-of-range access can cause exceptions or undefined behavior.</vuln_desc>
             <developer>Ensure vector access is within bounds.</developer>
@@ -43,7 +43,7 @@
         <rule>
             <name>Potential Memory Leak: Use of `new` Operator Without `delete`</name>
             <!--<regex>\bnew\s+\w+</regex>-->
-            <regex>\bnew\s+\w+\s*\(.*\)(?!.*delete)</regex>
+            <regex><![CDATA[\bnew\s+\w+(?![^<>]*\s*>)]]></regex>
             <rule_desc>Detects dynamic memory allocation with `new` but no corresponding `delete`, which can lead to memory leaks.</rule_desc>
             <vuln_desc>Manual memory management using `new` requires explicit `delete` calls to release memory. If not handled correctly, it can result in memory leaks, degrading performance and stability.</vuln_desc>
             <developer>Use `delete` for each `new` allocation or leverage smart pointers like `std::unique_ptr` or `std::shared_ptr` to automate memory management and prevent leaks.</developer>
@@ -52,7 +52,7 @@
 
         <rule>
             <name>Null Pointer Dereference with Smart Pointers</name>
-            <regex>\b(std::unique_ptr|std::shared_ptr)\s*<.*>\s*=\s*nullptr</regex>
+            <regex>\b(std::unique_ptr|std::shared_ptr)\s*&lt;.*&gt;\s*=\s*nullptr</regex>
             <rule_desc>Detects potential misuse of smart pointers, leading to null pointer dereference.</rule_desc>
             <vuln_desc>Smart pointers should be properly checked before use to avoid dereferencing null values.</vuln_desc>
             <developer>Perform null checks on smart pointers before dereferencing them.</developer>
