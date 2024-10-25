@@ -71,6 +71,15 @@
             <developer>Developers should set pointers to `nullptr` after deletion to prevent dangling references. Using smart pointers (like `std::unique_ptr`) is recommended for automatic memory management.</developer>
             <reviewer>Reviewers should ensure that pointers are set to `nullptr` after deletion, or smart pointers are employed to handle memory safely.</reviewer>
         </rule>
+
+        <rule>
+            <name>Access to Freed Memory</name>
+            <regex><![CDATA[\bfree\s*\(|delete\s*\[?\]?]]></regex>
+            <rule_desc>Detects access to memory that has already been freed.</rule_desc>
+            <vuln_desc>Using memory after it has been freed can lead to undefined behavior, crashes, or security vulnerabilities.</vuln_desc>
+            <developer>Set pointers to `nullptr` after freeing or deleting memory to avoid reuse.</developer>
+            <reviewer>Look for any use-after-free patterns in the code, especially in complex control flows.</reviewer>
+        </rule>
     </category>
 
     <category name="Memory Management and Allocation">
@@ -92,6 +101,36 @@
             <vuln_desc>Smart pointers should be properly checked before use to avoid dereferencing null values.</vuln_desc>
             <developer>Perform null checks on smart pointers before dereferencing them.</developer>
             <reviewer>Ensure all smart pointers are validated before use.</reviewer>
+        </rule>
+
+        <rule>
+            <!-- Applicable for C and C++ -->
+            <name>Access to Freed Memory</name>
+            <regex><![CDATA[\bfree\s*\(|delete\s*\[?\]?]]></regex>
+            <rule_desc>Detects potential access to memory that has already been freed.</rule_desc>
+            <vuln_desc>Using memory after it has been freed can lead to undefined behavior, crashes, or security vulnerabilities.</vuln_desc>
+            <developer>Set pointers to `nullptr` after freeing or deleting memory to avoid reuse.</developer>
+            <reviewer>Look for any use-after-free patterns in the code, especially in complex control flows.</reviewer>
+        </rule>
+
+        <rule>
+            <!-- Applicable for C and C++ -->
+            <name>Unsafe Use of realloc()</name>
+            <regex><![CDATA[\brealloc\s*\(]]></regex>
+            <rule_desc>Detects usage of `realloc()` which may modify object alignment.</rule_desc>
+            <vuln_desc>Changing the alignment of objects through `realloc()` can lead to undefined behavior.</vuln_desc>
+            <developer>Consider alternatives to `realloc()` for resizing memory, ensuring alignment remains correct.</developer>
+            <reviewer>Check if memory resizing affects object alignment or introduces memory access issues.</reviewer>
+        </rule>
+
+        <rule>
+            <!-- Applicable for C++ -->
+            <name>Memory Deallocation: delete vs. delete[]</name>
+            <regex><![CDATA[\bdelete\s+\[?\]?]]></regex>
+            <rule_desc>Detects improper usage of `delete` vs. `delete[]` for memory deallocation.</rule_desc>
+            <vuln_desc>Using `delete` on an array allocated with `new[]` can lead to undefined behavior.</vuln_desc>
+            <developer>Use `delete[]` for arrays allocated with `new[]` to ensure proper deallocation of memory.</developer>
+            <reviewer>Ensure that the appropriate deallocation function (`delete` vs. `delete[]`) is used based on how memory was allocated.</reviewer>
         </rule>
     </category>
 
@@ -220,6 +259,58 @@
             <vuln_desc>Race conditions occur when multiple threads access shared resources simultaneously.</vuln_desc>
             <developer>Use mutexes or semaphores to synchronize access.</developer>
             <reviewer>Check that shared resources are properly synchronized.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Declarations and Initialization">
+        <rule>
+            <!-- Applicable for C++ -->
+            <name>C-style Variadic Functions: Potential for Type Safety Issues</name>
+            <regex><![CDATA[\b(__attribute__\s*\(\s*format\s*\(\s*__variadic\s*,)]]></regex>
+            <rule_desc>Detects the definition of C-style variadic functions, which can lead to type safety issues.</rule_desc>
+            <vuln_desc>Using variadic functions can introduce risks due to the lack of type checking, potentially leading to undefined behavior.</vuln_desc>
+            <developer>Consider alternatives that provide type safety, as variadic functions can lead to serious security vulnerabilities.</developer>
+            <reviewer>Investigate the use of variadic functions and assess their impact on type safety and security.</reviewer>
+        </rule>
+
+        <rule>
+            <!-- Applicable for C++ -->
+            <name>Information Leakage Across Trust Boundaries: Security Risk</name>
+            <regex><![CDATA[\bclass\s+\w+\s*\(]]></regex>
+            <rule_desc>Detects passing class objects that may leak sensitive information across trust boundaries.</rule_desc>
+            <vuln_desc>Improper handling of class objects can expose internal state or sensitive data, posing security threats.</vuln_desc>
+            <developer>Encapsulate sensitive data within objects to avoid leakage during transitions across trust boundaries.</developer>
+            <reviewer>Investigate class interfaces for potential information leakage that could be exploited.</reviewer>
+        </rule>
+
+        <rule>
+            <!-- Applicable for C++ -->
+            <name>Static Object Initialization Cycles: Undefined Behavior Risk</name>
+            <regex><![CDATA[\bstatic\s+\w+\s*\(]]></regex>
+            <rule_desc>Detects potential cycles during the initialization of static objects, which can lead to undefined behavior.</rule_desc>
+            <vuln_desc>Initialization cycles can cause static initialization order issues, leading to crashes or undefined states.</vuln_desc>
+            <developer>Use function-local static variables or ensure initialization order is well-defined to avoid issues.</developer>
+            <reviewer>Investigate static object initializations for potential cycles that could lead to undefined behavior.</reviewer>
+        </rule>
+
+        <rule>
+            <!-- Applicable for C++ -->
+            <name>Exceptions in Destructors: Risk of Unhandled Behavior</name>
+            <regex><![CDATA[\bthrow\s*\(]]></regex>
+            <rule_desc>Detects exceptions thrown from destructors or deallocation functions.</rule_desc>
+            <vuln_desc>Throwing exceptions from destructors can cause program termination and resource leaks, posing security risks.</vuln_desc>
+            <developer>Catch and handle exceptions within destructors or deallocation functions to prevent unexpected behavior.</developer>
+            <reviewer>Investigate destructors that may throw exceptions, ensuring proper handling to avoid security issues.</reviewer>
+        </rule>
+
+        <rule>
+            <!-- Applicable for C and C++ -->
+            <name>Information Leakage with Structures: Security Concern</name>
+            <regex><![CDATA[\bstruct\s+\w+\s*\{]]></regex>
+            <rule_desc>Detects passing structures across trust boundaries, potentially leaking sensitive information.</rule_desc>
+            <vuln_desc>Improper handling of structures can expose sensitive data across boundaries, leading to security vulnerabilities.</vuln_desc>
+            <developer>Encapsulate sensitive data within structures and provide secure access methods for crossing trust boundaries.</developer>
+            <reviewer>Investigate structures for potential information leakage that could be exploited.</reviewer>
         </rule>
     </category>
 </root>
