@@ -12,22 +12,12 @@
         
         <rule>
             <!-- Applicable for C and C++ -->
-            <name>Command Injection: system() and popen()</name>
-            <regex><![CDATA[\b(?:system|popen)\b\s*\(]]></regex>
-            <rule_desc>Detects the usage of functions that execute shell commands, potentially leading to command injection vulnerabilities.</rule_desc>
-            <vuln_desc>If matched, this indicates a potential command injection vulnerability if user input is passed unsafely. This can allow attackers to execute arbitrary commands.</vuln_desc>
-            <developer>Developers should avoid passing user input to `system()` or `popen()`. Where necessary, input should be validated, and safer alternatives should be considered (e.g., `std::filesystem::copy`).</developer>
-            <reviewer>Reviewers should look for instances where user input is passed to `system()` or `popen()` and confirm that validation and sanitization are in place. Encouraging safer alternatives should also be part of the review.</reviewer>
-        </rule>
-
-        <rule>
-            <!-- Applicable for C and C++ -->
-            <name>Risky External Command Execution: system(), exec()</name>
-            <regex><![CDATA[\b(system|exec|popen)\s*\(]]></regex>
-            <rule_desc>Detects the usage of command execution functions that may introduce security risks.</rule_desc>
-            <vuln_desc>Using these functions without proper input sanitization can lead to command injection vulnerabilities.</vuln_desc>
-            <developer>Prefer using safer APIs or wrappers, such as `boost::process` or other platform-specific libraries.</developer>
-            <reviewer>Ensure all inputs to these functions are sanitized or escape unsafe characters appropriately.</reviewer>
+            <name>Unsafe Use of Command Execution Functions</name>
+            <regex><![CDATA[\b(?:system|popen|exec|execp|CreateProcess)\b\s*\(]]></regex>
+            <rule_desc>Detects the usage of command execution functions that may introduce command injection risks and unauthorized access to system resources.</rule_desc>
+            <vuln_desc>Improper use of commands like `system()`, `popen()`, `exec()`, and `CreateProcess()` can expose applications to command injection vulnerabilities and allow unauthorized access to critical system functionalities.</vuln_desc>
+            <developer>Minimize the use of command execution functions. When necessary, validate and sanitize any user input passed to these commands. Prefer safer alternatives such as `std::filesystem` operations or libraries like `boost::process`.</developer>
+            <reviewer>Reviewers should ensure that calls to command execution functions are justified, that inputs are thoroughly sanitized, and that safer alternatives are considered. Look for proper error handling and minimal privileges when interacting with system resources.</reviewer>
         </rule>
 
         <rule>
@@ -84,13 +74,23 @@
 
     <category name="Memory Management and Allocation">
         <rule>
+            <!-- Applicable for C and C++ -->
+            <name>Manual Memory Allocation: Use with Caution</name>
+            <regex><![CDATA[\b(new|malloc)\s*\(]]></regex>
+            <rule_desc>Detects usage of `new` or `malloc()` for manual memory allocation.</rule_desc>
+            <vuln_desc>Manual memory allocation requires careful handling. Failing to check for successful allocation can lead to null pointer dereferencing. It is also prone to memory leaks if deallocation is not handled correctly.</vuln_desc>
+            <developer>Avoid manual memory management where possible. Use smart pointers (like `std::unique_ptr`) or standard containers (like `std::vector`) to manage memory safely. Always check for null pointers if using `new` or `malloc()`.</developer>
+            <reviewer>Reviewers should ensure that all manual memory allocations are followed by appropriate null checks or are replaced with smart pointers or standard containers.</reviewer>
+        </rule>
+
+        <rule>
             <!-- Applicable for C++ -->
-            <name>Potential Memory Leak: Use of `new` Operator Without `delete`</name>
+            <name>Potential Memory Leak: Use of `new` Without `delete`</name>
             <regex><![CDATA[\bnew\s+\w+(?![^<>]*\s*>)]]></regex>
-            <rule_desc>Detects dynamic memory allocation with `new` but no corresponding `delete`, which can lead to memory leaks.</rule_desc>
-            <vuln_desc>Manual memory management using `new` requires explicit `delete` calls to release memory. If not handled correctly, it can result in memory leaks, degrading performance and stability.</vuln_desc>
-            <developer>Use `delete` for each `new` allocation or leverage smart pointers like `std::unique_ptr` or `std::shared_ptr` to automate memory management and prevent leaks.</developer>
-            <reviewer>Ensure dynamic allocations are either managed through smart pointers or properly released using `delete` if raw pointers are unavoidable.</reviewer>
+            <rule_desc>Detects dynamic memory allocation using `new` but no matching `delete`, potentially leading to memory leaks.</rule_desc>
+            <vuln_desc>Using `new` for manual memory management requires an explicit `delete` call. Failure to release allocated memory can result in memory leaks, degrading performance and stability.</vuln_desc>
+            <developer>Avoid raw pointers where possible. Use smart pointers (e.g., `std::unique_ptr`, `std::shared_ptr`) to manage memory safely and prevent leaks.</developer>
+            <reviewer>Check whether allocated memory is properly deallocated using `delete` or managed by smart pointers. If raw pointers are unavoidable, ensure all `new` calls have corresponding `delete` calls.</reviewer>
         </rule>
 
         <rule>
@@ -179,6 +179,16 @@
             <vuln_desc>Files created with `std::ofstream` may have insecure default permissions, potentially exposing sensitive data to unauthorized access.</vuln_desc>
             <developer>Use `umask()` or platform-specific APIs to enforce appropriate file permissions during creation.</developer>
             <reviewer>Ensure that files are created with correct permissions to prevent unauthorized access to sensitive data.</reviewer>
+        </rule>
+
+        <rule>
+            <!-- Applicable for C++ -->
+            <name>Unsafe File Handling: Insecure File Path Usage</name>
+            <regex><![CDATA[\b(?:ifstream|ofstream|fstream)\b.*\.open\s*\(.*\)]]></regex>
+            <rule_desc>Detects file handling operations (`ifstream`, `ofstream`, `fstream`) to ensure they are secure and protected against path traversal vulnerabilities.</rule_desc>
+            <vuln_desc>Improper use of file streams (e.g., `ifstream`, `ofstream`, `fstream`) without validating file paths can lead to path traversal vulnerabilities. Attackers may exploit this to access sensitive files outside the intended directory.</vuln_desc>
+            <developer>Ensure that file paths are properly validated to prevent path traversal. Avoid using user-supplied input directly for file paths. Use safe libraries or mechanisms (e.g., `std::filesystem`) to handle paths securely. Always close file streams after use to avoid resource leaks.</developer>
+            <reviewer>Verify that file paths are sanitized to prevent traversal attacks. Look for proper error handling for file operations and confirm that all streams are closed after use. Ensure that user input is not directly passed into `open()` without validation.</reviewer>
         </rule>
     </category>
 
@@ -311,6 +321,28 @@
             <vuln_desc>Improper handling of structures can expose sensitive data across boundaries, leading to security vulnerabilities.</vuln_desc>
             <developer>Encapsulate sensitive data within structures and provide secure access methods for crossing trust boundaries.</developer>
             <reviewer>Investigate structures for potential information leakage that could be exploited.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Compiler and Build Configuration Issues">
+        <rule>
+            <!-- Applicable for C++ -->
+            <name>Missing OS Runtime Security Mitigation Flags in Binaries</name>
+            <regex><![CDATA[/NXCOMPAT|/DYNAMICBASE|/GS|/guard:cf]]></regex>
+            <rule_desc>Detects missing compiler flags that enforce runtime security mitigations.</rule_desc>
+            <vuln_desc>Without these flags, binaries are vulnerable to attacks like buffer overflows or ROP.</vuln_desc>
+            <developer>Use `/NXCOMPAT`, `/GS`, and `/guard:cf` to enable runtime protections.</developer>
+            <reviewer>Ensure these flags are present in build configurations.</reviewer>
+        </rule>
+
+        <rule>
+            <!-- Applicable for C++ -->
+            <name>Insufficient Code Provenance Guarantees in Build Configuration</name>
+            <regex><![CDATA[/ZH:SHA_SHA256|/Zi|/SOURCELINK]]></regex>
+            <rule_desc>Detects missing compiler flags that ensure strong code provenance.</rule_desc>
+            <vuln_desc>Lack of these guarantees can hinder incident response and code tracing.</vuln_desc>
+            <developer>Enable `/ZH:SHA_SHA256` and `/SOURCELINK` for secure builds.</developer>
+            <reviewer>Verify that builds include source link and symbol archive generation.</reviewer>
         </rule>
     </category>
 </root>

@@ -42,7 +42,7 @@
     <rule>
         <platform>cpp</platform>
         <path>/cpp/cpp.xml</path>
-        <ftypes>*.cpp, *.cc, *.cxx, *.h, *.hpp, *.hxx, Makefile, CMakeLists.txt</ftypes>
+        <ftypes>*.cpp, *.cc, *.cxx, *.h, *.hpp, *.hxx, Makefile, CMakeLists.txt, *.vcxproj, *.props</ftypes>
     </rule>
     <rule>
         <platform>android</platform>
