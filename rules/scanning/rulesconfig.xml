@@ -2,113 +2,147 @@
     <rule>
         <platform>dotnet</platform>
         <path>/dotnet/dotnet.xml</path>
-        <ftypes>*.aspx, *.cs, *.vb, *.asax, *.asp, *.sln, *.svc, *.cshtml, *.rdl, *.sql, *.edmx, *.config</ftypes>
+        <platform_ftypes>*.aspx, *.cs, *.vb, *.asax, *.asp, *.sln, *.svc, *.cshtml, *.rdl, *.edmx</platform_ftypes>
+        <project_config_ftypes>*.config, web.config, app.config, machine.config</project_config_ftypes>
+        <common_ftypes>*.config, *.sql, *.xml, *.json, *.resx, *.settings, *.log</common_ftypes>
     </rule>
     <rule>
         <platform>php</platform>
         <path>/php/php.xml</path>
-        <ftypes>*.php, *.ini, *.txt, *.config, *.xml, *.lock, .htaccess, *.log</ftypes>
+        <platform_ftypes>*.php</platform_ftypes>
+        <project_config_ftypes>php.ini, .htaccess, composer.json, composer.lock</project_config_ftypes>
+        <common_ftypes>*.ini, *.txt, *.config, *.xml, *.lock, .htaccess, *.log, *.json</common_ftypes>
     </rule>
     <rule>
         <platform>java</platform>
         <path>/java/java.xml</path>
-        <ftypes>*.java, *.jsp</ftypes>
+        <platform_ftypes>*.java, *.jsp</platform_ftypes>
+        <project_config_ftypes>pom.xml, settings.xml, application.properties, application.yml</project_config_ftypes>
+        <common_ftypes>*.xml, *.properties, *.config, *.json, *.log, *.yml, *.yaml</common_ftypes>
     </rule>
     <rule>
         <platform>javascript</platform>
         <path>/javascript/javascript.xml</path>
-        <ftypes>*.js, *.ts</ftypes>
+        <platform_ftypes>*.js, *.ts</platform_ftypes>
+        <project_config_ftypes>package.json, package-lock.json, webpack.config.js, tsconfig.json</project_config_ftypes>
+        <common_ftypes>*.json, *.config, *.lock, *.yml, *.yaml, *.log</common_ftypes>
     </rule>
     <rule>
         <platform>kotlin</platform>
         <path>/mobile/android/kotlin.xml</path>
-        <ftypes>*.kt, *.java, *.xml</ftypes>
+        <platform_ftypes>*.kt</platform_ftypes>
+        <project_config_ftypes>build.gradle, settings.gradle, gradle.properties</project_config_ftypes>
+        <common_ftypes>*.java, *.xml, *.json, *.gradle, *.properties, *.log</common_ftypes>
     </rule>
     <rule>
         <platform>python</platform>
         <path>/python/python.xml</path>
-        <ftypes>*.py, *.yml, *.yaml, *.config, *.xml</ftypes>
+        <platform_ftypes>*.py</platform_ftypes>
+        <project_config_ftypes>requirements.txt, setup.py, Pipfile, Pipfile.lock, manage.py, settings.py, wsgi.py, asgi.py, pyproject.toml</project_config_ftypes>
+        <common_ftypes>*.yml, *.yaml, *.config, *.xml, *.json, *.log, *.txt, *.ini, .env, *.cfg</common_ftypes>
     </rule>
     <rule>
         <platform>go</platform>
         <path>/golang/go.xml</path>
-        <ftypes>*.go, *.mod, *.sum</ftypes>
+        <platform_ftypes>*.go</platform_ftypes>
+        <project_config_ftypes>go.mod, go.sum</project_config_ftypes>
+        <common_ftypes>*.mod, *.sum, *.yaml, *.yml, *.json, *.ini, *.cfg, *.txt, *.log</common_ftypes>
     </rule>
     <rule>
         <platform>c</platform>
         <path>/c/c.xml</path>
-        <ftypes>*.c, *.cpp, *.h, Makefile</ftypes>
+        <platform_ftypes>*.c, *.cpp, *.h</platform_ftypes>
+        <project_config_ftypes>Makefile, configure.ac, config.h</project_config_ftypes>
+        <common_ftypes>Makefile, *.config, *.ini, *.json, *.xml, *.log</common_ftypes>
     </rule>
     <rule>
         <platform>cpp</platform>
         <path>/cpp/cpp.xml</path>
-        <ftypes>*.cpp, *.cc, *.cxx, *.h, *.hpp, *.hxx, Makefile, CMakeLists.txt, *.vcxproj, *.props</ftypes>
+        <platform_ftypes>*.cpp, *.cc, *.cxx, *.hpp, *.hxx</platform_ftypes>
+        <project_config_ftypes>Makefile, CMakeLists.txt, *.vcxproj, *.props</project_config_ftypes>
+        <common_ftypes>*.h, Makefile, CMakeLists.txt, *.vcxproj, *.props, *.config, *.json, *.log</common_ftypes>
     </rule>
     <rule>
         <platform>android</platform>
         <path>/mobile/android/android.xml</path>
-        <ftypes>*.java, *.kt, *.groovy, *.xml</ftypes>
+        <platform_ftypes>*.java, *.kt, *.groovy</platform_ftypes>
+        <project_config_ftypes>AndroidManifest.xml, build.gradle, proguard-rules.pro</project_config_ftypes>
+        <common_ftypes>*.xml, *.json, *.gradle, *.properties, *.log</common_ftypes>
     </rule>
     <rule>
         <platform>common</platform>
         <path>/common.xml</path>
-        <ftypes>*.aspx, *.cs, *.vb, *.asax, *.asp, *.php, *.java, *.jsp, *.js, *.ts, *.py, *.yml, *.yaml, *.config, *.xml, *.sql, *.ini, *.txt, *.conf, *.properties, *.json, *.sh, *.bash, *.ps1, *.bat, *.cmd</ftypes>
+        <platform_ftypes>*.aspx, *.cs, *.vb, *.asax, *.asp, *.sln, *.svc, *.cshtml, *.rdl, *.edmx, *.php, *.java, *.jsp, *.js, *.ts, *.py, *.kt, *.go, *.c, *.cpp, *.h, *.cc, *.cxx, *.hpp, *.hxx, *.groovy, *.carbon, *.rb, *.rs, *.sql, *.psql, *.db, *.env</platform_ftypes>
+        <project_config_ftypes>*.config, web.config, app.config, machine.config, php.ini, .htaccess, composer.json, composer.lock, pom.xml, settings.xml, application.properties, application.yml, package.json, package-lock.json, webpack.config.js, tsconfig.json, build.gradle, settings.gradle, gradle.properties, requirements.txt, setup.py, Pipfile, Pipfile.lock, manage.py, settings.py, wsgi.py, asgi.py, pyproject.toml, go.mod, go.sum, Makefile, configure.ac, config.h, CMakeLists.txt, *.vcxproj, *.props, AndroidManifest.xml, proguard-rules.pro</project_config_ftypes>
+        <common_ftypes>*.conf, *.properties, *.env, *.resx, *.settings, *.json, *.lock, *.yml, *.yaml, *.xml, *.log, *.ini, *.txt, .env, *.cfg, *.bash, *.sh, *.ps1, *.bat, *.cmd, *.mod, *.sum</common_ftypes>
     </rule>
-    <!-- # Enable this rule when you want to create a custom rules file and also scan for custom file types list
+
+<!-- 
+    # Enable this rule when you want to create a custom rules file and also scan for custom file types list
     <rule>
         <platform>custom</platform>
-        <path>/custom/custom.xml</path>
-        <ftypes>*.java, *.jsp, *.js, *.php</ftypes>
-    </rule>-->
-    <rule>
-        <platform>allfiles</platform>
-        <path>/common.xml</path>
-        <ftypes>*.*</ftypes>
+        <path>/custom.xml</path>
+        <platform_ftypes>*.aspx, *.cs, *.vb, *.asax, *.asp, *.sln, *.svc, *.cshtml, *.rdl, *.edmx, *.php, *.java, *.jsp, *.js, *.ts, *.py, *.kt, *.go, *.c, *.cpp, *.h, *.cc, *.cxx, *.hpp, *.hxx, *.groovy, *.carbon, *.rb, *.rs, *.sql, *.psql, *.db, *.env</platform_ftypes>
+        <project_config_ftypes>*.config, web.config, app.config, machine.config, php.ini, .htaccess, composer.json, composer.lock, pom.xml, settings.xml, application.properties, application.yml, package.json, package-lock.json, webpack.config.js, tsconfig.json, build.gradle, settings.gradle, gradle.properties, requirements.txt, setup.py, Pipfile, Pipfile.lock, manage.py, settings.py, wsgi.py, asgi.py, pyproject.toml, go.mod, go.sum, Makefile, configure.ac, config.h, CMakeLists.txt, *.vcxproj, *.props, AndroidManifest.xml, proguard-rules.pro</project_config_ftypes>
+        <common_ftypes>*.conf, *.properties, *.env, *.resx, *.settings, *.json, *.lock, *.yml, *.yaml, *.xml, *.log, *.ini, *.txt, .env, *.cfg, *.bash, *.sh, *.ps1, *.bat, *.cmd, *.mod, *.sum</common_ftypes>
     </rule>
+-->
+
 </root>
 
 
-<!--<rule>
+<!-- TO BE IMPLEMENTED LATER
+
+    <rule>
         <platform>angular</platform>
         <path>/javascript/angular.xml</path>
-        <ftypes>*.js, *.ts, *.html, *.json</ftypes>
+        <platform_ftypes>*.js, *.ts, *.html</platform_ftypes>
+        <project_config_ftypes>angular.json, tsconfig.json, package.json</project_config_ftypes>
+        <common_ftypes>*.json</common_ftypes>
     </rule>
     <rule>
         <platform>nodejs</platform>
         <path>/javascript/nodejs.xml</path>
-        <ftypes>*.js, *.ts, *.html, *.json, *.ejs, *.yaml, *.yml</ftypes>
+        <platform_ftypes>*.js, *.ts, *.html, *.ejs</platform_ftypes>
+        <project_config_ftypes>package.json, package-lock.json, tsconfig.json</project_config_ftypes>
+        <common_ftypes>*.json, *.yaml, *.yml</common_ftypes>
     </rule>
     <rule>
         <platform>ruby</platform>
         <path>/ruby/rubyrails.xml</path>
-        <ftypes>*.rb</ftypes>
-    </rule>
-    <rule>
-        <platform>golang</platform>
-        <path>/golang/golang.xml</path>
-        <ftypes>*.go, *.mod, *.sum</ftypes>
+        <platform_ftypes>*.rb</platform_ftypes>
+        <project_config_ftypes>Gemfile, Rakefile, config.ru</project_config_ftypes>
+        <common_ftypes>*.yml, *.yaml</common_ftypes>
     </rule>
     <rule>
         <platform>rust</platform>
         <path>/rust/rust.xml</path>
-        <ftypes>*.rs, *.toml, *.env</ftypes>
+        <platform_ftypes>*.rs</platform_ftypes>
+        <project_config_ftypes>Cargo.toml, Cargo.lock</project_config_ftypes>
+        <common_ftypes>*.toml, *.env</common_ftypes>
     </rule>
     <rule>
         <platform>carbon</platform>
         <path>/carbon/carbon.xml</path>
-        <ftypes>*.carbon</ftypes>
+        <platform_ftypes>*.carbon</platform_ftypes>
+        <project_config_ftypes>carbon.config</project_config_ftypes>
+        <common_ftypes>*.conf</common_ftypes>
     </rule>
     <rule>
         <platform>database</platform>
         <path>/database/database.xml</path>
-        <ftypes>*.sql, *.psql, *.db</ftypes>
-            <dbtype>
-                <platform>storedprocedure</platform>
-                <path>/database/sql/sql_sp.xml</path>
-            </dbtype>
-            <dbtype>
-                <platform>postgress</platform>
-                <path>/database/postgress.xml</path>
-                <ftypes>*.psql, *.dbf, *.sqr, *.sql, *.gdb, *.rbf, *.db, *.spf, *.lis, *.mkd, *.sqs</ftypes>
-            </dbtype>
-    </rule>-->
+        <platform_ftypes>*.sql</platform_ftypes>
+        <project_config_ftypes>database.yml, dbconfig.json</project_config_ftypes>
+        <common_ftypes>*.db</common_ftypes>
+        <dbtype>
+            <platform>storedprocedure</platform>
+            <path>/database/sql/sql_sp.xml</path>
+        </dbtype>
+        <dbtype>
+            <platform>postgress</platform>
+            <path>/database/postgress.xml</path>
+            <platform_ftypes>*.psql, *.dbf, *.sqr</platform_ftypes>
+            <common_ftypes>*.sql, *.gdb, *.rbf, *.db, *.spf, *.lis, *.mkd, *.sqs</common_ftypes>
+        </dbtype>
+    </rule>
+-->

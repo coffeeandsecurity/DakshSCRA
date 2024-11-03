@@ -2,7 +2,7 @@ import json
 import yaml
 from jinja2 import Template
 import modules.runtime as runtime
-import modules.misclib as mlib
+import modules.utils as ut
 
 # Global variable for the HTML report path
 estimation_Fpath = runtime.estimation_Fpath
@@ -13,6 +13,23 @@ estimation_Fpath = runtime.estimation_Fpath
 
 
 def effortEstimator(json_file_path):
+    """
+    Estimates the effort in days for frontend and backend codebases 
+    based on file counts and outputs an HTML report.
+
+    This function reads a JSON file containing file count data for different 
+    frontend and backend languages, calculates the estimated minimum and maximum 
+    effort in days required for each language based on predefined effort metrics, 
+    and generates a summarized HTML report.
+
+    Parameters:
+        json_file_path (str): Path to the JSON file containing frontend and backend 
+                              file count data.
+
+    Returns:
+        None: The function writes an HTML report summarizing the effort estimation.
+    """
+
     global estimation_Fpath
 
     # Load data from JSON file
@@ -92,6 +109,16 @@ def effortEstimator(json_file_path):
 
 
 def generate_report(report_data):
+    """
+    Generates an HTML report for effort estimation by populating a Jinja2 template.
+
+    Parameters:
+        report_data (dict): Contains effort data for frontend, backend, 
+                            and total days estimate (min and max).
+
+    Returns:
+        None: Writes the rendered HTML report to a predefined file path.
+    """    
 
     # Load the template HTML content from the file
     with open(runtime.estimation_template, 'r') as template_file:
@@ -105,11 +132,25 @@ def generate_report(report_data):
     with open(estimation_Fpath, 'w') as report_file:
         report_file.write(rendered_html)
 
-    print("     [-] Effort estimation report: " + str(mlib.getRelativePath(estimation_Fpath)))
+    print("     [-] Effort estimation report: " + str(ut.getRelativePath(estimation_Fpath)))
 
 
 
 def get_effort_days(file_count, tech):
+    """
+    Estimates effort days based on the file count and technology type.
+
+    Parameters:
+        file_count (int): Number of files to estimate effort for.
+        tech (str): Technology type ('backend' or 'frontend').
+
+    Returns:
+        tuple: Effort range (min, max days) for the given file count.
+
+    Raises:
+        ValueError: If 'file_count' is not an integer or 'tech' is invalid.
+    """
+
     try:
         file_count = int(file_count)
     except ValueError:

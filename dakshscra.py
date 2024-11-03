@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path        # Resolve the windows / mac / linux path issue
 from os import path             # This lowercase path to be used only to validate whether a directory exist
 
-import modules.misclib as mlib
+import modules.utils as utils
 import modules.reports as report
 import modules.parser as parser
 import modules.recon as rec
@@ -23,10 +23,10 @@ import modules.estimator as estimate
 root_dir = os.path.dirname(os.path.realpath(__file__))
 runtime.root_dir = root_dir         # initialise global root directory which is referenced at multiple locations
 
-mlib.dirCleanup("runtime")
-mlib.dirCleanup("reports/html")
-mlib.dirCleanup("reports/text")
-mlib.dirCleanup("reports/pdf")
+utils.dirCleanup("runtime")
+utils.dirCleanup("reports/html")
+utils.dirCleanup("reports/text")
+utils.dirCleanup("reports/pdf")
 # ------------------------- #
 
 args = argparse.ArgumentParser()
@@ -40,32 +40,31 @@ args.add_argument('-recon', action='store_true', dest='recon', help="Detects pla
 args.add_argument('-estimate', action='store_true', dest='estimate', help="Estimate efforts required for code review")
 
 
-#results = args.parse_args(args=None if sys.argv[1:] else ['--help'])    # Display help if no argument is passed
-#results = args.parse_args()
 
+# Parse arguments with error handling
 try:
     results = args.parse_args()
 except argparse.ArgumentError as e:
     print("\nError: Invalid option provided.")
     args.print_help()
-    mlib.toolUsage('invalid_option')
+    utils.toolUsage('invalid_option')
     sys.exit(1)
 
-'''
-if len(sys.argv) < 2:
-    args.print_help()
-    #args.print_usage(description="Required arguments")
-    print("\nExample: python dakshsca.py -r dotnet -t /path_to_source_dir")
-    print("Example: python dakshsca.py -r dotnet -f dotnet -t /path_to_source_dir\n")
-    print("To specify the verbosity level, set -v, -vv or -vvv\n")
-    print("Example: python dakshsca.py -r dotnet -f dotnet -vvv -t /path_to_source_dir\n")
-    
-    sys.exit(1)
-'''
+
+# Display help if no arguments are passed
 if not results or len(sys.argv) < 2:
     args.print_help()
-    mlib.toolUsage('invalid_option')
+    utils.toolUsage('invalid_option')
     sys.exit(1)
+
+
+# Remove duplicates in rule_file and file_types
+results.rule_file = utils.remove_duplicates(results.rule_file)
+results.file_types = utils.remove_duplicates(results.file_types)
+
+# If rule_file has a value but file_types is empty, assign rule_file to file_types
+if results.rule_file and not results.file_types:
+    results.file_types = results.rule_file.lower()
 
 
 elif results.recon:
@@ -78,6 +77,7 @@ elif results.rules_filetypes != None:
     rops.listRulesFiletypes(results.rules_filetypes)    # List available rules and/or supported filetypes
     sys.exit(1)
 
+
 # Priority #1 - If '-recon' option used but no rule file is specified then only recon must be performed
 if (results.recon or results.estimate) and results.target_dir and not results.rule_file:
     print(runtime.author)
@@ -86,7 +86,7 @@ if (results.recon or results.estimate) and results.target_dir and not results.ru
     if path.isdir(results.target_dir) == False: 
         print("\nInvalid target directory :" + results.target_dir + "\n")
         args.print_usage()
-        mlib.toolUsage("inalid_dir")
+        utils.toolUsage("inalid_dir")
         sys.exit(1)
     else:
         targetdir = results.target_dir
@@ -121,14 +121,14 @@ elif results.rule_file:
         print(f'[*] File Types Selected  = {results.file_types.lower()!r}')
         print(f'[*] Target Directory     = {results.target_dir}')
 
-        mlib.updateScanSummary("inputs_received.rule_selected", results.rule_file.lower())
-        mlib.updateScanSummary("inputs_received.filetypes_selected", results.file_types.lower())
-        mlib.updateScanSummary("inputs_received.target_directory", results.target_dir)
+        utils.updateScanSummary("inputs_received.rule_selected", results.rule_file.lower())
+        utils.updateScanSummary("inputs_received.filetypes_selected", results.file_types.lower())
+        utils.updateScanSummary("inputs_received.target_directory", results.target_dir)
 
         # Prompt the user to enter project name and subtitle
         project_name = input("[*] Enter Project Name (E.g: XYZ Portal): ")
         project_subtitle = input("[*] Enter Project Subtitle (E.g: v1.0.1 / XYZ Corp): ")
-        mlib.updateProjectConfig(project_name,project_subtitle)     # Update project details
+        utils.updateProjectConfig(project_name,project_subtitle)     # Update project details
 
     if str(results.verbosity) in ('1', '2', '3'):
         runtime.verbosity = results.verbosity
@@ -141,7 +141,7 @@ elif results.rule_file:
 if path.isdir(results.target_dir) == False: 
     print("\nInvalid target directory :" + results.target_dir + "\n")
     args.print_usage()
-    mlib.toolUsage("invalid_dir")
+    utils.toolUsage("invalid_dir")
     sys.exit(1)
 
 # Add the trailing slash ('/' or '\') to the path if missing. This is required to treat it as a directory.
@@ -150,37 +150,71 @@ project_dir = os.path.join(results.target_dir, '')
 # The regex matches the last trailing slash ('/' or '\') and then reverse search until the next trailing slash is found
 runtime.sourcedir = re.search(r'((?!\/|\\).)*(\/|\\)$', project_dir)[0]        # Target Source Code Directory
 
-# mlib.dirCleanup("runtime")    
+# utils.dirCleanup("runtime")    
 
 # Current directory of the python file
 root_dir = os.path.dirname(os.path.realpath(__file__))
 runtime.root_dir = root_dir
 
-# codebase = 'allfiles'  # This is the list of file types to enumerate before scanning using rules
+# List of file types to enumerate before scanning using rules
 codebase = results.file_types
 
-# Verify if the rule name is valid
-if not (rules_main := rops.getRulesPath_OR_FileTypes(results.rule_file, "rules")):
-    print("\nError: Invalid rule name!")
-    sys.exit()
-else:
-    rules_main = Path(str(runtime.rulesRootDir) + rules_main)
+# Store rule name and corresponding full path in a dictionary
+
+# Verify if the rule name(s) are valid
+rule_files = {}
+for rule_name in results.rule_file.split(','):
+    rule_paths = rops.getRulesPath_OR_FileTypes(rule_name.strip(), "rules")
+    
+    if not rule_paths:
+        print("\nError: Invalid rule name or no path found:", rule_name.strip())
+        sys.exit()
+    else:
+        # Construct full path and store it in the dictionary under the rule name
+        full_path = Path(str(runtime.rulesRootDir) + rule_paths)  # Use the entire string
+        rule_files[rule_name.strip()] = full_path
+
+rules_main = rule_files     # Assign the rule files dictionary to rules main which will be later used in the program
+
+# Store rule paths and their counts in lists
+rule_paths_str = []     # Collect rule paths as strings (for logging/debugging)
+rule_counts = []        # Collect rule counts (for JSON update)
+
+# Iterate through the rules and collect paths + counts
+for rule_name, rule_path in rules_main.items():
+    #print(f"    [DEBUG] Rule Name: {rule_name}")
+    #print(f"    [DEBUG] Path: {Path(str(rule_path))}")
+    
+    # Add rule path to the list for logging purposes
+    rule_paths_str.append(str(rule_path))
+    
+    # Get the count of rules for this path
+    count = rops.rulesCount(Path(str(rule_path)))
+    rule_counts.append(str(count))  # Store as string for easy joining
+
+# Join all rule paths and counts as comma-separated strings
+platform_rules_paths = ", ".join(rule_paths_str)  # Optional for logging if needed
+platform_rules_total = ", ".join(rule_counts)
+
+# print(f"[*] All rule paths: {platform_rules_paths}")
+print(f"[*] Total {results.rule_file.lower()} rules loaded: {platform_rules_total}")
 
 
+# Handle common rules and their count
 rules_common = Path(str(runtime.rulesRootDir) + rops.getRulesPath_OR_FileTypes("common", "rules"))
-
-platform_rules_total = rops.rulesCount(rules_main)
 common_rules_total = rops.rulesCount(rules_common)
-total_rules_loaded = rops.rulesCount(rules_main) + rops.rulesCount(rules_common) 
+
+
+# Total loaded rules (platform + common)
+total_rules_loaded = sum(map(int, rule_counts)) + common_rules_total
 
 print(f"[*] Total {results.rule_file.lower()} rules loaded: {platform_rules_total}")
 print(f"[*] Total common rules loaded: {common_rules_total}")
 
 # Update Scan Summary JSON file - Loaded rules count
-mlib.updateScanSummary("inputs_received.platform_specific_rules", str(platform_rules_total))
-mlib.updateScanSummary("inputs_received.common_rules", str(common_rules_total))
-mlib.updateScanSummary("inputs_received.total_rules_loaded", str(total_rules_loaded))
-
+utils.updateScanSummary("inputs_received.platform_specific_rules", platform_rules_total)
+utils.updateScanSummary("inputs_received.common_rules", str(common_rules_total))
+utils.updateScanSummary("inputs_received.total_rules_loaded", str(total_rules_loaded))
 
 # Source Code Dirctory Path
 sourcepath = Path(results.target_dir)
@@ -200,10 +234,10 @@ if results.recon:
 
         sCnt+=1
         print(f"[*] [Stage {sCnt}] Discover file paths")    # Stage 2
-        log_filepaths = mlib.discoverFiles(codebase, sourcepath, 1)
+        log_filepaths = utils.discoverFiles(codebase, sourcepath, 1)
 else: 
     print(f"[*] [Stage {sCnt}] Discover file paths")        # Stage 1
-    log_filepaths = mlib.discoverFiles(codebase, sourcepath, 1)
+    log_filepaths = utils.discoverFiles(codebase, sourcepath, 1)
 
 ###### [Stage 2 or 3] Rules/Pattern Matching - Parse Source Code ######
 sCnt+=1
@@ -215,29 +249,46 @@ os.makedirs(output_directory, exist_ok=True)
 
 source_matched_rules = []
 source_unmatched_rules = []
-with open(runtime.outputAoI, "w") as f_scanout:
-    with open(log_filepaths, 'r', encoding=mlib.detectEncodingType(log_filepaths)) as f_targetfiles:
-        rule_no = 1
-        if results.rule_file.lower() not in ['common', 'allfiles']:   # This check is used to prevent duplicate scanning using common rules when common is selected as a rule i.e. once for the platform specific using common rules and then perform common rules scanning. 
-            print("\033[92m     --- Applying platform specific rules ---\033[0m")
-            source_matched_rules, source_unmatched_rules = parser.sourceParser(rules_main, f_targetfiles, f_scanout, rule_no)   # Pattern matching for specific platform type
-        
-        print("\033[92m     --- Applying common (platform independent) rules ---\033[0m")
-        common_matched_rules, common_unmatched_rules = parser.sourceParser(rules_common, f_targetfiles, f_scanout, rule_no)  # Pattern matching for common rules
-        print("\033[92m     --- Patterns matching Summary ---\033[0m")
 
-        # Extend the original lists with the results from the second call
+with open(runtime.outputAoI, "w") as f_scanout:
+    with open(log_filepaths, 'r', encoding=utils.detectEncodingType(log_filepaths)) as f_targetfiles:
+
+        # Only run platform-specific rules if the rule file is NOT 'common' 
+        # This check is used to prevent duplicate scanning when 'common' is selected as a rule
+        if results.rule_file.lower() not in ['common']:
+            # Iterate through each platform in the rules_main dictionary
+            for platform, rules_main_path in rules_main.items():
+                print(f"\033[92m     --- Applying rules for {platform} ---\033[0m")
+                #print(f"Rules Path: {rules_main_path}")
+
+                # Call sourceParser for each platform's rules
+                matched, unmatched = parser.sourceParser(rules_main_path, f_targetfiles, f_scanout)
+
+                # Store individual platform results
+                source_matched_rules.extend(matched)
+                source_unmatched_rules.extend(unmatched)
+
+                # Reset target file pointer after each pass to allow re-reading
+                f_targetfiles.seek(0)
+
+        # Apply common (platform-independent) rules
+        print("\033[92m     --- Applying common (platform-independent) rules ---\033[0m")
+        common_matched_rules, common_unmatched_rules = parser.sourceParser(rules_common, f_targetfiles, f_scanout)
+
+        # Aggregate common rule results with platform-specific results (if any)
         source_matched_rules.extend(common_matched_rules)
         source_unmatched_rules.extend(common_unmatched_rules)
 
-    # Update the scan summary JSON file with the matched and unmatched patterns
-    mlib.updateScanSummary("source_files_scanning_summary.matched_rules", source_matched_rules)
-    mlib.updateScanSummary("source_files_scanning_summary.unmatched_rules", source_unmatched_rules)
+        print("\033[92m     --- Patterns Matching Summary ---\033[0m")
+
+    # Update the scan summary JSON file with the aggregated matched and unmatched patterns
+    utils.updateScanSummary("source_files_scanning_summary.matched_rules", source_matched_rules)
+    utils.updateScanSummary("source_files_scanning_summary.unmatched_rules", source_unmatched_rules)
 
 
 print("     [-] Total Files Scanned:", str(runtime.totalFilesIdentified - runtime.parseErrorCnt))
-mlib.updateScanSummary("detection_summary.total_files_scanned", str(runtime.totalFilesIdentified - runtime.parseErrorCnt))
-mlib.updateScanSummary("detection_summary.areas_of_interest_identified", str(runtime.rulesMatchCnt))
+utils.updateScanSummary("detection_summary.total_files_scanned", str(runtime.totalFilesIdentified - runtime.parseErrorCnt))
+utils.updateScanSummary("detection_summary.areas_of_interest_identified", str(runtime.rulesMatchCnt))
 
 print("     [-] Total matched rules:", len(source_matched_rules))
 print("     [-] Total unmatched rules:", len(source_unmatched_rules))
@@ -247,22 +298,21 @@ sCnt+=1
 print(f"[*] [Stage {sCnt}] Parsing file paths for areas of interest")
 
 with open(runtime.outputAoI_Fpaths, "w") as f_scanout:
-    with open(log_filepaths, 'r', encoding=mlib.detectEncodingType(log_filepaths)) as f_targetfiles:
+    with open(log_filepaths, 'r', encoding=utils.detectEncodingType(log_filepaths)) as f_targetfiles:
         rule_no = 1
         matched_rules, unmatched_rules = parser.pathsParser(runtime.rulesFpaths, f_targetfiles, f_scanout, rule_no)
-
     
     print("     [-] Total matched rules:", len(matched_rules))
     print("     [-] Total unmatched rules:", len(unmatched_rules))
 
     # Update the scan summary JSON file with the matched and unmatched patterns
-    mlib.updateScanSummary("paths_scanning_summary.matched_rules", matched_rules)
-    mlib.updateScanSummary("paths_scanning_summary.unmatched_rules", unmatched_rules)
+    utils.updateScanSummary("paths_scanning_summary.matched_rules", matched_rules)
+    utils.updateScanSummary("paths_scanning_summary.unmatched_rules", unmatched_rules)
 
 
-mlib.updateScanSummary("detection_summary.file_paths_areas_of_interest_identified", str(runtime.rulesPathsMatchCnt))
+utils.updateScanSummary("detection_summary.file_paths_areas_of_interest_identified", str(runtime.rulesPathsMatchCnt))
 
-mlib.cleanFilePaths(log_filepaths)
+utils.cleanFilePaths(log_filepaths)
 os.unlink(log_filepaths)        # Delete the temp file paths log after the path cleanup in the above step
 
 print("\n[*] Scanning Timeline")
@@ -279,9 +329,9 @@ print(f"    [-] Scan completed in   : {scan_duration}")
 # print("    [-] Scan completed in   : {:0>2}Hr:{:0>2}Min:{:0>2}s:{}ms".format(int(hours),int(minutes),seconds, milliseconds[:3]))
 
 # Update Scan Summary JSON file - Timeline
-mlib.updateScanSummary("scanning_timeline.scan_start_time", runtime.start_timestamp)
-mlib.updateScanSummary("scanning_timeline.scan_end_time",  end_timestamp)
-mlib.updateScanSummary("scanning_timeline.scan_duration", scan_duration)
+utils.updateScanSummary("scanning_timeline.scan_start_time", runtime.start_timestamp)
+utils.updateScanSummary("scanning_timeline.scan_end_time",  end_timestamp)
+utils.updateScanSummary("scanning_timeline.scan_duration", scan_duration)
 
 # Parse the JSON Summary file and write output to a text file
 parser.genScanSummaryText(runtime.scanSummary_Fpath)
@@ -290,4 +340,5 @@ parser.genScanSummaryText(runtime.scanSummary_Fpath)
 
 ###### [Stage 4] Generate Reports ######
 report.genReport()
-mlib.updateProjectConfig("","")     # Clean up project details in the config file
+utils.updateProjectConfig("","")     # Clean up project details in the config file
+

@@ -13,10 +13,11 @@ from ruamel.yaml import YAML
 from tabulate import tabulate
 from pathlib import Path    # Resolve the windows / mac / linux path issue
 import xml.etree.ElementTree as ET
+from colorama import Fore, Style
 
 import modules.runtime as runtime
 import modules.rulesops as rulesops
-import modules.misclib as mlib
+
 
 # Current directory of the python file
 parentPath = os.path.dirname(os.path.realpath(__file__))
@@ -26,13 +27,20 @@ def saveYaml(file_path, data):
     with open(file_path, "w") as file:
         ruamel.yaml.safe_dump(data, file)
 
-# Update project details in the config file (config/project.yaml)
+
 def updateProjectConfig(project_name, project_subtitle):
+    """
+    Update the project title and subtitle in the YAML config file (`config/project.yaml`).
+
+    Parameters:
+        project_name (str): New project title.
+        project_subtitle (str): New project subtitle.
+
+    Returns:
+        None
+    """
+    
     if os.path.exists(runtime.projectConfig):
-        ''' <-- To be removed - deprecated -->
-        with open(runtime.projectConfig, "r") as file:
-            config_data = ruamel.yaml.round_trip_load(file)
-        '''
         yaml = ruamel.yaml.YAML()
         
         with open(runtime.projectConfig, "r") as file:
@@ -49,8 +57,19 @@ def updateProjectConfig(project_name, project_subtitle):
             yaml.dump(config_data, file)
 
 
-# Check the length and allowed characters of the inputs
+
 def validate_input(input_string, input_type):
+    """
+    Validate the input string based on type, length, and allowed characters.
+
+    Parameters:
+        input_string (str): The string to validate.
+        input_type (str): The type of input, either 'name' or 'path'.
+
+    Returns:
+        bool: True if input is valid, False if it exceeds length limits or contains invalid characters.
+    """
+
     allowed_chars = string.ascii_letters + string.digits + '-_()'
     max_length = 50
     
@@ -79,57 +98,100 @@ def detectEncodingType(targetfile):
     return result['encoding']
 
 
+
 def discoverFiles(codebase, sourcepath, mode):
+    """
+    Discovers files for specified platforms and logs paths to platform-specific and master log files.
 
-    # mode '1' is for standard files discovery based on the filetypes/platform specified
+    Parameters:
+        codebase (str): Comma-separated list of platforms to discover files for.
+        sourcepath (str): Directory path to search for files.
+        mode (int): Determines file type retrieval method (1 for specific types, 2 for all types).
+
+    Returns:
+        str: Path to the master log file containing discovered file paths.
+    """
+
+    platforms = list(dict.fromkeys(re.sub(r"\s+", "", codebase).split(",")))
+    #print(f"     [DEBUG] Platforms: {platforms}")
+    print(f"{Fore.CYAN}     [-] Selected Platforms and Respective Filetypes: {Style.RESET_ALL}")
+    #print(f"{Fore.CYAN}     [-] Platforms: {Style.RESET_ALL}")
+
+    platform_filetypes = {}  # Store platform-specific filetypes
+    platform_extensions = {}  # Store identified extensions per platform
+    matches, total_files_count = [], 0
+    identified_files_count = 0
+
+    # Create or return the /runtime/platform directory and clear existing logs
+    platform_dir = runtime.runtime_dirpath / "platform"
+    platform_dir.mkdir(parents=True, exist_ok=True)
+
+    # Clear all existing platform-specific log files
+    for log_file in platform_dir.glob("filepaths_*.log"):
+        log_file.unlink()
+
+    # Initialize platform-specific filetypes if mode is 1
     if mode == 1:
-        ft = re.sub(r"\s+", "", rulesops.getRulesPath_OR_FileTypes(codebase, "filetypes"))         # Get file types and use regex to remove any whitespaces in the string
-        filetypes = list(ft.split(","))         # Convert the comman separated string to a list
-        print("     [-] Filetypes Selected: " + str(filetypes))
-        updateScanSummary("inputs_received.file_extensions_selected", str(filetypes))
-    elif mode == 2:
-        filetypes = '*.*'
-        updateScanSummary("inputs_received.file_extensions_selected", str(filetypes))
+        for platform in platforms:
+            ft = rulesops.getRulesPath_OR_FileTypes(platform, "filetypes")
+            platform_filetypes[platform] = list(dict.fromkeys(ft.split(",")))
+            platform_extensions[platform] = []  # Initialize empty list for each platform
 
-    matches = []
-    fext = []
-    total_files_count = 0           # Counter to track total project files identified within the project directory
-    identified_files_count = 0      # Counter to track total platform specific project files identified
+            print(f"         [-] {platform.capitalize()} Filetypes: {platform_filetypes[platform]}")
+            #print(f"{Fore.YELLOW}     [-] {platform.capitalize()} Filetypes: {platform_filetypes[platform]}{Style.RESET_ALL}")
 
-    # print("     [-] DakshSCRA Directory Path: " + runtime.root_dir)      
-    
-    with open(runtime.discovered_Fpaths, "w+") as f_filepaths:         # File ('discovered_Fpaths') for logging all discovered file paths
-        print("     [-] Identifying total files to be scanned!")
-        #filename = None     # To be removed. Temporarily added to fix - "local variable referenced before assignment" error
+    elif mode == 2:  # Default to *.* if mode 2 is used
+        platform_filetypes = {platform: ['*.*'] for platform in platforms}
+        platform_extensions = {platform: [] for platform in platforms}
 
-        # Reccursive Traversal of Directories and Files
-        for root, dirnames, filenames in os.walk(sourcepath):           # os.walk - Returns root dir, dirnames, filenames
-            total_files_count += len(filenames)             #  Obtain the total number of files present in the current directory during the traversal process
+    master_log_path = runtime.runtime_dirpath / "filepaths.log"
+    with open(master_log_path, "w+") as master_log:
 
-            for extensions in filetypes:                    # Iterate over each file extension in 'filetypes'
-                for filename in fnmatch.filter(filenames, extensions):  # Filter the filenames based on the current file extension
-                    matches.append(os.path.join(root, filename))        # Add the matched file path to the 'matches' list
-                    filename = os.path.join(root, filename)             # Get the complete file path
-                    f_filepaths.write(filename + "\n")      # Log discovered file paths
-                    identified_files_count += 1                         # Increment the count of lines
-                    fext.append(getFileExtention(filename))     # Get the file extension of the last matched filename and append it to 'fext'
-                
-                #fext.append(getFileExtention(filename))     # Get the file extension of the last matched filename and append it to 'fext'
+        # Traverse the source path to discover and log files
+        for root, _, filenames in os.walk(sourcepath):
+            total_files_count += len(filenames)
 
-    print("     [-] Total project files in the directory: " + str(total_files_count))
-    print("     [-] Total files to be scanned: " + str(identified_files_count))
-    updateScanSummary("detection_summary.total_project_files_identified", str(total_files_count))    
-    updateScanSummary("detection_summary.total_files_identified", str(identified_files_count))    
-    updateScanSummary("detection_summary.file_extensions_identified", str(fext))
-    
+            for platform, extensions in platform_filetypes.items():
+                platform_log_path = platform_dir / f"filepaths_{platform}.log"
+
+                with open(platform_log_path, "a") as platform_log:
+                    for ext in extensions:
+                        ext = ext.strip()  # Remove spaces
+                        matched_files = fnmatch.filter(filenames, ext)
+
+                        for filename in matched_files:
+                            full_path = os.path.join(root, filename)
+
+                            platform_log.write(full_path + "\n")
+                            master_log.write(full_path + "\n")
+
+                            matches.append(full_path)
+                            identified_files_count += 1
+
+                            ext_value = getFileExtention(full_path)
+                            if ext_value and ext_value not in platform_extensions[platform]:
+                                platform_extensions[platform].append(ext_value)
+
+    # Print identified file extensions per platform
+    #print("     [-] Identified File Types:")
+    print(f"{Fore.CYAN}     [-] Discovered/Identified File Types:{Style.RESET_ALL}")
+    for platform, exts in platform_extensions.items():
+        print(f"         [-] {platform.capitalize()}: {exts}")
+
+    # Print and update scan summary
+    print(f"     [-] Total project files in the directory: {total_files_count}")
+    print(f"     [-] Total files to be scanned: {identified_files_count}")
+
+    updateScanSummary("detection_summary.total_project_files_identified", str(total_files_count))
+    updateScanSummary("detection_summary.total_files_identified", str(identified_files_count))
+    updateScanSummary("detection_summary.file_extensions_identified", platform_extensions)
+
     runtime.totalFilesIdentified = identified_files_count
-    fext = list(dict.fromkeys(filter(None, fext)))      # filter is used to remove empty item that gets added due to 'filename = None' above
-    
-    print("     [-] File Extentions Identified: " + str(fext))
-    updateScanSummary("detection_summary.file_extensions_identified", str(fext))
+
+    return master_log_path  # Return master log path
 
 
-    return runtime.discovered_Fpaths
+
 
 # This is a test function and will be merged with the above function
 def reconDiscoverFiles(codebase, sourcepath, mode):
@@ -169,6 +231,8 @@ def reconDiscoverFiles(codebase, sourcepath, mode):
     updateScanSummary("detection_summary.file_extensions_identified", str(fext))
 
     return identified_files
+
+
 
 # Return relative paths related to reports - Temp option. Will be removed later
 def getRelativePath(fpath):
@@ -267,9 +331,18 @@ def getShortPath(file_path):
     return f"{os.sep}{directory.split(os.sep)[1]}{os.sep}{shortened}{os.sep}{filename}"
 
 
-# Function to replace absolute file paths with project file paths 
-# by stripping out the path before the project directory
+
 def cleanFilePaths(filepaths_source):
+    """
+    Cleans file paths by replacing absolute paths with relative project paths.
+
+    Parameters:
+        filepaths_source (str): The source file path for which to clean paths.
+
+    Returns:
+        None: The function writes cleaned paths to a text file.
+    """
+
     target_dir = os.path.dirname(filepaths_source)
     source_file = os.path.join(target_dir, "filepaths.log")
     dest_file = os.path.join(target_dir, "filepaths.txt")
@@ -284,11 +357,23 @@ def cleanFilePaths(filepaths_source):
 
 
 
-# Function to update a specific entry in the scan summary JSON file
 def updateScanSummary(key, value):
+    """
+    Updates a specified entry in the scan summary JSON file.
+
+    If the JSON file is missing, it creates one with default data.
+
+    Parameters:
+        key (str): The key path to the entry in the JSON structure to update.
+        value (any): The new value to assign to the specified key.
+
+    Returns:
+        None: The function modifies the JSON file in place.
+    """
+
     json_filename = runtime.scanSummary_Fpath
 
-    # Create the JSON file with default data if the file is missing. 
+    # Create the JSON file with default data if the file is missing.
     if not os.path.isfile(json_filename):
         default_data = {
             "inputs_received": {
@@ -301,10 +386,10 @@ def updateScanSummary(key, value):
                 "file_extensions_selected": []
             },
             "detection_summary": {
-                "total_project_files_identified": 0,    # Total project files identified in the project directory
-                "total_files_identified": 0,            # Total platform specific project files identified
-                "total_files_scanned": 0,               # This should be same as "total_files_identified" unless some files were skipped during parsing or failed to scan
-                "file_extensions_identified": [],
+                "total_project_files_identified": 0,
+                "total_files_identified": 0,
+                "total_files_scanned": 0,
+                "file_extensions_identified": {},
                 "areas_of_interest_identified": 0,
                 "file_paths_areas_of_interest_identified": 0
             },
@@ -341,8 +426,20 @@ def updateScanSummary(key, value):
         for level in levels[:-1]:
             current = current[level]
 
-        # Update the specific entry in the dictionary
-        current[levels[-1]] = value
+        # If updating file extensions, ensure it's grouped by platform
+        if key == "detection_summary.file_extensions_identified":
+            # Merge new platform-specific extensions with existing ones
+            if not isinstance(current[levels[-1]], dict):
+                current[levels[-1]] = {}  # Initialize as a dictionary if not already
+
+            for platform, extensions in value.items():
+                current[levels[-1]].setdefault(platform, []).extend(extensions)
+                # Remove duplicates
+                current[levels[-1]][platform] = list(set(current[levels[-1]][platform]))
+
+        else:
+            # Update the specific entry in the dictionary
+            current[levels[-1]] = value
 
         with open(json_filename, "w") as file:
             json.dump(data, file, indent=4)
@@ -352,6 +449,8 @@ def updateScanSummary(key, value):
         print(f"Entry '{key}' does not exist or is not accessible.")
     except Exception as e:
         print(f"An error occurred while updating entry '{key}': {str(e)}")
+
+
 
 
 # Display tool's usage details in the console
@@ -385,4 +484,9 @@ def toolUsage(option):
     return
 
 
-
+# Removes duplicates from a comma-separated string and preserves order.
+def remove_duplicates(value):
+    if value:
+        unique_values = list(dict.fromkeys(value.split(',')))  # Remove duplicates while preserving order
+        return ','.join(unique_values)
+    return value

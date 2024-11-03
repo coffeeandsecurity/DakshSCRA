@@ -6,7 +6,7 @@ import chardet
 from pathlib import Path
 from collections import Counter
 
-import modules.misclib as mlib
+import modules.utils as ut
 import modules.runtime as runtime
 import modules.estimator as estimate
 
@@ -15,7 +15,27 @@ exclusion_list = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.ico', '.tiff', '.zi
                   '.svg', '.ttf', '.woff', '.woff2']
 
 
+
 def detectFramework(language, file_path):
+    """
+    Detects the framework used in a specified file based on its language.
+
+    Loads framework definitions from a JSON file, checks if the specified language
+    exists, and analyzes the file at `file_path` to identify any matching frameworks
+    using file extensions and regex patterns.
+
+    Parameters:
+        language (str): The programming language (e.g., 'Python').
+        file_path (str): The path to the file for analysis.
+
+    Returns:
+        str or None: The name of the detected framework or None if not found.
+
+    Raises:
+        FileNotFoundError: If the framework JSON file is missing.
+        json.JSONDecodeError: If the JSON cannot be decoded.
+    """
+
     # Load the JSON data from a file
     with open(runtime.framework_Fpath) as json_file:
         data = json.load(json_file)
@@ -47,8 +67,32 @@ def detectFramework(language, file_path):
 
 
 
-# Software composition analysis
+
 def recon(targetdir, flag=False):
+    """
+    Performs software composition analysis on a specified directory to identify technologies and frameworks 
+    used within the project files.
+
+    This function scans the given target directory for project files, checks their extensions or matches them 
+    against regex patterns defined for various technologies, and generates a summary of findings. The results 
+    are saved to a JSON output file. Optionally, the function can operate in a mode suited for source code scanning.
+
+    Parameters:
+        targetdir (str): The directory path to be scanned for project files.
+        flag (bool): A flag indicating whether to enable special behavior. If False, prints a header message for reconnaissance. 
+                     If True, indicates the function is used in conjunction with source code scanning.
+
+    Returns:
+        tuple: A tuple containing:
+            - log_filepaths (list): A list of file paths enumerated during the reconnaissance.
+            - recSummary (dict): A summary of the reconnaissance results, typically containing identified technologies and frameworks.
+
+    Raises:
+        FileNotFoundError: If the technology details JSON file is not found.
+        json.JSONDecodeError: If the JSON file cannot be decoded.
+        IOError: If there is an error writing the output JSON file.
+    """
+
     if flag == False:       # True is used when recon option is used along with source code scanning
         print("\n[*] Reconnaissance (a.k.a Software Composition Analysis)")
     
@@ -147,14 +191,21 @@ def recon(targetdir, flag=False):
 
 
 
-'''
-This function takes a list of file_paths as input. It extracts the project folder names from the file paths and 
-finds the most common project folder name using the Counter class. Then, it iterates over the file paths, extracts 
-the parent directories, and checks if the parent directory's name matches the most common project folder name. 
-If it matches, the parent directory is added to the parent_directories set. 
-Finally, the function returns a list of all the extracted parent directories.
-'''
 def extractParentDirectory(file_paths):
+    """
+    Extracts the unique parent directories of the most common project folder from a list of file paths.
+
+    This function identifies the project folder names from the given file paths, determines the most frequently occurring
+    project folder name, and then collects the parent directories of those paths that match this most common project folder.
+
+
+    Parameters:
+        file_paths (list): A list of file paths.
+
+    Returns:
+        list: A list of unique parent directories that match the most common project folder name.
+    """
+
     #print("filepaths: "+str(file_paths))
     # Extract project folder names from file paths
     project_folder_names = [os.path.basename(os.path.dirname(file_path)) for file_path in file_paths]
@@ -179,10 +230,22 @@ def extractParentDirectory(file_paths):
     return []
 
 
-'''
-This function generates the recon_summary.json
-'''
+
 def summariseRecon(json_file_path):
+    """
+    Generates a summary report from a given JSON recon file and saves it as recon_summary.json.
+
+    This function reads a JSON file containing categorized file paths, counts the occurrences of files 
+    in their respective directories, and summarizes this data into a structured format. The summary includes 
+    total files and directories for each file type within the categories.
+
+    Parameters:
+        json_file_path (str): The path to the input JSON file containing recon data.
+
+    Returns:
+        str: The path to the generated summary JSON file (recon_summary.json).
+    """
+
     with open(json_file_path, 'r') as file:
         data = json.load(file)
 
@@ -227,10 +290,23 @@ def summariseRecon(json_file_path):
     return output_file_path
 
 
-'''
-Parse the generated recon summary JSON file and generate the text based recon summary report. 
-'''
+
 def reconSummaryTextReport(json_file_path, output_file_path):
+    """
+    Parses a recon summary JSON file and generates a text-based reconnaissance summary report.
+
+    This function reads data from a JSON file that contains the results of a software composition analysis 
+    and creates a formatted text report. The report includes sections for different technology stacks and 
+    provides a detailed overview of discovered platforms, frameworks, directories, and file counts.
+
+    Parameters:
+        json_file_path (str): The path to the input JSON file containing the recon summary data.
+        output_file_path (str): The path where the generated text report will be saved.
+
+    Returns:
+        None: This function writes the summary report to the specified output file.
+    """
+
     with open(json_file_path, 'r') as json_file:
         data = json.load(json_file)
 
@@ -283,7 +359,7 @@ def reconSummaryTextReport(json_file_path, output_file_path):
                         text_file.write(f"      {relative_path}{os.path.sep} - file(s) count: {directory_info['fileCount']}\n")
             text_file.write("\n")
 
-    print("     [-] Reconnaissance summary report: " + str(mlib.getRelativePath(output_file_path)))
+    print("     [-] Reconnaissance summary report: " + str(ut.getRelativePath(output_file_path)))
 
 
 

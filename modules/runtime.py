@@ -47,6 +47,7 @@ rulesPathsMatchCnt = 0
 
 ## ------------- <Temp Files> ------------- ##
 # Log File paths
+runtime_dirpath = Path(str(root_dir) + "/runtime/")
 discovered_Fpaths = Path(str(root_dir) + "/runtime/filepaths.log")
 discovered_clean_Fpaths = Path(str(root_dir) + "/runtime/filepaths.txt")
 
