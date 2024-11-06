@@ -113,6 +113,45 @@
             <reviewer>Reviewers should ensure that proper input validation and sanitization techniques are implemented for open redirect methods. They should verify that developers have taken appropriate measures to prevent open redirect vulnerabilities, such as validating and constraining redirect URLs to trusted domains. Reviewers should also assess the sensitivity of the redirect destinations and confirm that relevant security controls are in place.</reviewer>
         </rule>
     </category>
+
+    <category name="Database Queries">
+        <rule>
+            <name>SQL Query: SELECT Statements with WHERE or ORDER BY</name>
+            <regex><![CDATA[(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*]]></regex>
+            <rule_desc>Detects instances of SELECT statements with WHERE or ORDER BY clauses in SQL queries, which may be vulnerable to SQL injection if user input is not handled securely.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the use of potentially vulnerable SELECT statements with WHERE or ORDER BY clauses. Improper handling of user input in these clauses can lead to SQL injection, allowing attackers to manipulate query behavior and gain unauthorized access to data.</vuln_desc>
+            <developer>Developers should validate and implement secure alternatives, such as using parameterized queries with `SqlParameter` objects to prevent SQL injection vulnerabilities.</developer>
+            <reviewer>Reviewers should check whether parameterized queries with `SqlParameter` are used in SELECT statements to mitigate SQL injection risks.</reviewer>
+        </rule>
+
+        <rule>
+            <name>SQL Query: Unrestricted SELECT *</name>
+            <regex><![CDATA[\bSELECT\s+\*\s+FROM\b]]></regex>
+            <rule_desc>Detects "SELECT * FROM" in SQL queries, which can expose unnecessary or sensitive data.</rule_desc>
+            <vuln_desc>If this rule matches, it suggests that the query retrieves more data than necessary, potentially exposing sensitive information and increasing the attack surface.</vuln_desc>
+            <developer>Developers should validate and specify only necessary columns in SQL queries rather than using "SELECT *" to reduce data exposure risks.</developer>
+            <reviewer>Reviewers should check if "SELECT *" is avoided in favor of selecting specific columns to limit data exposure.</reviewer>
+        </rule>
+
+        <rule>
+            <name>SQL Query: Non-parameterized INSERT Statements</name>
+            <regex><![CDATA[(?i)\bINSERT INTO\s+[^\s]+\s+\(.*=.*\$.*]]></regex>
+            <rule_desc>Detects INSERT statements with direct use of user input, which can lead to SQL injection.</rule_desc>
+            <vuln_desc>If this rule matches, it suggests an unparameterized INSERT query that may allow SQL injection attacks.</vuln_desc>
+            <developer>Developers should always use parameterized queries or prepared statements in INSERT queries to prevent SQL injection.</developer>
+            <reviewer>Reviewers should examine if INSERT statements use parameterized queries to prevent injection risks from user input.</reviewer>
+        </rule>
+
+        <rule>
+            <name>SQL Query: UNION Queries with User Input</name>
+            <regex><![CDATA[(?i)\bUNION\s+SELECT\s+.*\$.*]]></regex>
+            <rule_desc>Detects UNION queries that incorporate user input, which could allow SQL injection if not parameterized securely.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates a UNION query that may allow SQL injection if user input is included without proper handling.</vuln_desc>
+            <developer>Developers should use parameterized queries for UNION statements to prevent SQL injection vulnerabilities.</developer>
+            <reviewer>Reviewers should check UNION queries for direct user input and confirm if secure parameterization is implemented to avoid injection risks.</reviewer>
+        </rule>
+    </category>
+
     <category name="Information Disclosure">
         <rule>
             <name>Information Disclosure: Stack Trace</name>

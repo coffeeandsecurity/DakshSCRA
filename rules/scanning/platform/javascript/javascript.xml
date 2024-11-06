@@ -8,6 +8,7 @@
             <developer>Developers should validate and sanitize user input obtained through `document.getElementById().value` before using it in any sensitive operations. They should implement input validation techniques appropriate for the expected input, such as data type checking, length validation, and character filtering.</developer>
             <reviewer>Reviewers should ensure that proper input handling is in place for user input obtained through `document.getElementById().value`. They should verify that developers have implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related to unvalidated input.</reviewer>
         </rule>
+
         <rule>
             <name>Untrusted Data in InnerHTML</name>
             <regex>\.innerHTML\s?=\s?.+</regex>
@@ -16,6 +17,7 @@
             <developer>Developers should avoid assigning untrusted data directly to the innerHTML property. They should implement proper input validation and output encoding techniques when updating the content of elements via innerHTML to prevent XSS vulnerabilities.</developer>
             <reviewer>Reviewers should verify if potentially untrusted data is assigned to the innerHTML property. They should assess if the code implements proper input validation and output encoding techniques to prevent XSS vulnerabilities when updating element content.</reviewer>
         </rule>
+        
         <rule>
             <name>Untrusted Data in 'document.write'</name>
             <regex>document\.write\(|innerHTML\s?=\s?.+</regex>
@@ -25,6 +27,7 @@
             <reviewer>Reviewers should verify if the code uses `document.write()` or assigns potentially untrusted values to the `innerHTML` property. They should assess if proper input validation and output encoding techniques are implemented to prevent DOM-based cross-site scripting vulnerabilities.</reviewer>
         </rule>
     </category>
+
     <category name="Untrusted Input in Web/API Response">
         <rule>
             <name>Handlebars Unescaped String</name>
@@ -36,6 +39,7 @@
             <reviewer>Reviewers should verify that proper input sanitization techniques are applied when using Handlebars strings. They should ensure that developers use Handlebars' built-in escaping mechanisms or equivalent custom sanitization methods to mitigate the risk of XSS vulnerabilities. Reviewers should also assess the implementation of output encoding and confirm that user input is properly sanitized before rendering it in the application.</reviewer>
         </rule>
     </category>
+    
     <category name="Insecure Method/Function Call">
         <rule>
             <name>Insecure Method Call: child_process.exec()</name>
@@ -54,6 +58,7 @@
             <reviewer>Reviewers should verify whether the code uses the `eval`, `setTimeout`, or `setInterval` functions. They should assess if the usage is justified and if proper input validation and sanitization techniques are implemented to prevent code injection vulnerabilities.</reviewer>
         </rule>
     </category>
+    
     <category name="Cryptographic Issues">
         <rule>
             <name>Weak Cryptography</name>
@@ -72,6 +77,7 @@
             <reviewer>Reviewers should verify if weak random number generation functions, such as `Math.random()`, are used. They should assess if the code relies on secure random number generation functions for cryptographic operations or generating unpredictable values.</reviewer>
         </rule>
     </category>
+    
     <category name="Information Disclosure">
         <rule>
             <name>Routes</name>
@@ -82,6 +88,7 @@
             <reviewer>Reviewers should verify whether the code contains hardcoded routes and assess the potential security implications. They should ensure that sensitive information, such as internal URLs, API endpoints, or authentication routes, is not exposed through hardcoded routes. Reviewers should also check if the code implements appropriate access control measures and adheres to secure coding practices, such as using configuration files or dynamic routing mechanisms.</reviewer>
         </rule>
     </category>
+    
     <category name="Insecure/Weak Mitigations">
         <rule>
             <name>Weak Mitigation: Using disable|bypass|ignore|suppress|unsafe</name>
@@ -92,6 +99,45 @@
             <reviewer>Reviewers should identify weak or inadequate security mitigations in the code and recommend implementing stronger security measures. They should assess if the application applies appropriate security controls and avoids relying on weak mitigations that may be easily bypassed by attackers.</reviewer>
         </rule>
     </category>
+
+    <category name="Database Queries">
+        <rule>
+            <name>SQL Query: SELECT Statements with WHERE or ORDER BY</name>
+            <regex><![CDATA[(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*]]></regex>
+            <rule_desc>Detects SELECT statements with WHERE or ORDER BY clauses in SQL queries, which may be vulnerable to SQL injection if user input is not handled securely in JavaScript environments.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the use of potentially vulnerable SELECT statements with WHERE or ORDER BY clauses. Improper handling of user input in these clauses can lead to SQL injection, allowing attackers to manipulate query behavior and gain unauthorized access to data.</vuln_desc>
+            <developer>Developers should validate and implement secure alternatives, such as using parameterized queries or query bindings provided by JavaScript libraries like `mysql`, `pg`, or ORMs such as Sequelize to avoid SQL injection risks.</developer>
+            <reviewer>Reviewers should check if parameterized queries or query bindings are used with SELECT statements containing WHERE or ORDER BY clauses in JavaScript applications to ensure secure handling of user input.</reviewer>
+        </rule>
+
+        <rule>
+            <name>SQL Query: Unrestricted SELECT *</name>
+            <regex><![CDATA[\bSELECT\s+\*\s+FROM\b]]></regex>
+            <rule_desc>Detects "SELECT * FROM" in SQL queries, which can expose unnecessary or sensitive data in JavaScript applications.</rule_desc>
+            <vuln_desc>If this rule matches, it suggests that the query retrieves more data than necessary, potentially exposing sensitive information and increasing the attack surface.</vuln_desc>
+            <developer>Developers should validate and specify only necessary columns in SQL queries rather than using "SELECT *" to prevent unnecessary data exposure. This is especially important when working with libraries like `mysql` or `pg` in Node.js.</developer>
+            <reviewer>Reviewers should verify that SQL queries in JavaScript applications select only the required columns to minimize data exposure risks.</reviewer>
+        </rule>
+
+        <rule>
+            <name>SQL Query: Non-parameterized INSERT Statements</name>
+            <regex><![CDATA[(?i)\bINSERT\s+INTO\s+[^\s]+\s+\(.*=.*\$.*)]]></regex>
+            <rule_desc>Detects non-parameterized INSERT statements that may include user input directly, leading to SQL injection vulnerabilities in JavaScript environments.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates a potentially vulnerable INSERT statement that could allow SQL injection if user input is included without proper handling.</vuln_desc>
+            <developer>Developers should use parameterized queries or prepared statements in INSERT operations to prevent SQL injection attacks when using JavaScript libraries like `mysql`, `pg`, or ORMs such as Sequelize.</developer>
+            <reviewer>Reviewers should inspect any INSERT statements to confirm secure parameterization in JavaScript applications and ensure that user input is handled safely to minimize injection risks.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Deprecated SQL Functions</name>
+            <regex><![CDATA[(?i)\b(mysql_query|pg_query|sqlite_query|db.query|db.execute|knex.raw)\s*\(\s*['\"]?SELECT|INSERT|UPDATE|DELETE\s+.+\s*['\"]?\s*\.\s*\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)]]></regex>
+            <rule_desc>Detects usage of deprecated or insecure SQL functions and dynamic SQL queries that may lead to security vulnerabilities in JavaScript applications.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the usage of potentially insecure SQL functions or libraries that may be vulnerable to SQL injection or other security issues if used without proper configurations or parameterization.</vuln_desc>
+            <developer>Developers should avoid using deprecated SQL functions or dynamic query building, and instead use secure alternatives like prepared statements or parameterized queries available in Node.js libraries (`mysql`, `pg`, Sequelize).</developer>
+            <reviewer>Reviewers should check for deprecated SQL functions or dynamic SQL building with user input, ensuring secure alternatives are implemented and that input validation and query parameterization practices are followed in JavaScript applications.</reviewer>
+        </rule>
+    </category>
+
     <category name="Deprecated Functions">
         <rule>
             <name>Deprecated JS Function: escape|unescape|eval</name>
@@ -102,6 +148,7 @@
             <reviewer>Reviewers should check for the usage of deprecated JavaScript functions and recommend replacing them with safer alternatives. They should assess if the codebase follows best practices and avoids deprecated functions that may pose security risks.</reviewer>
         </rule>
     </category>
+    
     <category name="MISC Checks">
         <rule>
             <name>Insecure Direct Object References (IDOR)</name>

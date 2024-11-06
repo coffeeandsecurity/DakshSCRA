@@ -74,6 +74,7 @@
             <reviewer>Reviewers should verify that YAML loading in the codebase uses yaml.safe_load or specifies yaml.FullLoader to ensure the safe handling of YAML data and mitigate potential security risks related to arbitrary code execution or dangerous object construction.</reviewer>
         </rule>
     </category>
+
     <category name="Insecure File Operations">
         <rule>
             <name>Insecure File Operations</name>
@@ -84,17 +85,55 @@
             <reviewer>Reviewers should verify that file operations in the codebase are performed on trusted file paths and that proper input validation is in place to prevent security risks related to file operations.</reviewer>
         </rule>
     </category>
+    
     <category name="Database Queries">
         <rule>
             <name>Insecure SQL Queries: raw and extra</name>
-            <!--<regex><![CDATA[(?i)(?<![a-zA-Z0-9_])\s*(raw|extra)\s*\(\s*]]></regex>-->
             <regex><![CDATA[(?i)^[^#]*\.\s*(raw|extra)\s*\(\s*]]></regex>
             <rule_desc>Detects insecure SQL queries using the "raw" and "extra" methods in Python.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a potential security concern related to insecure SQL queries. The use of "raw" and "extra" methods can lead to SQL injection vulnerabilities if user input is not properly validated or sanitized. Developers should ensure secure handling of SQL queries to prevent such vulnerabilities.</vuln_desc>
             <developer>Developers should avoid using "raw" and "extra" methods for SQL queries, especially with unvalidated user input. Instead, they should use parameterized queries or other secure methods to prevent SQL injection vulnerabilities.</developer>
             <reviewer>Reviewers should check for the usage of "raw" and "extra" methods in SQL queries and assess if proper input validation and sanitization are applied to mitigate the risk of SQL injection vulnerabilities. They should recommend using parameterized queries or secure SQL query-building methods.</reviewer>
         </rule>
+
+        <rule>
+            <name>SQL Query: SELECT Statements with WHERE or ORDER BY</name>
+            <regex><![CDATA[(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*]]></regex>
+            <rule_desc>Detects instances of SELECT statements with WHERE or ORDER BY clauses in SQL queries, which may be vulnerable to SQL injection if user input is not handled securely.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the use of potentially vulnerable SELECT statements with WHERE or ORDER BY clauses. Improper handling of user input in these clauses can lead to SQL injection, allowing attackers to manipulate query behavior and gain unauthorized access to data.</vuln_desc>
+            <developer>Developers should validate and implement secure alternatives by using parameterized queries with placeholders or bindings to prevent SQL injection risks.</developer>
+            <reviewer>Reviewers should check for insecure usage of SELECT statements with WHERE or ORDER BY clauses, verifying the use of parameterized queries and input sanitization to prevent SQL injection.</reviewer>
+        </rule>
+
+        <rule>
+            <name>SQL Query: Unrestricted SELECT *</name>
+            <regex><![CDATA[\bSELECT\s+\*\s+FROM\b]]></regex>
+            <rule_desc>Detects "SELECT * FROM" in SQL queries, which can expose unnecessary or sensitive data.</rule_desc>
+            <vuln_desc>If this rule matches, it suggests that the query retrieves more data than necessary, potentially exposing sensitive information and increasing the attack surface.</vuln_desc>
+            <developer>Developers should validate existing queries and specify only the required columns to prevent unnecessary data exposure.</developer>
+            <reviewer>Reviewers should check for insecure implementation using "SELECT *" and ensure only essential columns are specified to limit data exposure risks.</reviewer>
+        </rule>
+
+        <rule>
+            <name>SQL Query: Direct DELETE with User Input</name>
+            <regex><![CDATA[(?i)\bDELETE\s+FROM\s+[^\s]+\s+WHERE\s+.*=.*\$.*]]></regex>
+            <rule_desc>Detects DELETE statements using user input directly without parameterization, increasing SQL injection risks.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates a potentially insecure DELETE query that could be exploited for SQL injection.</vuln_desc>
+            <developer>Developers should avoid using user input directly in DELETE statements. Use parameterized queries to prevent SQL injection.</developer>
+            <reviewer>Reviewers should check if user input is used in DELETE statements and verify that secure parameterization methods are applied.</reviewer>
+        </rule>
+
+        <rule>
+            <name>SQL Query: Subqueries with User Input</name>
+            <regex><![CDATA[(?i)\bSELECT\s+[^\s]+\s+FROM\s+\((SELECT\s+.*\$.*)\)]]></regex>
+            <rule_desc>Detects nested subqueries with user input, which can lead to SQL injection vulnerabilities if input is not parameterized.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates a nested query that may allow SQL injection if user input is not validated or parameterized securely.</vuln_desc>
+            <developer>Developers should use parameterized queries and validate any user input used within subqueries to prevent injection vulnerabilities.</developer>
+            <reviewer>Reviewers should inspect subqueries that incorporate user input and confirm if parameterization and input validation are enforced.</reviewer>
+        </rule>
+
     </category>
+    
     <category name="Command Injection">
         <rule>
             <name>Command Injection: subprocess</name>
@@ -121,6 +160,7 @@
             <reviewer>Reviewers should check for the secure usage of eval() and assess if user input is properly validated, sanitized, and appropriately used as command parameters. They should ensure that developers have implemented strong input validation measures, command parameterization techniques, and proper context-aware security controls to mitigate command injection vulnerabilities. Reviewers should also validate if safe alternatives or language constructs have been considered to minimize the risks associated with shell command execution.</reviewer>
         </rule>
     </category>
+    
     <category name="Arbitrary Code Execution">
         <rule>
             <name>Arbitrary Code Execution: eval()</name>
@@ -131,6 +171,7 @@
             <reviewer>Reviewers should identify the presence of eval() function and assess if user input is directly passed to eval(). They should verify that proper input validation and sanitization are applied to mitigate the risk of arbitrary code execution vulnerabilities. Additionally, reviewers should encourage the use of safer alternatives and evaluate the execution context to minimize potential harm.</reviewer>
         </rule>
     </category>
+    
     <category name="Session and State Management">
         <rule>
             <name>Insecure Session Cookies or CSRF Tokens Configuration</name>
@@ -141,6 +182,7 @@
             <reviewer>Reviewers should verify that the SESSION_COOKIE_SECURE and CSRF_COOKIE_SECURE settings are appropriately configured as True in the application's security settings. Insecure configurations (False) should be flagged as potential security vulnerabilities and should be addressed by developers.</reviewer>
         </rule>
     </category>
+    
     <category name="Deprecated Functions">
         <rule>
             <name>Deprecated Python Functions</name>
@@ -151,6 +193,7 @@
             <reviewer>Reviewers should identify and flag the use of deprecated Python functions or modules in the codebase and recommend updating them to modern alternatives.</reviewer>
         </rule>
     </category>
+    
     <category name="Insecure Implementation or Permissions">
         <!--    # This rule is extreamly verbose. Use it only if you know how to filter out what you need.
         <rule>
@@ -178,6 +221,7 @@
             <reviewer>Reviewers should verify the usage of CSRF exempt decorators in the codebase. Ensure that these decorators are correctly applied and consider their impact on security. Pay particular attention to exemptions that may introduce security risks.</reviewer>
         </rule>
     </category>
+    
     <category name="Software and Library Version Detection">
         <rule>
             <name>Library Version Check</name>
@@ -191,6 +235,7 @@
     <!--
     <category name="Missing Mitigations">
     </category> -->
+    
     <category name="Insecure Mitigations">
         <rule>
             <name>Insecure Mitigation: Django Safe Filter django.utils.safestring</name>

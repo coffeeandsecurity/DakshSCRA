@@ -24,6 +24,7 @@ root_dir = os.path.dirname(os.path.realpath(__file__))
 runtime.root_dir = root_dir         # initialise global root directory which is referenced at multiple locations
 
 utils.dirCleanup("runtime")
+utils.dirCleanup("runtime/platform")
 utils.dirCleanup("reports/html")
 utils.dirCleanup("reports/text")
 utils.dirCleanup("reports/pdf")
@@ -176,9 +177,10 @@ for rule_name in results.rule_file.split(','):
 
 rules_main = rule_files     # Assign the rule files dictionary to rules main which will be later used in the program
 
-# Store rule paths and their counts in lists
+# Initialize lists for storing rule paths and counts with platform names
 rule_paths_str = []     # Collect rule paths as strings (for logging/debugging)
 rule_counts = []        # Collect rule counts (for JSON update)
+platform_rules_list = []  # List to store formatted platform specific rules with counts
 
 # Iterate through the rules and collect paths + counts
 for rule_name, rule_path in rules_main.items():
@@ -192,13 +194,16 @@ for rule_name, rule_path in rules_main.items():
     count = rops.rulesCount(Path(str(rule_path)))
     rule_counts.append(str(count))  # Store as string for easy joining
 
+    # Format each platform with its rule count and add to the list
+    platform_rules_list.append(f"{rule_name}[{count}]")
+
 # Join all rule paths and counts as comma-separated strings
 platform_rules_paths = ", ".join(rule_paths_str)  # Optional for logging if needed
-platform_rules_total = ", ".join(rule_counts)
+#platform_rules_total = ", ".join(rule_counts)
+platform_rules_total = ", ".join(platform_rules_list)  # Now in the format "php [32], cpp [25], java [26]"
 
 # print(f"[*] All rule paths: {platform_rules_paths}")
-print(f"[*] Total {results.rule_file.lower()} rules loaded: {platform_rules_total}")
-
+#print(f"[*] Total {results.rule_file.lower()} rules loaded: {platform_rules_total}")
 
 # Handle common rules and their count
 rules_common = Path(str(runtime.rulesRootDir) + rops.getRulesPath_OR_FileTypes("common", "rules"))
@@ -208,8 +213,10 @@ common_rules_total = rops.rulesCount(rules_common)
 # Total loaded rules (platform + common)
 total_rules_loaded = sum(map(int, rule_counts)) + common_rules_total
 
-print(f"[*] Total {results.rule_file.lower()} rules loaded: {platform_rules_total}")
+#print(f"[*] Total {results.rule_file.lower()} rules loaded: {platform_rules_total}")
+print(f"[*] Total platform specific rules loaded: {platform_rules_total}")
 print(f"[*] Total common rules loaded: {common_rules_total}")
+print(f"[*] Overall total rules loaded: {total_rules_loaded}")
 
 # Update Scan Summary JSON file - Loaded rules count
 utils.updateScanSummary("inputs_received.platform_specific_rules", platform_rules_total)
@@ -234,10 +241,12 @@ if results.recon:
 
         sCnt+=1
         print(f"[*] [Stage {sCnt}] Discover file paths")    # Stage 2
-        log_filepaths = utils.discoverFiles(codebase, sourcepath, 1)
+        #log_filepaths = utils.discoverFiles(codebase, sourcepath, 1)
+        master_file_paths, platform_file_paths = utils.discoverFiles(codebase, sourcepath, 1)
 else: 
     print(f"[*] [Stage {sCnt}] Discover file paths")        # Stage 1
-    log_filepaths = utils.discoverFiles(codebase, sourcepath, 1)
+    #log_filepaths = utils.discoverFiles(codebase, sourcepath, 1)
+    master_file_paths, platform_file_paths = utils.discoverFiles(codebase, sourcepath, 1)
 
 ###### [Stage 2 or 3] Rules/Pattern Matching - Parse Source Code ######
 sCnt+=1
@@ -251,39 +260,45 @@ source_matched_rules = []
 source_unmatched_rules = []
 
 with open(runtime.outputAoI, "w") as f_scanout:
-    with open(log_filepaths, 'r', encoding=utils.detectEncodingType(log_filepaths)) as f_targetfiles:
+    
+    # Only run platform-specific rules if the rule file is NOT 'common'
+    if results.rule_file.lower() not in ['common']:
+        # Iterate through each platform in the rules_main dictionary
+        for index, (platform, rules_main_path) in enumerate(rules_main.items()):
+            # Ensure the index matches the file path list
+            if index < len(platform_file_paths):
+                platform_file_path = platform_file_paths[index]
 
-        # Only run platform-specific rules if the rule file is NOT 'common' 
-        # This check is used to prevent duplicate scanning when 'common' is selected as a rule
-        if results.rule_file.lower() not in ['common']:
-            # Iterate through each platform in the rules_main dictionary
-            for platform, rules_main_path in rules_main.items():
                 print(f"\033[92m     --- Applying rules for {platform} ---\033[0m")
-                #print(f"Rules Path: {rules_main_path}")
+                
+                # Debug print statement to check what is passed to sourceParser
+                # print(f"[DEBUG] Platform: {platform}, Rules Path: {rules_main_path}, File Path: {platform_file_path}")
 
-                # Call sourceParser for each platform's rules
-                matched, unmatched = parser.sourceParser(rules_main_path, f_targetfiles, f_scanout)
+                with open(platform_file_path, 'r', encoding=utils.detectEncodingType(platform_file_path)) as f_targetfiles:
+                    # Call sourceParser for each platform's rules
+                    matched, unmatched = parser.sourceParser(rules_main_path, f_targetfiles, f_scanout)
 
-                # Store individual platform results
-                source_matched_rules.extend(matched)
-                source_unmatched_rules.extend(unmatched)
+                    # Store individual platform results
+                    source_matched_rules.extend(matched)
+                    source_unmatched_rules.extend(unmatched)
 
-                # Reset target file pointer after each pass to allow re-reading
-                f_targetfiles.seek(0)
+                    # Reset target file pointer after each pass to allow re-reading
+                    f_targetfiles.seek(0)
 
-        # Apply common (platform-independent) rules
-        print("\033[92m     --- Applying common (platform-independent) rules ---\033[0m")
+    # Apply common (platform-independent) rules
+    print("\033[92m     --- Applying common (platform-independent) rules ---\033[0m")
+    with open(master_file_paths, 'r', encoding=utils.detectEncodingType(master_file_paths)) as f_targetfiles:
         common_matched_rules, common_unmatched_rules = parser.sourceParser(rules_common, f_targetfiles, f_scanout)
 
-        # Aggregate common rule results with platform-specific results (if any)
-        source_matched_rules.extend(common_matched_rules)
-        source_unmatched_rules.extend(common_unmatched_rules)
+    # Aggregate common rule results with platform-specific results (if any)
+    source_matched_rules.extend(common_matched_rules)
+    source_unmatched_rules.extend(common_unmatched_rules)
 
-        print("\033[92m     --- Patterns Matching Summary ---\033[0m")
+    print("\033[92m     --- Patterns Matching Summary ---\033[0m")
 
-    # Update the scan summary JSON file with the aggregated matched and unmatched patterns
-    utils.updateScanSummary("source_files_scanning_summary.matched_rules", source_matched_rules)
-    utils.updateScanSummary("source_files_scanning_summary.unmatched_rules", source_unmatched_rules)
+# Update the scan summary JSON file with the aggregated matched and unmatched patterns
+utils.updateScanSummary("source_files_scanning_summary.matched_rules", source_matched_rules)
+utils.updateScanSummary("source_files_scanning_summary.unmatched_rules", source_unmatched_rules)
 
 
 print("     [-] Total Files Scanned:", str(runtime.totalFilesIdentified - runtime.parseErrorCnt))
@@ -298,7 +313,7 @@ sCnt+=1
 print(f"[*] [Stage {sCnt}] Parsing file paths for areas of interest")
 
 with open(runtime.outputAoI_Fpaths, "w") as f_scanout:
-    with open(log_filepaths, 'r', encoding=utils.detectEncodingType(log_filepaths)) as f_targetfiles:
+    with open(master_file_paths, 'r', encoding=utils.detectEncodingType(master_file_paths)) as f_targetfiles:
         rule_no = 1
         matched_rules, unmatched_rules = parser.pathsParser(runtime.rulesFpaths, f_targetfiles, f_scanout, rule_no)
     
@@ -312,8 +327,8 @@ with open(runtime.outputAoI_Fpaths, "w") as f_scanout:
 
 utils.updateScanSummary("detection_summary.file_paths_areas_of_interest_identified", str(runtime.rulesPathsMatchCnt))
 
-utils.cleanFilePaths(log_filepaths)
-os.unlink(log_filepaths)        # Delete the temp file paths log after the path cleanup in the above step
+utils.cleanFilePaths(master_file_paths)
+os.unlink(master_file_paths)        # Delete the temp file paths log after the path cleanup in the above step
 
 print("\n[*] Scanning Timeline")
 print("    [-] Scan start time     : " + str(runtime.start_timestamp))

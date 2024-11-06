@@ -89,7 +89,7 @@ def validate_input(input_string, input_type):
     else:
         return True
 
-# Detect file encoding type
+
 def detectEncodingType(targetfile):
     # Open the file in binary mode and read the first 1000 bytes to detect the encoding type
     with open(targetfile, 'rb') as f:
@@ -109,13 +109,11 @@ def discoverFiles(codebase, sourcepath, mode):
         mode (int): Determines file type retrieval method (1 for specific types, 2 for all types).
 
     Returns:
-        str: Path to the master log file containing discovered file paths.
+        tuple: Paths to the master log file and platform-specific log files.
     """
 
     platforms = list(dict.fromkeys(re.sub(r"\s+", "", codebase).split(",")))
-    #print(f"     [DEBUG] Platforms: {platforms}")
-    print(f"{Fore.CYAN}     [-] Selected Platforms and Respective Filetypes: {Style.RESET_ALL}")
-    #print(f"{Fore.CYAN}     [-] Platforms: {Style.RESET_ALL}")
+    print(f"     [-] Selected Platforms and Respective Filetypes:")
 
     platform_filetypes = {}  # Store platform-specific filetypes
     platform_extensions = {}  # Store identified extensions per platform
@@ -138,14 +136,15 @@ def discoverFiles(codebase, sourcepath, mode):
             platform_extensions[platform] = []  # Initialize empty list for each platform
 
             print(f"         [-] {platform.capitalize()} Filetypes: {platform_filetypes[platform]}")
-            #print(f"{Fore.YELLOW}     [-] {platform.capitalize()} Filetypes: {platform_filetypes[platform]}{Style.RESET_ALL}")
 
     elif mode == 2:  # Default to *.* if mode 2 is used
         platform_filetypes = {platform: ['*.*'] for platform in platforms}
         platform_extensions = {platform: [] for platform in platforms}
 
-    master_log_path = runtime.runtime_dirpath / "filepaths.log"
-    with open(master_log_path, "w+") as master_log:
+    master_file_paths = runtime.runtime_dirpath / "filepaths.log"
+    platform_file_paths = []  # List to store paths of platform-specific logs
+
+    with open(master_file_paths, "w+") as master_log:
 
         # Traverse the source path to discover and log files
         for root, _, filenames in os.walk(sourcepath):
@@ -153,6 +152,7 @@ def discoverFiles(codebase, sourcepath, mode):
 
             for platform, extensions in platform_filetypes.items():
                 platform_log_path = platform_dir / f"filepaths_{platform}.log"
+                platform_file_paths.append(platform_log_path)  # Append each platform log path
 
                 with open(platform_log_path, "a") as platform_log:
                     for ext in extensions:
@@ -173,8 +173,7 @@ def discoverFiles(codebase, sourcepath, mode):
                                 platform_extensions[platform].append(ext_value)
 
     # Print identified file extensions per platform
-    #print("     [-] Identified File Types:")
-    print(f"{Fore.CYAN}     [-] Discovered/Identified File Types:{Style.RESET_ALL}")
+    print("     [-] Discovered/Identified File Types:")
     for platform, exts in platform_extensions.items():
         print(f"         [-] {platform.capitalize()}: {exts}")
 
@@ -188,7 +187,7 @@ def discoverFiles(codebase, sourcepath, mode):
 
     runtime.totalFilesIdentified = identified_files_count
 
-    return master_log_path  # Return master log path
+    return master_file_paths, platform_file_paths  # Return master log path and platform log paths
 
 
 
@@ -234,8 +233,20 @@ def reconDiscoverFiles(codebase, sourcepath, mode):
 
 
 
-# Return relative paths related to reports - Temp option. Will be removed later
 def getRelativePath(fpath):
+    """
+    Returns the relative path from the '/reports' directory in a given file path.
+
+    Converts an absolute path to a relative path starting from '/reports' if it exists.
+    If the path is already relative or '/reports' is not found, the full path or None is returned.
+
+    Parameters:
+        fpath (str or Path): The file path to convert.
+
+    Returns:
+        str or None: Relative path from '/reports' or None if '/reports' is not found.
+    """
+
     # Convert PosixPath object to string
     fpath = str(fpath)
 
@@ -263,50 +274,32 @@ def getFileExtention(fpath):
     return extention
 
 
-# Discovered files extentions and count of each type
-def fileExtentionInventory(fpath):
-    extention = Path(str(fpath)).suffix
-
-    inventory = {}
-    inventory["file"] = fpath 
-    inventory["extension"] = extention
-
-    inventory = json.dumps(inventory)           # Convert dictionary to string object
-    inventory = json.loads(inventory)           # Take a string as input and returns a dictionary as output.
 
 
-    with open(runtime.inventory_Fpathext, "a+") as outfile:
-        try:
-            data = json.loads(outfile)
-            data = data.append(inventory)
-            #outfile.seek(0,2)
-            json.dump(data, outfile, indent=2)
-            outfile.close
-            print("Try block: ")
-        
-        except TypeError as e:
-            with open(runtime.inventory_Fpathext, "a+") as outfile:
-                json.dump(str(inventory), outfile, indent=2)
-                outfile.close
-                print("TypeError block: ")
-
-    return inventory
-
-
-# Remove all files in the temp dir
 def dirCleanup(dirname):
-    dir = Path(parentPath + "/../" + dirname)
-    if os.path.exists(dir):
-        for the_file in os.listdir(dir):
-            file_path = os.path.join(dir, the_file)
-            try:
-                if os.path.isfile(file_path):
-                    os.unlink(file_path)
-            except Exception as e:
-                print(e)
-    else:  # Force create output directory if it doesn't exist
-        os.makedirs(dir)
-    return
+    """
+    Clears all files in the specified temporary directory. If the directory 
+    does not exist, it creates it.
+
+    Parameters:
+        dirname (str): Name of the directory to clean up.
+
+    Returns:
+        None
+    """
+
+    dir_path = Path(parentPath) / ".." / dirname
+    if dir_path.exists():
+        for file in dir_path.iterdir():
+            if file.is_file():
+                try:
+                    file.unlink()
+                except Exception as e:
+                    print(f"Error removing file {file}: {e}")
+    else:
+        dir_path.mkdir(parents=True)
+
+
 
 
 

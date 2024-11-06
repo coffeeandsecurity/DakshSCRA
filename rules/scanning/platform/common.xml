@@ -2,41 +2,47 @@
     <category name="Authentication or Authorization Functionalities">
         <rule>
             <name>Authentication Modules</name>
-            <regex>(?i)(Login|Authentication|Authenticated|Oauth|JWT)</regex>
-            <rule_desc>Detects common module names associated with authentication, such as 'Login', 'Authentication', 'Authenticated', 'Oauth', and 'JWT'.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential presence of module names associated with authentication, which can provide attackers with valuable information about the system's functionality and increase the attack surface.</vuln_desc>
-            <developer>Developers should ensure that the authentication processes are implemented securely.</developer>
-            <reviewer>Reviewers should verify if proper security measures are in place related to authentication.</reviewer>
+            <regex>(?i)\b(Login|authenticate|authenticating|authenticated|oauth|jwt)\b</regex>
+            <rule_desc>Detects common terms used in authentication functionalities, such as 'Login', 'authenticate', 'OAuth', and 'JWT', when used in likely function names or module references.</rule_desc>
+            <vuln_desc>This rule matches on common function or module names associated with authentication. If not properly secured, these modules may expose vulnerabilities in user authentication, allowing unauthorized access.</vuln_desc>
+            <developer>Ensure authentication processes use secure configurations, apply best practices, and avoid using weak or generic names that could be predictable.</developer>
+            <reviewer>Verify that authentication mechanisms are implemented securely, with protections like parameterized inputs, encryption, and secure session management.</reviewer>
         </rule>
+
         <rule>
-            <name>Authorization Modules (Authorization|Authorizing|AccessControl|RBAC|ABAC)</name>
-            <regex>(?i)(Authorization|Authorizing|AccessControl|RBAC|ABAC)</regex>
-            <rule_desc>Detects the presence of common module names related to authorization and access control.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential presence of module names associated with authorization and access control, which are crucial for enforcing proper permissions and protecting sensitive resources. Failure to implement secure authorization checks can result in unauthorized access and data breaches.</vuln_desc>
-            <developer>Developers should ensure that authorization mechanisms and access control policies are implemented securely to prevent unauthorized access to sensitive resources.</developer>
-            <reviewer>Reviewers should verify if proper security measures are in place related to authorization and access control to protect against potential vulnerabilities.</reviewer>
+            <name>Authorization Modules</name>
+            <regex>(?i)\b(authoriz(e|ing|ed)|access_control|rbac|abac|acl)\b</regex>
+            <rule_desc>Detects terms used in authorization and access control functionalities, such as 'authorize', 'access_control', 'RBAC', and 'ABAC', in probable function names or modules.</rule_desc>
+            <vuln_desc>This rule matches likely references to authorization or access control functionality. Improper implementation can allow unauthorized access to sensitive resources, compromising security.</vuln_desc>
+            <developer>Ensure secure implementation of authorization checks, role-based access control, or attribute-based access control, and avoid predictable naming for sensitive modules.</developer>
+            <reviewer>Verify that authorization checks are properly enforced and configured to secure sensitive data and resources.</reviewer>
         </rule>
     </category>
+    
     <category name="Privileged User or Management Functionalities">
         <rule>
             <name>Admin Modules/Section</name>
-            <regex>(?i)(Admin|Administrator|AdminFunc|AdminPage|AdminLogin)</regex>
-            <rule_desc>Detects the presence of common module names related to administration functionalities or admin login pages.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential presence of module names associated with administration functionalities or admin login pages, which can provide attackers with valuable information about the system's administration interfaces and increase the attack surface.</vuln_desc>
-            <developer>Developers should avoid using generic or predictable module names for admin functionalities or admin login pages and ensure that access control mechanisms and authentication processes are implemented securely.</developer>
-            <reviewer>Reviewers should assess the usage of module names related to administration functionalities or admin login pages and verify if proper security measures are in place to protect these critical areas of the system.</reviewer>
+            <regex>(?i)\b(admin_func|admin_page|admin_login|administrator|admin_portal|admin_module|admin_interface)\b</regex>
+            <rule_desc>Detects common terms for administrative functions, modules, or login pages, specifically focusing on terms that indicate specific functionality rather than general mentions.</rule_desc>
+            <vuln_desc>This rule matches terms commonly associated with administrative functionalities or access points. If inadequately secured, these areas could expose critical functions to unauthorized access.</vuln_desc>
+            <developer>Use descriptive, non-generic names for admin-related functions, secure with strong authentication and access controls, and consider avoiding direct exposure of administrative URLs or modules.</developer>
+            <reviewer>Verify that all admin functionalities are secured and access-controlled to prevent unauthorized access and ensure secure implementation.</reviewer>
         </rule>
     </category>
+    
     <category name="Commonly Targeted Functionalities">
         <rule>
             <name>File Upload Functionality</name>
-            <regex>(?i)(upload|file\s*input|file\s*upload)(\s+(?!secure|protected|restricted)\w+)*</regex>
-            <rule_desc>Detects the presence of file upload functionality.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential presence of file upload functionality that may allow unauthorized or malicious files to be uploaded, posing security risks such as arbitrary code execution or unauthorized access.</vuln_desc>
-            <developer>Developers should ensure that file upload functionality is implemented securely by validating file types, limiting file size, and applying appropriate access controls. It is recommended to use well-established file upload libraries or frameworks that have built-in security features.</developer>
-            <reviewer>Reviewers should verify the implementation of secure file upload practices, including proper file type validation, size restriction, and access control mechanisms.</reviewer>
+            <regex>(?i)(file\s*upload|file\s*input|upload\s*file|upload[_-]handler|upload[_-]service|upload[_-]controller|upload[_-]module)(?!.*\b(secure|protected|restricted)\b)</regex>
+            <!--<regex>(?i)\b(file\s*upload|upload[_-]file|upload[_-]handler|upload[_-]service|file\s*(uploader|uploaderService|post|transfer|write|put))\b(?!.*\b(secure|protected|restricted)\b)</regex>
+            -->
+            <rule_desc>Detects likely implementations of file upload functionality by matching common terms associated with file upload services or modules.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates potential file upload functionality, which, if improperly secured, could allow unauthorized or malicious file uploads. This can lead to risks such as arbitrary code execution or data leakage.</vuln_desc>
+            <developer>Ensure file upload functionality is implemented securely with validation of file types, size limits, and access controls. Use established libraries or frameworks with built-in security features for file uploads to minimize risks.</developer>
+            <reviewer>Verify that secure file upload practices are followed, including file type validation, size restrictions, and appropriate access controls to prevent unauthorized file uploads.</reviewer>
         </rule>
     </category>
+
     <category name="Hardcoded Secrets or Sensitive Info">
         <rule>
             <name>Password</name>
@@ -100,7 +106,6 @@
             <developer>Developers should use parameterized queries or prepared statements to prevent SQL injection attacks. Avoid concatenating user input directly into SQL queries.</developer>
             <reviewer>Reviewers should verify that SQL queries use parameterized queries or prepared statements to handle user input securely. They should flag any occurrences of unsafe string concatenation in SQL queries for further review.</reviewer>
         </rule>
-
         <rule>
             <name>SQL Query: SELECT Statement with ORDER BY Clause</name>
             <regex>(SELECT).*(ORDER BY).*</regex>
@@ -117,14 +122,6 @@
             <developer>Developers should implement proper input validation and parameterization techniques to mitigate the risk of SQL injection when using SELECT statements with ORDER BY clauses and user-provided input names.</developer>
             <reviewer>Reviewers should verify the implementation of secure coding practices and assess if additional security measures are in place to prevent SQL injection.</reviewer>
         </rule>
-        <!--<rule>
-            <name>SQL Query: Using INSERT|UPDATE|DELETE|DROP</name>
-            <regex>(SELECT|INSERT|UPDATE|DELETE|DROP)[\s\S]*?FROM[\s\S]*?</regex>
-            <rule_desc>Detects potential SQL injection vulnerabilities.</rule_desc>
-            <vuln_desc>This rule matches potential SQL injection vulnerabilities in the code. SQL injection occurs when user-supplied input is not properly sanitized or validated before being used in SQL queries. Attackers can exploit SQL injection to manipulate queries, bypass authentication, retrieve sensitive data, or modify the database.</vuln_desc>
-            <developer>Developers should use parameterized queries or prepared statements to prevent SQL injection attacks. Additionally, input validation and proper escaping of user input should be implemented to ensure that only safe and sanitized values are used in SQL queries.</developer>
-            <reviewer>Reviewers should verify whether the code implements proper measures to prevent SQL injection vulnerabilities. They should check if input validation and proper sanitization techniques, such as parameterized queries or prepared statements, are used to handle user input within SQL queries. Reviewers should assess the effectiveness of the implemented measures in mitigating SQL injection risks.</reviewer>
-        </rule>-->
         <rule>
             <name>SQL Query: Using INSERT, UPDATE, DELETE, or DROP</name>
             <regex>(INSERT|UPDATE|DELETE|DROP).*\$\{[a-zA-Z0-9_]+\}.*</regex>
@@ -133,26 +130,18 @@
             <developer>Developers should check for the use of dynamic queries with these commands and verify proper input handling. If detected, implement proper input validation, parameterization techniques, and use prepared statements to mitigate the risk of SQL injection or unauthorized database changes.</developer>
             <reviewer>Reviewers should check for the presence of dynamic queries with INSERT, UPDATE, DELETE, or DROP commands and assess proper input handling and parameterization. They should verify that appropriate measures are in place to prevent SQL injection or unauthorized changes, including input validation and restrictions on executing harmful commands.</reviewer>
         </rule>
-        <!-- Use of outdated or insecure SQL libraries -->
-        <rule>
-            <name>Insecure SQL Library Usage</name>
-            <regex>(?i)(mysql|mysqli|pg|postgresql|sqlite3)</regex>
-            <rule_desc>Detects the usage of outdated or insecure SQL libraries.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates potential security risks associated with using outdated or insecure SQL libraries. These libraries may have known vulnerabilities that could be exploited by attackers.</vuln_desc>
-            <developer>Developers should use modern and secure SQL libraries with active maintenance and regular security updates.</developer>
-            <reviewer>Reviewers should verify that secure and up-to-date SQL libraries are used in the application to mitigate the risk of known vulnerabilities.</reviewer>
-        </rule>
     </category>
     <category name="Trust-boundary Validation or 3rd-Party Interactions">
         <rule>
             <name>IPv4 / IPv6 Address</name>
             <regex>\b(?:\b(?:[1-9]|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.(?:\d{1,3}\.){2}\d{1,3}\b|\b(?:(?:(?:[0-9A-Fa-f]{1,4}):){6}(?:[0-9A-Fa-f]{1,4}|(?:(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)(?:\.(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)){3})))\b)</regex>
-                <exclude>(?i)\b\w*(?:version|release|dotnet|oid|urn)\w*\b</exclude>
+                <exclude>(?i)\b\w*(?:version|release|dotnet|oid|urn|mozilla|useragent)\w*\b</exclude>
             <rule_desc>Detects potential IPv4 or IPv6 addresses in the code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential presence of IP addresses in the code, which can lead to security risks if not handled properly.</vuln_desc>
             <developer>Developers should carefully validate and sanitize input related to IP addresses to prevent security vulnerabilities such as IP spoofing or injection attacks.</developer>
             <reviewer>Reviewers should check for appropriate input handling and assess the implementation of input validation and sanitization techniques for IP addresses.</reviewer>
         </rule>
+
         <rule>
             <name>Trusted Or Untrusted URLs</name>
             <regex>(?i)\bhttps?://[^\s]+</regex>
@@ -162,6 +151,7 @@
             <developer>Developers should list and carefully review all URLs used in the application. They should implement proper URL validation and sanitization techniques to ensure the security and integrity of the application when dealing with user-provided or third-party URLs. It is important to prevent any unintentional exposure of sensitive information and perform thorough taint validation on third-party URLs to mitigate trust-related security risks.</developer>
             <reviewer>Reviewers should verify the implementation of secure URL handling practices and assess if additional security measures are necessary. They should thoroughly investigate the presence of these URLs, determine their purpose, and ensure they undergo appropriate taint validation. Reviewers should pay special attention to URLs associated with data exfiltration concerns and assess the trustworthiness of third-party URLs to mitigate potential security risks.</reviewer>
         </rule>
+        
         <rule>
             <name>Unvalidated Redirects and Forwards</name>
             <regex>.*\b(redirect|forward)\b.*</regex>
@@ -171,6 +161,7 @@
             <reviewer>Reviewers should review the code for potential unvalidated redirect and forward vulnerabilities and verify if proper input validation and destination checks are implemented.</reviewer>
         </rule>
     </category>
+    
     <category name="APIs and Endpoints">
         <rule>
             <name>API Endpoint Detection</name>
@@ -182,6 +173,7 @@
             <reviewer>Reviewers should check for the presence of API endpoints in the source code. They should verify if developers have implemented appropriate security measures for handling API endpoints, such as input validation, authentication, authorization, rate limiting, and secure data handling. Reviewers should also assess the sensitivity of the data handled by the API endpoints and confirm the presence of relevant security controls.</reviewer>
         </rule>
     </category>
+    
     <category name="Code Quality and Documentation">
         <rule>
             <name>TODO Comments</name>
@@ -210,17 +202,18 @@
             <reviewer>Reviewers should verify that secure cryptographic algorithms are used to mitigate the risk of cryptographic vulnerabilities. They should assess if deprecated or weak algorithms are used and recommend replacing them with stronger alternatives.</reviewer>
         </rule>
     </category>
+
     <category name="Malicious Code or Backdoor Detection">
         <rule>
             <name>Backdoor Entry and Bypass Detection</name>
-            <regex>(?i)(backdoor|bypass|sneaky|exploit|unauthorized_access|unauthorized_entry|hidden_entry|stealthy_entry|secret_entry)</regex>
-            <!--The following keywords can be present in a backdoor code but are sometimes too noise and generates FalsePositives. Therefore excluded.(override) -->
-            <rule_desc>Detects the presence of terms related to backdoor entry, bypass, or sneaky methods to get around program restrictions.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential presence of terms associated with backdoor entry, bypass techniques, or sneaky methods to circumvent program restrictions. Such activities can lead to unauthorized access, privilege escalation, and potential security breaches.</vuln_desc>
-            <developer>Developers should implement strong access controls, proper input validation, and enforce least privilege principles to mitigate the risk of backdoor entries, bypass, or unauthorized access attempts. Regular security assessments and code reviews should also be conducted to identify and address any potential vulnerabilities.</developer>
-            <reviewer>Reviewers should assess the presence of backdoor-related terms and investigate if there are any actual backdoor entries, bypass techniques, or unauthorized access pathways in the code. They should also verify that appropriate security measures are in place to prevent such activities.</reviewer>
+            <regex>(?i)\b(backdoor|bypass|sneaky|exploit|unauthorized_access|unauthorized_entry|hidden_entry|stealthy_entry|secret_entry)\b</regex>
+            <rule_desc>Detects the presence of keywords commonly associated with backdoor entries or methods used to bypass security restrictions in code.</rule_desc>
+            <vuln_desc>If this rule matches, it suggests potential vulnerabilities associated with backdoor entries or circumvention techniques. Such vulnerabilities can lead to unauthorized access, privilege escalation, and overall security breaches.</vuln_desc>
+            <developer>Developers should implement robust access controls, perform regular input validation, and enforce least privilege principles to mitigate risks of backdoor entries or unauthorized access attempts. Conducting frequent security assessments and code reviews is crucial to identify and remediate vulnerabilities.</developer>
+            <reviewer>Reviewers should investigate any matches for backdoor-related terms, ensuring that no actual backdoor entries or bypass techniques exist in the code. They must verify that proper security measures are implemented to prevent unauthorized access and assess the overall security posture of the application.</reviewer>
         </rule>
     </category>
+
     <category name="Common Mitigations">
         <rule>
             <name>CAPTCHA Implementation</name>

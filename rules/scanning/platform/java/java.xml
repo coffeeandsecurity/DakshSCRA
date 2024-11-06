@@ -57,24 +57,27 @@
             <reviewer>Reviewers should verify that the usage of `child_process.exec()` function is justified and necessary. They should assess if developers have implemented appropriate input validation and sanitization techniques to prevent remote OS command execution vulnerabilities. Reviewers should also ensure that commands passed to `child_process.exec()` are securely constructed and that any user-provided or untrusted input is properly validated, sanitized, and restricted to trusted values.</reviewer>
         </rule>
     </category>
+
     <category name="Untrusted File Handling">
         <rule>
             <name>File Upload Functionality</name>
-            <regex>FileUpload( )*(\()(.*)(\))</regex>
-            <rule_desc>Detects unvalidated file uploads, which can lead to security vulnerabilities such as remote code execution or denial of service.</rule_desc>
+            <regex>(?i)(FileUpload|MultipartFile|CommonsMultipartFile)\s*\(.*\)|\bPart\s*\(.*\)</regex>
+            <rule_desc>Detects potential unvalidated file uploads in Java applications, which can lead to security vulnerabilities such as remote code execution or denial of service.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of unvalidated file uploads. Attackers can exploit this vulnerability by uploading malicious files that can be executed on the server or cause other security risks. It is crucial to validate and sanitize file uploads to ensure that only authorized and safe files are processed.</vuln_desc>
             <developer>Developers should implement proper validation and sanitization of file uploads. They should verify the file type, size, and content to prevent the execution of malicious files. Additionally, developers should store uploaded files in a secure location and apply access controls to restrict unauthorized access.</developer>
-            <reviewer>Reviewers should verify that file uploads are properly validated and sanitized. They should assess if the necessary checks, such as file type and size validation, are in place. Reviewers should also ensure that uploaded files are stored securely and access controls are applied appropriately.</reviewer>
+            <reviewer>Reviewers should verify that file uploads are properly validated and sanitized. They should assess if the necessary checks, such as file type and size validation, are in place. Reviewers should also ensure that uploaded files are stored securely and that access controls are applied appropriately.</reviewer>
         </rule>
+
         <rule>
             <name>File Inclusion Vulnerability</name>
-            <regex>(request\.getParameter|response\.sendRedirect|response\.setHeader|response\.addHeader)(\s)*\((\s)*("|')[^\s'"]*\.\w+("|')</regex>
+            <regex>(request\.getParameter|response\.sendRedirect|response\.setHeader|response\.addHeader)\s*\(\s*("|')[^\s'"]+\.(jsp|php|txt|html|xml|json|csv|log)("|')</regex>
             <rule_desc>Detects potential file inclusion vulnerabilities in Java code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of file inclusion. File inclusion vulnerabilities occur when user-supplied input is used to construct file paths or URLs without proper validation, allowing attackers to include arbitrary files from the server or external sources.</vuln_desc>
             <developer>Developers should validate and sanitize user-supplied input used for constructing file paths or URLs. They should ensure that only trusted and authorized files are accessed and implement proper input validation to prevent directory traversal attacks.</developer>
             <reviewer>Reviewers should verify that proper input validation and sanitization techniques are used to mitigate file inclusion vulnerabilities. They should assess if user-supplied input used for constructing file paths or URLs is properly validated and if the application is protected against directory traversal attacks.</reviewer>
         </rule>
     </category>
+
     <category name="Insecure/Deprecated Libraries">
         <rule>
             <name>Insecure Package: java.util.Random</name>
@@ -84,7 +87,53 @@
             <developer>Developers should avoid using the java.util.Random class for generating secure random values, especially in cryptographic or security-sensitive applications. Instead, they should use the java.security.SecureRandom class, which provides a more secure and unpredictable source of random numbers. Developers should also review the usage of the java.util.Random package and consider whether a more suitable alternative is available for their specific use case.</developer>
             <reviewer>Reviewers should verify that the java.util.Random package is used appropriately and assess the security implications. They should check if the java.security.SecureRandom class is used where secure random values are required. Reviewers should also evaluate the context in which the java.util.Random package is used and determine if there are any security risks associated with the predictable nature of its random number generation.</reviewer>
         </rule>
+
+        <rule>
+            <name>Insecure Package: java.net.HttpURLConnection</name>
+            <regex>java\.net\.HttpURLConnection</regex>
+            <rule_desc>Detects the usage of the java.net.HttpURLConnection package, which may expose applications to insecure HTTP connections.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential use of insecure HTTP connections without SSL/TLS. This can lead to man-in-the-middle attacks and data interception.</vuln_desc>
+            <developer>Developers should ensure that all network connections use HTTPS instead of HTTP. They should validate SSL certificates and handle SSL/TLS connections securely using the HttpsURLConnection class.</developer>
+            <reviewer>Reviewers should check for the proper usage of HTTP connections and verify that secure protocols (like HTTPS) are enforced for all communications.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Insecure Package: org.apache.commons.collections</name>
+            <regex>org\.apache\.commons\.collections</regex>
+            <rule_desc>Detects the usage of the Apache Commons Collections library, which has known vulnerabilities related to deserialization.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential risk of deserialization attacks due to insecure handling of untrusted data. Vulnerabilities in this library can allow attackers to execute arbitrary code.</vuln_desc>
+            <developer>Developers should avoid using insecure deserialization practices and update to the latest version of the library that addresses known vulnerabilities. Use safe alternatives for data handling whenever possible.</developer>
+            <reviewer>Reviewers should evaluate the use of the Apache Commons Collections library and assess whether it is being used securely and with proper data validation.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Insecure Package: javax.xml.parsers.DocumentBuilderFactory</name>
+            <regex>javax\.xml\.parsers\.DocumentBuilderFactory</regex>
+            <rule_desc>Detects the use of javax.xml.parsers.DocumentBuilderFactory, which may lead to XML external entity (XXE) attacks.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential for XXE vulnerabilities, where an attacker can control the XML parser to access sensitive files or perform server-side requests.</vuln_desc>
+            <developer>Developers should configure the DocumentBuilderFactory to prevent XXE attacks by disabling external entity processing and using secure parsing configurations.</developer>
+            <reviewer>Reviewers should ensure that the XML parsing is done securely, with proper configurations in place to mitigate XXE vulnerabilities.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Insecure Package: org.springframework.web.multipart.MultipartFile</name>
+            <regex>org\.springframework\.web\.multipart\.MultipartFile</regex>
+            <rule_desc>Detects the use of MultipartFile for file uploads without validation, which can lead to file upload vulnerabilities.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential risk of accepting unvalidated file uploads, which can lead to the upload of malicious files.</vuln_desc>
+            <developer>Developers should implement file validation checks on uploaded files, ensuring only allowed file types and sizes are accepted. Proper sanitization should also be enforced.</developer>
+            <reviewer>Reviewers should assess the file upload implementation and confirm that appropriate validation and sanitization processes are in place to mitigate risks.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Insecure Package: org.apache.poi.hssf.usermodel.HSSFWorkbook</name>
+            <regex>org\.apache\.poi\.hssf\.usermodel\.HSSFWorkbook</regex>
+            <rule_desc>Detects the use of HSSFWorkbook for Excel file manipulation, which may expose applications to vulnerabilities due to outdated libraries.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the potential risk of using deprecated or vulnerable libraries for handling Excel files.</vuln_desc>
+            <developer>Developers should use the latest versions of the Apache POI library or alternatives for handling Excel files. Ensure that the library used is actively maintained and secure.</developer>
+            <reviewer>Reviewers should confirm that the latest secure libraries are used for handling file formats and assess any associated vulnerabilities.</reviewer>
+        </rule>
     </category>
+
     <category name="Disabled/Missing Security Controls">
         <rule>
             <name>Missing 'httpOnly' Flag in Cookie</name>
@@ -111,6 +160,7 @@
             <reviewer>Reviewers should verify that input validation mechanisms are properly implemented and enabled for all relevant data inputs. They should identify any instances where input validation is explicitly disabled and assess the impact of such configurations. Reviewers should also evaluate the effectiveness of the implemented input validation measures in preventing common security vulnerabilities.</reviewer>
         </rule>
     </category>
+
     <category name="Information Disclosure">
         <rule>
             <name>Logger Functions</name>
@@ -143,6 +193,44 @@
             <vuln_desc>If this rule matches, it indicates the use of HTTP client classes without encryption, which can lead to the transmission of sensitive information over unsecured channels. Attackers can intercept and extract the data, potentially compromising the confidentiality and integrity of the transmitted information.</vuln_desc>
             <developer>Developers should ensure that sensitive data is transmitted over secure channels, such as HTTPS, to prevent information leaks. They should use appropriate HTTP client classes with encryption capabilities and validate server certificates to establish secure connections.</developer>
             <reviewer>Reviewers should verify that sensitive data is not transmitted over unencrypted HTTP connections. They should assess if appropriate encryption mechanisms are implemented using HTTP client classes and ensure the proper validation of server certificates. Reviewers should also evaluate the overall security architecture and ensure that secure communication practices are followed.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Database Queries">
+        <rule>
+            <name>SQL Query: SELECT Statements with WHERE or ORDER BY</name>
+            <regex><![CDATA[(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*]]></regex>
+            <rule_desc>Detects instances of SELECT statements with WHERE or ORDER BY clauses in SQL queries, which may be vulnerable to SQL injection if user input is not handled securely.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates the use of potentially vulnerable SELECT statements with WHERE or ORDER BY clauses. Improper handling of user input in these clauses can lead to SQL injection, allowing attackers to manipulate query behavior and gain unauthorized access to data.</vuln_desc>
+            <developer>Developers should validate and implement secure alternatives, such as using `PreparedStatement` to prevent SQL injection vulnerabilities.</developer>
+            <reviewer>Reviewers should check if parameterized queries with `PreparedStatement` are used for SELECT statements with WHERE or ORDER BY clauses to prevent SQL injection risks.</reviewer>
+        </rule>
+
+        <rule>
+            <name>SQL Query: Unrestricted SELECT *</name>
+            <regex><![CDATA[\bSELECT\s+\*\s+FROM\b]]></regex>
+            <rule_desc>Detects "SELECT * FROM" in SQL queries, which can expose unnecessary or sensitive data.</rule_desc>
+            <vuln_desc>If this rule matches, it suggests that the query retrieves more data than necessary, potentially exposing sensitive information and increasing the attack surface.</vuln_desc>
+            <developer>Developers should validate queries to include only necessary columns and avoid using "SELECT *" to reduce exposure risks.</developer>
+            <reviewer>Reviewers should verify whether only required columns are used in SQL queries to avoid data overexposure.</reviewer>
+        </rule>
+
+        <rule>
+            <name>SQL Query: Non-parameterized DELETE Statements</name>
+            <regex><![CDATA[(?i)\bDELETE\s+FROM\s+[^\s]+\s+WHERE\s+.*=.*\$.*]]></regex>
+            <rule_desc>Detects DELETE statements with direct use of user input, increasing the risk of SQL injection.</rule_desc>
+            <vuln_desc>If this rule matches, it suggests a potentially vulnerable DELETE query that could allow SQL injection if user input is not parameterized.</vuln_desc>
+            <developer>Developers should use parameterized queries or prepared statements for DELETE operations to prevent SQL injection.</developer>
+            <reviewer>Reviewers should examine DELETE statements with user input and confirm that parameterized queries are used to avoid injection vulnerabilities.</reviewer>
+        </rule>
+
+        <rule>
+            <name>SQL Query: Querying Sensitive Information Directly in Code</name>
+            <regex><![CDATA[(?i)\bSELECT\s+(password|ssn|creditcard|api_key|token|pin)\s+FROM\s+[^\s]+\b]]></regex>
+            <rule_desc>Detects SQL statements querying sensitive data directly, which could expose data if logs or exceptions are mishandled.</rule_desc>
+            <vuln_desc>If this rule matches, it suggests the use of sensitive data queries in code, which could lead to data leakage risks.</vuln_desc>
+            <developer>Developers should ensure secure handling of sensitive data and prevent direct logging of SQL statements querying sensitive fields.</developer>
+            <reviewer>Reviewers should check if sensitive data fields are queried and confirm that data protection practices and secure logging methods are applied.</reviewer>
         </rule>
     </category>
 </root>
