@@ -67,6 +67,11 @@ if not results or len(sys.argv) < 2:
     cli.toolUsage('invalid_option')
     sys.exit(1)
 
+# Check if results.file_types is set to "auto"
+if results.rule_file.lower() == "auto":
+    # Set file_types to the output of getAvailableRules()
+    results.rule_file = rutils.getAvailableRules(exclude=["android", "common"])
+    results.file_types = results.rule_file.lower()  # Override filetypes argument 
 
 # Remove duplicates in rule_file and file_types
 results.rule_file = strutils.remove_duplicates(results.rule_file)

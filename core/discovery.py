@@ -85,7 +85,10 @@ def discoverFiles(codebase, sourcepath, mode):
     # Print identified file extensions per platform
     print("     [-] Discovered/Identified File Types:")
     for platform, exts in platform_extensions.items():
-        print(f"         [-] {platform.capitalize()}: {exts}")
+        if exts:  # Check if the list is not empty
+            print(f"         [-] {platform.capitalize()}: {exts}")
+        else:
+            print(f"         [-] {platform.capitalize()}: None")
 
     # Print and update scan summary
     print(f"     [-] Total project files in the directory: {total_files_count}")

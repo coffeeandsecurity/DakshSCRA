@@ -121,7 +121,7 @@
 
         <rule>
             <name>SQL Query: Non-parameterized INSERT Statements</name>
-            <regex><![CDATA[(?i)\bINSERT\s+INTO\s+[^\s]+\s+\(.*=.*\$.*)]]></regex>
+            <regex><![CDATA[(?i)\bINSERT\s+INTO\s+[^\s]+\s+\(.*=.*\$.*\)]]></regex>
             <rule_desc>Detects non-parameterized INSERT statements that may include user input directly, leading to SQL injection vulnerabilities in JavaScript environments.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a potentially vulnerable INSERT statement that could allow SQL injection if user input is included without proper handling.</vuln_desc>
             <developer>Developers should use parameterized queries or prepared statements in INSERT operations to prevent SQL injection attacks when using JavaScript libraries like `mysql`, `pg`, or ORMs such as Sequelize.</developer>

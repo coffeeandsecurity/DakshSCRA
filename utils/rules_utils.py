@@ -125,3 +125,29 @@ def listRulesFiletypes(option):
     return 1 if rule_dict else 0
 
 
+
+def getAvailableRules(exclude=None):
+    """
+    Get a comma-separated string of available rules with no duplicates or spaces.
+
+    Parameters:
+        exclude (list): List of rules to exclude temporarily from the return value.
+
+    Returns:
+        str: Comma-separated string of available rules.
+    """
+    exclude = exclude or []  # Default to an empty list if exclude is None
+    available_rules = set()
+
+    # Load filetypes XML config file
+    xmltree = ET.parse(runtime_utils.rulesConfig)
+    rules = xmltree.getroot()
+
+    # Collect available rules
+    for rule in rules:
+        platform = rule.find("platform").text.strip()
+        if platform not in exclude:
+            available_rules.add(platform)
+
+    # Return comma-separated string with no spaces
+    return ",".join(sorted(available_rules))
