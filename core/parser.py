@@ -6,8 +6,8 @@ import xml.etree.ElementTree as ET
 from pathlib import Path 
 from timeit import default_timer as timer
 
-import modules.runtime as runtime
-import modules.utils as ut
+import state.runtime_state as state
+import utils.file_utils as futils
 
 
 
@@ -37,7 +37,7 @@ def sourceParser(rule_input, targetfile, outputfile):
     f_targetfiles = targetfile
 
     iCnt = 0
-    rule_no = runtime.rCnt
+    rule_no = state.rCnt
     error_count = 0
     unmatched_rules = []     # Store unmatched patterns
     matched_rules = []       # Store matched patterns
@@ -47,6 +47,14 @@ def sourceParser(rule_input, targetfile, outputfile):
         xmltree = ET.parse(rule_path)
         root = xmltree.getroot()
 
+        platform_name = rule_path.stem.upper()  # Extract platform name from the XML file (e.g., PHP, JAVA)
+        
+        # Reset rule count for each platform
+        rule_no = 0
+
+        # Write platform heading
+        f_scanout.write(f"\n--- {platform_name} Findings ---\n")
+        
         #print(f"     [-] Parsing rules from: {rule_path}")
 
         for category in root:
@@ -68,7 +76,7 @@ def sourceParser(rule_input, targetfile, outputfile):
                 #print(f"         [-] Applying Rule: {rule_title}")
                 
                 # stdout based on verbosity level set
-                if str(runtime.verbosity) == '1' or str(runtime.verbosity) == '2':
+                if str(state.verbosity) == '1' or str(state.verbosity) == '2':
                     #sys.stdout.write("\033[F")      # move the cursor up one line 
                     #sys.stdout.write("\033[K")     # clear line to prevent overlap of texts
                     print(f"         [-] Applying Rule: {rule_title}", end='\r')
@@ -81,13 +89,13 @@ def sourceParser(rule_input, targetfile, outputfile):
                     filepath = eachfilepath.rstrip()
                     iCnt += 1
 
-                    if str(runtime.verbosity) == '1':
+                    if str(state.verbosity) == '1':
                         if len(filepath) > 60:
-                            print('\t Parsing file: ' + "["+str(iCnt)+"] "+ ut.getShortPath(filepath), end='\r')
+                            print('\t Parsing file: ' + "["+str(iCnt)+"] "+ futils.getShortPath(filepath), end='\r')
                         else:
                             print('\t Parsing file: ' + "["+str(iCnt)+"] "+ filepath, end='\r')
                     else:
-                        print('\t Parsing file: ' + "["+str(iCnt)+"] "+ ut.getSourceFilePath(runtime.sourcedir, filepath), end='\r')
+                        print('\t Parsing file: ' + "["+str(iCnt)+"] "+ futils.getSourceFilePath(state.sourcedir, filepath), end='\r')
                     
                     sys.stdout.write("\033[K")     # clear line to prevent overlap of texts
                     #sys.stdout.write("\033[F\033[K")  # move the cursor up one line and clear line to prevent overlap of texts
@@ -114,11 +122,12 @@ def sourceParser(rule_input, targetfile, outputfile):
                                             f_scanout.write("\n\n")  # Add newlines before first entry
                                         flag_title_desc = True
                                         rule_no += 1
-                                        runtime.rulesMatchCnt += 1
+                                        state.rulesMatchCnt += 1
                                         matched_rules.append(rule_title)
 
-                                        f_scanout.write(
-                                            f"{rule_no}. Rule Title: {rule_title}\n"
+                                        f_scanout.write(                                            
+                                            f"\n{platform_name}-{rule_no}. Rule Title: {rule_title}\n"
+                                            #f"{rule_no}. Rule Title: {rule_title}\n"
                                             f"\n\t Rule Description  : {rule_desc}"
                                             f"\n\t Issue Description : {vuln_desc}"
                                             f"\n\t Developer Note    : {dev_note}"
@@ -128,7 +137,7 @@ def sourceParser(rule_input, targetfile, outputfile):
                                     if not flag_fpath:
                                         flag_fpath = True
                                         f_scanout.write(
-                                            f"\n\t -> Source File: {ut.getSourceFilePath(runtime.sourcedir, filepath)}\n"
+                                            f"\n\t -> Source File: {futils.getSourceFilePath(state.sourcedir, filepath)}\n"
                                             f"\t\t [{linecount}] {line}"
                                         )
                                     else:
@@ -142,7 +151,7 @@ def sourceParser(rule_input, targetfile, outputfile):
                         error_count += 1
 
                 f_targetfiles.seek(0)  # Reset the target files pointer
-                runtime.rCnt = rule_no  # Update runtime rule counter
+                state.rCnt = rule_no  # Update runtime rule counter
                 iCnt = 0  # Reset file counter
                 #sys.stdout.write("\033[K")  # Clear line to prevent overlap of texts
 
@@ -150,8 +159,149 @@ def sourceParser(rule_input, targetfile, outputfile):
         matched_rules = list(set(matched_rules))
         unmatched_rules = list(set(unmatched_rules))
 
-    runtime.parseErrorCnt += error_count
+    state.parseErrorCnt += error_count
     return matched_rules, unmatched_rules
+
+
+'''
+def sourceParser(rule_input, targetfile, outputfile):
+    """
+    Parses rules from XML files and applies them to target files.
+    Supports both individual Path and dictionary of Paths as input.
+
+    Parameters:
+        rule_input (dict or Path): Rule file paths or a single Path to an XML file.
+        targetfile (str): File containing paths of target source files.
+        outputfile (str or file object): File path or open file object to write scan results.
+
+    Returns:
+        tuple: (matched_rules, unmatched_rules) - Lists of rule titles for matched and unmatched patterns.
+    """
+    
+    # If outputfile is a string (path), open the file for writing
+    if isinstance(outputfile, str):
+        f_scanout = open(outputfile, "a")
+    else:
+        # Otherwise, assume it's already an open file object
+        f_scanout = outputfile
+
+    # Determine if input is a dict or a single Path
+    if isinstance(rule_input, dict):
+        rule_paths = rule_input.values()
+    elif isinstance(rule_input, Path):
+        rule_paths = [rule_input]
+    else:
+        raise TypeError(f"Expected a dict or Path, but got {type(rule_input)}")
+
+    iCnt = 0
+    rule_no = 0
+    error_count = 0
+    unmatched_rules = []  # Store unmatched patterns
+    matched_rules = []  # Store matched patterns
+
+    # Process each rule path (which corresponds to a platform like PHP, JAVA, etc.)
+    for rule_path in rule_paths:
+        platform_name = rule_path.stem.upper()  # Extract platform name from the XML file (e.g., PHP, JAVA)
+        
+        # Reset rule count for each platform
+        rule_no = 0
+        
+        # Write platform heading
+        f_scanout.write(f"\n-- {platform_name} Findings ---\n")
+
+        # Parse the XML rule file
+        xmltree = ET.parse(rule_path)
+        root = xmltree.getroot()
+
+        # Loop through categories and rules in the XML file
+        for category in root:
+            category_name = category.get('name')
+            if category_name:
+                print(f"     [-] Category: {category_name}")
+
+            # Process each rule in the category
+            for rule in category:
+                rule_title = rule.find("name").text
+                pattern = rule.find("regex").text
+                rule_desc = rule.find("rule_desc").text
+                vuln_desc = rule.find("vuln_desc").text
+                dev_note = rule.find("developer").text
+                rev_note = rule.find("reviewer").text
+
+                exclude = rule.find("exclude").text if rule.find("exclude") is not None else ""
+                flag_title_desc = False
+
+                print(f"         [-] Applying Rule: {rule_title}")
+
+                # Process each target file
+                for eachfilepath in targetfile:
+                    filepath = eachfilepath.rstrip()
+                    iCnt += 1
+
+                    # Print the file being processed
+                    print(f"\t Parsing file: [{iCnt}] {filepath}", end='\r')
+
+                    try:
+                        with open(filepath, 'r', encoding='ISO-8859-1') as fo_target:
+                            linecount = 0
+                            flag_fpath = False
+
+                            # Scan each line of the target file
+                            for line in fo_target:
+                                linecount += 1
+                                if len(line) > 500:
+                                    continue  # Skip overly long lines
+
+                                # Apply regex matching
+                                if re.findall(pattern, line):
+                                    if exclude and re.search(exclude, line, re.IGNORECASE):
+                                        continue  # Skip if exclude rule matches
+
+                                    line = (line[:75] + '..') if len(line) > 300 else line
+
+                                    if not flag_title_desc:
+                                        # Increment rule_no and write rule details to the output file
+                                        rule_no += 1
+                                        matched_rules.append(rule_title)
+
+                                        f_scanout.write(
+                                            f"\n{platform_name}-{rule_no}. Rule Title: {rule_title}\n"
+                                            f"\n\t Rule Description  : {rule_desc}"
+                                            f"\n\t Issue Description : {vuln_desc}"
+                                            f"\n\t Developer Note    : {dev_note}"
+                                            f"\n\t Reviewer Note     : {rev_note} \n"
+                                        )
+                                        flag_title_desc = True
+
+                                    if not flag_fpath:
+                                        flag_fpath = True
+                                        f_scanout.write(
+                                            f"\n\t -> Source File: {filepath}\n"
+                                            f"\t\t [{linecount}] {line}"
+                                        )
+                                    else:
+                                        f_scanout.write(f"\t\t [{linecount}] {line}")
+
+                            if rule_title not in matched_rules:
+                                unmatched_rules.append(rule_title)
+
+                    except (FileNotFoundError, PermissionError, UnicodeError) as e:
+                        print(f"Error processing {filepath}: {e}")
+                        error_count += 1
+
+        # Remove duplicates from the matched and unmatched rules lists
+        matched_rules = list(set(matched_rules))
+        unmatched_rules = list(set(unmatched_rules))
+
+        # Update error count in the state object
+        state.parseErrorCnt += error_count
+
+    # Close the file if we opened it
+    if isinstance(outputfile, str):
+        f_scanout.close()
+
+    return matched_rules, unmatched_rules
+'''
 
 
 
@@ -194,12 +344,12 @@ def pathsParser(rule_path, targetfile, outputfile, rule_no):
 
         for eachfilepath in f_targetfilepaths:  # Read each line (file path) in the file
             filepath = eachfilepath.rstrip()    # strip out '\r' or '\n' from the file paths
-            filepath = ut.getSourceFilePath(runtime.sourcedir, filepath)
+            filepath = futils.getSourceFilePath(state.sourcedir, filepath)
 
             if re.findall(pattern, filepath, flags=re.IGNORECASE):   # If there is a match
                 if pFlag == False:
                     rule_no += 1
-                    runtime.rulesPathsMatchCnt += 1
+                    state.rulesPathsMatchCnt += 1
                     matched_rules.append(pattern_name)  # Add matched patterns to the list
                     f_scanout.write(f"{rule_no}. Rule Title: {r.find('name').text}\n")
                     f_scanout.write(("\tFile Path: " + filepath) + "\n")
@@ -299,6 +449,6 @@ def genScanSummaryText(file_path):
     output += format_key_value("Scan end time", scanning_timeline.get('scan_end_time'), indent_level=1, is_sub_key=True)
     output += format_key_value("Scan completed in", scanning_timeline.get('scan_duration'), indent_level=1, is_sub_key=True)
 
-    with open(runtime.outputSummary, 'w') as file:
+    with open(state.outputSummary, 'w') as file:
         file.write(output)
 

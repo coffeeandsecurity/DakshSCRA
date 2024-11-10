@@ -3,7 +3,7 @@ import xml.etree.ElementTree as ET
 import pandas as pd
 from tabulate import tabulate
 
-import modules.runtime as runtime
+import state.runtime_state as runtime_utils
 
 
 
@@ -32,7 +32,7 @@ def getRulesPath_OR_FileTypes(platform, option):
     ret_value = ""
 
     # Load filetypes XML config file
-    xml_tree = ET.parse(runtime.rulesConfig)
+    xml_tree = ET.parse(runtime_utils.rulesConfig)
     rules = xml_tree.getroot()
 
     for rule in rules:
@@ -99,7 +99,7 @@ def listRulesFiletypes(option):
     rule_dict = {}
 
     # Load filetypes XML config file
-    xmltree = ET.parse(runtime.rulesConfig)
+    xmltree = ET.parse(runtime_utils.rulesConfig)
     rule = xmltree.getroot()
 
 

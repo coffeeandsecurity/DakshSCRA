@@ -8,3 +8,5 @@ reports/html/
 reports/pdf/
 reports/text/
 reports/!Sample-Reports
+web
+Dockerfile

@@ -19,9 +19,14 @@ from datetime import datetime, timedelta
 from weasyprint import HTML, CSS
 import time
 
-import modules.runtime as runtime
+import state.runtime_state as state
 import yaml
 import base64
+
+from collections import defaultdict
+import html
+import re
+
 
 def genPdfReport(html_path, pdf_path):
     try:
@@ -32,7 +37,7 @@ def genPdfReport(html_path, pdf_path):
         print("    [-] Be patient! PDF report generation takes time.")
         
 
-        HTML(html_path).write_pdf(pdf_path, stylesheets=[CSS(runtime.staticPdfCssFpath)])
+        HTML(html_path).write_pdf(pdf_path, stylesheets=[CSS(state.staticPdfCssFpath)])
 
         sys.stdout.write("\033[F") #back to previous line        
         sys.stdout.write("\033[K") #clear line to prevent overlap of texts
@@ -50,9 +55,11 @@ def genPdfReport(html_path, pdf_path):
 
     return pdf_path
 
+
+
 def genHtmlReport(summary, snippets, filepaths, filepaths_aoi, report_output_path):
     # Config
-    with open(runtime.projectConfig, "r") as stream:
+    with open(state.projectConfig, "r") as stream:
         try:
             config = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
@@ -62,14 +69,14 @@ def genHtmlReport(summary, snippets, filepaths, filepaths_aoi, report_output_pat
     # Logo image
     try:
         # Convert the image to base64 format
-        with open(runtime.staticLogo, "rb") as f:
+        with open(state.staticLogo, "rb") as f:
             encoded_logo_image = base64.b64encode(f.read())
     
     except Exception as exc:
         print(exc)
         return None
 
-    env = Environment( loader = FileSystemLoader(runtime.htmltemplates_dir))
+    env = Environment( loader = FileSystemLoader(state.htmltemplates_dir))
     template_file = "report.html"
     template = env.get_template(template_file)
     output_text = template.render(
@@ -89,47 +96,77 @@ def genHtmlReport(summary, snippets, filepaths, filepaths_aoi, report_output_pat
     html_file.close()
     return html_path,output_text
 
+
+
 def _highLightCode(statements):
     code = "".join(statements)
     # Make the style 'default' to show the code snippet in grey background
     code = highlight(code, PythonLexer(), BetterHtmlFormatter(linenos="table", noclasses=True, style='github-dark'))
     return code
 
+
+
 def getAreasOfInterest(input_file):
-    # Read text file
+    # Open the input file
     f = open(input_file)
 
     snippet = None
-    snippets = []
+    snippets = defaultdict(list)  # Use defaultdict to automatically initialize lists for each platform
     prev_snippets = None
+    platform = None  # Initialize a variable to store the current platform
+
+    # Read the file line by line
     for line in f.readlines():
-        if search("Rule Title", line):
-            keyword = re.sub("^.+Rule Title:", "", line)
-            
+        platform_match = re.match(r"--- (\w+) Findings ---", line)     # For extracting platform name
+        # Look for a platform line, e.g., "--- JAVA Findings ---"
+        # platform_match = re.match(r"--- (\w+ Findings) ---", line)  # For extracting platform name between '---'
+        if platform_match:
+            platform = platform_match.group(1)  # Store the full platform name (e.g., 'JAVA Findings')
+            continue  # Skip to the next line after capturing the platform
+
+        # Process Rule Title after capturing the platform
+        if platform and "Rule Title" in line:
+            # Extract the platform-specific rule count (e.g., JAVA-1, PHP-1, etc.)
+            rulecount_match = re.match(r"(\w+-\d+)\.\s+Rule Title:", line)
+            if rulecount_match:
+                rulecount = rulecount_match.group(1)  # Extract the platform rule count (e.g., 'JAVA-1')
+            else:
+                rulecount = "GENERAL"  # Fallback to 'GENERAL' if no match is found
+
+            # Extract the rule title (everything after "Rule Title:")
+            keyword = re.sub("^.+Rule Title:", "", line).strip()
+
+            # Escape the keyword for safe HTML rendering
             keyword = html.escape(keyword)
 
-            if prev_snippets:                
+            # Save the snippet data with platform name and rule count
+            if prev_snippets:
                 prev_snippets["code"] = _highLightCode(prev_snippets["statements"])
                 snippet["sources"].append(prev_snippets)
 
+            # Initialize the snippet
             snippet = {
-                "keyword": keyword,
+                "platform": platform,   # Store the platform name (e.g., JAVA, PHP, etc.)
+                "rulecount": rulecount, # Store the platform rule count (e.g., JAVA-1)
+                "keyword": keyword,     # Store the rule title
                 "rule_desc": "",
-                "issue_dec": "",
+                "issue_desc": "",
                 "dev_note": "",
                 "rev_note": "",
                 "sources": [],
             }
 
             prev_snippets = None
-            snippets.append(snippet)
+            snippets[platform].append(snippet)  # Group the snippet by platform
 
-        elif search("Source File", line):
+
+        # Process Source File
+        elif "Source File" in line:
             if prev_snippets:
                 prev_snippets["code"] = _highLightCode(prev_snippets["statements"])
                 snippet["sources"].append(prev_snippets)
 
-            source = line.replace("-> Source File:", "")
+            source = line.replace("-> Source File:", "").strip()
             source = html.escape(source)
 
             prev_snippets = {
@@ -137,24 +174,37 @@ def getAreasOfInterest(input_file):
                 "statements": []
             }
 
+        # Process Rule Description
         elif line.lstrip().startswith('Rule Description'):
             if snippet:
-                snippet["rule_desc"] = line.split(":", 1)[1]
+                snippet["rule_desc"] = line.split(":", 1)[1].strip()
+
+        # Process Issue Description
         elif line.lstrip().startswith('Issue Description'):
-             if snippet:
-                snippet["issue_desc"] = line.split(":", 1)[1]
+            if snippet:
+                snippet["issue_desc"] = line.split(":", 1)[1].strip()
+
+        # Process Developer Note
         elif line.lstrip().startswith('Developer Note'):
-             if snippet:
-                snippet["dev_note"] = line.split(":", 1)[1]
-        elif line.lstrip().startswith('Reviewer Note '): 
-             if snippet:
-                snippet["rev_note"] = line.split(":", 1)[1]       
+            if snippet:
+                snippet["dev_note"] = line.split(":", 1)[1].strip()
+
+        # Process Reviewer Note
+        elif line.lstrip().startswith('Reviewer Note'):
+            if snippet:
+                snippet["rev_note"] = line.split(":", 1)[1].strip()
+
+        # Process code snippets and other lines
         else:
             if prev_snippets and len(line.strip()) != 0:
                 code = line.lstrip()
                 prev_snippets["statements"].append(code)
 
     return snippets
+
+
+
+
 
 def getFilePathsOfAOI(input_file):
     # Read text file
@@ -183,11 +233,15 @@ def getFilePathsOfAOI(input_file):
             
     return paths_of_aoi
 
+
+
 def getFilePaths(input_file):
     # Read text file
     f = open(input_file)
     return f.readlines()
-     
+
+
+
 def getSummary(input_file):
     # Read text file
     f = open(input_file)
@@ -197,18 +251,20 @@ def getSummary(input_file):
   
     return content
 
+
+
 def genReport():
     started_at = time.time()
     print(f"[*] HTML report generation")
     print(f"    [-] Started at       : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
-    snippets = getAreasOfInterest(runtime.outputAoI)
-    filepaths_aoi = getFilePathsOfAOI(runtime.outputAoI_Fpaths)
-    filepaths = getFilePaths(runtime.output_Fpaths)
-    summary = getSummary(runtime.outputSummary)
+    snippets = getAreasOfInterest(state.outputAoI)
+    filepaths_aoi = getFilePathsOfAOI(state.outputAoI_Fpaths)
+    filepaths = getFilePaths(state.output_Fpaths)
+    summary = getSummary(state.outputSummary)
 
-    html_report_output_path =  runtime.htmlreport_Fpath
-    pdf_report_path = runtime.pdfreport_Fpath
+    html_report_output_path =  state.htmlreport_Fpath
+    pdf_report_path = state.pdfreport_Fpath
 
     htmlfile, output_html = genHtmlReport(summary, snippets, filepaths, filepaths_aoi, html_report_output_path)
     
@@ -226,23 +282,23 @@ def genReport():
 
     # Display reports path but strip out the path to root directory
     print("\n[*] HTML Report:")
-    print("     [-] HTML Report Path : "+ re.sub(str(runtime.root_dir), "", str(runtime.htmlreport_Fpath)))
+    print("     [-] HTML Report Path : "+ re.sub(str(state.root_dir), "", str(state.htmlreport_Fpath)))
     print("\n[*] PDF Report:")
-    print("     [-] PDF Report Path : "+ re.sub(str(runtime.root_dir), "", str(runtime.pdfreport_Fpath)))
+    print("     [-] PDF Report Path : "+ re.sub(str(state.root_dir), "", str(state.pdfreport_Fpath)))
     print("\n[*] Raw Text Reports:")
 
-    aoi_path = re.sub(str(runtime.root_dir), "", str(runtime.outputAoI))
-    aoi_fpaths_path = re.sub(str(runtime.root_dir), "", str(runtime.outputAoI_Fpaths))
-    discovered_files_path = re.sub(str(runtime.root_dir), "", str(runtime.discovered_clean_Fpaths))
-    recon_path = re.sub(str(runtime.root_dir), "", str(runtime.outputRecSummary))
+    aoi_path = re.sub(str(state.root_dir), "", str(state.outputAoI))
+    aoi_fpaths_path = re.sub(str(state.root_dir), "", str(state.outputAoI_Fpaths))
+    discovered_files_path = re.sub(str(state.root_dir), "", str(state.discovered_clean_Fpaths))
+    recon_path = re.sub(str(state.root_dir), "", str(state.outputRecSummary))
 
-    if os.path.isfile(runtime.outputRecSummary):
+    if os.path.isfile(state.outputRecSummary):
         print("     [-] Reconnaissance Summary:", recon_path)
-    if os.path.isfile(runtime.outputAoI):
+    if os.path.isfile(state.outputAoI):
         print("     [-] Areas of Interest:", aoi_path)
-    if os.path.isfile(runtime.outputAoI_Fpaths):
+    if os.path.isfile(state.outputAoI_Fpaths):
         print("     [-] Project Files - Areas of Interest:", aoi_fpaths_path)
-    if os.path.isfile(runtime.discovered_clean_Fpaths):
+    if os.path.isfile(state.discovered_clean_Fpaths):
         print("     [-] Discovered Files Path:", discovered_files_path)
 
     

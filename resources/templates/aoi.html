@@ -10,29 +10,34 @@
     determine the extent of the potential security risk. Any issues identified during the validation
     process should be documented.
 </p>
-{% set ruleno = namespace(value=0) -%}
-{% for snippet in snippets %}
-    {% if snippet["sources"] %}
+
+<!-- Iterate through platforms and display the snippets -->
+{% for platform, platform_snippets in snippets.items() %}
+    <h3 class="platform-heading">{{ platform }} Findings</h3>
+    <!--
+    <p class="p-justified">
+        This section provides details on findings within the {{ platform }} code.
+    </p>-->
+
+    {% for snippet in platform_snippets %}
         <div class="src-path-wrap">
-                {% set ruleno.value = ruleno.value + 1  %}
-                <h3 class="keyword-block">
-                    {{ruleno.value}}.<span class="keyword-ht"> Rule Title </span> : {{snippet["keyword"]}}
-                    <hr />
-                </h3>
-
-                <p><b>Rule Description</b>  : {{snippet["rule_desc"]}}</p>
-                <p><b>Issue Description</b> : {{snippet["issue_desc"]}}</p>
-                <p><b>Developer Note</b>    : {{snippet["dev_note"]}}</p>
-                <p><b>Reviewer Note</b>     : {{snippet["rev_note"]}}</p>
-
+            <h3 class="keyword-block">
+                <span class="keyword-ht">ID: {{ snippet["rulecount"] }}</span> : {{ snippet["keyword"] }}
                 <hr />
-                {% for source in snippet["sources"] %}
-                    <div class="source-file-block">
-                        - <span class="source-ht">Source File </span> : {{source["source"]}}
-                    </div>
-                    {{source["code"]}}
-                {% endfor %}
-        </div>
-    {% endif %}
+            </h3>
 
+            <p><b>Rule Description</b>  : {{ snippet["rule_desc"] }}</p>
+            <p><b>Issue Description</b> : {{ snippet["issue_desc"] }}</p>
+            <p><b>Developer Note</b>    : {{ snippet["dev_note"] }}</p>
+            <p><b>Reviewer Note</b>     : {{ snippet["rev_note"] }}</p>
+
+            <hr />
+            {% for source in snippet["sources"] %}
+            <div class="source-file-block">
+                - <span class="source-ht">Source File </span> : {{source["source"]}}
+            </div>
+            {{source["code"]}}
+            {% endfor %}
+        </div>
+    {% endfor %}
 {% endfor %}

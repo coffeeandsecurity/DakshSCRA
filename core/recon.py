@@ -6,9 +6,9 @@ import chardet
 from pathlib import Path
 from collections import Counter
 
-import modules.utils as ut
-import modules.runtime as runtime
-import modules.estimator as estimate
+import utils.file_utils as futils
+import state.runtime_state as state
+#import modules.estimator as estimate
 
 # Exclusion list for file extensions
 exclusion_list = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.ico', '.tiff', '.zip',
@@ -37,7 +37,7 @@ def detectFramework(language, file_path):
     """
 
     # Load the JSON data from a file
-    with open(runtime.framework_Fpath) as json_file:
+    with open(state.framework_Fpath) as json_file:
         data = json.load(json_file)
 
     # Check if the language exists in the JSON data
@@ -96,8 +96,8 @@ def recon(targetdir, flag=False):
     if flag == False:       # True is used when recon option is used along with source code scanning
         print("\n[*] Reconnaissance (a.k.a Software Composition Analysis)")
     
-    if Path(runtime.inventory_Fpathext).is_file():
-        os.remove(runtime.inventory_Fpathext)
+    if Path(state.inventory_Fpathext).is_file():
+        os.remove(state.inventory_Fpathext)
     log_filepaths = []
     print("     [-] Enumerating project files and directories")
     for root, _, files in os.walk(targetdir):
@@ -109,14 +109,14 @@ def recon(targetdir, flag=False):
 
     # Load technology details from JSON file
     try:
-        with open(runtime.technologies_Fpath, 'r') as json_file:
+        with open(state.technologies_Fpath, 'r') as json_file:
             technologies = json.load(json_file)
     except (FileNotFoundError, json.JSONDecodeError) as e:
         print("Error loading technology details:", str(e))
         return []
 
     # Output file path
-    output_file_path = runtime.reconOutput_Fpath
+    output_file_path = state.reconOutput_Fpath
 
     # Check if the output file already exists
     if Path(output_file_path).is_file():
@@ -279,12 +279,12 @@ def summariseRecon(json_file_path):
         summary[category] = category_summary
 
     # Write the output to a JSON file "recon_summary.json" in the same folder as the input JSON file
-    output_file_path = os.path.join(os.path.dirname(json_file_path), runtime.reconSummary_Fpath)
+    output_file_path = os.path.join(os.path.dirname(json_file_path), state.reconSummary_Fpath)
     with open(output_file_path, 'w') as output_file:
         json.dump(summary, output_file, indent=4, sort_keys=True)
 
     #print("     [-] Recon summary has been written to 'recon_summary.json'.")
-    reconSummaryTextReport(runtime.reconSummary_Fpath, runtime.outputRecSummary)
+    reconSummaryTextReport(state.reconSummary_Fpath, state.outputRecSummary)
     # estimate.effortEstimator(output_file_path)
 
     return output_file_path
@@ -359,7 +359,7 @@ def reconSummaryTextReport(json_file_path, output_file_path):
                         text_file.write(f"      {relative_path}{os.path.sep} - file(s) count: {directory_info['fileCount']}\n")
             text_file.write("\n")
 
-    print("     [-] Reconnaissance summary report: " + str(ut.getRelativePath(output_file_path)))
+    print("     [-] Reconnaissance summary report: " + str(futils.getRelativePath(output_file_path)))
 
 
 

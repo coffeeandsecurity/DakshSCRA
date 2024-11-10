@@ -1,11 +1,11 @@
 import json
 import yaml
 from jinja2 import Template
-import modules.runtime as runtime
-import modules.utils as ut
+import state.runtime_state as state
+import utils.file_utils as futils
 
 # Global variable for the HTML report path
-estimation_Fpath = runtime.estimation_Fpath
+estimation_Fpath = state.estimation_Fpath
 
 # Assumed number of hours to review one file
 # hours_per_file = 0.25
@@ -121,7 +121,7 @@ def generate_report(report_data):
     """    
 
     # Load the template HTML content from the file
-    with open(runtime.estimation_template, 'r') as template_file:
+    with open(state.estimation_template, 'r') as template_file:
         template_html = template_file.read()
 
     # Render the Jinja2 template with the data
@@ -132,7 +132,7 @@ def generate_report(report_data):
     with open(estimation_Fpath, 'w') as report_file:
         report_file.write(rendered_html)
 
-    print("     [-] Effort estimation report: " + str(ut.getRelativePath(estimation_Fpath)))
+    print("     [-] Effort estimation report: " + str(futils.getRelativePath(estimation_Fpath)))
 
 
 
@@ -160,7 +160,7 @@ def get_effort_days(file_count, tech):
         raise ValueError("Invalid value for 'tech'. It must be either 'backend' or 'frontend'.")
 
     # Load data from the config file
-    with open(runtime.estimateConfig, 'r') as config_file:
+    with open(state.estimateConfig, 'r') as config_file:
         config_data = yaml.safe_load(config_file)
 
     # Determine the corresponding data for the specified tech (backend or frontend)
