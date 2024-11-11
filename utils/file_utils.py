@@ -25,6 +25,29 @@ def detectEncodingType(targetfile):
     return result['encoding']
 
 
+def readfile_FallbackEncoding(filepath, fallback_order=("ISO-8859-1", "utf-8")):
+    """
+    Opens a file with specified encodings in fallback order.
+
+    Parameters:
+        filepath (str): The path to the file to open.
+        fallback_order (tuple): Encodings to try in order.
+
+    Returns:
+        file object: The file object opened with the first successful encoding.
+
+    Raises:
+        IOError: If all encodings fail.
+    """
+    for encoding in fallback_order:
+        try:
+            return open(filepath, 'r', encoding=encoding)
+        except (UnicodeDecodeError, ValueError):
+            continue
+    raise IOError(f"Could not open file {filepath} with any of the specified encodings: {fallback_order}")
+
+
+
 
 def getRelativePath(fpath):
     """
@@ -108,10 +131,14 @@ def getSourceFilePath(project_dir, source_file):
 
 
 def getShortPath(file_path):
-
     short_file_path = getSourceFilePath(runtime.sourcedir, file_path)
 
     directory, filename = os.path.split(file_path)
+    # Check if the filename length including extension is greater than 20 characters
+    if len(filename) > 40:
+        base, ext = os.path.splitext(filename)
+        filename = f"[FILENAME-TOO-LONG]{ext}"  # Updated name
+
     shortened = '..[SHORTENED]..'
     return f"{os.sep}{directory.split(os.sep)[1]}{os.sep}{shortened}{os.sep}{filename}"
 
