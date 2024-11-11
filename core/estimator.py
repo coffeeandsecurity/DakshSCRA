@@ -132,7 +132,7 @@ def generate_report(report_data):
     with open(estimation_Fpath, 'w') as report_file:
         report_file.write(rendered_html)
 
-    print("     [-] Effort estimation report: " + str(futils.getRelativePath(estimation_Fpath)))
+    print("     [-] Effort estimation report: " + str(futils.getReportsRootPath(estimation_Fpath)))
 
 
 

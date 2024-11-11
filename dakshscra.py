@@ -68,7 +68,7 @@ if not results or len(sys.argv) < 2:
     sys.exit(1)
 
 # Check if results.file_types is set to "auto"
-if results.rule_file.lower() == "auto":
+if results.rule_file and results.rule_file.lower() == "auto":
     # Set file_types to the output of getAvailableRules()
     results.rule_file = rutils.getAvailableRules(exclude=["android", "common"])
     results.file_types = results.rule_file.lower()  # Override filetypes argument 

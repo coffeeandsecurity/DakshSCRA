@@ -359,7 +359,7 @@ def reconSummaryTextReport(json_file_path, output_file_path):
                         text_file.write(f"      {relative_path}{os.path.sep} - file(s) count: {directory_info['fileCount']}\n")
             text_file.write("\n")
 
-    print("     [-] Reconnaissance summary report: " + str(futils.getRelativePath(output_file_path)))
+    print("     [-] Reconnaissance summary report: " + str(futils.getReportsRootPath(output_file_path)))
 
 
 

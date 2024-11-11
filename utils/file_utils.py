@@ -49,7 +49,7 @@ def readfile_FallbackEncoding(filepath, fallback_order=("ISO-8859-1", "utf-8")):
 
 
 
-def getRelativePath(fpath):
+def getReportsRootPath(fpath):
     """
     Returns the relative path from the '/reports' directory in a given file path.
 
