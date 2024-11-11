@@ -78,9 +78,10 @@ After running the activate command you should see the name of your virtual env a
 
 #### 3. Install Required Libraries in the Virtual Environment
 After activating the virtual environment, navigate to the DakshSCRA directory where it is saved or extracted:
-* cd path/to/DakshSCRA
-* Then, install the required libraries using:
-	pip install -r requirements.txt
+- cd path/to/DakshSCRA
+
+Then, install the required libraries using:
+- pip install -r requirements.txt
 
 Once the libraries are installed, refer to the tool usage commands to run the tool.
 
