@@ -106,39 +106,29 @@ $ python3 dakshscra.py		// To view tool usage along with examples
 
 	Examples:
 	# '-f' is optional. If not specified, it will default to the corresponding filetypes of the selected rule.
-	dakshscra.py -r php -t /source_dir_path
+		- dakshscra.py -r php -t /source_dir_path
 
 	# Specify platforms with '-r' (single or multiple) for platform-specific rules:
-	- Single platform: dakshscra.py -r php -t /source_dir_path
-	- Multiple platforms: dakshscra.py -r php,java,cpp -t /source_dir_path
-	- Auto-detect Platforms: dakshscra.py -r auto -t /source_dir_path
+		- Single platform: dakshscra.py -r php -t /source_dir_path
+		- Multiple platforms: dakshscra.py -r php,java,cpp -t /source_dir_path
+		- Auto-detect Platforms: dakshscra.py -r auto -t /source_dir_path
 
 	# To override default settings, other filetypes can be specified with the '-f' option:
-	dakshscra.py -r php -f dotnet -t /path_to_source_dir
-	dakshscra.py -r php -f custom -t /path_to_source_dir
+		- dakshscra.py -r php -f dotnet -t /path_to_source_dir
+		- dakshscra.py -r php -f custom -t /path_to_source_dir
 
 	# Perform reconnaissance and rule-based scanning if '-recon' used with '-r' option:
-	dakshscra.py  -recon -r php -t /path_to_source_dir
+		- dakshscra.py  -recon -r php -t /path_to_source_dir
 
 	# Perform only reconnaissance if '-recon' used without the '-r' option:
-	dakshscra.py  -recon -t /path_to_source_dir
+		- dakshscra.py  -recon -t /path_to_source_dir
 
 	# Verbosity: '-v' is default, '-vvv' will display all rules check within each rule category.
-	dakshscra.py -r php -vv -t /path_to_source_dir
+		- dakshscra.py -r php -vv -t /path_to_source_dir
 
 ### List of all available rules
-$ python3 dakshscra.py -l R 		# View list of supported rules
-        dotnet
-        php
-        java
-        javascript
-        kotlin
-        python
-        go
-        c
-        cpp
-        android (beta - limited checks)
-        common
+	# dakshscra.py -l R 		# View list of supported rules
+		- dotnet, php, java, javascript, kotlin, python, go, c, cpp, android (beta - limited checks), common
 
 
 ## Reports
