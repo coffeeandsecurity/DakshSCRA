@@ -111,6 +111,17 @@
         </rule>
     </category>
 
+    <category name="Information Disclosure">
+        <rule>
+            <name>Stack Trace or Error Disclosure</name>
+            <regex>(?i)(echo .*Exception.*;|print_r\(.*Exception.*\)|trigger_error\(.+\))</regex>
+            <rule_desc>Detects unsafe practices in error handling or logging in PHP applications.</rule_desc>
+            <vuln_desc>Printing exceptions or using `trigger_error` with sensitive details can expose implementation specifics and file paths to attackers.</vuln_desc>
+            <developer>Developers should use secure error handling mechanisms, such as custom error handlers or structured logging, without exposing stack traces.</developer>
+            <reviewer>Reviewers should ensure sensitive error information is not printed or exposed and that proper error handling mechanisms are implemented.</reviewer>
+        </rule>
+    </category>
+
     <category name="Deprecated Functions">
         <rule>
             <name>Deprecated and Potentially Insecure SQL Functions</name>

@@ -165,12 +165,39 @@
 
     <category name="Sensitive Information Handling">
         <rule>
-            <name>Insecure Handling of Sensitive Information</name>
-            <regex>\b(memset|mlock|setrlimit|unlink|remove)\s*\(</regex>
-            <rule_desc>Detects functions used to handle or erase sensitive information improperly.</rule_desc>
-            <vuln_desc>Failure to securely erase or restrict access to sensitive information (e.g., passwords, cryptographic keys) can lead to unintended leaks.</vuln_desc>
-            <developer>Store sensitive information in heap buffers, not stack buffers. Overwrite sensitive data before deletion using `memset()`. Use `mlock()` to prevent swapping and `setrlimit()` to disable core dumps.</developer>
-            <reviewer>Ensure sensitive data is managed securely, overwritten before deletion, and not stored in plaintext unnecessarily.</reviewer>
+            <name>Improper Use of `memset` for Sensitive Data</name>
+            <regex>\bmemset\s*\(\s*(password|key|secret|token|sensitive_data|.*_buffer).*?,.*?\)</regex>
+            <rule_desc>Detects potential improper clearing of sensitive data.</rule_desc>
+            <vuln_desc>Using `memset` for clearing sensitive data can be optimized away by compilers, leaving data in memory.</vuln_desc>
+            <developer>Ensure to use a secure method, such as `explicit_bzero` or similar, to clear sensitive data. Verify that sensitive variables (e.g., passwords, keys) are securely erased before freeing memory.</developer>
+            <reviewer>Check if the data cleared using `memset` is sensitive (passwords, keys, etc.) and confirm if a secure clearing method (like `explicit_bzero`) is implemented to prevent compiler optimizations.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Improper Use of `mlock` for Sensitive Data</name>
+            <regex>\bmlock\s*\(.*?\)</regex>
+            <rule_desc>Detects improper use of `mlock` for securing sensitive data.</rule_desc>
+            <vuln_desc>Failure to lock sensitive data in memory may expose it to swapping, potentially leaking to disk.</vuln_desc>
+            <developer>Use `mlock` on sensitive data buffers to prevent them from being swapped to disk. Ensure sufficient permissions and memory limits are set for the application.</developer>
+            <reviewer>Verify that sensitive data buffers are locked using `mlock` to prevent swapping. Confirm that the application handles cases where `mlock` fails gracefully.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Improper Use of `setrlimit` for Core Dump Prevention</name>
+            <regex>\bsetrlimit\s*\(\s*RLIMIT_CORE\s*,\s*0\s*\)</regex>
+            <rule_desc>Detects improper handling of `setrlimit` for preventing core dumps.</rule_desc>
+            <vuln_desc>Failure to disable core dumps might expose sensitive data during application crashes.</vuln_desc>
+            <developer>Use `setrlimit(RLIMIT_CORE, 0)` to disable core dumps for applications handling sensitive data. Test for successful application of limits.</developer>
+            <reviewer>Check if core dumps are disabled using `setrlimit(RLIMIT_CORE, 0)`. Ensure no sensitive data can leak through crash dumps in production environments.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Unsafe File Deletion Using `unlink` or `remove`</name>
+            <regex>\b(unlink|remove)\s*\(\s*(".*(password|key|secret).*?"|sensitive_file.*)\s*\)</regex>
+            <rule_desc>Detects unsafe deletion of sensitive files.</rule_desc>
+            <vuln_desc>Files containing sensitive data might still be recoverable after deletion without secure erasure.</vuln_desc>
+            <developer>Implement secure file deletion methods, such as overwriting the file contents before deletion. Avoid plain `unlink` or `remove` for sensitive files.</developer>
+            <reviewer>Ensure sensitive files are securely deleted using overwriting methods before unlinking or removing. Check if sensitive files are flagged correctly and handled securely.</reviewer>
         </rule>
     </category>
 

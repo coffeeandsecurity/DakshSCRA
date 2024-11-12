@@ -1,5 +1,6 @@
 <root>
     <category name="AndroidManifest.xml - Insecure Misconfiguration">
+        <!-- Applicable to AndroidManifest.xml files -->
         <rule>
             <name>Insecure Permissions</name>
             <regex>android\.permission\.(WRITE_EXTERNAL_STORAGE|READ_EXTERNAL_STORAGE|INTERNET|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION)</regex>
@@ -8,6 +9,7 @@
             <developer>Developers should carefully review and minimize the permissions requested by the application. Only request permissions that are necessary for the app's functionality and follow the principle of least privilege.</developer>
             <reviewer>Reviewers should verify that the AndroidManifest.xml file requests only the permissions necessary for the application's functionality. They should ensure that unnecessary or overly broad permissions are not granted, as they can pose security risks.</reviewer>
         </rule>
+
         <rule>
             <name>Content Providers with No Permissions</name>
             <regex>android:authorities\s*=|android:permission\s*=\s*"(?!android\.)</regex>
@@ -16,6 +18,7 @@
             <developer>Developers should specify appropriate permissions for content providers to restrict access to authorized applications or components. They should review the android:permission attribute and ensure that sensitive data is protected from unauthorized access.</developer>
             <reviewer>Reviewers should verify that content providers have appropriate permissions set to restrict access to authorized applications or components. They should ensure that sensitive data managed by content providers is protected from unauthorized access.</reviewer>
         </rule>
+        
         <rule>
             <name>Exported Components</name>
             <regex>android:exported\s*=\s*"(true|TRUE)"</regex>
@@ -24,6 +27,7 @@
             <developer>Developers should review the exported components in the AndroidManifest.xml file and ensure that only necessary components are exported. Components that do not need to be accessed by other applications should not be exported.</developer>
             <reviewer>Reviewers should verify that only necessary components are marked as exported in the AndroidManifest.xml file. They should ensure that sensitive functionality or data is not exposed to unauthorized entities through exported components.</reviewer>
         </rule>
+        
         <rule>
             <name>Allow Backup</name>
             <regex>android:allowBackup\s*=\s*"(true|TRUE)"</regex>
@@ -32,6 +36,7 @@
             <developer>Developers should carefully consider whether allowing backup of application data is necessary. If sensitive data is stored, it should be encrypted or excluded from backup using the android:allowBackup attribute set to "false".</developer>
             <reviewer>Reviewers should verify that sensitive data is not being backed up insecurely by checking the value of the allowBackup attribute in the AndroidManifest.xml file. They should ensure that sensitive data is properly protected and not exposed to unauthorized access through backup mechanisms.</reviewer>
         </rule>
+        
         <rule>
             <name>Unprotected Components</name>
             <regex>android:permission\s*=\s*"(?!android\.)</regex>
@@ -40,6 +45,7 @@
             <developer>Developers should specify appropriate permissions for components to ensure that only authorized entities can access them. Components that require specific permissions should have the android:permission attribute set accordingly.</developer>
             <reviewer>Reviewers should verify that components requiring specific permissions have the android:permission attribute set appropriately in the AndroidManifest.xml file. They should ensure that sensitive functionality is protected from unauthorized access.</reviewer>
         </rule>
+
         <rule>
             <name>Debuggable Application</name>
             <regex>android:debuggable\s*=\s*"(true|TRUE)"</regex>
@@ -48,6 +54,7 @@
             <developer>Developers should ensure that the android:debuggable attribute is set to "false" in release builds to prevent exposing sensitive information or vulnerabilities. Debugging features should be disabled in production builds.</developer>
             <reviewer>Reviewers should verify that the android:debuggable attribute is set to "false" in release builds of the application to prevent exposing sensitive information or vulnerabilities. They should ensure that debugging features are disabled in production builds.</reviewer>
         </rule>
+
         <rule>
             <name>Unsafe Intent Filters</name>
             <regex>android.intent.action.VIEW</regex>
@@ -56,6 +63,7 @@
             <developer>Developers should carefully configure intent filters to only allow expected data and actions. They should validate input and sanitize data to prevent unintended behavior or exploitation.</developer>
             <reviewer>Reviewers should verify that intent filters are properly configured to restrict access and prevent unintended behavior. They should ensure that input validation and data sanitization are implemented to mitigate potential security risks.</reviewer>
         </rule>
+
         <rule>
             <name>Unsafe Broadcast Receivers</name>
             <regex>android.intent.action.BOOT_COMPLETED</regex>
@@ -63,6 +71,70 @@
             <vuln_desc>Broadcast receivers listening for sensitive actions like "android.intent.action.BOOT_COMPLETED" can be exploited by malicious applications to execute arbitrary code or perform unauthorized actions when certain system events occur. This can lead to security risks such as privilege escalation or denial of service.</vuln_desc>
             <developer>Developers should carefully review broadcast receivers and ensure that they handle sensitive actions securely. They should implement appropriate permission checks and validation to prevent unauthorized access or execution of malicious code.</developer>
             <reviewer>Reviewers should verify that broadcast receivers handling sensitive actions are securely implemented to prevent unauthorized access or execution of malicious code. They should ensure that appropriate permission checks and validation are in place to mitigate potential security risks.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Insecure Network Traffic</name>
+            <regex>android:usesCleartextTraffic\s*=\s*"(true|TRUE)"</regex>
+            <rule_desc>Detects the use of cleartext traffic in the application's manifest.</rule_desc>
+            <vuln_desc>Allowing cleartext traffic (`usesCleartextTraffic="true"`) makes the application vulnerable to network eavesdropping and man-in-the-middle attacks.</vuln_desc>
+            <developer>Set android:usesCleartextTraffic to "false" to enforce secure communication using HTTPS. Configure a Network Security Config for exceptions.</developer>
+            <reviewer>Reviewers should verify the android:usesCleartextTraffic attribute in the AndroidManifest.xml and confirm that it is set to "false" or exceptions are appropriately defined in the Network Security Config.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Proguard/R8 - Code Obfuscation">
+        <!-- Applicable to proguard-rules.pro or R8 configuration files -->
+        <rule>
+            <name>Missing Obfuscation for Sensitive Classes</name>
+            <regex>-keepclassmembers class .*password.*|.*secret.*</regex>
+            <rule_desc>Detects missing obfuscation for sensitive classes or methods.</rule_desc>
+            <vuln_desc>Lack of obfuscation for sensitive classes makes it easier for attackers to reverse engineer the application and extract sensitive information.</vuln_desc>
+            <developer>Ensure that sensitive classes and methods are obfuscated in the Proguard/R8 configuration to prevent reverse engineering.</developer>
+            <reviewer>Verify that the Proguard/R8 rules include obfuscation for sensitive classes and methods.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Gradle Configuration - Build Security">
+        <!-- Applicable to build.gradle files -->
+        <rule>
+            <name>Debuggable Build Enabled</name>
+            <regex>debuggable\s*=\s*true</regex>
+            <rule_desc>Detects if a build configuration enables debugging for release builds.</rule_desc>
+            <vuln_desc>Enabling debuggable builds for release may expose sensitive data and debugging information to attackers.</vuln_desc>
+            <developer>Ensure that debugging is disabled for production builds by setting debuggable=false in the release build configuration.</developer>
+            <reviewer>Check the Gradle build configurations to confirm that debuggable is not enabled for release builds.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Outdated Dependencies</name>
+            <regex>implementation\s+['"][\w\.-]+:\w+:\d+\.\d+\.\d+['"]</regex>
+            <rule_desc>Detects dependency declarations with version numbers in the Gradle file.</rule_desc>
+            <vuln_desc>Using outdated dependencies can introduce known vulnerabilities into the application.</vuln_desc>
+            <developer>Regularly update dependencies to the latest stable versions to mitigate security risks. Review changelogs and security advisories before updating.</developer>
+            <reviewer>Check the Gradle file for dependency declarations and verify that the specified versions are up-to-date. Cross-reference with known vulnerabilities databases (e.g., CVE databases).</reviewer>
+        </rule>
+    </category>
+
+    <category name="Layout XML - UI and Accessibility Issues">
+        <!-- Applicable to all files with the .xml extension, typically found in the res/layout directory 
+        (e.g., activity_main.xml, fragment_example.xml) -->
+        <rule>
+            <name>Missing Content Descriptions</name>
+            <regex>android:contentDescription\s*=\s*["']["']</regex>
+            <rule_desc>Detects UI elements with missing or empty content descriptions.</rule_desc>
+            <vuln_desc>Missing content descriptions make the app inaccessible to users relying on assistive technologies like screen readers.</vuln_desc>
+            <developer>Provide meaningful content descriptions for all UI elements, especially images and buttons, to improve accessibility.</developer>
+            <reviewer>Check that all interactive or visual elements in layout XML files have appropriate content descriptions.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Insecure WebView Configuration</name>
+            <regex>WebView.*setJavaScriptEnabled\(true\)</regex>
+            <rule_desc>Detects insecure WebView configurations that enable JavaScript.</rule_desc>
+            <vuln_desc>Enabling JavaScript in WebView without additional security measures can expose the application to XSS attacks.</vuln_desc>
+            <developer>Restrict JavaScript usage in WebView and enable additional safeguards, such as strict URL validation.</developer>
+            <reviewer>Verify WebView configurations in layout XML files and associated Java/Kotlin files for secure settings.</reviewer>
         </rule>
     </category>
 </root>

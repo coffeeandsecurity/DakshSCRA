@@ -69,8 +69,8 @@ if not results or len(sys.argv) < 2:
 
 # Check if results.file_types is set to "auto"
 if results.rule_file and results.rule_file.lower() == "auto":
-    # Set file_types to the output of getAvailableRules()
-    results.rule_file = rutils.getAvailableRules(exclude=["android", "common"])
+    # Incase any rule is not stable that can be excluded from 'auto' mode using - exclude=["notsostable", "common"]
+    results.rule_file = rutils.getAvailableRules(exclude=["common"])
     results.file_types = results.rule_file.lower()  # Override filetypes argument 
 
 # Remove duplicates in rule_file and file_types

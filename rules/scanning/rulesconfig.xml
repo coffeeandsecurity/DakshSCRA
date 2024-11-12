@@ -29,7 +29,7 @@
     </rule>
     <rule>
         <platform>kotlin</platform>
-        <path>/mobile/android/kotlin.xml</path>
+        <path>/kotlin/kotlin.xml</path>
         <platform_ftypes>*.kt</platform_ftypes>
         <project_config_ftypes>build.gradle, settings.gradle, gradle.properties</project_config_ftypes>
         <common_ftypes>*.java, *.xml, *.json, *.gradle, *.properties, *.log</common_ftypes>
@@ -65,7 +65,8 @@
     <rule>
         <platform>android</platform>
         <path>/mobile/android/android.xml</path>
-        <platform_ftypes>*.java, *.kt, *.groovy</platform_ftypes>
+        <platform_ftypes>AndroidManifest.xml, build.gradle, proguard-rules.pro</platform_ftypes>
+        <!--<platform_ftypes>*.java, *.kt, *.groovy</platform_ftypes>-->
         <project_config_ftypes>AndroidManifest.xml, build.gradle, proguard-rules.pro</project_config_ftypes>
         <common_ftypes>*.xml, *.json, *.gradle, *.properties, *.log</common_ftypes>
     </rule>

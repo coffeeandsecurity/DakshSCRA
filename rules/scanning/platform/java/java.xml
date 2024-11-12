@@ -170,6 +170,7 @@
             <developer>Developers should ensure that the logger functions (error, warn, info, debug, trace) in Java code are used securely. They should carefully validate the logged data to prevent the inclusion of sensitive information. Additionally, developers should review and configure the logging framework to avoid the exposure of sensitive data through the logs.</developer>
             <reviewer>Reviewers should verify that the usage of logger functions (error, warn, info, debug, trace) in Java code is appropriate and adheres to secure coding practices. They should assess if proper validation mechanisms are in place to prevent the logging of sensitive information. Reviewers should also review the log configurations to ensure that log levels are set appropriately and sensitive data is not leaked through the logs.</reviewer>
         </rule>
+
         <rule>
             <name>Debugging and Logging Statements</name>
             <regex>(System\.out\.print|System\.err\.print|System\.out\.println|System\.err\.println|log\.(debug|trace))</regex>
@@ -178,14 +179,16 @@
             <developer>Developers should ensure that debugging and logging statements are not present in production code. They should review and remove or disable any logging statements that may log sensitive information. Additionally, developers should follow secure coding practices to prevent the accidental inclusion of debugging statements in production code.</developer>
             <reviewer>Reviewers should verify that debugging and logging statements are appropriately handled in production code. They should assess if sensitive information is inadvertently logged and if proper mechanisms are in place to prevent it. Reviewers should also evaluate the code review and release processes to ensure that debugging statements are removed or disabled before deploying to production environments.</reviewer>
         </rule>
+        
         <rule>
-            <name>Stack Traces in Error Messages</name>
-            <regex>(e\.printStackTrace|e\.getCause\.printStackTrace)</regex>
-            <rule_desc>Detects the usage of printStackTrace() method in exception handling, which can expose sensitive information through error messages.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the use of printStackTrace() method in exception handling, which can include detailed stack trace information in error messages. Stack traces may contain sensitive data or implementation details that could aid attackers in identifying vulnerabilities or understanding the system's internal structure.</vuln_desc>
-            <developer>Developers should avoid including stack traces in error messages displayed to users or logged in application logs. They should handle exceptions appropriately by providing meaningful error messages without revealing sensitive information. Developers should implement proper exception handling and logging practices.</developer>
-            <reviewer>Reviewers should verify that stack traces are not included in error messages presented to users or logged in application logs. They should assess if proper exception handling practices are followed, and error messages are appropriately sanitized to prevent the disclosure of sensitive information. Reviewers should also evaluate the logging mechanisms to ensure that stack traces are logged securely.</reviewer>
+            <name>Stack Trace or Error Disclosure</name>
+            <regex>(?i)(e\.printStackTrace\(\)|e\.getCause\(\)\.printStackTrace\(\)|System\.out\.print\(.*Exception.*\)|throw new \w+Exception\(.+\))</regex>
+            <rule_desc>Detects unsafe stack trace logging or error handling in Java code.</rule_desc>
+            <vuln_desc>Directly printing stack traces or detailed exceptions (e.g., via `e.printStackTrace` or `e.getCause().printStackTrace`) can expose sensitive information, such as implementation details and file paths.</vuln_desc>
+            <developer>Developers should replace direct stack trace printing with centralized logging frameworks like Log4j or SLF4J, ensuring sensitive information is excluded from logs.</developer>
+            <reviewer>Reviewers should check for improper use of `printStackTrace` and `getCause().printStackTrace` and ensure exceptions are logged securely and not exposed in production environments.</reviewer>
         </rule>
+        
         <rule>
             <name>Unencrypted Data Transmission over HTTP</name>
             <regex>new\s*HttpGet|new\s*HttpPost|new\s*HttpPut|new\s*HttpDelete|new\s*HttpURLConnection</regex>

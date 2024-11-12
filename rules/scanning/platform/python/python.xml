@@ -86,6 +86,17 @@
         </rule>
     </category>
     
+    <category name="Information Disclosure">
+        <rule>
+            <name>Stack Trace or Error Disclosure</name>
+            <regex>(?i)(traceback\.format_exc\(\)|traceback\.print_exc\(\)|print\(.*Exception.*\))</regex>
+            <rule_desc>Detects code that exposes stack traces or sensitive error information in Python applications.</rule_desc>
+            <vuln_desc>Using `traceback.print_exc()` or printing exceptions directly can expose sensitive details like file paths, method names, and line numbers to attackers.</vuln_desc>
+            <developer>Developers should use structured logging frameworks like Python's `logging` module to capture exceptions securely without exposing them to end-users.</developer>
+            <reviewer>Reviewers should ensure that sensitive stack trace information is not printed or exposed to end-users and verify proper use of logging practices.</reviewer>
+        </rule>
+    </category>
+
     <category name="Database Queries">
         <rule>
             <name>Insecure SQL Queries: raw and extra</name>

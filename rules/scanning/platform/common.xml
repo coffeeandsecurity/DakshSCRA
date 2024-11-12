@@ -78,15 +78,17 @@
             <reviewer>Reviewers should verify the secure handling of RSA private keys and assess if adequate measures are in place to safeguard their confidentiality and integrity.</reviewer>
         </rule>
     </category>
+
     <category name="Information Disclosure">
         <rule>
-            <name>Information Disclosure: Stack Trace or Error Messages</name>
-            <regex>(?i)Stacktrace</regex>
-            <rule_desc>Detects potential information disclosure due to stack traces or error messages.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential presence of stack traces or error messages in the code, which can provide valuable information to attackers and facilitate targeted attacks.</vuln_desc>
-            <developer>Developers should ensure that error handling mechanisms are properly implemented, and sensitive information is not exposed in error responses.</developer>
-            <reviewer>Reviewers should check for the presence of sensitive information in error responses and verify the implementation of proper error handling.</reviewer>
+            <name>Insecure HTTP Communication</name>
+            <regex>http://</regex>
+            <rule_desc>Detects the use of insecure HTTP communication.</rule_desc>
+            <vuln_desc>Using HTTP exposes the application to man-in-the-middle attacks, allowing attackers to intercept or manipulate traffic.</vuln_desc>
+            <developer>Use HTTPS for all network communication to ensure secure data transmission. Avoid using HTTP unless explicitly required and justified by the use case.</developer>
+            <reviewer>Review all URLs or network requests across source code, configuration files, and external API references to ensure HTTPS is used instead of HTTP.</reviewer>
         </rule>
+
         <rule>
             <name>Sensitive Debug Information</name>
             <regex>(?i)\.debug\s*=\s*True|\$debug\s*=\s*true|DEBUG\s*=\s*True|IsDebuggingEnabled\s*=\s*true</regex>
@@ -96,6 +98,7 @@
             <reviewer>Reviewers should check for debug-related configurations in application settings and ensure that they are disabled or set to false in production environments to protect sensitive information.</reviewer>
         </rule>
     </category>
+
     <category name="Dynamic SQL Queries">
         <!-- Unsafe string concatenation in SQL queries -->
         <rule>

@@ -83,6 +83,7 @@
             <reviewer>Reviewers should check for the presence of untrusted data output involving HttpContext.Current.Request.QueryString. They should verify if developers have implemented proper input validation, output encoding, and secure data handling techniques to prevent security vulnerabilities. Reviewers should also assess the sensitivity of the output data and confirm the presence of appropriate security controls.</reviewer>
         </rule>
     </category>
+
     <category name="File System Vulnerabilities">
         <rule>
             <name>Path Traversal: Directory.GetFiles</name>
@@ -93,6 +94,7 @@
             <reviewer>Reviewers should examine the usage of Directory.GetFiles and verify if proper input validation is performed to prevent path traversal vulnerabilities. They should assess the file path handling and confirm that user-supplied input is restricted to authorized directories, preventing unauthorized access to sensitive files.</reviewer>
         </rule>
     </category>
+    
     <category name="Insecure Method/Function Call">
         <rule>
             <name>Unsafe Method: Command Execution</name>
@@ -103,6 +105,7 @@
             <reviewer>Reviewers should ensure that proper input validation and sanitization techniques are implemented for command execution methods. They should verify that developers have taken appropriate measures to prevent command injection vulnerabilities, such as using parameterized queries or prepared statements. Reviewers should also assess the sensitivity of the commands executed and confirm that relevant security controls are in place.</reviewer>
         </rule>
     </category>
+    
     <category name="Trust-boundary Validation or 3rd-Party Interactions">
         <rule>
             <name>Unvalidated Redirects and Forwards</name>
@@ -154,14 +157,15 @@
 
     <category name="Information Disclosure">
         <rule>
-            <name>Information Disclosure: Stack Trace</name>
-            <regex>(?i)Response\.Write\s*\(.*StackTrace</regex>
-            <rule_desc>Detects the usage of Response.Write method that may inadvertently expose stack trace information.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using Response.Write method that may inadvertently expose stack trace information. Stack trace details can provide valuable information to attackers, aiding them in identifying potential vulnerabilities or weaknesses in the application.</vuln_desc>
-            <developer>Developers should avoid using Response.Write method to output stack trace information in a production environment. Stack traces should only be displayed for debugging purposes and should be properly handled and logged in an appropriate manner. Instead of using Response.Write, developers should consider using custom error pages or appropriate logging mechanisms to capture and handle error information securely.</developer>
-            <reviewer>Reviewers should ensure that Response.Write method is not used to output stack trace information in a production environment. They should verify that developers have implemented proper error handling and logging mechanisms to prevent the inadvertent exposure of sensitive information. Reviewers should also assess the sensitivity of the information exposed and confirm that relevant security controls are in place.</reviewer>
+            <name>Stack Trace or Error Disclosure</name>
+            <regex>(?i)(Response\.Write\s*\(.*StackTrace|ex\.ToString\(\)|Console\.WriteLine\(.*Exception.*\)|throw new Exception\(.+\))</regex>
+            <rule_desc>Detects unsafe error handling and stack trace exposure in .NET applications.</rule_desc>
+            <vuln_desc>Using `Response.Write`, `ex.ToString()`, or similar methods to output exception details can expose sensitive stack trace information, aiding attackers in identifying vulnerabilities.</vuln_desc>
+            <developer>Developers should avoid exposing stack traces or detailed exceptions directly to users. Use secure logging frameworks (e.g., Serilog, NLog) and custom error pages in web applications.</developer>
+            <reviewer>Reviewers should ensure that stack traces and exceptions are not exposed to users and are logged securely. Verify proper error handling mechanisms in both web and non-web contexts.</reviewer>
         </rule>
     </category>
+    
     <category name="Insecure Configuration">
         <rule>
             <name>API Route Prefix: Improper Usage</name>
@@ -172,6 +176,7 @@
             <reviewer>Reviewers should check for the presence of [RoutePrefix] attribute in API controllers and assess the configuration for proper route prefixing. They should verify that developers have followed established routing conventions and consider any potential conflicts or security risks. Reviewers should also ensure that the routing configuration has been thoroughly tested to avoid functional errors.</reviewer>
         </rule>
     </category>
+    
     <category name="Disabled/Missing Security Controls">
         <rule>
             <name>Request Validation: Disabled Configuration</name>
@@ -190,6 +195,7 @@
             <reviewer>Reviewers should check for the presence of insecure configuration of the ServerCertificateValidationCallback. They should assess if developers have followed best practices for certificate validation, such as verifying the certificate's chain of trust, checking for revocation status, and validating the server's hostname. Reviewers should also verify the usage of well-established libraries or frameworks that provide robust certificate validation mechanisms.</reviewer>
         </rule>
     </category>
+    
     <category name="Effective/Standard Mitigations Implemented">
         <rule>
             <name>XSS Mitigation: HTML Encoding using Razor</name>
