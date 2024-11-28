@@ -89,7 +89,7 @@ Once the libraries are installed, refer to the tool usage commands to run the to
 
 $ python3 dakshscra.py -h		// To view available options and arguments
 
-	usage: dakshscra.py [-h] [-r RULE_FILE] [-f FILE_TYPES] [-v] [-t TARGET_DIR] [-l {R,RF}] [-recon] [-estimate]
+	usage: usage: dakshscra.py [-h] [-r RULE_FILE] [-f FILE_TYPES] [-v] [-t TARGET_DIR] [-l {R,RF}] [-recon] [-estimate]
 
 	options:
 	-h, --help Show this help message and exit

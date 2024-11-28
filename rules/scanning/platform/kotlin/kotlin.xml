@@ -33,6 +33,7 @@
             <reviewer>Reviewers should verify the presence of secure coding practices, such as parameterized queries or proper input validation and sanitization, to mitigate the risk of SQL injection vulnerabilities in Room database queries. They should also assess the sensitivity of the data retrieved from Room queries and confirm that relevant security measures are implemented correctly.</reviewer>
         </rule>
     </category>
+
     <category name="Insecure Method/Function Call">
         <rule>
             <name>Insecure Method Call: Runtime.exec()</name>
@@ -83,6 +84,82 @@
             <reviewer>Reviewers should verify if any custom methods for setting HTML content, such as setHtmlText, properly sanitize or validate the input HTML content to prevent XSS vulnerabilities. They should ensure that developers have implemented appropriate security measures to handle HTML content securely and mitigate potential security risks.</reviewer>
         </rule>
     </category>
+
+    <category name="Internal Storage - Insecure File Permissions">
+        <!-- Applicable to Java/Kotlin source files (e.g., .java, .kt) -->    
+        <rule>
+            <name>Deprecated MODE_WORLD_WRITEABLE Usage</name>
+            <regex><![CDATA[M(?:ODE_)?WORLD_WRITEABLE]]></regex>
+            <rule_desc>Detects usage of the deprecated MODE_WORLD_WRITEABLE mode.</rule_desc>
+            <vuln_desc>The MODE_WORLD_WRITEABLE mode allows any application to write to your app's files, leading to potential data corruption or unauthorized modifications.</vuln_desc>
+            <developer>Avoid using MODE_WORLD_WRITEABLE. Consider using content providers or other mechanisms to share data securely.</developer>
+            <reviewer>Check Java/Kotlin source files for occurrences of MODE_WORLD_WRITEABLE and ensure that secure alternatives are used.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Deprecated MODE_WORLD_READABLE Usage</name>
+            <regex><![CDATA[M(?:ODE_)?WORLD_READABLE]]></regex>
+            <rule_desc>Detects usage of the deprecated MODE_WORLD_READABLE mode.</rule_desc>
+            <vuln_desc>The MODE_WORLD_READABLE mode allows any application to read your app's files, potentially exposing sensitive data to unauthorized access.</vuln_desc>
+            <developer>Avoid using MODE_WORLD_READABLE. Use content providers or define explicit permissions to control data access.</developer>
+            <reviewer>Check Java/Kotlin source files for occurrences of MODE_WORLD_READABLE and ensure secure data sharing mechanisms are in place.</reviewer>
+        </rule>
+        
+        <rule>
+            <name>Insecure File Operations</name>
+            <regex><![CDATA[openFile(?:Output|Input)\s*\([^,]*,\s*M(?:ODE_)?WORLD_(?:WRITEABLE|READABLE)]]></regex>
+            <rule_desc>Detects insecure file operations using deprecated world-readable or world-writable modes.</rule_desc>
+            <vuln_desc>Using world-readable or world-writable modes in file operations can lead to unauthorized access or modifications to the app's files.</vuln_desc>
+            <developer>Replace the use of MODE_WORLD_READABLE and MODE_WORLD_WRITEABLE with private modes or secure sharing mechanisms such as content providers.</developer>
+            <reviewer>Review Java/Kotlin source files for file operations that use insecure modes, ensuring that secure alternatives are implemented.</reviewer>
+        </rule>
+        
+        <rule>
+            <name>File Sharing Without Content Provider</name>
+            <regex><![CDATA[Intent\s*\(\s*(?:[^,]*,\s*)?Uri\.parse]]></regex>
+            <rule_desc>Detects file sharing operations that use URIs without a content provider.</rule_desc>
+            <vuln_desc>Sharing files directly using URIs without a content provider can expose sensitive data to unauthorized applications. Content providers offer a controlled mechanism for sharing files securely.</vuln_desc>
+            <developer>Use a content provider to securely share files between applications, ensuring proper access control and data protection.</developer>
+            <reviewer>Check Java/Kotlin source files for file sharing operations using `Intent` with `Uri.parse`. Verify that files are shared through content providers with appropriate permissions.</reviewer>
+        </rule>
+    </category>
+
+    <category name="External Storage - Insecure Practices">
+        <!-- Applicable to Java/Kotlin source files (e.g., .java, .kt) -->
+        <rule>
+            <name>Insecure External Storage Write</name>
+            <regex><![CDATA[(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*\.write]]></regex>
+            <rule_desc>Detects writing to external storage without proper validation or encryption.</rule_desc>
+            <vuln_desc>Writing sensitive information to external storage can lead to unauthorized access or modification, as external storage is globally writable and can be accessed by any application or user.</vuln_desc>
+            <developer>Store only non-sensitive information on external storage. For sensitive data, use internal storage or encrypt the data before writing it to external storage.</developer>
+            <reviewer>Verify that external storage is used only for non-sensitive data. Ensure that sensitive information is encrypted or stored securely.</reviewer>
+        </rule>
+        <rule>
+            <name>Dynamic Loading from External Storage</name>
+            <regex><![CDATA[(DexClassLoader|PathClassLoader)\s*\([^,]*Environment\.getExternalStorageDirectory]]></regex>
+            <rule_desc>Detects dynamic loading of files from external storage.</rule_desc>
+            <vuln_desc>Loading executables or class files from external storage without cryptographic verification can lead to code execution vulnerabilities if the files are tampered with.</vuln_desc>
+            <developer>Avoid loading executables or class files from external storage. If necessary, ensure files are cryptographically signed and verified before loading.</developer>
+            <reviewer>Check for usage of `DexClassLoader` or `PathClassLoader` with files retrieved from external storage. Verify that proper cryptographic verification mechanisms are in place.</reviewer>
+        </rule>
+        <rule>
+            <name>Insecure External Storage Read</name>
+            <regex><![CDATA[(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*\.read]]></regex>
+            <rule_desc>Detects reading data from external storage without proper input validation.</rule_desc>
+            <vuln_desc>Reading unvalidated data from external storage can lead to vulnerabilities such as malicious file execution or unexpected application behavior.</vuln_desc>
+            <developer>Validate and sanitize all data read from external storage as it may come from untrusted sources.</developer>
+            <reviewer>Ensure that data read from external storage is properly validated and sanitized before use.</reviewer>
+        </rule>
+        <rule>
+            <name>Executable File Storage on External Storage</name>
+            <regex><![CDATA[(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*.*\.(dex|so|jar|apk)]]></regex>
+            <rule_desc>Detects storage of executable files on external storage.</rule_desc>
+            <vuln_desc>Storing executable files on external storage can lead to unauthorized code execution if the files are tampered with by other applications or users.</vuln_desc>
+            <developer>Avoid storing executable files on external storage. If necessary, ensure files are cryptographically signed and verified before usage.</developer>
+            <reviewer>Review external storage usage to ensure that executable files are not stored insecurely. Verify that any necessary executables are cryptographically signed and verified.</reviewer>
+        </rule>
+    </category>
+
     <category name="Insecure Mitigations">
         <rule>
             <name>Insecure Mitigation: WebView.addJavascriptInterface()</name>
@@ -93,6 +170,7 @@
             <reviewer>Reviewers should verify that WebView.addJavascriptInterface() is used securely and that any input passed as the interface object is properly validated, sanitized, and limited to trusted values to prevent JavaScript injection vulnerabilities. They should also ensure that developers follow best practices for securely communicating between JavaScript and native code.</reviewer>
         </rule>
     </category>
+    
     <category name="Effective/Standard Mitigations Implemented">
         <rule>
             <name>Mitigation Identified: SQL Injection (Room Database)</name>
