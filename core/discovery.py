@@ -82,21 +82,30 @@ def discoverFiles(codebase, sourcepath, mode):
                             if ext_value and ext_value not in platform_extensions[platform]:
                                 platform_extensions[platform].append(ext_value)
 
-    # Print identified file extensions per platform
+    # Filter out platforms with no valid extensions before writing to summary
+    platform_extensions_filtered = {
+        platform: exts for platform, exts in platform_extensions.items() if exts
+    }
+
+    # Print identified extensions by platform
     print("     [-] Discovered/Identified File Types:")
+    for platform, exts in platform_extensions_filtered.items():
+        print(f"         [-] {platform.capitalize()}: {exts}")
+    '''
     for platform, exts in platform_extensions.items():
         if exts:  # Check if the list is not empty
             print(f"         [-] {platform.capitalize()}: {exts}")
         else:
             print(f"         [-] {platform.capitalize()}: None")
-
+        '''
     # Print and update scan summary
     print(f"     [-] Total project files in the directory: {total_files_count}")
     print(f"     [-] Total files to be scanned: {identified_files_count}")
 
     result.updateScanSummary("detection_summary.total_project_files_identified", str(total_files_count))
     result.updateScanSummary("detection_summary.total_files_identified", str(identified_files_count))
-    result.updateScanSummary("detection_summary.file_extensions_identified", platform_extensions)
+    result.updateScanSummary("detection_summary.file_extensions_identified", platform_extensions_filtered)
+    #result.updateScanSummary("detection_summary.file_extensions_identified", platform_extensions)
 
     runtime.totalFilesIdentified = identified_files_count
 

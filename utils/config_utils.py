@@ -1,5 +1,6 @@
 import os
 import ruamel.yaml
+from ruamel.yaml import YAML
 import state.runtime_state as runtime
 
 
@@ -14,18 +15,36 @@ def updateProjectConfig(project_name, project_subtitle):
     Returns:
         None
     """
-    
     if os.path.exists(runtime.projectConfig):
-        yaml = ruamel.yaml.YAML()
-        
+        yaml = YAML()
         with open(runtime.projectConfig, "r") as file:
             config_data = yaml.load(file)
 
-        # Update the entries in the YAML data
-        if "title" in config_data and "subtitle" in config_data:
-            config_data["title"] = project_name
-            config_data["subtitle"] = project_subtitle
+        # Update or set the values
+        config_data["title"] = project_name
+        config_data["subtitle"] = project_subtitle
 
-        # Save the updated YAML file while preserving order and formatting
         with open(runtime.projectConfig, "w") as file:
             yaml.dump(config_data, file)
+
+
+
+def get_tool_version():
+    """
+    Retrieve the tool version from the YAML config file (`config/tool.yaml`).
+
+    Returns:
+        str: The version string (e.g., "0.26") if found, else "Unknown".
+    """
+    yaml = YAML()
+    try:
+        if not os.path.exists(runtime.toolConfig):
+            return "Unknown"
+        
+        with open(runtime.toolConfig, 'r') as file:
+            config_data = yaml.load(file)
+            return str(config_data.get("release", "Unknown"))
+    except Exception as e:
+        print(f"[!] Error reading version info from config: {e}")
+        return "Unknown"
+

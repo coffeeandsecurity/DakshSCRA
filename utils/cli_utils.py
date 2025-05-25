@@ -1,39 +1,43 @@
+from colorama import Fore, Style
+
 def toolUsage(option):
+    cyan = Fore.CYAN
+    yellow = Fore.YELLOW
+    reset = Style.RESET_ALL
+
     if option == 'invalid_dir':
-        # Invalid directory usage examples
-        print("\nExample commands for invalid directory error:")
-        print("  python dakshsca.py -r php -t /path_to_source_dir")
-        print("  python dakshsca.py -r php -f php -t /path_to_source_dir")
-        print("  python dakshsca.py -r php,java,cpp -t /path_to_source_dir\n")
-    else:
-        # Tool usage examples
-        print("\nUsage Examples:")
+        print(f"\n{Fore.RED}[!] Invalid or missing target directory.{reset}\n")
+        print("Example:")
+        print(f"  {yellow}dakshsca.py -r php -t /path/to/source{reset}")
+        print(f"  {yellow}dakshsca.py -r php,java -t ./project/src{reset}")
+        return
 
-        # Platform-specific rule usage
-        print("  # Specify platforms with '-r' (single or multiple) for platform-specific rules:")
-        print("    - Single platform: dakshsca.py -r php -t /source_dir_path")
-        print("    - Multiple platforms: dakshsca.py -r php,java,cpp -t /source_dir_path")
-        print("    > Only the selected platform-specific rules will be applied to the corresponding project files.\n")
+    print(f"\n{cyan}DakshSCRA - Source Code Review Assist{reset}")
+    print(f"Author: Debasis Mohanty | https://www.coffeeandsecurity.com\n")
 
-        # File types option
-        print("  # '-f' is optional and defaults to the filetypes of the selected rule:")
-        print("    - Example: dakshsca.py -r php -t /source_dir_path")
-        print("  # To override the default, specify filetypes with '-f':")
-        print("    - Example: dakshsca.py -r php -f dotnet -t /path_to_source_dir\n")
+    print(f"{cyan}Usage:{reset}")
+    print(f"  {yellow}dakshsca.py [options]{reset}\n")
 
-        # Reconnaissance
-        print("  # Perform reconnaissance and rule-based scanning with '-recon' and '-r':")
-        print("    - Example: dakshsca.py -recon -r php -t /path_to_source_dir")
-        print("  # Perform reconnaissance only without '-r':")
-        print("    - Example: dakshsca.py -recon -t /path_to_source_dir\n")
+    print(f"{cyan}Options:{reset}")
+    print(f"  {yellow}-r <rule>{reset}         Specify platform(s) (e.g. php,java,cpp) or use {yellow}auto{reset}")
+    print(f"  {yellow}-f <filetype>{reset}     (Optional) Override default filetypes for scanning")
+    print(f"  {yellow}-t <dir>{reset}          Target source code directory (required)")
+    print(f"  {yellow}-v{reset}                Set verbosity level (-v, -vv, -vvv)")
+    print(f"  {yellow}-recon{reset}            Perform platform detection only or with rule scanning")
+    print(f"  {yellow}-estimate{reset}         Estimate code review effort based on codebase size")
+    print(f"  {yellow}-l [R|RF]{reset}         List available rules [R] or rules + filetypes [RF]")
+    print(f"  {yellow}-h, --help{reset}        Show this help message\n")
 
-        # Verbosity
-        print("  # Verbosity levels:")
-        print("    - '-v' is default; '-vvv' displays all rule checks within each category.")
-        print("    - Example: dakshsca.py -r php -vv -t /path_to_source_dir\n")
+    print(f"{cyan}Examples:{reset}")
+    print(f"  {yellow}dakshsca.py -r php -t ./src{reset}")
+    print(f"  {yellow}dakshsca.py -r php,cpp -vv -t /path/to/code{reset}")
+    print(f"  {yellow}dakshsca.py -r auto -t ./codebase{reset}")
+    print(f"  {yellow}dakshsca.py -recon -t ./api{reset}")
+    print(f"  {yellow}dakshsca.py -recon -r java -t ./javaapp{reset}")
+    print(f"  {yellow}dakshsca.py -r dotnet -f dotnet -t ./dotnetapp{reset}")
+    print(f"  {yellow}dakshsca.py -l RF{reset}     # View supported platform rules and file types\n")
 
-        # General Notes
-        print("Note: Ensure to run the tool in the correct Python environment.")
-        print("  Example: python3 dakshsca.py -r php -t /source_dir_path\n")
-    
-    return
+    print(f"{cyan}Notes:{reset}")
+    print(f"  • If {yellow}-f{reset} is not provided, default filetypes for the selected platform(s) will be used.")
+    print(f"  • Use {yellow}-r auto{reset} to detect file types and auto-apply all relevant platform rules.")
+    print(f"  • Use {yellow}-recon{reset} alone to detect technology stack without scanning.")

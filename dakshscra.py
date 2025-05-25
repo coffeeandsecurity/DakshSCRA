@@ -56,28 +56,39 @@ try:
     results = args.parse_args()
 except argparse.ArgumentError as e:
     print("\nError: Invalid option provided.")
-    args.print_help()
+    #args.print_help()
     cli.toolUsage('invalid_option')
     sys.exit(1)
 
 
 # Display help if no arguments are passed
 if not results or len(sys.argv) < 2:
-    args.print_help()
+    #args.print_help()
     cli.toolUsage('invalid_option')
     sys.exit(1)
 
+# Preserve original rule argument for display/logging purposes
+original_rule_file = results.rule_file
+
+# If '-r auto' is passed, resolve it into supported rule types
+if original_rule_file and original_rule_file.lower() == "auto":
+    resolved_rule_list = rutils.getAvailableRules(exclude=["common"])
+    results.rule_file = resolved_rule_list
+    results.file_types = resolved_rule_list  # Needed for filetype discovery
+
+'''
 # Check if results.file_types is set to "auto"
 if results.rule_file and results.rule_file.lower() == "auto":
     # Incase any rule is not stable that can be excluded from 'auto' mode using - exclude=["notsostable", "common"]
     results.rule_file = rutils.getAvailableRules(exclude=["common"])
     results.file_types = results.rule_file.lower()  # Override filetypes argument 
+'''
 
 # Remove duplicates in rule_file and file_types
 results.rule_file = strutils.remove_duplicates(results.rule_file)
 results.file_types = strutils.remove_duplicates(results.file_types)
 
-# If rule_file has a value but file_types is empty, assign rule_file to file_types
+# If rule_file is present but file_types is empty, inherit rule_file value
 if results.rule_file and not results.file_types:
     results.file_types = results.rule_file.lower()
 
@@ -100,7 +111,7 @@ if (results.recon or results.estimate) and results.target_dir and not results.ru
     # Check if the directory path is valid
     if path.isdir(results.target_dir) == False: 
         print("\nInvalid target directory :" + results.target_dir + "\n")
-        args.print_usage()
+        #args.print_usage()
         cli.toolUsage("invalid_dir")
         sys.exit(1)
     else:
@@ -129,15 +140,27 @@ elif results.rule_file:
         print("You must specify the target directory using -t option")
         sys.exit(1)
 
+    # Determine what to display for inputs
+    display_rule_file = "auto" if original_rule_file and original_rule_file.lower() == "auto" else results.rule_file.lower()
+    display_file_types = "auto" if original_rule_file and original_rule_file.lower() == "auto" else results.file_types.lower()
+
     if results.file_types and results.rule_file and results.target_dir:
         print(constants.author)
         print("\nThe following inputs were received:")
+        '''
         print(f'[*] Rule Selected        = {results.rule_file.lower()!r}')
         print(f'[*] File Types Selected  = {results.file_types.lower()!r}')
-        print(f'[*] Target Directory     = {results.target_dir}')
+        '''
+        print(f"[*] Rule Selected        = {display_rule_file!r}")
+        print(f"[*] File Types Selected  = {display_file_types!r}")
+        print(f"[*] Target Directory     = {results.target_dir}")
 
+        '''
         result.updateScanSummary("inputs_received.rule_selected", results.rule_file.lower())
         result.updateScanSummary("inputs_received.filetypes_selected", results.file_types.lower())
+        '''
+        result.updateScanSummary("inputs_received.rule_selected", display_rule_file)
+        result.updateScanSummary("inputs_received.filetypes_selected", display_file_types)
         result.updateScanSummary("inputs_received.target_directory", results.target_dir)
 
         # Prompt the user to enter project name and subtitle
@@ -155,7 +178,7 @@ elif results.rule_file:
 # Check if the directory path is valid
 if path.isdir(results.target_dir) == False: 
     print("\nInvalid target directory :" + results.target_dir + "\n")
-    args.print_usage()
+    #args.print_usage()
     cli.toolUsage("invalid_dir")
     sys.exit(1)
 

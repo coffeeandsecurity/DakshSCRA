@@ -297,7 +297,7 @@ def genScanSummaryText(file_path):
         output += "    [-] File Extensions Identified (Based on Selected Rule):\n"
         for platform, extensions in file_extensions_identified.items():
             formatted_extensions = ', '.join(extensions)
-            output += f"        {platform}: [{formatted_extensions}]\n"
+            output += f"        [-] {platform}: [{formatted_extensions}]\n"
     
     output += format_key_value("Code Files - Areas-of-Interests (Rules Matched)", detection_summary.get('areas_of_interest_identified'), indent_level=1, is_sub_key=True)
     output += format_key_value("File Paths - Areas-of-Interests (Rules Matched)", detection_summary.get('file_paths_areas_of_interest_identified'), indent_level=1, is_sub_key=True)

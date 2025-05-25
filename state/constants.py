@@ -1,17 +1,21 @@
 import os
 
+from utils.config_utils import get_tool_version
+
+version = get_tool_version()
 
 ## ----------- Banners | Credits | Console Output Decoration ----------- ##
 
-author = '''
+author = f'''
 =============================================================
-Daksh SCRA (Source Code Review Assist) - Beta Release v0.22
+DakshSCRA  (Source Code Review Assist) - Beta v{version}
 
-Author:     Debasis Mohanty 
-            www.coffeeandsecurity.com
-            Twitter: @coffensecurity
-            Email: d3basis.m0hanty@gmail.com
-============================================================='''
+Developed by: Debasis Mohanty
+Website     : https://www.coffeeandsecurity.com
+Twitter     : @coffensecurity
+Email       : d3basis.m0hanty@gmail.com
+=============================================================
+'''
 
 
 # NOT-IN-USE - To be used later after some improvements

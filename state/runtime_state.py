@@ -22,6 +22,9 @@ rulesRootDir = Path(str(root_dir) + "/rules/scanning/platform")
 # Rules config path
 rulesConfig = Path(str(rulesRootDir) + "/../rulesconfig.xml")
 
+# Tool details/version config file
+toolConfig = Path(str(root_dir) + "/config/tool.yaml")
+
 # Project config path
 projectConfig = Path(str(root_dir) + "/config/project.yaml")
 
