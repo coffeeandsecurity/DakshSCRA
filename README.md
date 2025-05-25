@@ -48,7 +48,7 @@ If you find any bugs, report them to d3basis.m0hanty@gmail.com.
 ## Tool Setup
 
 ### Pre-requisites
-- Python3
+- Python3.3+
 - All the libraries listed in `requirements.txt`
 
 ### Setting up environment to run this tool
@@ -59,18 +59,28 @@ Save it to your desired folder/directory. Must make sure you have unzipped it.
 
 Alternatively, 'cd' into your desired folder/directory and download using the 'git' command
 
-	$ git clone https://github.com/coffeeandsecurity/DakshSCRA.git
+	git clone https://github.com/coffeeandsecurity/DakshSCRA.git
 
 #### 2. Setup a virtual environment
 Note: Virtual environment can be set under any path. It need not have to under the same path as where you have extracted DakshSCRA.
 
-	$ pip install virtualenv
+	# Recommended Method (Using venv)
+		python3 -m venv venv             # Create virtual environment
+		source venv/bin/activate         # Activate on macOS/Linux
+		# OR
+		.\venv\Scripts\activate          # Activate on Windows
 
-	$ virtualenv -p python3 {name-of-virtual-env}  		// Create a virtualenv
-	Example: virtualenv -p python3 venv 				
+	# Alternative (If You Have Multiple Python Installations)
+		pip install virtualenv           # Install virtualenv if not already installed
 
-	$ source {name-of-virtual-env}/bin/activate 		// To activate virtual environment you just created
-	Example: source venv/bin/activate
+		virtualenv -p python3 venv       # Create virtualenv using specific Python version
+		# Example:
+		# virtualenv -p python3 venv
+
+		source venv/bin/activate         # Activate on macOS/Linux
+		# OR
+		.\venv\Scripts\activate          # Activate on Windows
+
 
 After running the activate command you should see the name of your virtual env at the beginning of your terminal like this:
 	(venv) $ 
