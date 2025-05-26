@@ -6,7 +6,7 @@ version = get_tool_version()
 
 ## ----------- Banners | Credits | Console Output Decoration ----------- ##
 
-author = f'''
+AUTHOR_BANNER = '''
 =============================================================
 DakshSCRA  (Source Code Review Assist) - Beta v{version}
 

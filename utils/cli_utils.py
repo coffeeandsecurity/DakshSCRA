@@ -1,4 +1,7 @@
 from colorama import Fore, Style
+from utils.config_utils import get_tool_version
+from state import constants
+
 
 def toolUsage(option):
     cyan = Fore.CYAN
@@ -12,8 +15,9 @@ def toolUsage(option):
         print(f"  {yellow}dakshsca.py -r php,java -t ./project/src{reset}")
         return
 
-    print(f"\n{cyan}DakshSCRA - Source Code Review Assist{reset}")
-    print(f"Author: Debasis Mohanty | https://www.coffeeandsecurity.com\n")
+    version = get_tool_version()
+    author_banner = constants.AUTHOR_BANNER.format(version=version)
+    print(author_banner)
 
     print(f"{cyan}Usage:{reset}")
     print(f"  {yellow}dakshsca.py [options]{reset}\n")

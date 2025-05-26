@@ -7,6 +7,7 @@ import utils.rules_utils as rulesops
 import utils.result_utils as result
 import utils.file_utils as fileops
 
+from utils.rules_utils import getAvailableRules, getRulesPath_OR_FileTypes
 
 
 def discoverFiles(codebase, sourcepath, mode):
@@ -113,7 +114,6 @@ def discoverFiles(codebase, sourcepath, mode):
 
 
 
-
 # This is a test function and will be merged with the above function
 def reconDiscoverFiles(codebase, sourcepath, mode):
     if mode == 1:
@@ -152,3 +152,44 @@ def reconDiscoverFiles(codebase, sourcepath, mode):
     result.updateScanSummary("detection_summary.file_extensions_identified", str(fext))
 
     return identified_files
+
+
+def autoDetectRuleTypes(sourcepath):
+    """
+    Automatically detects which rule platforms (e.g., php, java, cpp) are applicable
+    based on the file extensions found in the target directory.
+
+    Parameters:
+        sourcepath (str or Path): Directory path to search for files.
+
+    Returns:
+        str: Comma-separated platform names whose filetypes match discovered files.
+    """
+
+    supported_rules = rulesops.getAvailableRules(exclude=["common"])
+    print(f"     [-] Supported platform types: {supported_rules}")
+
+    detected_platforms = []
+    platform_filetypes = {}
+
+    for rule in supported_rules.split(','):
+        filetypes = rulesops.getRulesPath_OR_FileTypes(rule, "filetypes")
+        platform_filetypes[rule] = list(dict.fromkeys(filetypes.split(',')))
+
+    for platform, filetypes in platform_filetypes.items():
+        for root, _, files in os.walk(sourcepath):
+            for pattern in filetypes:
+                pattern = pattern.strip()
+                if not pattern:
+                    continue
+                matched = fnmatch.filter(files, pattern)
+                if matched:
+                    #print(f"[DEBUG] Match found in platform: {platform} | Pattern: {pattern} | Sample match: {matched[0]}")
+                    detected_platforms.append(platform)
+                    break  # Found a match for this platform
+
+    # Deduplicate and sort
+    unique_platforms = sorted(set(detected_platforms))
+    result_str = ",".join(unique_platforms)
+
+    return result_str

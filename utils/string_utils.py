@@ -1,6 +1,3 @@
-
-
-
 # Removes duplicates from a comma-separated string and preserves order.
 def remove_duplicates(value):
     if value:

@@ -25,6 +25,9 @@ import utils.config_utils as cutils
 import utils.string_utils as strutils
 import utils.result_utils as result
 
+from utils.config_utils import get_tool_version
+
+version = get_tool_version()
 
 # ---- Initilisation ----- 
 # Current directory of the python file
@@ -70,18 +73,15 @@ if not results or len(sys.argv) < 2:
 # Preserve original rule argument for display/logging purposes
 original_rule_file = results.rule_file
 
+'''
 # If '-r auto' is passed, resolve it into supported rule types
 if original_rule_file and original_rule_file.lower() == "auto":
-    resolved_rule_list = rutils.getAvailableRules(exclude=["common"])
-    results.rule_file = resolved_rule_list
-    results.file_types = resolved_rule_list  # Needed for filetype discovery
-
-'''
-# Check if results.file_types is set to "auto"
-if results.rule_file and results.rule_file.lower() == "auto":
-    # Incase any rule is not stable that can be excluded from 'auto' mode using - exclude=["notsostable", "common"]
-    results.rule_file = rutils.getAvailableRules(exclude=["common"])
-    results.file_types = results.rule_file.lower()  # Override filetypes argument 
+    #resolved_rule_list = rutils.getAvailableRules(exclude=["common"])
+    detected = discover.autoDetectRuleTypes(results.target_dir)
+    results.rule_file = detected
+    results.file_types = detected
+    #print(f"    [DEBUG] Target Dir: {str(results.target_dir)}")
+    #print(f"    [DEBUG] Detected File Types: {str(detected)}")
 '''
 
 # Remove duplicates in rule_file and file_types
@@ -106,7 +106,8 @@ elif results.rules_filetypes != None:
 
 # Priority #1 - If '-recon' option used but no rule file is specified then only recon must be performed
 if (results.recon or results.estimate) and results.target_dir and not results.rule_file:
-    print(constants.author)
+    #print(constants.author)
+    print(constants.AUTHOR_BANNER.format(version=version))
 
     # Check if the directory path is valid
     if path.isdir(results.target_dir) == False: 
@@ -145,15 +146,12 @@ elif results.rule_file:
     display_file_types = "auto" if original_rule_file and original_rule_file.lower() == "auto" else results.file_types.lower()
 
     if results.file_types and results.rule_file and results.target_dir:
-        print(constants.author)
-        print("\nThe following inputs were received:")
-        '''
-        print(f'[*] Rule Selected        = {results.rule_file.lower()!r}')
-        print(f'[*] File Types Selected  = {results.file_types.lower()!r}')
-        '''
-        print(f"[*] Rule Selected        = {display_rule_file!r}")
-        print(f"[*] File Types Selected  = {display_file_types!r}")
-        print(f"[*] Target Directory     = {results.target_dir}")
+        print(constants.AUTHOR_BANNER.format(version=version))
+
+        print(f"[*] Rule Selection and Inputs")
+        print(f"     [-] Rule Selected        : {display_rule_file!r}")
+        print(f"     [-] File Types Selected  : {display_file_types!r}")
+        print(f"     [-] Target Directory     : {results.target_dir}")
 
         '''
         result.updateScanSummary("inputs_received.rule_selected", results.rule_file.lower())
@@ -164,15 +162,15 @@ elif results.rule_file:
         result.updateScanSummary("inputs_received.target_directory", results.target_dir)
 
         # Prompt the user to enter project name and subtitle
-        project_name = input("[*] Enter Project Name (E.g: XYZ Portal): ")
-        project_subtitle = input("[*] Enter Project Subtitle (E.g: v1.0.1 / XYZ Corp): ")
+        project_name = input("     [-] Enter Project Name (e.g., XYZ Portal): ")
+        project_subtitle = input("     [-] Enter Project Subtitle (e.g., v1.0.1 / XYZ Corp): ")
         cutils.updateProjectConfig(project_name,project_subtitle)     # Update project details
 
     if str(results.verbosity) in ('1', '2', '3'):
         state.verbosity = results.verbosity
-        print(f'[*] Verbosity Level    = {results.verbosity}')
+        print(f"     [-] Verbosity Level    : {results.verbosity}")
     else:
-        print('[*] Default Verbosity Level [1] Set')
+        print(f"     [-] Verbosity Level    : Default [1]")
 
 
 # Check if the directory path is valid
@@ -193,6 +191,16 @@ state.sourcedir = re.search(r'((?!\/|\\).)*(\/|\\)$', project_dir)[0]        # T
 # Current directory of the python file
 root_dir = os.path.dirname(os.path.realpath(__file__))
 state.root_dir = root_dir
+
+# If '-r auto' is passed, resolve it into supported rule types
+if original_rule_file and original_rule_file.lower() == "auto":
+    print(f"[*] Auto-detecting applicable platform rule types...")
+
+    detected = discover.autoDetectRuleTypes(results.target_dir)
+    results.rule_file = detected
+    results.file_types = detected
+
+    print(f"     [-] Detected platform types: {detected}")
 
 # List of file types to enumerate before scanning using rules
 codebase = results.file_types
@@ -250,10 +258,10 @@ common_rules_total = rutils.rulesCount(rules_common)
 # Total loaded rules (platform + common)
 total_rules_loaded = sum(map(int, rule_counts)) + common_rules_total
 
-#print(f"[*] Total {results.rule_file.lower()} rules loaded: {platform_rules_total}")
-print(f"[*] Total platform specific rules loaded: {platform_rules_total}")
-print(f"[*] Total common rules loaded: {common_rules_total}")
-print(f"[*] Overall total rules loaded: {total_rules_loaded}")
+print(f"[*] Rules Loaded")
+print(f"     [-] Platform Rules       : {platform_rules_total}")
+print(f"     [-] Common Rules         : {common_rules_total}")
+print(f"     [-] Total Rules Loaded   : {total_rules_loaded}")
 
 # Update Scan Summary JSON file - Loaded rules count
 result.updateScanSummary("inputs_received.platform_specific_rules", platform_rules_total)
@@ -267,7 +275,7 @@ state.start_time = time.time()  # This time will be used to calculate total time
 state.start_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 sCnt = 0    # Stage counter
-print("[*] Scanner initiated!!")
+print("[*] Scanner Initiated")
 
 ###### [Stage #] Discover file paths    ######
 sCnt+=1
@@ -278,12 +286,11 @@ if results.recon:
 
         sCnt+=1
         print(f"[*] [Stage {sCnt}] Discover file paths")    # Stage 2
-        #log_filepaths = utils.discoverFiles(codebase, sourcepath, 1)
         master_file_paths, platform_file_paths = discover.discoverFiles(codebase, sourcepath, 1)
 else: 
     print(f"[*] [Stage {sCnt}] Discover file paths")        # Stage 1
-    #log_filepaths = utils.discoverFiles(codebase, sourcepath, 1)
     master_file_paths, platform_file_paths = discover.discoverFiles(codebase, sourcepath, 1)
+
 
 ###### [Stage 2 or 3] Rules/Pattern Matching - Parse Source Code ######
 sCnt+=1
@@ -371,14 +378,12 @@ print("\n[*] Scanning Timeline")
 print("    [-] Scan start time     : " + str(state.start_timestamp))
 end_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 print("    [-] Scan end time       : " + str(end_timestamp))
-# print("Scan completed in " + str(format((time.time() - settings.start_time), '.2f')) + " seconds.")
 
 hours, rem = divmod(time.time() - state.start_time, 3600)
 minutes, seconds = divmod(rem, 60)
 seconds, milliseconds = str(seconds).split('.')
 scan_duration = "{:0>2}Hr:{:0>2}Min:{:0>2}s:{}ms".format(int(hours), int(minutes), seconds, milliseconds[:3])
 print(f"    [-] Scan completed in   : {scan_duration}")
-# print("    [-] Scan completed in   : {:0>2}Hr:{:0>2}Min:{:0>2}s:{}ms".format(int(hours),int(minutes),seconds, milliseconds[:3]))
 
 # Update Scan Summary JSON file - Timeline
 result.updateScanSummary("scanning_timeline.scan_start_time", state.start_timestamp)
