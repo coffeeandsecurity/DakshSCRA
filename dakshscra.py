@@ -148,7 +148,7 @@ elif results.rule_file:
     if results.file_types and results.rule_file and results.target_dir:
         print(constants.AUTHOR_BANNER.format(version=version))
 
-        print(f"[*] Rule Selection and Inputs")
+        cli.section_print(f"[*] Inputs & Rule Selection")
         print(f"     [-] Rule Selected        : {display_rule_file!r}")
         print(f"     [-] File Types Selected  : {display_file_types!r}")
         print(f"     [-] Target Directory     : {results.target_dir}")
@@ -194,7 +194,7 @@ state.root_dir = root_dir
 
 # If '-r auto' is passed, resolve it into supported rule types
 if original_rule_file and original_rule_file.lower() == "auto":
-    print(f"[*] Auto-detecting applicable platform rule types...")
+    cli.section_print(f"[*] Auto-detecting applicable platform types...")
 
     detected = discover.autoDetectRuleTypes(results.target_dir)
     results.rule_file = detected
@@ -247,18 +247,14 @@ platform_rules_paths = ", ".join(rule_paths_str)  # Optional for logging if need
 #platform_rules_total = ", ".join(rule_counts)
 platform_rules_total = ", ".join(platform_rules_list)  # Now in the format "php [32], cpp [25], java [26]"
 
-# print(f"[*] All rule paths: {platform_rules_paths}")
-#print(f"[*] Total {results.rule_file.lower()} rules loaded: {platform_rules_total}")
-
 # Handle common rules and their count
 rules_common = Path(str(state.rulesRootDir) + rutils.getRulesPath_OR_FileTypes("common", "rules"))
 common_rules_total = rutils.rulesCount(rules_common)
 
-
 # Total loaded rules (platform + common)
 total_rules_loaded = sum(map(int, rule_counts)) + common_rules_total
 
-print(f"[*] Rules Loaded")
+cli.section_print(f"[*] Rules Loaded")
 print(f"     [-] Platform Rules       : {platform_rules_total}")
 print(f"     [-] Common Rules         : {common_rules_total}")
 print(f"     [-] Total Rules Loaded   : {total_rules_loaded}")
@@ -275,26 +271,26 @@ state.start_time = time.time()  # This time will be used to calculate total time
 state.start_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 sCnt = 0    # Stage counter
-print("[*] Scanner Initiated")
+cli.section_print("[*] Scanner Initiated")
 
-###### [Stage #] Discover file paths    ######
+###### [Stage #] File Path Discovery ######
 sCnt+=1
 if results.recon:
-        print(f"[*] [Stage {sCnt}] Reconnaissance (a.k.a Software Composition Analysis)")         # Stage 1
+        cli.section_print(f"[*] [Stage {sCnt}] Reconnaissance (a.k.a Software Composition Analysis)")         # Stage 1
         targetdir = results.target_dir
         rec.recon(targetdir, True)
 
         sCnt+=1
-        print(f"[*] [Stage {sCnt}] Discover file paths")    # Stage 2
+        cli.section_print(f"[*] [Stage {sCnt}] File Path Discovery")    # Stage 2
         master_file_paths, platform_file_paths = discover.discoverFiles(codebase, sourcepath, 1)
 else: 
-    print(f"[*] [Stage {sCnt}] Discover file paths")        # Stage 1
+    cli.section_print(f"[*] [Stage {sCnt}] File Path Discovery")        # Stage 1
     master_file_paths, platform_file_paths = discover.discoverFiles(codebase, sourcepath, 1)
 
 
-###### [Stage 2 or 3] Rules/Pattern Matching - Parse Source Code ######
+###### [Stage 2 or 3] Rules, or Pattern Matching & Analysis - Parse Source Code ######
 sCnt+=1
-print(f"[*] [Stage {sCnt}] Rules/Pattern Matching - Parsing identified project files")
+cli.section_print(f"[*] [Stage {sCnt}] Pattern Matching & Analysis")
 
 # Ensure the directory structure exists. If it doesn't then create necessary directory structure.
 output_directory = os.path.dirname(state.outputAoI)
@@ -313,7 +309,7 @@ with open(state.outputAoI, "w") as f_scanout:
             if index < len(platform_file_paths):
                 platform_file_path = platform_file_paths[index]
 
-                print(f"\033[92m     --- Applying rules for {platform} ---\033[0m")
+                print(f"\033[92m     --> Applying rules for {platform} \033[0m")
                 
                 # Debug print statement to check what is passed to sourceParser
                 # print(f"[DEBUG] Platform: {platform}, Rules Path: {rules_main_path}, File Path: {platform_file_path}")
@@ -330,7 +326,7 @@ with open(state.outputAoI, "w") as f_scanout:
                     f_targetfiles.seek(0)
 
     # Apply common (platform-independent) rules
-    print("\033[92m     --- Applying common (platform-independent) rules ---\033[0m")
+    print("\033[92m     --> Applying common (platform-independent) rules \033[0m")
     with open(master_file_paths, 'r', encoding=futils.detectEncodingType(master_file_paths)) as f_targetfiles:
         common_matched_rules, common_unmatched_rules = parser.sourceParser(rules_common, f_targetfiles, f_scanout)
 
@@ -338,7 +334,7 @@ with open(state.outputAoI, "w") as f_scanout:
     source_matched_rules.extend(common_matched_rules)
     source_unmatched_rules.extend(common_unmatched_rules)
 
-    print("\033[92m     --- Patterns Matching Summary ---\033[0m")
+    print("\033[92m     --- Pattern Matching Summary ---\033[0m")
 
 # Update the scan summary JSON file with the aggregated matched and unmatched patterns
 result.updateScanSummary("source_files_scanning_summary.matched_rules", source_matched_rules)
@@ -354,7 +350,7 @@ print("     [-] Total unmatched rules:", len(source_unmatched_rules))
 
 ###### [Stage 3 or 4] Parse File Paths for areas of interest ######
 sCnt+=1
-print(f"[*] [Stage {sCnt}] Parsing file paths for areas of interest")
+cli.section_print(f"[*] [Stage {sCnt}] Identifying Areas of Interest")
 
 with open(state.outputAoI_Fpaths, "w") as f_scanout:
     with open(master_file_paths, 'r', encoding=futils.detectEncodingType(master_file_paths)) as f_targetfiles:
@@ -374,7 +370,7 @@ result.updateScanSummary("detection_summary.file_paths_areas_of_interest_identif
 futils.cleanFilePaths(master_file_paths)
 os.unlink(master_file_paths)        # Delete the temp file paths log after the path cleanup in the above step
 
-print("\n[*] Scanning Timeline")
+cli.section_print(f"[*] Scanning Timeline")
 print("    [-] Scan start time     : " + str(state.start_timestamp))
 end_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 print("    [-] Scan end time       : " + str(end_timestamp))

@@ -60,7 +60,7 @@ def sourceParser(rule_input, targetfile, outputfile):
         for category in root:
             category_name = category.get('name')
             if category_name:
-                print(f"     [-] Category: {category_name}")
+                print(f"         [-] Category: {category_name}")
 
             for rule in category:
                 rule_title = rule.find("name").text
@@ -231,13 +231,6 @@ def pathsParser(rule_path, targetfile, outputfile, rule_no):
 
     # Remove duplicates from unmatched items list
     unmatched_rules = list(set(unmatched_rules))
-    '''
-    # Print unmatched patterns
-    if unmatched_patterns:
-        print("Unmatched Patterns:")
-        for item in unmatched_patterns:
-            print("     [-]" + item)
-    '''
 
     return matched_rules, unmatched_rules
 

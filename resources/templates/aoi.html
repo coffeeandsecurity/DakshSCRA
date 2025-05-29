@@ -13,11 +13,11 @@
 
 <!-- Iterate through platforms and display the snippets -->
 {% for platform, platform_snippets in snippets.items() %}
+    {% if not loop.first %}
+        <div style="page-break-before: always;"></div>
+    {% endif %}
+
     <h3 class="platform-heading">{{ platform }} Findings</h3>
-    <!--
-    <p class="p-justified">
-        This section provides details on findings within the {{ platform }} code.
-    </p>-->
 
     {% for snippet in platform_snippets %}
         <div class="src-path-wrap">

@@ -8,6 +8,7 @@ from collections import Counter
 
 import utils.file_utils as futils
 import state.runtime_state as state
+import utils.cli_utils as cli
 #import modules.estimator as estimate
 
 # Exclusion list for file extensions
@@ -94,7 +95,7 @@ def recon(targetdir, flag=False):
     """
 
     if flag == False:       # True is used when recon option is used along with source code scanning
-        print("\n[*] Reconnaissance (a.k.a Software Composition Analysis)")
+        cli.section_print("[*] Reconnaissance (a.k.a Software Composition Analysis)")   
     
     if Path(state.inventory_Fpathext).is_file():
         os.remove(state.inventory_Fpathext)

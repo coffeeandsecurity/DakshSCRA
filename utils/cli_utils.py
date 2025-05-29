@@ -45,3 +45,8 @@ def toolUsage(option):
     print(f"  • If {yellow}-f{reset} is not provided, default filetypes for the selected platform(s) will be used.")
     print(f"  • Use {yellow}-r auto{reset} to detect file types and auto-apply all relevant platform rules.")
     print(f"  • Use {yellow}-recon{reset} alone to detect technology stack without scanning.")
+
+
+def section_print(message):
+    print()
+    print(message)

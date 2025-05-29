@@ -27,14 +27,17 @@ from collections import defaultdict
 import html
 import re
 
+import utils.cli_utils as cli
+
 
 def genPdfReport(html_path, pdf_path):
     try:
         started_at = time.time()
-        print(f"[*] PDF report generation")
+        cli.section_print(f"[*] PDF Report Generation")
+
         print(f"    [-] Started at       : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         
-        print("    [-] Be patient! PDF report generation takes time.")
+        print(f"    [-] Be patient! PDF report generation takes time.")
         
 
         HTML(html_path).write_pdf(pdf_path, stylesheets=[CSS(state.staticPdfCssFpath)])
@@ -255,7 +258,7 @@ def getSummary(input_file):
 
 def genReport():
     started_at = time.time()
-    print(f"[*] HTML report generation")
+    cli.section_print("[*] HTML Report Generation")
     print(f"    [-] Started at       : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
     snippets = getAreasOfInterest(state.outputAoI)
@@ -281,11 +284,11 @@ def genReport():
     genPdfReport(htmlfile, pdf_report_path)
 
     # Display reports path but strip out the path to root directory
-    print("\n[*] HTML Report:")
+    cli.section_print("[*] HTML Report:")
     print("     [-] HTML Report Path : "+ re.sub(str(state.root_dir), "", str(state.htmlreport_Fpath)))
-    print("\n[*] PDF Report:")
+    cli.section_print("[*] PDF Report:")
     print("     [-] PDF Report Path : "+ re.sub(str(state.root_dir), "", str(state.pdfreport_Fpath)))
-    print("\n[*] Raw Text Reports:")
+    cli.section_print("[*] Raw Text Reports:")    
 
     aoi_path = re.sub(str(state.root_dir), "", str(state.outputAoI))
     aoi_fpaths_path = re.sub(str(state.root_dir), "", str(state.outputAoI_Fpaths))
@@ -295,11 +298,11 @@ def genReport():
     if os.path.isfile(state.outputRecSummary):
         print("     [-] Reconnaissance Summary:", recon_path)
     if os.path.isfile(state.outputAoI):
-        print("     [-] Areas of Interest:", aoi_path)
+        print("     [-] Areas of Interest (AoI):", aoi_path)
     if os.path.isfile(state.outputAoI_Fpaths):
-        print("     [-] Project Files - Areas of Interest:", aoi_fpaths_path)
+        print("     [-] Filepaths (AoI):", aoi_fpaths_path)
     if os.path.isfile(state.discovered_clean_Fpaths):
-        print("     [-] Discovered Files Path:", discovered_files_path)
+        print("     [-] All Discovered Files:", discovered_files_path)
 
     
     print("\nNote: The tool generates reports in three formats: HTML, PDF, and TEXT. " 
