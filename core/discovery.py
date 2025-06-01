@@ -167,7 +167,7 @@ def autoDetectRuleTypes(sourcepath):
     """
 
     supported_rules = rulesops.getAvailableRules(exclude=["common"])
-    print(f"     [-] Supported platform types: {supported_rules}")
+    #print(f"     [-] Supported platform types: {supported_rules}")
 
     detected_platforms = []
     platform_filetypes = {}

@@ -1,33 +1,34 @@
-import sys, re
-import html
 import os
+import re
+import sys
+import time
+import html
+import base64
+import traceback
+from datetime import datetime, timedelta
+from collections import defaultdict
+from pathlib import Path
 from re import search
 
-try :
-	from jinja2 import Environment, PackageLoader, FileSystemLoader, Template
-except ImportError :
-	sys.exit("[!] The Jinja2 module is not installed, please install it and try again")
+# Third-party libraries
+try:
+    from jinja2 import Environment, FileSystemLoader, Template
+except ImportError:
+    sys.exit("[!] The Jinja2 module is not installed, please install it and try again")
 
 from pygments import highlight
 from pygments.lexers import PythonLexer
 from pygments.formatters import HtmlFormatter
-
 from pygments_better_html import BetterHtmlFormatter
-import traceback
 
-from datetime import datetime, timedelta
 from weasyprint import HTML, CSS
-import time
-
-import state.runtime_state as state
 import yaml
-import base64
 
-from collections import defaultdict
-import html
-import re
-
+# Project-specific modules
+import state.runtime_state as state
 import utils.cli_utils as cli
+from utils.cli_utils import spinner
+
 
 
 def genPdfReport(html_path, pdf_path):
@@ -37,10 +38,11 @@ def genPdfReport(html_path, pdf_path):
 
         print(f"    [-] Started at       : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         
-        print(f"    [-] Be patient! PDF report generation takes time.")
-        
+        #print(f"    [-] Be patient! PDF report generation takes time.")
+        spinner("start", "    [-] Be patient! PDF report generation in progress...")
 
         HTML(html_path).write_pdf(pdf_path, stylesheets=[CSS(state.staticPdfCssFpath)])
+        spinner("stop")
 
         sys.stdout.write("\033[F") #back to previous line        
         sys.stdout.write("\033[K") #clear line to prevent overlap of texts

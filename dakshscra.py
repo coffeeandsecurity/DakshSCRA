@@ -26,6 +26,8 @@ import utils.string_utils as strutils
 import utils.result_utils as result
 
 from utils.config_utils import get_tool_version
+from utils.cli_utils import spinner
+
 
 version = get_tool_version()
 
@@ -194,13 +196,15 @@ state.root_dir = root_dir
 
 # If '-r auto' is passed, resolve it into supported rule types
 if original_rule_file and original_rule_file.lower() == "auto":
-    cli.section_print(f"[*] Auto-detecting applicable platform types...")
+    #cli.section_print(f"[*] Auto-detecting applicable platform types...")
+    spinner("start", "     [-] Auto-detecting applicable platform types...")
 
     detected = discover.autoDetectRuleTypes(results.target_dir)
     results.rule_file = detected
     results.file_types = detected
+    spinner("stop")
 
-    print(f"     [-] Detected platform types: {detected}")
+    print(f"     [-] Detected Platform Types: {detected}")
 
 # List of file types to enumerate before scanning using rules
 codebase = results.file_types
