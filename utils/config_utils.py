@@ -1,7 +1,13 @@
+# Standard libraries
 import os
+
+# Third-party libraries
 import ruamel.yaml
 from ruamel.yaml import YAML
+
+# Local application imports
 import state.runtime_state as runtime
+
 
 
 def updateProjectConfig(project_name, project_subtitle):

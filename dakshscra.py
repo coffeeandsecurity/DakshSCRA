@@ -1,32 +1,31 @@
+# Standard libraries
+import argparse
 import os
 import re
 import sys
-import argparse
 import time
 from datetime import datetime
-from pathlib import Path        # Resolve the windows / mac / linux path issue
-from os import path             # This lowercase path to be used only to validate whether a directory exist
+from os import path  # This lowercase path to be used only to validate whether a directory exists
+from pathlib import Path  # Resolve the Windows / macOS / Linux path issue
 
-
-import core.estimator as estimate
-import core.reports as report
+# Local application imports
 import core.discovery as discover
+import core.estimator as estimate
 import core.parser as parser
 import core.recon as rec
+import core.reports as report
 
-
-import state.runtime_state as state
 import state.constants as constants
+import state.runtime_state as state
 
-import utils.file_utils as futils
-import utils.rules_utils as rutils
 import utils.cli_utils as cli
 import utils.config_utils as cutils
-import utils.string_utils as strutils
+import utils.file_utils as futils
 import utils.result_utils as result
-
-from utils.config_utils import get_tool_version
+import utils.rules_utils as rutils
+import utils.string_utils as strutils
 from utils.cli_utils import spinner
+from utils.config_utils import get_tool_version
 
 
 version = get_tool_version()
@@ -45,13 +44,31 @@ futils.dirCleanup("reports/pdf")
 
 args = argparse.ArgumentParser()
 
-args.add_argument('-r', type=str, action='store', dest='rule_file', required=False, help='Specify platform specific rule name')
-args.add_argument('-f', type=str, action='store', dest='file_types', required=False, help='Specify file types to scan')
-args.add_argument('-v', action='count', dest='verbosity', default=0, help="Specify verbosity level {'-v', '-vv', '-vvv'}")
-args.add_argument('-t', type=str, action='store', dest='target_dir', required=False, help='Specify target directory path') 
-args.add_argument('-l', '--list', type=str, action='store', dest='rules_filetypes', required=False, choices=['R','RF'], help='List rules [R] OR rules and filetypes [RF]')
-args.add_argument('-recon', action='store_true', dest='recon', help="Detects platform, framework and programming language used")
-args.add_argument('-estimate', action='store_true', dest='estimate', help="Estimate efforts required for code review")
+args.add_argument('-r', type=str, action='store', dest='rule_file', required=False,
+                  help='Specify platform-specific rule name')
+
+args.add_argument('-f', type=str, action='store', dest='file_types', required=False,
+                  help='Specify file types to scan')
+
+args.add_argument('-v', action='count', dest='verbosity', default=0,
+                  help="Specify verbosity level {'-v', '-vv', '-vvv'}")
+
+args.add_argument('-t', type=str, action='store', dest='target_dir', required=False,
+                  help='Specify target directory path')
+
+args.add_argument('-l', '--list', type=str, action='store', dest='rules_filetypes',
+                  required=False, choices=['R', 'RF'],
+                  help='List rules [R] OR rules and filetypes [RF]')
+
+args.add_argument('-recon', action='store_true', dest='recon',
+                  help="Detect platform, framework, and programming language used")
+
+args.add_argument('-estimate', action='store_true', dest='estimate',
+                  help="Estimate efforts required for code review")
+
+args.add_argument('-rpt', '--report', type=str, action='store', dest='report_format',
+                  default='html,pdf',
+                  help="Report types to generate: html, pdf, or html,pdf (default: html,pdf)")
 
 
 
@@ -170,9 +187,9 @@ elif results.rule_file:
 
     if str(results.verbosity) in ('1', '2', '3'):
         state.verbosity = results.verbosity
-        print(f"     [-] Verbosity Level    : {results.verbosity}")
+        print(f"     [-] Verbosity Level      : {results.verbosity}")
     else:
-        print(f"     [-] Verbosity Level    : Default [1]")
+        print(f"     [-] Verbosity Level      : Default [1]")
 
 
 # Check if the directory path is valid
@@ -197,14 +214,15 @@ state.root_dir = root_dir
 # If '-r auto' is passed, resolve it into supported rule types
 if original_rule_file and original_rule_file.lower() == "auto":
     #cli.section_print(f"[*] Auto-detecting applicable platform types...")
-    spinner("start", "     [-] Auto-detecting applicable platform types...")
+    print("     [-] Auto-detecting applicable platform types... ", end="", flush=True)
+    spinner("start")
 
     detected = discover.autoDetectRuleTypes(results.target_dir)
     results.rule_file = detected
     results.file_types = detected
     spinner("stop")
 
-    print(f"     [-] Detected Platform Types: {detected}")
+    print(f"     [-] Detected Platform(s) : {detected}")
 
 # List of file types to enumerate before scanning using rules
 codebase = results.file_types
@@ -396,6 +414,16 @@ parser.genScanSummaryText(state.scanSummary_Fpath)
 
 
 ###### [Stage 4] Generate Reports ######
-report.genReport()
+#report.genReport()
+valid_formats = {"html", "pdf"}
+requested_formats = results.report_format.lower().replace(" ", "").split(",")
+selected_formats = [fmt for fmt in requested_formats if fmt in valid_formats]
+
+if selected_formats:
+    report.genReport(formats=",".join(selected_formats))
+else:
+    print("[!] No valid report format selected. Defaulting to 'html,pdf'.")
+    report.genReport(formats="html,pdf")
+
 cutils.updateProjectConfig("","")     # Clean up project details in the config file
 

@@ -1,9 +1,13 @@
-import os, re
+# Standard libraries
+import os
+import re
+from pathlib import Path  # Resolve the Windows / macOS / Linux path issue
+
+# Third-party libraries
 import chardet
 import ruamel.yaml
 
-from pathlib import Path    # Resolve the windows / mac / linux path issue
-
+# Local application imports
 import state.runtime_state as runtime
 
 

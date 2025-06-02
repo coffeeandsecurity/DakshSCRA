@@ -1,4 +1,6 @@
+# Standard libraries
 import string
+
 
 
 def validate_input(input_string, input_type):

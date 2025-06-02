@@ -1,6 +1,9 @@
+# Standard libraries
+import os
+import time
 from datetime import datetime
-import time, os
-from pathlib import Path    # Resolve the windows / mac / linux path issue
+from pathlib import Path  # Resolve the Windows / macOS / Linux path issue
+
 
 start_time = time.time()  # This time will be used to calculate total time taken for the scan
 start_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')

@@ -1,8 +1,14 @@
+# Standard libraries
 import json
+
+# Third-party libraries
 import yaml
 from jinja2 import Template
+
+# Local application imports
 import state.runtime_state as state
 import utils.file_utils as futils
+
 
 # Global variable for the HTML report path
 estimation_Fpath = state.estimation_Fpath

@@ -1,7 +1,9 @@
-import os
+# Standard libraries
 import json
-import state.runtime_state as runtime
+import os
 
+# Local application imports
+import state.runtime_state as runtime
 
 
 

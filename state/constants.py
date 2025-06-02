@@ -1,6 +1,9 @@
+# Standard libraries
 import os
 
+# Local application imports
 from utils.config_utils import get_tool_version
+
 
 version = get_tool_version()
 

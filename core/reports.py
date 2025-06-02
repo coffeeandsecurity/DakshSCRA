@@ -1,12 +1,13 @@
+# Standard libraries
+import base64
+import html
 import os
 import re
 import sys
 import time
-import html
-import base64
 import traceback
-from datetime import datetime, timedelta
 from collections import defaultdict
+from datetime import datetime, timedelta
 from pathlib import Path
 from re import search
 
@@ -16,19 +17,17 @@ try:
 except ImportError:
     sys.exit("[!] The Jinja2 module is not installed, please install it and try again")
 
-from pygments import highlight
-from pygments.lexers import PythonLexer
-from pygments.formatters import HtmlFormatter
-from pygments_better_html import BetterHtmlFormatter
-
-from weasyprint import HTML, CSS
 import yaml
+from pygments import highlight
+from pygments.formatters import HtmlFormatter
+from pygments.lexers import PythonLexer
+from pygments_better_html import BetterHtmlFormatter
+from weasyprint import CSS, HTML
 
-# Project-specific modules
+# Local application imports
 import state.runtime_state as state
 import utils.cli_utils as cli
 from utils.cli_utils import spinner
-
 
 
 def genPdfReport(html_path, pdf_path):
@@ -37,28 +36,31 @@ def genPdfReport(html_path, pdf_path):
         cli.section_print(f"[*] PDF Report Generation")
 
         print(f"    [-] Started at       : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        
-        #print(f"    [-] Be patient! PDF report generation takes time.")
-        spinner("start", "    [-] Be patient! PDF report generation in progress...")
+        print("    [-] Be patient! PDF report generation in progress... ", end="", flush=True)
+        spinner("start")  # spinner animates at the end of above message
 
         HTML(html_path).write_pdf(pdf_path, stylesheets=[CSS(state.staticPdfCssFpath)])
+
         spinner("stop")
 
-        sys.stdout.write("\033[F") #back to previous line        
-        sys.stdout.write("\033[K") #clear line to prevent overlap of texts
         print(f"    [-] Completed at     : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
         hours, rem = divmod(time.time() - started_at, 3600)
         minutes, seconds = divmod(rem, 60)
         seconds, milliseconds = str(seconds).split('.')
-        print("    [-] Total time taken : {:0>2}Hr:{:0>2}Min:{:0>2}s:{}ms".format(int(hours),int(minutes),seconds, milliseconds[:3]))
+        print("    [-] Total time taken : {:0>2}Hr:{:0>2}Min:{:0>2}s:{}ms".format(int(hours), int(minutes), seconds, milliseconds[:3]))
 
         return pdf_path
+
     except Exception as e:
-        print(e)
+        spinner("stop")
+        print(f"\n[!] Error during PDF generation: {e}")
         traceback.print_exc()
 
     return pdf_path
+
+
+
 
 
 
@@ -257,7 +259,60 @@ def getSummary(input_file):
     return content
 
 
+# Generate the HTML and PDF reports
+def genReport(formats="html,pdf"):
+    started_at = time.time()
+    cli.section_print("[*] HTML Report Generation")
+    print(f"    [-] Started at       : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
+    snippets = getAreasOfInterest(state.outputAoI)
+    filepaths_aoi = getFilePathsOfAOI(state.outputAoI_Fpaths)
+    filepaths = getFilePaths(state.output_Fpaths)
+    summary = getSummary(state.outputSummary)
+
+    html_report_output_path = state.htmlreport_Fpath
+    pdf_report_path = state.pdfreport_Fpath
+
+    htmlfile = None
+    output_html = None
+
+    if "html" in formats or "pdf" in formats:
+        htmlfile, output_html = genHtmlReport(summary, snippets, filepaths, filepaths_aoi, html_report_output_path)
+
+    print(f"    [-] Completed at     : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    hours, rem = divmod(time.time() - started_at, 3600)
+    minutes, seconds = divmod(rem, 60)
+    seconds, milliseconds = str(seconds).split('.')
+    print("    [-] Total time taken : {:0>2}Hr:{:0>2}Min:{:0>2}s:{}ms".format(int(hours), int(minutes), seconds, milliseconds[:3]))
+
+    if "pdf" in formats and htmlfile:
+        genPdfReport(htmlfile, pdf_report_path)
+
+    # Report path output
+    if "html" in formats:
+        cli.section_print("[*] HTML Report:")
+        print("     [-] HTML Report Path : " + re.sub(str(state.root_dir), "", str(state.htmlreport_Fpath)))
+
+    if "pdf" in formats:
+        cli.section_print("[*] PDF Report:")
+        print("     [-] PDF Report Path : " + re.sub(str(state.root_dir), "", str(state.pdfreport_Fpath)))
+
+    cli.section_print("[*] Raw Text Reports:")
+    if os.path.isfile(state.outputRecSummary):
+        print("     [-] Reconnaissance Summary:", re.sub(str(state.root_dir), "", str(state.outputRecSummary)))
+    if os.path.isfile(state.outputAoI):
+        print("     [-] Areas of Interest (AoI):", re.sub(str(state.root_dir), "", str(state.outputAoI)))
+    if os.path.isfile(state.outputAoI_Fpaths):
+        print("     [-] Filepaths (AoI):", re.sub(str(state.root_dir), "", str(state.outputAoI_Fpaths)))
+    if os.path.isfile(state.discovered_clean_Fpaths):
+        print("     [-] All Discovered Files:", re.sub(str(state.root_dir), "", str(state.discovered_clean_Fpaths)))
+
+    print("\nNote: The tool generates reports in three formats: HTML, PDF, and TEXT. "
+          "While the HTML and PDF reports are currently in a reasonably good state, "
+          "they will undergo continuous refinement and improvement with each subsequent iteration.")
+
+
+'''
 def genReport():
     started_at = time.time()
     cli.section_print("[*] HTML Report Generation")
@@ -311,3 +366,4 @@ def genReport():
     "While the HTML and PDF reports are currently in a reasonably good state, " 
     "they will undergo continuous refinement and improvement with each subsequent iteration.")
     
+'''

@@ -1,8 +1,16 @@
-from colorama import Fore, Style
-from utils.config_utils import get_tool_version
-from state import constants
+# Standard libraries
+import itertools
+import sys
+import threading
+import time
 
-import itertools, sys, threading, time
+# Third-party libraries
+from colorama import Fore, Style
+
+# Local application imports
+from state import constants
+from utils.config_utils import get_tool_version
+
 
 
 def toolUsage(option):
@@ -54,37 +62,28 @@ def section_print(message):
     print(message)
 
 
-def spinner_controller():
-    _spinner_running = {"flag": False}
-    _spinner_thread = {"thread": None}
-    _spinner_message = {"text": ""}
+_spinner_thread = None
+_spinner_running = False
 
-    def control(action, message="Processing..."):
-        if action == "start":
-            _spinner_running["flag"] = True
-            _spinner_message["text"] = message
-            spinner = itertools.cycle(['|', '/', '-', '\\'])
+def spinner(mode):
+    global _spinner_thread, _spinner_running
 
-            def run_spinner():
-                while _spinner_running["flag"]:
-                    sys.stdout.write(f"\r{message} {next(spinner)} ")
+    if mode == "start":
+        def spin():
+            while _spinner_running:
+                for ch in "|/-\\":
+                    sys.stdout.write(ch)
                     sys.stdout.flush()
                     time.sleep(0.1)
+                    sys.stdout.write("\b")
+        _spinner_running = True
+        _spinner_thread = threading.Thread(target=spin)
+        _spinner_thread.start()
 
-            t = threading.Thread(target=run_spinner)
-            t.daemon = True
-            t.start()
-            _spinner_thread["thread"] = t
-
-        elif action == "stop":
-            _spinner_running["flag"] = False
-            if _spinner_thread["thread"]:
-                _spinner_thread["thread"].join(timeout=0.2)
-            # Clear the line with carriage return and padding spaces
-            clear_len = len(_spinner_message["text"]) + 5  # buffer for spinner char
-            sys.stdout.write('\r' + ' ' * clear_len + '\r')
-            sys.stdout.flush()
-
-    return control
-
-spinner = spinner_controller()  # Initialize spinner controller
+    elif mode == "stop":
+        _spinner_running = False
+        if _spinner_thread:
+            _spinner_thread.join()
+        # Clear entire line cleanly
+        sys.stdout.write("\r" + " " * 80 + "\r")  # Clear the full line
+        sys.stdout.flush()

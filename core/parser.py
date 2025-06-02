@@ -1,11 +1,12 @@
+# Standard libraries
+import json
 import re
 import sys
-import json
-
 import xml.etree.ElementTree as ET
-from pathlib import Path 
+from pathlib import Path
 from timeit import default_timer as timer
 
+# Local application imports
 import state.runtime_state as state
 import utils.file_utils as futils
 

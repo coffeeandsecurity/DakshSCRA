@@ -1,13 +1,15 @@
-import os
+# Standard libraries
 import fnmatch
+import os
 import re
 
+# Local application imports
 import state.runtime_state as runtime
-import utils.rules_utils as rulesops
-import utils.result_utils as result
 import utils.file_utils as fileops
-
+import utils.result_utils as result
+import utils.rules_utils as rulesops
 from utils.rules_utils import getAvailableRules, getRulesPath_OR_FileTypes
+
 
 
 def discoverFiles(codebase, sourcepath, mode):

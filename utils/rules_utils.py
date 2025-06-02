@@ -1,8 +1,12 @@
+# Standard libraries
 import sys
 import xml.etree.ElementTree as ET
+
+# Third-party libraries
 import pandas as pd
 from tabulate import tabulate
 
+# Local application imports
 import state.runtime_state as runtime_utils
 
 
