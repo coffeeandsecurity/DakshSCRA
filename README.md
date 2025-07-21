@@ -132,9 +132,18 @@ You’re now ready to use DakshSCRA.
 
 
 ## Tool Usage
+💡 Use python if you're inside a virtual environment. Otherwise, use python3 or the appropriate Python version installed on your system.
 
 ```
-$ python3 dakshscra.py -h  # To view available options and arguments
+# To view tool usage along with examples
+$ python dakshscra.py          # Inside virtual environment
+# OR
+$ python3 dakshscra.py         # If running outside the venv
+
+# To view help and available options
+$ python dakshscra.py -h       # Inside virtual environment
+# OR
+$ python3 dakshscra.py -h      # Outside virtual environment
 ```
 
 ```
@@ -152,10 +161,6 @@ options:
 ```
 
 ### Example Usage
-
-```
-$ python3 dakshscra.py  # To view tool usage along with examples
-```
 
 Examples:
 
