@@ -54,7 +54,7 @@ If you find any bugs, report them to [d3basis.m0hanty@gmail.com](mailto\:d3basis
 - Python 3.8+
 - All the libraries listed in `requirements.txt`
 
----
+
 
 ### 1. Download Daksh SCRA
 
@@ -66,7 +66,7 @@ Alternatively, 'cd' into your desired folder/directory and download using the 'g
 git clone https://github.com/coffeeandsecurity/DakshSCRA.git
 ```
 
----
+
 
 ### 2. Setup a Virtual Environment
 
@@ -129,7 +129,7 @@ playwright install chromium
 
 You’re now ready to use DakshSCRA.
 
----
+
 
 ## Tool Usage
 
@@ -196,7 +196,7 @@ Currently supported:
 - kotlin, python, go, c, cpp,
 - android (beta - limited checks), common
 
----
+
 
 ## Reports
 
