@@ -1,6 +1,6 @@
 exclude
 runtime/*
-venv
+venv*
 *.pyc
 modules/__pycache__/
 modules/*pycache*

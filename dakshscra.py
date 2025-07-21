@@ -180,11 +180,14 @@ elif results.rule_file:
         result.updateScanSummary("inputs_received.filetypes_selected", display_file_types)
         result.updateScanSummary("inputs_received.target_directory", results.target_dir)
 
+        # Load or prompt for project name and subtitle
+        cutils.init_or_prompt_project_config()
+        '''
         # Prompt the user to enter project name and subtitle
         project_name = input("     [-] Enter Project Name (e.g., XYZ Portal): ")
         project_subtitle = input("     [-] Enter Project Subtitle (e.g., v1.0.1 / XYZ Corp): ")
         cutils.updateProjectConfig(project_name,project_subtitle)     # Update project details
-
+        '''
     if str(results.verbosity) in ('1', '2', '3'):
         state.verbosity = results.verbosity
         print(f"     [-] Verbosity Level      : {results.verbosity}")
