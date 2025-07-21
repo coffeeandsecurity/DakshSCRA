@@ -162,9 +162,8 @@ options:
 
 ### Example Usage
 
-Examples:
-
-- `-f` is optional. If not specified, it will default to the corresponding filetypes of the selected rule.
+📝 Note:
+-f (file types) is optional. If not specified, DakshSCRA uses the default file types for the selected platform(s).
 
 ```
 # Specify platforms with '-r' (single or multiple) for platform-specific rules:
