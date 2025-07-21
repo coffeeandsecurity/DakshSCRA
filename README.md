@@ -1,6 +1,5 @@
 # Daksh SCRA (Source Code Review Assist)
 
-
 ```
 Author: 	
 - Debasis Mohanty (d3basis.m0hanty@gmail.com)
@@ -9,6 +8,7 @@ Author:
 ```
 
 ## About Daksh SCRA
+
 Daksh SCRA (Source Code Review Assist) tool is built to enhance the efficiency of the source code review process, providing a well-structured and organized approach for code reviewers.
 
 Rather than indiscriminately flagging everything as a potential issue, Daksh SCRA promotes thoughtful analysis, urging the investigation and confirmation of potential problems. This approach mitigates the scramble to tag every potential concern as a bug, cutting back on the confusion and wasted time spent on false positives.
@@ -16,6 +16,7 @@ Rather than indiscriminately flagging everything as a potential issue, Daksh SCR
 What sets Daksh SCRA apart is its emphasis on avoiding unnecessary bug tagging. Unlike conventional methods, it advocates for thorough investigation and confirmation of potential issues before tagging them as bugs. This approach helps mitigate the issue of false positives, which often consume valuable time and resources, thereby fostering a more productive and efficient code review process.
 
 ## Debut
+
 Daksh SCRA was initially introduced during a source code review training session I conducted at Black Hat USA 2022 (August 6 - 9), where it was subtly presented to a specific audience. However, this introduction was carried out with a low-profile approach, avoiding any major announcements.
 
 While this tool was quietly published on GitHub after the 2022 training, its official public debut took place at Black Hat USA 2023 in Las Vegas.
@@ -23,43 +24,49 @@ While this tool was quietly published on GitHub after the 2022 training, its off
 ## Features and Functionalities
 
 ### Distinctive Features (Multiple World’s First)
-* **Identifies Areas of Interest in Source Code:** Encourage focused investigation and confirmation rather than indiscriminately labeling everything as a bug. 
 
-* **Identifies Areas of Interest in File Paths (World’s First):** Recognises patterns in file paths to pinpoint relevant sections for review.
+- **Identifies Areas of Interest in Source Code:** Encourage focused investigation and confirmation rather than indiscriminately labeling everything as a bug.
 
-* **Software-Level Reconnaissance to Identify Technologies Utilised:** Identifies project technologies, enabling code reviewers to conduct precise scans with appropriate rules. 
+- **Identifies Areas of Interest in File Paths (World’s First):** Recognises patterns in file paths to pinpoint relevant sections for review.
 
-* **Automated Scientific Effort Estimation for Code Review (World’s First):** Providing a measurable approach for estimating efforts required for a code review process.
+- **Software-Level Reconnaissance to Identify Technologies Utilised:** Identifies project technologies, enabling code reviewers to conduct precise scans with appropriate rules.
+
+- **Automated Scientific Effort Estimation for Code Review (World’s First):** Providing a measurable approach for estimating efforts required for a code review process.
 
 > Although this tool has progressed beyond its early stages, it has reached a functional state that is quite usable and delivers on its promised capabilities. Nevertheless, active enhancements are currently underway, and there are multiple new features and improvements expected to be added in the upcoming months.
 
-Additionally, the tool offers the following functionalities: 
-* Options to use platform-specific rules specific for finding areas of interests
-* Options to extend or add new rules for any new or existing languages
-* Generates report in text, HTML and PDF format for inspection
+Additionally, the tool offers the following functionalities:
 
+- Options to use platform-specific rules specific for finding areas of interests
+- Options to extend or add new rules for any new or existing languages
+- Generates report in text, HTML and PDF format for inspection
 
-Refer to the wiki for the tool setup and usage details - https://github.com/coffeeandsecurity/DakshSCRA/wiki
+Refer to the wiki for the tool setup and usage details - [https://github.com/coffeeandsecurity/DakshSCRA/wiki](https://github.com/coffeeandsecurity/DakshSCRA/wiki)
 
 Feel free to contribute towards updating or adding new rules and future development.
 
-If you find any bugs, report them to d3basis.m0hanty@gmail.com.
+If you find any bugs, report them to [d3basis.m0hanty@gmail.com](mailto\:d3basis.m0hanty@gmail.com).
 
 ## Tool Setup
 
 ### Pre-requisites
-- Python3.3+
+
+- Python 3.8+
 - All the libraries listed in `requirements.txt`
 
-### Setting up environment to run this tool
+---
 
-#### 1. Download Daksh SCRA
-Download and save the latest build from here: https://github.com/coffeeandsecurity/DakshSCRA
-Save it to your desired folder/directory. Must make sure you have unzipped it. 
+### 1. Download Daksh SCRA
 
-Alternatively, 'cd' into your desired folder/directory and download using the 'git' command
+Download and save the latest build from here: [https://github.com/coffeeandsecurity/DakshSCRA](https://github.com/coffeeandsecurity/DakshSCRA) Save it to your desired folder/directory. Must make sure you have unzipped it.
 
-	git clone https://github.com/coffeeandsecurity/DakshSCRA.git
+Alternatively, 'cd' into your desired folder/directory and download using the 'git' command:
+
+```
+git clone https://github.com/coffeeandsecurity/DakshSCRA.git
+```
+
+---
 
 ### 2. Setup a Virtual Environment
 
@@ -67,7 +74,7 @@ Alternatively, 'cd' into your desired folder/directory and download using the 'g
 
 You have two options:
 
-#### ✅ Option A: One-Step Setup (Recommended) — Use `setup_env.py`
+#### Option A: One-Step Setup (Recommended) — Use `setup_env.py`
 
 This script automates the full environment setup, including creating a virtual environment, installing dependencies, and installing Playwright's Chromium browser.
 
@@ -118,7 +125,7 @@ pip install playwright
 playwright install chromium
 ```
 
-> ✅ After activation, your terminal prompt should show the environment name: `(daksh-env) $`
+> After activation, your terminal prompt should show the environment name: `(daksh-env) $`
 
 You’re now ready to use DakshSCRA.
 
@@ -126,75 +133,95 @@ You’re now ready to use DakshSCRA.
 
 ## Tool Usage
 
-$ python3 dakshscra.py -h		// To view available options and arguments
+```bash
+$ python3 dakshscra.py -h  # To view available options and arguments
+```
 
-	usage: usage: dakshscra.py [-h] [-r RULE_FILE] [-f FILE_TYPES] [-v] [-t TARGET_DIR] [-l {R,RF}] [-recon] [-estimate]
+```
+usage: dakshscra.py [-h] [-r RULE_FILE] [-f FILE_TYPES] [-v] [-t TARGET_DIR] [-l {R,RF}] [-recon] [-estimate]
 
-	options:
-	-h, --help Show this help message and exit
-	-r RULE_FILE Specify platform-specific rule name or 'auto' for auto-detection of platforms
-	-f FILE_TYPES Specify file types to scan
-	-v Specify verbosity level {'-v', '-vv', '-vvv'}
-	-t TARGET_DIR Specify target directory path
-	-l {R,RF}, --list {R,RF} List rules [R] OR rules and filetypes [RF]
-	-recon Detects platform, framework, and programming language used
-	-estimate Estimate efforts required for code review
+options:
+-h, --help                 Show this help message and exit
+-r RULE_FILE               Specify platform-specific rule name or 'auto' for auto-detection of platforms
+-f FILE_TYPES              Specify file types to scan
+-v                         Specify verbosity level {'-v', '-vv', '-vvv'}
+-t TARGET_DIR              Specify target directory path
+-l {R,RF}, --list {R,RF}   List rules [R] OR rules and filetypes [RF]
+-recon                     Detects platform, framework, and programming language used
+-estimate                  Estimate efforts required for code review
+```
 
 ### Example Usage
-$ python3 dakshscra.py		// To view tool usage along with examples
 
-	Examples:
-	# '-f' is optional. If not specified, it will default to the corresponding filetypes of the selected rule.
-	- dakshscra.py -r php -t /source_dir_path
+```bash
+$ python3 dakshscra.py  # To view tool usage along with examples
+```
 
-	# Specify platforms with '-r' (single or multiple) for platform-specific rules:
-	- Single platform: dakshscra.py -r php -t /source_dir_path
-	- Multiple platforms: dakshscra.py -r php,java,cpp -t /source_dir_path
-	- Auto-detect Platforms: dakshscra.py -r auto -t /source_dir_path
+Examples:
 
-	# To override default settings, other filetypes can be specified with the '-f' option:
-	- dakshscra.py -r php -f dotnet -t /path_to_source_dir
-	- dakshscra.py -r php -f custom -t /path_to_source_dir
+- `-f` is optional. If not specified, it will default to the corresponding filetypes of the selected rule.
 
-	# Perform reconnaissance and rule-based scanning if '-recon' used with '-r' option:
-	- dakshscra.py  -recon -r php -t /path_to_source_dir
+```bash
+# Specify platforms with '-r' (single or multiple) for platform-specific rules:
+- Single platform:     dakshscra.py -r php -t /source_dir_path
+- Multiple platforms:  dakshscra.py -r php,java,cpp -t /source_dir_path
+- Auto-detect:         dakshscra.py -r auto -t /source_dir_path
 
-	# Perform only reconnaissance if '-recon' used without the '-r' option:
-	- dakshscra.py  -recon -t /path_to_source_dir
+# Override filetypes using '-f' (optional)
+- dakshscra.py -r php -f dotnet -t /source_dir_path
+- dakshscra.py -r java -f custom -t /source_dir_path
 
-	# Verbosity: '-v' is default, '-vvv' will display all rules check within each rule category.
-	- dakshscra.py -r php -vv -t /path_to_source_dir
+# Perform Reconnaissance and Rule-Based Scanning
+- dakshscra.py -recon -r php -t /source_dir_path
 
-### List of all available rules
-	# dakshscra.py -l R 		# View list of supported rules
-	- dotnet, php, java, javascript, 
-	- kotlin, python, go, c, cpp, 
-	- android (beta - limited checks), common
+# Perform Recon Only (No Rule-Based Scanning)
+- dakshscra.py -recon -t /source_dir_path
 
+# Effort Estimation (without scanning)
+- dakshscra.py -estimate -t /source_dir_path
+
+# Verbosity: '-v' is default, '-vvv' will show all pattern checks
+- dakshscra.py -r php -vvv -t /source_dir_path
+```
+
+### View List of Supported Rules
+
+```bash
+dakshscra.py -l R   # List all supported rule types
+```
+
+Currently supported:
+
+- dotnet, php, java, javascript,
+- kotlin, python, go, c, cpp,
+- android (beta - limited checks), common
+
+---
 
 ## Reports
+
 The tool generates reports in three formats: HTML, PDF, and TEXT. Although the HTML and PDF reports are still being improved, they are currently in a reasonably good state. With each subsequent iteration, these reports will continue to be refined and improved even further.
 
 ### Scanning (Areas of Security Concerns) Report
-###### HTML Report:
-* DakshSCRA/reports/html/report.html	
-###### PDF Report:
-* DakshSCRA/reports/html/report.pdf
-###### RAW TEXT Based Reports: 	
-* Areas of Interest - Identified Patterns : 	DakshSCRA/reports/text/areas_of_interest.txt
-* Areas of Interest - Project Files: 	DakshSCRA/reports/text/filepaths_aoi.txt
-* Identified Project Files:		DakshSCRA/runtime/filepaths.txt	
 
-### Reconnaissance (Recon) Report
-* Reconnaissance Summary: /reports/text/recon.txt
+- HTML Report:
+  - `DakshSCRA/reports/html/report.html`
+- PDF Report:
+  - `DakshSCRA/reports/html/report.pdf`
+- Raw Text Reports:
+  - Areas of Interest: `DakshSCRA/reports/text/areas_of_interest.txt`
+  - Project Files:     `DakshSCRA/reports/text/filepaths_aoi.txt`
+  - Identified Files:  `DakshSCRA/runtime/filepaths.txt`
 
-Note: Currently, the reconnaissance report is created in a text format. However, in upcoming releases, the plan is to incorporate it into the vulnerability scanning report, which will be available in both HTML and PDF formats.
+### Reconnaissance Report
 
+- Text Summary: `DakshSCRA/reports/text/recon.txt`
 
-### Code Review Effort Estimation Report
-* Effort estimation report: /reports/html/estimation.html
+> Note: Recon report is currently plain text but will be merged into the HTML/PDF report in future versions.
 
-Note: At present, the effort estimation for the source code review is in its early stages. It is considered experimental and will be developed and refined through several iterations. Improvements will be made over multiple releases, as the formula and the concept are new and require time to be honed to achieve accuracy or reasonable estimation.
+### Effort Estimation Report
 
-Currently, the report is generated in HTML format. However, in future releases, there are plans to also provide it in PDF format.
+- HTML Report: `DakshSCRA/reports/html/estimation.html`
+
+> Note: This feature is in early stage. Future versions will improve the accuracy and add PDF support.
 
