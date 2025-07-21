@@ -89,7 +89,7 @@ What it does:
 - Installs required packages from `requirements.txt`
 - Installs Chromium (required by Playwright for PDF export)
 
----
+
 
 #### 🔧 Option B: Manual Setup
 
@@ -129,7 +129,7 @@ playwright install chromium
 
 You’re now ready to use DakshSCRA.
 
----
+
 
 ## Tool Usage
 
@@ -196,7 +196,7 @@ Currently supported:
 - kotlin, python, go, c, cpp,
 - android (beta - limited checks), common
 
----
+
 
 ## Reports
 
