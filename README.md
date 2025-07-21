@@ -99,7 +99,7 @@ What it does:
 
 ```
 python -m venv venv
-venv\Scripts\activate
+.\venv\Scripts\activate
 ```
 
 **macOS/Linux:**
