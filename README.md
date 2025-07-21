@@ -84,7 +84,7 @@ python setup_env.py
 
 What it does:
 
-- Creates a virtual environment in `daksh-env/`
+- Creates a virtual environment in `venv/`
 - Activates the environment
 - Installs required packages from `requirements.txt`
 - Installs Chromium (required by Playwright for PDF export)
@@ -98,14 +98,14 @@ What it does:
 **Windows:**
 
 ```
-python -m venv daksh-env
-daksh-env\Scripts\activate
+python -m venv venv
+venv\Scripts\activate
 ```
 
 **macOS/Linux:**
 
 ```
-python3 -m venv daksh-env
+python3 -m venv venv
 source daksh-env/bin/activate
 ```
 
@@ -125,7 +125,7 @@ pip install playwright
 playwright install chromium
 ```
 
-> ✅ After activation, your terminal prompt should show the environment name: `(daksh-env) $`
+> ✅ After activation, your terminal prompt should show the environment name: `(venv) $`
 
 You’re now ready to use DakshSCRA.
 
