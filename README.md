@@ -74,11 +74,11 @@ git clone https://github.com/coffeeandsecurity/DakshSCRA.git
 
 You have two options:
 
-#### Option A: One-Step Setup (Recommended) — Use `setup_env.py`
+#### ✅ Option A: One-Step Setup (Recommended) — Use `setup_env.py`
 
 This script automates the full environment setup, including creating a virtual environment, installing dependencies, and installing Playwright's Chromium browser.
 
-```bash
+```
 python setup_env.py
 ```
 
@@ -97,14 +97,14 @@ What it does:
 
 **Windows:**
 
-```bash
+```
 python -m venv daksh-env
 daksh-env\Scripts\activate
 ```
 
 **macOS/Linux:**
 
-```bash
+```
 python3 -m venv daksh-env
 source daksh-env/bin/activate
 ```
@@ -113,19 +113,19 @@ source daksh-env/bin/activate
 
 Navigate to your DakshSCRA directory:
 
-```bash
+```
 cd path/to/DakshSCRA
 pip install -r requirements.txt
 ```
 
 ##### Step 3: Install Playwright & Chromium
 
-```bash
+```
 pip install playwright
 playwright install chromium
 ```
 
-> After activation, your terminal prompt should show the environment name: `(daksh-env) $`
+> ✅ After activation, your terminal prompt should show the environment name: `(daksh-env) $`
 
 You’re now ready to use DakshSCRA.
 
@@ -133,7 +133,7 @@ You’re now ready to use DakshSCRA.
 
 ## Tool Usage
 
-```bash
+```
 $ python3 dakshscra.py -h  # To view available options and arguments
 ```
 
@@ -153,7 +153,7 @@ options:
 
 ### Example Usage
 
-```bash
+```
 $ python3 dakshscra.py  # To view tool usage along with examples
 ```
 
@@ -161,7 +161,7 @@ Examples:
 
 - `-f` is optional. If not specified, it will default to the corresponding filetypes of the selected rule.
 
-```bash
+```
 # Specify platforms with '-r' (single or multiple) for platform-specific rules:
 - Single platform:     dakshscra.py -r php -t /source_dir_path
 - Multiple platforms:  dakshscra.py -r php,java,cpp -t /source_dir_path
@@ -186,7 +186,7 @@ Examples:
 
 ### View List of Supported Rules
 
-```bash
+```
 dakshscra.py -l R   # List all supported rule types
 ```
 
