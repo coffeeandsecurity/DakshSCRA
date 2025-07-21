@@ -129,7 +129,7 @@ playwright install chromium
 
 You’re now ready to use DakshSCRA.
 
-
+---
 
 ## Tool Usage
 
@@ -196,7 +196,7 @@ Currently supported:
 - kotlin, python, go, c, cpp,
 - android (beta - limited checks), common
 
-
+---
 
 ## Reports
 
