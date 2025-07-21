@@ -61,39 +61,68 @@ Alternatively, 'cd' into your desired folder/directory and download using the 'g
 
 	git clone https://github.com/coffeeandsecurity/DakshSCRA.git
 
-#### 2. Setup a virtual environment
-Note: Virtual environment can be set under any path. It need not have to under the same path as where you have extracted DakshSCRA.
+### 2. Setup a Virtual Environment
 
-	# Recommended Method (Using venv)
-		python3 -m venv venv             # Create virtual environment
-		source venv/bin/activate         # Activate on macOS/Linux
-		# OR
-		.\venv\Scripts\activate          # Activate on Windows
+> 💡 *You can create the virtual environment in any directory. It does not have to be inside the DakshSCRA folder.*
 
-	# Alternative (If You Have Multiple Python Installations)
-		pip install virtualenv           # Install virtualenv if not already installed
+You have two options:
 
-		virtualenv -p python3 venv       # Create virtualenv using specific Python version
-		# Example:
-		# virtualenv -p python3 venv
+#### ✅ Option A: One-Step Setup (Recommended) — Use `setup_env.py`
 
-		source venv/bin/activate         # Activate on macOS/Linux
-		# OR
-		.\venv\Scripts\activate          # Activate on Windows
+This script automates the full environment setup, including creating a virtual environment, installing dependencies, and installing Playwright's Chromium browser.
 
+```bash
+python setup_env.py
+```
 
-After running the activate command you should see the name of your virtual env at the beginning of your terminal like this:
-	(venv) $ 
+What it does:
 
+- Creates a virtual environment in `daksh-env/`
+- Activates the environment
+- Installs required packages from `requirements.txt`
+- Installs Chromium (required by Playwright for PDF export)
 
-#### 3. Install Required Libraries in the Virtual Environment
-After activating the virtual environment, navigate to the DakshSCRA directory where it is saved or extracted:
-- cd path/to/DakshSCRA
+---
 
-Then, install the required libraries using:
-- pip install -r requirements.txt
+#### 🔧 Option B: Manual Setup
 
-Once the libraries are installed, refer to the tool usage commands to run the tool.
+##### Step 1: Create a Virtual Environment
+
+**Windows:**
+
+```bash
+python -m venv daksh-env
+daksh-env\Scripts\activate
+```
+
+**macOS/Linux:**
+
+```bash
+python3 -m venv daksh-env
+source daksh-env/bin/activate
+```
+
+##### Step 2: Install Required Libraries
+
+Navigate to your DakshSCRA directory:
+
+```bash
+cd path/to/DakshSCRA
+pip install -r requirements.txt
+```
+
+##### Step 3: Install Playwright & Chromium
+
+```bash
+pip install playwright
+playwright install chromium
+```
+
+> ✅ After activation, your terminal prompt should show the environment name: `(daksh-env) $`
+
+You’re now ready to use DakshSCRA.
+
+---
 
 ## Tool Usage
 

@@ -321,7 +321,7 @@ os.makedirs(output_directory, exist_ok=True)
 source_matched_rules = []
 source_unmatched_rules = []
 
-with open(state.outputAoI, "w") as f_scanout:
+with open(state.outputAoI, "w", encoding="utf-8") as f_scanout:
     
     # Only run platform-specific rules if the rule file is NOT 'common'
     if results.rule_file.lower() not in ['common']:
@@ -374,7 +374,7 @@ print("     [-] Total unmatched rules:", len(source_unmatched_rules))
 sCnt+=1
 cli.section_print(f"[*] [Stage {sCnt}] Identifying Areas of Interest")
 
-with open(state.outputAoI_Fpaths, "w") as f_scanout:
+with open(state.outputAoI_Fpaths, "w", encoding="utf-8") as f_scanout:
     with open(master_file_paths, 'r', encoding=futils.detectEncodingType(master_file_paths)) as f_targetfiles:
         rule_no = 1
         matched_rules, unmatched_rules = parser.pathsParser(state.rulesFpaths, f_targetfiles, f_scanout, rule_no)

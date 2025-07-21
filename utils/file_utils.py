@@ -173,3 +173,52 @@ def cleanFilePaths(filepaths_source):
 
 
 
+def count_effective_lines(filepath):
+    """
+    Counts the number of effective lines of code in a given file, excluding:
+        - Blank lines
+        - Single-line comments
+        - Multi-line comments (e.g., /* */, <!-- -->, ''' ''', """ """)
+
+    Parameters:
+        filepath (str): The full path to the file to be analyzed.
+
+    Returns:
+        int: The number of effective lines of actual code.
+    """
+    count = 0
+    in_multiline_comment = False  # Tracks if we are inside a multi-line comment
+
+    try:
+        with open(filepath, 'r', errors='ignore') as f:
+            for line in f:
+                stripped = line.strip()
+
+                # Skip completely blank lines
+                if not stripped:
+                    continue
+
+                # Handle multiline comments start or end
+                if any(start in stripped for start in ['/*', '"""', "'''", '<!--']):
+                    in_multiline_comment = True
+
+                if in_multiline_comment:
+                    # Check if the line also contains an end marker
+                    if any(end in stripped for end in ['*/', '"""', "'''", '-->']):
+                        in_multiline_comment = False
+                    continue  # Skip line while inside a multiline comment
+
+                # Skip lines that are single-line comments
+                if (stripped.startswith('#') or 
+                    stripped.startswith('//') or 
+                    stripped.startswith('--') or 
+                    stripped.startswith('*')):
+                    continue
+
+                # Otherwise, this is a valid code line
+                count += 1
+
+    except Exception as e:
+        print(f"[!] Error reading {filepath}: {e}")
+
+    return count
