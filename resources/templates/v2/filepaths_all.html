@@ -4,11 +4,16 @@
 <div class="panel">
     <h2>All Discovered Filepaths</h2>
     {% if filepaths %}
-    <div class="list">
-        {% for path in filepaths %}
-        <li class="path">{{ path }}</li>
-        {% endfor %}
-    </div>
+    <details class="long-block" open>
+        <summary>Expand filepaths list ({{ filepaths|length }})</summary>
+        <div class="long-body">
+            <ul class="list">
+                {% for path in filepaths %}
+                <li class="path">{{ path }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </details>
     {% else %}
         <div class="muted">No filepaths available.</div>
     {% endif %}

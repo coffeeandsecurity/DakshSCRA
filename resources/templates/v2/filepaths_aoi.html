@@ -3,23 +3,48 @@
 <div class="breadcrumbs"><a href="{{ back_link }}">← Back to index</a></div>
 <div class="panel">
     <h2>File Path Findings</h2>
-    {% if items %}
-    <div class="list">
-        {% for item in items %}
-        <li>
-            <div class="badge"><strong>Rule</strong> {{ item.keyword }}</div>
-            {% if item.paths %}
-                <ul class="list" style="margin-top:6px;">
-                    {% for path in item.paths %}
-                    <li class="path">{{ path }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        </li>
-        {% endfor %}
+    <div class="note-block">
+        <span class="note-title">Tip:</span>
+        Open each rule block only when needed to keep long reports readable.
     </div>
+    {% if items %}
+    <div class="actions">
+        <button type="button" id="expand-path-rules">Expand all</button>
+        <button type="button" id="collapse-path-rules">Collapse all</button>
+    </div>
+    {% for item in items %}
+    <details class="long-block path-rule" {% if loop.index <= 8 %}open{% endif %}>
+        <summary>{{ item.keyword }}</summary>
+        <div class="long-body">
+            {% if item.paths %}
+            <ul class="list">
+                {% for path in item.paths %}
+                <li class="path">{{ path }}</li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="muted">No path entries captured for this rule.</div>
+            {% endif %}
+        </div>
+    </details>
+    {% endfor %}
     {% else %}
         <div class="muted">No file path matches recorded.</div>
     {% endif %}
 </div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+    (function () {
+        function setOpen(selector, open) {
+            document.querySelectorAll(selector).forEach(function (node) {
+                node.open = open;
+            });
+        }
+        var expandBtn = document.getElementById("expand-path-rules");
+        var collapseBtn = document.getElementById("collapse-path-rules");
+        if (expandBtn) expandBtn.addEventListener("click", function () { setOpen("details.path-rule", true); });
+        if (collapseBtn) collapseBtn.addEventListener("click", function () { setOpen("details.path-rule", false); });
+    })();
+</script>
 {% endblock %}

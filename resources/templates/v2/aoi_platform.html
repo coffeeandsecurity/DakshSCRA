@@ -8,61 +8,103 @@
         Reported issues are based on rule matches and may not be 100% confirmed. Use the developer and reviewer notes to validate, investigate, and remediate as needed.
     </div>
     {% if entries %}
-        {% for entry in entries %}
-        <div class="aoi-entry">
-            <div class="finding-header">
-                <div class="finding-id">{{ entry.rulecount }}</div>
-                <div class="finding-title">{{ entry.keyword }}</div>
-            </div>
-
-            {% if entry.rule_desc %}
-            <div class="info-card">
-                <div class="label">Rule</div>
-                <div class="text">{{ entry.rule_desc }}</div>
-            </div>
-            {% endif %}
-            {% if entry.category %}
-            <div class="info-card">
-                <div class="label">Category</div>
-                <div class="text">{{ entry.category }}</div>
-            </div>
-            {% endif %}
-            {% if entry.issue_scope %}
-            <div class="info-card">
-                <div class="label">Scope</div>
-                <div class="text">{{ entry.issue_scope }}</div>
-            </div>
-            {% endif %}
-            {% if entry.issue_desc %}
-            <div class="info-card issue">
-                <div class="label">Issue</div>
-                <div class="text">{{ entry.issue_desc }}</div>
-            </div>
-            {% endif %}
-
-            {% if entry.dev_note %}
-            <div class="note-block">
-                <span class="note-title">Developer note:</span> {{ entry.dev_note }}
-            </div>
-            {% endif %}
-            {% if entry.rev_note %}
-            <div class="note-block">
-                <span class="note-title">Reviewer note:</span> {{ entry.rev_note }}
-            </div>
-            {% endif %}
-
-            {% for source in entry.sources %}
-                <div class="aoi-meta" style="margin-top:10px;">
-                    <span class="pill"><strong>Source</strong> {{ source.source }}</span>
-                </div>
-                <div class="code-block">
-                    {{ source.code | safe }}
-                </div>
-            {% endfor %}
+    <div class="actions">
+        <button type="button" id="expand-findings">Expand all findings</button>
+        <button type="button" id="collapse-findings">Collapse all findings</button>
+        <button type="button" id="expand-sources">Expand all snippets</button>
+        <button type="button" id="collapse-sources">Collapse all snippets</button>
+    </div>
+    <details class="long-block" {% if entries|length <= 12 %}open{% endif %}>
+        <summary>Finding quick jump ({{ entries|length }})</summary>
+        <div class="long-body">
+            <ul class="toc">
+                {% for entry in entries %}
+                <li><a href="#finding-{{ loop.index }}">{{ entry.rulecount }}: {{ entry.keyword }}</a></li>
+                {% endfor %}
+            </ul>
         </div>
+    </details>
+    <div style="margin-top:10px;">
+        {% for entry in entries %}
+        <details class="aoi-entry finding-block" id="finding-{{ loop.index }}" {% if loop.index <= 8 %}open{% endif %}>
+            <summary>
+                <div class="finding-header">
+                    <div class="finding-id">{{ entry.rulecount }}</div>
+                    <div class="finding-title">{{ entry.keyword }}</div>
+                </div>
+            </summary>
+            <div class="aoi-body">
+                <div class="info-stack">
+                    {% if entry.rule_desc %}
+                    <div class="info-card">
+                        <div class="label">Rule</div>
+                        <div class="text">{{ entry.rule_desc }}</div>
+                    </div>
+                    {% endif %}
+                    {% if entry.category %}
+                    <div class="info-card">
+                        <div class="label">Category</div>
+                        <div class="text">{{ entry.category }}</div>
+                    </div>
+                    {% endif %}
+                    {% if entry.issue_scope %}
+                    <div class="info-card">
+                        <div class="label">Scope</div>
+                        <div class="text">{{ entry.issue_scope }}</div>
+                    </div>
+                    {% endif %}
+                    {% if entry.issue_desc %}
+                    <div class="info-card issue">
+                        <div class="label">Issue</div>
+                        <div class="text">{{ entry.issue_desc }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if entry.dev_note %}
+                <div class="note-block">
+                    <span class="note-title">Developer note:</span> {{ entry.dev_note }}
+                </div>
+                {% endif %}
+                {% if entry.rev_note %}
+                <div class="note-block">
+                    <span class="note-title">Reviewer note:</span> {{ entry.rev_note }}
+                </div>
+                {% endif %}
+
+                {% for source in entry.sources %}
+                <div class="code-block">
+                    <details class="snippet-block" {% if loop.first %}open{% endif %}>
+                        <summary>Source: {{ source.source }}</summary>
+                        {{ source.code | safe }}
+                    </details>
+                </div>
+                {% endfor %}
+            </div>
+        </details>
         {% endfor %}
+    </div>
     {% else %}
-        <div class="muted">No findings for this platform.</div>
+    <div class="muted">No findings for this platform.</div>
     {% endif %}
 </div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+    (function () {
+        function setOpen(selector, open) {
+            document.querySelectorAll(selector).forEach(function (node) {
+                node.open = open;
+            });
+        }
+        var expandFindings = document.getElementById("expand-findings");
+        var collapseFindings = document.getElementById("collapse-findings");
+        var expandSources = document.getElementById("expand-sources");
+        var collapseSources = document.getElementById("collapse-sources");
+        if (expandFindings) expandFindings.addEventListener("click", function () { setOpen("details.finding-block", true); });
+        if (collapseFindings) collapseFindings.addEventListener("click", function () { setOpen("details.finding-block", false); });
+        if (expandSources) expandSources.addEventListener("click", function () { setOpen("details.snippet-block", true); });
+        if (collapseSources) collapseSources.addEventListener("click", function () { setOpen("details.snippet-block", false); });
+    })();
+</script>
 {% endblock %}

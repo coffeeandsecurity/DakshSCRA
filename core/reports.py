@@ -446,6 +446,13 @@ def gen_report_multipage(formats="html,pdf", output_dir=None, pdf_output_dir=Non
 
     config = _load_yaml_file(state.projectConfig, default={}, label="project config") or {}
     scan_summary = _load_json_file(state.scanSummary_Fpath, default={}, label="scan summary") or {}
+    logo_image_path = None
+    try:
+        with open(state.staticLogo, "rb") as f:
+            encoded_logo_image = base64.b64encode(f.read()).decode("utf-8")
+            logo_image_path = f"data:image/jpg;base64,{encoded_logo_image}"
+    except OSError as exc:
+        logger.error("Failed to load logo image %s: %s", state.staticLogo, exc)
 
     snippets = get_areas_of_interest(state.outputAoI_JSON)
     filepaths_aoi = get_filepaths_of_aoi(state.outputAoI_Fpaths_JSON)
@@ -466,7 +473,8 @@ def gen_report_multipage(formats="html,pdf", output_dir=None, pdf_output_dir=Non
 
     cache_bust = f"?v={int(time.time())}"
 
-    links = {
+    links_root = {
+        "home": f"./index.html{cache_bust}",
         "aoi_index": f"./{aoi_dir.name}/index.html{cache_bust}",
         "filepaths_aoi": f"./{filepaths_dir.name}/filepaths_aoi.html{cache_bust}",
         "filepaths_all": f"./{filepaths_dir.name}/filepaths_all.html{cache_bust}",
@@ -484,7 +492,7 @@ def gen_report_multipage(formats="html,pdf", output_dir=None, pdf_output_dir=Non
         overview_cards.append({
             "label": "Total LOC (effective)",
             "value": detection.get("total_loc", "-"),
-            "href": links.get("filepaths_all")
+            "href": links_root.get("filepaths_all")
         })
 
     platforms = []
@@ -498,6 +506,19 @@ def gen_report_multipage(formats="html,pdf", output_dir=None, pdf_output_dir=Non
             "href_aoi": f"./{platform.lower()}.html{cache_bust}",
         })
 
+    platforms_from_root = [
+        {"name": platform["name"], "href": f"./{aoi_dir.name}/{platform['name'].lower()}.html{cache_bust}"}
+        for platform in platforms
+    ]
+    platforms_from_aoi = [
+        {"name": platform["name"], "href": f"./{platform['name'].lower()}.html{cache_bust}"}
+        for platform in platforms
+    ]
+    platforms_from_filepaths = [
+        {"name": platform["name"], "href": f"../{aoi_dir.name}/{platform['name'].lower()}.html{cache_bust}"}
+        for platform in platforms
+    ]
+
     # Render index/overview
     index_ctx = {
         "config": config,
@@ -506,7 +527,11 @@ def gen_report_multipage(formats="html,pdf", output_dir=None, pdf_output_dir=Non
         "summary_text": summary_text,
         "recon_text": recon_text,
         "timeline": timeline,
-        "links": links,
+        "links": links_root,
+        "nav_links": links_root,
+        "platform_nav": platforms_from_root,
+        "active_nav": "home",
+        "logoImagePath": logo_image_path,
         "generated_at": datetime.now().strftime("%b %d, %Y %H:%M"),
     }
     index_path = _render_template(env, "index.html", index_ctx, output_root / "index.html")
@@ -515,6 +540,15 @@ def gen_report_multipage(formats="html,pdf", output_dir=None, pdf_output_dir=Non
     aoi_index_ctx = {
         "platforms": platforms,
         "back_link": "../index.html",
+        "nav_links": {
+            "home": f"../index.html{cache_bust}",
+            "aoi_index": f"./index.html{cache_bust}",
+            "filepaths_aoi": f"../{filepaths_dir.name}/filepaths_aoi.html{cache_bust}",
+            "filepaths_all": f"../{filepaths_dir.name}/filepaths_all.html{cache_bust}",
+        },
+        "platform_nav": platforms_from_aoi,
+        "active_nav": "aoi_index",
+        "logoImagePath": logo_image_path,
         "generated_at": index_ctx["generated_at"],
     }
     aoi_index_path = _render_template(env, "aoi_index.html", aoi_index_ctx, aoi_dir / "index.html")
@@ -526,6 +560,15 @@ def gen_report_multipage(formats="html,pdf", output_dir=None, pdf_output_dir=Non
             "platform": platform,
             "entries": entries,
             "back_link": "../index.html",
+            "nav_links": {
+                "home": f"../index.html{cache_bust}",
+                "aoi_index": f"./index.html{cache_bust}",
+                "filepaths_aoi": f"../{filepaths_dir.name}/filepaths_aoi.html{cache_bust}",
+                "filepaths_all": f"../{filepaths_dir.name}/filepaths_all.html{cache_bust}",
+            },
+            "platform_nav": platforms_from_aoi,
+            "active_nav": "aoi_index",
+            "logoImagePath": logo_image_path,
             "generated_at": index_ctx["generated_at"],
         }
         page_path = _render_template(env, "aoi_platform.html", ctx, aoi_dir / f"{platform.lower()}.html")
@@ -538,6 +581,15 @@ def gen_report_multipage(formats="html,pdf", output_dir=None, pdf_output_dir=Non
         {
             "items": filepaths_aoi,
             "back_link": "../index.html",
+            "nav_links": {
+                "home": f"../index.html{cache_bust}",
+                "aoi_index": f"../{aoi_dir.name}/index.html{cache_bust}",
+                "filepaths_aoi": f"./filepaths_aoi.html{cache_bust}",
+                "filepaths_all": f"./filepaths_all.html{cache_bust}",
+            },
+            "platform_nav": platforms_from_filepaths,
+            "active_nav": "filepaths_aoi",
+            "logoImagePath": logo_image_path,
             "generated_at": index_ctx["generated_at"],
         },
         filepaths_dir / "filepaths_aoi.html",
@@ -549,6 +601,15 @@ def gen_report_multipage(formats="html,pdf", output_dir=None, pdf_output_dir=Non
         {
             "filepaths": filepaths,
             "back_link": "../index.html",
+            "nav_links": {
+                "home": f"../index.html{cache_bust}",
+                "aoi_index": f"../{aoi_dir.name}/index.html{cache_bust}",
+                "filepaths_aoi": f"./filepaths_aoi.html{cache_bust}",
+                "filepaths_all": f"./filepaths_all.html{cache_bust}",
+            },
+            "platform_nav": platforms_from_filepaths,
+            "active_nav": "filepaths_all",
+            "logoImagePath": logo_image_path,
             "generated_at": index_ctx["generated_at"],
         },
         filepaths_dir / "filepaths_all.html",

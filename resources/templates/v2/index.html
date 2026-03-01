@@ -14,7 +14,13 @@
         {% else %}
         <div class="card">
             <h3>{{ card.label }}</h3>
-            <div class="value">{{ card.value }}</div>
+            <div class="value{% if card.label|lower == 'duration' %} compact{% endif %}">
+                {% if card.label|lower == 'duration' %}
+                {{ card.value | replace(':', ': ') }}
+                {% else %}
+                {{ card.value }}
+                {% endif %}
+            </div>
         </div>
         {% endif %}
         {% endfor %}
@@ -28,6 +34,20 @@
         <li><a href="{{ links.filepaths_aoi }}">File Path Findings</a></li>
         <li><a href="{{ links.filepaths_all }}">All Discovered Filepaths</a></li>
     </ul>
+    {% if platform_nav %}
+    <div style="margin-top:12px;">
+        <details class="long-block">
+            <summary>Platform Quick Links</summary>
+            <div class="long-body">
+                <ul class="toc">
+                    {% for platform in platform_nav %}
+                    <li><a href="{{ platform.href }}">{{ platform.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </details>
+    </div>
+    {% endif %}
 </div>
 
 <div class="panel">
@@ -54,13 +74,23 @@
         <span class="note-title">About findings:</span>
         Reported issues are based on rule matches and may not be 100% confirmed. Use the developer notes to validate, investigate, and remediate as needed.
     </div>
-    <pre class="muted" style="white-space: pre-wrap;">{{ summary_text }}</pre>
+    <details class="long-block" open>
+        <summary>Expand Scan Summary</summary>
+        <div class="long-body">
+            <pre class="muted">{{ summary_text }}</pre>
+        </div>
+    </details>
 </div>
 
 {% if recon_text %}
 <div class="panel">
     <h2>Reconnaissance Summary</h2>
-    <pre class="muted" style="white-space: pre-wrap;">{{ recon_text }}</pre>
+    <details class="long-block">
+        <summary>Expand Recon Summary</summary>
+        <div class="long-body">
+            <pre class="muted">{{ recon_text }}</pre>
+        </div>
+    </details>
 </div>
 {% endif %}
 
@@ -77,7 +107,7 @@
         </div>
         <div class="card">
             <h3>Duration</h3>
-            <div class="value">{{ timeline.get("scan_duration", "-") }}</div>
+            <div class="value compact">{{ timeline.get("scan_duration", "-") | replace(':', ': ') }}</div>
         </div>
     </div>
 </div>
