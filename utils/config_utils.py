@@ -2,6 +2,7 @@
 import os
 import sys
 import threading
+from pathlib import Path
 
 # Third-party libraries
 import ruamel.yaml
@@ -61,6 +62,49 @@ def get_tool_version():
     except Exception as e:
         print(f"[!] Error reading version info from config: {e}")
         return "Unknown"
+
+
+def get_tool_config():
+    """
+    Load the full tool configuration from `config/tool.yaml`.
+
+    Returns:
+        dict: Parsed YAML data or an empty dict on failure.
+    """
+    yaml = YAML()
+    try:
+        if not os.path.exists(runtime.toolConfig):
+            return {}
+        with open(runtime.toolConfig, "r") as file:
+            data = yaml.load(file) or {}
+            return data if isinstance(data, dict) else {}
+    except Exception as exc:
+        print(f"[!] Error reading tool config: {exc}")
+        return {}
+
+
+def get_state_management_config():
+    """
+    Get scan state-management settings with sane defaults.
+    """
+    tool_cfg = get_tool_config()
+    state_cfg = tool_cfg.get("state_management", {}) if isinstance(tool_cfg, dict) else {}
+    if not isinstance(state_cfg, dict):
+        state_cfg = {}
+
+    default_path = str(Path(runtime.root_dir) / "runtime" / "scan_state.json")
+    configured_path = str(state_cfg.get("default_state_file", default_path)).strip() or default_path
+    if not Path(configured_path).is_absolute():
+        configured_path = str(Path(runtime.root_dir) / configured_path)
+
+    return {
+        "enabled": bool(state_cfg.get("enabled", True)),
+        "resume_mode": str(state_cfg.get("resume_mode", "manual")).strip().lower() or "manual",
+        "persist_after_seconds": int(state_cfg.get("persist_after_seconds", 300)),
+        "persist_interval_seconds": int(state_cfg.get("persist_interval_seconds", 30)),
+        "default_state_file": configured_path,
+        "cleanup_on_success": bool(state_cfg.get("cleanup_on_success", False)),
+    }
 
 
 

@@ -1,5 +1,6 @@
 # Standard libraries
 import argparse
+import atexit
 import os
 import re
 import sys
@@ -34,6 +35,7 @@ import utils.string_utils as strutils
 import utils.suppression_utils as supp
 from utils.cli_utils import spinner
 from utils.config_utils import get_tool_version
+from utils.scan_state_utils import ScanStateManager
 
 
 version = get_tool_version()
@@ -41,13 +43,6 @@ version = get_tool_version()
 # ---- Initilisation -----
 root_dir = os.path.dirname(os.path.realpath(__file__))
 state.root_dir = root_dir         # initialise global root directory which is referenced at multiple locations
-
-futils.dir_cleanup("runtime")
-futils.dir_cleanup("runtime/platform")
-futils.dir_cleanup("reports/html")
-futils.dir_cleanup("reports/pdf")
-futils.dir_cleanup("reports/json")
-futils.dir_cleanup_recursive("reports/analysis")
 # ------------------------- #
 
 args = cli.DakshArgumentParser(
@@ -128,6 +123,19 @@ advanced_group.add_argument('--baseline-generate', action='store_true', dest='ba
 advanced_group.add_argument('--no-baseline', action='store_true', dest='no_baseline',
                             help='Disable baseline suppression for this run')
 
+advanced_group.add_argument('--resume-scan', action='store_true', dest='resume_scan',
+                            help='Resume a previously interrupted long-running scan from state file')
+
+advanced_group.add_argument('--state-file', type=str, dest='state_file',
+                            default='', metavar='PATH',
+                            help='Custom scan state/checkpoint file path')
+
+advanced_group.add_argument('--state-disable', action='store_true', dest='state_disable',
+                            help='Disable scan state checkpointing for this run')
+
+advanced_group.add_argument('--state-enable', action='store_true', dest='state_enable',
+                            help='Force enable scan state checkpointing for this run')
+
 # Display help if no arguments are passed
 if len(sys.argv) < 2:
     args.print_help()
@@ -148,6 +156,29 @@ if results.target_dir:
 # Remove duplicates in rule_file and file_types
 results.rule_file = strutils.remove_duplicates(results.rule_file)
 results.file_types = strutils.remove_duplicates(results.file_types)
+
+state_cfg = cutils.get_state_management_config()
+state_enabled = (state_cfg["enabled"] and not results.state_disable) or results.state_enable
+state_file_path = results.state_file.strip() if results.state_file else state_cfg["default_state_file"]
+if not Path(state_file_path).is_absolute():
+    state_file_path = str(Path(state.root_dir) / state_file_path)
+
+scan_state_mgr = ScanStateManager(
+    state_file=state_file_path,
+    enabled=state_enabled,
+    persist_after_seconds=state_cfg["persist_after_seconds"],
+    persist_interval_seconds=state_cfg["persist_interval_seconds"],
+    cleanup_on_success=state_cfg["cleanup_on_success"],
+)
+
+should_preserve_runtime = bool(results.resume_scan)
+if not should_preserve_runtime:
+    futils.dir_cleanup("runtime")
+    futils.dir_cleanup("runtime/platform")
+    futils.dir_cleanup("reports/html")
+    futils.dir_cleanup("reports/pdf")
+    futils.dir_cleanup("reports/json")
+    futils.dir_cleanup_recursive("reports/analysis")
 
 # If rule_file is present but file_types is empty, inherit rule_file value
 if results.rule_file and not results.file_types:
@@ -283,24 +314,89 @@ result.update_scan_summary("inputs_received.platform_specific_rules", platform_r
 result.update_scan_summary("inputs_received.common_rules", str(common_rules_total))
 result.update_scan_summary("inputs_received.total_rules_loaded", str(total_rules_loaded))
 
+resume_progress = {}
+if results.rule_file:
+    scan_fingerprint = {
+        "target_dir": str(results.target_dir),
+        "rule_file": str(results.rule_file),
+        "file_types": str(results.file_types),
+        "recon": bool(results.recon),
+        "recon_strict": bool(results.recon_strict),
+    }
+    scan_config = {
+        "state_file": str(state_file_path),
+        "state_enabled": bool(state_enabled),
+        "persist_after_seconds": state_cfg["persist_after_seconds"],
+        "persist_interval_seconds": state_cfg["persist_interval_seconds"],
+    }
+
+    restored = None
+    if results.resume_scan or state_cfg["resume_mode"] == "auto":
+        restored = scan_state_mgr.load_for_resume(scan_fingerprint)
+        if results.resume_scan and not restored:
+            print(f"[!] Unable to resume scan. No matching valid state found at: {state_file_path}")
+            sys.exit(1)
+
+    if not restored:
+        scan_state_mgr.start_new(scan_fingerprint, scan_config)
+    else:
+        print(f"     [-] Resume State Loaded  : {state_file_path}")
+        resume_progress = scan_state_mgr.get_resume_progress()
+
+    scan_state_mgr.install_signal_handlers()
+    atexit.register(lambda: scan_state_mgr.persist(force=True))
+
+    def _uncaught_excepthook(exc_type, exc_value, exc_traceback):
+        scan_state_mgr.mark_failed(str(exc_value))
+        scan_state_mgr.persist(force=True)
+        scan_state_mgr.uninstall_signal_handlers()
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+
+    sys.excepthook = _uncaught_excepthook
+
 sourcepath = Path(results.target_dir)
 state.start_time = time.time()
 state.start_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 sCnt = 0
 cli.section_print("[*] Scanner Initiated")
+resume_stages = resume_progress.get("stages", {}) if isinstance(resume_progress, dict) else {}
+resume_discovery = resume_stages.get("discovery", {})
+resume_pattern = resume_stages.get("pattern_matching", {})
+resume_paths = resume_stages.get("path_analysis", {})
+
+scan_state_mgr.update_stage("initialization", "completed", {
+    "start_timestamp": state.start_timestamp,
+})
 
 ###### [Stage #] File Path Discovery ######
 sCnt += 1
-if results.recon:
-    cli.section_print(f"[*] [Stage {sCnt}] Reconnaissance (a.k.a Software Composition Analysis)")
-    rec.recon(results.target_dir, True, strict_mode=results.recon_strict)
-    sCnt += 1
+if resume_discovery.get("status") == "completed":
+    master_file_paths = Path(resume_discovery.get("master_file_paths", ""))
+    platform_file_paths = [Path(p) for p in resume_discovery.get("platform_file_paths", [])]
+    if not master_file_paths.exists() or not all(p.exists() for p in platform_file_paths):
+        print("     [-] Resume checkpoint missing discovery artifacts; re-running file discovery.")
+        resume_discovery = {}
+
+if resume_discovery.get("status") == "completed":
     cli.section_print(f"[*] [Stage {sCnt}] File Path Discovery")
-    master_file_paths, platform_file_paths = discover.discover_files(codebase, sourcepath, 1)
+    print("     [-] Discovery Stage      : Resumed from checkpoint")
 else:
-    cli.section_print(f"[*] [Stage {sCnt}] File Path Discovery")
-    master_file_paths, platform_file_paths = discover.discover_files(codebase, sourcepath, 1)
+    scan_state_mgr.update_stage("discovery", "running")
+    if results.recon:
+        cli.section_print(f"[*] [Stage {sCnt}] Reconnaissance (a.k.a Software Composition Analysis)")
+        rec.recon(results.target_dir, True, strict_mode=results.recon_strict)
+        sCnt += 1
+        cli.section_print(f"[*] [Stage {sCnt}] File Path Discovery")
+        master_file_paths, platform_file_paths = discover.discover_files(codebase, sourcepath, 1)
+    else:
+        cli.section_print(f"[*] [Stage {sCnt}] File Path Discovery")
+        master_file_paths, platform_file_paths = discover.discover_files(codebase, sourcepath, 1)
+
+    scan_state_mgr.update_stage("discovery", "completed", {
+        "master_file_paths": str(master_file_paths),
+        "platform_file_paths": [str(p) for p in platform_file_paths],
+    })
 
 ###### [Stage 2 or 3] Pattern Matching & Analysis ######
 sCnt += 1
@@ -309,31 +405,81 @@ os.makedirs(os.path.dirname(state.outputAoI_JSON), exist_ok=True)
 
 source_matched_rules = []
 source_unmatched_rules = []
+completed_platforms = set(resume_pattern.get("completed_platforms", [])) if isinstance(resume_pattern, dict) else set()
+common_rules_done = bool(resume_pattern.get("common_rules_done", False)) if isinstance(resume_pattern, dict) else False
+
+scan_state_mgr.update_stage("pattern_matching", "running", {
+    "completed_platforms": sorted(completed_platforms),
+    "common_rules_done": common_rules_done,
+})
+
+
+def _source_progress(payload):
+    scan_state_mgr.update_cursor({
+        "stage": "pattern_matching",
+        "platform": payload.get("platform", ""),
+        "category": payload.get("category", ""),
+        "rule_title": payload.get("rule_title", ""),
+        "filepath": payload.get("filepath", ""),
+        "file_index": payload.get("file_index", 0),
+    })
+    scan_state_mgr.update_counters({
+        "rules_match_count": state.rulesMatchCnt,
+        "suppressed_count": state.suppressedFindingsCnt,
+        "parse_error_count": state.parseErrorCnt,
+    })
 
 # Platform-specific rules
 if results.rule_file.lower() not in ['common']:
     for index, (platform, rules_main_path) in enumerate(rules_main.items()):
+        if platform.upper() in completed_platforms:
+            print(f"\033[92m     --> Skipping {platform} (already completed in checkpoint)\033[0m")
+            continue
         if index < len(platform_file_paths):
             platform_file_path = platform_file_paths[index]
             print(f"\033[92m     --> Applying rules for {platform} \033[0m")
             with open(platform_file_path, 'r', encoding=futils.detect_encoding_type(platform_file_path)) as f_targetfiles:
                 matched, unmatched = parser.source_parser(
-                    rules_main_path, f_targetfiles, outputfile=None, findings_json_path=state.outputAoI_JSON
+                    rules_main_path,
+                    f_targetfiles,
+                    outputfile=None,
+                    findings_json_path=state.outputAoI_JSON,
+                    progress_callback=_source_progress,
                 )
                 source_matched_rules.extend(matched)
                 source_unmatched_rules.extend(unmatched)
                 f_targetfiles.seek(0)
+            completed_platforms.add(platform.upper())
+            scan_state_mgr.mark_platform_completed(platform.upper())
+            scan_state_mgr.update_stage("pattern_matching", "running", {
+                "completed_platforms": sorted(completed_platforms),
+                "common_rules_done": common_rules_done,
+            })
 
 # Common rules
-print("\033[92m     --> Applying common (platform-independent) rules \033[0m")
-with open(master_file_paths, 'r', encoding=futils.detect_encoding_type(master_file_paths)) as f_targetfiles:
-    common_matched_rules, common_unmatched_rules = parser.source_parser(
-        rules_common, f_targetfiles, outputfile=None, findings_json_path=state.outputAoI_JSON
-    )
+if common_rules_done:
+    print("\033[92m     --> Skipping common rules (already completed in checkpoint)\033[0m")
+    common_matched_rules, common_unmatched_rules = [], []
+else:
+    print("\033[92m     --> Applying common (platform-independent) rules \033[0m")
+    with open(master_file_paths, 'r', encoding=futils.detect_encoding_type(master_file_paths)) as f_targetfiles:
+        common_matched_rules, common_unmatched_rules = parser.source_parser(
+            rules_common,
+            f_targetfiles,
+            outputfile=None,
+            findings_json_path=state.outputAoI_JSON,
+            progress_callback=_source_progress,
+        )
+    common_rules_done = True
+    scan_state_mgr.mark_common_rules_completed()
 
 source_matched_rules.extend(common_matched_rules)
 source_unmatched_rules.extend(common_unmatched_rules)
 print("\033[92m     --- Pattern Matching Summary ---\033[0m")
+scan_state_mgr.update_stage("pattern_matching", "completed", {
+    "completed_platforms": sorted(completed_platforms),
+    "common_rules_done": common_rules_done,
+})
 
 result.update_scan_summary("source_files_scanning_summary.matched_rules", source_matched_rules)
 result.update_scan_summary("source_files_scanning_summary.unmatched_rules", source_unmatched_rules)
@@ -350,11 +496,32 @@ print("     [-] Total suppressed hits:", state.suppressedFindingsCnt)
 sCnt += 1
 cli.section_print(f"[*] [Stage {sCnt}] Identifying Areas of Interest")
 
-with open(master_file_paths, 'r', encoding=futils.detect_encoding_type(master_file_paths)) as f_targetfiles:
-    rule_no = 1
-    matched_rules, unmatched_rules = parser.paths_parser(
-        state.rulesFpaths, f_targetfiles, outputfile=None, rule_no=rule_no, findings_json_path=state.outputAoI_Fpaths_JSON
-    )
+scan_state_mgr.update_stage("path_analysis", "running")
+if resume_paths.get("status") == "completed" and Path(state.outputAoI_Fpaths_JSON).exists():
+    print("     [-] Path Analysis Stage : Resumed from checkpoint")
+    matched_rules, unmatched_rules = [], []
+else:
+    def _paths_progress(payload):
+        scan_state_mgr.update_cursor({
+            "stage": "path_analysis",
+            "rule_title": payload.get("rule_title", ""),
+            "filepath": payload.get("filepath", ""),
+            "file_index": payload.get("file_index", 0),
+        })
+        scan_state_mgr.update_counters({
+            "paths_match_count": state.rulesPathsMatchCnt,
+        })
+
+    with open(master_file_paths, 'r', encoding=futils.detect_encoding_type(master_file_paths)) as f_targetfiles:
+        rule_no = 1
+        matched_rules, unmatched_rules = parser.paths_parser(
+            state.rulesFpaths,
+            f_targetfiles,
+            outputfile=None,
+            rule_no=rule_no,
+            findings_json_path=state.outputAoI_Fpaths_JSON,
+            progress_callback=_paths_progress,
+        )
 
 print("     [-] Total matched rules:", len(matched_rules))
 print("     [-] Total unmatched rules:", len(unmatched_rules))
@@ -367,6 +534,7 @@ total_loc = futils.clean_file_paths(master_file_paths, count_loc=bool(results.lo
 if total_loc is not None:
     result.update_scan_summary("detection_summary.total_loc", str(total_loc))
 os.unlink(master_file_paths)
+scan_state_mgr.mark_path_analysis_completed()
 
 cli.section_print(f"[*] Scanning Timeline")
 print("    [-] Scan start time     : " + str(state.start_timestamp))
@@ -389,6 +557,7 @@ if results.baseline_generate:
     print(f"     [-] Baseline generated   : {baseline_count} entries")
 
 ###### [Stage 4] Generate Reports ######
+scan_state_mgr.update_stage("reporting", "running")
 valid_formats = {"html", "pdf"}
 requested_formats = results.report_format.lower().replace(" ", "").split(",")
 selected_formats = [fmt for fmt in requested_formats if fmt in valid_formats]
@@ -398,6 +567,7 @@ if selected_formats:
 else:
     print("[!] No valid report format selected. Defaulting to 'html,pdf'.")
     report.gen_report(formats="html,pdf")
+scan_state_mgr.update_stage("reporting", "completed")
 
 # Experimental: dataflow/control flow analysis per platform
 if results.analysis:
@@ -440,3 +610,5 @@ if results.analysis:
                 print(f"[!] {platform.capitalize()} dataflow analysis failed: {exc}")
 
 cutils.update_project_config("","")     # Clean up project details in the config file
+scan_state_mgr.mark_completed()
+scan_state_mgr.uninstall_signal_handlers()

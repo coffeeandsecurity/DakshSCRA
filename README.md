@@ -172,9 +172,10 @@ $ python3 dakshscra.py -h      # Outside virtual environment
 
 ```text
 usage: dakshscra.py [-h] [-r RULES] [-f FILE_TYPES] [-v] [-t TARGET_DIR]
-                    [-l {R,RF}] [-recon] [-estimate] [-rpt FORMATS]
+                    [-l {R,RF}] [-recon] [-rs] [-estimate] [-rpt FORMATS]
                     [--analysis] [--loc] [--baseline-file PATH]
-                    [--baseline-generate] [--no-baseline]
+                    [--baseline-generate] [--no-baseline] [--resume-scan]
+                    [--state-file PATH] [--state-disable] [--state-enable]
 
 options:
 -h, --help                 Show this help message and exit
@@ -184,6 +185,7 @@ options:
 -t TARGET_DIR              Target source code directory
 -l {R,RF}, --list {R,RF}   List rules [R] OR rules and filetypes [RF]
 -recon                     Detect platform/framework/language stack
+-rs, --recon-strict        Strict recon filter for high-confidence detections
 -estimate                  Estimate review effort
 -rpt, --report FORMATS     Report types: html, pdf, or html,pdf
 --analysis, --analyse      Experimental data/control flow analysis
@@ -191,6 +193,10 @@ options:
 --baseline-file PATH       Suppression baseline file (JSON)
 --baseline-generate        Generate baseline from current findings
 --no-baseline              Disable baseline suppression for current run
+--resume-scan              Resume a previously interrupted scan from state file
+--state-file PATH          Custom scan state/checkpoint file path
+--state-disable            Disable scan state checkpointing for current run
+--state-enable             Force enable scan state checkpointing for current run
 ```
 
 ### Example Usage
@@ -228,6 +234,15 @@ options:
 
 # Run without suppression baseline
 - dakshscra.py -r auto -t /source_dir_path --no-baseline
+
+# Start long scan with checkpoint state enabled
+- dakshscra.py -r auto -t /source_dir_path --state-enable
+
+# Resume an interrupted scan
+- dakshscra.py -r auto -t /source_dir_path --resume-scan
+
+# Resume with custom state file
+- dakshscra.py -r auto -t /source_dir_path --resume-scan --state-file runtime/scan_state.json
 ```
 
 ### View List of Supported Rules

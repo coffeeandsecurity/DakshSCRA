@@ -39,7 +39,7 @@ def _derive_issue_scope(category_name, platform_name):
     return "platform_specific"
 
 
-def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=None):
+def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=None, progress_callback=None):
     """
     Parses rules from XML files and applies them to target files.
     Supports both individual Path and dictionary of Paths as input.
@@ -134,7 +134,7 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                 finding_index = None
                 rule_has_unsuppressed_match = False
 
-                for eachfilepath in f_targetfiles:
+                for file_index, eachfilepath in enumerate(f_targetfiles, start=1):
                     filepath = eachfilepath.rstrip()
                     iCnt += 1
 
@@ -154,6 +154,17 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                     except (FileNotFoundError, PermissionError, UnicodeError, IOError) as exc:
                         print(f"Error processing {filepath}: {exc}")
                         error_count += 1
+                        if callable(progress_callback):
+                            progress_callback({
+                                "scope": "source_parser",
+                                "platform": platform_name,
+                                "category": category_name,
+                                "rule_title": rule_title,
+                                "file_index": file_index,
+                                "filepath": filepath,
+                                "status": "read_error",
+                                "error_count": error_count,
+                            })
                         continue
 
                     file_lines = content.splitlines()
@@ -254,6 +265,19 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                             "code": short_line.strip()
                         })
 
+                    if callable(progress_callback):
+                        progress_callback({
+                            "scope": "source_parser",
+                            "platform": platform_name,
+                            "category": category_name,
+                            "rule_title": rule_title,
+                            "file_index": file_index,
+                            "filepath": filepath,
+                            "matched_evidence_count": len(candidate_evidence),
+                            "rules_match_count": state.rulesMatchCnt,
+                            "suppressed_count": state.suppressedFindingsCnt,
+                        })
+
                 f_targetfiles.seek(0)
                 state.rCnt = rule_no
                 iCnt = 0
@@ -279,7 +303,7 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
 
 
 
-def paths_parser(rule_path, targetfile, outputfile=None, rule_no=None, findings_json_path=None):
+def paths_parser(rule_path, targetfile, outputfile=None, rule_no=None, findings_json_path=None, progress_callback=None):
     """
     Parses file paths and matches them against specified patterns from an XML rule file.
 
@@ -326,7 +350,7 @@ def paths_parser(rule_path, targetfile, outputfile=None, rule_no=None, findings_
         pattern = r.find("regex").text
         pattern_name = r.find("name").text
 
-        for eachfilepath in f_targetfilepaths:  # Read each line (file path) in the file
+        for file_index, eachfilepath in enumerate(f_targetfilepaths, start=1):  # Read each line (file path) in the file
             filepath = eachfilepath.rstrip()    # strip out '\r' or '\n' from the file paths
             filepath = futils.get_source_file_path(state.sourcedir, filepath)
 
@@ -356,6 +380,16 @@ def paths_parser(rule_path, targetfile, outputfile=None, rule_no=None, findings_
                 
             else:
                 unmatched_rules.append(pattern_name)  # Add unmatched items to the list
+
+            if callable(progress_callback):
+                progress_callback({
+                    "scope": "paths_parser",
+                    "rule_title": pattern_name,
+                    "file_index": file_index,
+                    "filepath": filepath,
+                    "matched_rules_count": len(matched_rules),
+                    "paths_match_count": state.rulesPathsMatchCnt,
+                })
 
         pFlag = False
         f_targetfilepaths.seek(0, 0)

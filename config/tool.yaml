@@ -1,3 +1,10 @@
 tool_name: Daksh SCRA (Source Code Review Assist)
 author: Debasis Mohanty (d3basis.m0hanty@gmail.com)
 release: 0.32
+state_management:
+  enabled: false
+  resume_mode: manual
+  persist_after_seconds: 300
+  persist_interval_seconds: 30
+  default_state_file: runtime/scan_state.json
+  cleanup_on_success: false
