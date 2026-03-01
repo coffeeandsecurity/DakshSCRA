@@ -202,6 +202,16 @@
 
     <category name="Database Queries">
         <rule>
+            <name>RDL Conditional: SQL Query with Untrusted Input and Missing Parameterization</name>
+            <regex><![CDATA[(?i)\b(?:mysql_query|mysqli_query|pg_query|sqlite_query|->query)\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:\$_(GET|POST|REQUEST|COOKIE)][IF(MISSING:\b(?:prepare|bindParam|bindValue|mysqli_stmt_prepare|PDO::prepare)\b)]]></rdl>
+            <rule_desc>Flags SQL query execution in files that also process untrusted PHP input without evidence of parameterized query APIs.</rule_desc>
+            <vuln_desc>Direct SQL execution combined with untrusted input and no parameterization patterns may indicate SQL injection risk.</vuln_desc>
+            <developer>Use prepared statements with bound parameters and avoid building queries with untrusted input.</developer>
+            <reviewer>Confirm whether the matched query path is parameterized and untrusted input is never concatenated into SQL.</reviewer>
+        </rule>
+
+        <rule>
             <name>SQL Query: Non-parameterized SELECT Statements with WHERE or ORDER BY</name>
             <regex><![CDATA[(?i)\bSELECT\s+\*?\s+FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*]]></regex>
             <rule_desc>Detects non-parameterized SELECT statements with WHERE or ORDER BY clauses in SQL queries, which may be vulnerable to SQL injection if user input is not handled securely.</rule_desc>

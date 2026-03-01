@@ -18,7 +18,7 @@ estimation_Fpath = state.estimation_Fpath
 
 
 
-def effortEstimator(json_file_path):
+def effort_estimator(json_file_path):
     """
     Estimates the effort in days for frontend and backend codebases 
     based on file counts and outputs an HTML report.
@@ -138,7 +138,7 @@ def generate_report(report_data):
     with open(estimation_Fpath, 'w') as report_file:
         report_file.write(rendered_html)
 
-    print("     [-] Effort estimation report: " + str(futils.getReportsRootPath(estimation_Fpath)))
+    print("     [-] Effort estimation report: " + str(futils.get_reports_root_path(estimation_Fpath)))
 
 
 
@@ -182,4 +182,7 @@ def get_effort_days(file_count, tech):
         
     raise ValueError(f"No effort range found for file count {file_count} and tech {tech}.")
 
+
+# Backward-compatible alias for legacy callers.
+effortEstimator = effort_estimator
 

@@ -11,7 +11,7 @@ import state.runtime_state as runtime_utils
 
 
 
-def getRulesPath_OR_FileTypes(platform, option):
+def get_rules_path_or_filetypes(platform, option):
     """
     Retrieve the rules file path or supported file types for a specific platform.
 
@@ -30,7 +30,7 @@ def getRulesPath_OR_FileTypes(platform, option):
 
     allowed_options = ["filetypes", "rules"]
     if option not in allowed_options:
-        print(f"Error (getRulesPath_OR_FileTypes): Invalid option supplied. Allowed options are {allowed_options}!")
+        print(f"Error (get_rules_path_or_filetypes): Invalid option supplied. Allowed options are {allowed_options}!")
         sys.exit()
 
     ret_value = ""
@@ -51,7 +51,7 @@ def getRulesPath_OR_FileTypes(platform, option):
 
 
 
-def rulesCount(rules_file):
+def rules_count(rules_file):
     """
     Count the total number of rules in an XML rules file.
 
@@ -87,7 +87,7 @@ def rulesCount(rules_file):
 
 
 
-def listRulesFiletypes(option):
+def list_rules_filetypes(option):
     """
     List available rules, file types, or both based on the provided option.
 
@@ -130,7 +130,7 @@ def listRulesFiletypes(option):
 
 
 
-def getAvailableRules(exclude=None):
+def get_available_rules(exclude=None):
     """
     Get a comma-separated string of available rules with no duplicates or spaces.
 
@@ -155,3 +155,10 @@ def getAvailableRules(exclude=None):
 
     # Return comma-separated string with no spaces
     return ",".join(sorted(available_rules))
+
+
+# Backward-compatible aliases for legacy callers.
+getRulesPath_OR_FileTypes = get_rules_path_or_filetypes
+rulesCount = rules_count
+listRulesFiletypes = list_rules_filetypes
+getAvailableRules = get_available_rules

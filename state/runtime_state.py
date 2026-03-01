@@ -31,6 +31,9 @@ toolConfig = Path(str(root_dir) + "/config/tool.yaml")
 # Project config path
 projectConfig = Path(str(root_dir) + "/config/project.yaml")
 
+# Suppression baseline config
+suppressionBaseline = Path(str(root_dir) + "/config/suppressions.json")
+
 # Estimation config path
 estimateConfig = Path(str(root_dir) + "/config/estimate.yaml")
 
@@ -48,7 +51,11 @@ totalFilesIdentified = 0
 parseErrorCnt = 0           # Keep track of file parsing errors
 rulesMatchCnt = 0
 rulesPathsMatchCnt = 0
+suppressedFindingsCnt = 0
 ## ------------- </Counters> ------------- ##
+
+# Runtime suppression entries loaded from baseline file
+suppressions = []
 
 
 ## ------------- <Temp Files> ------------- ##
@@ -76,20 +83,23 @@ reconSummary_Fpath = Path(str(root_dir) + "/runtime/recon_summary.json")
 
 ## ------------- <Reports> ------------- ##
 
-# Output file - areas of interest
-outputAoI = Path(str(root_dir) + "/reports/text/areas_of_interest.txt")
+# Output file - areas of interest (JSON)
+outputAoI_JSON = Path(str(root_dir) + "/reports/json/areas_of_interest.json")
 
 # Filepaths - Areas of Interests
-outputAoI_Fpaths = Path(str(root_dir) + "/reports/text/filepaths_aoi.txt")       
+outputAoI_Fpaths_JSON = Path(str(root_dir) + "/reports/json/filepaths_aoi.json")
 
 # FilePaths - Runtime
-output_Fpaths = Path(str(root_dir) + "/runtime/filepaths.txt")   
+output_Fpaths_JSON = Path(str(root_dir) + "/runtime/filepaths.json")
 
 # Output file - summary
-outputSummary = Path(str(root_dir) + "/reports/text/summary.txt")
+outputSummary_JSON = Path(str(root_dir) + "/reports/json/summary.json")
 
 # Output file - Recon summary
-outputRecSummary = Path(str(root_dir) + "/reports/text/recon.txt")
+outputRecSummary_JSON = Path(str(root_dir) + "/reports/json/recon.json")
+
+# Backward-compatible alias used by legacy recon code paths
+outputRecSummary = outputRecSummary_JSON
 
 # PDF Report file path
 pdfreport_Fpath = Path(str(root_dir) + "/reports/pdf/report.pdf")
@@ -106,7 +116,7 @@ estimation_template = Path(str(root_dir) + "/resources/templates/estimate.html")
 # Effort estimation - HTML Report file path
 estimation_Fpath = Path(str(root_dir) + "/reports/html/estimation.html")
 
+# Reconnaissance - HTML Report file path
+reconreport_Fpath = Path(str(root_dir) + "/reports/html/reconnaissance.html")
+
 ## ------------- </Reports> ------------- ##
-
-
-

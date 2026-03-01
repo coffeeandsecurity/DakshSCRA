@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="panel">
+    <h2>Overview</h2>
+    <div class="grid">
+        {% for card in overview_cards %}
+        {% if card.href %}
+        <a class="card-link" href="{{ card.href }}">
+            <div class="card">
+                <h3>{{ card.label }}</h3>
+                <div class="value">{{ card.value }}</div>
+            </div>
+        </a>
+        {% else %}
+        <div class="card">
+            <h3>{{ card.label }}</h3>
+            <div class="value">{{ card.value }}</div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+<div class="panel">
+    <h2>Navigation</h2>
+    <ul class="toc">
+        <li><a href="{{ links.aoi_index }}">Areas of Interest by Platform</a></li>
+        <li><a href="{{ links.filepaths_aoi }}">File Path Findings</a></li>
+        <li><a href="{{ links.filepaths_all }}">All Discovered Filepaths</a></li>
+    </ul>
+</div>
+
+<div class="panel">
+    <h2>Platforms</h2>
+    {% if platforms %}
+    <div class="grid">
+        {% for platform in platforms %}
+        <div class="card">
+            <h3>{{ platform.name }}</h3>
+            <div class="value">{{ platform.count }} finding{% if platform.count != 1 %}s{% endif %}</div>
+            <div class="muted" style="margin-top:6px;">Code AOI snippets</div>
+            <div style="margin-top:10px;"><a href="{{ platform.href_index }}">View details →</a></div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <div class="muted">No platform-specific findings recorded.</div>
+    {% endif %}
+</div>
+
+<div class="panel">
+    <h2>Scan Summary</h2>
+    <div class="note-block">
+        <span class="note-title">About findings:</span>
+        Reported issues are based on rule matches and may not be 100% confirmed. Use the developer notes to validate, investigate, and remediate as needed.
+    </div>
+    <pre class="muted" style="white-space: pre-wrap;">{{ summary_text }}</pre>
+</div>
+
+{% if recon_text %}
+<div class="panel">
+    <h2>Reconnaissance Summary</h2>
+    <pre class="muted" style="white-space: pre-wrap;">{{ recon_text }}</pre>
+</div>
+{% endif %}
+
+<div class="panel">
+    <h2>Timeline</h2>
+    <div class="grid">
+        <div class="card">
+            <h3>Scan start</h3>
+            <div class="value">{{ timeline.get("scan_start_time", "-") }}</div>
+        </div>
+        <div class="card">
+            <h3>Scan end</h3>
+            <div class="value">{{ timeline.get("scan_end_time", "-") }}</div>
+        </div>
+        <div class="card">
+            <h3>Duration</h3>
+            <div class="value">{{ timeline.get("scan_duration", "-") }}</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

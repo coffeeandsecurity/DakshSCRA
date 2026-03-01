@@ -1,0 +1,210 @@
+ranking:
+  base_score: 35
+  bucket_scores:
+    critical: 40
+    high: 28
+    medium: 16
+    low: 8
+  bonuses:
+    cross_file: 15
+    source_role: 8
+    call_role: 5
+    path_step_multiplier: 2
+    path_step_cap: 5
+  severity_thresholds:
+    critical: 85
+    high: 70
+    medium: 50
+  keywords:
+    critical:
+      - "eval"
+      - "exec"
+      - "runtime.exec"
+      - "process.start"
+      - "scriptengine"
+      - "command execution"
+      - "dynamic code"
+    high:
+      - "sql"
+      - "query"
+      - "xss"
+      - "innerhtml"
+      - "outerhtml"
+      - "document.write"
+      - "template"
+    medium:
+      - "httpclient"
+      - "openconnection"
+      - "webrequest"
+      - "file write"
+      - "deserialize"
+      - "pickle"
+  platform_overrides:
+    javascript:
+      bucket_scores:
+        high: 32
+      keywords:
+        high:
+          - "innerhtml"
+          - "outerhtml"
+          - "document.write"
+          - "eval"
+          - "function("
+          - "settimeout"
+          - "setinterval"
+    golang:
+      bucket_scores:
+        critical: 44
+      keywords:
+        critical:
+          - "exec.command"
+          - "command execution"
+        high:
+          - "db.query"
+          - "db.exec"
+          - "db.queryrow"
+          - "template.parse"
+
+python:
+  sources:
+    - "\\binput\\b"
+    - "\\brequest\\.args\\.get\\b"
+    - "\\brequest\\.form\\.get\\b"
+    - "\\brequest\\.get_json\\b"
+    - "\\bos\\.environ\\.get\\b"
+  sinks:
+    - ["eval", "Dynamic code execution", "\\beval\\b"]
+    - ["exec", "Dynamic code execution", "\\bexec\\b"]
+    - ["os.system", "OS command execution", "\\bos\\.system\\b"]
+    - ["subprocess.run", "Process execution", "\\bsubprocess\\.(run|Popen|call|check_output)\\b"]
+    - ["pickle.loads", "Insecure deserialization", "\\bpickle\\.(loads|load)\\b"]
+  sanitizers:
+    - "\\bshlex\\.quote\\b"
+    - "\\bhtml\\.escape\\b"
+
+php:
+  sources:
+    - "\\$_(GET|POST|REQUEST|COOKIE)\\b"
+  sinks:
+    - ["eval", "Dynamic execution with tainted input", "\\beval\\s*\\("]
+    - ["exec", "Command execution with tainted input", "\\b(exec|system|passthru|shell_exec)\\s*\\("]
+    - ["mysqli_query", "SQL query execution with possible injection", "\\bmysqli_query\\s*\\("]
+    - ["mysql_query", "SQL query execution with possible injection", "\\bmysql_query\\s*\\("]
+    - ["pdo_query", "PDO query execution with tainted input", "->\\s*(query|exec)\\s*\\("]
+  sanitizers:
+    - "\\bmysqli_real_escape_string\\b"
+    - "\\bhtmlspecialchars\\b"
+
+javascript:
+  sources:
+    - "\\breq\\.(body|query|params|headers|cookies)\\b"
+    - "\\brequest\\.(body|query|params|headers|cookies)\\b"
+    - "\\bctx\\.(request\\.)?(body|query|params|headers)\\b"
+    - "\\bprocess\\.env\\b"
+    - "\\bURLSearchParams\\b"
+    - "\\bdocument\\.cookie\\b"
+    - "\\blocation\\.search\\b"
+    - "\\blocation\\.hash\\b"
+    - "\\bwindow\\.name\\b"
+    - "\\blocalStorage\\.getItem\\b"
+    - "\\bsessionStorage\\.getItem\\b"
+  sinks:
+    - ["innerHTML", "DOM XSS sink", "\\.innerHTML\\b"]
+    - ["outerHTML", "DOM XSS sink", "\\.outerHTML\\b"]
+    - ["document.write", "DOM XSS sink", "\\bdocument\\.write\\b"]
+    - ["eval", "Dynamic execution", "\\beval\\b"]
+    - ["Function", "Dynamic execution", "\\bFunction\\s*\\("]
+    - ["setTimeout", "Timer execution", "\\bsetTimeout\\s*\\("]
+    - ["setInterval", "Timer execution", "\\bsetInterval\\s*\\("]
+  sanitizers:
+    - "\\bencodeURI\\b"
+    - "\\bencodeURIComponent\\b"
+    - "\\bDOMPurify\\.sanitize\\b"
+
+java:
+  sources:
+    - "\\@RequestParam\\b"
+    - "\\@PathVariable\\b"
+    - "\\@RequestBody\\b"
+    - "\\@RequestHeader\\b"
+    - "\\@CookieValue\\b"
+    - "\\@ModelAttribute\\b"
+    - "\\bHttpServletRequest\\b"
+    - "\\bServletRequest\\b"
+    - "\\brequestEntity\\.getUrl\\b"
+    - "\\bgetParameter\\b"
+    - "\\bgetHeader\\b"
+    - "\\bgetCookies\\b"
+    - "\\bgetQueryString\\b"
+    - "\\bgetParameterValues\\b"
+    - "\\bgetParameterMap\\b"
+    - "\\bgetInputStream\\b"
+    - "\\bgetReader\\b"
+    - "\\bgetRequestURI\\b"
+    - "\\bgetPathInfo\\b"
+    - "\\bgetParts?\\b"
+    - "\\bgetRemoteAddr\\b"
+    - "\\bgetRemoteHost\\b"
+    - "\\bgetAttribute\\b"
+    - "\\bgetSession\\(\\)\\.getAttribute\\b"
+    - "\\bSystem\\.getenv\\b"
+    - "\\bSystem\\.getProperty\\b"
+  sinks:
+    - ["Runtime.exec", "Command execution", "\\bRuntime\\.getRuntime\\(\\)\\.exec\\b"]
+    - ["ProcessBuilder", "Command execution", "\\bProcessBuilder\\b"]
+    - ["SQL", "SQL execution", "\\bprepareStatement\\b|\\bcreateStatement\\b|\\bexecute(Query|Update|LargeUpdate|)\\b|\\bexecuteBatch\\b|\\bexecute\\s*\\(|\\baddBatch\\b|\\bjdbcTemplate\\.(query|queryForList|queryForMap|queryForObject|update|execute|batchUpdate)\\b"]
+    - ["JPA/ORM", "SQL execution", "\\bcreateNativeQuery\\b|\\bcreateQuery\\b|\\bnativeQuery\\b|\\bcreateSQLQuery\\b|\\bentityManager\\.(createNativeQuery|createQuery)\\b|\\bJpaRepository\\b|\\bCrudRepository\\b|\\bJdbcTemplate\\.(query|update|execute)\\b"]
+    - ["URL.openConnection", "External request/SSRF", "\\bnew\\s+URL\\s*\\(.*\\)\\s*\\.openConnection\\b"]
+    - ["HttpClient", "External request/SSRF", "\\bHttp(Client|Request)\\b.*\\b(send|execute)\\b"]
+    - ["ScriptEngine", "Dynamic script execution", "\\bScriptEngineManager\\b|\\bScriptEngine\\b|\\bengine\\.eval\\b"]
+  sanitizers:
+    - "\\bESAPI\\.encoder\\.encodeForSQL\\b"
+    - "\\bESAPI\\.encoder\\.encodeForHTML\\b"
+    - "\\bStringEscapeUtils\\.escapeHtml4\\b"
+    - "\\bPreparedStatement\\s+\\w+\\s*=\\s*conn\\.prepareStatement\\b"
+
+dotnet:
+  sources:
+    - "\\bRequest\\.(QueryString|Form|Cookies|Headers)\\b"
+    - "\\bRequest\\.(Query|Form)\\b"
+    - "\\bHttpContext\\.Current\\.Request\\.(QueryString|Form|Cookies|Headers|Params|Item)\\b"
+    - "\\bRequest\\[.+\\]"
+    - "\\bRequest\\.Body\\b"
+    - "\\bRequest\\.InputStream\\b"
+    - "\\bRequest\\.Path\\b"
+    - "\\bRequest\\.Url\\b"
+    - "\\bEnvironment\\.Get(Environment)?Variable\\b"
+    - "\\bConfigurationManager\\.(AppSettings|ConnectionStrings)\\b"
+    - "\\bHttpRequest\\b.*\\.(Query|Form|Cookies|Headers)"
+  sinks:
+    - ["Process.Start", "Command execution", "\\bProcess\\.Start\\b"]
+    - ["SqlCommand", "SQL execution", "\\bSqlCommand\\b.*\\.(ExecuteReader|ExecuteNonQuery|ExecuteScalar|ExecuteXmlReader|Execute|ExecuteAsync)\\b|\\bExecute(Reader|NonQuery|Scalar)\\b"]
+    - ["OleDbCommand", "SQL execution", "\\bOleDbCommand\\b.*\\.(ExecuteReader|ExecuteNonQuery|ExecuteScalar)\\b"]
+    - ["MySqlCommand", "SQL execution", "\\bMySqlCommand\\b.*\\.(ExecuteReader|ExecuteNonQuery|ExecuteScalar)\\b"]
+    - ["DataAdapter", "SQL execution", "\\b(DataAdapter|SqlDataAdapter|OleDbDataAdapter)\\b"]
+    - ["EF Raw SQL", "SQL execution (raw)", "\\bDatabase\\.(ExecuteSqlCommand|SqlQuery)\\b|\\bFromSqlRaw\\b"]
+    - ["Dapper", "SQL execution (dapper)", "\\bConnection\\.(Execute|Query|QueryFirst|QuerySingle)\\b"]
+    - ["Eval", "Dynamic code execution", "\\bEval\\b|\\bDataBinder\\.Eval\\b"]
+    - ["CodeDom", "Dynamic code compilation", "\\bCSharpCodeProvider\\b|\\bCodeDomProvider\\b"]
+    - ["ScriptEngine", "Script execution", "\\bMicrosoft\\.ClearScript\\b|\\bJint\\b|\\bChakraCore\\b|\\bScriptEngine\\b"]
+    - ["HttpClient/WebRequest", "External request/SSRF", "\\bHttpClient\\b.*\\.(Send|SendAsync|GetAsync|PostAsync)\\b|\\bWebRequest\\b.*\\.(Create|GetResponse)\\b|\\bWebClient\\b.*\\.(DownloadString|UploadString|OpenRead)\\b"]
+    - ["File IO", "File write", "\\bFile\\.(WriteAllText|WriteAllBytes|Create|AppendAllText)\\b|\\bStreamWriter\\b"]
+    - ["ProcessStartInfo", "Command execution", "\\bProcessStartInfo\\b"]
+  sanitizers:
+    - "\\bHttpUtility\\.HtmlEncode\\b"
+    - "\\bHttpUtility\\.UrlEncode\\b"
+    - "\\bAntiXssEncoder\\.HtmlEncode\\b"
+    - "\\bRegex\\.Escape\\b"
+    - "\\bSqlParameter\\b"
+
+golang:
+  sources:
+    - "\\br\\.FormValue\\b"
+    - "\\br\\.URL\\.Query\\b"
+  sinks:
+    - ["exec", "Command execution", "\\bexec\\.Command\\b"]
+    - ["sql", "SQL execution", "\\bdb\\.Query\\b|\\bdb\\.Exec\\b|\\bdb\\.QueryRow\\b"]
+    - ["template", "Template rendering", "\\btemplate\\.Must\\b|\\btemplate\\.Parse\\b"]
+  sanitizers:
+    - "\\btemplate\\.HTMLEscapeString\\b"
+    - "\\burl\\.QueryEscape\\b"

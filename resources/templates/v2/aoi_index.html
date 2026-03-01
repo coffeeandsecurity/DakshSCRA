@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="breadcrumbs"><a href="{{ back_link }}">← Back to index</a></div>
+<div class="panel">
+    <h2>Areas of Interest by Platform</h2>
+    {% if platforms %}
+    <div class="grid">
+        {% for platform in platforms %}
+        <div class="card">
+            <h3>{{ platform.name }}</h3>
+            <div class="value">{{ platform.count }} finding{% if platform.count != 1 %}s{% endif %}</div>
+            <div class="muted" style="margin-top:6px;">Code AOI snippets</div>
+            <div style="margin-top:10px;"><a href="{{ platform.href_aoi }}">View details →</a></div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <div class="muted">No platform-specific findings recorded.</div>
+    {% endif %}
+</div>
+{% endblock %}

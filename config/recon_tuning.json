@@ -1,0 +1,7 @@
+{
+  "exclude_path_globs": [],
+  "exclude_path_contains": [],
+  "disable_categories": [],
+  "disable_detections": [],
+  "confidence_overrides": {}
+}

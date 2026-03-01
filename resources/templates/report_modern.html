@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ reportTitle }} - Modern Scan Report</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --text: #1f2a44;
+      --muted: #5f6f8f;
+      --primary: #0e7490;
+      --primary-2: #0369a1;
+      --accent: #0f766e;
+      --line: #d8e2f0;
+      --code-bg: #0d1117;
+      --shadow: 0 10px 30px rgba(21, 56, 92, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", "Trebuchet MS", "Helvetica Neue", sans-serif;
+      background:
+        radial-gradient(circle at 90% 10%, #d6eef6 0%, transparent 35%),
+        radial-gradient(circle at 5% 80%, #d9f2ea 0%, transparent 40%),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      border-right: 1px solid var(--line);
+      background: linear-gradient(180deg, #f8fbff 0%, #edf3fb 100%);
+      padding: 18px;
+    }
+
+    .brand {
+      display: grid;
+      grid-template-columns: 64px 1fr;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .logo {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .brand h1 {
+      font-size: 16px;
+      margin: 0;
+      line-height: 1.2;
+    }
+
+    .brand p {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .nav-group {
+      margin: 14px 0;
+      padding: 10px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .nav-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin: 0 0 8px;
+    }
+
+    .nav-link {
+      display: block;
+      text-decoration: none;
+      color: var(--text);
+      padding: 7px 9px;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+
+    .nav-link:hover {
+      background: #e7f2ff;
+      color: var(--primary-2);
+    }
+
+    .nav-meta {
+      color: var(--muted);
+      font-size: 11px;
+      margin-left: 6px;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    button, .btn {
+      border: 1px solid #c5d7ee;
+      background: #fff;
+      color: var(--text);
+      border-radius: 9px;
+      padding: 8px 9px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    button:hover, .btn:hover {
+      border-color: #9ec5ea;
+      background: #eff7ff;
+    }
+
+    .main {
+      padding: 26px;
+      max-width: 1400px;
+      width: 100%;
+    }
+
+    .hero {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: linear-gradient(130deg, #ffffff 0%, #ecf7fb 100%);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    .hero h2 {
+      margin: 0 0 4px;
+      font-size: 28px;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin: 14px 0 20px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      padding: 12px;
+    }
+
+    .card .k {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .card .v {
+      font-size: 23px;
+      font-weight: 700;
+      color: var(--primary-2);
+    }
+
+    .section {
+      margin: 14px 0 22px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .section > .section-h {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      background: #f7fbff;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .section .section-b {
+      padding: 14px;
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .kv div {
+      padding: 8px 10px;
+      border: 1px solid #dbe8f7;
+      border-radius: 10px;
+      background: #fbfdff;
+      font-size: 13px;
+    }
+
+    .kv b { color: #173a67; }
+
+    details.platform {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      margin-bottom: 12px;
+      background: #fcfeff;
+    }
+
+    details.platform > summary,
+    details.finding > summary {
+      cursor: pointer;
+      list-style: none;
+    }
+
+    details.platform > summary::-webkit-details-marker,
+    details.finding > summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .platform-summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 12px;
+      font-weight: 700;
+      border-left: 5px solid var(--accent);
+      background: #f0fbf8;
+      border-radius: 12px;
+    }
+
+    .pill {
+      display: inline-block;
+      font-size: 11px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: #dbf5ee;
+      color: #115e59;
+      border: 1px solid #9ed9cb;
+      margin-left: 8px;
+    }
+
+    .platform-body {
+      padding: 10px;
+      border-top: 1px solid var(--line);
+    }
+
+    details.finding {
+      border: 1px solid #d4e4f7;
+      border-radius: 10px;
+      background: #fff;
+      margin-bottom: 10px;
+    }
+
+    .finding-summary {
+      padding: 10px;
+      background: #f6fbff;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .finding-id {
+      font-size: 12px;
+      color: #1d4f8c;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .finding-title {
+      font-size: 14px;
+      font-weight: 700;
+      flex: 1;
+    }
+
+    .finding-body {
+      padding: 10px;
+      border-top: 1px solid #d4e4f7;
+      font-size: 13px;
+    }
+
+    .finding-body p {
+      margin: 6px 0;
+    }
+
+    .source-block {
+      margin-top: 8px;
+      border: 1px solid #ccdff5;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .source-head {
+      padding: 8px 10px;
+      background: #edf5ff;
+      font-size: 12px;
+      font-weight: 700;
+      color: #1b4c86;
+    }
+
+    .source-code {
+      padding: 8px;
+      background: var(--code-bg);
+      color: #fff;
+      overflow-x: auto;
+    }
+
+    .source-code .highlight {
+      margin: 0;
+      background: var(--code-bg) !important;
+    }
+
+    .source-code pre {
+      margin: 0;
+      white-space: pre-wrap;
+    }
+
+    .source-code .highlighttable,
+    .source-code .highlighttable table,
+    .source-code .highlighttable tbody,
+    .source-code .highlighttable tr,
+    .source-code .highlighttable td {
+      border-spacing: 0;
+      border-collapse: collapse;
+    }
+
+    /* Hide formatter line-number gutter; line numbers are already embedded in snippet text. */
+    .source-code .highlighttable td.linenos,
+    .source-code .highlighttable td.linenos * {
+      display: none !important;
+    }
+
+    .source-code .highlighttable td.code {
+      padding-left: 0 !important;
+      background: var(--code-bg) !important;
+    }
+
+    .paths {
+      max-height: 420px;
+      overflow: auto;
+      border: 1px solid #d7e5f5;
+      border-radius: 10px;
+      padding: 8px;
+      background: #fbfdff;
+    }
+
+    .paths-item {
+      padding: 8px;
+      border-bottom: 1px dashed #cfddf0;
+      font-size: 13px;
+    }
+
+    .paths-item:last-child { border-bottom: none; }
+
+    .floating-nav {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      display: grid;
+      gap: 8px;
+      z-index: 10;
+    }
+
+    .floating-nav button {
+      background: #ffffff;
+      box-shadow: var(--shadow);
+      min-width: 44px;
+      min-height: 38px;
+      font-weight: 700;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 1100px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar {
+        position: static;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+      }
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .kv { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .main { padding: 14px; }
+      .grid { grid-template-columns: 1fr; }
+      .hero h2 { font-size: 22px; }
+      .floating-nav { right: 10px; bottom: 10px; }
+    }
+
+    @media print {
+      html, body {
+        background: #fff !important;
+      }
+
+      .layout {
+        display: block;
+      }
+
+      .sidebar {
+        position: static;
+        height: auto;
+        overflow: visible;
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+        background: #fff;
+        page-break-after: always;
+      }
+
+      .actions,
+      .floating-nav {
+        display: none !important;
+      }
+
+      /* Allow long findings/snippets to flow across pages instead of creating large blanks. */
+      .section,
+      .section .section-b,
+      details,
+      details.platform,
+      details.finding,
+      .platform-body,
+      .finding-body,
+      .source-block,
+      .source-code {
+        break-inside: auto !important;
+        page-break-inside: auto !important;
+      }
+
+      .section,
+      details.platform,
+      details.finding,
+      .source-block {
+        overflow: visible !important;
+      }
+
+      .source-code {
+        max-height: none !important;
+        overflow: visible !important;
+      }
+
+      .source-code pre {
+        white-space: pre-wrap !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar" id="top">
+      <div class="brand">
+        <img class="logo" src="{{ logoImagePath }}" alt="logo" />
+        <div>
+          <h1>{{ reportTitle }}</h1>
+          {% if reportSubTitle %}<p>{{ reportSubTitle }}</p>{% endif %}
+          <p>{{ reportDate }}</p>
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <p class="nav-title">Sections</p>
+        <a class="nav-link" href="#overview">Overview</a>
+        <a class="nav-link" href="#inputs">Inputs</a>
+        <a class="nav-link" href="#timeline">Timeline</a>
+        <a class="nav-link" href="#findings">Findings</a>
+        <a class="nav-link" href="#paths-aoi">Parsed Paths AOI</a>
+        <a class="nav-link" href="#paths-all">All Parsed Files</a>
+      </div>
+
+      <div class="nav-group">
+        <p class="nav-title">Platforms</p>
+        {% for platform, count in platform_counts.items() %}
+        <a class="nav-link" href="#platform-{{ platform|lower|replace(' ', '-')|replace('/', '-')|replace('.', '-') }}">{{ platform }} <span class="nav-meta">{{ count }} findings</span></a>
+        {% endfor %}
+      </div>
+
+      <div class="nav-group">
+        <p class="nav-title">Controls</p>
+        <div class="actions">
+          <button type="button" id="expand-all-platforms">Expand Platforms</button>
+          <button type="button" id="collapse-all-platforms">Collapse Platforms</button>
+          <button type="button" id="expand-all-findings">Expand Findings</button>
+          <button type="button" id="collapse-all-findings">Collapse Findings</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main" id="content">
+      <section class="hero" id="overview">
+        <h2>Security Analysis Report</h2>
+        <p>Interactive single-file view with collapsible platform and finding sections.</p>
+      </section>
+
+      <section class="grid" aria-label="overview cards">
+        <div class="card"><div class="k">Rules Loaded</div><div class="v">{{ inputs.get('total_rules_loaded', '-') }}</div></div>
+        <div class="card"><div class="k">Files Scanned</div><div class="v">{{ detection.get('total_files_scanned', '-') }}</div></div>
+        <div class="card"><div class="k">Code Findings</div><div class="v">{{ detection.get('areas_of_interest_identified', '-') }}</div></div>
+        <div class="card"><div class="k">Path Findings</div><div class="v">{{ detection.get('file_paths_areas_of_interest_identified', '-') }}</div></div>
+      </section>
+
+      <section class="section" id="inputs">
+        <div class="section-h">Scan Inputs</div>
+        <div class="section-b kv">
+          <div><b>Target Directory:</b> {{ inputs.get('target_directory', '-') }}</div>
+          <div><b>Rule Selected:</b> {{ inputs.get('rule_selected', '-') }}</div>
+          <div><b>File Types Selected:</b> {{ inputs.get('filetypes_selected', '-') }}</div>
+          <div><b>Platform Rules:</b> {{ inputs.get('platform_specific_rules', '-') }}</div>
+          <div><b>Common Rules:</b> {{ inputs.get('common_rules', '-') }}</div>
+          <div><b>Total Rules Loaded:</b> {{ inputs.get('total_rules_loaded', '-') }}</div>
+        </div>
+      </section>
+
+      <section class="section" id="timeline">
+        <div class="section-h">Scanning Timeline</div>
+        <div class="section-b kv">
+          <div><b>Scan Start:</b> {{ timeline.get('scan_start_time', '-') }}</div>
+          <div><b>Scan End:</b> {{ timeline.get('scan_end_time', '-') }}</div>
+          <div><b>Duration:</b> {{ timeline.get('scan_duration', '-') }}</div>
+          <div><b>Total LOC (effective):</b> {{ detection.get('total_loc', '-') }}</div>
+        </div>
+      </section>
+
+      <section class="section" id="findings">
+        <div class="section-h">Areas of Interest <span class="pill">{{ total_findings }} total findings</span></div>
+        <div class="section-b">
+          {% if snippets %}
+            {% for platform, platform_snippets in snippets.items() %}
+              <details class="platform" id="platform-{{ platform|lower|replace(' ', '-')|replace('/', '-')|replace('.', '-') }}" open>
+                <summary class="platform-summary">
+                  <span>{{ platform }} Findings</span>
+                  <span class="pill">{{ platform_snippets|length }}</span>
+                </summary>
+                <div class="platform-body">
+                  {% for snippet in platform_snippets %}
+                    <details class="finding" id="finding-{{ platform|lower|replace(' ', '-')|replace('/', '-')|replace('.', '-') }}-{{ loop.index }}">
+                      <summary class="finding-summary">
+                        <span class="finding-id">ID: {{ snippet["rulecount"] }}</span>
+                        <span class="finding-title">{{ snippet["keyword"] }}</span>
+                        <span class="muted">{{ snippet["sources"]|length }} source(s)</span>
+                      </summary>
+                      <div class="finding-body">
+                        <p><b>Rule Description:</b> {{ snippet["rule_desc"] }}</p>
+                        {% if snippet["category"] %}<p><b>Issue Category:</b> {{ snippet["category"] }}</p>{% endif %}
+                        {% if snippet["issue_scope"] %}<p><b>Issue Scope:</b> {{ snippet["issue_scope"] }}</p>{% endif %}
+                        <p><b>Issue Description:</b> {{ snippet["issue_desc"] }}</p>
+                        <p><b>Developer Note:</b> {{ snippet["dev_note"] }}</p>
+                        <p><b>Reviewer Note:</b> {{ snippet["rev_note"] }}</p>
+
+                        {% for source in snippet["sources"] %}
+                          <div class="source-block">
+                            <div class="source-head">Source: {{ source["source"] }}</div>
+                            <div class="source-code">{{ source["code"] | safe }}</div>
+                          </div>
+                        {% endfor %}
+                      </div>
+                    </details>
+                  {% endfor %}
+                </div>
+              </details>
+            {% endfor %}
+          {% else %}
+            <p>No code findings were recorded for this run.</p>
+          {% endif %}
+        </div>
+      </section>
+
+      <section class="section" id="paths-aoi">
+        <div class="section-h">Parsed Paths - Areas of Interest</div>
+        <div class="section-b">
+          {% if filepaths_aoi %}
+            {% for filepath in filepaths_aoi %}
+              {% if filepath["paths"] %}
+              <details class="finding">
+                <summary class="finding-summary">
+                  <span class="finding-title">{{ filepath["keyword"] }}</span>
+                  <span class="muted">{{ filepath["paths"]|length }} path(s)</span>
+                </summary>
+                <div class="finding-body paths">
+                  {% for path in filepath["paths"] %}
+                    <div class="paths-item">{{ path }}</div>
+                  {% endfor %}
+                </div>
+              </details>
+              {% endif %}
+            {% endfor %}
+          {% else %}
+            <p>No file-path findings were recorded for this run.</p>
+          {% endif %}
+        </div>
+      </section>
+
+      <section class="section" id="paths-all">
+        <div class="section-h">All Identified File Paths</div>
+        <div class="section-b paths">
+          {% for path in filepaths %}
+            <div class="paths-item">{{ path }}</div>
+          {% endfor %}
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="floating-nav">
+    <button type="button" id="prev-section" title="Previous section">↑ Section</button>
+    <button type="button" id="next-section" title="Next section">↓ Section</button>
+    <button type="button" id="jump-top" title="Jump to top">Top</button>
+    <button type="button" id="jump-bottom" title="Jump to bottom">Bottom</button>
+  </div>
+
+  <script>
+    (function () {
+      function setOpen(selector, open) {
+        document.querySelectorAll(selector).forEach(function (el) {
+          el.open = open;
+        });
+      }
+
+      var sections = Array.prototype.slice.call(
+        document.querySelectorAll("main .section, main .hero")
+      );
+
+      function nearestSectionIndex() {
+        var y = window.scrollY + 20;
+        var idx = 0;
+        for (var i = 0; i < sections.length; i++) {
+          if (sections[i].offsetTop <= y) {
+            idx = i;
+          }
+        }
+        return idx;
+      }
+
+      function scrollToSection(index) {
+        if (!sections.length) return;
+        var bounded = Math.max(0, Math.min(index, sections.length - 1));
+        sections[bounded].scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      var expandPlatforms = document.getElementById("expand-all-platforms");
+      var collapsePlatforms = document.getElementById("collapse-all-platforms");
+      var expandFindings = document.getElementById("expand-all-findings");
+      var collapseFindings = document.getElementById("collapse-all-findings");
+      var prevBtn = document.getElementById("prev-section");
+      var nextBtn = document.getElementById("next-section");
+      var topBtn = document.getElementById("jump-top");
+      var bottomBtn = document.getElementById("jump-bottom");
+
+      if (expandPlatforms) expandPlatforms.addEventListener("click", function () { setOpen("details.platform", true); });
+      if (collapsePlatforms) collapsePlatforms.addEventListener("click", function () { setOpen("details.platform", false); });
+      if (expandFindings) expandFindings.addEventListener("click", function () { setOpen("details.finding", true); });
+      if (collapseFindings) collapseFindings.addEventListener("click", function () { setOpen("details.finding", false); });
+
+      if (prevBtn) prevBtn.addEventListener("click", function () {
+        scrollToSection(nearestSectionIndex() - 1);
+      });
+      if (nextBtn) nextBtn.addEventListener("click", function () {
+        scrollToSection(nearestSectionIndex() + 1);
+      });
+      if (topBtn) topBtn.addEventListener("click", function () {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+      if (bottomBtn) bottomBtn.addEventListener("click", function () {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+      });
+    })();
+  </script>
+</body>
+</html>

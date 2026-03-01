@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="breadcrumbs"><a href="{{ back_link }}">← Back to index</a></div>
+<div class="panel">
+    <h2>File Path Findings</h2>
+    {% if items %}
+    <div class="list">
+        {% for item in items %}
+        <li>
+            <div class="badge"><strong>Rule</strong> {{ item.keyword }}</div>
+            {% if item.paths %}
+                <ul class="list" style="margin-top:6px;">
+                    {% for path in item.paths %}
+                    <li class="path">{{ path }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </div>
+    {% else %}
+        <div class="muted">No file path matches recorded.</div>
+    {% endif %}
+</div>
+{% endblock %}

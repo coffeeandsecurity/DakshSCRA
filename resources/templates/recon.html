@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ reportTitle }} - Reconnaissance Report</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --text: #1f2a44;
+      --muted: #5f6f8f;
+      --primary: #0e7490;
+      --primary-2: #0369a1;
+      --accent: #0f766e;
+      --line: #d8e2f0;
+      --shadow: 0 10px 30px rgba(21, 56, 92, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", "Trebuchet MS", "Helvetica Neue", sans-serif;
+      background:
+        radial-gradient(circle at 90% 10%, #d6eef6 0%, transparent 35%),
+        radial-gradient(circle at 5% 80%, #d9f2ea 0%, transparent 40%),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      border-right: 1px solid var(--line);
+      background: linear-gradient(180deg, #f8fbff 0%, #edf3fb 100%);
+      padding: 18px;
+    }
+
+    .brand {
+      display: grid;
+      grid-template-columns: 64px 1fr;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .logo {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .brand h1 {
+      font-size: 15px;
+      margin: 0;
+      line-height: 1.2;
+    }
+
+    .brand p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .nav-group {
+      margin: 14px 0;
+      padding: 10px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .nav-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin: 0 0 8px;
+    }
+
+    .nav-link {
+      display: block;
+      color: var(--text);
+      text-decoration: none;
+      padding: 7px 9px;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+
+    .nav-link:hover { background: #e7f2ff; color: var(--primary-2); }
+
+    .main {
+      padding: 26px;
+      max-width: 1400px;
+      width: 100%;
+    }
+
+    .hero {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: linear-gradient(130deg, #ffffff 0%, #ecf7fb 100%);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    .hero h2 {
+      margin: 0 0 4px;
+      font-size: 28px;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin: 14px 0 20px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      padding: 12px;
+    }
+
+    .card .k {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .card .v {
+      font-size: 23px;
+      font-weight: 700;
+      color: var(--primary-2);
+    }
+
+    details.section {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+
+    details.section > summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 11px 12px;
+      font-weight: 700;
+      border-left: 5px solid var(--accent);
+      background: #f0fbf8;
+    }
+
+    details.section > summary::-webkit-details-marker { display: none; }
+
+    .section-body {
+      padding: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    details.tech {
+      border: 1px solid #d4e4f7;
+      border-radius: 10px;
+      background: #fff;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    details.tech > summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 10px;
+      background: #f7fbff;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      font-weight: 600;
+    }
+
+    details.tech > summary::-webkit-details-marker { display: none; }
+
+    .meta { color: var(--muted); font-size: 12px; }
+    .badge {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge-high { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .badge-medium { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .badge-low { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+    .dirs {
+      border-top: 1px solid #d4e4f7;
+      padding: 10px;
+    }
+
+    .dir-row {
+      border: 1px dashed #d6e4f7;
+      border-radius: 8px;
+      padding: 8px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      background: #fcfdff;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .dir-row:last-child { margin-bottom: 0; }
+
+    .samples {
+      margin-top: 10px;
+      border-top: 1px solid #d4e4f7;
+      padding-top: 10px;
+    }
+
+    .samples-title {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 6px;
+    }
+
+    .sample-path {
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+      border: 1px solid #e3ebf7;
+      border-radius: 8px;
+      padding: 6px 8px;
+      background: #fdfefe;
+      margin-bottom: 6px;
+      word-break: break-all;
+    }
+
+    .footer {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 1100px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; height: auto; }
+    }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 600px) {
+      .grid { grid-template-columns: 1fr; }
+      .hero h2 { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        {% if logoImagePath %}
+        <img class="logo" src="{{ logoImagePath }}" alt="Logo" />
+        {% else %}
+        <div class="logo"></div>
+        {% endif %}
+        <div>
+          <h1>{{ reportTitle }}</h1>
+          {% if reportSubTitle %}<p>{{ reportSubTitle }}</p>{% endif %}
+          <p>{{ reportDate }}</p>
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <p class="nav-title">Recon Categories</p>
+        {% for section in sections %}
+        <a class="nav-link" href="#cat-{{ loop.index }}">{{ section.category }}</a>
+        {% endfor %}
+      </div>
+    </aside>
+
+    <main class="main">
+      <section class="hero">
+        <h2>Reconnaissance Report</h2>
+        <p>Software composition analysis summary with category, technology, directory, and file-count breakdown.</p>
+        {% if recon_target %}
+        <p><strong>Target:</strong> {{ recon_target }}</p>
+        {% endif %}
+        <p><strong>Strict Mode:</strong> {{ recon_strict_mode }}</p>
+      </section>
+
+      <section class="grid">
+        <div class="card"><div class="k">Categories</div><div class="v">{{ total_categories }}</div></div>
+        <div class="card"><div class="k">Technologies</div><div class="v">{{ total_technologies }}</div></div>
+        <div class="card"><div class="k">Matched Files</div><div class="v">{{ total_files }}</div></div>
+        <div class="card"><div class="k">Matched Directories</div><div class="v">{{ total_directories }}</div></div>
+      </section>
+
+      {% for section in sections %}
+      <details class="section" id="cat-{{ loop.index }}" open>
+        <summary>{{ section.category }} <span class="meta">({{ section.tech_rows|length }} technologies)</span></summary>
+        <div class="section-body">
+          {% for tech in section.tech_rows %}
+          <details class="tech">
+            <summary>
+              <span>{{ tech.name }}</span>
+              <span class="meta">
+                <span class="badge badge-{{ tech.confidence }}">{{ tech.confidence }}</span>
+                {{ tech.total_files }} files | {{ tech.total_dirs }} directories
+              </span>
+            </summary>
+            <div class="dirs">
+              <div class="dir-row">
+                <span>Confidence Breakdown</span>
+                <strong>H:{{ tech.confidence_counts.high }} M:{{ tech.confidence_counts.medium }} L:{{ tech.confidence_counts.low }}</strong>
+              </div>
+              {% for d in tech.directories %}
+              <div class="dir-row">
+                <span>{{ d.directory }}</span>
+                <strong>{{ d.fileCount }}</strong>
+              </div>
+              {% endfor %}
+              {% if tech.sample_files %}
+              <div class="samples">
+                <div class="samples-title">Sample Files</div>
+                {% for sample in tech.sample_files %}
+                <div class="sample-path">{{ sample }}</div>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+          </details>
+          {% endfor %}
+        </div>
+      </details>
+      {% endfor %}
+
+      <div class="footer">Generated at {{ generated_at }}</div>
+    </main>
+  </div>
+</body>
+</html>

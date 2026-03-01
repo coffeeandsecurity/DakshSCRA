@@ -23,7 +23,7 @@
         <rule>
             <!-- Applicable for C and C++ -->
             <name>Unsafe Loop Handling Over Arrays or Vectors</name>
-            <regex><![CDATA[\b(for|while)\s*\(.*]]></regex>
+            <regex><![CDATA[\b(?:for|while)\s*\([^)]*(?:<|<=|>|>=)[^)]*(?:size|length|count|index|idx|i|j|k)[^)]*\)]]></regex>
             <rule_desc>Detects loops iterating over arrays, vectors, or strings.</rule_desc>
             <vuln_desc>Improperly bounded loops can cause buffer or integer overflows, compromising program stability.</vuln_desc>
             <developer>Use bounds-checked loops, such as range-based `for` loops, to prevent overflows.</developer>

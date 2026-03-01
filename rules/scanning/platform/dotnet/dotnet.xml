@@ -158,7 +158,7 @@
     <category name="Information Disclosure">
         <rule>
             <name>Stack Trace or Error Disclosure</name>
-            <regex>(?i)(Response\.Write\s*\(.*StackTrace|ex\.ToString\(\)|Console\.WriteLine\(.*Exception.*\)|throw new Exception\(.+\))</regex>
+            <regex>(?i)(Response\.Write\s*\([^)]{0,200}StackTrace|ex\.ToString\(\)|Console\.WriteLine\([^)]{0,200}Exception[^)]*\)|throw new \w*Exception\([^)]{0,200}\))</regex>
             <rule_desc>Detects unsafe error handling and stack trace exposure in .NET applications.</rule_desc>
             <vuln_desc>Using `Response.Write`, `ex.ToString()`, or similar methods to output exception details can expose sensitive stack trace information, aiding attackers in identifying vulnerabilities.</vuln_desc>
             <developer>Developers should avoid exposing stack traces or detailed exceptions directly to users. Use secure logging frameworks (e.g., Serilog, NLog) and custom error pages in web applications.</developer>

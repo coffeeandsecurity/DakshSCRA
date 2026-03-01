@@ -1,51 +1,101 @@
 {
-    "Python": [
-      {"name": "Django", "regex": "django", "regexFlag": "1", "fileExtensions": [".py"]},
-      {"name": "Flask", "regex": "(?i)\\bimport\\s+.*?flask\\b|flask\\b", "regexFlag": "1", "fileExtensions": [".py"]}
-    ],
-    "Ruby": [
-      {"name": "Ruby on Rails", "regex": "rails", "regexFlag": "1", "fileExtensions": [".rb"]},
-      {"name": "Ruby Sinatra", "regex": "require\\s+['\"]sinatra['\"]", "regexFlag": "1", "fileExtensions": [".rb"]},
-      {"name": "Ruby Hanami", "regex": "require\\s+['\"]hanami['\"]", "regexFlag": "1", "fileExtensions": [".rb"]}
-    ],
-    "JavaScript": [
-      {"name": "Ghost", "regex": "ghost", "regexFlag": "1", "fileExtensions": [".js"]},
-      {"name": "KeystoneJS", "regex": "keystone", "regexFlag": "1", "fileExtensions": [".js"]},
-      {"name": "Strapi", "regex": "strapi", "regexFlag": "1", "fileExtensions": [".js"]}
-    ],
-    "Java": [
-      {"name": "Liferay", "regex": "liferay", "regexFlag": "1", "fileExtensions": [".java"]},
-      {"name": "Magnolia", "regex": "magnolia", "regexFlag": "1", "fileExtensions": [".java"]},
-      {"name": "Spring", "regex": "import\\s+org\\.springframework\\.", "regexFlag": "1", "fileExtensions": [".java"]}
-    ],
-    "PHP": [
-      {"name": "WordPress", "regex": "wp-config.php", "regexFlag": "1", "fileExtensions": [".php"]},
-      {"name": "Drupal", "regex": "drupal", "regexFlag": "1", "fileExtensions": [".php"]},
-      {"name": "Joomla", "regex": "joomla", "regexFlag": "1", "fileExtensions": [".php"]},
-      {"name": "Laravel", "regex": "laravel", "regexFlag": "1", "fileExtensions": [".php"]},
-      {"name": "Code Igniter", "regex": "codeigniter", "regexFlag": "1", "fileExtensions": [".php"]},
-      {"name": "Magento", "regex": "magento", "regexFlag": "1", "fileExtensions": [".php"]},
-      {"name": "PrestaShop", "regex": "prestashop", "regexFlag": "1", "fileExtensions": [".php"]},
-      {"name": "Shopify", "regex": "shopify", "regexFlag": "1", "fileExtensions": [".php"]},
-      {"name": "Symfony", "regex": "symfony", "regexFlag": "1", "fileExtensions": [".php"]}
-    ],
-    "C#": [
-      {"name": "ASP.NET", "regex": "using\\s+System.Web;", "regexFlag": "1", "fileExtensions": [".cs"]},
-      {"name": "DotNetNuke", "regex": "DotNetNuke", "regexFlag": "1", "fileExtensions": [".cs"]},
-      {"name": "Umbraco", "regex": "umbraco", "regexFlag": "1", "fileExtensions": [".cs"]}
-    ],
-    "Go": [
-      {"name": "Gin", "regex": "import\\s+.*?gin", "regexFlag": "1", "fileExtensions": [".go"]},
-      {"name": "Echo", "regex": "import\\s+.*?echo", "regexFlag": "1", "fileExtensions": [".go"]}
-    ],
-    "Rust": [
-      {"name": "Rocket", "regex": "rocket", "regexFlag": "1", "fileExtensions": [".rs"]},
-      {"name": "Actix", "regex": "actix", "regexFlag": "1", "fileExtensions": [".rs"]}
-    ],
-    ".NET": [
-      {"name": "ASP.NET Core", "regex": "using\\s+Microsoft\\.AspNetCore;", "regexFlag": "1", "fileExtensions": [".cs"]},
-      {"name": "Entity Framework", "regex": "using\\s+Microsoft\\.EntityFrameworkCore;", "regexFlag": "1", "fileExtensions": [".cs"]},
-      {"name": "Nancy", "regex": "using\\s+Nancy", "regexFlag": "1", "fileExtensions": [".cs"]}
-    ]
+  "Python": [
+    {"name": "Django", "regex": "\\bdjango\\b|INSTALLED_APPS|manage\\.py", "regexFlag": "1", "fileExtensions": [".py", "*"]},
+    {"name": "Flask", "regex": "\\bfrom\\s+flask\\s+import\\b|\\bFlask\\(", "regexFlag": "1", "fileExtensions": [".py"]},
+    {"name": "FastAPI", "regex": "\\bfrom\\s+fastapi\\s+import\\b|\\bFastAPI\\(", "regexFlag": "1", "fileExtensions": [".py"]},
+    {"name": "Pyramid", "regex": "\\bpyramid\\b", "regexFlag": "1", "fileExtensions": [".py"]},
+    {"name": "Tornado", "regex": "\\btornado\\b", "regexFlag": "1", "fileExtensions": [".py"]},
+    {"name": "Sanic", "regex": "\\bsanic\\b", "regexFlag": "1", "fileExtensions": [".py"]},
+    {"name": "Celery", "regex": "\\bcelery\\b|from\\s+celery\\s+import", "regexFlag": "1", "fileExtensions": [".py"]}
+  ],
+  "JavaScript": [
+    {"name": "Express", "regex": "\\bexpress\\b|require\\(['\"]express['\"]\\)", "regexFlag": "1", "fileExtensions": [".js", ".mjs", ".cjs"]},
+    {"name": "Koa", "regex": "\\bkoa\\b", "regexFlag": "1", "fileExtensions": [".js", ".mjs", ".cjs"]},
+    {"name": "Hapi", "regex": "@hapi/hapi|\\bhapi\\b", "regexFlag": "1", "fileExtensions": [".js", ".mjs", ".cjs"]},
+    {"name": "Fastify", "regex": "\\bfastify\\b", "regexFlag": "1", "fileExtensions": [".js", ".mjs", ".cjs"]},
+    {"name": "NestJS", "regex": "@nestjs/|NestFactory", "regexFlag": "1", "fileExtensions": [".js", ".ts"]},
+    {"name": "React", "regex": "\\bfrom\\s+['\"]react['\"]|React\\.", "regexFlag": "1", "fileExtensions": [".js", ".jsx", ".ts", ".tsx"]},
+    {"name": "Next.js", "regex": "\\bnext\\b|next\\/router|next\\.config", "regexFlag": "1", "fileExtensions": [".js", ".jsx", ".ts", ".tsx", "*"]},
+    {"name": "Vue", "regex": "\\bfrom\\s+['\"]vue['\"]|createApp\\(", "regexFlag": "1", "fileExtensions": [".vue", ".js", ".ts"]},
+    {"name": "Nuxt", "regex": "\\bnuxt\\b|nuxt\\.config", "regexFlag": "1", "fileExtensions": [".js", ".ts", "*"]},
+    {"name": "Svelte", "regex": "\\bsvelte\\b|svelte\\.config", "regexFlag": "1", "fileExtensions": [".svelte", ".js", ".ts"]},
+    {"name": "Remix", "regex": "@remix-run/|\\bremix\\b", "regexFlag": "1", "fileExtensions": [".js", ".jsx", ".ts", ".tsx"]},
+    {"name": "Gatsby", "regex": "\\bgatsby\\b|gatsby-config\\.js", "regexFlag": "1", "fileExtensions": [".js", "*"]},
+    {"name": "Ionic", "regex": "@ionic/|ionic\\.config\\.json", "regexFlag": "1", "fileExtensions": [".js", ".ts", ".json", "*"]},
+    {"name": "React Native", "regex": "react-native|@react-native", "regexFlag": "1", "fileExtensions": [".js", ".jsx", ".ts", ".tsx", ".json", "*"]},
+    {"name": "Cordova", "regex": "\\bcordova\\b|config\\.xml", "regexFlag": "1", "fileExtensions": [".js", ".xml", "*"]},
+    {"name": "NativeScript", "regex": "nativescript", "regexFlag": "1", "fileExtensions": [".js", ".ts", ".json", "*"]},
+    {"name": "Capacitor", "regex": "@capacitor/|capacitor\\.config", "regexFlag": "1", "fileExtensions": [".js", ".ts", ".json", "*"]}
+  ],
+  "TypeScript": [
+    {"name": "Angular", "regex": "@angular/|angular\\.json|NgModule", "regexFlag": "1", "fileExtensions": [".ts", ".json", "*"]},
+    {"name": "NestJS", "regex": "@nestjs/|NestFactory", "regexFlag": "1", "fileExtensions": [".ts"]},
+    {"name": "Next.js", "regex": "\\bnext\\b|next\\/router|next\\.config", "regexFlag": "1", "fileExtensions": [".ts", ".tsx", "*"]},
+    {"name": "Nuxt", "regex": "\\bnuxt\\b|nuxt\\.config", "regexFlag": "1", "fileExtensions": [".ts", "*"]},
+    {"name": "Remix", "regex": "@remix-run/|\\bremix\\b", "regexFlag": "1", "fileExtensions": [".ts", ".tsx"]},
+    {"name": "Ionic", "regex": "@ionic/|ionic\\.config", "regexFlag": "1", "fileExtensions": [".ts", ".json", "*"]},
+    {"name": "React Native", "regex": "react-native|@react-native", "regexFlag": "1", "fileExtensions": [".ts", ".tsx", ".json", "*"]}
+  ],
+  "Java": [
+    {"name": "Spring", "regex": "org\\.springframework", "regexFlag": "1", "fileExtensions": [".java", "*"]},
+    {"name": "Spring Boot", "regex": "@SpringBootApplication|spring-boot", "regexFlag": "1", "fileExtensions": [".java", ".properties", ".yml", ".yaml", "*"]},
+    {"name": "Hibernate", "regex": "org\\.hibernate|@Entity", "regexFlag": "1", "fileExtensions": [".java", "*"]},
+    {"name": "Struts", "regex": "org\\.apache\\.struts", "regexFlag": "1", "fileExtensions": [".java", ".xml"]},
+    {"name": "Micronaut", "regex": "io\\.micronaut", "regexFlag": "1", "fileExtensions": [".java", ".yml", ".yaml"]},
+    {"name": "Quarkus", "regex": "io\\.quarkus|quarkus", "regexFlag": "1", "fileExtensions": [".java", ".properties", ".yml", ".yaml"]}
+  ],
+  "PHP": [
+    {"name": "WordPress", "regex": "wp-config\\.php|wordpress", "regexFlag": "1", "fileExtensions": [".php", "*"]},
+    {"name": "Drupal", "regex": "\\bdrupal\\b", "regexFlag": "1", "fileExtensions": [".php", "*"]},
+    {"name": "Joomla", "regex": "\\bjoomla\\b", "regexFlag": "1", "fileExtensions": [".php", "*"]},
+    {"name": "Laravel", "regex": "\\blaravel\\b|artisan|Illuminate\\\\", "regexFlag": "1", "fileExtensions": [".php", "*"]},
+    {"name": "CodeIgniter", "regex": "codeigniter", "regexFlag": "1", "fileExtensions": [".php", "*"]},
+    {"name": "Magento", "regex": "\\bmagento\\b", "regexFlag": "1", "fileExtensions": [".php", "*"]},
+    {"name": "Symfony", "regex": "\\bsymfony\\b|Symfony\\\\", "regexFlag": "1", "fileExtensions": [".php", "*"]},
+    {"name": "Yii", "regex": "\\byii\\b|Yii::", "regexFlag": "1", "fileExtensions": [".php", "*"]},
+    {"name": "CakePHP", "regex": "cakephp|Cake\\\\", "regexFlag": "1", "fileExtensions": [".php", "*"]},
+    {"name": "Zend/Laminas", "regex": "zendframework|laminas", "regexFlag": "1", "fileExtensions": [".php", "*"]}
+  ],
+  "Ruby": [
+    {"name": "Ruby on Rails", "regex": "\\brails\\b|config\\/application\\.rb", "regexFlag": "1", "fileExtensions": [".rb", "*"]},
+    {"name": "Sinatra", "regex": "require\\s+['\"]sinatra['\"]", "regexFlag": "1", "fileExtensions": [".rb"]},
+    {"name": "Hanami", "regex": "require\\s+['\"]hanami['\"]|\\bHanami::", "regexFlag": "1", "fileExtensions": [".rb"]}
+  ],
+  "C#": [
+    {"name": "ASP.NET", "regex": "System\\.Web|Microsoft\\.AspNet", "regexFlag": "1", "fileExtensions": [".cs", ".csproj", "*"]},
+    {"name": "Entity Framework", "regex": "EntityFramework|DbContext", "regexFlag": "1", "fileExtensions": [".cs"]},
+    {"name": "Blazor", "regex": "\\.razor$|Microsoft\\.AspNetCore\\.Components", "regexFlag": "1", "fileExtensions": [".razor", ".cs", "*"]}
+  ],
+  ".NET": [
+    {"name": "ASP.NET Core", "regex": "Microsoft\\.AspNetCore|WebApplication\\.CreateBuilder", "regexFlag": "1", "fileExtensions": [".cs", ".csproj", "*"]},
+    {"name": "Entity Framework", "regex": "Microsoft\\.EntityFrameworkCore|DbContext", "regexFlag": "1", "fileExtensions": [".cs"]},
+    {"name": "MAUI", "regex": "UseMauiApp|MauiProgram", "regexFlag": "1", "fileExtensions": [".cs", ".csproj", "*"]},
+    {"name": "Xamarin", "regex": "Xamarin\\.|monoandroid|xamarinios", "regexFlag": "1", "fileExtensions": [".cs", ".csproj", "*"]}
+  ],
+  "Go": [
+    {"name": "Gin", "regex": "github\\.com/gin-gonic/gin", "regexFlag": "1", "fileExtensions": [".go", "*"]},
+    {"name": "Echo", "regex": "github\\.com/labstack/echo", "regexFlag": "1", "fileExtensions": [".go", "*"]},
+    {"name": "Fiber", "regex": "github\\.com/gofiber/fiber", "regexFlag": "1", "fileExtensions": [".go", "*"]},
+    {"name": "Beego", "regex": "github\\.com/beego/beego", "regexFlag": "1", "fileExtensions": [".go", "*"]},
+    {"name": "Chi", "regex": "github\\.com/go-chi/chi", "regexFlag": "1", "fileExtensions": [".go", "*"]}
+  ],
+  "Rust": [
+    {"name": "Rocket", "regex": "\\brocket\\b", "regexFlag": "1", "fileExtensions": [".rs", "*"]},
+    {"name": "Actix", "regex": "\\bactix\\b", "regexFlag": "1", "fileExtensions": [".rs", "*"]},
+    {"name": "Axum", "regex": "\\baxum\\b", "regexFlag": "1", "fileExtensions": [".rs", "*"]},
+    {"name": "Warp", "regex": "\\bwarp\\b", "regexFlag": "1", "fileExtensions": [".rs", "*"]}
+  ],
+  "Kotlin": [
+    {"name": "Ktor", "regex": "\\bio\\.ktor\\b", "regexFlag": "1", "fileExtensions": [".kt", ".kts"]},
+    {"name": "Spring (Kotlin)", "regex": "org\\.springframework", "regexFlag": "1", "fileExtensions": [".kt", ".kts"]},
+    {"name": "Android Jetpack", "regex": "androidx\\.|compose\\.|RoomDatabase", "regexFlag": "1", "fileExtensions": [".kt", ".kts", "*"]},
+    {"name": "Kotlin Multiplatform", "regex": "kotlin\\(\\\"multiplatform\\\"\\)|kotlin-multiplatform", "regexFlag": "1", "fileExtensions": [".kts", ".gradle", "*"]}
+  ],
+  "Swift": [
+    {"name": "SwiftUI", "regex": "import\\s+SwiftUI|@main\\s+struct", "regexFlag": "1", "fileExtensions": [".swift"]},
+    {"name": "UIKit", "regex": "import\\s+UIKit|UIViewController", "regexFlag": "1", "fileExtensions": [".swift"]}
+  ],
+  "Dart": [
+    {"name": "Flutter", "regex": "package:flutter/|MaterialApp\\(|CupertinoApp\\(", "regexFlag": "1", "fileExtensions": [".dart", ".yaml", "*"]}
+  ]
 }
-  

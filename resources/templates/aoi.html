@@ -27,6 +27,12 @@
             </h3>
 
             <p><b>Rule Description</b>  : {{ snippet["rule_desc"] }}</p>
+            {% if snippet["category"] %}
+            <p><b>Issue Category</b>  : {{ snippet["category"] }}</p>
+            {% endif %}
+            {% if snippet["issue_scope"] %}
+            <p><b>Issue Scope</b>     : {{ snippet["issue_scope"] }}</p>
+            {% endif %}
             <p><b>Issue Description</b> : {{ snippet["issue_desc"] }}</p>
             <p><b>Developer Note</b>    : {{ snippet["dev_note"] }}</p>
             <p><b>Reviewer Note</b>     : {{ snippet["rev_note"] }}</p>

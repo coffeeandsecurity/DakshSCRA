@@ -1,12 +1,52 @@
-exclude
+# -----------------------------
+# Python bytecode and caches
+# -----------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# -----------------------------
+# Virtual environments
+# -----------------------------
+venv/
+.venv/
+env/
+
+# -----------------------------
+# Runtime and generated outputs
+# -----------------------------
 runtime/*
-venv*
-*.pyc
-modules/__pycache__/
-modules/*pycache*
 reports/html/
 reports/pdf/
 reports/text/
-reports/!Sample-Reports
-web
+reports/json/
+reports/analysis/
+
+!reports/!Sample-Reports/
+!reports/!Sample-Reports/**
+
+# -----------------------------
+# Local environment/secrets
+# -----------------------------
+.env
+.env.*
+!.env.example
+
+# -----------------------------
+# Editor/OS artifacts
+# -----------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# -----------------------------
+# Legacy/local-only paths
+# -----------------------------
+/exclude/
+/exclude/**
+daksh-web/
+docs/
 Dockerfile

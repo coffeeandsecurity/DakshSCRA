@@ -15,6 +15,13 @@ import core.parser as parser
 import core.recon as rec
 import core.reports as report
 
+from core.analysis.php import analyzer as php_analysis
+from core.analysis.dotnet import analyzer as dotnet_analysis
+from core.analysis.java import analyzer as java_analysis
+from core.analysis.python import analyzer as py_analysis
+from core.analysis.javascript import analyzer as js_analysis
+from core.analysis.golang import analyzer as go_analysis
+
 import state.constants as constants
 import state.runtime_state as state
 
@@ -24,84 +31,119 @@ import utils.file_utils as futils
 import utils.result_utils as result
 import utils.rules_utils as rutils
 import utils.string_utils as strutils
+import utils.suppression_utils as supp
 from utils.cli_utils import spinner
 from utils.config_utils import get_tool_version
 
 
 version = get_tool_version()
 
-# ---- Initilisation ----- 
-# Current directory of the python file
+# ---- Initilisation -----
 root_dir = os.path.dirname(os.path.realpath(__file__))
 state.root_dir = root_dir         # initialise global root directory which is referenced at multiple locations
 
-futils.dirCleanup("runtime")
-futils.dirCleanup("runtime/platform")
-futils.dirCleanup("reports/html")
-futils.dirCleanup("reports/text")
-futils.dirCleanup("reports/pdf")
+futils.dir_cleanup("runtime")
+futils.dir_cleanup("runtime/platform")
+futils.dir_cleanup("reports/html")
+futils.dir_cleanup("reports/pdf")
+futils.dir_cleanup("reports/json")
+futils.dir_cleanup_recursive("reports/analysis")
 # ------------------------- #
 
-args = argparse.ArgumentParser()
+args = cli.DakshArgumentParser(
+    prog="dakshscra.py",
+    description=(
+        "Source Code Review Assist for rule-based scanning, reconnaissance,\n"
+        "and effort estimation."
+    ),
+    formatter_class=cli.DakshHelpFormatter,
+    epilog=(
+        "Examples:\n"
+        "  dakshscra.py -r php -t ./src\n"
+        "  dakshscra.py -r php,cpp -vv -t /path/to/code\n"
+        "  dakshscra.py -r auto -t ./codebase\n"
+        "  dakshscra.py -recon -t ./api\n"
+        "  dakshscra.py -recon -rs -t ./mobile_app\n"
+        "  dakshscra.py -recon -r java -t ./javaapp\n"
+        "  dakshscra.py -r dotnet -f dotnet -t ./dotnetapp\n"
+        "  dakshscra.py -l RF\n\n"
+        "Notes:\n"
+        "  - If -f is not provided, default filetypes for selected platform(s) are used.\n"
+        "  - Use -r auto to detect file types and auto-apply relevant platform rules.\n"
+        "  - Use -recon alone to detect technology stack without scanning.\n"
+        "  - Use -rs (or --recon-strict) with -recon for high-confidence recon output."
+    ),
+)
 
-args.add_argument('-r', type=str, action='store', dest='rule_file', required=False,
-                  help='Specify platform-specific rule name')
+scan_group = args.add_argument_group("Scan options")
+mode_group = args.add_argument_group("Mode options")
+output_group = args.add_argument_group("Output options")
+advanced_group = args.add_argument_group("Advanced options")
 
-args.add_argument('-f', type=str, action='store', dest='file_types', required=False,
-                  help='Specify file types to scan')
+scan_group.add_argument('-r', type=str, action='store', dest='rule_file', required=False,
+                        metavar='RULES',
+                        help='Platform rules (e.g. php,java,cpp) or "auto"')
 
-args.add_argument('-v', action='count', dest='verbosity', default=0,
-                  help="Specify verbosity level {'-v', '-vv', '-vvv'}")
+scan_group.add_argument('-f', type=str, action='store', dest='file_types', required=False,
+                        metavar='FILE_TYPES',
+                        help='Override default filetypes for scanning')
 
-args.add_argument('-t', type=str, action='store', dest='target_dir', required=False,
-                  help='Specify target directory path')
+scan_group.add_argument('-v', action='count', dest='verbosity', default=0,
+                        help='Verbosity level (-v, -vv, -vvv)')
 
-args.add_argument('-l', '--list', type=str, action='store', dest='rules_filetypes',
-                  required=False, choices=['R', 'RF'],
-                  help='List rules [R] OR rules and filetypes [RF]')
+scan_group.add_argument('-t', type=str, action='store', dest='target_dir', required=False,
+                        metavar='TARGET_DIR',
+                        help='Target source code directory')
 
-args.add_argument('-recon', action='store_true', dest='recon',
-                  help="Detect platform, framework, and programming language used")
+mode_group.add_argument('-l', '--list', type=str, action='store', dest='rules_filetypes',
+                        required=False, choices=['R', 'RF'], metavar='{R,RF}',
+                        help='List rules [R] or rules + filetypes [RF]')
 
-args.add_argument('-estimate', action='store_true', dest='estimate',
-                  help="Estimate efforts required for code review")
+mode_group.add_argument('-recon', action='store_true', dest='recon',
+                        help='Run reconnaissance (platform/framework/language detection)')
 
-args.add_argument('-rpt', '--report', type=str, action='store', dest='report_format',
-                  default='html,pdf',
-                  help="Report types to generate: html, pdf, or html,pdf (default: html,pdf)")
+mode_group.add_argument('-rs', '-recons', '--recon-strict', action='store_true', dest='recon_strict',
+                        help='Strict recon filter (use with -recon): high-confidence framework/platform detections only')
 
+mode_group.add_argument('-estimate', action='store_true', dest='estimate',
+                        help='Estimate code review effort based on codebase size')
 
+output_group.add_argument('-rpt', '--report', type=str, action='store', dest='report_format',
+                          default='html,pdf', metavar='FORMATS',
+                          help='Report types: html, pdf, or html,pdf')
 
-# Parse arguments with error handling
+advanced_group.add_argument('--analysis', '--analyse', action='store_true', dest='analysis',
+                            help='Run experimental data/control flow analysis')
 
-try:
-    results = args.parse_args()
-except argparse.ArgumentError as e:
-    print("\nError: Invalid option provided.")
-    #args.print_help()
-    cli.toolUsage('invalid_option')
-    sys.exit(1)
+advanced_group.add_argument('--loc', action='store_true', dest='loc',
+                            help='Count effective lines of code (may add scan time)')
 
+advanced_group.add_argument('--baseline-file', type=str, dest='baseline_file',
+                            default=str(state.suppressionBaseline), metavar='PATH',
+                            help='Suppression baseline file (JSON)')
+
+advanced_group.add_argument('--baseline-generate', action='store_true', dest='baseline_generate',
+                            help='Generate suppression baseline from current findings')
+
+advanced_group.add_argument('--no-baseline', action='store_true', dest='no_baseline',
+                            help='Disable baseline suppression for this run')
 
 # Display help if no arguments are passed
-if not results or len(sys.argv) < 2:
-    #args.print_help()
-    cli.toolUsage('invalid_option')
+if len(sys.argv) < 2:
+    args.print_help()
     sys.exit(1)
 
-# Preserve original rule argument for display/logging purposes
+# Parse arguments with error handling
+results = args.parse_args()
+
 original_rule_file = results.rule_file
 
-'''
-# If '-r auto' is passed, resolve it into supported rule types
-if original_rule_file and original_rule_file.lower() == "auto":
-    #resolved_rule_list = rutils.getAvailableRules(exclude=["common"])
-    detected = discover.autoDetectRuleTypes(results.target_dir)
-    results.rule_file = detected
-    results.file_types = detected
-    #print(f"    [DEBUG] Target Dir: {str(results.target_dir)}")
-    #print(f"    [DEBUG] Detected File Types: {str(detected)}")
-'''
+# Normalize target path early so every stage uses the same canonical location.
+if results.target_dir:
+    try:
+        results.target_dir = str(Path(results.target_dir).expanduser().resolve())
+    except OSError:
+        pass
 
 # Remove duplicates in rule_file and file_types
 results.rule_file = strutils.remove_duplicates(results.rule_file)
@@ -111,172 +153,125 @@ results.file_types = strutils.remove_duplicates(results.file_types)
 if results.rule_file and not results.file_types:
     results.file_types = results.rule_file.lower()
 
-
 elif results.recon:
-
     if not results.target_dir:
         print("You must specify the target directory using -t option.\n")
         sys.exit(1)
 
-elif results.rules_filetypes != None:       
-    rutils.listRulesFiletypes(results.rules_filetypes)    # List available rules and/or supported filetypes
-    sys.exit(1)
+elif results.rules_filetypes is not None:
+    rutils.list_rules_filetypes(results.rules_filetypes)
+    sys.exit(0)
 
-
-# Priority #1 - If '-recon' option used but no rule file is specified then only recon must be performed
+# Priority #1 - recon/estimate only
 if (results.recon or results.estimate) and results.target_dir and not results.rule_file:
-    #print(constants.author)
     print(constants.AUTHOR_BANNER.format(version=version))
-
-    # Check if the directory path is valid
-    if path.isdir(results.target_dir) == False: 
+    if not path.isdir(results.target_dir):
         print("\nInvalid target directory :" + results.target_dir + "\n")
-        #args.print_usage()
-        cli.toolUsage("invalid_dir")
+        cli.tool_usage("invalid_dir")
+        sys.exit(1)
+    targetdir = results.target_dir
+    if results.recon and not results.estimate:
+        rec.recon(targetdir, False, strict_mode=results.recon_strict)
+        sys.exit(1)
+    elif results.estimate and not results.recon:
+        _, recSummary = rec.recon(targetdir, False, strict_mode=results.recon_strict)
+        estimate.effort_estimator(recSummary)
         sys.exit(1)
     else:
-        targetdir = results.target_dir
-        
-        # Perform recon and/or estimate based on the options used
-        if results.recon and not results.estimate:
-            log_filepaths, _ = rec.recon(targetdir, False)
-            sys.exit(1)
-        elif results.estimate and not results.recon:
-            log_filepaths, recSummary = rec.recon(targetdir, False)
-            estimate.effortEstimator(recSummary)
-            sys.exit(1)
-        else:  # If both '-recon' and '-estimate' options are used
-            log_filepaths, recSummary = rec.recon(targetdir, False)
-            estimate.effortEstimator(recSummary) 
-            sys.exit(1)
+        _, recSummary = rec.recon(targetdir, False, strict_mode=results.recon_strict)
+        estimate.effort_estimator(recSummary)
+        sys.exit(1)
 
-# Priority #2 - Check if '-r' (rule type) is set
+# Priority #2 - rule based scan
 elif results.rule_file:
-
-    if not results.file_types:        # If filetypes is not specified then default to platform specific filetypes
-        results.file_types = results.rule_file.lower()              # Set filetypes as the rules option specified
-    
+    if not results.file_types:
+        results.file_types = results.rule_file.lower()
     if not results.target_dir:
         print("You must specify the target directory using -t option")
         sys.exit(1)
 
-    # Determine what to display for inputs
     display_rule_file = "auto" if original_rule_file and original_rule_file.lower() == "auto" else results.rule_file.lower()
     display_file_types = "auto" if original_rule_file and original_rule_file.lower() == "auto" else results.file_types.lower()
 
-    if results.file_types and results.rule_file and results.target_dir:
-        print(constants.AUTHOR_BANNER.format(version=version))
+    print(constants.AUTHOR_BANNER.format(version=version))
+    cli.section_print(f"[*] Inputs & Rule Selection")
+    print(f"     [-] Rule Selected        : {display_rule_file!r}")
+    print(f"     [-] File Types Selected  : {display_file_types!r}")
+    print(f"     [-] Target Directory     : {results.target_dir}")
 
-        cli.section_print(f"[*] Inputs & Rule Selection")
-        print(f"     [-] Rule Selected        : {display_rule_file!r}")
-        print(f"     [-] File Types Selected  : {display_file_types!r}")
-        print(f"     [-] Target Directory     : {results.target_dir}")
+    result.update_scan_summary("inputs_received.rule_selected", display_rule_file)
+    result.update_scan_summary("inputs_received.filetypes_selected", display_file_types)
+    result.update_scan_summary("inputs_received.target_directory", results.target_dir)
 
-        '''
-        result.updateScanSummary("inputs_received.rule_selected", results.rule_file.lower())
-        result.updateScanSummary("inputs_received.filetypes_selected", results.file_types.lower())
-        '''
-        result.updateScanSummary("inputs_received.rule_selected", display_rule_file)
-        result.updateScanSummary("inputs_received.filetypes_selected", display_file_types)
-        result.updateScanSummary("inputs_received.target_directory", results.target_dir)
-
-        # Load or prompt for project name and subtitle
-        cutils.init_or_prompt_project_config()
-        '''
-        # Prompt the user to enter project name and subtitle
-        project_name = input("     [-] Enter Project Name (e.g., XYZ Portal): ")
-        project_subtitle = input("     [-] Enter Project Subtitle (e.g., v1.0.1 / XYZ Corp): ")
-        cutils.updateProjectConfig(project_name,project_subtitle)     # Update project details
-        '''
+    cutils.init_or_prompt_project_config()
     if str(results.verbosity) in ('1', '2', '3'):
         state.verbosity = results.verbosity
         print(f"     [-] Verbosity Level      : {results.verbosity}")
     else:
         print(f"     [-] Verbosity Level      : Default [1]")
 
-
 # Check if the directory path is valid
-if path.isdir(results.target_dir) == False: 
+if path.isdir(results.target_dir) is False:
     print("\nInvalid target directory :" + results.target_dir + "\n")
-    #args.print_usage()
-    cli.toolUsage("invalid_dir")
+    cli.tool_usage("invalid_dir")
     sys.exit(1)
 
-# Add the trailing slash ('/' or '\') to the path if missing. This is required to treat it as a directory.
 project_dir = os.path.join(results.target_dir, '')
-
-# The regex matches the last trailing slash ('/' or '\') and then reverse search until the next trailing slash is found
 state.sourcedir = re.search(r'((?!\/|\\).)*(\/|\\)$', project_dir)[0]        # Target Source Code Directory
 
-# utils.dirCleanup("runtime")    
-
-# Current directory of the python file
 root_dir = os.path.dirname(os.path.realpath(__file__))
 state.root_dir = root_dir
+state.suppressionBaseline = Path(results.baseline_file)
 
-# If '-r auto' is passed, resolve it into supported rule types
+if results.no_baseline:
+    state.suppressions = []
+    print("     [-] Baseline Suppression : Disabled")
+else:
+    # For baseline generation mode, scan raw findings and generate baseline from those findings.
+    if results.baseline_generate:
+        state.suppressions = []
+        print(f"     [-] Baseline Mode        : Generate ({state.suppressionBaseline})")
+    else:
+        state.suppressions = supp.load_suppressions(state.suppressionBaseline)
+        print(f"     [-] Baseline Loaded      : {len(state.suppressions)} suppression entries")
+
+# Auto-detect rule types
 if original_rule_file and original_rule_file.lower() == "auto":
-    #cli.section_print(f"[*] Auto-detecting applicable platform types...")
     print("     [-] Auto-detecting applicable platform types... ", end="", flush=True)
     spinner("start")
-
-    detected = discover.autoDetectRuleTypes(results.target_dir)
+    detected = discover.auto_detect_rule_types(results.target_dir)
     results.rule_file = detected
     results.file_types = detected
     spinner("stop")
-
     print(f"     [-] Detected Platform(s) : {detected}")
 
-# List of file types to enumerate before scanning using rules
 codebase = results.file_types
 
-# Store rule name and corresponding full path in a dictionary
-
-# Verify if the rule name(s) are valid
+# Verify rule names
 rule_files = {}
 for rule_name in results.rule_file.split(','):
-    rule_paths = rutils.getRulesPath_OR_FileTypes(rule_name.strip(), "rules")
-    
+    rule_paths = rutils.get_rules_path_or_filetypes(rule_name.strip(), "rules")
     if not rule_paths:
         print("\nError: Invalid rule name or no path found:", rule_name.strip())
         sys.exit()
-    else:
-        # Construct full path and store it in the dictionary under the rule name
-        full_path = Path(str(state.rulesRootDir) + rule_paths)  # Use the entire string
-        rule_files[rule_name.strip()] = full_path
+    full_path = Path(str(state.rulesRootDir) + rule_paths)
+    rule_files[rule_name.strip()] = full_path
 
-rules_main = rule_files     # Assign the rule files dictionary to rules main which will be later used in the program
-
-# Initialize lists for storing rule paths and counts with platform names
-rule_paths_str = []     # Collect rule paths as strings (for logging/debugging)
-rule_counts = []        # Collect rule counts (for JSON update)
-platform_rules_list = []  # List to store formatted platform specific rules with counts
-
-# Iterate through the rules and collect paths + counts
+rules_main = rule_files
+rule_paths_str = []
+rule_counts = []
+platform_rules_list = []
 for rule_name, rule_path in rules_main.items():
-    #print(f"    [DEBUG] Rule Name: {rule_name}")
-    #print(f"    [DEBUG] Path: {Path(str(rule_path))}")
-    
-    # Add rule path to the list for logging purposes
     rule_paths_str.append(str(rule_path))
-    
-    # Get the count of rules for this path
-    count = rutils.rulesCount(Path(str(rule_path)))
-    rule_counts.append(str(count))  # Store as string for easy joining
-
-    # Format each platform with its rule count and add to the list
+    count = rutils.rules_count(Path(str(rule_path)))
+    rule_counts.append(str(count))
     platform_rules_list.append(f"{rule_name}[{count}]")
 
-# Join all rule paths and counts as comma-separated strings
-platform_rules_paths = ", ".join(rule_paths_str)  # Optional for logging if needed
-#platform_rules_total = ", ".join(rule_counts)
-platform_rules_total = ", ".join(platform_rules_list)  # Now in the format "php [32], cpp [25], java [26]"
+platform_rules_paths = ", ".join(rule_paths_str)
+platform_rules_total = ", ".join(platform_rules_list)
 
-# Handle common rules and their count
-rules_common = Path(str(state.rulesRootDir) + rutils.getRulesPath_OR_FileTypes("common", "rules"))
-common_rules_total = rutils.rulesCount(rules_common)
-
-# Total loaded rules (platform + common)
+rules_common = Path(str(state.rulesRootDir) + rutils.get_rules_path_or_filetypes("common", "rules"))
+common_rules_total = rutils.rules_count(rules_common)
 total_rules_loaded = sum(map(int, rule_counts)) + common_rules_total
 
 cli.section_print(f"[*] Rules Loaded")
@@ -284,149 +279,164 @@ print(f"     [-] Platform Rules       : {platform_rules_total}")
 print(f"     [-] Common Rules         : {common_rules_total}")
 print(f"     [-] Total Rules Loaded   : {total_rules_loaded}")
 
-# Update Scan Summary JSON file - Loaded rules count
-result.updateScanSummary("inputs_received.platform_specific_rules", platform_rules_total)
-result.updateScanSummary("inputs_received.common_rules", str(common_rules_total))
-result.updateScanSummary("inputs_received.total_rules_loaded", str(total_rules_loaded))
+result.update_scan_summary("inputs_received.platform_specific_rules", platform_rules_total)
+result.update_scan_summary("inputs_received.common_rules", str(common_rules_total))
+result.update_scan_summary("inputs_received.total_rules_loaded", str(total_rules_loaded))
 
-# Source Code Dirctory Path
 sourcepath = Path(results.target_dir)
-
-state.start_time = time.time()  # This time will be used to calculate total time taken for the scan
+state.start_time = time.time()
 state.start_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-sCnt = 0    # Stage counter
+sCnt = 0
 cli.section_print("[*] Scanner Initiated")
 
 ###### [Stage #] File Path Discovery ######
-sCnt+=1
+sCnt += 1
 if results.recon:
-        cli.section_print(f"[*] [Stage {sCnt}] Reconnaissance (a.k.a Software Composition Analysis)")         # Stage 1
-        targetdir = results.target_dir
-        rec.recon(targetdir, True)
+    cli.section_print(f"[*] [Stage {sCnt}] Reconnaissance (a.k.a Software Composition Analysis)")
+    rec.recon(results.target_dir, True, strict_mode=results.recon_strict)
+    sCnt += 1
+    cli.section_print(f"[*] [Stage {sCnt}] File Path Discovery")
+    master_file_paths, platform_file_paths = discover.discover_files(codebase, sourcepath, 1)
+else:
+    cli.section_print(f"[*] [Stage {sCnt}] File Path Discovery")
+    master_file_paths, platform_file_paths = discover.discover_files(codebase, sourcepath, 1)
 
-        sCnt+=1
-        cli.section_print(f"[*] [Stage {sCnt}] File Path Discovery")    # Stage 2
-        master_file_paths, platform_file_paths = discover.discoverFiles(codebase, sourcepath, 1)
-else: 
-    cli.section_print(f"[*] [Stage {sCnt}] File Path Discovery")        # Stage 1
-    master_file_paths, platform_file_paths = discover.discoverFiles(codebase, sourcepath, 1)
-
-
-###### [Stage 2 or 3] Rules, or Pattern Matching & Analysis - Parse Source Code ######
-sCnt+=1
+###### [Stage 2 or 3] Pattern Matching & Analysis ######
+sCnt += 1
 cli.section_print(f"[*] [Stage {sCnt}] Pattern Matching & Analysis")
-
-# Ensure the directory structure exists. If it doesn't then create necessary directory structure.
-output_directory = os.path.dirname(state.outputAoI)
-os.makedirs(output_directory, exist_ok=True)
+os.makedirs(os.path.dirname(state.outputAoI_JSON), exist_ok=True)
 
 source_matched_rules = []
 source_unmatched_rules = []
 
-with open(state.outputAoI, "w", encoding="utf-8") as f_scanout:
-    
-    # Only run platform-specific rules if the rule file is NOT 'common'
-    if results.rule_file.lower() not in ['common']:
-        # Iterate through each platform in the rules_main dictionary
-        for index, (platform, rules_main_path) in enumerate(rules_main.items()):
-            # Ensure the index matches the file path list
-            if index < len(platform_file_paths):
-                platform_file_path = platform_file_paths[index]
+# Platform-specific rules
+if results.rule_file.lower() not in ['common']:
+    for index, (platform, rules_main_path) in enumerate(rules_main.items()):
+        if index < len(platform_file_paths):
+            platform_file_path = platform_file_paths[index]
+            print(f"\033[92m     --> Applying rules for {platform} \033[0m")
+            with open(platform_file_path, 'r', encoding=futils.detect_encoding_type(platform_file_path)) as f_targetfiles:
+                matched, unmatched = parser.source_parser(
+                    rules_main_path, f_targetfiles, outputfile=None, findings_json_path=state.outputAoI_JSON
+                )
+                source_matched_rules.extend(matched)
+                source_unmatched_rules.extend(unmatched)
+                f_targetfiles.seek(0)
 
-                print(f"\033[92m     --> Applying rules for {platform} \033[0m")
-                
-                # Debug print statement to check what is passed to sourceParser
-                # print(f"[DEBUG] Platform: {platform}, Rules Path: {rules_main_path}, File Path: {platform_file_path}")
+# Common rules
+print("\033[92m     --> Applying common (platform-independent) rules \033[0m")
+with open(master_file_paths, 'r', encoding=futils.detect_encoding_type(master_file_paths)) as f_targetfiles:
+    common_matched_rules, common_unmatched_rules = parser.source_parser(
+        rules_common, f_targetfiles, outputfile=None, findings_json_path=state.outputAoI_JSON
+    )
 
-                with open(platform_file_path, 'r', encoding=futils.detectEncodingType(platform_file_path)) as f_targetfiles:
-                    # Call sourceParser for each platform's rules
-                    matched, unmatched = parser.sourceParser(rules_main_path, f_targetfiles, f_scanout)
+source_matched_rules.extend(common_matched_rules)
+source_unmatched_rules.extend(common_unmatched_rules)
+print("\033[92m     --- Pattern Matching Summary ---\033[0m")
 
-                    # Store individual platform results
-                    source_matched_rules.extend(matched)
-                    source_unmatched_rules.extend(unmatched)
-
-                    # Reset target file pointer after each pass to allow re-reading
-                    f_targetfiles.seek(0)
-
-    # Apply common (platform-independent) rules
-    print("\033[92m     --> Applying common (platform-independent) rules \033[0m")
-    with open(master_file_paths, 'r', encoding=futils.detectEncodingType(master_file_paths)) as f_targetfiles:
-        common_matched_rules, common_unmatched_rules = parser.sourceParser(rules_common, f_targetfiles, f_scanout)
-
-    # Aggregate common rule results with platform-specific results (if any)
-    source_matched_rules.extend(common_matched_rules)
-    source_unmatched_rules.extend(common_unmatched_rules)
-
-    print("\033[92m     --- Pattern Matching Summary ---\033[0m")
-
-# Update the scan summary JSON file with the aggregated matched and unmatched patterns
-result.updateScanSummary("source_files_scanning_summary.matched_rules", source_matched_rules)
-result.updateScanSummary("source_files_scanning_summary.unmatched_rules", source_unmatched_rules)
-
+result.update_scan_summary("source_files_scanning_summary.matched_rules", source_matched_rules)
+result.update_scan_summary("source_files_scanning_summary.unmatched_rules", source_unmatched_rules)
 
 print("     [-] Total Files Scanned:", str(state.totalFilesIdentified - state.parseErrorCnt))
-result.updateScanSummary("detection_summary.total_files_scanned", str(state.totalFilesIdentified - state.parseErrorCnt))
-result.updateScanSummary("detection_summary.areas_of_interest_identified", str(state.rulesMatchCnt))
-
+result.update_scan_summary("detection_summary.total_files_scanned", str(state.totalFilesIdentified - state.parseErrorCnt))
+result.update_scan_summary("detection_summary.areas_of_interest_identified", str(state.rulesMatchCnt))
+result.update_scan_summary("detection_summary.suppressed_findings", str(state.suppressedFindingsCnt))
 print("     [-] Total matched rules:", len(source_matched_rules))
 print("     [-] Total unmatched rules:", len(source_unmatched_rules))
+print("     [-] Total suppressed hits:", state.suppressedFindingsCnt)
 
 ###### [Stage 3 or 4] Parse File Paths for areas of interest ######
-sCnt+=1
+sCnt += 1
 cli.section_print(f"[*] [Stage {sCnt}] Identifying Areas of Interest")
 
-with open(state.outputAoI_Fpaths, "w", encoding="utf-8") as f_scanout:
-    with open(master_file_paths, 'r', encoding=futils.detectEncodingType(master_file_paths)) as f_targetfiles:
-        rule_no = 1
-        matched_rules, unmatched_rules = parser.pathsParser(state.rulesFpaths, f_targetfiles, f_scanout, rule_no)
-    
-    print("     [-] Total matched rules:", len(matched_rules))
-    print("     [-] Total unmatched rules:", len(unmatched_rules))
+with open(master_file_paths, 'r', encoding=futils.detect_encoding_type(master_file_paths)) as f_targetfiles:
+    rule_no = 1
+    matched_rules, unmatched_rules = parser.paths_parser(
+        state.rulesFpaths, f_targetfiles, outputfile=None, rule_no=rule_no, findings_json_path=state.outputAoI_Fpaths_JSON
+    )
 
-    # Update the scan summary JSON file with the matched and unmatched patterns
-    result.updateScanSummary("paths_scanning_summary.matched_rules", matched_rules)
-    result.updateScanSummary("paths_scanning_summary.unmatched_rules", unmatched_rules)
+print("     [-] Total matched rules:", len(matched_rules))
+print("     [-] Total unmatched rules:", len(unmatched_rules))
+result.update_scan_summary("paths_scanning_summary.matched_rules", matched_rules)
+result.update_scan_summary("paths_scanning_summary.unmatched_rules", unmatched_rules)
 
+result.update_scan_summary("detection_summary.file_paths_areas_of_interest_identified", str(state.rulesPathsMatchCnt))
 
-result.updateScanSummary("detection_summary.file_paths_areas_of_interest_identified", str(state.rulesPathsMatchCnt))
-
-futils.cleanFilePaths(master_file_paths)
-os.unlink(master_file_paths)        # Delete the temp file paths log after the path cleanup in the above step
+total_loc = futils.clean_file_paths(master_file_paths, count_loc=bool(results.loc))
+if total_loc is not None:
+    result.update_scan_summary("detection_summary.total_loc", str(total_loc))
+os.unlink(master_file_paths)
 
 cli.section_print(f"[*] Scanning Timeline")
 print("    [-] Scan start time     : " + str(state.start_timestamp))
 end_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 print("    [-] Scan end time       : " + str(end_timestamp))
-
 hours, rem = divmod(time.time() - state.start_time, 3600)
 minutes, seconds = divmod(rem, 60)
 seconds, milliseconds = str(seconds).split('.')
 scan_duration = "{:0>2}Hr:{:0>2}Min:{:0>2}s:{}ms".format(int(hours), int(minutes), seconds, milliseconds[:3])
 print(f"    [-] Scan completed in   : {scan_duration}")
 
-# Update Scan Summary JSON file - Timeline
-result.updateScanSummary("scanning_timeline.scan_start_time", state.start_timestamp)
-result.updateScanSummary("scanning_timeline.scan_end_time",  end_timestamp)
-result.updateScanSummary("scanning_timeline.scan_duration", scan_duration)
+result.update_scan_summary("scanning_timeline.scan_start_time", state.start_timestamp)
+result.update_scan_summary("scanning_timeline.scan_end_time", end_timestamp)
+result.update_scan_summary("scanning_timeline.scan_duration", scan_duration)
 
-# Parse the JSON Summary file and write output to a text file
-parser.genScanSummaryText(state.scanSummary_Fpath)
+parser.gen_scan_summary_text(state.scanSummary_Fpath)
 
-
+if results.baseline_generate:
+    baseline_count = supp.build_baseline_from_findings(state.outputAoI_JSON, state.suppressionBaseline)
+    print(f"     [-] Baseline generated   : {baseline_count} entries")
 
 ###### [Stage 4] Generate Reports ######
-#report.genReport()
 valid_formats = {"html", "pdf"}
 requested_formats = results.report_format.lower().replace(" ", "").split(",")
 selected_formats = [fmt for fmt in requested_formats if fmt in valid_formats]
 
 if selected_formats:
-    report.genReport(formats=",".join(selected_formats))
+    report.gen_report(formats=",".join(selected_formats))
 else:
     print("[!] No valid report format selected. Defaulting to 'html,pdf'.")
-    report.genReport(formats="html,pdf")
+    report.gen_report(formats="html,pdf")
 
-cutils.updateProjectConfig("","")     # Clean up project details in the config file
+# Experimental: dataflow/control flow analysis per platform
+if results.analysis:
+    analyzers = {
+        "python": py_analysis.run,
+        "php": php_analysis.run,
+        "javascript": js_analysis.run,
+        "java": java_analysis.run,
+        "dotnet": dotnet_analysis.run,
+        "golang": go_analysis.run,
+    }
+    platform_aliases = {
+        "py": "python",
+        "python": "python",
+        "php": "php",
+        "js": "javascript",
+        "javascript": "javascript",
+        "node": "javascript",
+        "nodejs": "javascript",
+        "java": "java",
+        "dotnet": "dotnet",
+        ".net": "dotnet",
+        "csharp": "dotnet",
+        "c#": "dotnet",
+        "go": "golang",
+        "golang": "golang",
+    }
+    selected_platforms = {
+        platform_aliases.get(r.strip().lower(), r.strip().lower())
+        for r in results.rule_file.split(",")
+        if r.strip()
+    }
+    for platform, runner in analyzers.items():
+        if platform in selected_platforms and runner:
+            try:
+                flow_json, flow_html = runner(sourcepath)
+                print(f"     [-] {platform.capitalize()} dataflow report (JSON):", re.sub(str(state.root_dir), "", str(flow_json)))
+                print(f"     [-] {platform.capitalize()} dataflow report (HTML):", re.sub(str(state.root_dir), "", str(flow_html)))
+            except Exception as exc:
+                print(f"[!] {platform.capitalize()} dataflow analysis failed: {exc}")
 
+cutils.update_project_config("","")     # Clean up project details in the config file

@@ -82,7 +82,8 @@
     <category name="Information Disclosure">
         <rule>
             <name>Insecure HTTP Communication</name>
-            <regex>http://</regex>
+            <regex><![CDATA[(?i)\b(?:url|uri|endpoint|baseurl|server|host|href|src|fetch|axios|httpclient|xmlhttprequest|request|location|window\.open|redirect)[^\n]{0,220}http://]]></regex>
+            <exclude><![CDATA[(?i)apache\.org/licenses|opensource\.org/licenses|w3\.org|^\s*(//|/\*|\*|#|<!--|~)|\bxmlns=]]></exclude>
             <rule_desc>Detects the use of insecure HTTP communication.</rule_desc>
             <vuln_desc>Using HTTP exposes the application to man-in-the-middle attacks, allowing attackers to intercept or manipulate traffic.</vuln_desc>
             <developer>Use HTTPS for all network communication to ensure secure data transmission. Avoid using HTTP unless explicitly required and justified by the use case.</developer>
@@ -147,8 +148,8 @@
 
         <rule>
             <name>Trusted Or Untrusted URLs</name>
-            <regex>(?i)\bhttps?://[^\s]+</regex>
-                <exclude>(?i).*DOCTYPE\s.*</exclude>
+            <regex><![CDATA[(?i)(?:\b(?:redirect|forward|sendRedirect|Response\.Redirect|res\.redirect|window\.location|location\.href|location\.replace|window\.open|fetch|axios|httpclient|xmlhttprequest|request|href|src)\b[^\n]{0,220}https?://|\b(?:url|uri|endpoint|baseurl|api[_-]?url|callback[_-]?url|redirect[_-]?url|host|server)\b\s*[:=]\s*["']?\s*https?://)]]></regex>
+            <exclude><![CDATA[(?i)^\s*(//|/\*|\*|#|<!--|~)|apache\.org/licenses|opensource\.org/licenses|w3\.org|robots\.stanford\.edu|msdn\.microsoft\.com|\b(?:xml|xmlns|xsd|xsi|schema)\b|DOCTYPE]]></exclude>
             <rule_desc>Detects the presence of URLs in the application that may pose security risks or indicate potential trust issues with third-party URLs.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the presence of URLs starting with http:// or https://, which could potentially pose security risks if not properly handled or validated. These URLs might involve data exfiltration or raise concerns about trusting third-party resources without thorough validation. Developers and reviewers should investigate these URLs to ensure their purpose, legitimacy, and adherence to security practices.</vuln_desc>
             <developer>Developers should list and carefully review all URLs used in the application. They should implement proper URL validation and sanitization techniques to ensure the security and integrity of the application when dealing with user-provided or third-party URLs. It is important to prevent any unintentional exposure of sensitive information and perform thorough taint validation on third-party URLs to mitigate trust-related security risks.</developer>
@@ -157,7 +158,8 @@
         
         <rule>
             <name>Unvalidated Redirects and Forwards</name>
-            <regex>.*\b(redirect|forward)\b.*</regex>
+            <regex><![CDATA[(?i)\b(?:redirect|forward|sendRedirect|Response\.Redirect|res\.redirect|window\.location|location\.href)\s*(?:\(|=)]]></regex>
+            <exclude><![CDATA[(?i)^\s*(//|/\*|\*|#|<!--|~)|\b(?:docs?|readme|changelog)\b]]></exclude>
             <rule_desc>Detects potential unvalidated redirect and forward vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the presence of code patterns that may indicate vulnerabilities in unvalidated redirects and forwards, which can be exploited by attackers to redirect users to malicious websites or perform phishing attacks.</vuln_desc>
             <developer>Developers should validate and sanitize all user-supplied input used in redirect and forward operations. They should also ensure that redirects and forwards are performed only to trusted and authorized destinations.</developer>

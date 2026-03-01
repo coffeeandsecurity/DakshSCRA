@@ -87,7 +87,8 @@
         <!-- Applicable to proguard-rules.pro or R8 configuration files -->
         <rule>
             <name>Missing Obfuscation for Sensitive Classes</name>
-            <regex>-keepclassmembers class .*password.*|.*secret.*</regex>
+            <regex><![CDATA[(?i)-keepclassmembers\s+class\s+[^\n{]*(?:password|secret|token|apikey)[^\n{]*]]></regex>
+            <exclude><![CDATA[(?i)^\s*(#|//|/\*|\*)]]></exclude>
             <rule_desc>Detects missing obfuscation for sensitive classes or methods.</rule_desc>
             <vuln_desc>Lack of obfuscation for sensitive classes makes it easier for attackers to reverse engineer the application and extract sensitive information.</vuln_desc>
             <developer>Ensure that sensitive classes and methods are obfuscated in the Proguard/R8 configuration to prevent reverse engineering.</developer>

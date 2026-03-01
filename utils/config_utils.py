@@ -1,5 +1,6 @@
 # Standard libraries
 import os
+import sys
 import threading
 
 # Third-party libraries
@@ -11,7 +12,13 @@ import state.runtime_state as runtime
 import utils.cli_utils as cli
 
 
-def updateProjectConfig(project_name, project_subtitle):
+def _safe_config_text(value):
+    if value is None:
+        return ""
+    return str(value).strip()
+
+
+def update_project_config(project_name, project_subtitle):
     """
     Update the project title and subtitle in the YAML config file (`config/project.yaml`).
 
@@ -25,11 +32,11 @@ def updateProjectConfig(project_name, project_subtitle):
     if os.path.exists(runtime.projectConfig):
         yaml = YAML()
         with open(runtime.projectConfig, "r") as file:
-            config_data = yaml.load(file)
+            config_data = yaml.load(file) or {}
 
         # Update or set the values
-        config_data["title"] = project_name
-        config_data["subtitle"] = project_subtitle
+        config_data["title"] = _safe_config_text(project_name)
+        config_data["subtitle"] = _safe_config_text(project_subtitle)
 
         with open(runtime.projectConfig, "w") as file:
             yaml.dump(config_data, file)
@@ -73,10 +80,22 @@ def init_or_prompt_project_config():
         return
 
     with open(config_path, 'r') as f:
-        config = yaml.load(f)
+        config = yaml.load(f) or {}
 
-    current_title = config.get('title', '').strip()
-    current_subtitle = config.get('subtitle', '').strip()
+    current_title = _safe_config_text(config.get('title', ''))
+    current_subtitle = _safe_config_text(config.get('subtitle', ''))
+    non_interactive = os.environ.get("DAKSH_NON_INTERACTIVE", "").strip() == "1" or (not sys.stdin.isatty())
+
+    if non_interactive:
+        if not current_title:
+            current_title = "DakshSCRA Scan"
+        if not current_subtitle:
+            current_subtitle = "Automated Run"
+        update_project_config(current_title, current_subtitle)
+        cli.section_print(f"[*] Using Project Configuration (non-interactive mode):")
+        print(f"     ├── Project Name     : {current_title}")
+        print(f"     └── Project Subtitle : {current_subtitle}")
+        return
 
     if current_title and current_subtitle:
         cli.section_print(f"[*] Using Existing Project Configuration:")
@@ -108,5 +127,9 @@ def init_or_prompt_project_config():
     cli.section_print(f"[!] Project details not set or user opted to modify. Provide the following:")
     title = input("     [-] Enter Project Name (e.g., XYZ Portal): ")
     subtitle = input("     [-] Enter Project Subtitle (e.g., v1.0.1 / XYZ Corp): ")
-    updateProjectConfig(title, subtitle)
+    update_project_config(title, subtitle)
     print("     [-] Project configuration updated.\n")
+
+
+# Backward-compatible alias for legacy callers.
+updateProjectConfig = update_project_config

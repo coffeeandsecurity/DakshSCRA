@@ -87,6 +87,33 @@
             <developer>Developers should avoid hardcoding routes in JavaScript code and instead consider using configuration files or dynamic route handling mechanisms. Hardcoding routes can introduce security risks and make the codebase less maintainable. By implementing dynamic routing solutions, developers can improve flexibility, allow for easier configuration changes, and minimize the exposure of sensitive information.</developer>
             <reviewer>Reviewers should verify whether the code contains hardcoded routes and assess the potential security implications. They should ensure that sensitive information, such as internal URLs, API endpoints, or authentication routes, is not exposed through hardcoded routes. Reviewers should also check if the code implements appropriate access control measures and adheres to secure coding practices, such as using configuration files or dynamic routing mechanisms.</reviewer>
         </rule>
+        <rule>
+            <name>Stack Trace or Error Disclosure (Node/Express)</name>
+            <regex><![CDATA[(?i)(res\.(?:send|json|end)\s*\(\s*err(?:or)?\s*\)|console\.(?:log|error)\s*\(\s*err(?:or)?(?:\.stack)?\s*\)|throw\s+new\s+Error\()]]></regex>
+            <rule_desc>Detects Node/Express error-handling patterns that commonly expose internal exception details.</rule_desc>
+            <vuln_desc>Returning raw errors or stack traces can disclose internal paths, libraries, and execution flow to attackers.</vuln_desc>
+            <developer>Return generic client errors and log detailed exceptions only in protected server logs with redaction controls.</developer>
+            <reviewer>Check that production responses do not include raw error objects, stack traces, or sensitive diagnostic details.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Node Runtime Hardening">
+        <rule>
+            <name>Node Inspector Exposed via --inspect</name>
+            <regex><![CDATA[\B--inspect(?:-brk)?(?:=\S+)?\b]]></regex>
+            <rule_desc>Detects Node.js debug inspector flags that may expose a remotely reachable debug endpoint.</rule_desc>
+            <vuln_desc>If debug inspector is exposed beyond localhost, attackers may gain high-impact introspection or code execution capabilities.</vuln_desc>
+            <developer>Disable inspector in production, or bind strictly to localhost behind controlled access and network restrictions.</developer>
+            <reviewer>Verify runtime scripts and deployment manifests do not expose inspector endpoints in production environments.</reviewer>
+        </rule>
+        <rule>
+            <name>Insecure HTTP Parser Enabled</name>
+            <regex><![CDATA[\binsecureHTTPParser\s*:\s*true\b]]></regex>
+            <rule_desc>Detects explicit enablement of Node's insecure HTTP parser option.</rule_desc>
+            <vuln_desc>Using insecure parsing behavior can increase request-smuggling and parser ambiguity risks in proxy/backend chains.</vuln_desc>
+            <developer>Avoid enabling insecure parser options and align HTTP parsing behavior with hardened defaults.</developer>
+            <reviewer>Confirm parser hardening remains enabled across app servers and reverse-proxy boundaries.</reviewer>
+        </rule>
     </category>
     
     <category name="Insecure/Weak Mitigations">

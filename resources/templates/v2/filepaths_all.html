@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="breadcrumbs"><a href="{{ back_link }}">← Back to index</a></div>
+<div class="panel">
+    <h2>All Discovered Filepaths</h2>
+    {% if filepaths %}
+    <div class="list">
+        {% for path in filepaths %}
+        <li class="path">{{ path }}</li>
+        {% endfor %}
+    </div>
+    {% else %}
+        <div class="muted">No filepaths available.</div>
+    {% endif %}
+</div>
+{% endblock %}

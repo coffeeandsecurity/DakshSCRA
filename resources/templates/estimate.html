@@ -1,157 +1,217 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>Code Review Effort Estimation Report</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
-        h1 {
-            color: #0066cc;
-            text-align: center;
-            margin-top: 5px; 
-            margin-bottom: 5px; 
-        }
-        h2 {
-            color: #0066cc;
-            text-align: left;
-            margin-top: 5px; 
-            margin-bottom: 5px;
-        }
-        h3 {
-            color: #000000;
-            margin: 5px 0;
-            text-align: left;
-        }
-        .section-title {
-            color: #000000;
-            font-size: 1.5em;
-            margin-top: 10px;
-            margin-bottom: 5px;
-        }
-        .subsection-title {
-            color: #2F4F4F;
-            font-size: 1.2em;
-            margin-top: 5px;
-            margin-bottom: 5px;
-        }
-        p {
-            margin: 5px 0;
-        }
-        .notes {
-            font-size: 14px;
-            background-color: #f5f5f5; /* Light gray background */
-            padding: 10px; /* Add padding around the Notes section */
-        }
-        .todo-notes {
-            font-size: 14px;
-            background-color: #f5f5f5;
-            padding: 10px;
-        }
-        .language-section {
-            margin-left: 20px;
-        }
-        .center-text {
-            text-align: center;
-        }
-        li {
-            margin-left: 20px; /* Adjust the indentation as needed */
-            padding: 3px 0; /* Add padding before and after the text */
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DakshSCRA - Code Review Effort Estimation</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --text: #1f2a44;
+      --muted: #5f6f8f;
+      --primary: #0369a1;
+      --line: #d8e2f0;
+      --shadow: 0 10px 28px rgba(21, 56, 92, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Trebuchet MS", "Helvetica Neue", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 90% 10%, #d6eef6 0%, transparent 35%),
+        radial-gradient(circle at 10% 85%, #d9f2ea 0%, transparent 35%),
+        var(--bg);
+      line-height: 1.45;
+    }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .hero {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: linear-gradient(130deg, #ffffff 0%, #ecf7fb 100%);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin-bottom: 14px;
+    }
+    .hero h1 { margin: 0; font-size: 28px; }
+    .hero p { margin: 6px 0 0; color: var(--muted); }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      padding: 12px;
+    }
+    .card .k { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+    .card .v { color: var(--primary); font-size: 24px; font-weight: 700; }
+
+    .section {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .section-h {
+      padding: 12px 14px;
+      font-weight: 700;
+      background: #f7fbff;
+      border-left: 5px solid #0f766e;
+      border-bottom: 1px solid var(--line);
+    }
+    .section-b { padding: 10px 12px 12px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border: 1px solid #d7e4f5;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 9px 10px;
+      border-bottom: 1px solid #e6eef9;
+      text-align: left;
+      font-size: 14px;
+    }
+    th {
+      background: #f4f9ff;
+      color: #1f467b;
+      font-size: 12px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    tr:last-child td { border-bottom: none; }
+
+    .note {
+      border: 1px solid #d7e4f5;
+      border-radius: 10px;
+      background: #fbfdff;
+      padding: 10px;
+      font-size: 14px;
+      color: #334155;
+    }
+
+    .list {
+      margin: 0;
+      padding-left: 18px;
+      color: #334155;
+    }
+    .list li { margin: 6px 0; }
+
+    @media (max-width: 900px) {
+      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 600px) {
+      .cards { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 22px; }
+      th, td { font-size: 13px; }
+    }
+  </style>
 </head>
 <body>
-    <h1>Code Review Effort Estimation Report</h1>
-    <h2 class="center-text">Generated Using Daksh SCRA</h2>
-    <h3 class="center-text">World's First Scientific Approach To Automated Code Review Effort Estimation</h3>
-    <br>
-    <div class="notes">
-        <p>Note: This report offers approximate effort estimation figures for conducting source code reviews. 
-        These figures should be considered as guidance to formulate an estimate that satisfies all stakeholders. 
-        For organizations seeking code review services, this report offers benchmark figures that can be utilized to verify estimates provided by third-party companies. 
-        Similarly, for security consulting firms, these estimated figures serve as supporting evidence for code review proposals put forth to clients.</p> 
-        <p>It's important to note that the current version of this tool focuses solely on estimating efforts for web applications. 
-        Nevertheless, as the estimation module undergoes multiple updates in the forthcoming months, support for all other types of applications will also be incorporated.</p>
-    </div>
-    <br>
-    <div class="section-title">Backend</div>
-    {% for info in backend_data %}
-    <div class="language-section">
-        <div class="subsection-title">{{ info['language'] }}</div>
-            <li>Total files identified: {{ info['total_files'] }}</li>
-            <li>Estimated efforts (days): {{ info['effort_days_min'] }} (minimum) - {{ info['effort_days_max'] }} (maximum) days</li>
-    </div>
-    {% endfor %}
-
-    <div class="section-title">Frontend</div>
-    {% for info in frontend_data %}
-    <div class="language-section">
-        <div class="subsection-title">{{ info['language'] }}</div>
-            <li>Total files identified: {{ info['total_files'] }}</li>
-            <li>Estimated efforts (days): {{ info['effort_days_min'] }} (minimum) - {{ info['effort_days_max'] }} (maximum) days</li>
-    </div>
-    {% endfor %}
-    <br>
-    <div class="section-title"><b>Total Efforts</b> (for the entire code review)</div>
-    <p>Total estimated effort (days): {{ total_days_min }} (minimum) - {{ total_days_max }} (maximum) days</p>
-    <br>
-    <br>
-
-    <!-- Adding the TODO section -->
-    <div class="todo-notes">
-        <p>
-            Note: The effort estimator module is currently in its initial developmental phase and is actively being worked on. 
-            The following list encompasses the areas that will be taken into account for the purpose of effort estimation. 
-            The estimation report will encompass a wide spectrum of estimates contingent on several factors enumerated below. 
-            This approach ensures that users can refer to the most appropriate estimate available.
-        </p>
-        <p>
-            Nevertheless, it's important to note that the subsequent aspects have not been integrated yet and will gradually 
-            be incorporated over a series of future release iterations.
-        </p>
-        <ul>
-            <li>Factors to be taken into account for estimation include:</li>
-            <ul>
-                <li>Total resources</li>
-                <li>Usage of automated tools</li>
-                <li>Total files and corresponding lines of codes</li>
-                <li>Functionalities (Total functions)</li>
-                <li>Workflow and UseCases</li>
-                <li>Routes</li>
-                <li>Framework</li>
-                <li>Technology</li>
-                <li>Reports:
-                    <ul>
-                        <li>Manually prepared</li>
-                        <li>Automated report generation</li>
-                    </ul>
-                </li>
-            </ul>
-        </ul>
-        <ul>
-            <li>Estimation will include the following:</li>
-            <ul>
-                <li>Targeted</li>
-                <li>Thorough and Comprehensive</li>
-                <li>Manual Only</li>
-                <li>Hybrid Scan</li>
-                <li>Ball Park - High and Low</li>
-            </ul>
-        </ul>
-        <ul>
-            <li>Estimation using config File:</li>
-            <ul>
-                <li>Organisation can provide details such as:</li>
-                <ul>
-                    <li>Total Functions/Methods (Add User, Delete User)</li>
-                    <li>Total Workflows (User Registration, Password Reset)</li>
-                    <li>Technologies (C#,Java etc)</li>
-                    <li>Framework</li>
-                </ul>
-            </ul>
-        </ul>
+  <div class="wrap">
+    <div class="hero">
+      <h1>Code Review Effort Estimation Report</h1>
+      <p>Estimated review effort by technology stack, with minimum and maximum day ranges.</p>
     </div>
 
+    <div class="cards">
+      <div class="card"><div class="k">Total Minimum Days</div><div class="v">{{ total_days_min }}</div></div>
+      <div class="card"><div class="k">Total Maximum Days</div><div class="v">{{ total_days_max }}</div></div>
+      <div class="card"><div class="k">Backend Technologies</div><div class="v">{{ backend_data|length }}</div></div>
+      <div class="card"><div class="k">Frontend Technologies</div><div class="v">{{ frontend_data|length }}</div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-h">Backend</div>
+      <div class="section-b">
+        <table>
+          <thead>
+            <tr>
+              <th>Technology</th>
+              <th>Total Files</th>
+              <th>Estimated Days (Min)</th>
+              <th>Estimated Days (Max)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for info in backend_data %}
+            <tr>
+              <td>{{ info['language'] }}</td>
+              <td>{{ info['total_files'] }}</td>
+              <td>{{ info['effort_days_min'] }}</td>
+              <td>{{ info['effort_days_max'] }}</td>
+            </tr>
+            {% endfor %}
+            {% if backend_data|length == 0 %}
+            <tr><td colspan="4">No backend technologies identified.</td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-h">Frontend</div>
+      <div class="section-b">
+        <table>
+          <thead>
+            <tr>
+              <th>Technology</th>
+              <th>Total Files</th>
+              <th>Estimated Days (Min)</th>
+              <th>Estimated Days (Max)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for info in frontend_data %}
+            <tr>
+              <td>{{ info['language'] }}</td>
+              <td>{{ info['total_files'] }}</td>
+              <td>{{ info['effort_days_min'] }}</td>
+              <td>{{ info['effort_days_max'] }}</td>
+            </tr>
+            {% endfor %}
+            {% if frontend_data|length == 0 %}
+            <tr><td colspan="4">No frontend technologies identified.</td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-h">Estimation Notes</div>
+      <div class="section-b">
+        <div class="note">
+          The estimate represents an approximation for planning and should be calibrated with project context,
+          reviewer expertise, and scope depth.
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-h">Upcoming Enhancements</div>
+      <div class="section-b">
+        <ul class="list">
+          <li>Factor in total resources and reviewer availability.</li>
+          <li>Include LOC, workflow, route, and functional complexity weighting.</li>
+          <li>Incorporate framework and technology-specific calibration.</li>
+          <li>Support estimation profiles: targeted, comprehensive, manual-only, and hybrid scan.</li>
+          <li>Enable organization-specific estimation input via config.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

@@ -1,0 +1,97 @@
+<root>
+    <category name="Platform-Specific Issues - iOS Configuration">
+        <rule>
+            <name>App Transport Security Allows Arbitrary Loads</name>
+            <regex><![CDATA[NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]></regex>
+            <rule_desc>Detects ATS configuration that allows unrestricted cleartext or weak transport.</rule_desc>
+            <vuln_desc>Disabling ATS protections can expose traffic to interception and man-in-the-middle attacks.</vuln_desc>
+            <developer>Keep ATS enabled and define minimal domain exceptions only when strictly required.</developer>
+            <reviewer>Review Info.plist ATS entries and validate that all exceptions are justified and limited.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Insecure URL Scheme Registration</name>
+            <regex><![CDATA[CFBundleURLSchemes]]></regex>
+            <rule_desc>Detects custom URL scheme declarations that may require deep-link validation checks.</rule_desc>
+            <vuln_desc>Improper deep-link validation can allow unauthorized app actions or data exposure.</vuln_desc>
+            <developer>Validate all deep-link parameters, enforce allowlists, and avoid sensitive actions without auth checks.</developer>
+            <reviewer>Assess deep-link handlers for authentication, authorization, and input validation.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Application Queries Schemes Broad Allowlist</name>
+            <regex><![CDATA[LSApplicationQueriesSchemes]]></regex>
+            <rule_desc>Detects URL scheme query allowlists in Info.plist.</rule_desc>
+            <vuln_desc>Overly broad query scheme allowlists may increase app fingerprinting and data exposure risks.</vuln_desc>
+            <developer>Restrict queried URL schemes to only those required for business functionality.</developer>
+            <reviewer>Ensure scheme allowlist entries are minimal and justified.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Platform-Specific Issues - iOS Runtime Security">
+        <rule>
+            <name>Keychain Accessibility Too Permissive</name>
+            <regex><![CDATA[kSecAttrAccessible\s*:\s*kSecAttrAccessibleAlways]]></regex>
+            <rule_desc>Detects keychain entries with permissive accessibility settings.</rule_desc>
+            <vuln_desc>Overly permissive keychain accessibility can expose secrets when device security state is weaker.</vuln_desc>
+            <developer>Use stricter keychain accessibility (for example, WhenUnlocked or AfterFirstUnlock variants as required).</developer>
+            <reviewer>Check keychain storage options for least-privilege accessibility settings.</reviewer>
+        </rule>
+
+        <rule>
+            <name>UserDefaults Used for Sensitive Data</name>
+            <regex><![CDATA[\b(?:UserDefaults\.standard|NSUserDefaults\s+standardUserDefaults)]]></regex>
+            <rule_desc>Detects UserDefaults storage usage which may be inappropriate for secrets.</rule_desc>
+            <vuln_desc>Storing secrets in UserDefaults can expose credentials or tokens through backups or local extraction.</vuln_desc>
+            <developer>Store sensitive values in Keychain and apply encryption for high-risk data.</developer>
+            <reviewer>Verify that tokens, passwords, and keys are not persisted in UserDefaults.</reviewer>
+        </rule>
+
+        <rule>
+            <name>WebView JavaScript Enabled for Dynamic Content</name>
+            <regex><![CDATA[WKPreferences\(\)\.javaScriptEnabled\s*=\s*true|setJavaScriptEnabled\s*:\s*YES]]></regex>
+            <rule_desc>Detects explicit JavaScript enablement in embedded web views.</rule_desc>
+            <vuln_desc>Unsafe web view configurations can increase XSS-style abuse and local data access risk.</vuln_desc>
+            <developer>Disable JavaScript unless required and enforce strict navigation/content policies.</developer>
+            <reviewer>Review web view usage for script injection risk and trusted-content restrictions.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Certificate Validation Override</name>
+            <regex><![CDATA[didReceive\s+challenge|NSURLSessionAuthChallengeDisposition\.useCredential]]></regex>
+            <rule_desc>Detects custom TLS challenge handling that may weaken certificate validation.</rule_desc>
+            <vuln_desc>Improper challenge handling can bypass TLS trust and enable MITM attacks.</vuln_desc>
+            <developer>Use system trust evaluation and pinning patterns where appropriate; avoid unconditional trust.</developer>
+            <reviewer>Inspect challenge handlers to confirm strict certificate and host validation logic.</reviewer>
+        </rule>
+    </category>
+
+    <category name="Platform-Specific Issues - iOS Build and Entitlements">
+        <rule>
+            <name>Debug Logging in Production Code Paths</name>
+            <regex><![CDATA[\b(?:NSLog\(|print\(|debugPrint\()]]></regex>
+            <rule_desc>Detects debug logging statements that may leak runtime internals or sensitive data.</rule_desc>
+            <vuln_desc>Verbose logs can disclose user data, API details, and security-relevant internals.</vuln_desc>
+            <developer>Gate debug logging by build configuration and redact sensitive values.</developer>
+            <reviewer>Check logging behavior for production builds and sensitive-data exposure.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Associated Domains Entitlement Present</name>
+            <regex><![CDATA[com\.apple\.developer\.associated-domains]]></regex>
+            <rule_desc>Detects associated domains entitlement that requires strict domain ownership and validation.</rule_desc>
+            <vuln_desc>Misconfigured universal links may enable unintended app routing or phishing workflows.</vuln_desc>
+            <developer>Configure only trusted domains and validate universal-link handling logic securely.</developer>
+            <reviewer>Verify entitlement scope and universal-link validation/authorization checks.</reviewer>
+        </rule>
+
+        <rule>
+            <name>Push Notification Entitlement Enabled</name>
+            <regex><![CDATA[aps-environment]]></regex>
+            <rule_desc>Detects push notification entitlement usage.</rule_desc>
+            <vuln_desc>Push workflows can expose sensitive data if payload validation and notification handling are weak.</vuln_desc>
+            <developer>Ensure notification payloads avoid secrets and enforce secure action handling on receipt.</developer>
+            <reviewer>Review push handlers for sensitive data exposure and authorization checks.</reviewer>
+        </rule>
+    </category>
+</root>

@@ -84,7 +84,7 @@ python setup_env.py
 
 What it does:
 
-- Creates a virtual environment in `venv/`
+- Creates an isolated virtual environment
 - Activates the environment
 - Installs required packages from `requirements.txt`
 - Installs Chromium (required by Playwright for PDF export)
@@ -98,14 +98,14 @@ What it does:
 **Windows:**
 
 ```
-python -m venv venv
-.\venv\Scripts\activate
+python -m venv daksh-env
+.\daksh-env\Scripts\activate
 ```
 
 **macOS/Linux:**
 
 ```
-python3 -m venv venv
+python3 -m venv daksh-env
 source daksh-env/bin/activate
 ```
 
@@ -125,7 +125,7 @@ pip install playwright
 playwright install chromium
 ```
 
-> ✅ After activation, your terminal prompt should show the environment name: `(venv) $`
+> ✅ After activation, your terminal prompt should show your environment name.
 
 You’re now ready to use DakshSCRA.
 
@@ -133,6 +133,30 @@ You’re now ready to use DakshSCRA.
 
 ## Tool Usage
 💡 Use python if you're inside a virtual environment. Otherwise, use python3 or the appropriate Python version installed on your system.
+
+### RDL Rule Authoring (Quick Note)
+
+Rules can now include optional `<rdl>` for conditional checks in addition to `<regex>`.
+
+Example:
+
+```xml
+<rule>
+  <name>Conditional SQLi Check</name>
+  <regex><![CDATA[(?i)\b(?:mysql_query|mysqli_query|->query)\s*\(]]></regex>
+  <rdl><![CDATA[[FLAG:\$_(GET|POST|REQUEST|COOKIE)][IF(MISSING:\b(?:prepare|bindParam|bindValue|PDO::prepare)\b)]]></rdl>
+  <rule_desc>...</rule_desc>
+  <vuln_desc>...</vuln_desc>
+  <developer>...</developer>
+  <reviewer>...</reviewer>
+</rule>
+```
+
+Supported RDL operators:
+- `FLAG:<regex>`
+- `IF(...)`
+- predicates: `MISSING:`, `PRESENT:`, `EXISTS:`
+- boolean operators: `&&`, `||`, `!`
 
 ```
 # To view tool usage along with examples
@@ -146,18 +170,27 @@ $ python dakshscra.py -h       # Inside virtual environment
 $ python3 dakshscra.py -h      # Outside virtual environment
 ```
 
-```
-usage: dakshscra.py [-h] [-r RULE_FILE] [-f FILE_TYPES] [-v] [-t TARGET_DIR] [-l {R,RF}] [-recon] [-estimate]
+```text
+usage: dakshscra.py [-h] [-r RULES] [-f FILE_TYPES] [-v] [-t TARGET_DIR]
+                    [-l {R,RF}] [-recon] [-estimate] [-rpt FORMATS]
+                    [--analysis] [--loc] [--baseline-file PATH]
+                    [--baseline-generate] [--no-baseline]
 
 options:
 -h, --help                 Show this help message and exit
--r RULE_FILE               Specify platform-specific rule name or 'auto' for auto-detection of platforms
--f FILE_TYPES              Specify file types to scan
--v                         Specify verbosity level {'-v', '-vv', '-vvv'}
--t TARGET_DIR              Specify target directory path
+-r RULES                   Platform rules (e.g. php,java,cpp) or "auto"
+-f FILE_TYPES              Override default filetypes for scanning
+-v                         Verbosity level (-v, -vv, -vvv)
+-t TARGET_DIR              Target source code directory
 -l {R,RF}, --list {R,RF}   List rules [R] OR rules and filetypes [RF]
--recon                     Detects platform, framework, and programming language used
--estimate                  Estimate efforts required for code review
+-recon                     Detect platform/framework/language stack
+-estimate                  Estimate review effort
+-rpt, --report FORMATS     Report types: html, pdf, or html,pdf
+--analysis, --analyse      Experimental data/control flow analysis
+--loc                      Count effective lines of code
+--baseline-file PATH       Suppression baseline file (JSON)
+--baseline-generate        Generate baseline from current findings
+--no-baseline              Disable baseline suppression for current run
 ```
 
 ### Example Usage
@@ -186,6 +219,15 @@ options:
 
 # Verbosity: '-v' is default, '-vvv' will show all pattern checks
 - dakshscra.py -r php -vvv -t /source_dir_path
+
+# Generate baseline suppression from current findings
+- dakshscra.py -r auto -t /source_dir_path --baseline-generate
+
+# Apply baseline suppression for recurring known FPs
+- dakshscra.py -r auto -t /source_dir_path --baseline-file config/suppressions.json
+
+# Run without suppression baseline
+- dakshscra.py -r auto -t /source_dir_path --no-baseline
 ```
 
 ### View List of Supported Rules
@@ -198,34 +240,24 @@ Currently supported:
 
 - dotnet, php, java, javascript,
 - kotlin, python, go, c, cpp,
-- android (beta - limited checks), common
+- android, ios, reactnative, flutter, xamarin, ionic, nativescript, cordova,
+- ruby, rust, common
 
 
 
 ## Reports
 
-The tool generates reports in three formats: HTML, PDF, and TEXT. Although the HTML and PDF reports are still being improved, they are currently in a reasonably good state. With each subsequent iteration, these reports will continue to be refined and improved even further.
+The tool produces HTML/PDF reports and structured JSON outputs.
 
-### Scanning (Areas of Security Concerns) Report
+### Scanning Report Outputs
 
-- HTML Report:
-  - `DakshSCRA/reports/html/report.html`
-- PDF Report:
-  - `DakshSCRA/reports/html/report.pdf`
-- Raw Text Reports:
-  - Areas of Interest: `DakshSCRA/reports/text/areas_of_interest.txt`
-  - Project Files:     `DakshSCRA/reports/text/filepaths_aoi.txt`
-  - Identified Files:  `DakshSCRA/runtime/filepaths.txt`
-
-### Reconnaissance Report
-
-- Text Summary: `DakshSCRA/reports/text/recon.txt`
-
-> Note: Recon report is currently plain text but will be merged into the HTML/PDF report in future versions.
+- HTML report
+- PDF report
+- JSON findings (AoI, file-path AoI, summary, recon summary)
+- Runtime inventory output
 
 ### Effort Estimation Report
 
-- HTML Report: `DakshSCRA/reports/html/estimation.html`
+- HTML estimation report
 
 > Note: This feature is in early stage. Future versions will improve the accuracy and add PDF support.
-

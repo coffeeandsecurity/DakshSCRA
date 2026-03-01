@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="breadcrumbs"><a href="{{ back_link }}">← Back to index</a></div>
+<div class="panel">
+    <h2>{{ platform }} Findings</h2>
+    <div class="note-block">
+        <span class="note-title">About these findings:</span>
+        Reported issues are based on rule matches and may not be 100% confirmed. Use the developer and reviewer notes to validate, investigate, and remediate as needed.
+    </div>
+    {% if entries %}
+        {% for entry in entries %}
+        <div class="aoi-entry">
+            <div class="finding-header">
+                <div class="finding-id">{{ entry.rulecount }}</div>
+                <div class="finding-title">{{ entry.keyword }}</div>
+            </div>
+
+            {% if entry.rule_desc %}
+            <div class="info-card">
+                <div class="label">Rule</div>
+                <div class="text">{{ entry.rule_desc }}</div>
+            </div>
+            {% endif %}
+            {% if entry.category %}
+            <div class="info-card">
+                <div class="label">Category</div>
+                <div class="text">{{ entry.category }}</div>
+            </div>
+            {% endif %}
+            {% if entry.issue_scope %}
+            <div class="info-card">
+                <div class="label">Scope</div>
+                <div class="text">{{ entry.issue_scope }}</div>
+            </div>
+            {% endif %}
+            {% if entry.issue_desc %}
+            <div class="info-card issue">
+                <div class="label">Issue</div>
+                <div class="text">{{ entry.issue_desc }}</div>
+            </div>
+            {% endif %}
+
+            {% if entry.dev_note %}
+            <div class="note-block">
+                <span class="note-title">Developer note:</span> {{ entry.dev_note }}
+            </div>
+            {% endif %}
+            {% if entry.rev_note %}
+            <div class="note-block">
+                <span class="note-title">Reviewer note:</span> {{ entry.rev_note }}
+            </div>
+            {% endif %}
+
+            {% for source in entry.sources %}
+                <div class="aoi-meta" style="margin-top:10px;">
+                    <span class="pill"><strong>Source</strong> {{ source.source }}</span>
+                </div>
+                <div class="code-block">
+                    {{ source.code | safe }}
+                </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="muted">No findings for this platform.</div>
+    {% endif %}
+</div>
+{% endblock %}

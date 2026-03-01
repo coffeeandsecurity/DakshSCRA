@@ -1,4 +1,5 @@
 # Standard libraries
+import argparse
 import itertools
 import sys
 import threading
@@ -12,8 +13,22 @@ from state import constants
 from utils.config_utils import get_tool_version
 
 
+class DakshHelpFormatter(argparse.RawTextHelpFormatter):
+    """Preserve newlines in examples/notes while keeping argparse layout."""
+    pass
 
-def toolUsage(option):
+
+class DakshArgumentParser(argparse.ArgumentParser):
+    """Inject the project banner into argparse help output."""
+
+    def format_help(self):
+        version = get_tool_version()
+        author_banner = constants.AUTHOR_BANNER.format(version=version)
+        return f"{author_banner}\n{super().format_help()}"
+
+
+
+def tool_usage(option):
     cyan = Fore.CYAN
     yellow = Fore.YELLOW
     reset = Style.RESET_ALL
@@ -21,8 +36,8 @@ def toolUsage(option):
     if option == 'invalid_dir':
         print(f"\n{Fore.RED}[!] Invalid or missing target directory.{reset}\n")
         print("Example:")
-        print(f"  {yellow}dakshsca.py -r php -t /path/to/source{reset}")
-        print(f"  {yellow}dakshsca.py -r php,java -t ./project/src{reset}")
+        print(f"  {yellow}dakshscra.py -r php -t /path/to/source{reset}")
+        print(f"  {yellow}dakshscra.py -r php,java -t ./project/src{reset}")
         return
 
     version = get_tool_version()
@@ -30,7 +45,7 @@ def toolUsage(option):
     print(author_banner)
 
     print(f"{cyan}Usage:{reset}")
-    print(f"  {yellow}dakshsca.py [options]{reset}\n")
+    print(f"  {yellow}dakshscra.py [options]{reset}\n")
 
     print(f"{cyan}Options:{reset}")
     print(f"  {yellow}-r <rule>{reset}         Specify platform(s) (e.g. php,java,cpp) or use {yellow}auto{reset}")
@@ -38,23 +53,26 @@ def toolUsage(option):
     print(f"  {yellow}-t <dir>{reset}          Target source code directory (required)")
     print(f"  {yellow}-v{reset}                Set verbosity level (-v, -vv, -vvv)")
     print(f"  {yellow}-recon{reset}            Perform platform detection only or with rule scanning")
+    print(f"  {yellow}-rs{reset}               Recon strict mode (use with -recon; high-confidence detections only)")
     print(f"  {yellow}-estimate{reset}         Estimate code review effort based on codebase size")
     print(f"  {yellow}-l [R|RF]{reset}         List available rules [R] or rules + filetypes [RF]")
     print(f"  {yellow}-h, --help{reset}        Show this help message\n")
 
     print(f"{cyan}Examples:{reset}")
-    print(f"  {yellow}dakshsca.py -r php -t ./src{reset}")
-    print(f"  {yellow}dakshsca.py -r php,cpp -vv -t /path/to/code{reset}")
-    print(f"  {yellow}dakshsca.py -r auto -t ./codebase{reset}")
-    print(f"  {yellow}dakshsca.py -recon -t ./api{reset}")
-    print(f"  {yellow}dakshsca.py -recon -r java -t ./javaapp{reset}")
-    print(f"  {yellow}dakshsca.py -r dotnet -f dotnet -t ./dotnetapp{reset}")
-    print(f"  {yellow}dakshsca.py -l RF{reset}     # View supported platform rules and file types\n")
+    print(f"  {yellow}dakshscra.py -r php -t ./src{reset}")
+    print(f"  {yellow}dakshscra.py -r php,cpp -vv -t /path/to/code{reset}")
+    print(f"  {yellow}dakshscra.py -r auto -t ./codebase{reset}")
+    print(f"  {yellow}dakshscra.py -recon -t ./api{reset}")
+    print(f"  {yellow}dakshscra.py -recon -rs -t ./mobile_app{reset}")
+    print(f"  {yellow}dakshscra.py -recon -r java -t ./javaapp{reset}")
+    print(f"  {yellow}dakshscra.py -r dotnet -f dotnet -t ./dotnetapp{reset}")
+    print(f"  {yellow}dakshscra.py -l RF{reset}     # View supported platform rules and file types\n")
 
     print(f"{cyan}Notes:{reset}")
     print(f"  • If {yellow}-f{reset} is not provided, default filetypes for the selected platform(s) will be used.")
     print(f"  • Use {yellow}-r auto{reset} to detect file types and auto-apply all relevant platform rules.")
     print(f"  • Use {yellow}-recon{reset} alone to detect technology stack without scanning.")
+    print(f"  • Use {yellow}-rs{reset} (or {yellow}--recon-strict{reset}) with {yellow}-recon{reset} for strict high-confidence output.")
 
 
 def section_print(message):
@@ -87,3 +105,7 @@ def spinner(mode):
         # Clear entire line cleanly
         sys.stdout.write("\r" + " " * 80 + "\r")  # Clear the full line
         sys.stdout.flush()
+
+
+# Backward-compatible alias for legacy callers.
+toolUsage = tool_usage

@@ -1,0 +1,94 @@
+{
+  "php": {
+    "xss_output_encoding": {
+      "patterns": [
+        "htmlspecialchars\\s*\\(",
+        "htmlentities\\s*\\("
+      ],
+      "scope_default": "same_file"
+    },
+    "sql_parameterization": {
+      "patterns": [
+        "prepare\\s*\\(",
+        "bindParam\\s*\\(",
+        "bindValue\\s*\\(",
+        "PDO::prepare"
+      ],
+      "scope_default": "same_function"
+    },
+    "command_sanitization": {
+      "patterns": [
+        "escapeshellarg\\s*\\(",
+        "escapeshellcmd\\s*\\("
+      ],
+      "scope_default": "same_file"
+    }
+  },
+  "javascript": {
+    "xss_output_encoding": {
+      "patterns": [
+        "DOMPurify\\.sanitize\\s*\\(",
+        "escapeHtml\\s*\\("
+      ],
+      "scope_default": "same_file"
+    },
+    "sql_parameterization": {
+      "patterns": [
+        "\\.query\\s*\\([^)]*\\$\\d+",
+        "replacements\\s*:"
+      ],
+      "scope_default": "same_function"
+    }
+  },
+  "python": {
+    "sql_parameterization": {
+      "patterns": [
+        "execute\\s*\\([^)]*%s",
+        "execute\\s*\\([^)]*\\?",
+        "sqlalchemy\\."
+      ],
+      "scope_default": "same_function"
+    },
+    "command_sanitization": {
+      "patterns": [
+        "subprocess\\.run\\s*\\([^)]*shell\\s*=\\s*False",
+        "shlex\\.quote\\s*\\("
+      ],
+      "scope_default": "same_file"
+    }
+  },
+  "java": {
+    "sql_parameterization": {
+      "patterns": [
+        "prepareStatement\\s*\\(",
+        "\\.setString\\s*\\(",
+        "\\.setInt\\s*\\("
+      ],
+      "scope_default": "same_function"
+    },
+    "xss_output_encoding": {
+      "patterns": [
+        "Encode\\.forHtml\\s*\\(",
+        "HtmlUtils\\.htmlEscape\\s*\\("
+      ],
+      "scope_default": "same_file"
+    }
+  },
+  "dotnet": {
+    "sql_parameterization": {
+      "patterns": [
+        "SqlParameter\\s*\\(",
+        "AddWithValue\\s*\\(",
+        "FromSqlInterpolated\\s*\\("
+      ],
+      "scope_default": "same_function"
+    },
+    "xss_output_encoding": {
+      "patterns": [
+        "HtmlEncoder\\.Default\\.Encode\\s*\\(",
+        "AntiXssEncoder\\."
+      ],
+      "scope_default": "same_file"
+    }
+  }
+}

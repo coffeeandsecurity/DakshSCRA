@@ -114,7 +114,7 @@
     <category name="Loop Vulnerabilities">
         <rule>
             <name>Unsafe Loop Handling Over Arrays or Strings</name>
-            <regex>\b(for|while)\s*\(.*</regex>
+            <regex><![CDATA[\b(?:for|while)\s*\([^)]*(?:<|<=|>|>=)[^)]*(?:len|size|count|index|idx|i|j|k)[^)]*\)]]></regex>
             <rule_desc>Detects loops iterating over arrays, strings, or lists with potentially unsafe bounds.</rule_desc>
             <vuln_desc>Unbounded loops or those influenced by incorrect size checks may cause buffer or integer overflows.</vuln_desc>
             <developer>Ensure loops terminate based on array size or valid upper/lower limits.</developer>
@@ -166,7 +166,8 @@
     <category name="Sensitive Information Handling">
         <rule>
             <name>Improper Use of `memset` for Sensitive Data</name>
-            <regex>\bmemset\s*\(\s*(password|key|secret|token|sensitive_data|.*_buffer).*?,.*?\)</regex>
+            <regex>\bmemset\s*\(\s*(?:\w*(?:password|passwd|secret|token|api[_-]?key|private[_-]?key)\w*|\w+_buffer)\s*,\s*[^,]+,\s*[^)]+\)</regex>
+            <exclude>(?i)^\s*(//|/\*|\*|#)</exclude>
             <rule_desc>Detects potential improper clearing of sensitive data.</rule_desc>
             <vuln_desc>Using `memset` for clearing sensitive data can be optimized away by compilers, leaving data in memory.</vuln_desc>
             <developer>Ensure to use a secure method, such as `explicit_bzero` or similar, to clear sensitive data. Verify that sensitive variables (e.g., passwords, keys) are securely erased before freeing memory.</developer>
@@ -193,7 +194,8 @@
 
         <rule>
             <name>Unsafe File Deletion Using `unlink` or `remove`</name>
-            <regex>\b(unlink|remove)\s*\(\s*(".*(password|key|secret).*?"|sensitive_file.*)\s*\)</regex>
+            <regex>\b(?:unlink|remove)\s*\(\s*(?:"[^"\n]*(?:password|passwd|token|secret|key)[^"\n]*"|sensitive_file\w*)\s*\)</regex>
+            <exclude>(?i)^\s*(//|/\*|\*|#)</exclude>
             <rule_desc>Detects unsafe deletion of sensitive files.</rule_desc>
             <vuln_desc>Files containing sensitive data might still be recoverable after deletion without secure erasure.</vuln_desc>
             <developer>Implement secure file deletion methods, such as overwriting the file contents before deletion. Avoid plain `unlink` or `remove` for sensitive files.</developer>
@@ -224,7 +226,8 @@
 
         <rule>
             <name>Download from Insecure Sources</name>
-            <regex>wget\s+http://</regex>
+            <regex><![CDATA[\b(?:wget|curl)\s+[^\n]{0,120}http://]]></regex>
+            <exclude><![CDATA[(?i)apache\.org/licenses|opensource\.org/licenses|w3\.org|^\s*(#|//|/\*|\*)]]></exclude>
             <rule_desc>Detects downloads from insecure sources using HTTP.</rule_desc>
             <vuln_desc>Downloading files over HTTP makes the application vulnerable to MITM attacks and tampering.</vuln_desc>
             <developer>Developers should use HTTPS and validate file integrity with checksums.</developer>

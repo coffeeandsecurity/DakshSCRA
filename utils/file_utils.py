@@ -1,6 +1,8 @@
 # Standard libraries
 import os
 import re
+import json
+import shutil
 from pathlib import Path  # Resolve the Windows / macOS / Linux path issue
 
 # Third-party libraries
@@ -15,13 +17,13 @@ import state.runtime_state as runtime
 parentPath = os.path.dirname(os.path.realpath(__file__))
 
 
-def saveYaml(file_path, data):
+def save_yaml(file_path, data):
     with open(file_path, "w") as file:
         ruamel.yaml.safe_dump(data, file)
 
 
 
-def detectEncodingType(targetfile):
+def detect_encoding_type(targetfile):
     # Open the file in binary mode and read the first 1000 bytes to detect the encoding type
     with open(targetfile, 'rb') as f:
         result = chardet.detect(f.read(1000))
@@ -53,7 +55,7 @@ def readfile_FallbackEncoding(filepath, fallback_order=("ISO-8859-1", "utf-8")):
 
 
 
-def getReportsRootPath(fpath):
+def get_reports_root_path(fpath):
     """
     Returns the relative path from the '/reports' directory in a given file path.
 
@@ -88,15 +90,15 @@ def getReportsRootPath(fpath):
 
 
 
-# Retrieve files extention from file path
-def getFileExtention(fpath):
-    extention = Path(str(fpath)).suffix
+# Retrieve files extension from file path
+def get_file_extension(fpath):
+    extension = Path(str(fpath)).suffix
 
-    return extention
+    return extension
 
 
 
-def dirCleanup(dirname):
+def dir_cleanup(dirname):
     """
     Clears all files in the specified temporary directory. If the directory 
     does not exist, it creates it.
@@ -121,7 +123,19 @@ def dirCleanup(dirname):
 
 
 
-def getSourceFilePath(project_dir, source_file):
+def dir_cleanup_recursive(dirname):
+    """
+    Removes and recreates the specified directory.
+
+    This variant clears nested directories as well, unlike dir_cleanup().
+    """
+    dir_path = Path(parentPath) / ".." / dirname
+    if dir_path.exists():
+        shutil.rmtree(dir_path, ignore_errors=True)
+    dir_path.mkdir(parents=True, exist_ok=True)
+
+
+def get_source_file_path(project_dir, source_file):
     pattern = re.compile(project_dir + '.+')
 
     source_filepath = ''
@@ -134,11 +148,11 @@ def getSourceFilePath(project_dir, source_file):
 
 
 
-def getShortPath(file_path):
-    short_file_path = getSourceFilePath(runtime.sourcedir, file_path)
+def get_short_path(file_path):
+    short_file_path = get_source_file_path(runtime.sourcedir, file_path)
 
     directory, filename = os.path.split(file_path)
-    # Check if the filename length including extension is greater than 20 characters
+    # Check if the filename length including extension is greater than 40 characters
     if len(filename) > 40:
         base, ext = os.path.splitext(filename)
         filename = f"[FILENAME-TOO-LONG]{ext}"  # Updated name
@@ -148,28 +162,34 @@ def getShortPath(file_path):
 
 
 
-def cleanFilePaths(filepaths_source):
+def clean_file_paths(filepaths_source, count_loc=False):
     """
     Cleans file paths by replacing absolute paths with relative project paths.
 
-    Parameters:
-        filepaths_source (str): The source file path for which to clean paths.
-
-    Returns:
-        None: The function writes cleaned paths to a text file.
+    Writes structured JSON (and no longer writes legacy text).
     """
 
     target_dir = os.path.dirname(filepaths_source)
     source_file = os.path.join(target_dir, "filepaths.log")
-    dest_file = os.path.join(target_dir, "filepaths.txt")
+    dest_json = runtime.output_Fpaths_JSON
 
-    with open(source_file, "r") as h_sf, open(dest_file, "w") as h_df:
-        for eachfilepath in h_sf:  # Read each line (file path) in the file
-            filepath = eachfilepath.rstrip()  # strip out '\r' or '\n' from the file paths
-            h_df.write(getSourceFilePath(runtime.sourcedir, filepath) + "\n")
+    cleaned = []
+    total_loc = 0
+    with open(source_file, "r") as h_sf:
+        for eachfilepath in h_sf:
+            filepath = eachfilepath.rstrip()
+            rel = get_source_file_path(runtime.sourcedir, filepath)
+            if count_loc:
+                loc = count_effective_lines(filepath)
+                cleaned.append({"path": rel, "loc": loc})
+                total_loc += loc
+            else:
+                cleaned.append(rel)
 
-    runtime.discovered_clean_Fpaths = dest_file
-    #os.unlink(source_file)
+    dest_json.parent.mkdir(parents=True, exist_ok=True)
+    dest_json.write_text(json.dumps(cleaned, indent=2), encoding="utf-8")
+    runtime.discovered_clean_Fpaths = dest_json
+    return total_loc if count_loc else None
 
 
 
@@ -222,3 +242,15 @@ def count_effective_lines(filepath):
         print(f"[!] Error reading {filepath}: {e}")
 
     return count
+
+
+# Backward-compatible aliases for legacy callers.
+saveYaml = save_yaml
+detectEncodingType = detect_encoding_type
+getReportsRootPath = get_reports_root_path
+getFileExtension = get_file_extension
+dirCleanup = dir_cleanup
+dirCleanupRecursive = dir_cleanup_recursive
+getSourceFilePath = get_source_file_path
+getShortPath = get_short_path
+cleanFilePaths = clean_file_paths
