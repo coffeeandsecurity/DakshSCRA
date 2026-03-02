@@ -2,7 +2,8 @@
     <category name="Untrusted Input Handling and Buffer Overflow">
         <rule>
             <name>Unsafe String Manipulation: strcpy(), strcat(), sprintf(), etc.</name>
-            <regex>\b(strcpy|strcat|sprintf|gets|scanf)\s*\(</regex>
+            <regex><![CDATA[\b(strcpy|strcat|sprintf|gets|scanf)\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:\b(strcpy|strcat|sprintf|gets|scanf)\s*\(]]]></rdl>
             <rule_desc>Detects usage of unsafe functions such as `strcpy()`, `strcat()`, and `sprintf()`.</rule_desc>
             <vuln_desc>These functions do not perform boundary checks and can cause buffer overflows, which attackers can exploit to corrupt memory or gain unauthorized access.</vuln_desc>
             <developer>Developers should replace these with safer alternatives such as `strncpy()`, `snprintf()`, or `fgets()`.</developer>
@@ -11,7 +12,8 @@
 
         <rule>
             <name>Potential Buffer Overflow: strncpy() Misuse</name>
-            <regex>\bstrncpy\s*\(\s*\w+\s*,\s*\w+\s*,\s*\w+\s*\-\s*1\s*\)</regex>
+            <regex><![CDATA[\bstrncpy\s*\(\s*\w+\s*,\s*\w+\s*,\s*\w+\s*\-\s*1\s*\)]]></regex>
+            <rdl><![CDATA[[FLAG:\bstrncpy\s*\(\s*\w+\s*,\s*\w+\s*,\s*\w+\s*\-\s*1\s*\)]]]></rdl>
             <rule_desc>Detects misuse of `strncpy()` with potentially unsafe size calculations.</rule_desc>
             <vuln_desc>If the length parameter subtracts 1 improperly, it may result in an off-by-one error, leading to buffer overflows.</vuln_desc>
             <developer>Ensure that the length parameter accurately reflects the size of the destination buffer and that it doesn't underflow.</developer>
@@ -20,7 +22,8 @@
 
         <rule>
             <name>Unbounded Memory Allocation</name>
-            <regex>\bmalloc\s*\(\s*[^\)]*user_input</regex>
+            <regex><![CDATA[\bmalloc\s*\(\s*[^\)]*user_input]]></regex>
+            <rdl><![CDATA[[FLAG:\bmalloc\s*\(\s*[^\)]*user_input]]]></rdl>
             <rule_desc>Detects memory allocation functions (`malloc()`, `calloc()`) where size is influenced by user input without validation.</rule_desc>
             <vuln_desc>If user input directly controls memory allocation size, attackers could cause memory exhaustion (DoS).</vuln_desc>
             <developer>Developers should validate user input before using it for memory allocation.</developer>
@@ -31,7 +34,8 @@
     <category name="Command Injection">
         <rule>
             <name>Unsafe Execution Functions: system(), exec(), etc.</name>
-            <regex>^\s*(?:int|void|char|size_t|auto)?\s*\*?\s*\w+\s*=\s*\b(system|exec|popen|execl)\s*\(.*\)</regex>
+            <regex><![CDATA[^\s*(?:int|void|char|size_t|auto)?\s*\*?\s*\w+\s*=\s*\b(system|exec|popen|execl)\s*\(.*\)]]></regex>
+            <rdl><![CDATA[[FLAG:^\s*(?:int|void|char|size_t|auto)?\s*\*?\s*\w+\s*=\s*\b(system|exec|popen|execl)\s*\(.*\)]]]></rdl>
             <rule_desc>Detects unsafe usage of execution functions that may lead to command injection vulnerabilities.</rule_desc>
             <vuln_desc>These functions can allow attackers to execute arbitrary commands if input is not properly sanitized.</vuln_desc>
             <developer>Validate and sanitize inputs passed to these functions. Use safer alternatives such as `posix_spawn()` where possible.</developer>
@@ -40,7 +44,8 @@
 
         <rule>
             <name>Use of `system()` with Hardcoded Paths</name>
-            <regex>\bsystem\s*\(\s*["'].*(/bin|/usr/bin)</regex>
+            <regex><![CDATA[\bsystem\s*\(\s*["'].*(/bin|/usr/bin)]]></regex>
+            <rdl><![CDATA[[FLAG:\bsystem\s*\(\s*["'].*(/bin|/usr/bin)]]]></rdl>
             <rule_desc>Detects the use of `system()` with hardcoded file paths that may introduce security risks.</rule_desc>
             <vuln_desc>Using hardcoded paths in `system()` may cause unintended command execution if the paths are modified.</vuln_desc>
             <developer>Developers should avoid hardcoding paths and use environment-safe alternatives.</developer>
@@ -51,7 +56,8 @@
     <category name="Format String Vulnerabilities">
         <rule>
             <name>Potential Format String Attack: printf(), fprintf(), etc.</name>
-            <regex>\b(printf|fprintf|sprintf|vsprintf|snprintf)\s*\(\s*[^"]+\s*,</regex>
+            <regex><![CDATA[\b(printf|fprintf|sprintf|vsprintf|snprintf)\s*\(\s*[^"]+\s*,]]></regex>
+            <rdl><![CDATA[[FLAG:\b(printf|fprintf|sprintf|vsprintf|snprintf)\s*\(\s*[^"]+\s*,]]]></rdl>
             <rule_desc>Detects potentially unsafe usage of format functions where user input is passed directly as the format string.</rule_desc>
             <vuln_desc>If untrusted input is used directly in format functions, it may result in format string vulnerabilities, potentially leading to information leakage or code execution.</vuln_desc>
             <developer>Avoid using user input as the format string. Use fixed format strings (e.g., `"%s"`) with sanitized inputs.</developer>
@@ -62,7 +68,8 @@
     <category name="Memory Management and Allocation">
         <rule>
             <name>Risky Memory Allocation: malloc() and Related Functions</name>
-            <regex>^[^*/]*\b(malloc|calloc|realloc)\s*\(</regex>
+            <regex><![CDATA[^[^*/]*\b(malloc|calloc|realloc)\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:^[^*/]*\b(malloc|calloc|realloc)\s*\(]]]></rdl>
             <rule_desc>Detects usage of memory allocation functions in code.</rule_desc>
             <vuln_desc>If external input influences the size, it can lead to denial-of-service by allocating too much memory or integer overflows, resulting in heap overflows.</vuln_desc>
             <developer>Use `size_t` for size variables. Validate the size and check for overflow conditions using safe arithmetic checks.</developer>
@@ -71,8 +78,8 @@
 
         <rule>
             <name>Unsafe Memory Function: Use of malloc() Without free()</name>
-            <!-- <regex>\bmalloc\s*\(</regex> -->
-            <regex>\bmalloc\s*\(.*\)(?!.*free)</regex>
+            <regex><![CDATA[\bmalloc\s*\(.*\)(?!.*free)]]></regex>
+            <rdl><![CDATA[[FLAG:\bmalloc\s*\(.*\)(?!.*free)]]]></rdl>
             <rule_desc>Detects usage of `malloc()` without a corresponding `free()`.</rule_desc>
             <vuln_desc>If dynamically allocated memory is not released properly, it can lead to memory leaks, eventually exhausting system resources.</vuln_desc>
             <developer>Developers should ensure every `malloc()` call has a corresponding `free()` to prevent memory leaks.</developer>
@@ -81,7 +88,8 @@
 
         <rule>
             <name>Null Pointer Dereference</name>
-            <regex>(\w+)\s*=\s*NULL\s*;\s*\w+\s*\(.*\1.*\)</regex>
+            <regex><![CDATA[(\w+)\s*=\s*NULL\s*;\s*\w+\s*\(.*\1.*\)]]></regex>
+            <rdl><![CDATA[[FLAG:(\w+)\s*=\s*NULL\s*;\s*\w+\s*\(.*\1.*\)]]]></rdl>
             <rule_desc>Detects potential null pointer dereference errors.</rule_desc>
             <vuln_desc>If a null pointer is dereferenced, the program may crash or expose vulnerabilities that attackers could exploit.</vuln_desc>
             <developer>Developers should always check for null pointers before dereferencing them.</developer>
@@ -92,7 +100,8 @@
     <category name="Arithmetic and Numeric Errors">
         <rule>
             <name>Integer Overflow or Wraparound</name>
-            <regex>\b(int|short|unsigned)\s+\w+\s*=\s*\w+\s*\+\s*(\d{5,}|INT_MAX|UINT_MAX);</regex>
+            <regex><![CDATA[\b(int|short|unsigned)\s+\w+\s*=\s*\w+\s*\+\s*(\d{5,}|INT_MAX|UINT_MAX);]]></regex>
+            <rdl><![CDATA[[FLAG:\b(int|short|unsigned)\s+\w+\s*=\s*\w+\s*\+\s*(\d{5,}|INT_MAX|UINT_MAX);]]]></rdl>
             <rule_desc>Detects arithmetic operations prone to overflow or wraparound.</rule_desc>
             <vuln_desc>Operations involving large constants or near boundary values may cause integer overflows.</vuln_desc>
             <developer>Use safe arithmetic libraries and perform boundary checks.</developer>
@@ -103,7 +112,8 @@
     <category name="Type Safety">
         <rule>
             <name>Incorrect Casting of malloc() Results</name>
-            <regex>\(\s*\w+\s*\*\)\s*malloc\s*</regex>
+            <regex><![CDATA[\(\s*\w+\s*\*\)\s*malloc\s*]]></regex>
+            <rdl><![CDATA[[FLAG:\(\s*\w+\s*\*\)\s*malloc\s*]]]></rdl>
             <rule_desc>Detects unnecessary casting of `malloc()` results.</rule_desc>
             <vuln_desc>Casting the result of `malloc()` can hide bugs if prototypes are missing or improperly scoped, reducing code readability.</vuln_desc>
             <developer>Do not cast the result of `malloc()`; use proper prototypes to avoid type mismatches.</developer>
@@ -115,6 +125,7 @@
         <rule>
             <name>Unsafe Loop Handling Over Arrays or Strings</name>
             <regex><![CDATA[\b(?:for|while)\s*\([^)]*(?:<|<=|>|>=)[^)]*(?:len|size|count|index|idx|i|j|k)[^)]*\)]]></regex>
+            <rdl><![CDATA[[FLAG:\b(?:for|while)\s*\([^)]*(?:<|<=|>|>=)[^)]*(?:len|size|count|index|idx|i|j|k)[^)]*\)]]]></rdl>
             <rule_desc>Detects loops iterating over arrays, strings, or lists with potentially unsafe bounds.</rule_desc>
             <vuln_desc>Unbounded loops or those influenced by incorrect size checks may cause buffer or integer overflows.</vuln_desc>
             <developer>Ensure loops terminate based on array size or valid upper/lower limits.</developer>
@@ -125,7 +136,8 @@
     <category name="File Handling">
         <rule>
             <name>Temporary Files: Use of mkstemp()</name>
-            <regex>^[^*/]*\bmktemp\s*\(</regex>
+            <regex><![CDATA[^[^*/]*\bmktemp\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:^[^*/]*\bmktemp\s*\(]]]></rdl>
             <rule_desc>Detects usage of the unsafe `mktemp()` function.</rule_desc>
             <vuln_desc>`mktemp()` is vulnerable to race conditions; it is recommended to use `mkstemp()` for safe temporary file creation.</vuln_desc>
             <developer>Replace `mktemp()` with `mkstemp()` to avoid race conditions during temporary file creation.</developer>
@@ -133,7 +145,8 @@
         </rule>
         <rule>
             <name>Insecure File Permissions</name>
-            <regex>\bopen\s*\(.*\bO_CREAT\b.*\)</regex>
+            <regex><![CDATA[\bopen\s*\(.*\bO_CREAT\b.*\)]]></regex>
+            <rdl><![CDATA[[FLAG:\bopen\s*\(.*\bO_CREAT\b.*\)]]]></rdl>
             <rule_desc>Detects file creation with potentially insecure permissions.</rule_desc>
             <vuln_desc>Improper file permissions (e.g., 0644) may expose sensitive data. Use `umask(077)` to restrict permissions.</vuln_desc>
             <developer>Use `umask()` to set restrictive default permissions and avoid exposing confidential files.</developer>
@@ -144,7 +157,8 @@
     <category name="Process Environment Issues">
         <rule>
             <name>Unsafe Use of Process Environment Variables</name>
-            <regex>\b(getenv|setenv|putenv|clearenv)\s*\(</regex>
+            <regex><![CDATA[\b(getenv|setenv|putenv|clearenv)\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:\b(getenv|setenv|putenv|clearenv)\s*\(]]]></rdl>
             <rule_desc>Detects the usage of functions that access or modify the process environment.</rule_desc>
             <vuln_desc>Process environments can expose sensitive data such as passwords, as they are often accessible by other processes with the same UID. Attackers may also manipulate environment variables.</vuln_desc>
             <developer>Use anonymous pipes, sockets, or other secure communication methods for passing secrets. Avoid relying on environment variables for sensitive data transmission.</developer>
@@ -155,7 +169,8 @@
     <category name="Privilege Management">
         <rule>
             <name>Improper Privilege Dropping</name>
-            <regex>^[^*/]*(setuid|setgid|initgroups)\s*\(\s*[^)]+\s*\)\s*[^/]*$</regex>
+            <regex><![CDATA[^[^*/]*(setuid|setgid|initgroups)\s*\(\s*[^)]+\s*\)\s*[^/]*$]]></regex>
+            <rdl><![CDATA[[FLAG:^[^*/]*(setuid|setgid|initgroups)\s*\(\s*[^)]+\s*\)\s*[^/]*$]]]></rdl>
             <rule_desc>Detects the usage of privilege management functions that need proper ordering for secure operation.</rule_desc>
             <vuln_desc>Incorrect use or ordering of privilege-dropping functions (e.g., `setuid` before `setgid`) can result in improper privilege handling, leading to security issues.</vuln_desc>
             <developer>Use `initgroups()` → `setgid()` → `setuid()` sequence to ensure secure privilege dropping, and always check return values.</developer>
@@ -166,7 +181,8 @@
     <category name="Sensitive Information Handling">
         <rule>
             <name>Improper Use of `memset` for Sensitive Data</name>
-            <regex>\bmemset\s*\(\s*(?:\w*(?:password|passwd|secret|token|api[_-]?key|private[_-]?key)\w*|\w+_buffer)\s*,\s*[^,]+,\s*[^)]+\)</regex>
+            <regex><![CDATA[\bmemset\s*\(\s*(?:\w*(?:password|passwd|secret|token|api[_-]?key|private[_-]?key)\w*|\w+_buffer)\s*,\s*[^,]+,\s*[^)]+\)]]></regex>
+            <rdl><![CDATA[[FLAG:\bmemset\s*\(\s*(?:\w*(?:password|passwd|secret|token|api[_-]?key|private[_-]?key)\w*|\w+_buffer)\s*,\s*[^,]+,\s*[^)]+\)][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
             <exclude>(?i)^\s*(//|/\*|\*|#)</exclude>
             <rule_desc>Detects potential improper clearing of sensitive data.</rule_desc>
             <vuln_desc>Using `memset` for clearing sensitive data can be optimized away by compilers, leaving data in memory.</vuln_desc>
@@ -176,7 +192,8 @@
 
         <rule>
             <name>Improper Use of `mlock` for Sensitive Data</name>
-            <regex>\bmlock\s*\(.*?\)</regex>
+            <regex><![CDATA[\bmlock\s*\(.*?\)]]></regex>
+            <rdl><![CDATA[[FLAG:\bmlock\s*\(.*?\)]]]></rdl>
             <rule_desc>Detects improper use of `mlock` for securing sensitive data.</rule_desc>
             <vuln_desc>Failure to lock sensitive data in memory may expose it to swapping, potentially leaking to disk.</vuln_desc>
             <developer>Use `mlock` on sensitive data buffers to prevent them from being swapped to disk. Ensure sufficient permissions and memory limits are set for the application.</developer>
@@ -185,7 +202,8 @@
 
         <rule>
             <name>Improper Use of `setrlimit` for Core Dump Prevention</name>
-            <regex>\bsetrlimit\s*\(\s*RLIMIT_CORE\s*,\s*0\s*\)</regex>
+            <regex><![CDATA[\bsetrlimit\s*\(\s*RLIMIT_CORE\s*,\s*0\s*\)]]></regex>
+            <rdl><![CDATA[[FLAG:\bsetrlimit\s*\(\s*RLIMIT_CORE\s*,\s*0\s*\)]]]></rdl>
             <rule_desc>Detects improper handling of `setrlimit` for preventing core dumps.</rule_desc>
             <vuln_desc>Failure to disable core dumps might expose sensitive data during application crashes.</vuln_desc>
             <developer>Use `setrlimit(RLIMIT_CORE, 0)` to disable core dumps for applications handling sensitive data. Test for successful application of limits.</developer>
@@ -194,7 +212,8 @@
 
         <rule>
             <name>Unsafe File Deletion Using `unlink` or `remove`</name>
-            <regex>\b(?:unlink|remove)\s*\(\s*(?:"[^"\n]*(?:password|passwd|token|secret|key)[^"\n]*"|sensitive_file\w*)\s*\)</regex>
+            <regex><![CDATA[\b(?:unlink|remove)\s*\(\s*(?:"[^"\n]*(?:password|passwd|token|secret|key)[^"\n]*"|sensitive_file\w*)\s*\)]]></regex>
+            <rdl><![CDATA[[FLAG:\b(?:unlink|remove)\s*\(\s*(?:"[^"\n]*(?:password|passwd|token|secret|key)[^"\n]*"|sensitive_file\w*)\s*\)][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
             <exclude>(?i)^\s*(//|/\*|\*|#)</exclude>
             <rule_desc>Detects unsafe deletion of sensitive files.</rule_desc>
             <vuln_desc>Files containing sensitive data might still be recoverable after deletion without secure erasure.</vuln_desc>
@@ -206,7 +225,8 @@
     <category name="Concurrency and Race Conditions">
         <rule>
             <name>Race Condition with Shared Resource</name>
-            <regex>\bpthread_create\s*\(.*\);\s*.*\s*=.*shared_var</regex>
+            <regex><![CDATA[\bpthread_create\s*\(.*\);\s*.*\s*=.*shared_var]]></regex>
+            <rdl><![CDATA[[FLAG:\bpthread_create\s*\(.*\);\s*.*\s*=.*shared_var]]]></rdl>
             <rule_desc>Detects potential race conditions in multi-threaded applications.</rule_desc>
             <vuln_desc>Race conditions occur when multiple threads access shared resources simultaneously.</vuln_desc>
             <developer>Use mutexes or semaphores to synchronize access.</developer>
@@ -217,7 +237,8 @@
     <category name="Makefile Configuration Issues">
         <rule>
             <name>Insecure Compiler Flags</name>
-            <regex>CFLAGS\s*=.*\b(-fno-stack-protector|-z execstack)\b</regex>
+            <regex><![CDATA[CFLAGS\s*=.*\b(-fno-stack-protector|-z execstack)\b]]></regex>
+            <rdl><![CDATA[[FLAG:CFLAGS\s*=.*\b(-fno-stack-protector|-z execstack)\b]]]></rdl>
             <rule_desc>Detects insecure compiler flags that disable security protections.</rule_desc>
             <vuln_desc>Disabling stack protection and executable stack permissions may expose the application to buffer overflow attacks.</vuln_desc>
             <developer>Developers should avoid disabling stack protection unless absolutely necessary.</developer>
@@ -227,6 +248,7 @@
         <rule>
             <name>Download from Insecure Sources</name>
             <regex><![CDATA[\b(?:wget|curl)\s+[^\n]{0,120}http://]]></regex>
+            <rdl><![CDATA[[FLAG:\b(?:wget|curl)\s+[^\n]{0,120}http://][IF(MISSING:https://)]]]></rdl>
             <exclude><![CDATA[(?i)apache\.org/licenses|opensource\.org/licenses|w3\.org|^\s*(#|//|/\*|\*)]]></exclude>
             <rule_desc>Detects downloads from insecure sources using HTTP.</rule_desc>
             <vuln_desc>Downloading files over HTTP makes the application vulnerable to MITM attacks and tampering.</vuln_desc>
@@ -236,7 +258,8 @@
 
         <rule>
             <name>Suppressing Compiler Warnings</name>
-            <regex>CFLAGS\s*=.*\b(-w)\b</regex>
+            <regex><![CDATA[CFLAGS\s*=.*\b(-w)\b]]></regex>
+            <rdl><![CDATA[[FLAG:CFLAGS\s*=.*\b(-w)\b]]]></rdl>
             <rule_desc>Detects flags that suppress compiler warnings.</rule_desc>
             <vuln_desc>Ignoring warnings can mask potential vulnerabilities or bugs.</vuln_desc>
             <developer>Developers should address warnings instead of suppressing them.</developer>
@@ -245,7 +268,8 @@
 
         <rule>
             <name>Hardcoded Secrets in Environment Variables</name>
-            <regex>export\s+\w+=.*</regex>
+            <regex><![CDATA[export\s+\w+=.*]]></regex>
+            <rdl><![CDATA[[FLAG:export\s+\w+=.*]]]></rdl>
             <rule_desc>Detects use of environment variables to store hardcoded secrets.</rule_desc>
             <vuln_desc>Hardcoding secrets in environment variables may expose them to unauthorized access.</vuln_desc>
             <developer>Developers should use secure vaults or encrypted storage for sensitive data.</developer>

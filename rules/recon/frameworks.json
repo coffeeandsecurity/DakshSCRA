@@ -85,6 +85,17 @@
     {"name": "Axum", "regex": "\\baxum\\b", "regexFlag": "1", "fileExtensions": [".rs", "*"]},
     {"name": "Warp", "regex": "\\bwarp\\b", "regexFlag": "1", "fileExtensions": [".rs", "*"]}
   ],
+  "C": [
+    {"name": "ESP-IDF", "regex": "\\besp_idf\\b|idf\\.py|#include\\s+[<\\\"]esp_", "regexFlag": "1", "fileExtensions": [".c", ".h", ".txt", "*"]},
+    {"name": "Zephyr", "regex": "\\bzephyr\\b|#include\\s+[<\\\"]zephyr/", "regexFlag": "1", "fileExtensions": [".c", ".h", ".conf", "*"]},
+    {"name": "FreeRTOS", "regex": "\\bFreeRTOS\\b|#include\\s+[<\\\"]FreeRTOS\\.h[>\\\"]", "regexFlag": "1", "fileExtensions": [".c", ".h", "*"]}
+  ],
+  "C++": [
+    {"name": "Qt", "regex": "\\bQtCore\\b|\\bQtWidgets\\b|Q_OBJECT|find_package\\(Qt", "regexFlag": "1", "fileExtensions": [".cpp", ".cc", ".cxx", ".hpp", ".hxx", ".h", ".pro", "*"]},
+    {"name": "Boost", "regex": "boost::|#include\\s+[<\\\"]boost/", "regexFlag": "1", "fileExtensions": [".cpp", ".cc", ".cxx", ".hpp", ".hxx", ".h", "*"]},
+    {"name": "POCO", "regex": "\\bPoco::|#include\\s+[<\\\"]Poco/", "regexFlag": "1", "fileExtensions": [".cpp", ".cc", ".cxx", ".hpp", ".hxx", ".h", "*"]},
+    {"name": "gRPC C++", "regex": "grpc::|#include\\s+[<\\\"]grpcpp/", "regexFlag": "1", "fileExtensions": [".cpp", ".cc", ".cxx", ".hpp", ".hxx", ".h", "*"]}
+  ],
   "Kotlin": [
     {"name": "Ktor", "regex": "\\bio\\.ktor\\b", "regexFlag": "1", "fileExtensions": [".kt", ".kts"]},
     {"name": "Spring (Kotlin)", "regex": "org\\.springframework", "regexFlag": "1", "fileExtensions": [".kt", ".kts"]},

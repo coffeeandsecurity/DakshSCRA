@@ -1,0 +1,49 @@
+<root>
+    <category name="Framework-Specific Security">
+        <rule>
+            <name>Entityframework Developer Exception Page Enabled</name>
+            <regex><![CDATA[UseDeveloperExceptionPage\(\)]]></regex>
+            <rdl><![CDATA[[FLAG:UseDeveloperExceptionPage\(\)]]]></rdl>
+            <rule_desc>Detects developer exception middleware usage.</rule_desc>
+            <vuln_desc>Detailed exception output in production can leak sensitive internals.</vuln_desc>
+            <developer>Enable developer exception page only in development environment.</developer>
+            <reviewer>Verify environment guard around UseDeveloperExceptionPage.</reviewer>
+        </rule>
+        <rule>
+            <name>Entityframework Insecure Certificate Validation Callback</name>
+            <regex><![CDATA[ServerCertificateCustomValidationCallback\s*=\s*\(.*=>\s*true]]></regex>
+            <rdl><![CDATA[[FLAG:ServerCertificateCustomValidationCallback\s*=\s*\(.*=>\s*true]]]></rdl>
+            <rule_desc>Detects TLS certificate validation bypass patterns.</rule_desc>
+            <vuln_desc>Bypassing certificate validation enables MITM attacks.</vuln_desc>
+            <developer>Remove bypass callbacks and enforce strict certificate validation.</developer>
+            <reviewer>Inspect all HTTP client handlers for certificate bypass.</reviewer>
+        </rule>
+        <rule>
+            <name>Entityframework Raw SQL Execution Sink</name>
+            <regex><![CDATA[FromSqlRaw\(|ExecuteSqlRaw\(|SqlQueryRaw\(]]></regex>
+            <rdl><![CDATA[[FLAG:FromSqlRaw\(|ExecuteSqlRaw\(|SqlQueryRaw\(]]]></rdl>
+            <rule_desc>Detects raw SQL execution APIs in EF/.NET code.</rule_desc>
+            <vuln_desc>Raw SQL with untrusted data can cause SQL injection.</vuln_desc>
+            <developer>Use parameter binding and input validation.</developer>
+            <reviewer>Review callsites for untrusted argument flow.</reviewer>
+        </rule>
+        <rule>
+            <name>Entityframework Permissive CORS</name>
+            <regex><![CDATA[AllowAnyOrigin\(\)|WithOrigins\(\s*[\'\"]\*[\'\"]]]></regex>
+            <rdl><![CDATA[[FLAG:AllowAnyOrigin\(\)|WithOrigins\(\s*[\'\"]\*[\'\"]]]]></rdl>
+            <rule_desc>Detects overly broad CORS policy configuration.</rule_desc>
+            <vuln_desc>Permissive CORS may expose APIs to malicious web origins.</vuln_desc>
+            <developer>Restrict CORS origins to known trusted domains.</developer>
+            <reviewer>Verify policy registration and environment overrides.</reviewer>
+        </rule>
+        <rule>
+            <name>Entityframework Hardcoded Secret Material</name>
+            <regex><![CDATA[(Secret|ApiKey|Token|Password)\s*=\s*"[^\"]{8,}"]]></regex>
+            <rdl><![CDATA[[FLAG:(Secret|ApiKey|Token|Password)\s*=\s*"[^\"]{8,}"][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <rule_desc>Detects likely hardcoded secret literals.</rule_desc>
+            <vuln_desc>Hardcoded secrets may be exposed through source and logs.</vuln_desc>
+            <developer>Move secrets to secure configuration providers.</developer>
+            <reviewer>Review secret handling and rotate exposed values.</reviewer>
+        </rule>
+    </category>
+</root>

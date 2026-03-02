@@ -1,0 +1,49 @@
+<root>
+    <category name="Framework-Specific Security">
+        <rule>
+            <name>Axum Debug/Dev Exposure</name>
+            <regex><![CDATA[RUST_LOG\s*=\s*"debug"|env_logger::init\(\)]]></regex>
+            <rdl><![CDATA[[FLAG:RUST_LOG\s*=\s*"debug"|env_logger::init\(\)][IF(MISSING:release|production)]]]></rdl>
+            <rule_desc>Detects potential debug logging exposure points requiring review.</rule_desc>
+            <vuln_desc>Verbose logs in production can leak sensitive runtime details.</vuln_desc>
+            <developer>Use production-safe log levels and scrub sensitive data.</developer>
+            <reviewer>Review logger initialization and production env defaults.</reviewer>
+        </rule>
+        <rule>
+            <name>Axum Insecure TLS Handling</name>
+            <regex><![CDATA[danger_accept_invalid_certs\(\s*true\s*\)|danger_accept_invalid_hostnames\(\s*true\s*\)]]></regex>
+            <rdl><![CDATA[[FLAG:danger_accept_invalid_certs\(\s*true\s*\)|danger_accept_invalid_hostnames\(\s*true\s*\)]]]></rdl>
+            <rule_desc>Detects TLS certificate/hostname validation bypass in Rust HTTP clients.</rule_desc>
+            <vuln_desc>TLS bypass allows interception and spoofing attacks.</vuln_desc>
+            <developer>Remove bypass options and enforce strict validation.</developer>
+            <reviewer>Audit reqwest/native-tls/rustls client builder settings.</reviewer>
+        </rule>
+        <rule>
+            <name>Axum SQL Injection Sink</name>
+            <regex><![CDATA[format!\(\s*"\s*SELECT|format!\(\s*"\s*INSERT|sql_query\(\s*format!]]></regex>
+            <rdl><![CDATA[[FLAG:format!\(\s*"\s*SELECT|format!\(\s*"\s*INSERT|sql_query\(\s*format!]]]></rdl>
+            <rule_desc>Detects likely formatted SQL query construction.</rule_desc>
+            <vuln_desc>String-built SQL can be vulnerable to injection.</vuln_desc>
+            <developer>Use parameterized query APIs and query builders.</developer>
+            <reviewer>Review data flow into formatted SQL fragments.</reviewer>
+        </rule>
+        <rule>
+            <name>Axum Permissive CORS</name>
+            <regex><![CDATA[allow_any_origin\(\)|Any\s*,\s*allow_origin|allow_origin\(Any\)]]></regex>
+            <rdl><![CDATA[[FLAG:allow_any_origin\(\)|Any\s*,\s*allow_origin|allow_origin\(Any\)]]]></rdl>
+            <rule_desc>Detects permissive CORS configurations.</rule_desc>
+            <vuln_desc>Wildcard origins can expose endpoints to untrusted origins.</vuln_desc>
+            <developer>Restrict allowed origins explicitly.</developer>
+            <reviewer>Validate CORS middleware settings in server bootstrap.</reviewer>
+        </rule>
+        <rule>
+            <name>Axum Hardcoded Secret Material</name>
+            <regex><![CDATA[(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <rule_desc>Detects likely hardcoded secret values.</rule_desc>
+            <vuln_desc>Hardcoded secrets risk credential leakage.</vuln_desc>
+            <developer>Externalize secrets via environment or secure stores.</developer>
+            <reviewer>Verify no production credentials in code/config.</reviewer>
+        </rule>
+    </category>
+</root>

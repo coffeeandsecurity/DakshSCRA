@@ -2,7 +2,8 @@
     <category name="Untrusted Input Handling or Injection Flaws">
         <rule>
             <name>Untrusted Inputs: request.GET</name>
-            <regex>request\.GET</regex>
+            <regex><![CDATA[request\.GET]]></regex>
+            <rdl><![CDATA[[FLAG:request\.GET][IF(PRESENT:(execute|raw\(|extra\(|eval\(|subprocess|os\.system|redirect|HttpResponse|mark_safe|safe_filter) && MISSING:(escape|sanitize|validate|cleaned_data|get_validators))]]]></rdl>
             <rule_desc>Detects the usage of request.GET, which may contain untrusted inputs.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a potential vulnerability related to using user input from request.GET without proper validation and sanitization. Attackers can manipulate URL parameters to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks (SQL, OS, or LDAP), cross-site scripting (XSS), or unauthorized access to sensitive information.</vuln_desc>
             <developer>Developers should carefully validate and sanitize user input received from request.GET before using it in any sensitive operations. They should implement strong input validation, ensuring that only expected and sanitized values are accepted from URL parameters. Additionally, developers should be aware of the risks associated with using user-supplied data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
@@ -10,7 +11,8 @@
         </rule>
         <rule>
             <name>Untrusted Inputs: request.POST</name>
-            <regex>request\.POST</regex>
+            <regex><![CDATA[request\.POST]]></regex>
+            <rdl><![CDATA[[FLAG:request\.POST][IF(PRESENT:(execute|raw\(|extra\(|eval\(|subprocess|os\.system|redirect|HttpResponse|mark_safe|safe_filter) && MISSING:(escape|sanitize|validate|cleaned_data|get_validators))]]]></rdl>
             <rule_desc>Detects the usage of request.POST, which may contain untrusted inputs.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a potential vulnerability related to using user input from request.POST without proper validation and sanitization. Attackers can manipulate form data to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks (SQL, OS, or LDAP), cross-site scripting (XSS), or unauthorized access to sensitive information.</vuln_desc>
             <developer>Developers should carefully validate and sanitize user input received from request.POST before using it in any sensitive operations. They should implement strong input validation, ensuring that only expected and sanitized values are accepted from form submissions. Additionally, developers should be aware of the risks associated with using user-supplied data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
@@ -18,7 +20,8 @@
         </rule>
         <rule>
             <name>Untrusted Inputs: Request Usage with require_GET or require_POST Decorator</name>
-            <regex>@require_(GET|POST)[\s\S]*?def\s+(\w+)\(.*?request.*?:</regex>
+            <regex><![CDATA[@require_(GET|POST)[\s\S]*?def\s+(\w+)\(.*?request.*?:]]></regex>
+            <rdl><![CDATA[[FLAG:@require_(GET|POST)[\s\S]*?def\s+(\w+)\(.*?request.*?:]]]></rdl>
             <rule_desc>Detects instances where either the require_GET or require_POST decorator is used and the request object is accessed in the view function.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential use of the require_GET or require_POST decorator in conjunction with the request object. This may suggest that the view function expects specific HTTP request methods and should handle them accordingly.</vuln_desc>
             <developer>Developers should ensure that view functions decorated with require_GET or require_POST handle the respective HTTP request methods correctly and securely. It's essential to validate user input and perform necessary security checks when using the request object.</developer>
@@ -27,6 +30,7 @@
         <rule>
             <name>Untrusted Inputs: user_input_variable</name>
             <regex>user_input_variable</regex>
+            <rdl><![CDATA[[FLAG:user_input_variable][IF(PRESENT:(execute|raw\(|extra\(|eval\(|subprocess|os\.system|redirect|HttpResponse) && MISSING:(escape|sanitize|validate|allowlist|whitelist))]]]></rdl>
             <rule_desc>Detects the usage of user_input_variable, which can introduce untrusted inputs into the code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using user input without proper validation and sanitization. Attackers can manipulate input values to provide malicious or unexpected data, potentially leading to security vulnerabilities such as injection attacks (SQL, OS, or LDAP), cross-site scripting (XSS), or remote code execution.</vuln_desc>
             <developer>Developers should validate and sanitize user_input_variable before using it in any sensitive operations. They should implement strong input validation, ensuring that only expected and sanitized values are accepted. Additionally, developers should be cautious about the potential risks associated with using user-supplied data and follow secure coding practices.</developer>
@@ -34,7 +38,8 @@
         </rule>
         <rule>
             <name>Insecure Use of Python input() Function</name>
-            <regex>input\(\)</regex>
+            <regex><![CDATA[input\(\)]]></regex>
+            <rdl><![CDATA[[FLAG:input\(\)][IF(PRESENT:(eval\(|exec\(|subprocess|os\.system|os\.popen|sql|execute) && MISSING:(strip\(|isdigit\(|isnumeric\(|re\.match|re\.fullmatch))]]]></rdl>
             <rule_desc>Detects potentially insecure usage of Python's input() function for user input.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a potential security concern related to the usage of Python's input() function for accepting user input without proper validation and sanitization. Using input() in this way can expose the application to various security risks, including injection vulnerabilities. Developers should implement strong input validation and sanitization when using input() to prevent security vulnerabilities.</vuln_desc>
             <developer>Developers should avoid using input() for untrusted user input. Instead, they should use input() only for non-sensitive, trusted input sources. For untrusted input, developers should implement robust input validation and sanitization techniques.</developer>
@@ -42,7 +47,8 @@
         </rule>
         <rule>
             <name>Insecure Serialization: pickle and shelve</name>
-            <regex>(?i)(pickle\.load\(.*\)|pickle\.loads\(.*\)|shelve\.open\(.*\))</regex>
+            <regex><![CDATA[(?i)(pickle\.load\(.*\)|pickle\.loads\(.*\)|shelve\.open\(.*\))]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)(pickle\.load\(.*\)|pickle\.loads\(.*\)|shelve\.open\(.*\))][IF(MISSING:(trusted|signed|verify|hmac|safe_serialization))]]]></rdl>
             <rule_desc>Detects insecure usage of the pickle and shelve modules, which can introduce deserialization vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of insecure deserialization patterns by looking for calls to `pickle.load()`, `pickle.loads()`, and `shelve.open()` with any arguments. Attackers can exploit insecure deserialization to execute arbitrary code, escalate privileges, or perform other malicious actions.</vuln_desc>
             <developer>Developers should avoid using insecure deserialization practices with pickle and shelve modules. It is crucial to validate and sanitize any serialized data before deserialization and to ensure that serialized data comes from a trusted source.</developer>
@@ -50,7 +56,8 @@
         </rule>
         <rule>
             <name>Network Calls: urllib2 and socket</name>
-            <regex>(?i)(urllib2|socket)</regex>
+            <regex><![CDATA[(?i)(urllib2|socket)]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)(urllib2|socket)][IF(PRESENT:(connect|send|recv|urlopen|request) && MISSING:(timeout=|ssl|TLS|verify=True|cert_reqs))]]]></rdl>
                 <exclude>(?i).*import\s.*</exclude>
             <rule_desc>Detects the usage of network-related modules urllib2 and socket in Python code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a potential security concern related to network operations. The use of urllib2 and socket modules can introduce security risks if not handled securely. Developers should ensure proper input validation and consider security best practices when making network calls using these modules.</vuln_desc>
@@ -59,7 +66,8 @@
         </rule>
         <rule>
             <name>Insecure URL Configuration</name>
-            <regex>(?i)(url|re_path)\s*\(\s*['"](\^|\^\/)(?P&lt;url&gt;[^'"]+)['"]</regex>
+            <regex><![CDATA[(?i)(url|re_path)\s*\(\s*['"](\^|\^\/)([^'"]+)['"]]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)(url|re_path)\s*\(\s*['"](\^|\^\/)([^'"]+)['"]]]]></rdl>
             <rule_desc>Detects insecure URL configurations in Django's URL patterns.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a potential security concern related to insecure URL configurations. Improperly configured URL patterns can lead to security vulnerabilities, such as open redirects or unauthorized access to views. Developers should ensure that URL configurations are properly secured.</vuln_desc>
             <developer>Developers should review and secure their URL configurations to prevent security vulnerabilities. They should avoid using insecure URL patterns and ensure that sensitive views are properly protected.</developer>
@@ -67,7 +75,8 @@
         </rule>
         <rule>
             <name>YAML Loading: Use safe_load</name>
-            <regex>yaml\.load\((?!.*Loader=yaml\.FullLoader)(.*?)\)</regex>
+            <regex><![CDATA[yaml\.load\((?!.*Loader=yaml\.FullLoader)(.*?)\)]]></regex>
+            <rdl><![CDATA[[FLAG:yaml\.load\((?!.*Loader=yaml\.FullLoader)(.*?)\)][IF(MISSING:yaml\.safe_load|Loader=yaml\.SafeLoader)]]]></rdl>
             <rule_desc>Detects the usage of yaml.load without specifying the Loader as yaml.FullLoader, which may lead to potential security risks.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a potential security concern related to using yaml.load without specifying yaml.FullLoader as the Loader. This practice can lead to security vulnerabilities if the loaded YAML contains Python code or constructors. Using yaml.safe_load or specifying yaml.FullLoader is recommended to ensure safe loading of YAML data.</vuln_desc>
             <developer>Developers should use yaml.safe_load or specify yaml.FullLoader when loading YAML data to prevent potential code execution vulnerabilities and ensure the safe construction of Python objects from the YAML data.</developer>
@@ -78,7 +87,8 @@
     <category name="Insecure File Operations">
         <rule>
             <name>Insecure File Operations</name>
-            <regex>(?i)(os\.remove|os\.unlink|shutil\.rmtree)</regex>
+            <regex><![CDATA[(?i)(os\.remove|os\.unlink|shutil\.rmtree)]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)(os\.remove|os\.unlink|shutil\.rmtree)][IF(PRESENT:(request|input\(|argv|user_input|params|query) && MISSING:(abspath|realpath|normpath|startswith\(|allowlist|whitelist))]]]></rdl>
             <rule_desc>Detects the use of file removal functions in Python that may operate on untrusted file paths, potentially leading to security risks.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of untrusted file operations. Operating on untrusted file paths can lead to arbitrary file deletion and other security issues.</vuln_desc>
             <developer>Developers should validate and sanitize file paths and restrict file operations to trusted directories when removing files or directories.</developer>
@@ -89,7 +99,8 @@
     <category name="Information Disclosure">
         <rule>
             <name>Stack Trace or Error Disclosure</name>
-            <regex>(?i)(traceback\.format_exc\(\)|traceback\.print_exc\(\)|print\(.*Exception.*\))</regex>
+            <regex><![CDATA[(?i)(traceback\.format_exc\(\)|traceback\.print_exc\(\)|print\(.*Exception.*\))]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)(traceback\.format_exc\(\)|traceback\.print_exc\(\)|print\(.*Exception.*\))][IF(MISSING:(DEBUG=False|logger\.exception|logging\.exception|production))]]]></rdl>
             <rule_desc>Detects code that exposes stack traces or sensitive error information in Python applications.</rule_desc>
             <vuln_desc>Using `traceback.print_exc()` or printing exceptions directly can expose sensitive details like file paths, method names, and line numbers to attackers.</vuln_desc>
             <developer>Developers should use structured logging frameworks like Python's `logging` module to capture exceptions securely without exposing them to end-users.</developer>
@@ -101,6 +112,7 @@
         <rule>
             <name>Insecure SQL Queries: raw and extra</name>
             <regex><![CDATA[(?i)^[^#]*\.\s*(raw|extra)\s*\(\s*]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)^[^#]*\.\s*(raw|extra)\s*\(\s*][IF(PRESENT:(request|params|query|format\(|f\"|f'|\+) && MISSING:(params=|placeholders|bindparam))]]]></rdl>
             <rule_desc>Detects insecure SQL queries using the "raw" and "extra" methods in Python.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a potential security concern related to insecure SQL queries. The use of "raw" and "extra" methods can lead to SQL injection vulnerabilities if user input is not properly validated or sanitized. Developers should ensure secure handling of SQL queries to prevent such vulnerabilities.</vuln_desc>
             <developer>Developers should avoid using "raw" and "extra" methods for SQL queries, especially with unvalidated user input. Instead, they should use parameterized queries or other secure methods to prevent SQL injection vulnerabilities.</developer>
@@ -110,6 +122,7 @@
         <rule>
             <name>SQL Query: SELECT Statements with WHERE or ORDER BY</name>
             <regex><![CDATA[(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*][IF(PRESENT:(request|params|query|format\(|f\"|f'|\+) && MISSING:%s|\?|:\w+|params=|execute\()]]]></rdl>
             <rule_desc>Detects instances of SELECT statements with WHERE or ORDER BY clauses in SQL queries, which may be vulnerable to SQL injection if user input is not handled securely.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the use of potentially vulnerable SELECT statements with WHERE or ORDER BY clauses. Improper handling of user input in these clauses can lead to SQL injection, allowing attackers to manipulate query behavior and gain unauthorized access to data.</vuln_desc>
             <developer>Developers should validate and implement secure alternatives by using parameterized queries with placeholders or bindings to prevent SQL injection risks.</developer>
@@ -119,6 +132,7 @@
         <rule>
             <name>SQL Query: Unrestricted SELECT *</name>
             <regex><![CDATA[\bSELECT\s+\*\s+FROM\b]]></regex>
+            <rdl><![CDATA[[FLAG:\bSELECT\s+\*\s+FROM\b][IF(MISSING:LIMIT\s+\d+)]]]></rdl>
             <rule_desc>Detects "SELECT * FROM" in SQL queries, which can expose unnecessary or sensitive data.</rule_desc>
             <vuln_desc>If this rule matches, it suggests that the query retrieves more data than necessary, potentially exposing sensitive information and increasing the attack surface.</vuln_desc>
             <developer>Developers should validate existing queries and specify only the required columns to prevent unnecessary data exposure.</developer>
@@ -128,6 +142,7 @@
         <rule>
             <name>SQL Query: Direct DELETE with User Input</name>
             <regex><![CDATA[(?i)\bDELETE\s+FROM\s+[^\s]+\s+WHERE\s+.*=.*\$.*]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)\bDELETE\s+FROM\s+[^\s]+\s+WHERE\s+.*=.*\$.*][IF(MISSING:%s|\?|:\w+|params=|execute\()]]]></rdl>
             <rule_desc>Detects DELETE statements using user input directly without parameterization, increasing SQL injection risks.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a potentially insecure DELETE query that could be exploited for SQL injection.</vuln_desc>
             <developer>Developers should avoid using user input directly in DELETE statements. Use parameterized queries to prevent SQL injection.</developer>
@@ -137,6 +152,7 @@
         <rule>
             <name>SQL Query: Subqueries with User Input</name>
             <regex><![CDATA[(?i)\bSELECT\s+[^\s]+\s+FROM\s+\((SELECT\s+.*\$.*)\)]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)\bSELECT\s+[^\s]+\s+FROM\s+\((SELECT\s+.*\$.*)\)][IF(MISSING:%s|\?|:\w+|params=|execute\()]]]></rdl>
             <rule_desc>Detects nested subqueries with user input, which can lead to SQL injection vulnerabilities if input is not parameterized.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a nested query that may allow SQL injection if user input is not validated or parameterized securely.</vuln_desc>
             <developer>Developers should use parameterized queries and validate any user input used within subqueries to prevent injection vulnerabilities.</developer>
@@ -148,7 +164,8 @@
     <category name="Command Injection">
         <rule>
             <name>Command Injection: subprocess</name>
-            <regex>subprocess\.run\(.*\)</regex>
+            <regex><![CDATA[subprocess\.run\(.*\)]]></regex>
+            <rdl><![CDATA[[FLAG:subprocess\.run\(.*\)][IF(PRESENT:(shell=True|input\(|request|params|query|argv) && MISSING:(shlex\.quote|list2cmdline|allowlist|whitelist))]]]></rdl>
             <rule_desc>Detects instances of subprocess.run() that can lead to command injection vulnerabilities if used with untrusted input.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of command injection. Attackers can exploit subprocess.run() with unsanitized user input to execute arbitrary shell commands, potentially leading to unauthorized access, data loss, remote code execution, or other malicious activities.</vuln_desc>
             <developer>Developers should avoid using subprocess.run() with untrusted user input whenever possible. If their usage is necessary, it is crucial to employ strict input validation, input sanitization, and command parameterization techniques to prevent command injection attacks. Developers should also consider using safer alternatives or language constructs that mitigate command execution risks.</developer>
@@ -156,7 +173,8 @@
         </rule>
         <rule>
             <name>Subprocess Modules: os.system, os.spawn, os.popen, popen2., os.kill, commands.</name>
-            <regex>(?i)(os\.system|os\.spawn|os\.popen|popen2\.|os\.kill|commands\.)</regex>
+            <regex><![CDATA[(?i)(os\.system|os\.spawn|os\.popen|popen2\.|os\.kill|commands\.)]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)(os\.system|os\.spawn|os\.popen|popen2\.|os\.kill|commands\.)][IF(PRESENT:(input\(|request|params|query|argv) && MISSING:(shlex\.quote|allowlist|whitelist))]]]></rdl>
             <rule_desc>Detects the usage of subprocess-related modules and functions in Python code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a potential security concern related to subprocess handling. The use of subprocess-related functions and modules can introduce security risks if not handled securely. Developers should ensure proper input validation, sanitization, and security measures when executing system commands or managing subprocesses.</vuln_desc>
             <developer>Developers should carefully validate and sanitize any user input used in subprocess-related operations. They should also follow security best practices when using subprocess functions and modules to mitigate potential security risks associated with subprocess handling.</developer>
@@ -164,7 +182,8 @@
         </rule>
         <rule>
             <name>Command Injection: eval()</name>
-            <regex>(^|\s|=\s?)eval\(</regex>
+            <regex><![CDATA[(^|\s|=\s?)eval\(]]></regex>
+            <rdl><![CDATA[[FLAG:(^|\s|=\s?)eval\(][IF(PRESENT:(input\(|request|params|query|user_input|base64|pickle) && MISSING:(allowlist|whitelist))]]]></rdl>
             <rule_desc>Detects instances of eval() that can lead to command injection vulnerabilities if used with untrusted input.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of command injection. Attackers can exploit eval() with unsanitized user input to execute arbitrary code, potentially leading to unauthorized access, data loss, remote code execution, or other malicious activities.</vuln_desc>
             <developer>Developers should avoid using eval() with untrusted user input whenever possible. If its usage is necessary, it is crucial to employ strict input validation, input sanitization, and command parameterization techniques to prevent command injection attacks. Developers should also consider using safer alternatives or language constructs that mitigate command execution risks.</developer>
@@ -175,7 +194,8 @@
     <category name="Arbitrary Code Execution">
         <rule>
             <name>Arbitrary Code Execution: eval()</name>
-            <regex>\beval\(.+\)</regex>
+            <regex><![CDATA[\beval\(.+\)]]></regex>
+            <rdl><![CDATA[[FLAG:\beval\(.+\)][IF(PRESENT:(input\(|request|params|query|user_input|base64|pickle) && MISSING:(allowlist|whitelist))]]]></rdl>
             <rule_desc>Detects the usage of eval() function, which can lead to arbitrary code execution vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of code injection. Attackers can exploit the eval() function to execute arbitrary code, potentially gaining unauthorized access, compromising data integrity, or executing malicious actions on the server.</vuln_desc>
             <developer>Developers should avoid using eval() function whenever possible. If its usage is unavoidable, it is crucial to validate and sanitize any user-supplied input before passing it to eval(). Developers should explore safer alternatives or restrict the execution to a limited and controlled environment.</developer>
@@ -186,7 +206,8 @@
     <category name="Session and State Management">
         <rule>
             <name>Insecure Session Cookies or CSRF Tokens Configuration</name>
-            <regex>(?i)\b(SESSION_COOKIE_SECURE|CSRF_COOKIE_SECURE)\s*=\s*False\b</regex>
+            <regex><![CDATA[(?i)\b(SESSION_COOKIE_SECURE|CSRF_COOKIE_SECURE)\s*=\s*False\b]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)\b(SESSION_COOKIE_SECURE|CSRF_COOKIE_SECURE)\s*=\s*False\b]]]></rdl>
             <rule_desc>Detects potential security vulnerabilities related to insecure session cookies or CSRF token configurations in Django and similar Python web frameworks.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a potential security vulnerability. Insecure settings for session cookies (SESSION_COOKIE_SECURE=False) or CSRF tokens (CSRF_COOKIE_SECURE=False) can expose the application to security risks, including session hijacking and cross-site request forgery (CSRF) attacks. Developers should ensure that session cookies are set as secure (SESSION_COOKIE_SECURE=True) and that CSRF tokens are correctly configured (CSRF_COOKIE_SECURE=True) to enhance the security of the application.</vuln_desc>
             <developer>Developers should review and update the configuration settings for session cookies and CSRF tokens in the application's security settings. Ensure that SESSION_COOKIE_SECURE is set to True to make session cookies secure (HTTPS-only), and set CSRF_COOKIE_SECURE to True to enhance protection against CSRF attacks.</developer>
@@ -197,7 +218,8 @@
     <category name="Deprecated Functions">
         <rule>
             <name>Deprecated Python Functions</name>
-            <regex>(?i)\b(urllib2|commands)\b</regex>
+            <regex><![CDATA[(?i)\b(urllib2|commands)\b]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)\b(urllib2|commands)\b]]]></rdl>
             <rule_desc>Detects the use of deprecated Python functions and modules.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a potential security concern related to the use of deprecated Python functions or modules. Deprecated functions and modules may have security vulnerabilities or lack support in newer Python versions. Developers should update their code to use recommended alternatives.</vuln_desc>
             <developer>Developers should replace deprecated functions and modules with recommended alternatives to ensure code security and compatibility with newer Python versions.</developer>
@@ -209,7 +231,8 @@
         <!--    # This rule is extreamly verbose. Use it only if you know how to filter out what you need.
         <rule>
             <name>Decorators Usage and Placement</name>
-            <regex>@\w+\s*(\([^)]*\))?\s*(def\s+\w+\s*\()?</regex>
+            <regex><![CDATA[@\w+\s*(\([^)]*\))?\s*(def\s+\w+\s*\()?]]></regex>
+            <rdl><![CDATA[[FLAG:@\w+\s*(\([^)]*\))?\s*(def\s+\w+\s*\()?]]]></rdl>
             <rule_desc>Identifies decorators used in the code and checks their placement.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the presence of decorators in the code. Review the usage and placement of decorators to ensure they are correctly applied where needed and not missed where they are required. Additionally, check for decorators that apply exceptions and review them for potential security issues.</vuln_desc>
             <developer>Developers should use decorators judiciously and ensure they are correctly placed on functions or methods where they are needed. Carefully review decorators that apply exceptions to ensure they do not introduce security vulnerabilities.</developer>
@@ -217,7 +240,8 @@
         </rule> -->
         <rule>
             <name>HTTP Decorators: Insecure or Commonly Abused Methods</name>
-            <regex>(@require_http_methods\s*\(\s*\["(?:GET|PUT|DELETE|.*?)"\]\))|(@require_GET)</regex>
+            <regex><![CDATA[(@require_http_methods\s*\(\s*\["(?:GET|PUT|DELETE|.*?)"\]\))|(@require_GET)]]></regex>
+            <rdl><![CDATA[[FLAG:(@require_http_methods\s*\(\s*\["(?:GET|PUT|DELETE|.*?)"\]\))|(@require_GET)]]]></rdl>
             <rule_desc>Detects the usage of insecure or commonly abused HTTP decorators.</rule_desc>
             <vuln_desc>If this rule matches, it indicates either the usage of the @require_http_methods decorator permitting insecure HTTP methods (e.g., GET, PUT, DELETE) or the presence of @require_GET. Review the usage of these decorators to ensure they are applied correctly and consider whether security measures are in place, especially when sensitive information is transmitted via GET requests.</vuln_desc>
             <developer>Developers should use the @require_http_methods decorator judiciously and only permit insecure HTTP methods when absolutely necessary. Ensure that it is applied to views where it is needed to restrict or specify the allowed HTTP methods, and consider the security implications of permitting insecure methods. When using @require_GET, take care to implement additional security measures if required.</developer>
@@ -225,7 +249,8 @@
         </rule>
         <rule>
             <name>CSRF Exempt Decorators</name>
-            <regex>@(csrf_exempt)</regex>
+            <regex><![CDATA[@(csrf_exempt)]]></regex>
+            <rdl><![CDATA[[FLAG:@(csrf_exempt)]]]></rdl>
             <rule_desc>Detects decorators that exempt views from CSRF protection.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the presence of decorators that exempt views from CSRF protection. Review these decorators to ensure they are used judiciously and do not introduce security vulnerabilities.</vuln_desc>
             <developer>Developers should use CSRF exempt decorators sparingly and ensure they are applied only where necessary. Carefully review the purpose and security implications of each exemption applied by these decorators.</developer>
@@ -236,7 +261,8 @@
     <category name="Software and Library Version Detection">
         <rule>
             <name>Library Version Check</name>
-            <regex>@\w+_version</regex>
+            <regex><![CDATA[@\w+_version]]></regex>
+            <rdl><![CDATA[[FLAG:@\w+_version]]]></rdl>
             <rule_desc>Detects the version of the software and various libraries used in the code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the presence of version information for a library. Review the library versions to ensure they are current and not outdated or End of Life (EoL).</vuln_desc>
             <developer>Developers should regularly check and update libraries to the latest versions to ensure security and stability. Avoid using outdated or EoL library versions whenever possible.</developer>
@@ -250,7 +276,8 @@
     <category name="Insecure Mitigations">
         <rule>
             <name>Insecure Mitigation: Django Safe Filter django.utils.safestring</name>
-            <regex>(?i)\.safestring</regex>
+            <regex><![CDATA[(?i)\.safestring]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)\.safestring]]]></rdl>
             <rule_desc>Detects the potentially insecure usage of the Django Safe Filter (django.utils.safestring), which may indicate an insufficient security mitigation approach.</rule_desc>
             <vuln_desc>If this rule matches, it suggests a potential vulnerability related to the use of the Django Safe Filter. Relying solely on the Safe Filter without additional security measures may leave the application susceptible to Cross-Site Scripting (XSS) attacks if not used correctly. It is recommended to complement the Safe Filter with proper output encoding and validation to ensure robust security mitigation against XSS.</vuln_desc>
             <developer>Developers are advised to avoid relying solely on the Django Safe Filter for XSS mitigation. Instead, they should use it in conjunction with proper output encoding and validation to prevent XSS vulnerabilities effectively.</developer>
@@ -258,7 +285,8 @@
         </rule>
         <rule>
             <name>Insecure Use of Django mark_safe</name>
-            <regex>(?i)\.mark_safe\(\s*["']</regex>
+            <regex><![CDATA[(?i)\.mark_safe\(\s*["']]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)\.mark_safe\(\s*["']]]]></rdl>
             <rule_desc>Detects potentially insecure usage of Django's mark_safe function, which can lead to Cross-Site Scripting (XSS) vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a potential security concern related to the usage of Django's mark_safe function without proper output encoding. This can expose the application to Cross-Site Scripting (XSS) attacks if not used correctly. It is recommended to use mark_safe in conjunction with proper output encoding and validation to ensure robust security mitigation against XSS.</vuln_desc>
             <developer>Developers should avoid using mark_safe in isolation for XSS mitigation. It should be used alongside proper output encoding and validation to prevent XSS vulnerabilities effectively.</developer>
@@ -266,7 +294,8 @@
         </rule>
         <rule>
             <name>Insecure Use of Django csrf_exempt Decorator</name>
-            <regex>(?i)@csrf_exempt</regex>
+            <regex><![CDATA[(?i)@csrf_exempt]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)@csrf_exempt]]]></rdl>
             <rule_desc>Detects potentially insecure usage of Django's @csrf_exempt decorator.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a potential security concern related to the usage of Django's @csrf_exempt decorator without proper justification. This can expose the application to Cross-Site Request Forgery (CSRF) vulnerabilities. It is recommended to use @csrf_exempt sparingly and only when necessary, with a clear understanding of the associated security risks.</vuln_desc>
             <developer>Developers should avoid using @csrf_exempt without a strong justification. When used, it should be thoroughly documented, and alternative security mechanisms should be considered to mitigate CSRF vulnerabilities.</developer>
@@ -274,7 +303,8 @@
         </rule>
         <rule>
             <name>Insecure Use of Django @login_required Decorator</name>
-            <regex>(?i)@login_required</regex>
+            <regex><![CDATA[(?i)@login_required]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)@login_required]]]></rdl>
             <rule_desc>Detects potentially insecure usage of Django's @login_required decorator.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a potential security concern related to the usage of Django's @login_required decorator without proper context and additional security measures. This can expose sensitive views to unauthorized access. Developers should ensure that @login_required is used appropriately and that access controls are enforced for sensitive operations.</vuln_desc>
             <developer>Developers should use @login_required with caution, ensuring that it is applied to views that require authentication and authorization. Sensitive operations should have proper access controls in place.</developer>
@@ -282,7 +312,8 @@
         </rule>
         <rule>
             <name>Using Django's Safe Filter</name>
-            <regex>(?i)\.safe_filter\s*\(\s*</regex>
+            <regex><![CDATA[(?i)\.safe_filter\s*\(\s*]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)\.safe_filter\s*\(\s*]]]></rdl>
             <rule_desc>Detects the use of Django's Safe Filter without proper sanitization.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a potential security concern related to the use of Django's Safe Filter without proper sanitization. Using Safe Filter without ensuring that the content is safe can lead to Cross-Site Scripting (XSS) vulnerabilities.</vuln_desc>
             <developer>Developers should only use Django's Safe Filter on content that has been properly sanitized and validated to be safe from XSS attacks.</developer>

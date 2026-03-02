@@ -3,6 +3,7 @@
         <rule>
             <name>Untrusted Inputs: $_REQUEST, $_GET, $_POST, $_COOKIE</name>
             <regex><![CDATA[\$_(REQUEST|GET|POST|COOKIE)]]></regex>
+            <rdl><![CDATA[[FLAG:\$_(REQUEST|GET|POST|COOKIE)][IF(PRESENT:(query|execute|include|require|header|echo|print|system|exec|shell_exec|eval|assert) && MISSING:(filter_input|filter_var|htmlspecialchars|htmlentities|intval|floatval|preg_match))]]]></rdl>
             <rule_desc>Detects the use of common PHP superglobals that can introduce untrusted input into the code.</rule_desc>
             <vuln_desc>Using untrusted input from PHP superglobals like $_REQUEST, $_GET, $_POST, or $_COOKIE without proper validation and sanitization can lead to vulnerabilities such as injection attacks (SQL, OS, or LDAP), cross-site scripting (XSS), unauthorized access, or remote code execution.</vuln_desc>
             <developer>Developers should validate and sanitize input from superglobals before using it in sensitive operations. Implementing strong input validation, parameterized queries, output encoding, and appropriate filtering techniques, depending on the context, helps to mitigate risks associated with user-supplied data.</developer>
@@ -12,6 +13,7 @@
         <rule>
             <name>Command Injection: shell_exec, exec, passthru, system, popen, backtick</name>
             <regex><![CDATA[(shell_exec|exec|passthru|system|popen|`)\(]]></regex>
+            <rdl><![CDATA[[FLAG:(shell_exec|exec|passthru|system|popen|`)\(][IF(PRESENT:\$_(GET|POST|REQUEST|COOKIE)|\$_SERVER|argv|request && MISSING:escapeshellarg|escapeshellcmd)]]]></rdl>
             <rule_desc>Detects instances of shell-executing functions that can lead to command injection if used with untrusted input.</rule_desc>
             <vuln_desc>Using shell-executing functions with unvalidated input can lead to command injection, enabling attackers to execute arbitrary commands on the server, causing unauthorized access, data loss, or remote code execution.</vuln_desc>
             <developer>Developers should avoid these functions if possible. If necessary, they must ensure that input is strictly validated and sanitized, or use safer APIs with built-in security controls.</developer>
@@ -21,6 +23,7 @@
         <rule>
             <name>Arbitrary Code Execution: eval and exec</name>
             <regex><![CDATA[\b(?:eval|exec)\b]]></regex>
+            <rdl><![CDATA[[FLAG:\b(?:eval|exec)\b][IF(PRESENT:\$_(GET|POST|REQUEST|COOKIE)|base64_decode|gzinflate|str_rot13|preg_replace && MISSING:allowlist|whitelist)]]]></rdl>
             <rule_desc>Detects usage of eval() and exec(), which can lead to arbitrary code execution vulnerabilities.</rule_desc>
             <vuln_desc>Using eval() or exec() with user input can allow arbitrary code execution, risking unauthorized access, data compromise, or system control by attackers.</vuln_desc>
             <developer>Developers should avoid these functions; if unavoidable, validate and sanitize any input passed to them. Consider safer alternatives or confine execution to controlled environments.</developer>
@@ -30,6 +33,7 @@
         <rule>
             <name>Object Injection via Serialization</name>
             <regex><![CDATA[\b(?:unserialize|serialize)\b]]></regex>
+            <rdl><![CDATA[[FLAG:\b(?:unserialize|serialize)\b][IF(PRESENT:unserialize\s*\(|\$_(GET|POST|REQUEST|COOKIE) && MISSING:allowed_classes\s*=>\s*false|json_decode\s*\())]]]></rdl>
             <rule_desc>Detects usage of unserialize() or serialize() functions, potentially leading to object injection vulnerabilities.</rule_desc>
             <vuln_desc>Improper handling of serialized data can lead to object injection, allowing attackers to execute arbitrary code or perform privilege escalation by manipulating serialized objects.</vuln_desc>
             <developer>Developers should ensure serialized data is validated and from trusted sources. Secure deserialization practices should be used to prevent object injection vulnerabilities.</developer>
@@ -39,6 +43,7 @@
         <rule>
             <name>Regular Expression Injection: preg_replace with /e Modifier or Untrusted Input</name>
             <regex><![CDATA[preg_replace\(([^,]+,\s*)?[^/]*e[^/]*|preg_replace\(\$_(GET|POST|REQUEST|COOKIE)]]></regex>
+            <rdl><![CDATA[[FLAG:preg_replace\(([^,]+,\s*)?[^/]*e[^/]*|preg_replace\(\$_(GET|POST|REQUEST|COOKIE)][IF(MISSING:preg_replace_callback)]]]></rdl>
             <rule_desc>Detects usage of preg_replace() with the /e modifier or direct use of untrusted inputs, leading to regular expression injection.</rule_desc>
             <vuln_desc>Using preg_replace() with the /e modifier or direct input from superglobals can allow code execution via regular expression injection, risking remote code execution or data exposure.</vuln_desc>
             <developer>Developers should avoid using the /e modifier in preg_replace(). Use preg_replace_callback() and ensure untrusted inputs are validated and sanitized before including them in regular expressions.</developer>
@@ -48,6 +53,7 @@
         <rule>
             <name>Cross-Site Scripting (XSS) via PHP_SELF</name>
             <regex><![CDATA[\$_SERVER\['PHP_SELF']]></regex>
+            <rdl><![CDATA[[FLAG:\$_SERVER\['PHP_SELF'][IF(PRESENT:(echo|print|action\s*=|header\s*\() && MISSING:htmlspecialchars|htmlentities|basename)]]]></rdl>
             <rule_desc>Detects usage of the PHP_SELF variable in contexts that may be vulnerable to cross-site scripting (XSS).</rule_desc>
             <vuln_desc>Using PHP_SELF directly in forms or links without sanitization allows attackers to inject malicious scripts, potentially leading to XSS and unauthorized access.</vuln_desc>
             <developer>Developers should avoid using PHP_SELF directly in URLs or forms. Alternative URL construction methods should be used, or PHP_SELF should be sanitized and encoded to prevent XSS.</developer>
@@ -59,6 +65,7 @@
         <rule>
             <name>Insecure Method Call: preg_replace() with Code Execution</name>
             <regex><![CDATA[preg_replace\s*\(\s*['"](eval|assert|system|passthru|shell_exec|exec|popen|proc_open|pcntl_exec)['"]\s*,\s*\$([^\s,]*)\s*\)]]></regex>
+            <rdl><![CDATA[[FLAG:preg_replace\s*\(\s*['"](eval|assert|system|passthru|shell_exec|exec|popen|proc_open|pcntl_exec)['"]\s*,\s*\$([^\s,]*)\s*\)]]]></rdl>
             <rule_desc>Detects insecure usage of preg_replace() with dangerous replacement parameters that could lead to code injection vulnerabilities.</rule_desc>
             <vuln_desc>Using preg_replace() with functions like eval, assert, system, passthru, shell_exec, exec, popen, proc_open, or pcntl_exec as replacement parameters can allow attackers to execute arbitrary code.</vuln_desc>
             <developer>Developers should avoid using potentially untrusted inputs in preg_replace() replacement parameters, especially functions that could execute code. Instead, validate inputs thoroughly or consider safer string manipulation alternatives.</developer>
@@ -68,6 +75,7 @@
         <rule>
             <name>Insecure Redirect: header() with Location</name>
             <regex><![CDATA[header\s*\(\s*['\"]\s*Location\s*:\s*['\"]\s*\.\s*\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)]]></regex>
+            <rdl><![CDATA[[FLAG:header\s*\(\s*['\"]\s*Location\s*:\s*['\"]\s*\.\s*\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)][IF(MISSING:parse_url|filter_var\s*\(.*FILTER_VALIDATE_URL|allowlist|whitelist)]]]></rdl>
             <rule_desc>Detects usage of the header() function with the "Location" parameter, which can lead to insecure redirects.</rule_desc>
             <vuln_desc>Using unvalidated input in the "Location" parameter of header() can allow attackers to perform open redirects, leading to phishing or redirection to malicious sites.</vuln_desc>
             <developer>Developers should sanitize and validate any inputs used in "Location" headers, restricting them to trusted values or domains. Consider safer libraries or frameworks for handling redirects.</developer>
@@ -77,6 +85,7 @@
         <rule>
             <name>Insecure File Inclusion: include(), require()</name>
             <regex><![CDATA[\b(?:include|require)(_once)?\s*\(\s*(?:(?:\'[^\']*\'|\"[^\"]*\")\s*\.\s*)?\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\.\s*(?:\'[^\']*\'|\"[^\"]*\"))?\s*\)]]></regex>
+            <rdl><![CDATA[[FLAG:\b(?:include|require)(_once)?\s*\(\s*(?:(?:\'[^\']*\'|\"[^\"]*\")\s*\.\s*)?\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\.\s*(?:\'[^\']*\'|\"[^\"]*\"))?\s*\)]]]></rdl>
             <rule_desc>Detects insecure usage of include() and require() functions, especially with user input in file paths.</rule_desc>
             <vuln_desc>Using user input in file paths of include() or require() statements can lead to file inclusion vulnerabilities, potentially allowing attackers to load arbitrary files and execute unauthorized code.</vuln_desc>
             <developer>Developers should avoid using user input directly in include() or require() statements. Instead, use strict whitelisting or ensure any input is validated and sanitized before use.</developer>
@@ -86,6 +95,7 @@
         <rule>
             <name>Insecure Variable Injection: extract()</name>
             <regex><![CDATA[extract\s*\(\s*(\$_(GET|POST|REQUEST)|\$\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}?)\s*,\s*(?:\s*EXTR_(?:OVERWRITE|SKIP|PREFIX_SAME|PREFIX_ALL|IF_EXISTS|IF_DOESNT_EXIST|PREFIX_INVALID))?]]></regex>
+            <rdl><![CDATA[[FLAG:extract\s*\(\s*(\$_(GET|POST|REQUEST)|\$\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}?)\s*,\s*(?:\s*EXTR_(?:OVERWRITE|SKIP|PREFIX_SAME|PREFIX_ALL|IF_EXISTS|IF_DOESNT_EXIST|PREFIX_INVALID))?]]]></rdl>
             <rule_desc>Detects usage of extract() with user-supplied arrays, which can introduce variable overwrite vulnerabilities.</rule_desc>
             <vuln_desc>Using extract() with user-supplied arrays can overwrite existing variables, introducing injection risks and unexpected behavior.</vuln_desc>
             <developer>Developers should avoid using extract() with untrusted input. Explicitly access array elements instead, and sanitize inputs before assigning to variables.</developer>
@@ -95,6 +105,7 @@
         <rule>
             <name>Insecure Code Execution: assert() and eval()</name>
             <regex><![CDATA[(assert|eval)\s*\(\s*(\$_(GET|POST|REQUEST)|\$\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}?)]]></regex>
+            <rdl><![CDATA[[FLAG:(assert|eval)\s*\(\s*(\$_(GET|POST|REQUEST)|\$\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}?)]]]></rdl>
             <rule_desc>Detects usage of assert() and eval() with potentially untrusted inputs, leading to code injection vulnerabilities.</rule_desc>
             <vuln_desc>Using assert() or eval() with untrusted user inputs can enable attackers to inject and execute arbitrary code on the server, posing severe security risks.</vuln_desc>
             <developer>Developers should avoid using assert() or eval() with user input. For dynamic expressions, consider safer alternatives or confine inputs to validated and sanitized values.</developer>
@@ -104,6 +115,7 @@
         <rule>
             <name>Insecure File Operations: fopen(), file_get_contents(), file_put_contents()</name>
             <regex><![CDATA[(fopen|file_get_contents|file_put_contents)\s*\(\s*(?:(?:\'[^\']*\'|\"[^\"]*\")\s*\.\s*)?\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\.\s*(?:\'[^\']*\'|\"[^\"]*\"))?\s*\)]]></regex>
+            <rdl><![CDATA[[FLAG:(fopen|file_get_contents|file_put_contents)\s*\(\s*(?:(?:\'[^\']*\'|\"[^\"]*\")\s*\.\s*)?\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\.\s*(?:\'[^\']*\'|\"[^\"]*\"))?\s*\)]]]></rdl>
             <rule_desc>Detects insecure usage of file operations with untrusted input in file paths, potentially leading to file inclusion or manipulation vulnerabilities.</rule_desc>
             <vuln_desc>Using unvalidated input in file operations such as fopen(), file_get_contents(), or file_put_contents() can enable attackers to access or modify unintended files, leading to unauthorized access or data corruption.</vuln_desc>
             <developer>Developers should sanitize and validate any inputs used in file paths for these functions. Use strict input validation or restrict paths to safe directories to prevent unauthorized file access.</developer>
@@ -114,7 +126,8 @@
     <category name="Information Disclosure">
         <rule>
             <name>Stack Trace or Error Disclosure</name>
-            <regex>(?i)(echo .*Exception.*;|print_r\(.*Exception.*\)|trigger_error\(.+\))</regex>
+            <regex><![CDATA[(?i)(echo .*Exception.*;|print_r\(.*Exception.*\)|trigger_error\(.+\))]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)(echo .*Exception.*;|print_r\(.*Exception.*\)|trigger_error\(.+\))]]]></rdl>
             <rule_desc>Detects unsafe practices in error handling or logging in PHP applications.</rule_desc>
             <vuln_desc>Printing exceptions or using `trigger_error` with sensitive details can expose implementation specifics and file paths to attackers.</vuln_desc>
             <developer>Developers should use secure error handling mechanisms, such as custom error handlers or structured logging, without exposing stack traces.</developer>
@@ -126,6 +139,7 @@
         <rule>
             <name>Deprecated and Potentially Insecure SQL Functions</name>
             <regex><![CDATA[(?i)\b(mysql_query|mysqli_query|new\s+PDO\(|pg_connect\(|mysql_connect\(|mysqli_connect\(|sqlite3_open|mysql_fetch_array|mysql_fetch_assoc|mysql_num_rows)\b|(?:mysql_query|pg_query|sqlite_query|mysqli_query|pdo->query)\s*\(\s*['\"]?\b(SELECT|INSERT|UPDATE|DELETE)\b\s+.*\s*['\"]?\s*\.\s*\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)\b(mysql_query|mysqli_query|new\s+PDO\(|pg_connect\(|mysql_connect\(|mysqli_connect\(|sqlite3_open|mysql_fetch_array|mysql_fetch_assoc|mysql_num_rows)\b|(?:mysql_query|pg_query|sqlite_query|mysqli_query|pdo->query)\s*\(\s*['\"]?\b(SELECT|INSERT|UPDATE|DELETE)\b\s+.*\s*['\"]?\s*\.\s*\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)]]]></rdl>
             <rule_desc>Detects usage of deprecated or insecure SQL functions and dynamic SQL queries with user input that may lead to SQL injection vulnerabilities.</rule_desc>
             <vuln_desc>This rule detects deprecated functions or dynamic queries using user input without secure parameterization, which may expose applications to SQL injection or other database security risks.</vuln_desc>
             <developer>Developers should replace deprecated SQL functions with secure alternatives like MySQLi or PDO with parameterized queries to prevent SQL injection. Validate and sanitize user input before use in database queries.</developer>
@@ -134,7 +148,8 @@
 
         <rule>
             <name>Deprecated Regular Expression Functions</name>
-            <regex>\b(ereg|eregi)\b</regex>
+            <regex><![CDATA[\b(ereg|eregi)\b]]></regex>
+            <rdl><![CDATA[[FLAG:\b(ereg|eregi)\b]]]></rdl>
             <rule_desc>Detects usage of deprecated regular expression functions that may lead to security issues.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the use of outdated regex functions that can lead to potential security vulnerabilities and performance issues, as these functions are no longer maintained.</vuln_desc>
             <developer>Developers should replace deprecated functions with modern alternatives such as preg_match or preg_replace to improve security and performance.</developer>
@@ -144,6 +159,7 @@
         <rule>
             <name>Deprecated String Split Function</name>
             <regex><![CDATA[\bsplit\s*\(\s*[^;]*\s*\)]]></regex>
+            <rdl><![CDATA[[FLAG:\bsplit\s*\(\s*[^;]*\s*\)]]]></rdl>
             <rule_desc>Detects usage of the deprecated split() function, which can lead to unpredictable behavior and maintenance challenges.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the use of an outdated method for splitting strings that may result in unexpected string handling, potentially exposing logic errors. The deprecated function may also lead to compatibility issues with newer PHP versions, increasing the risk of security vulnerabilities due to insufficient input validation and handling.</vuln_desc>
             <developer>Developers should replace split() with explode() or preg_split() as appropriate to ensure better performance, predictable behavior, and enhanced security. Implementing these alternatives helps maintain code quality and compatibility with modern PHP standards.</developer>
@@ -153,6 +169,7 @@
         <rule>
             <name>Deprecated Session Register Function</name>
             <regex><![CDATA[\bsession_register\s*\(\s*['"]?[\w\s]*['"]?\s*\)]]></regex>
+            <rdl><![CDATA[[FLAG:\bsession_register\s*\(\s*['"]?[\w\s]*['"]?\s*\)]]]></rdl>
             <rule_desc>Detects usage of the deprecated session_register() function, which is no longer supported in modern PHP versions.</rule_desc>
             <vuln_desc>If this rule matches, it indicates outdated session management practices that may lead to security issues. The use of session_register() has been deprecated due to limitations and security concerns, as it does not support PHP's modern session handling methods.</vuln_desc>
             <developer>Developers should manage session variables using the $_SESSION superglobal array for better security and compatibility with current PHP standards.</developer>
@@ -162,6 +179,7 @@
         <rule>
             <name>Deprecated register_globals Directive</name>
             <regex><![CDATA[\bregister_globals\b]]></regex>
+            <rdl><![CDATA[[FLAG:\bregister_globals\b]]]></rdl>
             <rule_desc>Detects usage of the deprecated and insecure register_globals directive.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the presence of the insecure register_globals directive. Enabling this directive allows PHP to automatically turn incoming parameters into global variables, which can lead to unauthorized variable overwrites, increased risk of injection attacks, and a higher chance of security vulnerabilities.</vuln_desc>
             <developer>Developers should ensure that register_globals is disabled and instead rely on superglobals like $_GET, $_POST, and $_SESSION to safely access input variables. This approach reduces the risk of unintended variable manipulation and security vulnerabilities.</developer>
@@ -171,6 +189,7 @@
         <rule>
             <name>Deprecated create_function() Usage</name>
             <regex><![CDATA[\bcreate_function\(\s*]]></regex>
+            <rdl><![CDATA[[FLAG:\bcreate_function\(\s*]]]></rdl>
             <rule_desc>Detects usage of the deprecated and potentially insecure create_function() method.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the use of the deprecated create_function(), which can introduce security vulnerabilities by allowing dynamically generated code to be executed. This function may expose the codebase to code injection risks if user input is incorporated without proper sanitization.</vuln_desc>
             <developer>Developers should replace create_function() with anonymous functions (closures) to enhance security and maintainability. Anonymous functions avoid the risks of dynamically generated code and improve compatibility with newer PHP versions.</developer>
@@ -182,6 +201,7 @@
         <rule>
             <name>Insecure Mitigation: SQL Injection (mysql_real_escape_string)</name>
             <regex>mysql_real_escape_string</regex>
+            <rdl><![CDATA[[FLAG:mysql_real_escape_string]]]></rdl>
             <rule_desc>Detects the usage of the mysql_real_escape_string function for SQL injection mitigation.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of SQL injection. Attackers can bypass the protection provided by mysql_real_escape_string and still execute SQL injection attacks if not used correctly.</vuln_desc>
             <developer>Developers should avoid relying solely on mysql_real_escape_string for SQL injection mitigation. Instead, they should use parameterized queries or prepared statements with bound parameters to ensure proper defense against SQL injection attacks.</developer>
@@ -193,6 +213,7 @@
         <rule>
             <name>Mitigation Identified: XSS</name>
             <regex>htmlentities</regex>
+            <rdl><![CDATA[[FLAG:htmlentities]]]></rdl>
             <rule_desc>Detects the presence of XSS mitigation using htmlentities function.</rule_desc>
             <vuln_desc>This rule checks if the "htmlentities" function is utilized as a recommended mitigation technique against Cross-Site Scripting (XSS) vulnerabilities. XSS vulnerabilities arise when untrusted data is displayed on a web page without proper sanitization, enabling attackers to inject malicious scripts. By employing the "htmlentities" function, special characters are encoded to prevent script execution.</vuln_desc>
             <developer>Ensure that the implementation of the "htmlentities" function is thorough and consistent across the application to effectively mitigate XSS vulnerabilities. Verify that all user-supplied data displayed in HTML context undergoes proper sanitization using this function to encode special characters and thwart script injection attempts.</developer>
@@ -204,7 +225,7 @@
         <rule>
             <name>RDL Conditional: SQL Query with Untrusted Input and Missing Parameterization</name>
             <regex><![CDATA[(?i)\b(?:mysql_query|mysqli_query|pg_query|sqlite_query|->query)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\$_(GET|POST|REQUEST|COOKIE)][IF(MISSING:\b(?:prepare|bindParam|bindValue|mysqli_stmt_prepare|PDO::prepare)\b)]]></rdl>
+            <rdl><![CDATA[[FLAG:(?i)\b(?:mysql_query|mysqli_query|pg_query|sqlite_query|->query)\s*\(][IF(PRESENT:\$_(GET|POST|REQUEST|COOKIE)|\.\s*\$|sprintf\s*\(|format\s*\( && MISSING:prepare\s*\(|bind_param|bindValue|bindParam|PDO::prepare)]]]></rdl>
             <rule_desc>Flags SQL query execution in files that also process untrusted PHP input without evidence of parameterized query APIs.</rule_desc>
             <vuln_desc>Direct SQL execution combined with untrusted input and no parameterization patterns may indicate SQL injection risk.</vuln_desc>
             <developer>Use prepared statements with bound parameters and avoid building queries with untrusted input.</developer>
@@ -214,6 +235,7 @@
         <rule>
             <name>SQL Query: Non-parameterized SELECT Statements with WHERE or ORDER BY</name>
             <regex><![CDATA[(?i)\bSELECT\s+\*?\s+FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)\bSELECT\s+\*?\s+FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*][IF(PRESENT:(\.\s*\$|\$_(GET|POST|REQUEST|COOKIE)|sprintf\s*\(|format\s*\() && MISSING:prepare\s*\(|bind_param|bindValue|bindParam|PDO::prepare)]]]></rdl>
             <rule_desc>Detects non-parameterized SELECT statements with WHERE or ORDER BY clauses in SQL queries, which may be vulnerable to SQL injection if user input is not handled securely.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the use of a SELECT statement with WHERE or ORDER BY clauses where user input is not properly parameterized, allowing attackers to manipulate query behavior and gain unauthorized access to data.</vuln_desc>
             <developer>Developers should implement secure alternatives by using parameterized queries or prepared statements to prevent SQL injection vulnerabilities in SELECT statements with WHERE or ORDER BY clauses.</developer>
@@ -223,6 +245,7 @@
         <rule>
             <name>SQL Query: Unrestricted SELECT *</name>
             <regex><![CDATA[\bSELECT\s+\*\s+FROM\b]]></regex>
+            <rdl><![CDATA[[FLAG:\bSELECT\s+\*\s+FROM\b][IF(MISSING:LIMIT\s+[0-9]+)]]]></rdl>
             <rule_desc>Detects the use of "SELECT * FROM" in SQL queries, which may expose unnecessary or sensitive data, increasing the attack surface.</rule_desc>
             <vuln_desc>If this rule matches, it suggests that the query retrieves more data than necessary, potentially exposing sensitive information and increasing the risk of data leakage.</vuln_desc>
             <developer>Developers should specify only the required columns in SQL queries instead of using "SELECT *" to reduce data exposure and improve query performance.</developer>
@@ -232,6 +255,7 @@
         <rule>
             <name>SQL Query: Non-parameterized INSERT/UPDATE Statements</name>
             <regex><![CDATA[(?i)\b(INSERT INTO|UPDATE)\s+[^\s]+\s+(SET|VALUES)\s+.*=.*\$.*]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)\b(INSERT INTO|UPDATE)\s+[^\s]+\s+(SET|VALUES)\s+.*=.*\$.*][IF(MISSING:prepare\s*\(|bind_param|bindValue|bindParam|PDO::prepare)]]]></rdl>
             <rule_desc>Detects non-parameterized INSERT or UPDATE statements that may include user input directly, potentially leading to SQL injection vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a potentially vulnerable INSERT or UPDATE statement that could allow SQL injection if user input is included without proper handling.</vuln_desc>
             <developer>Developers should always use parameterized queries or prepared statements in INSERT and UPDATE operations to prevent SQL injection attacks.</developer>
@@ -241,6 +265,7 @@
         <rule>
             <name>SQL Query: Hardcoded Sensitive Information in WHERE Clauses</name>
             <regex><![CDATA[(?i)\bSELECT\s+[^\s]+\s+FROM\s+[^\s]+\s+WHERE\s+(username|password|apikey|token)=['"][^'"]+['"]]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)\bSELECT\s+[^\s]+\s+FROM\s+[^\s]+\s+WHERE\s+(username|password|apikey|token)=['"][^'"]+['"]][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
             <rule_desc>Detects hardcoded sensitive data in WHERE clauses of SQL queries, which can increase the risk of data exposure or compromise.</rule_desc>
             <vuln_desc>If this rule matches, it suggests the use of hardcoded sensitive data, such as passwords or API keys, directly in SQL queries, increasing the potential for data exposure.</vuln_desc>
             <developer>Developers should avoid hardcoding sensitive data in SQL queries. Instead, use environment variables or secure storage mechanisms to manage credentials safely.</developer>
@@ -250,6 +275,7 @@
         <rule>
             <name>SQL Query: Non-parameterized DELETE Statements</name>
             <regex><![CDATA[(?i)\bDELETE\s+FROM\s+[^\s]+\s+WHERE\s+.*=.*\$.*]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)\bDELETE\s+FROM\s+[^\s]+\s+WHERE\s+.*=.*\$.*][IF(MISSING:prepare\s*\(|bind_param|bindValue|bindParam|PDO::prepare)]]]></rdl>
             <rule_desc>Detects non-parameterized DELETE statements that use user input directly, which can lead to SQL injection vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a potentially vulnerable DELETE statement that could allow SQL injection if user input is used without proper parameterization.</vuln_desc>
             <developer>Developers should use parameterized queries or prepared statements in DELETE operations to prevent SQL injection vulnerabilities.</developer>
@@ -257,5 +283,4 @@
         </rule>
     </category>
 </root>
-
 

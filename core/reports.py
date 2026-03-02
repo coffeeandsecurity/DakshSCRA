@@ -6,6 +6,7 @@ import re
 import sys
 import time
 import shutil
+import tempfile
 from collections import defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -41,10 +42,19 @@ def gen_pdf_report_modern(html_path, pdf_path):
         cli.section_print(f"[*] Modern PDF Report Generation")
 
         print(f"    [-] Started at       : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print("    [-] Rendering expanded modern HTML to PDF... ", end="", flush=True)
+        print("    [-] Rendering JSON-driven professional PDF report... ", end="", flush=True)
         spinner("start")
 
-        export_pdf_from_html(html_path, pdf_path, expand_all_details=True)
+        report_context = _build_pdf_report_context()
+        rendered_html = _render_pdf_html(report_context)
+        temp_html_file = _write_temp_pdf_html(rendered_html)
+        try:
+            export_pdf_from_html(temp_html_file, pdf_path, expand_all_details=True)
+        finally:
+            try:
+                temp_html_file.unlink(missing_ok=True)
+            except OSError:
+                pass
 
         spinner("stop")
         print(f"    [-] Completed at     : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -56,7 +66,7 @@ def gen_pdf_report_modern(html_path, pdf_path):
 
         return pdf_path
 
-    except (OSError, RuntimeError, ValueError) as e:
+    except Exception as e:
         spinner("stop")
         logger.exception("Error during modern PDF generation: %s", e)
 
@@ -114,6 +124,370 @@ def export_pdf_from_html(html_file_path, output_pdf_path, expand_all_details=Fal
         )
 
         browser.close()
+
+
+def _load_report_logo_data_uri():
+    try:
+        with open(state.staticLogo, "rb") as f:
+            encoded_logo_image = base64.b64encode(f.read()).decode("utf-8")
+            return f"data:image/jpg;base64,{encoded_logo_image}"
+    except OSError as exc:
+        logger.error("Failed to load logo image %s: %s", state.staticLogo, exc)
+        return None
+
+
+def _normalize_aoi_data(raw_aoi):
+    if isinstance(raw_aoi, list):
+        return raw_aoi
+    if isinstance(raw_aoi, dict):
+        return list(raw_aoi.values())
+    return []
+
+
+def _bar_rows_from_counter(counter_map, top_n=12):
+    if not counter_map:
+        return []
+    top = sorted(counter_map.items(), key=lambda x: x[1], reverse=True)[:top_n]
+    max_value = max(v for _, v in top) or 1
+    total_value = sum(v for _, v in top) or 1
+    return [
+        {
+            "label": label,
+            "value": value,
+            "width_pct": round((value / max_value) * 100, 2),
+            "share_pct": round((value / total_value) * 100, 1),
+        }
+        for label, value in top
+    ]
+
+
+def _infer_pdf_evidence_label(issue_scope, category, files):
+    text = f"{issue_scope} {category}".lower()
+    config_markers = (
+        "config",
+        "configuration",
+        "settings",
+        "property",
+        "properties",
+        "yaml",
+        "yml",
+        "ini",
+        "toml",
+        "xml",
+        "json",
+        "env",
+    )
+    config_exts = {
+        ".conf", ".cfg", ".cnf", ".config", ".ini", ".toml", ".yaml", ".yml", ".properties",
+        ".env", ".xml", ".json", ".plist", ".tfvars",
+    }
+    config_filenames = {
+        "dockerfile", "makefile", "jenkinsfile", "kustomization.yaml",
+        "application.properties", "application.yml", "application.yaml",
+        "web.config", "app.config",
+    }
+
+    if any(marker in text for marker in config_markers):
+        return "Matched Configuration Entries"
+
+    for file_path in files:
+        if not file_path:
+            continue
+        lower_path = str(file_path).lower()
+        base = os.path.basename(lower_path)
+        if any(lower_path.endswith(ext) for ext in config_exts) or base in config_filenames:
+            return "Matched Configuration Entries"
+
+    return "Matched Source Snippets"
+
+
+def _build_pdf_report_context(
+    platform_filter=None,
+    summary_json_path=None,
+    aoi_json_path=None,
+    filepaths_aoi_json_path=None,
+    project_config_path=None,
+):
+    summary_json_path = Path(summary_json_path) if summary_json_path else Path(state.outputSummary_JSON)
+    aoi_json_path = Path(aoi_json_path) if aoi_json_path else Path(state.outputAoI_JSON)
+    filepaths_aoi_json_path = (
+        Path(filepaths_aoi_json_path) if filepaths_aoi_json_path else Path(state.outputAoI_Fpaths_JSON)
+    )
+    project_config_path = Path(project_config_path) if project_config_path else Path(state.projectConfig)
+
+    scan_summary = _load_json_file(summary_json_path, default={}, label="scan summary") or {}
+    aoi_raw = _load_json_file(aoi_json_path, default=[], label="areas of interest") or []
+    filepaths_aoi = _load_json_file(filepaths_aoi_json_path, default=[], label="filepaths aoi") or []
+    config = _load_yaml_file(project_config_path, default={}, label="project config") or {}
+
+    inputs = scan_summary.get("inputs_received", {})
+    detection = scan_summary.get("detection_summary", {})
+    timeline = scan_summary.get("scanning_timeline", {})
+
+    aoi_list = _normalize_aoi_data(aoi_raw)
+    findings = []
+    platform_counter = defaultdict(int)
+    category_counter = defaultdict(int)
+    scope_counter = defaultdict(int)
+    rule_counter = defaultdict(int)
+    evidence_total = 0
+
+    for item in aoi_list:
+        if not isinstance(item, dict):
+            continue
+        platform = str(item.get("platform", "unknown")).strip() or "unknown"
+        if platform_filter and platform.lower() != platform_filter.lower():
+            continue
+
+        rule_title = str(item.get("rule_title", "")).strip() or "Unnamed rule"
+        category = str(item.get("category", "")).strip() or "-"
+        issue_scope = str(item.get("issue_scope", "")).strip() or "-"
+        evidence = item.get("evidence", [])
+        evidence_count = len(evidence) if isinstance(evidence, list) else 0
+        evidence_total += evidence_count
+
+        files = []
+        evidence_samples = []
+        if isinstance(evidence, list):
+            seen = set()
+            for ev in evidence:
+                if not isinstance(ev, dict):
+                    continue
+                ev_file = str(ev.get("file", "")).strip()
+                if ev_file and ev_file not in seen:
+                    seen.add(ev_file)
+                    files.append(ev_file)
+                ev_line = ev.get("line")
+                ev_code = str(ev.get("code", "")).rstrip()
+                if ev_code:
+                    # Keep snippet payload bounded for PDF readability/performance.
+                    if len(ev_code) > 240:
+                        ev_code = ev_code[:240] + "..."
+                    evidence_samples.append({
+                        "file": ev_file or "-",
+                        "line": ev_line if isinstance(ev_line, int) else "-",
+                        "code": ev_code,
+                    })
+
+        finding = {
+            "platform": platform,
+            "rule_title": rule_title,
+            "category": category,
+            "issue_scope": issue_scope,
+            "rule_desc": str(item.get("rule_desc", "")).strip(),
+            "issue_desc": str(item.get("issue_desc", "")).strip(),
+            "developer_note": str(item.get("developer_note", "")).strip(),
+            "reviewer_note": str(item.get("reviewer_note", "")).strip(),
+            "rule_id": str(item.get("rule_id", "")).strip(),
+            "evidence_count": evidence_count,
+            "files": files[:8],
+            "evidence_samples": evidence_samples[:12],
+            "evidence_label": _infer_pdf_evidence_label(issue_scope, category, files),
+        }
+        findings.append(finding)
+        platform_counter[platform] += 1
+        category_counter[category] += 1
+        scope_counter[issue_scope] += 1
+        rule_counter[rule_title] += 1
+
+    findings.sort(key=lambda f: (f["platform"].lower(), f["rule_title"].lower()))
+
+    findings_by_platform = defaultdict(list)
+    for finding in findings:
+        findings_by_platform[finding["platform"]].append(finding)
+
+    platform_sections = []
+    for platform_name in sorted(findings_by_platform.keys(), key=lambda s: s.lower()):
+        slug = re.sub(r"[^a-z0-9]+", "-", platform_name.lower()).strip("-") or "platform"
+        platform_sections.append({
+            "name": platform_name,
+            "slug": slug,
+            "findings": findings_by_platform[platform_name],
+            "count": len(findings_by_platform[platform_name]),
+        })
+
+    rule_index = [
+        {"title": title, "count": count}
+        for title, count in sorted(rule_counter.items(), key=lambda x: (-x[1], x[0].lower()))
+    ]
+
+    file_index = []
+    if isinstance(filepaths_aoi, list):
+        for item in filepaths_aoi:
+            if not isinstance(item, dict):
+                continue
+            paths = item.get("filepath", [])
+            if not isinstance(paths, list):
+                paths = []
+            file_index.append({
+                "rule_title": str(item.get("rule_title", "")).strip() or "Unnamed rule",
+                "count": len(paths),
+                "paths": paths[:20],
+            })
+    file_index.sort(key=lambda x: (-x["count"], x["rule_title"].lower()))
+
+    file_extensions = detection.get("file_extensions_identified", {})
+    extension_rows = []
+    if isinstance(file_extensions, dict):
+        for pf, ext_list in sorted(file_extensions.items()):
+            if isinstance(ext_list, list):
+                extension_rows.append({"platform": pf, "extensions": ", ".join(ext_list)})
+
+    top_files = []
+    file_hit_counter = defaultdict(int)
+    for finding in findings:
+        for fp in finding["files"]:
+            file_hit_counter[fp] += 1
+    for path, hits in sorted(file_hit_counter.items(), key=lambda x: x[1], reverse=True)[:15]:
+        top_files.append({"path": path, "hits": hits})
+
+    report_title = config.get("title", "Daksh SCRA Scan Report")
+    report_subtitle = config.get("subtitle")
+    if report_subtitle and str(report_subtitle).lower() == "none":
+        report_subtitle = None
+
+    cards = [
+        {"label": "Total Findings", "value": len(findings)},
+        {"label": "Evidence Matches", "value": evidence_total},
+        {"label": "Platforms Impacted", "value": len(platform_sections)},
+        {"label": "Rules Loaded", "value": inputs.get("total_rules_loaded", "-")},
+        {"label": "Files Scanned", "value": detection.get("total_files_scanned", "-")},
+        {"label": "AOI File Paths", "value": detection.get("file_paths_areas_of_interest_identified", "-")},
+    ]
+
+    return {
+        "generated_at": datetime.now().strftime("%b %d, %Y %H:%M"),
+        "report_date": datetime.now().strftime("%b %d, %Y"),
+        "logoImagePath": _load_report_logo_data_uri(),
+        "reportTitle": report_title,
+        "reportSubTitle": report_subtitle,
+        "platform_filter": platform_filter,
+        "cards": cards,
+        "inputs": inputs,
+        "detection": detection,
+        "timeline": timeline,
+        "extension_rows": extension_rows,
+        "platform_sections": platform_sections,
+        "rule_index": rule_index,
+        "file_index": file_index,
+        "top_files": top_files,
+        "chart_platforms": _bar_rows_from_counter(platform_counter, top_n=16),
+        "chart_categories": _bar_rows_from_counter(category_counter, top_n=12),
+        "chart_scopes": _bar_rows_from_counter(scope_counter, top_n=12),
+    }
+
+
+def _render_pdf_html(context):
+    env = Environment(loader=FileSystemLoader(state.htmltemplates_dir))
+    template = env.get_template("pdf_report.html")
+    return template.render(**context)
+
+
+def _write_temp_pdf_html(rendered_html):
+    pdf_temp_root = Path(state.root_dir) / "reports/pdf"
+    pdf_temp_root.mkdir(parents=True, exist_ok=True)
+    fd, path_str = tempfile.mkstemp(prefix="report-json-", suffix=".html", dir=str(pdf_temp_root))
+    os.close(fd)
+    path = Path(path_str)
+    path.write_text(rendered_html, encoding="utf-8")
+    return path
+
+
+def gen_pdf_reports_from_json(
+    json_dir=None,
+    output_pdf_path=None,
+    multifile_output_dir=None,
+    include_multifile=True,
+    project_config_path=None,
+):
+    """
+    Generate professional PDF report(s) directly from existing JSON outputs.
+
+    Expected JSON filenames in json_dir:
+      - summary.json
+      - areas_of_interest.json
+      - filepaths_aoi.json (optional)
+    """
+    json_root = Path(json_dir) if json_dir else (Path(state.root_dir) / "reports/json")
+    summary_path = json_root / "summary.json"
+    aoi_path = json_root / "areas_of_interest.json"
+    filepaths_aoi_path = json_root / "filepaths_aoi.json"
+
+    if not summary_path.exists():
+        raise FileNotFoundError(f"Missing required JSON: {summary_path}")
+    if not aoi_path.exists():
+        raise FileNotFoundError(f"Missing required JSON: {aoi_path}")
+
+    single_pdf_path = Path(output_pdf_path) if output_pdf_path else Path(state.pdfreport_Fpath)
+    multi_pdf_root = Path(multifile_output_dir) if multifile_output_dir else (Path(state.root_dir) / "reports/pdf/multi-file")
+
+    single_pdf_path.parent.mkdir(parents=True, exist_ok=True)
+
+    context_all = _build_pdf_report_context(
+        summary_json_path=summary_path,
+        aoi_json_path=aoi_path,
+        filepaths_aoi_json_path=filepaths_aoi_path,
+        project_config_path=project_config_path,
+    )
+    rendered_html = _render_pdf_html(context_all)
+    temp_html_file = _write_temp_pdf_html(rendered_html)
+    try:
+        export_pdf_from_html(temp_html_file, single_pdf_path, expand_all_details=True)
+    finally:
+        try:
+            temp_html_file.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+    generated_platform_pdfs = []
+    if include_multifile:
+        if multi_pdf_root.exists():
+            shutil.rmtree(multi_pdf_root, ignore_errors=True)
+        multi_pdf_root.mkdir(parents=True, exist_ok=True)
+        platforms_dir = multi_pdf_root / "platforms"
+        platforms_dir.mkdir(parents=True, exist_ok=True)
+
+        full_pdf_path = multi_pdf_root / "report-full.pdf"
+        full_html = _render_pdf_html(context_all)
+        full_html_path = _write_temp_pdf_html(full_html)
+        try:
+            export_pdf_from_html(full_html_path, full_pdf_path, expand_all_details=True)
+        finally:
+            try:
+                full_html_path.unlink(missing_ok=True)
+            except OSError:
+                pass
+
+        for section in context_all.get("platform_sections", []):
+            platform_name = section.get("name")
+            if not platform_name:
+                continue
+            platform_ctx = _build_pdf_report_context(
+                platform_filter=platform_name,
+                summary_json_path=summary_path,
+                aoi_json_path=aoi_path,
+                filepaths_aoi_json_path=filepaths_aoi_path,
+                project_config_path=project_config_path,
+            )
+            platform_html = _render_pdf_html(platform_ctx)
+            platform_html_path = _write_temp_pdf_html(platform_html)
+            safe_name = re.sub(r"[^a-z0-9]+", "-", str(platform_name).lower()).strip("-") or "platform"
+            platform_pdf_path = platforms_dir / f"{safe_name}.pdf"
+            try:
+                export_pdf_from_html(platform_html_path, platform_pdf_path, expand_all_details=True)
+                generated_platform_pdfs.append(platform_pdf_path)
+            finally:
+                try:
+                    platform_html_path.unlink(missing_ok=True)
+                except OSError:
+                    pass
+
+    return {
+        "json_root": json_root,
+        "single_pdf": single_pdf_path,
+        "multi_pdf_root": multi_pdf_root if include_multifile else None,
+        "platform_pdfs": generated_platform_pdfs,
+    }
 
 def gen_html_report_modern(scan_summary, snippets, filepaths, filepaths_aoi, report_output_path):
     try:
@@ -298,7 +672,7 @@ def get_summary(input_file):
 
 # Generate the HTML and PDF reports
 def gen_report(formats="html,pdf"):
-    multipage_result = None
+    multifile_result = None
     started_at = time.time()
     state.htmlreport_Fpath.parent.mkdir(parents=True, exist_ok=True)
     cli.section_print("[*] HTML Report Generation")
@@ -337,18 +711,18 @@ def gen_report(formats="html,pdf"):
     else:
         formats_csv = "html,pdf"
 
-    # Multi-page timing
+    # Multi-file timing
     mp_started = datetime.now()
     mp_elapsed_start = time.time()
     try:
-        multipage_result = gen_report_multipage(
+        multifile_result = gen_report_multifile(
             formats=formats_csv,
-            output_dir=Path(state.root_dir) / "reports/html/multi-page",
-            pdf_output_dir=Path(state.root_dir) / "reports/pdf/multi-page",
+            output_dir=Path(state.root_dir) / "reports/html/multi-file",
+            pdf_output_dir=Path(state.root_dir) / "reports/pdf/multi-file",
             expand_all_details_in_pdf=True,
         )
     except (OSError, RuntimeError, ValueError) as exc:
-        logger.error("Multipage report generation failed: %s", exc)
+        logger.error("Multi-file report generation failed: %s", exc)
     mp_hours, mp_rem = divmod(time.time() - mp_elapsed_start, 3600)
     mp_minutes, mp_seconds = divmod(mp_rem, 60)
     mp_seconds, mp_milliseconds = str(mp_seconds).split('.')
@@ -362,24 +736,24 @@ def gen_report(formats="html,pdf"):
         cli.section_print("[*] HTML Report:")
         if htmlfile:
             print("     [-] HTML Report Path : " + re.sub(str(state.root_dir), "", str(htmlfile)))
-        if multipage_result and multipage_result.get("html_root"):
-            print("     [-] Multi-page HTML Started at  : " + mp_started.strftime('%Y-%m-%d %H:%M:%S'))
-            print("     [-] Multi-page HTML Completed at: " + mp_completed.strftime('%Y-%m-%d %H:%M:%S'))
-            print("     [-] Multi-page HTML time       : {:0>2}Hr:{:0>2}Min:{:0>2}s:{}ms".format(int(mp_hours), int(mp_minutes), mp_seconds, mp_milliseconds[:3]))
-            print("     [-] Multi-page HTML report     : " + re.sub(str(state.root_dir), "", str(multipage_result["html_root"] / "index.html")))
-            if multipage_result.get("pdf_root"):
-                print("     [-] Multi-page PDF root        : " + re.sub(str(state.root_dir), "", str(multipage_result["pdf_root"])))
-            if multipage_result.get("pdf_pages"):
-                print("     [-] Multi-page PDFs generated  : " + str(len(multipage_result["pdf_pages"])))
+        if multifile_result and multifile_result.get("html_root"):
+            print("     [-] Multi-file HTML Started at  : " + mp_started.strftime('%Y-%m-%d %H:%M:%S'))
+            print("     [-] Multi-file HTML Completed at: " + mp_completed.strftime('%Y-%m-%d %H:%M:%S'))
+            print("     [-] Multi-file HTML time       : {:0>2}Hr:{:0>2}Min:{:0>2}s:{}ms".format(int(mp_hours), int(mp_minutes), mp_seconds, mp_milliseconds[:3]))
+            print("     [-] Multi-file HTML report     : " + re.sub(str(state.root_dir), "", str(multifile_result["html_root"] / "index.html")))
+            if multifile_result.get("pdf_root"):
+                print("     [-] Multi-file PDF root        : " + re.sub(str(state.root_dir), "", str(multifile_result["pdf_root"])))
+            if multifile_result.get("pdf_pages"):
+                print("     [-] Multi-file PDFs generated  : " + str(len(multifile_result["pdf_pages"])))
 
     if "pdf" in formats:
         cli.section_print("[*] PDF Report:")
         if htmlfile:
             print("     [-] PDF Report Path : " + re.sub(str(state.root_dir), "", str(pdf_report_path)))
-        if multipage_result and multipage_result.get("pdf_root"):
-            print("     [-] Multi-page PDF root : " + re.sub(str(state.root_dir), "", str(multipage_result["pdf_root"])))
-        if multipage_result and multipage_result.get("pdf_pages"):
-            print("     [-] Multi-page PDFs     : " + str(len(multipage_result["pdf_pages"])))
+        if multifile_result and multifile_result.get("pdf_root"):
+            print("     [-] Multi-file PDF root : " + re.sub(str(state.root_dir), "", str(multifile_result["pdf_root"])))
+        if multifile_result and multifile_result.get("pdf_pages"):
+            print("     [-] Multi-file PDFs     : " + str(len(multifile_result["pdf_pages"])))
 
     cli.section_print("[*] Structured Reports:")
     if os.path.isfile(state.outputRecSummary_JSON):
@@ -421,19 +795,19 @@ def _render_template(env, template_name, context, output_path):
     return output_path
 
 
-def gen_report_multipage(formats="html,pdf", output_dir=None, pdf_output_dir=None, expand_all_details_in_pdf=False):
+def gen_report_multifile(formats="html,pdf", output_dir=None, pdf_output_dir=None, expand_all_details_in_pdf=False):
     """
-    Experimental multi-page report generator (keeps existing single-page report untouched).
+    Experimental multi-file report generator (keeps existing single-file report untouched).
 
     Creates a lightweight index + per-section pages to reduce HTML/PDF size for large scans.
     """
     started_at = time.time()
-    output_root = Path(output_dir) if output_dir else Path(state.root_dir) / "reports/html/multi-page"
-    pdf_output_root = Path(pdf_output_dir) if pdf_output_dir else Path(state.root_dir) / "reports/pdf/multi-page"
+    output_root = Path(output_dir) if output_dir else Path(state.root_dir) / "reports/html/multi-file"
+    pdf_output_root = Path(pdf_output_dir) if pdf_output_dir else Path(state.root_dir) / "reports/pdf/multi-file"
     aoi_dir = output_root / "aoi"
     filepaths_dir = output_root / "filepaths"
 
-    # Clean previous multipage output to avoid stale links/files
+    # Clean previous multi-file output to avoid stale links/files
     if output_root.exists():
         shutil.rmtree(output_root, ignore_errors=True)
 
@@ -617,20 +991,46 @@ def gen_report_multipage(formats="html,pdf", output_dir=None, pdf_output_dir=Non
 
     generated_html = [index_path, aoi_index_path, *platform_pages, filepaths_dir / "filepaths_aoi.html", filepaths_dir / "filepaths_all.html"]
 
-    # Optional PDFs (one per page to avoid giant single PDF)
+    # Optional PDFs (JSON-driven and print-optimized)
     generated_pdfs = []
     if "pdf" in formats_set:
         if pdf_output_root.exists():
             shutil.rmtree(pdf_output_root, ignore_errors=True)
-        for html_page in generated_html:
-            rel = html_page.relative_to(output_root)
-            pdf_page = (pdf_output_root / rel).with_suffix(".pdf")
-            pdf_page.parent.mkdir(parents=True, exist_ok=True)
+        pdf_output_root.mkdir(parents=True, exist_ok=True)
+
+        context_all = _build_pdf_report_context()
+        full_html = _render_pdf_html(context_all)
+        full_html_path = _write_temp_pdf_html(full_html)
+        full_pdf_path = pdf_output_root / "report-full.pdf"
+        try:
+            export_pdf_from_html(full_html_path, full_pdf_path, expand_all_details=expand_all_details_in_pdf)
+            generated_pdfs.append(full_pdf_path)
+        except (OSError, RuntimeError, ValueError) as exc:
+            logger.error("Multipage PDF generation failed for full report: %s", exc)
+        finally:
             try:
-                export_pdf_from_html(html_page, pdf_page, expand_all_details=expand_all_details_in_pdf)
-                generated_pdfs.append(pdf_page)
+                full_html_path.unlink(missing_ok=True)
+            except OSError:
+                pass
+
+        platforms_dir = pdf_output_root / "platforms"
+        platforms_dir.mkdir(parents=True, exist_ok=True)
+        for platform in snippets.keys():
+            context_platform = _build_pdf_report_context(platform_filter=platform)
+            platform_html = _render_pdf_html(context_platform)
+            platform_html_path = _write_temp_pdf_html(platform_html)
+            safe_name = re.sub(r"[^a-z0-9]+", "-", platform.lower()).strip("-") or "platform"
+            platform_pdf_path = platforms_dir / f"{safe_name}.pdf"
+            try:
+                export_pdf_from_html(platform_html_path, platform_pdf_path, expand_all_details=expand_all_details_in_pdf)
+                generated_pdfs.append(platform_pdf_path)
             except (OSError, RuntimeError, ValueError) as exc:
-                logger.error("Multipage PDF generation failed for %s: %s", html_page, exc)
+                logger.error("Multipage PDF generation failed for platform %s: %s", platform, exc)
+            finally:
+                try:
+                    platform_html_path.unlink(missing_ok=True)
+                except OSError:
+                    pass
 
     return {
         "html_root": output_root,
@@ -648,4 +1048,7 @@ getFilePathsOfAOI = get_filepaths_of_aoi
 getFilePaths = get_filepaths
 getSummary = get_summary
 genReport = gen_report
-genReportMultipage = gen_report_multipage
+gen_report_multipage = gen_report_multifile
+genReportMultifile = gen_report_multifile
+genReportMultipage = gen_report_multifile
+genPdfReportsFromJson = gen_pdf_reports_from_json

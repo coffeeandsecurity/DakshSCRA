@@ -1,7 +1,8 @@
 <root>
     <rule>
         <name>Authentication</name>
-        <regex>(?i)(Login|Signin|Authentication|Authenticated|Oauth|JWT)</regex>
+        <regex><![CDATA[(?i)(Login|Signin|Authentication|Authenticated|Oauth|JWT)]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)(Login|Signin|Authentication|Authenticated|Oauth|JWT)][IF(PRESENT:(?i)(/|\\\\).*(auth|login|signin|oauth|jwt) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
         <rule_desc>Detects file paths related to authentication functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of authentication-related code files in the project.</vuln_desc>
         <developer>Developers should review and document authentication-related code, ensuring they are correctly implemented.</developer>
@@ -9,7 +10,8 @@
     </rule>
     <rule>
         <name>Authorization</name>
-        <regex>(?i)(authorization|authz|access_control)</regex>
+        <regex><![CDATA[(?i)(authorization|authz|access_control)]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)(authorization|authz|access_control)][IF(PRESENT:(?i)(/|\\\\).*(authz|authorization|access|permission|policy) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
         <rule_desc>Detects file paths related to authorization functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to authorization in the project.</vuln_desc>
         <developer>Developers should review and document authorization-related code, ensuring they are correctly implemented.</developer>
@@ -17,7 +19,8 @@
     </rule>
     <rule>
         <name>Session Management</name>
-        <regex>(?i)(session|cookie|token)</regex>
+        <regex><![CDATA[(?i)(session|cookie|token)]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)(session|cookie|token)][IF(PRESENT:(?i)(/|\\\\).*(session|cookie|token) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/|example|sample|dummy|test|placeholder))]]]></rdl>
         <rule_desc>Detects file paths related to session management functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to session management in the project.</vuln_desc>
         <developer>Developers should review and document session management-related code, ensuring they are correctly implemented.</developer>
@@ -25,7 +28,8 @@
     </rule>
     <rule>
         <name>Permission Management or Handling</name>
-        <regex>(?i)Permission</regex>
+        <regex><![CDATA[(?i)Permission]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)Permission][IF(PRESENT:(?i)(/|\\\\).*(permission|policy|acl|rbac))]]]></rdl>
         <rule_desc>Detects file paths related to permission management or handling functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of permission management or handling-related code paths in the project.</vuln_desc>
         <developer>Developers should review and document permission management or handling-related code paths, ensuring they are correctly implemented.</developer>
@@ -33,7 +37,8 @@
     </rule>
     <rule>
         <name>Multi-Factor Validation</name>
-        <regex>(?i)(mfa|multi_factor|2fa|otp)</regex>
+        <regex><![CDATA[(?i)(mfa|multi_factor|2fa|otp)]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)(mfa|multi_factor|2fa|otp)][IF(PRESENT:(?i)(/|\\\\).*(mfa|2fa|otp|auth))]]]></rdl>
         <rule_desc>Detects file paths that may indicate the implementation or handling of Multi-Factor Validation.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to Multi-Factor Validation in the project.</vuln_desc>
         <developer>Developers should thoroughly review and document code paths related to Multi-Factor Validation, ensuring they are correctly implemented.</developer>
@@ -41,7 +46,8 @@
     </rule>
     <rule>
         <name>Admin Section</name>
-        <regex>(?i)(Admin|Administrator)</regex>
+        <regex><![CDATA[(?i)(Admin|Administrator)]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)(Admin|Administrator)][IF(PRESENT:(?i)(/|\\\\).*(admin|administrator) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
         <rule_desc>Detects file paths related to admin section functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of admin section-related code paths in the project.</vuln_desc>
         <developer>Developers should review and document admin section-related code paths, ensuring they are correctly implemented.</developer>
@@ -49,7 +55,8 @@
     </rule>
     <rule>
         <name>User Section</name>
-        <regex>(?i)(user)</regex>
+        <regex><![CDATA[(?i)(user)]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)\buser\b][IF(PRESENT:(?i)(/|\\\\).*(user|users|profile|account) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
         <rule_desc>Detects file paths related to user section functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of user section-related code paths in the project.</vuln_desc>
         <developer>Developers should review and document user section-related code paths, ensuring they are correctly implemented.</developer>
@@ -57,7 +64,8 @@
     </rule>
     <rule>
         <name>Password Related Functionality</name>
-        <regex>(?i)(Password|password|pwd|passwd|credential|forgotpassword)</regex>
+        <regex><![CDATA[(?i)(Password|password|pwd|passwd|credential|forgotpassword)]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)(Password|password|pwd|passwd|credential|forgotpassword)][IF(PRESENT:(?i)(/|\\\\).*(password|credential|auth|secret) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/|example|sample|dummy|test|placeholder))]]]></rdl>
         <rule_desc>Detects file paths related to password-related functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of password-related code paths in the project.</vuln_desc>
         <developer>Developers should review and document password-related code paths, ensuring they are correctly implemented.</developer>
@@ -65,7 +73,8 @@
     </rule>
     <rule>
         <name>Sensitive Data Handling</name>
-        <regex>(?i)(sensitive|secret|private_key)</regex>
+        <regex><![CDATA[(?i)(sensitive|secret|private_key)]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)(sensitive|secret|private_key)][IF(PRESENT:(?i)(/|\\\\).*(secret|key|vault|credential|token) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/|example|sample|dummy|test|placeholder))]]]></rdl>
         <rule_desc>Detects file paths related to sensitive data handling functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to sensitive data handling in the project.</vuln_desc>
         <developer>Developers should review and document code paths related to sensitive data handling, ensuring they are correctly implemented.</developer>
@@ -73,7 +82,8 @@
     </rule>
     <rule>
         <name>Security Functionality</name>
-        <regex>(?i)security</regex>
+        <regex><![CDATA[(?i)security]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)security][IF(PRESENT:(?i)(/|\\\\).*(security|auth|policy|hardening) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
         <rule_desc>Detects file paths related to security functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of security-related code paths in the project.</vuln_desc>
         <developer>Developers should review and document security-related code paths, ensuring they are correctly implemented.</developer>
@@ -81,7 +91,8 @@
     </rule>
     <rule>
         <name>Input Validation</name>
-        <regex>(?i)(validation|sanitize|input)</regex>
+        <regex><![CDATA[(?i)(validation|sanitize|input)]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)(validation|sanitize|input)][IF(PRESENT:(?i)(/|\\\\).*(validation|validator|sanitize|input) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
         <rule_desc>Detects file paths related to input validation functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to input validation in the project.</vuln_desc>
         <developer>Developers should review and document input validation-related code, ensuring they are correctly implemented.</developer>
@@ -89,7 +100,8 @@
     </rule>
     <rule>
         <name>API</name>
-        <regex>(?i)(api)</regex>
+        <regex><![CDATA[(?i)(api)]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)\bapi\b][IF(PRESENT:(?i)(/|\\\\).*(api|endpoint|route|controller|handler) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
         <rule_desc>Detects file paths related to API functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of API-related code paths in the project.</vuln_desc>
         <developer>Developers should review and document API-related code paths, ensuring they are correctly implemented.</developer>
@@ -97,7 +109,8 @@
     </rule>
     <rule>
         <name>Libraries | Extensions | Plugins</name>
-        <regex>(?i)(Libraries|Extension|Plugin)</regex>
+        <regex><![CDATA[(?i)(Libraries|Extension|Plugin)]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)(Libraries|Extension|Plugin)][IF(PRESENT:(?i)(/|\\\\).*(lib|libs|extension|plugin|addons?))]]]></rdl>
         <rule_desc>Detects file paths related to libraries, extensions, or plugins.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to libraries, extensions, or plugins in the project.</vuln_desc>
         <developer>Developers should review and document code paths related to libraries, extensions, or plugins, ensuring they are correctly implemented.</developer>
@@ -105,7 +118,8 @@
     </rule>
     <rule>
         <name>Monkey Patched Code Files</name>
-        <regex>(?i)(?:monkey_patch|patched_code|custom_patch)</regex>
+        <regex><![CDATA[(?i)(?:monkey_patch|patched_code|custom_patch)]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)(?:monkey_patch|patched_code|custom_patch)][IF(MISSING:(?i)(/tests?/|/fixtures?/|/mocks?/))]]]></rdl>
         <rule_desc>Detects the presence of monkey patched code in a project.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of monkey patched code in the project. While monkey patches themselves may not inherently contain security issues, they introduce potential maintenance challenges and risks. Ensure that these patches are well-documented, periodically reviewed for necessity, and that they do not introduce security vulnerabilities or regressions.</vuln_desc>
         <developer>Developers should carefully review and document any monkey patched code in the project. Ensure that the patches are correctly applied and do not introduce compatibility issues or security vulnerabilities. Consider alternatives to monkey patching when possible to maintain code stability and security.</developer>
@@ -113,7 +127,8 @@
     </rule>
     <rule>
         <name>CAPTCHA</name>
-        <regex>(?i)(CAPTCHA)</regex>
+        <regex><![CDATA[(?i)(CAPTCHA)]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)(CAPTCHA)][IF(PRESENT:(?i)(/|\\\\).*(captcha|recaptcha|anti-bot))]]]></rdl>
         <rule_desc>Detects file paths related to CAPTCHA functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to CAPTCHA functionality in the project.</vuln_desc>
         <developer>Developers should review and document code paths related to CAPTCHA functionality, ensuring they are correctly implemented.</developer>
@@ -121,7 +136,8 @@
     </rule>
     <rule>
         <name>File Upload</name>
-        <regex>(?i)Upload</regex>
+        <regex><![CDATA[(?i)Upload]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)Upload][IF(PRESENT:(?i)(/|\\\\).*(upload|uploader|attachments?|files?) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
         <rule_desc>Detects file paths related to file upload functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to file upload functionality in the project.</vuln_desc>
         <developer>Developers should review and document code paths related to file upload functionality, ensuring they are correctly implemented.</developer>
@@ -129,7 +145,8 @@
     </rule>
     <rule>
         <name>Payment Functionality</name>
-        <regex>(?i)(payment|pay)</regex>
+        <regex><![CDATA[(?i)(payment|pay)]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)(payment|pay)][IF(PRESENT:(?i)(/|\\\\).*(payment|billing|checkout|invoice|transaction) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
         <rule_desc>Detects file paths related to payment functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to payment functionality in the project.</vuln_desc>
         <developer>Developers should review and document code paths related to payment functionality, ensuring they are correctly implemented.</developer>
@@ -137,7 +154,8 @@
     </rule>
     <rule>
         <name>Purchases | Ordering</name>
-        <regex>(?i)(purchase|order|cart)</regex>
+        <regex><![CDATA[(?i)(purchase|order|cart)]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)(purchase|order|cart)][IF(PRESENT:(?i)(/|\\\\).*(purchase|order|cart|checkout) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
         <rule_desc>Detects file paths related to purchasing or ordering functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to purchasing or ordering functionality in the project.</vuln_desc>
         <developer>Developers should review and document code paths related to purchasing or ordering functionality, ensuring they are correctly implemented.</developer>
@@ -145,7 +163,8 @@
     </rule>
     <rule>
         <name>Models</name>
-        <regex>(?i)\/(Models)\/</regex>
+        <regex><![CDATA[(?i)\/(Models)\/]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)/(Models)/][IF(PRESENT:(?i)(/|\\\\).*(models?|entities?))]]]></rdl>
         <rule_desc>Detects file paths related to models.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to models in the project.</vuln_desc>
         <developer>Developers should review and document code paths related to models, ensuring they are correctly implemented.</developer>
@@ -153,7 +172,8 @@
     </rule>
     <rule>
         <name>Views</name>
-        <regex>(?i)\/(Views|View)\/</regex>
+        <regex><![CDATA[(?i)\/(Views|View)\/]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)/(Views|View)/][IF(PRESENT:(?i)(/|\\\\).*(views?|templates?))]]]></rdl>
         <rule_desc>Detects file paths related to views.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to views in the project.</vuln_desc>
         <developer>Developers should review and document code paths related to views, ensuring they are correctly implemented.</developer>
@@ -161,7 +181,8 @@
     </rule>
     <rule>
         <name>ViewModel</name>
-        <regex>(?i)\/(ViewModel)\/</regex>
+        <regex><![CDATA[(?i)\/(ViewModel)\/]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)/(ViewModel)/][IF(PRESENT:(?i)(/|\\\\).*(viewmodel|presenter))]]]></rdl>
         <rule_desc>Detects file paths related to view models.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to view models in the project.</vuln_desc>
         <developer>Developers should review and document code paths related to view models, ensuring they are correctly implemented.</developer>
@@ -169,7 +190,8 @@
     </rule>
     <rule>
         <name>Controllers</name>
-        <regex>(?i)\/(Controllers|Controller)\/</regex>
+        <regex><![CDATA[(?i)\/(Controllers|Controller)\/]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)/(Controllers|Controller)/][IF(PRESENT:(?i)(/|\\\\).*(controllers?|handlers?|routes?))]]]></rdl>
         <rule_desc>Detects file paths related to controllers.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to controllers in the project.</vuln_desc>
         <developer>Developers should review and document code paths related to controllers, ensuring they are correctly implemented.</developer>
@@ -177,7 +199,8 @@
     </rule>
     <rule>
         <name>Presenter</name>
-        <regex>(?i)\/(Presenter)\/</regex>
+        <regex><![CDATA[(?i)\/(Presenter)\/]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)/(Presenter)/][IF(PRESENT:(?i)(/|\\\\).*(presenter|presentation))]]]></rdl>
         <rule_desc>Detects file paths related to presenters.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to presenters in the project.</vuln_desc>
         <developer>Developers should review and document code paths related to presenters, ensuring they are correctly implemented.</developer>
@@ -185,7 +208,8 @@
     </rule>
     <rule>
         <name>Logging</name>
-        <regex>(?i)(log|logging|logger)</regex>
+        <regex><![CDATA[(?i)(log|logging|logger)]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)(log|logging|logger)][IF(PRESENT:(?i)(/|\\\\).*(log|logging|logger|audit) && MISSING:(?i)(blog|blogging|/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
             <exclude>(?i)(blog|blogging)</exclude>
         <rule_desc>Detects file paths related to logging functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to logging in the project.</vuln_desc>
@@ -194,7 +218,8 @@
     </rule>
     <rule>
         <name>Exception Handling</name>
-        <regex>(?i)(exception|error_handling)</regex>
+        <regex><![CDATA[(?i)(exception|error_handling)]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)(exception|error_handling)][IF(PRESENT:(?i)(/|\\\\).*(exception|errors?|handling|fault))]]]></rdl>
         <rule_desc>Detects file paths related to exception handling functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to exception handling in the project.</vuln_desc>
         <developer>Developers should review exception handling functionality, ensuring it is correctly implemented.</developer>
@@ -202,7 +227,8 @@
     </rule>
     <rule>
         <name>Database Interaction</name>
-        <regex>(?i)(database|db|sql)</regex>
+        <regex><![CDATA[(?i)(database|db|sql)]]></regex>
+        <rdl><![CDATA[[FLAG:(?i)(database|db|sql)][IF(PRESENT:(?i)(/|\\\\).*(db|database|sql|repository|dao|migration) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
         <rule_desc>Detects file paths related to database interaction functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to database interaction in the project.</vuln_desc>
         <developer>Developers should review database interaction functionality, ensuring it is correctly implemented.</developer>

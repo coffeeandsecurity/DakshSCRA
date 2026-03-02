@@ -1,6 +1,7 @@
 # Standard libraries
 import argparse
 import atexit
+import fnmatch
 import os
 import re
 import sys
@@ -61,6 +62,8 @@ args = cli.DakshArgumentParser(
         "  dakshscra.py -recon -rs -t ./mobile_app\n"
         "  dakshscra.py -recon -r java -t ./javaapp\n"
         "  dakshscra.py -r dotnet -f dotnet -t ./dotnetapp\n"
+        "  dakshscra.py --pdf-from-json\n"
+        "  dakshscra.py --pdf-from-json --json-input-dir ./custom/reports/json\n"
         "  dakshscra.py -l RF\n\n"
         "Notes:\n"
         "  - If -f is not provided, default filetypes for selected platform(s) are used.\n"
@@ -103,9 +106,27 @@ mode_group.add_argument('-rs', '-recons', '--recon-strict', action='store_true',
 mode_group.add_argument('-estimate', action='store_true', dest='estimate',
                         help='Estimate code review effort based on codebase size')
 
+mode_group.add_argument('--pdf-from-json', action='store_true', dest='pdf_from_json',
+                        help='Generate PDF report(s) from existing JSON outputs without re-running scan')
+
 output_group.add_argument('-rpt', '--report', type=str, action='store', dest='report_format',
                           default='html,pdf', metavar='FORMATS',
                           help='Report types: html, pdf, or html,pdf')
+
+output_group.add_argument('--json-input-dir', type=str, action='store', dest='json_input_dir',
+                          default='', metavar='PATH',
+                          help='Path to JSON report directory (default: ./reports/json)')
+
+output_group.add_argument('--pdf-output', type=str, action='store', dest='pdf_output',
+                          default='', metavar='PATH',
+                          help='Output path for single PDF report (default: ./reports/pdf/report.pdf)')
+
+output_group.add_argument('--pdf-multi-dir', type=str, action='store', dest='pdf_multi_dir',
+                          default='', metavar='PATH',
+                          help='Output directory for multi-file PDF report set (default: ./reports/pdf/multi-file)')
+
+output_group.add_argument('--pdf-single-only', action='store_true', dest='pdf_single_only',
+                          help='Generate only single PDF (skip multi-file PDF set)')
 
 advanced_group.add_argument('--analysis', '--analyse', action='store_true', dest='analysis',
                             help='Run experimental data/control flow analysis')
@@ -156,6 +177,40 @@ if results.target_dir:
 # Remove duplicates in rule_file and file_types
 results.rule_file = strutils.remove_duplicates(results.rule_file)
 results.file_types = strutils.remove_duplicates(results.file_types)
+
+# Utility mode: generate professional PDF report(s) from existing JSON outputs.
+if results.pdf_from_json:
+    print(constants.AUTHOR_BANNER.format(version=version))
+    cli.section_print("[*] On-Demand PDF Generation (JSON)")
+
+    json_input_dir = Path(results.json_input_dir).expanduser() if results.json_input_dir else (Path(state.root_dir) / "reports/json")
+    single_pdf_output = Path(results.pdf_output).expanduser() if results.pdf_output else Path(state.pdfreport_Fpath)
+    multi_pdf_output = Path(results.pdf_multi_dir).expanduser() if results.pdf_multi_dir else (Path(state.root_dir) / "reports/pdf/multi-file")
+
+    print(f"     [-] JSON Input Dir       : {json_input_dir}")
+    print(f"     [-] Single PDF Output    : {single_pdf_output}")
+    if results.pdf_single_only:
+        print("     [-] Multi-file PDF       : disabled")
+    else:
+        print(f"     [-] Multi-file PDF Dir   : {multi_pdf_output}")
+
+    try:
+        generated = report.gen_pdf_reports_from_json(
+            json_dir=json_input_dir,
+            output_pdf_path=single_pdf_output,
+            multifile_output_dir=multi_pdf_output,
+            include_multifile=not results.pdf_single_only,
+        )
+    except Exception as exc:
+        print(f"[!] PDF generation failed: {exc}")
+        sys.exit(1)
+
+    cli.section_print("[*] PDF Report:")
+    print("     [-] PDF Report Path : " + str(generated.get("single_pdf")))
+    if generated.get("multi_pdf_root"):
+        print("     [-] Multi-file PDF root : " + str(generated.get("multi_pdf_root")))
+        print("     [-] Multi-file PDFs     : " + str(len(generated.get("platform_pdfs", [])) + 1))
+    sys.exit(0)
 
 state_cfg = cutils.get_state_management_config()
 state_enabled = (state_cfg["enabled"] and not results.state_disable) or results.state_enable
@@ -277,6 +332,34 @@ if original_rule_file and original_rule_file.lower() == "auto":
     print(f"     [-] Detected Platform(s) : {detected}")
 
 codebase = results.file_types
+selected_platforms = [p.strip() for p in str(results.rule_file).split(",") if p.strip()]
+framework_rule_files = discover.detect_framework_rule_files(results.target_dir, selected_platforms)
+framework_summary = {
+    platform: [
+        {
+            "name": entry.get("name", ""),
+            "rule_file": entry["path"].name,
+            "scan_ftypes": entry.get("scan_ftypes", []),
+        }
+        for entry in entries
+    ]
+    for platform, entries in framework_rule_files.items()
+    if entries
+}
+if framework_summary:
+    print("     [-] Framework Rule Packs :")
+    for platform, fw_entries in sorted(framework_summary.items()):
+        fw_labels = []
+        for fw in fw_entries:
+            patt = fw.get("scan_ftypes") or []
+            label = fw.get("name") or fw.get("rule_file")
+            if patt:
+                label = f"{label} [{', '.join(patt)}]"
+            fw_labels.append(label)
+        print(f"         [-] {platform}: {', '.join(sorted(fw_labels))}")
+else:
+    print("     [-] Framework Rule Packs : none detected")
+result.update_scan_summary("inputs_received.framework_rules_selected", framework_summary)
 
 # Verify rule names
 rule_files = {}
@@ -303,14 +386,20 @@ platform_rules_total = ", ".join(platform_rules_list)
 
 rules_common = Path(str(state.rulesRootDir) + rutils.get_rules_path_or_filetypes("common", "rules"))
 common_rules_total = rutils.rules_count(rules_common)
-total_rules_loaded = sum(map(int, rule_counts)) + common_rules_total
+framework_rules_total = 0
+for fw_entries in framework_rule_files.values():
+    for fw_entry in fw_entries:
+        framework_rules_total += rutils.rules_count(fw_entry["path"])
+total_rules_loaded = sum(map(int, rule_counts)) + common_rules_total + framework_rules_total
 
 cli.section_print(f"[*] Rules Loaded")
 print(f"     [-] Platform Rules       : {platform_rules_total}")
+print(f"     [-] Framework Rules      : {framework_rules_total}")
 print(f"     [-] Common Rules         : {common_rules_total}")
 print(f"     [-] Total Rules Loaded   : {total_rules_loaded}")
 
 result.update_scan_summary("inputs_received.platform_specific_rules", platform_rules_total)
+result.update_scan_summary("inputs_received.framework_rules_count", str(framework_rules_total))
 result.update_scan_summary("inputs_received.common_rules", str(common_rules_total))
 result.update_scan_summary("inputs_received.total_rules_loaded", str(total_rules_loaded))
 
@@ -429,8 +518,33 @@ def _source_progress(payload):
         "parse_error_count": state.parseErrorCnt,
     })
 
-# Platform-specific rules
+# Platform-specific rules (+ framework-specific overlays)
 if results.rule_file.lower() not in ['common']:
+    def _filter_framework_target_files(src_file_path, framework_key, patterns):
+        if not patterns:
+            return src_file_path, None
+
+        out_file_path = state.runtime_dirpath / "platform" / f"{Path(src_file_path).stem}_{framework_key}.log"
+        selected = []
+
+        with open(src_file_path, "r", encoding=futils.detect_encoding_type(src_file_path)) as f_src:
+            for each in f_src:
+                candidate = each.rstrip()
+                if not candidate:
+                    continue
+                base = os.path.basename(candidate)
+                normalized = candidate.replace("\\", "/")
+                matched = False
+                for patt in patterns:
+                    if fnmatch.fnmatch(base, patt) or fnmatch.fnmatch(normalized, patt):
+                        matched = True
+                        break
+                if matched:
+                    selected.append(candidate)
+
+        out_file_path.write_text("\n".join(selected) + ("\n" if selected else ""), encoding="utf-8")
+        return out_file_path, len(selected)
+
     for index, (platform, rules_main_path) in enumerate(rules_main.items()):
         if platform.upper() in completed_platforms:
             print(f"\033[92m     --> Skipping {platform} (already completed in checkpoint)\033[0m")
@@ -449,6 +563,37 @@ if results.rule_file.lower() not in ['common']:
                 source_matched_rules.extend(matched)
                 source_unmatched_rules.extend(unmatched)
                 f_targetfiles.seek(0)
+
+                applied_fw_rule_paths = set()
+                for fw_entry in framework_rule_files.get(platform, []):
+                    fw_rule_path = fw_entry["path"]
+                    fw_rule_key = str(fw_rule_path).lower()
+                    if fw_rule_key in applied_fw_rule_paths:
+                        continue
+                    fw_key = fw_entry.get("name", fw_rule_path.stem).replace(" ", "_")
+                    fw_scan_ftypes = fw_entry.get("scan_ftypes", [])
+                    target_file_for_fw, fw_target_count = _filter_framework_target_files(
+                        platform_file_path, fw_key, fw_scan_ftypes
+                    )
+                    if fw_target_count == 0:
+                        print(f"\033[93m     --> Skipping framework rules: {platform}/{fw_rule_path.stem} (no applicable files)\033[0m")
+                        applied_fw_rule_paths.add(fw_rule_key)
+                        continue
+                    aliases = fw_entry.get("names", [])
+                    alias_suffix = f" [aliases: {', '.join(aliases)}]" if aliases else ""
+                    print(f"\033[92m     --> Applying framework rules: {platform}/{fw_rule_path.stem}{alias_suffix}\033[0m")
+                    with open(target_file_for_fw, 'r', encoding=futils.detect_encoding_type(target_file_for_fw)) as f_fw_targetfiles:
+                        fw_matched, fw_unmatched = parser.source_parser(
+                            fw_rule_path,
+                            f_fw_targetfiles,
+                            outputfile=None,
+                            findings_json_path=state.outputAoI_JSON,
+                            progress_callback=_source_progress,
+                        )
+                    source_matched_rules.extend(fw_matched)
+                    source_unmatched_rules.extend(fw_unmatched)
+                    applied_fw_rule_paths.add(fw_rule_key)
+                    f_targetfiles.seek(0)
             completed_platforms.add(platform.upper())
             scan_state_mgr.mark_platform_completed(platform.upper())
             scan_state_mgr.update_stage("pattern_matching", "running", {

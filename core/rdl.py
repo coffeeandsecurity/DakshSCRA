@@ -9,12 +9,49 @@ def extract_flag_pattern(rdl_text):
     """
     if not rdl_text:
         return None
-
-    match = re.search(r"\[\s*FLAG\s*:(.*?)\]", rdl_text, flags=re.IGNORECASE | re.DOTALL)
+    match = re.search(r"\[\s*FLAG\s*:", rdl_text, flags=re.IGNORECASE)
     if not match:
         return None
 
-    return match.group(1).strip()
+    idx = match.end()
+    buf = []
+    escaped = False
+    in_char_class = False
+
+    while idx < len(rdl_text):
+        ch = rdl_text[idx]
+
+        if escaped:
+            buf.append(ch)
+            escaped = False
+            idx += 1
+            continue
+
+        if ch == "\\":
+            buf.append(ch)
+            escaped = True
+            idx += 1
+            continue
+
+        if ch == "[" and not in_char_class:
+            in_char_class = True
+            buf.append(ch)
+            idx += 1
+            continue
+
+        if ch == "]":
+            if in_char_class:
+                in_char_class = False
+                buf.append(ch)
+                idx += 1
+                continue
+            break
+
+        buf.append(ch)
+        idx += 1
+
+    pattern = "".join(buf).strip()
+    return pattern or None
 
 
 def _extract_if_expression(rdl_text):

@@ -1,0 +1,49 @@
+<root>
+    <category name="Framework-Specific Security">
+        <rule>
+            <name>Ktor Debug/Development Build Exposure</name>
+            <regex><![CDATA[BuildConfig\.DEBUG|debuggable\s+true]]></regex>
+            <rdl><![CDATA[[FLAG:BuildConfig\.DEBUG|debuggable\s+true][IF(MISSING:release|production)]]]></rdl>
+            <rule_desc>Detects debug/development flags in Kotlin app/service code.</rule_desc>
+            <vuln_desc>Debug-enabled builds can increase runtime information exposure.</vuln_desc>
+            <developer>Disable debuggable flags in production builds.</developer>
+            <reviewer>Validate release build config and runtime debug guards.</reviewer>
+        </rule>
+        <rule>
+            <name>Ktor Insecure Trust Manager / TLS Bypass</name>
+            <regex><![CDATA[HostnameVerifier\s*\{\s*.*true\s*\}|TrustAllCerts|setHostnameVerifier\(]]></regex>
+            <rdl><![CDATA[[FLAG:HostnameVerifier\s*\{\s*.*true\s*\}|TrustAllCerts|setHostnameVerifier\(]]]></rdl>
+            <rule_desc>Detects TLS certificate/hostname verification bypass patterns.</rule_desc>
+            <vuln_desc>Bypassing TLS validation can enable MITM attacks.</vuln_desc>
+            <developer>Use strict certificate and hostname verification.</developer>
+            <reviewer>Inspect HTTP client TLS configuration for bypasses.</reviewer>
+        </rule>
+        <rule>
+            <name>Ktor SQL Injection Sink</name>
+            <regex><![CDATA[rawQuery\(\s*"[^"]*"\s*\+|execSQL\(\s*"[^"]*"\s*\+]]></regex>
+            <rdl><![CDATA[[FLAG:rawQuery\(\s*"[^"]*"\s*\+|execSQL\(\s*"[^"]*"\s*\+]]]></rdl>
+            <rule_desc>Detects dynamic SQL concatenation patterns.</rule_desc>
+            <vuln_desc>Concatenated SQL may lead to injection vulnerabilities.</vuln_desc>
+            <developer>Use parameterized queries and prepared statements.</developer>
+            <reviewer>Trace untrusted input into SQL construction sites.</reviewer>
+        </rule>
+        <rule>
+            <name>Ktor Permissive CORS/Origin</name>
+            <regex><![CDATA[allowedOrigins\s*=\s*arrayOf\(\s*"\*"\s*\)|origin\s*=\s*"\*"]]></regex>
+            <rdl><![CDATA[[FLAG:allowedOrigins\s*=\s*arrayOf\(\s*"\*"\s*\)|origin\s*=\s*"\*"]]]></rdl>
+            <rule_desc>Detects wildcard origin policy settings.</rule_desc>
+            <vuln_desc>Wildcard origins may expose sensitive endpoints/data.</vuln_desc>
+            <developer>Restrict origins to trusted domains.</developer>
+            <reviewer>Review HTTP/security config for least privilege.</reviewer>
+        </rule>
+        <rule>
+            <name>Ktor Hardcoded Secret Material</name>
+            <regex><![CDATA[(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <rule_desc>Detects likely hardcoded secrets.</rule_desc>
+            <vuln_desc>Hardcoded secrets can be extracted from source/apk artifacts.</vuln_desc>
+            <developer>Use secure config/secret stores and rotate leaked values.</developer>
+            <reviewer>Validate no production secrets are committed.</reviewer>
+        </rule>
+    </category>
+</root>

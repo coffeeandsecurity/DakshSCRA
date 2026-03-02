@@ -1,0 +1,49 @@
+<root>
+    <category name="Framework-Specific Security">
+        <rule>
+            <name>Hibernate Actuator/Management Overexposure</name>
+            <regex><![CDATA[management\.endpoints\.web\.exposure\.include\s*=\s*\*|/actuator]]></regex>
+            <rdl><![CDATA[[FLAG:management\.endpoints\.web\.exposure\.include\s*=\s*\*|/actuator]]]></rdl>
+            <rule_desc>Detects potentially overexposed management endpoints.</rule_desc>
+            <vuln_desc>Overexposed management endpoints can leak operational and sensitive data.</vuln_desc>
+            <developer>Limit exposed endpoints and enforce auth/network restrictions.</developer>
+            <reviewer>Verify actuator/management endpoints are hardened in production.</reviewer>
+        </rule>
+        <rule>
+            <name>Hibernate SQL Query Concatenation Sink</name>
+            <regex><![CDATA[createQuery\(\s*"[^"]*"\s*\+|createNativeQuery\(\s*"[^"]*"\s*\+|Statement\s+\w+\s*=\s*.*createStatement\(]]></regex>
+            <rdl><![CDATA[[FLAG:createQuery\(\s*"[^"]*"\s*\+|createNativeQuery\(\s*"[^"]*"\s*\+|Statement\s+\w+\s*=\s*.*createStatement\(]]]></rdl>
+            <rule_desc>Detects dynamic SQL/HQL query concatenation patterns.</rule_desc>
+            <vuln_desc>Concatenated queries may be vulnerable to SQL injection.</vuln_desc>
+            <developer>Use parameterized queries/prepared statements.</developer>
+            <reviewer>Inspect tainted data flow into query construction APIs.</reviewer>
+        </rule>
+        <rule>
+            <name>Hibernate Permissive CORS</name>
+            <regex><![CDATA[@CrossOrigin\(.*\*|allowedOrigins\s*=\s*\{?\s*"\*"]]></regex>
+            <rdl><![CDATA[[FLAG:@CrossOrigin\(.*\*|allowedOrigins\s*=\s*\{?\s*"\*"]]]></rdl>
+            <rule_desc>Detects wildcard CORS in controller/global config.</rule_desc>
+            <vuln_desc>Wildcard CORS can expose endpoints to untrusted web origins.</vuln_desc>
+            <developer>Use explicit trusted origin allow-lists.</developer>
+            <reviewer>Validate CORS settings across all controllers and profiles.</reviewer>
+        </rule>
+        <rule>
+            <name>Hibernate Insecure Transport Setting</name>
+            <regex><![CDATA[http://|server\.ssl\.enabled\s*=\s*false|allowInsecureProtocol\s*=\s*true]]></regex>
+            <rdl><![CDATA[[FLAG:http://|server\.ssl\.enabled\s*=\s*false|allowInsecureProtocol\s*=\s*true][IF(MISSING:https://)]]]></rdl>
+            <rule_desc>Detects insecure transport usage/settings in code or config.</rule_desc>
+            <vuln_desc>Insecure transport can expose credentials and session data.</vuln_desc>
+            <developer>Enforce TLS and secure transport defaults.</developer>
+            <reviewer>Review transport settings for production hardening.</reviewer>
+        </rule>
+        <rule>
+            <name>Hibernate Hardcoded Secret Material</name>
+            <regex><![CDATA[(secret|apikey|token|password)\s*[=:]\s*"[^\"]{8,}"]]></regex>
+            <rdl><![CDATA[[FLAG:(secret|apikey|token|password)\s*[=:]\s*"[^\"]{8,}"][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <rule_desc>Detects likely hardcoded secret values.</rule_desc>
+            <vuln_desc>Hardcoded credentials can be extracted and abused.</vuln_desc>
+            <developer>Use secret managers or runtime environment variables.</developer>
+            <reviewer>Verify credentials are not stored in source/config.</reviewer>
+        </rule>
+    </category>
+</root>

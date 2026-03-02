@@ -3,7 +3,8 @@
         <!-- Applicable to AndroidManifest.xml files -->
         <rule>
             <name>Insecure Permissions</name>
-            <regex>android\.permission\.(WRITE_EXTERNAL_STORAGE|READ_EXTERNAL_STORAGE|INTERNET|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION)</regex>
+            <regex><![CDATA[android\.permission\.(WRITE_EXTERNAL_STORAGE|READ_EXTERNAL_STORAGE|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION)]]></regex>
+            <rdl><![CDATA[[FLAG:android\.permission\.(WRITE_EXTERNAL_STORAGE|READ_EXTERNAL_STORAGE|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION)][IF(MISSING:maxSdkVersion|usesPermissionFlags="neverForLocation")]]]></rdl>
             <rule_desc>Detects insecure permissions that can pose security risks.</rule_desc>
             <vuln_desc>Granting unnecessary permissions or overly broad permissions, such as WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE, INTERNET, ACCESS_FINE_LOCATION, or ACCESS_COARSE_LOCATION, can lead to security vulnerabilities. Malicious apps or attackers can exploit these permissions to access sensitive user data, track user location, or perform unauthorized actions.</vuln_desc>
             <developer>Developers should carefully review and minimize the permissions requested by the application. Only request permissions that are necessary for the app's functionality and follow the principle of least privilege.</developer>
@@ -12,7 +13,8 @@
 
         <rule>
             <name>Content Providers with No Permissions</name>
-            <regex>android:authorities\s*=|android:permission\s*=\s*"(?!android\.)</regex>
+            <regex><![CDATA[<provider\b|android:authorities\s*=]]></regex>
+            <rdl><![CDATA[[FLAG:<provider\b|android:authorities\s*=][IF(PRESENT:<provider\b && MISSING:android:exported\s*=\s*"false" && MISSING:android:permission\s*= && MISSING:android:readPermission\s*= && MISSING:android:writePermission\s*= && MISSING:androidx-startup)]]]></rdl>
             <rule_desc>Detects content providers without specific permissions.</rule_desc>
             <vuln_desc>Content providers without specific permissions may expose sensitive data to unauthorized applications or components. Without proper permission checks, other applications can potentially access or modify the data managed by the content provider, leading to security vulnerabilities.</vuln_desc>
             <developer>Developers should specify appropriate permissions for content providers to restrict access to authorized applications or components. They should review the android:permission attribute and ensure that sensitive data is protected from unauthorized access.</developer>
@@ -21,7 +23,8 @@
         
         <rule>
             <name>Exported Components</name>
-            <regex>android:exported\s*=\s*"(true|TRUE)"</regex>
+            <regex><![CDATA[android:exported\s*=\s*"(true|TRUE)"]]></regex>
+            <rdl><![CDATA[[FLAG:android:exported\s*=\s*"(true|TRUE)"][IF(PRESENT:<activity|<service|<receiver|<provider && MISSING:android:permission\s*= && MISSING:android:readPermission\s*= && MISSING:android:writePermission\s*=)]]]></rdl>
             <rule_desc>Detects exported components that can pose security risks.</rule_desc>
             <vuln_desc>Exported components, such as activities, services, or broadcast receivers, that are marked as exported="true" can be accessed by other applications or components. This can lead to security vulnerabilities if sensitive functionality or data is exposed to unauthorized entities.</vuln_desc>
             <developer>Developers should review the exported components in the AndroidManifest.xml file and ensure that only necessary components are exported. Components that do not need to be accessed by other applications should not be exported.</developer>
@@ -30,7 +33,8 @@
         
         <rule>
             <name>Allow Backup</name>
-            <regex>android:allowBackup\s*=\s*"(true|TRUE)"</regex>
+            <regex><![CDATA[android:allowBackup\s*=\s*"(true|TRUE)"]]></regex>
+            <rdl><![CDATA[[FLAG:android:allowBackup\s*=\s*"(true|TRUE)"]]]></rdl>
             <rule_desc>Detects the use of allowBackup="true" in the application's manifest.</rule_desc>
             <vuln_desc>The allowBackup attribute, when set to "true", allows the application's data to be backed up to external storage. This can lead to security risks if sensitive data is stored insecurely or if the backup is accessible to unauthorized entities.</vuln_desc>
             <developer>Developers should carefully consider whether allowing backup of application data is necessary. If sensitive data is stored, it should be encrypted or excluded from backup using the android:allowBackup attribute set to "false".</developer>
@@ -39,7 +43,8 @@
         
         <rule>
             <name>Unprotected Components</name>
-            <regex>android:permission\s*=\s*"(?!android\.)</regex>
+            <regex><![CDATA[android:permission\s*=\s*"(?!android\.)]]></regex>
+            <rdl><![CDATA[[FLAG:android:permission\s*=\s*"(?!android\.)]]]></rdl>
             <rule_desc>Detects components that do not require specific permissions.</rule_desc>
             <vuln_desc>Components without the android:permission attribute or with a permission that does not start with "android." may not be properly protected. This can allow unauthorized applications or components to access the functionality provided by the component, leading to security vulnerabilities.</vuln_desc>
             <developer>Developers should specify appropriate permissions for components to ensure that only authorized entities can access them. Components that require specific permissions should have the android:permission attribute set accordingly.</developer>
@@ -48,7 +53,8 @@
 
         <rule>
             <name>Debuggable Application</name>
-            <regex>android:debuggable\s*=\s*"(true|TRUE)"</regex>
+            <regex><![CDATA[android:debuggable\s*=\s*"(true|TRUE)"]]></regex>
+            <rdl><![CDATA[[FLAG:android:debuggable\s*=\s*"(true|TRUE)"][IF(MISSING:release|production)]]]></rdl>
             <rule_desc>Detects debuggable applications.</rule_desc>
             <vuln_desc>Setting android:debuggable="true" in the application's manifest allows debugging of the application, potentially exposing sensitive information or vulnerabilities to attackers. Debuggable applications may leak information or have security weaknesses that could be exploited.</vuln_desc>
             <developer>Developers should ensure that the android:debuggable attribute is set to "false" in release builds to prevent exposing sensitive information or vulnerabilities. Debugging features should be disabled in production builds.</developer>
@@ -58,6 +64,7 @@
         <rule>
             <name>Unsafe Intent Filters</name>
             <regex>android.intent.action.VIEW</regex>
+            <rdl><![CDATA[[FLAG:android.intent.action.VIEW][IF(MISSING:autoVerify="true" && MISSING:android:scheme="https" && MISSING:android:host=)]]]></rdl>
             <rule_desc>Detects unsafe intent filters.</rule_desc>
             <vuln_desc>Intent filters with actions like "android.intent.action.VIEW" can potentially expose the application to security risks if not properly configured. Malicious applications or links can exploit these intent filters to launch activities in the application or manipulate data.</vuln_desc>
             <developer>Developers should carefully configure intent filters to only allow expected data and actions. They should validate input and sanitize data to prevent unintended behavior or exploitation.</developer>
@@ -67,6 +74,7 @@
         <rule>
             <name>Unsafe Broadcast Receivers</name>
             <regex>android.intent.action.BOOT_COMPLETED</regex>
+            <rdl><![CDATA[[FLAG:android.intent.action.BOOT_COMPLETED][IF(MISSING:android:permission\s*=\s*"android\.permission\.RECEIVE_BOOT_COMPLETED" && MISSING:android:exported\s*=\s*"false")]]]></rdl>
             <rule_desc>Detects unsafe broadcast receivers.</rule_desc>
             <vuln_desc>Broadcast receivers listening for sensitive actions like "android.intent.action.BOOT_COMPLETED" can be exploited by malicious applications to execute arbitrary code or perform unauthorized actions when certain system events occur. This can lead to security risks such as privilege escalation or denial of service.</vuln_desc>
             <developer>Developers should carefully review broadcast receivers and ensure that they handle sensitive actions securely. They should implement appropriate permission checks and validation to prevent unauthorized access or execution of malicious code.</developer>
@@ -75,7 +83,8 @@
 
         <rule>
             <name>Insecure Network Traffic</name>
-            <regex>android:usesCleartextTraffic\s*=\s*"(true|TRUE)"</regex>
+            <regex><![CDATA[android:usesCleartextTraffic\s*=\s*"(true|TRUE)"]]></regex>
+            <rdl><![CDATA[[FLAG:android:usesCleartextTraffic\s*=\s*"(true|TRUE)"]]]></rdl>
             <rule_desc>Detects the use of cleartext traffic in the application's manifest.</rule_desc>
             <vuln_desc>Allowing cleartext traffic (`usesCleartextTraffic="true"`) makes the application vulnerable to network eavesdropping and man-in-the-middle attacks.</vuln_desc>
             <developer>Set android:usesCleartextTraffic to "false" to enforce secure communication using HTTPS. Configure a Network Security Config for exceptions.</developer>
@@ -88,6 +97,7 @@
         <rule>
             <name>Missing Obfuscation for Sensitive Classes</name>
             <regex><![CDATA[(?i)-keepclassmembers\s+class\s+[^\n{]*(?:password|secret|token|apikey)[^\n{]*]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)-keepclassmembers\s+class\s+[^\n{]*(?:password|secret|token|apikey)[^\n{]*][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
             <exclude><![CDATA[(?i)^\s*(#|//|/\*|\*)]]></exclude>
             <rule_desc>Detects missing obfuscation for sensitive classes or methods.</rule_desc>
             <vuln_desc>Lack of obfuscation for sensitive classes makes it easier for attackers to reverse engineer the application and extract sensitive information.</vuln_desc>
@@ -100,7 +110,8 @@
         <!-- Applicable to build.gradle files -->
         <rule>
             <name>Debuggable Build Enabled</name>
-            <regex>debuggable\s*=\s*true</regex>
+            <regex><![CDATA[debuggable\s*=\s*true]]></regex>
+            <rdl><![CDATA[[FLAG:debuggable\s*=\s*true][IF(MISSING:release|production)]]]></rdl>
             <rule_desc>Detects if a build configuration enables debugging for release builds.</rule_desc>
             <vuln_desc>Enabling debuggable builds for release may expose sensitive data and debugging information to attackers.</vuln_desc>
             <developer>Ensure that debugging is disabled for production builds by setting debuggable=false in the release build configuration.</developer>
@@ -109,7 +120,8 @@
 
         <rule>
             <name>Outdated Dependencies</name>
-            <regex>implementation\s+['"][\w\.-]+:\w+:\d+\.\d+\.\d+['"]</regex>
+            <regex><![CDATA[implementation\s+['"][\w\.-]+:\w+:\d+\.\d+\.\d+['"]]]></regex>
+            <rdl><![CDATA[[FLAG:implementation\s+['"][\w\.-]+:\w+:\d+\.\d+\.\d+['"]][IF(PRESENT:com\.android\.tools|androidx|google|okhttp|retrofit|firebase)]]]></rdl>
             <rule_desc>Detects dependency declarations with version numbers in the Gradle file.</rule_desc>
             <vuln_desc>Using outdated dependencies can introduce known vulnerabilities into the application.</vuln_desc>
             <developer>Regularly update dependencies to the latest stable versions to mitigate security risks. Review changelogs and security advisories before updating.</developer>
@@ -122,7 +134,8 @@
         (e.g., activity_main.xml, fragment_example.xml) -->
         <rule>
             <name>Missing Content Descriptions</name>
-            <regex>android:contentDescription\s*=\s*["']["']</regex>
+            <regex><![CDATA[android:contentDescription\s*=\s*["']["']]]></regex>
+            <rdl><![CDATA[[FLAG:android:contentDescription\s*=\s*["']["']]]]></rdl>
             <rule_desc>Detects UI elements with missing or empty content descriptions.</rule_desc>
             <vuln_desc>Missing content descriptions make the app inaccessible to users relying on assistive technologies like screen readers.</vuln_desc>
             <developer>Provide meaningful content descriptions for all UI elements, especially images and buttons, to improve accessibility.</developer>
@@ -131,7 +144,8 @@
 
         <rule>
             <name>Insecure WebView Configuration</name>
-            <regex>WebView.*setJavaScriptEnabled\(true\)</regex>
+            <regex><![CDATA[WebView.*setJavaScriptEnabled\(true\)]]></regex>
+            <rdl><![CDATA[[FLAG:WebView.*setJavaScriptEnabled\(true\)]]]></rdl>
             <rule_desc>Detects insecure WebView configurations that enable JavaScript.</rule_desc>
             <vuln_desc>Enabling JavaScript in WebView without additional security measures can expose the application to XSS attacks.</vuln_desc>
             <developer>Restrict JavaScript usage in WebView and enable additional safeguards, such as strict URL validation.</developer>

@@ -2,7 +2,8 @@
     <category name="Untrusted Input Handling or Injection Flaws">
         <rule>
             <name>Untrusted Inputs: Intent Extras</name>
-            <regex>Intent\.get.*Extra\(".*"</regex>
+            <regex><![CDATA[Intent\.get.*Extra\(".*"]]></regex>
+            <rdl><![CDATA[[FLAG:Intent\.get.*Extra\(".*"]]]></rdl>
             <rule_desc>Detects the usage of Intent extras, which may contain untrusted inputs.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using Intent extras without proper validation and sanitization. Attackers can manipulate Intent extras to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks (SQL, OS, or other), data tampering, or unauthorized access.</vuln_desc>
             <developer>Developers should validate and sanitize Intent extras before using them in any sensitive operations. They should implement strong input validation, ensuring that only expected and sanitized values are accepted from Intent extras. Additionally, developers should be cautious about the potential risks associated with using untrusted data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
@@ -10,7 +11,8 @@
         </rule>
         <rule>
             <name>Untrusted Inputs: Shared Preferences</name>
-            <regex>SharedPreferences\.get.*\(".*"</regex>
+            <regex><![CDATA[SharedPreferences\.get.*\(".*"]]></regex>
+            <rdl><![CDATA[[FLAG:SharedPreferences\.get.*\(".*"]]]></rdl>
             <rule_desc>Identifies the usage of Shared Preferences, which may contain untrusted inputs.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using Shared Preferences without proper validation and sanitization. Attackers can manipulate Shared Preferences to provide malicious or unexpected values, potentially leading to security vulnerabilities such as data tampering, information disclosure, or unauthorized access.</vuln_desc>
             <developer>Developers should carefully validate and sanitize data retrieved from Shared Preferences before using it in any sensitive operations. They should implement strong input validation, ensuring that only expected and sanitized values are accepted from Shared Preferences. Additionally, developers should be aware of the risks associated with using untrusted data and follow secure coding practices, such as input validation, output encoding, and appropriate data encryption techniques.</developer>
@@ -18,7 +20,8 @@
         </rule>
         <rule>
             <name>Untrusted Inputs: User Input Fields</name>
-            <regex>EditText\.getText\(\)</regex>
+            <regex><![CDATA[EditText\.getText\(\)]]></regex>
+            <rdl><![CDATA[[FLAG:EditText\.getText\(\)]]]></rdl>
             <rule_desc>Detects the usage of user input fields, such as EditTexts, which may contain untrusted inputs.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using user input fields without proper validation and sanitization. Attackers can manipulate user input fields to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks (SQL, OS, or other), cross-site scripting (XSS), or unauthorized access.</vuln_desc>
             <developer>Developers should validate and sanitize user input retrieved from EditTexts or other user input fields before using it in any sensitive operations. They should implement strong input validation, ensuring that only expected and sanitized values are accepted from user input fields. Additionally, developers should be cautious about the potential risks associated with using untrusted data and follow secure coding practices, such as input validation, output encoding, and appropriate data filtering techniques.</developer>
@@ -26,7 +29,8 @@
         </rule>
         <rule>
             <name>SQL Injection: Room Database Queries</name>
-            <regex>Room\.databaseBuilder\(.*\)</regex>
+            <regex><![CDATA[Room\.databaseBuilder\(.*\)]]></regex>
+            <rdl><![CDATA[[FLAG:Room\.databaseBuilder\(.*\)]]]></rdl>
             <rule_desc>Detects the usage of Room database queries, which may be vulnerable to SQL injection.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using Room database queries without proper parameterization or validation. Attackers can exploit SQL injection vulnerabilities to manipulate database operations, retrieve unauthorized data, or perform malicious actions.</vuln_desc>
             <developer>Developers should ensure that Room database queries are properly parameterized or sanitized to prevent SQL injection attacks. They should use Room's built-in support for parameterized queries or sanitize user input before incorporating it into database queries.</developer>
@@ -37,7 +41,8 @@
     <category name="Insecure Method/Function Call">
         <rule>
             <name>Insecure Method Call: Runtime.exec()</name>
-            <regex>Runtime\.exec\(".*"\)</regex>
+            <regex><![CDATA[Runtime\.exec\(".*"\)]]></regex>
+            <rdl><![CDATA[[FLAG:Runtime\.exec\(".*"\)]]]></rdl>
             <rule_desc>Detects insecure usage of the Runtime.exec() method for executing shell commands.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of command injection. Attackers can exploit insecure usage of Runtime.exec() with unsanitized user input to execute arbitrary shell commands on the device, leading to unauthorized access, data loss, or other malicious activities.</vuln_desc>
             <developer>Developers should avoid using Runtime.exec() with user-supplied input whenever possible. If its usage is necessary, it is crucial to employ strict input validation, input sanitization, and command parameterization techniques to prevent command injection attacks.</developer>
@@ -45,7 +50,8 @@
         </rule>
         <rule>
             <name>Insecure Method Call: WebView.loadUrl()</name>
-            <regex>WebView\.loadUrl\(".*"\)</regex>
+            <regex><![CDATA[WebView\.loadUrl\(".*"\)]]></regex>
+            <rdl><![CDATA[[FLAG:WebView\.loadUrl\(".*"\)]]]></rdl>
             <rule_desc>Detects insecure usage of WebView.loadUrl() method, which may lead to JavaScript injection vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of JavaScript injection. Attackers can exploit insecure usage of WebView.loadUrl() with unsanitized user input to inject malicious JavaScript code into web pages loaded by the WebView, leading to cross-site scripting (XSS) vulnerabilities.</vuln_desc>
             <developer>Developers should avoid using WebView.loadUrl() with untrusted user input directly concatenated into the URL string. Instead, they should use proper input validation, output encoding, and secure mechanisms for injecting dynamic content into web pages loaded by WebView.</developer>
@@ -53,7 +59,8 @@
         </rule>
         <rule>
             <name>Insecure Method Call: ContentResolver.query()</name>
-            <regex>ContentResolver\.query\(".*"\)</regex>
+            <regex><![CDATA[ContentResolver\.query\(".*"\)]]></regex>
+            <rdl><![CDATA[[FLAG:ContentResolver\.query\(".*"\)]]]></rdl>
             <rule_desc>Detects insecure usage of ContentResolver.query() method, which may lead to SQL injection vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of SQL injection. Attackers can exploit insecure usage of ContentResolver.query() with unsanitized user input to inject malicious SQL code into content provider queries, leading to unauthorized data access or data manipulation.</vuln_desc>
             <developer>Developers should ensure that ContentResolver.query() is used securely by properly parameterizing queries or sanitizing user input before incorporating it into content provider queries. They should also follow best practices for securely accessing and querying content providers.</developer>
@@ -61,7 +68,8 @@
         </rule>
         <rule>
             <name>Insecure Method Call: SharedPreferences</name>
-            <regex>getSharedPreferences\(\s*[^,]+,\s*Context\.MODE_PRIVATE\s*\)</regex>
+            <regex><![CDATA[getSharedPreferences\(\s*[^,]+,\s*Context\.MODE_PRIVATE\s*\)]]></regex>
+            <rdl><![CDATA[[FLAG:getSharedPreferences\(\s*[^,]+,\s*Context\.MODE_PRIVATE\s*\)][IF(PRESENT:(putString|putInt|putLong|putBoolean|getString|getInt|getLong|getBoolean) && PRESENT:(token|secret|password|auth|session|apikey|key) && MISSING:(EncryptedSharedPreferences|MasterKey|KeyStore|Keystore|Cipher|encrypt|decrypt))]]]></rdl>
             <rule_desc>Detects insecure usage of SharedPreferences without proper encryption or secure storage.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of storing sensitive data in SharedPreferences without proper encryption or secure storage mechanisms. Attackers with access to the device can potentially extract and manipulate data stored in SharedPreferences, leading to unauthorized access or data leakage.</vuln_desc>
             <developer>Developers should avoid storing sensitive data, such as authentication tokens or user credentials, directly in SharedPreferences without proper encryption or secure storage mechanisms. Consider using encrypted storage solutions provided by Android APIs or third-party libraries to protect sensitive data.</developer>
@@ -69,7 +77,8 @@
         </rule>
         <rule>
             <name>Insecure Method Call: viewModelScope.launch</name>
-            <regex>viewModelScope\.launch\s*{[^}]*}</regex>
+            <regex><![CDATA[viewModelScope\.launch\s*{[^}]*}]]></regex>
+            <rdl><![CDATA[[FLAG:viewModelScope\.launch\s*{[^}]*}]]]></rdl>
             <rule_desc>Detects insecure usage of viewModelScope.launch without proper error handling or exception logging.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of not properly handling exceptions or errors that occur within the coroutine launched by viewModelScope.launch. Unhandled exceptions or errors can lead to unexpected behavior, crashes, or security vulnerabilities in the application.</vuln_desc>
             <developer>Developers should ensure that viewModelScope.launch is used with proper error handling mechanisms, such as try-catch blocks or error propagation, to handle exceptions or errors that occur within the coroutine. Additionally, developers should log exceptions or errors for debugging and monitoring purposes.</developer>
@@ -77,7 +86,8 @@
         </rule>
         <rule>
             <name>Insecure Method Call: setHtmlText</name>
-            <regex>setHtmlText\s*\(.*\)</regex>
+            <regex><![CDATA[setHtmlText\s*\(.*\)]]></regex>
+            <rdl><![CDATA[[FLAG:setHtmlText\s*\(.*\)]]]></rdl>
             <rule_desc>Detects insecure usage of the setHtmlText method.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using a custom method setHtmlText, which could pose security risks if it doesn't properly sanitize or validate the input HTML content. Unsanitized or unvalidated HTML content can lead to XSS (Cross-Site Scripting) vulnerabilities, allowing attackers to execute malicious scripts within the application.</vuln_desc>
             <developer>Developers should ensure that any custom methods for setting HTML content properly sanitize or validate the input HTML content to prevent XSS vulnerabilities. They should use secure HTML parsing libraries or built-in platform APIs for handling HTML content to mitigate security risks.</developer>
@@ -90,6 +100,7 @@
         <rule>
             <name>Deprecated MODE_WORLD_WRITEABLE Usage</name>
             <regex><![CDATA[M(?:ODE_)?WORLD_WRITEABLE]]></regex>
+            <rdl><![CDATA[[FLAG:M(?:ODE_)?WORLD_WRITEABLE]]]></rdl>
             <rule_desc>Detects usage of the deprecated MODE_WORLD_WRITEABLE mode.</rule_desc>
             <vuln_desc>The MODE_WORLD_WRITEABLE mode allows any application to write to your app's files, leading to potential data corruption or unauthorized modifications.</vuln_desc>
             <developer>Avoid using MODE_WORLD_WRITEABLE. Consider using content providers or other mechanisms to share data securely.</developer>
@@ -99,6 +110,7 @@
         <rule>
             <name>Deprecated MODE_WORLD_READABLE Usage</name>
             <regex><![CDATA[M(?:ODE_)?WORLD_READABLE]]></regex>
+            <rdl><![CDATA[[FLAG:M(?:ODE_)?WORLD_READABLE]]]></rdl>
             <rule_desc>Detects usage of the deprecated MODE_WORLD_READABLE mode.</rule_desc>
             <vuln_desc>The MODE_WORLD_READABLE mode allows any application to read your app's files, potentially exposing sensitive data to unauthorized access.</vuln_desc>
             <developer>Avoid using MODE_WORLD_READABLE. Use content providers or define explicit permissions to control data access.</developer>
@@ -108,6 +120,7 @@
         <rule>
             <name>Insecure File Operations</name>
             <regex><![CDATA[openFile(?:Output|Input)\s*\([^,]*,\s*M(?:ODE_)?WORLD_(?:WRITEABLE|READABLE)]]></regex>
+            <rdl><![CDATA[[FLAG:openFile(?:Output|Input)\s*\([^,]*,\s*M(?:ODE_)?WORLD_(?:WRITEABLE|READABLE)]]]></rdl>
             <rule_desc>Detects insecure file operations using deprecated world-readable or world-writable modes.</rule_desc>
             <vuln_desc>Using world-readable or world-writable modes in file operations can lead to unauthorized access or modifications to the app's files.</vuln_desc>
             <developer>Replace the use of MODE_WORLD_READABLE and MODE_WORLD_WRITEABLE with private modes or secure sharing mechanisms such as content providers.</developer>
@@ -117,6 +130,7 @@
         <rule>
             <name>File Sharing Without Content Provider</name>
             <regex><![CDATA[Intent\s*\(\s*(?:[^,]*,\s*)?Uri\.parse]]></regex>
+            <rdl><![CDATA[[FLAG:Intent\s*\(\s*(?:[^,]*,\s*)?Uri\.parse]]]></rdl>
             <rule_desc>Detects file sharing operations that use URIs without a content provider.</rule_desc>
             <vuln_desc>Sharing files directly using URIs without a content provider can expose sensitive data to unauthorized applications. Content providers offer a controlled mechanism for sharing files securely.</vuln_desc>
             <developer>Use a content provider to securely share files between applications, ensuring proper access control and data protection.</developer>
@@ -129,6 +143,7 @@
         <rule>
             <name>Insecure External Storage Write</name>
             <regex><![CDATA[(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*\.write]]></regex>
+            <rdl><![CDATA[[FLAG:(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*\.write]]]></rdl>
             <rule_desc>Detects writing to external storage without proper validation or encryption.</rule_desc>
             <vuln_desc>Writing sensitive information to external storage can lead to unauthorized access or modification, as external storage is globally writable and can be accessed by any application or user.</vuln_desc>
             <developer>Store only non-sensitive information on external storage. For sensitive data, use internal storage or encrypt the data before writing it to external storage.</developer>
@@ -137,6 +152,7 @@
         <rule>
             <name>Dynamic Loading from External Storage</name>
             <regex><![CDATA[(DexClassLoader|PathClassLoader)\s*\([^,]*Environment\.getExternalStorageDirectory]]></regex>
+            <rdl><![CDATA[[FLAG:(DexClassLoader|PathClassLoader)\s*\([^,]*Environment\.getExternalStorageDirectory]]]></rdl>
             <rule_desc>Detects dynamic loading of files from external storage.</rule_desc>
             <vuln_desc>Loading executables or class files from external storage without cryptographic verification can lead to code execution vulnerabilities if the files are tampered with.</vuln_desc>
             <developer>Avoid loading executables or class files from external storage. If necessary, ensure files are cryptographically signed and verified before loading.</developer>
@@ -145,6 +161,7 @@
         <rule>
             <name>Insecure External Storage Read</name>
             <regex><![CDATA[(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*\.read]]></regex>
+            <rdl><![CDATA[[FLAG:(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*\.read]]]></rdl>
             <rule_desc>Detects reading data from external storage without proper input validation.</rule_desc>
             <vuln_desc>Reading unvalidated data from external storage can lead to vulnerabilities such as malicious file execution or unexpected application behavior.</vuln_desc>
             <developer>Validate and sanitize all data read from external storage as it may come from untrusted sources.</developer>
@@ -153,6 +170,7 @@
         <rule>
             <name>Executable File Storage on External Storage</name>
             <regex><![CDATA[(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*.*\.(dex|so|jar|apk)]]></regex>
+            <rdl><![CDATA[[FLAG:(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*.*\.(dex|so|jar|apk)]]]></rdl>
             <rule_desc>Detects storage of executable files on external storage.</rule_desc>
             <vuln_desc>Storing executable files on external storage can lead to unauthorized code execution if the files are tampered with by other applications or users.</vuln_desc>
             <developer>Avoid storing executable files on external storage. If necessary, ensure files are cryptographically signed and verified before usage.</developer>
@@ -163,7 +181,8 @@
     <category name="Insecure Mitigations">
         <rule>
             <name>Insecure Mitigation: WebView.addJavascriptInterface()</name>
-            <regex>WebView\.addJavascriptInterface\(".*"\)</regex>
+            <regex><![CDATA[WebView\.addJavascriptInterface\(".*"\)]]></regex>
+            <rdl><![CDATA[[FLAG:WebView\.addJavascriptInterface\(".*"\)]]]></rdl>
             <rule_desc>Detects insecure usage of WebView.addJavascriptInterface() method, which may introduce JavaScript injection vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of JavaScript injection. Attackers can exploit insecure usage of WebView.addJavascriptInterface() with unsanitized input to inject malicious JavaScript code into web pages loaded by the WebView, leading to cross-site scripting (XSS) vulnerabilities.</vuln_desc>
             <developer>Developers should avoid using WebView.addJavascriptInterface() with untrusted input directly passed as the interface object. Instead, they should carefully validate and sanitize any input passed to this method to prevent JavaScript injection vulnerabilities. Alternatively, consider using safer alternatives for communication between JavaScript and native code.</developer>
@@ -174,7 +193,8 @@
     <category name="Effective/Standard Mitigations Implemented">
         <rule>
             <name>Mitigation Identified: SQL Injection (Room Database)</name>
-            <regex>Room\.createQuery\(".*"\)</regex>
+            <regex><![CDATA[Room\.createQuery\(".*"\)]]></regex>
+            <rdl><![CDATA[[FLAG:Room\.createQuery\(".*"\)]]]></rdl>
             <rule_desc>Detects the presence of Room database queries with properly parameterized or sanitized inputs to mitigate SQL injection vulnerabilities.</rule_desc>
             <vuln_desc>This rule checks if Room database queries are constructed using Room's query builder methods, which inherently parameterize or sanitize inputs, effectively mitigating SQL injection vulnerabilities. By using Room's built-in mechanisms for query construction, developers avoid the risk of SQL injection vulnerabilities that arise from improper input handling.</vuln_desc>
             <developer>Ensure that Room database queries are constructed using Room's query builder methods, such as createQuery(), which automatically handle input parameterization or sanitization. By leveraging these mechanisms, developers can effectively mitigate SQL injection vulnerabilities in Room database queries.</developer>

@@ -1,0 +1,49 @@
+<root>
+    <category name="Framework-Specific Security">
+        <rule>
+            <name>Codeigniter Debug Mode Enabled</name>
+            <regex><![CDATA[APP_DEBUG\s*=\s*true|kernel\.debug\s*=\s*true|WP_DEBUG\s*,\s*true|ENVIRONMENT\s*=\s*[\'\"]development[\'\"]]]></regex>
+            <rdl><![CDATA[[FLAG:APP_DEBUG\s*=\s*true|kernel\.debug\s*=\s*true|WP_DEBUG\s*,\s*true|ENVIRONMENT\s*=\s*[\'\"]development[\'\"]][IF(MISSING:release|production)]]]></rdl>
+            <rule_desc>Detects framework/application debug mode enabled in deployable configuration.</rule_desc>
+            <vuln_desc>Debug mode can expose stack traces, internal paths, and sensitive runtime details.</vuln_desc>
+            <developer>Disable debug mode in production and separate dev/prod config.</developer>
+            <reviewer>Verify production config and runtime env disable debug flags.</reviewer>
+        </rule>
+        <rule>
+            <name>Codeigniter Dangerous Dynamic Eval/Template Execution</name>
+            <regex><![CDATA[\beval\s*\(|assert\s*\(\s*\$|create_function\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:\beval\s*\(|assert\s*\(\s*\$|create_function\s*\(]]]></rdl>
+            <rule_desc>Detects dangerous dynamic code execution primitives in PHP code paths.</rule_desc>
+            <vuln_desc>Dynamic execution APIs can lead to remote code execution when user input is involved.</vuln_desc>
+            <developer>Avoid dynamic execution; use strict allow-lists and safer alternatives.</developer>
+            <reviewer>Review data flow into dynamic execution sinks for user-controlled input.</reviewer>
+        </rule>
+        <rule>
+            <name>Codeigniter Raw SQL Query Construction</name>
+            <regex><![CDATA[DB::raw\(|selectRaw\(|whereRaw\(|->query\(\s*\$|mysqli_query\(|PDO::query\(]]></regex>
+            <rdl><![CDATA[[FLAG:DB::raw\(|selectRaw\(|whereRaw\(|->query\(\s*\$|mysqli_query\(|PDO::query\(]]]></rdl>
+            <rule_desc>Detects raw/dynamic SQL construction in framework and DB access calls.</rule_desc>
+            <vuln_desc>Dynamic SQL with untrusted input can introduce SQL injection vulnerabilities.</vuln_desc>
+            <developer>Use parameterized queries/prepared statements and validate input.</developer>
+            <reviewer>Check whether untrusted data reaches raw SQL APIs without binding.</reviewer>
+        </rule>
+        <rule>
+            <name>Codeigniter Permissive CORS Configuration</name>
+            <regex><![CDATA[Access-Control-Allow-Origin\s*[:=]\s*[\'\"]\*[\'\"]|allowed_origins\s*=\s*\[?\s*[\'\"]\*[\'\"]]]></regex>
+            <rdl><![CDATA[[FLAG:Access-Control-Allow-Origin\s*[:=]\s*[\'\"]\*[\'\"]|allowed_origins\s*=\s*\[?\s*[\'\"]\*[\'\"]][IF(MISSING:allowlist|whitelist|trusted)]]]></rdl>
+            <rule_desc>Detects wildcard CORS settings in application or framework config.</rule_desc>
+            <vuln_desc>Wildcard CORS may allow untrusted origins to access sensitive endpoints.</vuln_desc>
+            <developer>Restrict CORS origins to explicit trusted domains.</developer>
+            <reviewer>Validate CORS policies are environment-specific and least-privilege.</reviewer>
+        </rule>
+        <rule>
+            <name>Codeigniter Hardcoded Secret Material</name>
+            <regex><![CDATA[(APP_KEY|SECRET|API[_-]?KEY|TOKEN|PASSWORD)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]]]></regex>
+            <rdl><![CDATA[[FLAG:(APP_KEY|SECRET|API[_-]?KEY|TOKEN|PASSWORD)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <rule_desc>Detects likely hardcoded secret material in source/config.</rule_desc>
+            <vuln_desc>Hardcoded secrets risk leakage through source exposure and artifact distribution.</vuln_desc>
+            <developer>Move secrets to secure secret management and rotate compromised values.</developer>
+            <reviewer>Review whether detected literals are real credentials and enforce secret hygiene.</reviewer>
+        </rule>
+    </category>
+</root>

@@ -1,0 +1,58 @@
+<root>
+    <category name="Framework-Specific Security">
+        <rule>
+            <name>Flutter Debug Mode Marker</name>
+            <regex><![CDATA[kDebugMode|assert\(|debugShowCheckedModeBanner\s*:\s*true]]></regex>
+            <rdl><![CDATA[[FLAG:kDebugMode|assert\(|debugShowCheckedModeBanner\s*:\s*true][IF(MISSING:kReleaseMode)]]]></rdl>
+            <rule_desc>Detects debug/development mode markers in Flutter apps.</rule_desc>
+            <vuln_desc>Debug features in production may expose internals and diagnostics.</vuln_desc>
+            <developer>Disable debug indicators/features in release builds.</developer>
+            <reviewer>Review build profiles and debug-only code guards.</reviewer>
+        </rule>
+        <rule>
+            <name>Flutter Insecure HTTP Usage</name>
+            <regex><![CDATA[http://|Uri\.parse\(\s*[\'\"]http://]]></regex>
+            <rdl><![CDATA[[FLAG:http://|Uri\.parse\(\s*[\'\"]http://][IF(MISSING:https://)]]]></rdl>
+            <rule_desc>Detects cleartext endpoint usage in Flutter apps.</rule_desc>
+            <vuln_desc>Cleartext transport can leak credentials and session data.</vuln_desc>
+            <developer>Use HTTPS only with strict TLS validation.</developer>
+            <reviewer>Audit endpoint constants and request builders.</reviewer>
+        </rule>
+        <rule>
+            <name>Flutter Certificate Validation Bypass</name>
+            <regex><![CDATA[badCertificateCallback\s*=\s*\(|badCertificateCallback\s*:\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:badCertificateCallback\s*=\s*\(|badCertificateCallback\s*:\s*\(][IF(MISSING:sha256|certificatePinning|SecurityContext)]]]></rdl>
+            <rule_desc>Detects custom certificate callback patterns requiring trust validation review.</rule_desc>
+            <vuln_desc>Improper callbacks can disable certificate verification and allow MITM.</vuln_desc>
+            <developer>Avoid permissive callbacks and enforce strict trust checks.</developer>
+            <reviewer>Review HttpClient security callbacks and return conditions.</reviewer>
+        </rule>
+        <rule>
+            <name>Flutter WebView JavaScript Unrestricted</name>
+            <regex><![CDATA[JavaScriptMode\.unrestricted|evaluateJavascript\(]]></regex>
+            <rdl><![CDATA[[FLAG:JavaScriptMode\.unrestricted|evaluateJavascript\(][IF(MISSING:NavigationDelegate)]]]></rdl>
+            <rule_desc>Detects unrestricted JS execution in Flutter WebView contexts.</rule_desc>
+            <vuln_desc>Unrestricted WebView JS with untrusted content increases injection risk.</vuln_desc>
+            <developer>Limit JS execution and trust only controlled content.</developer>
+            <reviewer>Audit WebView usage and content origin controls.</reviewer>
+        </rule>
+        <rule>
+            <name>Flutter Shared Preferences Secret Marker</name>
+            <regex><![CDATA[SharedPreferences\.getInstance\(\)|setString\(\s*[\'\"].*(token|secret|password|apikey)]]></regex>
+            <rdl><![CDATA[[FLAG:setString\(\s*[\'\"].*(token|secret|password|apikey)][IF(MISSING:flutter_secure_storage|secure_storage)]]]></rdl>
+            <rule_desc>Detects local preference storage patterns involving likely sensitive keys.</rule_desc>
+            <vuln_desc>Shared preferences are not ideal for sensitive secret storage.</vuln_desc>
+            <developer>Use secure storage plugins for secrets.</developer>
+            <reviewer>Review key names and sensitive data persistence paths.</reviewer>
+        </rule>
+        <rule>
+            <name>Flutter Hardcoded Secret Marker</name>
+            <regex><![CDATA[(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]]]></regex>
+            <rdl><![CDATA[[FLAG:(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]][IF(MISSING:kDebugMode)]]]></rdl>
+            <rule_desc>Detects likely hardcoded secret literals.</rule_desc>
+            <vuln_desc>Hardcoded secrets can be extracted from source and app binaries.</vuln_desc>
+            <developer>Externalize and rotate secrets; avoid embedding in app code.</developer>
+            <reviewer>Validate no production credentials are committed.</reviewer>
+        </rule>
+    </category>
+</root>

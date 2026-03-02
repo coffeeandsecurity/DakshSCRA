@@ -2,7 +2,8 @@
     <category name="Untrusted Input Handling or Injection Flaws">
         <rule>
             <name>Untrusted Data in 'document.getElementById().value'</name>
-            <regex>document\.getElementById\(.+\)\.value</regex>
+            <regex><![CDATA[document\.getElementById\(.+\)\.value]]></regex>
+            <rdl><![CDATA[[FLAG:document\.getElementById\(.+\)\.value][IF(PRESENT:(innerHTML|outerHTML|document\.write|eval\(|setTimeout\(|setInterval\(|fetch\(|XMLHttpRequest|location\.) && MISSING:(DOMPurify|sanitize|encodeURI|encodeURIComponent|textContent|innerText))]]]></rdl>
             <rule_desc>Detects the usage of unvalidated input.</rule_desc>
             <vuln_desc>This rule matches instances where user input obtained from `document.getElementById().value` is used without proper validation. Unvalidated input can lead to security vulnerabilities such as injection attacks, cross-site scripting (XSS), and improper data handling.</vuln_desc>
             <developer>Developers should validate and sanitize user input obtained through `document.getElementById().value` before using it in any sensitive operations. They should implement input validation techniques appropriate for the expected input, such as data type checking, length validation, and character filtering.</developer>
@@ -11,7 +12,8 @@
 
         <rule>
             <name>Untrusted Data in InnerHTML</name>
-            <regex>\.innerHTML\s?=\s?.+</regex>
+            <regex><![CDATA[\.innerHTML\s?=\s?.+]]></regex>
+            <rdl><![CDATA[[FLAG:\.innerHTML\s?=\s?.+][IF(MISSING:(DOMPurify|sanitize|textContent|innerText|createTextNode))]]]></rdl>
             <rule_desc>Detects potential security risks when assigning untrusted data to the innerHTML property.</rule_desc>
             <vuln_desc>This rule matches instances where potentially untrusted data is assigned to the innerHTML property. Assigning untrusted data directly to innerHTML can lead to cross-site scripting (XSS) vulnerabilities if proper input validation and output encoding are not performed.</vuln_desc>
             <developer>Developers should avoid assigning untrusted data directly to the innerHTML property. They should implement proper input validation and output encoding techniques when updating the content of elements via innerHTML to prevent XSS vulnerabilities.</developer>
@@ -20,7 +22,8 @@
         
         <rule>
             <name>Untrusted Data in 'document.write'</name>
-            <regex>document\.write\(|innerHTML\s?=\s?.+</regex>
+            <regex><![CDATA[document\.write\(|innerHTML\s?=\s?.+]]></regex>
+            <rdl><![CDATA[[FLAG:document\.write\(|innerHTML\s?=\s?.+][IF(MISSING:(DOMPurify|sanitize|textContent|innerText|createTextNode))]]]></rdl>
             <rule_desc>Detects potential DOM-based cross-site scripting (XSS) vulnerabilities.</rule_desc>
             <vuln_desc>This rule matches instances where the `document.write()` function or the assignment of potentially untrusted values to the `innerHTML` property is performed. These actions can introduce DOM-based cross-site scripting vulnerabilities if proper input validation and output encoding are not applied.</vuln_desc>
             <developer>Developers should avoid using `document.write()` and should implement appropriate input validation and output encoding techniques when assigning values to the `innerHTML` property. They should ensure that user-supplied data is properly sanitized and encoded to prevent XSS attacks.</developer>
@@ -31,7 +34,8 @@
     <category name="Untrusted Input in Web/API Response">
         <rule>
             <name>Handlebars Unescaped String</name>
-            <regex>\{\{\{.*?\}\}\}</regex>
+            <regex><![CDATA[\{\{\{.*?\}\}\}]]></regex>
+            <rdl><![CDATA[[FLAG:\{\{\{.*?\}\}\}][IF(MISSING:(sanitize|escape|xss|safeHtml))]]]></rdl>
             <description>Detects unescaped Handlebars strings in code.</description>
             <rule_desc>Detects instances of unescaped Handlebars strings in the code, which can indicate a potential security vulnerability.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of unescaped Handlebars strings in the code. Unescaped strings can lead to cross-site scripting (XSS) vulnerabilities if user input is not properly escaped or sanitized before rendering.</vuln_desc>
@@ -43,7 +47,8 @@
     <category name="Insecure Method/Function Call">
         <rule>
             <name>Insecure Method Call: child_process.exec()</name>
-            <regex>(^|\s|=\s?)require\(\s*('|")child_process('|")\s*\)(\s*\.(\s*\w+\s*)*\()?\s*\)</regex>
+            <regex><![CDATA[(^|\s|=\s?)require\(\s*('|")child_process('|")\s*\)(\s*\.(\s*\w+\s*)*\()?\s*\)]]></regex>
+            <rdl><![CDATA[[FLAG:(^|\s|=\s?)require\(\s*('|")child_process('|")\s*\)(\s*\.(\s*\w+\s*)*\()?\s*\)]]]></rdl>
             <rule_desc>Detects the usage of the `require('child_process')` statement with the `exec()` function, which can introduce remote OS command execution vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using the `child_process.exec()` function to execute operating system commands. Attackers can manipulate user input or crafted data to execute arbitrary commands on the host system, leading to unauthorized access, data breaches, or system compromise.</vuln_desc>
             <developer>Developers should exercise caution when using the `child_process.exec()` function and ensure that any user input passed to it is properly validated, sanitized, and restricted to prevent command injection vulnerabilities. It is recommended to use safer alternatives, such as using predefined functions or libraries specifically designed for safe command execution or employing proper input validation and sanitization techniques.</developer>
@@ -51,7 +56,8 @@
         </rule>
         <rule>
             <name>Insecure Method Call: eval|setTimeout|setInterval</name>
-            <regex>\b(eval|setTimeout|setInterval)\(.+\)</regex>
+            <regex><![CDATA[\b(eval|setTimeout|setInterval)\(.+\)]]></regex>
+            <rdl><![CDATA[[FLAG:\b(eval|setTimeout|setInterval)\(.+\)][IF(PRESENT:(\+|`|\$\{|location|document\.cookie|localStorage|sessionStorage|req\.|res\.) && MISSING:(allowlist|whitelist))]]]></rdl>
             <rule_desc>Detects the usage of the `eval`, `setTimeout`, and `setInterval` functions.</rule_desc>
             <vuln_desc>This rule matches instances where the `eval`, `setTimeout`, or `setInterval` functions are used. These functions can introduce security vulnerabilities if not used carefully, as they can execute arbitrary code and lead to code injection or unintended consequences.</vuln_desc>
             <developer>Developers should avoid using the `eval`, `setTimeout`, and `setInterval` functions whenever possible. If their usage is necessary, developers should carefully validate and sanitize any input used within these functions to prevent code injection vulnerabilities.</developer>
@@ -62,7 +68,8 @@
     <category name="Cryptographic Issues">
         <rule>
             <name>Weak Cryptography</name>
-            <regex>(CryptoJS\.DES\.encrypt|CryptoJS\.AES\.encrypt|MD5|SHA-1|RC4)\(.+\)</regex>
+            <regex><![CDATA[(CryptoJS\.DES\.encrypt|CryptoJS\.AES\.encrypt|MD5|SHA-1|RC4)\(.+\)]]></regex>
+            <rdl><![CDATA[[FLAG:(CryptoJS\.DES\.encrypt|CryptoJS\.AES\.encrypt|MD5|SHA-1|RC4)\(.+\)]]]></rdl>
             <rule_desc>Detects the usage of weak cryptographic functions.</rule_desc>
             <vuln_desc>This rule matches instances where weak cryptographic functions, such as `CryptoJS.DES.encrypt`, `CryptoJS.AES.encrypt`, `MD5`, `SHA-1`, or `RC4`, are used. These functions are considered weak and can lead to security vulnerabilities in cryptographic operations.</vuln_desc>
             <developer>Developers should use stronger and more secure cryptographic functions and algorithms, such as AES-256 or SHA-256, for encryption and hashing operations. They should also follow best practices for key management and encryption protocols.</developer>
@@ -70,7 +77,8 @@
         </rule>
         <rule>
             <name>Weak Random Number Generation</name>
-            <regex>(Math\.random|crypto\.getRandomValues)\(.*\)</regex>
+            <regex><![CDATA[(Math\.random|crypto\.getRandomValues)\(.*\)]]></regex>
+            <rdl><![CDATA[[FLAG:Math\.random\(.*\)][IF(PRESENT:(token|secret|nonce|otp|session|password|key))]]]></rdl>
             <rule_desc>Detects the usage of weak random number generation.</rule_desc>
             <vuln_desc>This rule matches instances where weak random number generation functions, such as `Math.random()` or `crypto.getRandomValues()`, are used. Weak random number generation can lead to predictable values, compromising the security of cryptographic operations or session tokens.</vuln_desc>
             <developer>Developers should use strong and cryptographically secure random number generation functions, such as `crypto.getRandomValues()`, for any security-critical operations. They should avoid using `Math.random()` for generating random values that require high entropy.</developer>
@@ -81,7 +89,8 @@
     <category name="Information Disclosure">
         <rule>
             <name>Routes</name>
-            <regex>(?i)route:\s+'.*(\s?)</regex>
+            <regex><![CDATA[(?i)route:\s+'.*(\s?)]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)route:\s+'.*(\s?)]]]></rdl>
             <rule_desc>Detects the presence of hardcoded routes in JavaScript code, which may expose sensitive information or introduce security risks.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the presence of hardcoded routes in the JavaScript code. Hardcoded routes may expose sensitive information, such as internal URLs, API endpoints, or authentication routes, to potential attackers. Hardcoded routes can also lead to security vulnerabilities, such as insufficient access control, information disclosure, or bypassing security mechanisms.</vuln_desc>
             <developer>Developers should avoid hardcoding routes in JavaScript code and instead consider using configuration files or dynamic route handling mechanisms. Hardcoding routes can introduce security risks and make the codebase less maintainable. By implementing dynamic routing solutions, developers can improve flexibility, allow for easier configuration changes, and minimize the exposure of sensitive information.</developer>
@@ -90,6 +99,7 @@
         <rule>
             <name>Stack Trace or Error Disclosure (Node/Express)</name>
             <regex><![CDATA[(?i)(res\.(?:send|json|end)\s*\(\s*err(?:or)?\s*\)|console\.(?:log|error)\s*\(\s*err(?:or)?(?:\.stack)?\s*\)|throw\s+new\s+Error\()]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)(res\.(?:send|json|end)\s*\(\s*err(?:or)?\s*\)|console\.(?:log|error)\s*\(\s*err(?:or)?(?:\.stack)?\s*\)|throw\s+new\s+Error\()]]]></rdl>
             <rule_desc>Detects Node/Express error-handling patterns that commonly expose internal exception details.</rule_desc>
             <vuln_desc>Returning raw errors or stack traces can disclose internal paths, libraries, and execution flow to attackers.</vuln_desc>
             <developer>Return generic client errors and log detailed exceptions only in protected server logs with redaction controls.</developer>
@@ -101,6 +111,7 @@
         <rule>
             <name>Node Inspector Exposed via --inspect</name>
             <regex><![CDATA[\B--inspect(?:-brk)?(?:=\S+)?\b]]></regex>
+            <rdl><![CDATA[[FLAG:\B--inspect(?:-brk)?(?:=\S+)?\b]]]></rdl>
             <rule_desc>Detects Node.js debug inspector flags that may expose a remotely reachable debug endpoint.</rule_desc>
             <vuln_desc>If debug inspector is exposed beyond localhost, attackers may gain high-impact introspection or code execution capabilities.</vuln_desc>
             <developer>Disable inspector in production, or bind strictly to localhost behind controlled access and network restrictions.</developer>
@@ -109,6 +120,7 @@
         <rule>
             <name>Insecure HTTP Parser Enabled</name>
             <regex><![CDATA[\binsecureHTTPParser\s*:\s*true\b]]></regex>
+            <rdl><![CDATA[[FLAG:\binsecureHTTPParser\s*:\s*true\b]]]></rdl>
             <rule_desc>Detects explicit enablement of Node's insecure HTTP parser option.</rule_desc>
             <vuln_desc>Using insecure parsing behavior can increase request-smuggling and parser ambiguity risks in proxy/backend chains.</vuln_desc>
             <developer>Avoid enabling insecure parser options and align HTTP parsing behavior with hardened defaults.</developer>
@@ -119,7 +131,8 @@
     <category name="Insecure/Weak Mitigations">
         <rule>
             <name>Weak Mitigation: Using disable|bypass|ignore|suppress|unsafe</name>
-            <regex>\b(disable|bypass|ignore|suppress|unsafe)\b</regex>
+            <regex><![CDATA[\b(disable|bypass|ignore|suppress|unsafe)\b]]></regex>
+            <rdl><![CDATA[[FLAG:\b(disable|bypass|ignore|suppress|unsafe)\b][IF(PRESENT:(auth|csrf|xss|cors|tls|ssl|verify|validation|sanitize|security) && MISSING:(example|sample|dummy|test|placeholder))]]]></rdl>
             <rule_desc>Detects weak or inadequate security mitigations.</rule_desc>
             <vuln_desc>This rule matches instances where weak or inadequate security mitigations (such as disable, bypass, ignore, suppress, or unsafe) are used. Weak mitigations can lead to security vulnerabilities or provide a false sense of security, leaving the application exposed to attacks.</vuln_desc>
             <developer>Developers should avoid using weak or inadequate security mitigations as they can create vulnerabilities in the application. They should implement strong and effective security measures that follow established best practices and standards.</developer>
@@ -131,6 +144,7 @@
         <rule>
             <name>SQL Query: SELECT Statements with WHERE or ORDER BY</name>
             <regex><![CDATA[(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*][IF(PRESENT:(\+|`|\$\{|req\.|params|query|body) && MISSING:(\?|prepare|bind|replacements|sequelize\.query\s*\(.*replacements))]]]></rdl>
             <rule_desc>Detects SELECT statements with WHERE or ORDER BY clauses in SQL queries, which may be vulnerable to SQL injection if user input is not handled securely in JavaScript environments.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the use of potentially vulnerable SELECT statements with WHERE or ORDER BY clauses. Improper handling of user input in these clauses can lead to SQL injection, allowing attackers to manipulate query behavior and gain unauthorized access to data.</vuln_desc>
             <developer>Developers should validate and implement secure alternatives, such as using parameterized queries or query bindings provided by JavaScript libraries like `mysql`, `pg`, or ORMs such as Sequelize to avoid SQL injection risks.</developer>
@@ -140,6 +154,7 @@
         <rule>
             <name>SQL Query: Unrestricted SELECT *</name>
             <regex><![CDATA[\bSELECT\s+\*\s+FROM\b]]></regex>
+            <rdl><![CDATA[[FLAG:\bSELECT\s+\*\s+FROM\b]]]></rdl>
             <rule_desc>Detects "SELECT * FROM" in SQL queries, which can expose unnecessary or sensitive data in JavaScript applications.</rule_desc>
             <vuln_desc>If this rule matches, it suggests that the query retrieves more data than necessary, potentially exposing sensitive information and increasing the attack surface.</vuln_desc>
             <developer>Developers should validate and specify only necessary columns in SQL queries rather than using "SELECT *" to prevent unnecessary data exposure. This is especially important when working with libraries like `mysql` or `pg` in Node.js.</developer>
@@ -149,6 +164,7 @@
         <rule>
             <name>SQL Query: Non-parameterized INSERT Statements</name>
             <regex><![CDATA[(?i)\bINSERT\s+INTO\s+[^\s]+\s+\(.*=.*\$.*\)]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)\bINSERT\s+INTO\s+[^\s]+\s+\(.*=.*\$.*\)][IF(MISSING:(\?|prepare|bind|replacements|sequelize\.query\s*\(.*replacements))]]]></rdl>
             <rule_desc>Detects non-parameterized INSERT statements that may include user input directly, leading to SQL injection vulnerabilities in JavaScript environments.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a potentially vulnerable INSERT statement that could allow SQL injection if user input is included without proper handling.</vuln_desc>
             <developer>Developers should use parameterized queries or prepared statements in INSERT operations to prevent SQL injection attacks when using JavaScript libraries like `mysql`, `pg`, or ORMs such as Sequelize.</developer>
@@ -158,6 +174,7 @@
         <rule>
             <name>Deprecated SQL Functions</name>
             <regex><![CDATA[(?i)\b(mysql_query|pg_query|sqlite_query|db.query|db.execute|knex.raw)\s*\(\s*['\"]?SELECT|INSERT|UPDATE|DELETE\s+.+\s*['\"]?\s*\.\s*\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)\b(mysql_query|pg_query|sqlite_query|db.query|db.execute|knex.raw)\s*\(][IF(PRESENT:(\+|`|\$\{|req\.|params|query|body) && MISSING:(\?|prepare|bind|replacements))]]]></rdl>
             <rule_desc>Detects usage of deprecated or insecure SQL functions and dynamic SQL queries that may lead to security vulnerabilities in JavaScript applications.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the usage of potentially insecure SQL functions or libraries that may be vulnerable to SQL injection or other security issues if used without proper configurations or parameterization.</vuln_desc>
             <developer>Developers should avoid using deprecated SQL functions or dynamic query building, and instead use secure alternatives like prepared statements or parameterized queries available in Node.js libraries (`mysql`, `pg`, Sequelize).</developer>
@@ -168,7 +185,8 @@
     <category name="Deprecated Functions">
         <rule>
             <name>Deprecated JS Function: escape|unescape|eval</name>
-            <regex>\b(escape|unescape|eval)\b</regex>
+            <regex><![CDATA[\b(escape|unescape|eval)\b]]></regex>
+            <rdl><![CDATA[[FLAG:\b(escape|unescape|eval)\b]]]></rdl>
             <rule_desc>Detects usage of deprecated JavaScript functions.</rule_desc>
             <vuln_desc>This rule matches instances where deprecated JavaScript functions (such as escape, unescape, or eval) are used. Deprecated functions may have security vulnerabilities or compatibility issues and should be replaced with modern, safer alternatives.</vuln_desc>
             <developer>Developers should avoid using deprecated JavaScript functions as they may introduce security vulnerabilities. They should update their code to use modern alternatives and follow best practices to ensure the security and compatibility of their applications.</developer>
@@ -179,7 +197,8 @@
     <category name="MISC Checks">
         <rule>
             <name>Insecure Direct Object References (IDOR)</name>
-            <regex>(req\.params|req\.query|req\.body)[\s\S]*?(\[|\.)[\s\S]*?</regex>
+            <regex><![CDATA[(req\.params|req\.query|req\.body)[\s\S]*?(\[|\.)[\s\S]*?]]></regex>
+            <rdl><![CDATA[[FLAG:(req\.params|req\.query|req\.body)[\s\S]*?(\[|\.)[\s\S]*?][IF(PRESENT:(findByPk|findOne|findAll|where|delete|update|patch|put|remove|destroy) && MISSING:(authorize|isAuthorized|canAccess|hasRole|ownership|tenantId))]]]></rdl>
             <rule_desc>Detects potential Insecure Direct Object References (IDOR).</rule_desc>
             <vuln_desc>This rule matches potential Insecure Direct Object References (IDOR) vulnerabilities in the code. IDOR occurs when user-supplied input is used directly to access internal resources or sensitive objects without proper authorization or validation. Attackers can manipulate the input to access unauthorized resources, view sensitive data, or perform actions they are not allowed to.</vuln_desc>
             <developer>Developers should implement proper authorization and access control mechanisms to prevent IDOR vulnerabilities. User input used to access resources should be validated, sanitized, and authorized based on the user's privileges. Additionally, developers should use indirect references or randomized identifiers to obfuscate direct object references.</developer>
@@ -187,7 +206,8 @@
         </rule>
         <rule>
             <name>Server-Side Request Forgery (SSRF)</name>
-            <regex>XMLHttpRequest\.open\(|fetch\(|axios\.get\(|http\.request\(|https\.request\(|http\.get\(|https\.get\(|http\.post\(|https\.post\(|http\.put\(|https\.put\(|http\.delete\(|https\.delete\(|\$.ajax\({\s*url:\s*['"].+['"]</regex>
+            <regex><![CDATA[XMLHttpRequest\.open\(|fetch\(|axios\.get\(|http\.request\(|https\.request\(|http\.get\(|https\.get\(|http\.post\(|https\.post\(|http\.put\(|https\.put\(|http\.delete\(|https\.delete\(|\$.ajax\({\s*url:\s*['"].+['"]]]></regex>
+            <rdl><![CDATA[[FLAG:XMLHttpRequest\.open\(|fetch\(|axios\.get\(|http\.request\(|https\.request\(|http\.get\(|https\.get\(|http\.post\(|https\.post\(|http\.put\(|https\.put\(|http\.delete\(|https\.delete\(|\$.ajax\({\s*url:\s*['"].+['"]][IF(PRESENT:(req\.|params|query|body|userInput|target|url) && MISSING:(allowlist|whitelist|isPrivateIPBlocked|validateUrl|new URL\())]]]></rdl>
             <rule_desc>Detects potential server-side request forgery (SSRF) vulnerabilities.</rule_desc>
             <vuln_desc>This rule matches instances where XMLHttpRequest, fetch, axios, http.request, https.request, http.get, https.get, http.post, https.post, http.put, https.put, http.delete, https.delete, or $.ajax functions are used with potentially untrusted URLs. Improper usage of these functions can lead to SSRF vulnerabilities, allowing attackers to make unauthorized requests to internal resources.</vuln_desc>
             <developer>Developers should implement proper input validation and sanitization when using XMLHttpRequest, fetch, axios, http.request, https.request, http.get, https.get, http.post, https.post, http.put, https.put, http.delete, https.delete, or $.ajax functions. They should validate and restrict the URLs to trusted sources to prevent SSRF attacks.</developer>
@@ -195,7 +215,8 @@
         </rule>
         <rule>
             <name>Prototype Pollution</name>
-            <regex>(\b__proto__\b|Object\.prototype\.(?!hasOwnProperty)[a-zA-Z]+\s?=)</regex>
+            <regex><![CDATA[(\b__proto__\b|Object\.prototype\.(?!hasOwnProperty)[a-zA-Z]+\s?=)]]></regex>
+            <rdl><![CDATA[[FLAG:(\b__proto__\b|Object\.prototype\.(?!hasOwnProperty)[a-zA-Z]+\s?=)]]]></rdl>
             <rule_desc>Detects potential prototype pollution vulnerabilities.</rule_desc>
             <vuln_desc>This rule matches instances where the `__proto__` property or assignment to properties of `Object.prototype` (excluding `hasOwnProperty`) is performed. These actions can lead to prototype pollution vulnerabilities, allowing attackers to modify the behavior of objects and potentially compromise the application's security.</vuln_desc>
             <developer>Developers should avoid using or modifying the `__proto__` property directly, and they should exercise caution when extending or modifying properties of `Object.prototype`. They should use safer alternatives, such as `Object.create()` or creating new objects with specific prototypes.</developer>
@@ -203,7 +224,8 @@
         </rule>
         <rule>
             <name>Missing Cookie Security Flags</name>
-            <regex>(httpOnly(\s)*:(\s)*true|httpOnly)| (secure(\s)*:(\s)*true|secure)| (SameSite(\s)*=(\s)*(Lax|Strict))| (SameSite(\s)*=(\s)*(None|lax))| (Domain(\s)*=(\s)*.*[;\s])| (Domain(\s)*=(\s)*(localhost|\.local))</regex>
+            <regex><![CDATA[(httpOnly(\s)*:(\s)*true|httpOnly)| (secure(\s)*:(\s)*true|secure)| (SameSite(\s)*=(\s)*(Lax|Strict))| (SameSite(\s)*=(\s)*(None|lax))| (Domain(\s)*=(\s)*.*[;\s])| (Domain(\s)*=(\s)*(localhost|\.local))]]></regex>
+            <rdl><![CDATA[[FLAG:(httpOnly(\s)*:(\s)*true|httpOnly)| (secure(\s)*:(\s)*true|secure)| (SameSite(\s)*=(\s)*(Lax|Strict))| (SameSite(\s)*=(\s)*(None|lax))| (Domain(\s)*=(\s)*.*[;\s])| (Domain(\s)*=(\s)*(localhost|\.local))]]]></rdl>
             <rule_desc>Detects the absence of important security flags in a cookie, such as 'httpOnly', 'secure', 'SameSite', and 'Domain' attributes.</rule_desc>
             <vuln_desc>If this rule matches, it indicates that one or more security flags are missing in a cookie. The absence of these flags can lead to security vulnerabilities, including cross-site scripting (XSS) attacks and information leakage.</vuln_desc>
             <developer>Developers should ensure that cookies containing sensitive information have the necessary security flags set. This includes enabling the 'httpOnly' attribute, setting the 'secure' attribute for secure connections, and specifying appropriate values for the 'SameSite' and 'Domain' attributes. These measures help protect against various security risks, such as XSS attacks and cookie tampering.</developer>
@@ -211,4 +233,3 @@
         </rule>
     </category>
 </root>
-

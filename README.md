@@ -173,6 +173,9 @@ $ python3 dakshscra.py -h      # Outside virtual environment
 ```text
 usage: dakshscra.py [-h] [-r RULES] [-f FILE_TYPES] [-v] [-t TARGET_DIR]
                     [-l {R,RF}] [-recon] [-rs] [-estimate] [-rpt FORMATS]
+                    [--pdf-from-json] [--json-input-dir PATH]
+                    [--pdf-output PATH] [--pdf-multi-dir PATH]
+                    [--pdf-single-only]
                     [--analysis] [--loc] [--baseline-file PATH]
                     [--baseline-generate] [--no-baseline] [--resume-scan]
                     [--state-file PATH] [--state-disable] [--state-enable]
@@ -187,7 +190,12 @@ options:
 -recon                     Detect platform/framework/language stack
 -rs, --recon-strict        Strict recon filter for high-confidence detections
 -estimate                  Estimate review effort
+--pdf-from-json            Generate PDF report(s) from existing JSON outputs without re-running scan
 -rpt, --report FORMATS     Report types: html, pdf, or html,pdf
+--json-input-dir PATH      Path to JSON report directory (default: ./reports/json)
+--pdf-output PATH          Output path for single PDF report (default: ./reports/pdf/report.pdf)
+--pdf-multi-dir PATH       Output directory for multi-file PDF report set (default: ./reports/pdf/multi-file)
+--pdf-single-only          Generate only single PDF (skip multi-file PDF set)
 --analysis, --analyse      Experimental data/control flow analysis
 --loc                      Count effective lines of code
 --baseline-file PATH       Suppression baseline file (JSON)
@@ -243,6 +251,18 @@ options:
 
 # Resume with custom state file
 - dakshscra.py -r auto -t /source_dir_path --resume-scan --state-file runtime/scan_state.json
+
+# Generate PDF report(s) from existing JSON (without scanning again)
+- dakshscra.py --pdf-from-json
+
+# Generate PDF report(s) from custom JSON directory
+- dakshscra.py --pdf-from-json --json-input-dir ./custom/reports/json
+
+# Custom single PDF output and multi-file PDF directory
+- dakshscra.py --pdf-from-json --pdf-output ./reports/pdf/custom-report.pdf --pdf-multi-dir ./reports/pdf/multi-file
+
+# Only generate single PDF from JSON
+- dakshscra.py --pdf-from-json --pdf-single-only
 ```
 
 ### View List of Supported Rules
@@ -266,8 +286,11 @@ The tool produces HTML/PDF reports and structured JSON outputs.
 
 ### Scanning Report Outputs
 
-- HTML report
-- PDF report
+- Single-file HTML report: `./reports/html/report.html`
+- Multi-file HTML report set root: `./reports/html/multi-file`
+- Single-file PDF report: `./reports/pdf/report.pdf`
+- Multi-file PDF report set root: `./reports/pdf/multi-file`
+- Multi-file report sets include a consolidated/full report and platform-specific files.
 - JSON findings (AoI, file-path AoI, summary, recon summary)
 - Runtime inventory output
 

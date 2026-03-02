@@ -1,0 +1,49 @@
+<root>
+    <category name="Framework-Specific Security">
+        <rule>
+            <name>Django Debug Mode Enabled</name>
+            <regex><![CDATA[\bDEBUG\s*=\s*True\b|FLASK_DEBUG\s*=\s*1|reload\s*=\s*True]]></regex>
+            <rdl><![CDATA[[FLAG:\bDEBUG\s*=\s*True\b|FLASK_DEBUG\s*=\s*1|reload\s*=\s*True][IF(MISSING:release|production)]]]></rdl>
+            <rule_desc>Detects framework debug/development mode enabled.</rule_desc>
+            <vuln_desc>Debug mode can expose internals and increase exploitability in production.</vuln_desc>
+            <developer>Disable debug mode in production and enforce environment-specific config.</developer>
+            <reviewer>Verify deployment profiles do not enable debug/reload.</reviewer>
+        </rule>
+        <rule>
+            <name>Django Unsafe Deserialization</name>
+            <regex><![CDATA[pickle\.loads\(|yaml\.load\(\s*[^,\)]*\)|marshal\.loads\(]]></regex>
+            <rdl><![CDATA[[FLAG:pickle\.loads\(|yaml\.load\(\s*[^,\)]*\)|marshal\.loads\(]]]></rdl>
+            <rule_desc>Detects unsafe deserialization primitives in framework request/worker flows.</rule_desc>
+            <vuln_desc>Unsafe deserialization of untrusted data can lead to code execution.</vuln_desc>
+            <developer>Use safe loaders (e.g., yaml.safe_load) and trusted serialization boundaries.</developer>
+            <reviewer>Trace untrusted input reaching deserialization functions.</reviewer>
+        </rule>
+        <rule>
+            <name>Django SQL Injection Sink</name>
+            <regex><![CDATA[\.execute\(\s*f[\'\"]|\.execute\(\s*[^\)]*%\s*\(|raw\(\s*f[\'\"]]]></regex>
+            <rdl><![CDATA[[FLAG:\.execute\(\s*f[\'\"]|\.execute\(\s*[^\)]*%\s*\(|raw\(\s*f[\'\"]]]]></rdl>
+            <rule_desc>Detects likely string-built SQL execution in framework data access paths.</rule_desc>
+            <vuln_desc>String-formatted SQL may be vulnerable to SQL injection.</vuln_desc>
+            <developer>Use query parameter binding and ORM-safe APIs.</developer>
+            <reviewer>Review query construction and verify parameterization.</reviewer>
+        </rule>
+        <rule>
+            <name>Django Permissive CORS</name>
+            <regex><![CDATA[allow_origins\s*=\s*\[\s*[\'\"]\*[\'\"]\s*\]|CORS\(.*origins\s*=\s*[\'\"]\*[\'\"]]]></regex>
+            <rdl><![CDATA[[FLAG:allow_origins\s*=\s*\[\s*[\'\"]\*[\'\"]\s*\]|CORS\(.*origins\s*=\s*[\'\"]\*[\'\"]]]]></rdl>
+            <rule_desc>Detects wildcard CORS policy definitions.</rule_desc>
+            <vuln_desc>Wildcard CORS allows untrusted browser origins to access APIs.</vuln_desc>
+            <developer>Restrict allowed origins explicitly.</developer>
+            <reviewer>Validate CORS settings in all environment profiles.</reviewer>
+        </rule>
+        <rule>
+            <name>Django Hardcoded Secret Material</name>
+            <regex><![CDATA[(SECRET_KEY|API[_-]?KEY|TOKEN|PASSWORD)\s*=\s*[\'\"][^\'\"]{8,}[\'\"]]]></regex>
+            <rdl><![CDATA[[FLAG:(SECRET_KEY|API[_-]?KEY|TOKEN|PASSWORD)\s*=\s*[\'\"][^\'\"]{8,}[\'\"]][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <rule_desc>Detects likely hardcoded secret values.</rule_desc>
+            <vuln_desc>Hardcoded secrets may leak and be abused if repository/artifacts are exposed.</vuln_desc>
+            <developer>Externalize secrets and rotate exposed values.</developer>
+            <reviewer>Confirm no live credentials are embedded in source.</reviewer>
+        </rule>
+    </category>
+</root>

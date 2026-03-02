@@ -1,0 +1,49 @@
+<root>
+    <category name="Framework-Specific Security">
+        <rule>
+            <name>Rails Development/Debug Mode Enabled</name>
+            <regex><![CDATA[RAILS_ENV\s*=\s*[\'\"]development[\'\"]|config\.consider_all_requests_local\s*=\s*true]]></regex>
+            <rdl><![CDATA[[FLAG:RAILS_ENV\s*=\s*[\'\"]development[\'\"]|config\.consider_all_requests_local\s*=\s*true][IF(MISSING:release|production)]]]></rdl>
+            <rule_desc>Detects development/debug settings in deployable Ruby app configs.</rule_desc>
+            <vuln_desc>Development settings can leak detailed error diagnostics.</vuln_desc>
+            <developer>Harden production.rb and deployment env settings.</developer>
+            <reviewer>Validate production environment configuration separation.</reviewer>
+        </rule>
+        <rule>
+            <name>Rails Unsafe Deserialization</name>
+            <regex><![CDATA[YAML\.load\(|Marshal\.load\(]]></regex>
+            <rdl><![CDATA[[FLAG:YAML\.load\(|Marshal\.load\(]]]></rdl>
+            <rule_desc>Detects unsafe deserialization primitives.</rule_desc>
+            <vuln_desc>Unsafe deserialization of untrusted payloads can lead to code execution.</vuln_desc>
+            <developer>Use safe loaders and trusted serialization boundaries.</developer>
+            <reviewer>Review user input flow to deserialization APIs.</reviewer>
+        </rule>
+        <rule>
+            <name>Rails SQL Injection Sink</name>
+            <regex><![CDATA[where\(\s*"[^"]*#\{|find_by_sql\(|connection\.execute\(]]></regex>
+            <rdl><![CDATA[[FLAG:where\(\s*"[^"]*#\{|find_by_sql\(|connection\.execute\(]]]></rdl>
+            <rule_desc>Detects raw/dynamic SQL construction patterns in Ruby frameworks.</rule_desc>
+            <vuln_desc>Dynamic query strings may be vulnerable to injection.</vuln_desc>
+            <developer>Prefer parameterized ActiveRecord queries.</developer>
+            <reviewer>Check tainted values reaching SQL strings.</reviewer>
+        </rule>
+        <rule>
+            <name>Rails Permissive CORS</name>
+            <regex><![CDATA[origins\s+[\'\"]\*[\'\"]|Access-Control-Allow-Origin\s*=\s*[\'\"]\*[\'\"]]]></regex>
+            <rdl><![CDATA[[FLAG:origins\s+[\'\"]\*[\'\"]|Access-Control-Allow-Origin\s*=\s*[\'\"]\*[\'\"]][IF(MISSING:allowlist|whitelist|trusted)]]]></rdl>
+            <rule_desc>Detects wildcard CORS/origin permissions.</rule_desc>
+            <vuln_desc>Permissive CORS may expose sensitive API endpoints.</vuln_desc>
+            <developer>Restrict origins to trusted domains.</developer>
+            <reviewer>Validate rack-cors and proxy header configs.</reviewer>
+        </rule>
+        <rule>
+            <name>Rails Hardcoded Secret Material</name>
+            <regex><![CDATA[(?i)(secret_key_base|secret|apikey|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)(secret_key_base|secret|apikey|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <rule_desc>Detects likely hardcoded secret material.</rule_desc>
+            <vuln_desc>Hardcoded credentials can be leaked and abused.</vuln_desc>
+            <developer>Store secrets outside source and rotate regularly.</developer>
+            <reviewer>Review secrets management and commit history exposure.</reviewer>
+        </rule>
+    </category>
+</root>

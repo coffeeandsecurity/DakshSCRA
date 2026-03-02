@@ -1,0 +1,58 @@
+<root>
+    <category name="Framework-Specific Security">
+        <rule>
+            <name>React Native Debug Mode Marker</name>
+            <regex><![CDATA[__DEV__|NODE_ENV\s*=\s*[\'\"]development[\'\"]]]></regex>
+            <rdl><![CDATA[[FLAG:__DEV__|NODE_ENV\s*=\s*[\'\"]development[\'\"]][IF(MISSING:NODE_ENV\s*=\s*[\'\"]production[\'\"])]]]></rdl>
+            <rule_desc>Detects React Native debug/development mode usage.</rule_desc>
+            <vuln_desc>Debug mode can expose diagnostics and weaken production posture.</vuln_desc>
+            <developer>Ensure production builds disable debug/developer features.</developer>
+            <reviewer>Review build variants and runtime debug toggles.</reviewer>
+        </rule>
+        <rule>
+            <name>React Native Insecure HTTP Usage</name>
+            <regex><![CDATA[fetch\(\s*[\'\"]http://|axios\.(get|post|request)\(\s*[\'\"]http://|http://]]></regex>
+            <rdl><![CDATA[[FLAG:http://][IF(MISSING:https://)]]]></rdl>
+            <rule_desc>Detects cleartext network endpoint usage.</rule_desc>
+            <vuln_desc>Cleartext transport can expose sensitive app traffic.</vuln_desc>
+            <developer>Use HTTPS endpoints and strict TLS validation.</developer>
+            <reviewer>Audit all API base URLs and network clients.</reviewer>
+        </rule>
+        <rule>
+            <name>React Native AsyncStorage Secret Marker</name>
+            <regex><![CDATA[AsyncStorage\.(setItem|multiSet)\(.*(token|secret|password|apikey)]]></regex>
+            <rdl><![CDATA[[FLAG:AsyncStorage\.(setItem|multiSet)\(.*(token|secret|password|apikey)][IF(MISSING:react-native-keychain|expo-secure-store|EncryptedStorage)]]]></rdl>
+            <rule_desc>Detects likely sensitive values being persisted via AsyncStorage.</rule_desc>
+            <vuln_desc>AsyncStorage is not suitable for secrets without additional protection.</vuln_desc>
+            <developer>Use secure storage/keychain abstractions for secrets.</developer>
+            <reviewer>Review storage keys and classify sensitive data paths.</reviewer>
+        </rule>
+        <rule>
+            <name>React Native WebView Origin Wildcard</name>
+            <regex><![CDATA[originWhitelist\s*=\s*\{?\s*\[\s*[\'\"]\*[\'\"]]]></regex>
+            <rdl><![CDATA[[FLAG:originWhitelist\s*=\s*\{?\s*\[\s*[\'\"]\*[\'\"]][IF(MISSING:onShouldStartLoadWithRequest)]]]></rdl>
+            <rule_desc>Detects wildcard origin allowlist in React Native WebView.</rule_desc>
+            <vuln_desc>Wildcard origins can allow untrusted content loading.</vuln_desc>
+            <developer>Restrict origin whitelist to trusted domains.</developer>
+            <reviewer>Validate WebView origin restrictions and navigation policies.</reviewer>
+        </rule>
+        <rule>
+            <name>React Native WebView JavaScript Bridge</name>
+            <regex><![CDATA[onMessage\s*=|injectedJavaScript\s*=|javaScriptEnabled\s*=\s*\{?true\}?]]></regex>
+            <rdl><![CDATA[[FLAG:onMessage\s*=|injectedJavaScript\s*=|javaScriptEnabled\s*=\s*\{?true\}?][IF(PRESENT:WebView && MISSING:originWhitelist\s*=\s*\[\s*[\'\"]https://)]]]></rdl>
+            <rule_desc>Detects JS bridge/script injection capabilities in React Native WebView.</rule_desc>
+            <vuln_desc>Unsafe bridge/script usage can increase injection and data exfiltration risk.</vuln_desc>
+            <developer>Minimize bridge surface and sanitize message handling.</developer>
+            <reviewer>Audit WebView bridge handlers and untrusted content paths.</reviewer>
+        </rule>
+        <rule>
+            <name>React Native Hardcoded Secret Marker</name>
+            <regex><![CDATA[(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]]]></regex>
+            <rdl><![CDATA[[FLAG:(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]][IF(MISSING:__DEV__)]]]></rdl>
+            <rule_desc>Detects likely hardcoded secret values in React Native code.</rule_desc>
+            <vuln_desc>Embedded secrets can be extracted from source or bundles.</vuln_desc>
+            <developer>Use backend-issued short-lived tokens and secure storage.</developer>
+            <reviewer>Verify no long-lived production secrets are bundled.</reviewer>
+        </rule>
+    </category>
+</root>

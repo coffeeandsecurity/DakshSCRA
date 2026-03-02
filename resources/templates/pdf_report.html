@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ reportTitle }} - PDF Report</title>
+  <style>
+    :root {
+      --bg: #f5f8fc;
+      --panel: #ffffff;
+      --line: #d7e2f0;
+      --text: #1e2d45;
+      --muted: #5d6f91;
+      --brand: #0f4c81;
+      --accent: #0f766e;
+      --soft: #f1f7ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", "Trebuchet MS", "Helvetica Neue", sans-serif;
+      line-height: 1.45;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      font-size: 12px;
+    }
+    .page {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+    .cover {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(145deg, #ffffff 0%, #eff6ff 100%);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .brand {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .brand-content {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .logo {
+      width: 52px;
+      height: 52px;
+      flex: 0 0 auto;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #fff;
+      object-fit: contain;
+      padding: 4px;
+    }
+    .title {
+      margin: 0;
+      font-size: 25px;
+      letter-spacing: 0.01em;
+      color: var(--brand);
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .subtitle {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .meta {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 11px;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+      padding: 14px;
+      margin: 10px 0;
+      page-break-inside: avoid;
+    }
+    h2 {
+      margin: 0 0 10px;
+      color: var(--brand);
+      font-size: 17px;
+    }
+    h3 {
+      margin: 0 0 8px;
+      font-size: 14px;
+      color: #12466f;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 9px;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fbfdff;
+      padding: 10px;
+    }
+    .k {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+    .v {
+      font-size: 22px;
+      font-weight: 700;
+      color: #0d3e67;
+    }
+    .toc {
+      margin: 0;
+      padding-left: 18px;
+      columns: 2;
+      column-gap: 20px;
+    }
+    .toc li {
+      margin: 4px 0;
+      break-inside: avoid;
+    }
+    .toc a {
+      color: var(--brand);
+      text-decoration: none;
+    }
+    .toc a:hover { text-decoration: underline; }
+    .kv {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .kv div {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+      padding: 8px 9px;
+    }
+    .bars {
+      margin-top: 8px;
+    }
+    .metric-table-wrap {
+      margin-top: 8px;
+    }
+    .metric-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px;
+    }
+    .metric-table th,
+    .metric-table td {
+      border: 1px solid var(--line);
+      padding: 5px 6px;
+      vertical-align: top;
+    }
+    .metric-table th {
+      background: #f6faff;
+      color: #11456f;
+      font-weight: 700;
+    }
+    .metric-table td:nth-child(2),
+    .metric-table td:nth-child(3),
+    .metric-table th:nth-child(2),
+    .metric-table th:nth-child(3) {
+      text-align: right;
+      white-space: nowrap;
+    }
+    .metric-note {
+      margin: 6px 0 10px;
+      font-size: 10px;
+      color: var(--muted);
+    }
+    .bar-row {
+      display: grid;
+      grid-template-columns: 340px 1fr 96px;
+      gap: 8px;
+      align-items: center;
+      margin: 6px 0;
+    }
+    .bar-label {
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      color: #143f66;
+      font-size: 11px;
+    }
+    .bar-track {
+      height: 14px;
+      border-radius: 6px;
+      border: 1px solid #c5d5e8;
+      background: #ecf3fb;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #0f4c81 0%, #0f766e 100%);
+    }
+    .bar-value {
+      text-align: right;
+      font-weight: 700;
+      color: #0f3f66;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+    .table-wrap {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 6px 7px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #f0f7ff;
+      color: #11456f;
+    }
+    .rule-card {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #fcfeff;
+      padding: 9px;
+      margin-bottom: 8px;
+      page-break-inside: avoid;
+    }
+    .rule-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .pill {
+      border: 1px solid #b8cee8;
+      border-radius: 999px;
+      padding: 2px 7px;
+      font-size: 10px;
+      color: #123f64;
+      background: #eef6ff;
+      white-space: nowrap;
+    }
+    .muted { color: var(--muted); }
+    .file-list {
+      margin: 5px 0 0;
+      padding-left: 17px;
+    }
+    .file-list li {
+      margin: 3px 0;
+      word-break: break-word;
+    }
+    .snippet-list {
+      margin: 6px 0 0;
+      padding-left: 17px;
+    }
+    .snippet-list li {
+      margin: 6px 0;
+    }
+    .snippet-meta {
+      color: var(--muted);
+      font-size: 10px;
+      margin-bottom: 2px;
+      word-break: break-word;
+    }
+    .snippet-code {
+      border: 1px solid #d4deec;
+      background: #f5f9ff;
+      border-radius: 6px;
+      padding: 5px 7px;
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 10px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #163b61;
+    }
+    .section-anchor {
+      display: block;
+      position: relative;
+      top: -4px;
+      visibility: hidden;
+    }
+    .page-break { page-break-before: always; }
+    @page {
+      size: A4;
+      margin: 12mm;
+    }
+    @media print {
+      a { color: inherit; text-decoration: none; }
+      .page { max-width: none; margin: 0; padding: 0; }
+      .panel { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="cover">
+      <div class="brand">
+        {% if logoImagePath %}
+        <img class="logo" src="{{ logoImagePath }}" alt="Daksh SCRA Logo">
+        {% endif %}
+        <div class="brand-content">
+          <h1 class="title">{{ reportTitle }}</h1>
+          {% if reportSubTitle %}<p class="subtitle">{{ reportSubTitle }}</p>{% endif %}
+          <div class="meta">
+            Generated: {{ generated_at }} | Report Date: {{ report_date }}
+            {% if platform_filter %}| Platform Focus: {{ platform_filter|upper }}{% endif %}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <span id="toc" class="section-anchor"></span>
+    <section class="panel">
+      <h2>Table of Contents</h2>
+      <ol class="toc">
+        <li><a href="#executive-summary">Executive Summary</a></li>
+        <li><a href="#scan-context">Scan Context</a></li>
+        <li><a href="#metrics-charts">Metrics & Graphs</a></li>
+        <li><a href="#findings-by-platform">Findings by Platform</a></li>
+        <li><a href="#rule-index">Rule Index</a></li>
+        <li><a href="#file-index">File Index</a></li>
+        <li><a href="#timeline">Timeline</a></li>
+      </ol>
+    </section>
+
+    <span id="executive-summary" class="section-anchor"></span>
+    <section class="panel">
+      <h2>Executive Summary</h2>
+      <div class="cards">
+        {% for card in cards %}
+        <div class="card">
+          <div class="k">{{ card.label }}</div>
+          <div class="v">{{ card.value }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <span id="scan-context" class="section-anchor"></span>
+    <section class="panel">
+      <h2>Scan Context</h2>
+      <div class="kv">
+        <div><b>Target Directory:</b> {{ inputs.get("target_directory", "-") }}</div>
+        <div><b>Rule Selection:</b> {{ inputs.get("rule_selected", "-") }}</div>
+        <div><b>File Type Selection:</b> {{ inputs.get("filetypes_selected", "-") }}</div>
+        <div><b>Total Rules Loaded:</b> {{ inputs.get("total_rules_loaded", "-") }}</div>
+        <div><b>Platform Rules:</b> {{ inputs.get("platform_specific_rules", "-") }}</div>
+        <div><b>Common Rules:</b> {{ inputs.get("common_rules", "-") }}</div>
+      </div>
+
+      {% if extension_rows %}
+      <h3 style="margin-top:12px;">Detected File Extensions</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 160px;">Platform</th>
+              <th>Extensions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in extension_rows %}
+            <tr>
+              <td>{{ row.platform }}</td>
+              <td>{{ row.extensions }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+    </section>
+
+    <span id="metrics-charts" class="section-anchor"></span>
+    <section class="panel">
+      <h2>Metrics & Graphs</h2>
+      <div class="metric-note">Bar length is relative to the highest value in each group. Right side shows count and share.</div>
+
+      <h3>Findings by Platform</h3>
+      <div class="bars">
+        {% if chart_platforms %}
+          {% for row in chart_platforms %}
+          <div class="bar-row">
+            <div class="bar-label">{{ row.label }}</div>
+            <div class="bar-track"><div class="bar-fill" style="width: {{ row.width_pct }}%;"></div></div>
+            <div class="bar-value">{{ row.value }} ({{ row.share_pct }}%)</div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="muted">No platform finding data available.</div>
+        {% endif %}
+      </div>
+      {% if chart_platforms %}
+      <div class="metric-table-wrap">
+        <table class="metric-table">
+          <thead>
+            <tr>
+              <th>Platform</th>
+              <th>Count</th>
+              <th>Share</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in chart_platforms %}
+            <tr>
+              <td>{{ row.label }}</td>
+              <td>{{ row.value }}</td>
+              <td>{{ row.share_pct }}%</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
+      <h3 style="margin-top:12px;">Findings by Category</h3>
+      <div class="bars">
+        {% if chart_categories %}
+          {% for row in chart_categories %}
+          <div class="bar-row">
+            <div class="bar-label">{{ row.label }}</div>
+            <div class="bar-track"><div class="bar-fill" style="width: {{ row.width_pct }}%;"></div></div>
+            <div class="bar-value">{{ row.value }} ({{ row.share_pct }}%)</div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="muted">No category data available.</div>
+        {% endif %}
+      </div>
+      {% if chart_categories %}
+      <div class="metric-table-wrap">
+        <table class="metric-table">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Count</th>
+              <th>Share</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in chart_categories %}
+            <tr>
+              <td>{{ row.label }}</td>
+              <td>{{ row.value }}</td>
+              <td>{{ row.share_pct }}%</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
+      <h3 style="margin-top:12px;">Findings by Scope</h3>
+      <div class="bars">
+        {% if chart_scopes %}
+          {% for row in chart_scopes %}
+          <div class="bar-row">
+            <div class="bar-label">{{ row.label }}</div>
+            <div class="bar-track"><div class="bar-fill" style="width: {{ row.width_pct }}%;"></div></div>
+            <div class="bar-value">{{ row.value }} ({{ row.share_pct }}%)</div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="muted">No scope data available.</div>
+        {% endif %}
+      </div>
+      {% if chart_scopes %}
+      <div class="metric-table-wrap">
+        <table class="metric-table">
+          <thead>
+            <tr>
+              <th>Scope</th>
+              <th>Count</th>
+              <th>Share</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in chart_scopes %}
+            <tr>
+              <td>{{ row.label }}</td>
+              <td>{{ row.value }}</td>
+              <td>{{ row.share_pct }}%</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+    </section>
+
+    <span id="findings-by-platform" class="section-anchor"></span>
+    <section class="panel page-break">
+      <h2>Findings by Platform</h2>
+      {% if platform_sections %}
+        {% for platform in platform_sections %}
+        <span id="platform-{{ platform.slug }}" class="section-anchor"></span>
+        <div class="rule-card">
+          <div class="rule-head">
+            <h3 style="margin:0;">{{ platform.name }}</h3>
+            <span class="pill">{{ platform.count }} finding{% if platform.count != 1 %}s{% endif %}</span>
+          </div>
+
+          {% for finding in platform.findings %}
+          <div class="rule-card">
+            <div class="rule-head">
+              <div><b>{{ finding.rule_title }}</b></div>
+              <span class="pill">{{ finding.evidence_count }} evidence</span>
+            </div>
+            <div class="muted" style="margin-bottom:4px;">
+              Category: {{ finding.category }} | Scope: {{ finding.issue_scope }}{% if finding.rule_id %} | Rule ID: {{ finding.rule_id }}{% endif %}
+            </div>
+            {% if finding.issue_desc %}<div><b>Issue:</b> {{ finding.issue_desc }}</div>{% endif %}
+            {% if finding.rule_desc %}<div><b>Rule:</b> {{ finding.rule_desc }}</div>{% endif %}
+            {% if finding.files %}
+            <div style="margin-top:5px;"><b>Sample Files:</b></div>
+            <ul class="file-list">
+              {% for path in finding.files %}
+              <li>{{ path }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+            {% if finding.evidence_samples %}
+            <div style="margin-top:5px;"><b>{{ finding.evidence_label if finding.evidence_label else "Matched Evidence" }}:</b></div>
+            <ul class="snippet-list">
+              {% for ev in finding.evidence_samples %}
+              <li>
+                <div class="snippet-meta">{{ ev.file }}{% if ev.line != "-" %}:{{ ev.line }}{% endif %}</div>
+                <div class="snippet-code">{{ ev.code|e }}</div>
+              </li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="muted">No findings available for report rendering.</div>
+      {% endif %}
+    </section>
+
+    <span id="rule-index" class="section-anchor"></span>
+    <section class="panel page-break">
+      <h2>Rule Index</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Rule</th>
+              <th style="width: 110px;">Matches</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for rule in rule_index %}
+            <tr>
+              <td>{{ rule.title }}</td>
+              <td>{{ rule.count }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <span id="file-index" class="section-anchor"></span>
+    <section class="panel page-break">
+      <h2>File Index</h2>
+      {% if top_files %}
+      <h3>Most Frequently Flagged Files</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>File Path</th>
+              <th style="width: 80px;">Hits</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for file in top_files %}
+            <tr>
+              <td>{{ file.path }}</td>
+              <td>{{ file.hits }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
+      {% if file_index %}
+      <h3 style="margin-top:12px;">Rule to File Mapping (AOI File Paths)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 260px;">Rule Title</th>
+              <th style="width: 70px;">Count</th>
+              <th>Sample Paths</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in file_index %}
+            <tr>
+              <td>{{ item.rule_title }}</td>
+              <td>{{ item.count }}</td>
+              <td>
+                {% if item.paths %}
+                <ul class="file-list">
+                  {% for path in item.paths %}
+                  <li>{{ path }}</li>
+                  {% endfor %}
+                </ul>
+                {% else %}
+                -
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="muted">No AOI file index data available.</div>
+      {% endif %}
+    </section>
+
+    <span id="timeline" class="section-anchor"></span>
+    <section class="panel">
+      <h2>Timeline</h2>
+      <div class="kv">
+        <div><b>Scan Start:</b> {{ timeline.get("scan_start_time", "-") }}</div>
+        <div><b>Scan End:</b> {{ timeline.get("scan_end_time", "-") }}</div>
+        <div><b>Duration:</b> {{ timeline.get("scan_duration", "-") }}</div>
+        <div><b>Total Project Files:</b> {{ detection.get("total_project_files_identified", "-") }}</div>
+        <div><b>Total Files Identified:</b> {{ detection.get("total_files_identified", "-") }}</div>
+        <div><b>Total LOC (effective):</b> {{ detection.get("total_loc", "-") }}</div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

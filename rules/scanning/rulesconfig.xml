@@ -66,7 +66,6 @@
         <platform>android</platform>
         <path>/mobile/android/android.xml</path>
         <platform_ftypes>AndroidManifest.xml, build.gradle, proguard-rules.pro</platform_ftypes>
-        <!--<platform_ftypes>*.java, *.kt, *.groovy</platform_ftypes>-->
         <project_config_ftypes>AndroidManifest.xml, build.gradle, proguard-rules.pro</project_config_ftypes>
         <common_ftypes>*.xml, *.json, *.gradle, *.properties, *.log</common_ftypes>
     </rule>
@@ -157,41 +156,6 @@
 
 <!-- TO BE IMPLEMENTED LATER
 
-    <rule>
-        <platform>angular</platform>
-        <path>/javascript/angular.xml</path>
-        <platform_ftypes>*.js, *.ts, *.html</platform_ftypes>
-        <project_config_ftypes>angular.json, tsconfig.json, package.json</project_config_ftypes>
-        <common_ftypes>*.json</common_ftypes>
-    </rule>
-    <rule>
-        <platform>nodejs</platform>
-        <path>/javascript/nodejs.xml</path>
-        <platform_ftypes>*.js, *.ts, *.html, *.ejs</platform_ftypes>
-        <project_config_ftypes>package.json, package-lock.json, tsconfig.json</project_config_ftypes>
-        <common_ftypes>*.json, *.yaml, *.yml</common_ftypes>
-    </rule>
-    <rule>
-        <platform>ruby</platform>
-        <path>/ruby/rubyrails.xml</path>
-        <platform_ftypes>*.rb</platform_ftypes>
-        <project_config_ftypes>Gemfile, Rakefile, config.ru</project_config_ftypes>
-        <common_ftypes>*.yml, *.yaml</common_ftypes>
-    </rule>
-    <rule>
-        <platform>rust</platform>
-        <path>/rust/rust.xml</path>
-        <platform_ftypes>*.rs</platform_ftypes>
-        <project_config_ftypes>Cargo.toml, Cargo.lock</project_config_ftypes>
-        <common_ftypes>*.toml, *.env</common_ftypes>
-    </rule>
-    <rule>
-        <platform>carbon</platform>
-        <path>/carbon/carbon.xml</path>
-        <platform_ftypes>*.carbon</platform_ftypes>
-        <project_config_ftypes>carbon.config</project_config_ftypes>
-        <common_ftypes>*.conf</common_ftypes>
-    </rule>
     <rule>
         <platform>database</platform>
         <path>/database/database.xml</path>

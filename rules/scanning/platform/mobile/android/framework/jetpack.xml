@@ -1,0 +1,76 @@
+<root>
+    <category name="Framework-Specific Security">
+        <rule>
+            <name>Android Cleartext Traffic Enabled</name>
+            <regex><![CDATA[android:usesCleartextTraffic\s*=\s*"true"|cleartextTrafficPermitted\s*=\s*true]]></regex>
+            <rdl><![CDATA[[FLAG:android:usesCleartextTraffic\s*=\s*"true"|cleartextTrafficPermitted\s*=\s*true][IF(MISSING:networkSecurityConfig\s*=\s*"@xml/.*" && MISSING:cleartextTrafficPermitted\s*=\s*false)]]]></rdl>
+            <rule_desc>Detects cleartext transport allowances in Android app manifest/network config.</rule_desc>
+            <vuln_desc>Cleartext traffic can expose sensitive data to interception.</vuln_desc>
+            <developer>Disable cleartext traffic and enforce TLS for all endpoints.</developer>
+            <reviewer>Review AndroidManifest and network security config for cleartext allowances.</reviewer>
+        </rule>
+        <rule>
+            <name>Android Backup Allowed</name>
+            <regex><![CDATA[android:allowBackup\s*=\s*"true"]]></regex>
+            <rdl><![CDATA[[FLAG:android:allowBackup\s*=\s*"true"][IF(MISSING:android:fullBackupContent\s*= && MISSING:android:dataExtractionRules\s*=)]]]></rdl>
+            <rule_desc>Detects app backup enabled in AndroidManifest.</rule_desc>
+            <vuln_desc>Backup-enabled apps may leak sensitive app data via backup channels.</vuln_desc>
+            <developer>Set allowBackup to false unless explicitly required and risk-assessed.</developer>
+            <reviewer>Validate backup policy for apps handling sensitive data.</reviewer>
+        </rule>
+        <rule>
+            <name>Android Debuggable Build Flag</name>
+            <regex><![CDATA[android:debuggable\s*=\s*"true"|debuggable\s+true]]></regex>
+            <rdl><![CDATA[[FLAG:android:debuggable\s*=\s*"true"|debuggable\s+true][IF(MISSING:buildTypes\s*\{[^\}]*release[^\}]*debuggable\s+false)]]]></rdl>
+            <rule_desc>Detects debuggable builds/configuration.</rule_desc>
+            <vuln_desc>Debuggable apps are easier to tamper with and introspect in production.</vuln_desc>
+            <developer>Ensure release builds are non-debuggable.</developer>
+            <reviewer>Verify manifest and Gradle build types for release-safe values.</reviewer>
+        </rule>
+        <rule>
+            <name>Android Exported Component</name>
+            <regex><![CDATA[android:exported\s*=\s*"true"]]></regex>
+            <rdl><![CDATA[[FLAG:android:exported\s*=\s*"true"][IF(PRESENT:<activity|<service|<receiver|<provider && PRESENT:<intent-filter && MISSING:android:permission\s*= && MISSING:android:readPermission\s*= && MISSING:android:writePermission\s*=)]]]></rdl>
+            <rule_desc>Detects explicitly exported app components.</rule_desc>
+            <vuln_desc>Exported components may be invoked by other apps if not permission-protected.</vuln_desc>
+            <developer>Restrict exports and require permissions where exposure is necessary.</developer>
+            <reviewer>Review all exported components for authorization and input validation.</reviewer>
+        </rule>
+        <rule>
+            <name>Android WebView JavaScript Enabled</name>
+            <regex><![CDATA[setJavaScriptEnabled\(\s*true\s*\)]]></regex>
+            <rdl><![CDATA[[FLAG:setJavaScriptEnabled\(\s*true\s*\)][IF(MISSING:setSafeBrowsingEnabled\(\s*true\s*\) && MISSING:setAllowFileAccess\(\s*false\s*\))]]]></rdl>
+            <rule_desc>Detects JavaScript enabled in WebView.</rule_desc>
+            <vuln_desc>WebView JavaScript with untrusted content can enable script injection paths.</vuln_desc>
+            <developer>Disable JavaScript unless required and harden content sources.</developer>
+            <reviewer>Audit WebView content origins and bridge exposure.</reviewer>
+        </rule>
+        <rule>
+            <name>Android WebView File URL Universal Access</name>
+            <regex><![CDATA[setAllowUniversalAccessFromFileURLs\(\s*true\s*\)|setAllowFileAccessFromFileURLs\(\s*true\s*\)]]></regex>
+            <rdl><![CDATA[[FLAG:setAllowUniversalAccessFromFileURLs\(\s*true\s*\)|setAllowFileAccessFromFileURLs\(\s*true\s*\)][IF(MISSING:setAllowUniversalAccessFromFileURLs\(\s*false\s*\) && MISSING:setAllowFileAccessFromFileURLs\(\s*false\s*\))]]]></rdl>
+            <rule_desc>Detects permissive WebView file URL access settings.</rule_desc>
+            <vuln_desc>File URL access can enable local file disclosure and script abuse.</vuln_desc>
+            <developer>Disable permissive file URL access flags unless strictly needed.</developer>
+            <reviewer>Verify WebView file access settings are hardened.</reviewer>
+        </rule>
+        <rule>
+            <name>Android JavaScript Interface Exposure</name>
+            <regex><![CDATA[addJavascriptInterface\(]]></regex>
+            <rdl><![CDATA[[FLAG:addJavascriptInterface\(][IF(PRESENT:setJavaScriptEnabled\(\s*true\s*\) && MISSING:shouldOverrideUrlLoading\() ]]]></rdl>
+            <rule_desc>Detects JavaScript bridge exposure into WebView.</rule_desc>
+            <vuln_desc>Improperly exposed JS interfaces can lead to code execution/data leakage.</vuln_desc>
+            <developer>Expose minimal interfaces and restrict untrusted content loading.</developer>
+            <reviewer>Review annotated bridge methods and content trust boundaries.</reviewer>
+        </rule>
+        <rule>
+            <name>Android Hardcoded Secret Marker</name>
+            <regex><![CDATA[(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"]]></regex>
+            <rdl><![CDATA[[FLAG:(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:BuildConfig\.DEBUG\s*=\s*true && MISSING:example|sample|dummy)]]]></rdl>
+            <rule_desc>Detects likely hardcoded secret material in Android code/config.</rule_desc>
+            <vuln_desc>Hardcoded secrets can be extracted from source or app package artifacts.</vuln_desc>
+            <developer>Move secrets to server-side issuance/secure runtime retrieval.</developer>
+            <reviewer>Validate no production secrets are embedded in mobile clients.</reviewer>
+        </rule>
+    </category>
+</root>

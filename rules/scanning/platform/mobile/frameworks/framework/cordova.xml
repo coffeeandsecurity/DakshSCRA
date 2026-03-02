@@ -1,0 +1,58 @@
+<root>
+    <category name="Framework-Specific Security">
+        <rule>
+            <name>Cordova Wildcard Access Origin</name>
+            <regex><![CDATA[<access\s+origin=\"\*\"]]></regex>
+            <rdl><![CDATA[[FLAG:<access\s+origin=\"\*\"][IF(MISSING:Content-Security-Policy)]]]></rdl>
+            <rule_desc>Detects wildcard access origin in Cordova config.</rule_desc>
+            <vuln_desc>Wildcard origin allows broad network access and expands attack surface.</vuln_desc>
+            <developer>Restrict access origins to explicit trusted domains.</developer>
+            <reviewer>Review config.xml access policy entries.</reviewer>
+        </rule>
+        <rule>
+            <name>Cordova Wildcard Allow Navigation</name>
+            <regex><![CDATA[<allow-navigation\s+href=\"\*\"]]></regex>
+            <rdl><![CDATA[[FLAG:<allow-navigation\s+href=\"\*\"][IF(MISSING:allow-navigation\s+href=\"https://)]]]></rdl>
+            <rule_desc>Detects wildcard navigation policy in Cordova config.</rule_desc>
+            <vuln_desc>Wildcard navigation permits untrusted content navigation.</vuln_desc>
+            <developer>Restrict navigation destinations and enforce CSP.</developer>
+            <reviewer>Validate navigation allowlist for least privilege.</reviewer>
+        </rule>
+        <rule>
+            <name>Cordova Unsafe CSP Directives</name>
+            <regex><![CDATA[unsafe-inline|unsafe-eval]]></regex>
+            <rdl><![CDATA[[FLAG:unsafe-inline|unsafe-eval][IF(MISSING:nonce-|sha256-)]]]></rdl>
+            <rule_desc>Detects weak CSP directives in Cordova web assets/config.</rule_desc>
+            <vuln_desc>Unsafe directives increase XSS/script injection risk.</vuln_desc>
+            <developer>Harden CSP and avoid unsafe directives where feasible.</developer>
+            <reviewer>Audit CSP config in HTML/meta headers and templates.</reviewer>
+        </rule>
+        <rule>
+            <name>Cordova Insecure HTTP Endpoint Usage</name>
+            <regex>http://</regex>
+            <rdl><![CDATA[[FLAG:http://][IF(MISSING:https://)]]]></rdl>
+            <rule_desc>Detects cleartext endpoint references in Cordova code/config.</rule_desc>
+            <vuln_desc>Cleartext traffic can expose user and session data.</vuln_desc>
+            <developer>Use HTTPS endpoints and strict transport controls.</developer>
+            <reviewer>Audit endpoint constants and plugin config values.</reviewer>
+        </rule>
+        <rule>
+            <name>Cordova WebView JavaScript Bridge Marker</name>
+            <regex><![CDATA[addJavascriptInterface\(|cordova\.exec\(]]></regex>
+            <rdl><![CDATA[[FLAG:addJavascriptInterface\(|cordova\.exec\(][IF(MISSING:allow-navigation\s+href=\"https://)]]]></rdl>
+            <rule_desc>Detects JavaScript-native bridge usage requiring trust-boundary review.</rule_desc>
+            <vuln_desc>Unsafe bridge handling can expose native capabilities to untrusted content.</vuln_desc>
+            <developer>Constrain bridge usage and validate inbound arguments.</developer>
+            <reviewer>Review plugin bridge interfaces and content trust assumptions.</reviewer>
+        </rule>
+        <rule>
+            <name>Cordova Hardcoded Secret Marker</name>
+            <regex><![CDATA[(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]]]></regex>
+            <rdl><![CDATA[[FLAG:(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]][IF(MISSING:example|sample|dummy)]]]></rdl>
+            <rule_desc>Detects likely hardcoded secrets in Cordova projects.</rule_desc>
+            <vuln_desc>Embedded secrets can be recovered from packaged app assets.</vuln_desc>
+            <developer>Use backend-managed secrets and rotate exposed values.</developer>
+            <reviewer>Validate no static production secrets are shipped.</reviewer>
+        </rule>
+    </category>
+</root>

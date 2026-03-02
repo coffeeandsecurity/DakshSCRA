@@ -1,0 +1,49 @@
+<root>
+    <category name="Framework-Specific Security">
+        <rule>
+            <name>Nextjs Debug/Verbose Mode Enabled</name>
+            <regex><![CDATA[NODE_ENV\s*=\s*[\'\"]development[\'\"]|debug\s*:\s*true|logger\(\s*[\'\"]dev[\'\"]]]></regex>
+            <rdl><![CDATA[[FLAG:NODE_ENV\s*=\s*[\'\"]development[\'\"]|debug\s*:\s*true|logger\(\s*[\'\"]dev[\'\"]][IF(MISSING:release|production)]]]></rdl>
+            <rule_desc>Detects development/debug settings in potentially deployable paths.</rule_desc>
+            <vuln_desc>Debug verbosity can leak internals and sensitive information.</vuln_desc>
+            <developer>Disable debug/development modes in production.</developer>
+            <reviewer>Verify runtime profile separation and safe logging levels.</reviewer>
+        </rule>
+        <rule>
+            <name>Nextjs Injection Sink (Eval/Function)</name>
+            <regex><![CDATA[\beval\s*\(|new\s+Function\s*\(|vm\.runIn]]></regex>
+            <rdl><![CDATA[[FLAG:\beval\s*\(|new\s+Function\s*\(|vm\.runIn]]]></rdl>
+            <rule_desc>Detects dynamic code execution sinks in application flows.</rule_desc>
+            <vuln_desc>Dynamic execution with untrusted input can lead to code injection/RCE.</vuln_desc>
+            <developer>Avoid dynamic execution; enforce strict input handling.</developer>
+            <reviewer>Trace user-controllable data into eval/function constructors.</reviewer>
+        </rule>
+        <rule>
+            <name>Nextjs SQL/NoSQL Injection Sink</name>
+            <regex><![CDATA[\.(query|execute)\(\s*`|\$where\s*:\s*|sequelize\.query\(]]></regex>
+            <rdl><![CDATA[[FLAG:\.(query|execute)\(\s*`|\$where\s*:\s*|sequelize\.query\(]]]></rdl>
+            <rule_desc>Detects query construction patterns requiring injection review.</rule_desc>
+            <vuln_desc>String-based or unsafe query construction may enable injection attacks.</vuln_desc>
+            <developer>Use parameterized queries and ORM-safe APIs.</developer>
+            <reviewer>Review tainted inputs in DB query call paths.</reviewer>
+        </rule>
+        <rule>
+            <name>Nextjs Permissive CORS</name>
+            <regex><![CDATA[origin\s*:\s*[\'\"]\*[\'\"]|Access-Control-Allow-Origin\s*[:=]\s*[\'\"]\*[\'\"]]]></regex>
+            <rdl><![CDATA[[FLAG:origin\s*:\s*[\'\"]\*[\'\"]|Access-Control-Allow-Origin\s*[:=]\s*[\'\"]\*[\'\"]][IF(MISSING:allowlist|whitelist|trusted)]]]></rdl>
+            <rule_desc>Detects wildcard CORS policies in framework/server config.</rule_desc>
+            <vuln_desc>Wildcard CORS can expose APIs to arbitrary origins.</vuln_desc>
+            <developer>Restrict allowed origins and methods explicitly.</developer>
+            <reviewer>Validate CORS config in bootstrap and middleware setup.</reviewer>
+        </rule>
+        <rule>
+            <name>Nextjs Hardcoded Secret Material</name>
+            <regex><![CDATA[(secret|api[_-]?key|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]]]></regex>
+            <rdl><![CDATA[[FLAG:(secret|api[_-]?key|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <rule_desc>Detects likely hardcoded credentials or tokens.</rule_desc>
+            <vuln_desc>Hardcoded secrets are vulnerable to repository and artifact exposure.</vuln_desc>
+            <developer>Externalize and rotate secrets using managed secret stores.</developer>
+            <reviewer>Confirm literals are not production secrets.</reviewer>
+        </rule>
+    </category>
+</root>

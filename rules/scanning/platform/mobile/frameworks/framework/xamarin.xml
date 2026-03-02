@@ -1,0 +1,58 @@
+<root>
+    <category name="Framework-Specific Security">
+        <rule>
+            <name>Xamarin Debug Build Marker</name>
+            <regex><![CDATA[\bDEBUG\b|debuggable\s*[:=]\s*true]]></regex>
+            <rdl><![CDATA[[FLAG:\bDEBUG\b|debuggable\s*[:=]\s*true][IF(MISSING:RELEASE)]]]></rdl>
+            <rule_desc>Detects debug build markers in Xamarin/mobile .NET code paths.</rule_desc>
+            <vuln_desc>Debug builds can expose additional diagnostics and attack surface.</vuln_desc>
+            <developer>Ensure release builds disable debug behavior.</developer>
+            <reviewer>Review build configuration and conditional compilation paths.</reviewer>
+        </rule>
+        <rule>
+            <name>Xamarin Certificate Validation Bypass</name>
+            <regex><![CDATA[ServerCertificateCustomValidationCallback\s*=\s*\(.*=>\s*true|ServicePointManager\.ServerCertificateValidationCallback]]></regex>
+            <rdl><![CDATA[[FLAG:ServerCertificateCustomValidationCallback\s*=\s*\(.*=>\s*true|ServicePointManager\.ServerCertificateValidationCallback][IF(MISSING:CertificatePinning|PublicKeyPinning)]]]></rdl>
+            <rule_desc>Detects TLS certificate validation bypass patterns.</rule_desc>
+            <vuln_desc>Bypassing TLS validation allows MITM interception attacks.</vuln_desc>
+            <developer>Remove bypass logic and enforce strict cert validation.</developer>
+            <reviewer>Audit all HTTP client handlers and global callbacks.</reviewer>
+        </rule>
+        <rule>
+            <name>Xamarin Insecure HTTP Endpoint Usage</name>
+            <regex>http://</regex>
+            <rdl><![CDATA[[FLAG:http://][IF(MISSING:https://)]]]></rdl>
+            <rule_desc>Detects cleartext endpoint references in Xamarin apps.</rule_desc>
+            <vuln_desc>Cleartext transport can leak sensitive information.</vuln_desc>
+            <developer>Use HTTPS endpoints only and enforce TLS policy.</developer>
+            <reviewer>Audit endpoint constants and networking client setup.</reviewer>
+        </rule>
+        <rule>
+            <name>Xamarin WebView Script Bridge Marker</name>
+            <regex><![CDATA[WebView|EvaluateJavaScriptAsync\(|addJavascriptInterface\(]]></regex>
+            <rdl><![CDATA[[FLAG:WebView|EvaluateJavaScriptAsync\(|addJavascriptInterface\(][IF(MISSING:Navigating\s*\+=)]]]></rdl>
+            <rule_desc>Detects webview/bridge execution points needing security review.</rule_desc>
+            <vuln_desc>Unsafe bridge/content handling may permit script injection or data leakage.</vuln_desc>
+            <developer>Restrict untrusted content and minimize bridge capabilities.</developer>
+            <reviewer>Review webview sources, script execution, and bridge handlers.</reviewer>
+        </rule>
+        <rule>
+            <name>Xamarin Secret Storage Marker</name>
+            <regex><![CDATA[(Preferences|SecureStorage)\.(Set|SetAsync)\(.*(token|secret|password|apikey)]]></regex>
+            <rdl><![CDATA[[FLAG:(Preferences|SecureStorage)\.(Set|SetAsync)\(.*(token|secret|password|apikey)][IF(MISSING:SecureStorage\.GetAsync)]]]></rdl>
+            <rule_desc>Detects secret-like keys written through app storage APIs.</rule_desc>
+            <vuln_desc>Improper storage choices can leak credentials/tokens.</vuln_desc>
+            <developer>Use platform secure storage appropriately for sensitive values.</developer>
+            <reviewer>Review storage API usage and key naming for sensitive data.</reviewer>
+        </rule>
+        <rule>
+            <name>Xamarin Hardcoded Secret Marker</name>
+            <regex><![CDATA[(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"]]></regex>
+            <rdl><![CDATA[[FLAG:(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:DEBUG)]]]></rdl>
+            <rule_desc>Detects likely hardcoded secret literals in Xamarin code/config.</rule_desc>
+            <vuln_desc>Hardcoded credentials can be extracted from binaries/source.</vuln_desc>
+            <developer>Externalize secrets and rotate any exposed credentials.</developer>
+            <reviewer>Verify no production secrets are embedded in client code.</reviewer>
+        </rule>
+    </category>
+</root>

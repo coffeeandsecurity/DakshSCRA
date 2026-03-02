@@ -3,6 +3,8 @@ import fnmatch
 import json
 import os
 import re
+import xml.etree.ElementTree as ET
+from pathlib import Path
 
 # Local application imports
 import state.runtime_state as runtime
@@ -13,6 +15,29 @@ import utils.rules_utils as rulesops
 from utils.rules_utils import get_available_rules, get_rules_path_or_filetypes
 
 logger = get_logger(__name__)
+
+# In auto mode, these platforms/frameworks are validated using project markers
+# instead of extension-only matching to avoid overlap-based false positives.
+AUTO_MARKER_VALIDATED_PLATFORMS = {
+    "android",
+    "ios",
+    "reactnative",
+    "flutter",
+    "xamarin",
+    "ionic",
+    "nativescript",
+    "cordova",
+    "javascript",
+}
+
+JSON_DEP_SECTIONS = (
+    "dependencies",
+    "devDependencies",
+    "peerDependencies",
+    "optionalDependencies",
+    "require",
+    "require-dev",
+)
 
 
 def _read_text_limited(file_path, max_bytes=200000):
@@ -29,16 +54,34 @@ def _read_text_limited(file_path, max_bytes=200000):
 
 def detect_mobile_rule_types(sourcepath):
     """
-    Detect mobile platforms/frameworks from common project markers.
+    Detect platforms/frameworks from common project and framework markers.
 
     Returns:
         set: Detected platform names compatible with rulesconfig.xml.
     """
 
     detected = set()
+    ext_counts = {}
+
+    def _bump_ext(fname):
+        ext = os.path.splitext(fname)[1].lower()
+        if ext:
+            ext_counts[ext] = ext_counts.get(ext, 0) + 1
+
+    def _load_json(path_value):
+        raw = _read_text_limited(path_value)
+        if not raw.strip():
+            return {}
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError:
+            return {}
 
     for root, dirs, files in os.walk(sourcepath):
         files_set = set(files)
+        files_set_lower = {f.lower() for f in files_set}
+        for file_name in files:
+            _bump_ext(file_name)
 
         # Native Android markers
         if "AndroidManifest.xml" in files_set or "proguard-rules.pro" in files_set:
@@ -73,17 +116,22 @@ def detect_mobile_rule_types(sourcepath):
         if "package.json" in files_set:
             package_json_path = os.path.join(root, "package.json")
             content = _read_text_limited(package_json_path)
-
-            try:
-                package_data = json.loads(content) if content.strip() else {}
-            except json.JSONDecodeError:
-                package_data = {}
+            package_data = _load_json(package_json_path)
 
             deps = {}
             deps.update(package_data.get("dependencies", {}))
             deps.update(package_data.get("devDependencies", {}))
             dep_names = set(deps.keys())
             dep_blob = " ".join(dep_names).lower() + " " + content.lower()
+
+            # Generic JavaScript ecosystem markers (non-mobile included)
+            js_markers = (
+                "express", "koa", "fastify", "@nestjs/", "next", "nuxt",
+                "react", "vue", "svelte", "@angular/", "@remix-run/", "gatsby",
+                "webpack", "vite", "typescript",
+            )
+            if any(marker in dep_blob for marker in js_markers):
+                detected.add("javascript")
 
             if "react-native" in dep_blob or "expo" in dep_blob:
                 detected.update({"reactnative", "android", "ios"})
@@ -94,6 +142,9 @@ def detect_mobile_rule_types(sourcepath):
             if "cordova" in dep_blob:
                 detected.update({"cordova", "android", "ios"})
 
+        if {"angular.json", "next.config.js", "next.config.ts", "next.config.mjs", "nuxt.config.js", "nuxt.config.ts"}.intersection(files_set_lower):
+            detected.add("javascript")
+
         if "capacitor.config.json" in files_set or "capacitor.config.ts" in files_set:
             detected.update({"ionic", "android", "ios"})
         if "config.xml" in files_set:
@@ -101,13 +152,322 @@ def detect_mobile_rule_types(sourcepath):
             if "cordova" in cfg_content or "phonegap" in cfg_content:
                 detected.update({"cordova", "android", "ios"})
 
+        # PHP + popular frameworks
+        if "composer.json" in files_set:
+            composer_path = os.path.join(root, "composer.json")
+            composer_content = _read_text_limited(composer_path).lower()
+            composer_data = _load_json(composer_path)
+            req = {}
+            req.update(composer_data.get("require", {}))
+            req.update(composer_data.get("require-dev", {}))
+            req_blob = " ".join(req.keys()).lower() + " " + composer_content
+            php_framework_markers = (
+                "laravel", "codeigniter", "symfony", "yii", "cakephp",
+                "drupal", "joomla", "magento", "laminas", "zendframework", "wordpress",
+            )
+            if any(m in req_blob for m in php_framework_markers):
+                detected.add("php")
+            else:
+                detected.add("php")
+        if {"artisan", "wp-config.php"}.intersection(files_set_lower):
+            detected.add("php")
+
+        # Python + popular frameworks
+        if {"requirements.txt", "pyproject.toml", "setup.py", "pipfile", "manage.py", "wsgi.py", "asgi.py"}.intersection(files_set_lower):
+            detected.add("python")
+        if "requirements.txt" in files_set_lower:
+            req_content = _read_text_limited(os.path.join(root, "requirements.txt")).lower()
+            if any(m in req_content for m in ("django", "flask", "fastapi", "pyramid", "tornado", "sanic", "celery")):
+                detected.add("python")
+        if "pyproject.toml" in files_set_lower:
+            pyproject_content = _read_text_limited(os.path.join(root, "pyproject.toml")).lower()
+            if any(m in pyproject_content for m in ("django", "flask", "fastapi", "pyramid", "tornado", "sanic", "celery")):
+                detected.add("python")
+
+        # Java + popular frameworks
+        if {"pom.xml", "build.gradle", "build.gradle.kts", "settings.gradle", "settings.gradle.kts"}.intersection(files_set_lower):
+            detected.add("java")
+        if "pom.xml" in files_set_lower:
+            pom_content = _read_text_limited(os.path.join(root, "pom.xml")).lower()
+            if any(m in pom_content for m in ("spring-boot", "springframework", "hibernate", "struts", "micronaut", "quarkus")):
+                detected.add("java")
+
+        # Go + frameworks
+        if {"go.mod", "go.sum"}.intersection(files_set_lower):
+            detected.add("go")
+        if "go.mod" in files_set_lower:
+            gomod_content = _read_text_limited(os.path.join(root, "go.mod")).lower()
+            if any(m in gomod_content for m in ("gin-gonic/gin", "labstack/echo", "gofiber/fiber", "beego", "go-chi/chi")):
+                detected.add("go")
+
+        # Rust + frameworks
+        if {"cargo.toml", "cargo.lock"}.intersection(files_set_lower):
+            detected.add("rust")
+        if "cargo.toml" in files_set_lower:
+            cargo_content = _read_text_limited(os.path.join(root, "cargo.toml")).lower()
+            if any(m in cargo_content for m in ("rocket", "actix", "axum", "warp")):
+                detected.add("rust")
+
+        # Ruby + frameworks
+        if {"gemfile", "gemfile.lock", "rakefile", "config.ru"}.intersection(files_set_lower):
+            detected.add("ruby")
+        if "gemfile" in files_set_lower:
+            gem_content = _read_text_limited(os.path.join(root, "Gemfile")).lower()
+            if any(m in gem_content for m in ("rails", "sinatra", "hanami")):
+                detected.add("ruby")
+
         # .NET mobile (Xamarin / MAUI)
         for csproj in [f for f in files if f.endswith(".csproj")]:
             csproj_content = _read_text_limited(os.path.join(root, csproj))
+            detected.add("dotnet")
             if re.search(r"(Xamarin|UseMaui|Maui|net\d+\.\d+-android|net\d+\.\d+-ios)", csproj_content, re.IGNORECASE):
                 detected.update({"xamarin", "android", "ios"})
+            if re.search(r"(Microsoft\.AspNetCore|Microsoft\.EntityFrameworkCore|WebApplication\.CreateBuilder)", csproj_content, re.IGNORECASE):
+                detected.add("dotnet")
+
+        if any(name.lower().endswith(".sln") for name in files):
+            detected.add("dotnet")
+
+        # Kotlin marker for backend/non-mobile kotlin projects.
+        if any(name.lower().endswith(".kt") for name in files):
+            detected.add("kotlin")
+
+        # C / C++ ecosystem markers
+        if "CMakeLists.txt" in files_set:
+            cmake_content = _read_text_limited(os.path.join(root, "CMakeLists.txt")).lower()
+            if any(m in cmake_content for m in ("project(", "add_executable(", "add_library(")):
+                detected.update({"c", "cpp"})
+            if any(m in cmake_content for m in ("find_package(qt", "boost", "find_package(poco")):
+                detected.add("cpp")
+        if {"makefile", "configure.ac", "config.h"}.intersection(files_set_lower):
+            detected.update({"c", "cpp"})
+
+    # Extension-informed refinement for C/C++ and JavaScript:
+    # avoid adding C just because C++ headers/sources matched C patterns in config.
+    c_count = ext_counts.get(".c", 0)
+    cpp_count = ext_counts.get(".cpp", 0) + ext_counts.get(".cc", 0) + ext_counts.get(".cxx", 0)
+    if c_count:
+        detected.add("c")
+    if cpp_count:
+        detected.add("cpp")
+    if "c" in detected and not c_count and cpp_count:
+        detected.discard("c")
+
+    js_count = ext_counts.get(".js", 0) + ext_counts.get(".jsx", 0) + ext_counts.get(".ts", 0) + ext_counts.get(".tsx", 0)
+    if js_count >= 20:
+        detected.add("javascript")
 
     return detected
+
+
+def detect_framework_rule_files(sourcepath, selected_platforms=None):
+    """
+    Detect framework rule files to apply per selected platform using marker validation.
+
+    Returns:
+        dict[str, list[Path]]: platform -> framework XML paths
+    """
+    selected = set(selected_platforms or [])
+
+    def _load_framework_registry():
+        entries = []
+        try:
+            tree = ET.parse(runtime.frameworkConfig)
+        except (ET.ParseError, OSError) as exc:
+            logger.error("Failed to load framework registry %s: %s", runtime.frameworkConfig, exc)
+            return entries
+
+        root = tree.getroot()
+        for node in root.findall("framework"):
+            name = (node.findtext("name") or "").strip().lower()
+            platform = (node.findtext("platform") or "").strip().lower()
+            rule_file = (node.findtext("rule_file") or "").strip()
+            if not name or not platform or not rule_file:
+                continue
+
+            marker_files = []
+            dep_rules = []
+            regex_rules = []
+            scan_ftypes = []
+            markers = node.find("markers")
+            if markers is not None:
+                for file_node in markers.findall("file"):
+                    value = (file_node.text or "").strip().lower()
+                    if value:
+                        marker_files.append(value)
+                for dep_node in markers.findall("dep"):
+                    value = (dep_node.text or "").strip().lower()
+                    dep_file = (dep_node.get("file") or "*").strip().lower()
+                    if value:
+                        dep_rules.append((dep_file, value))
+                for regex_node in markers.findall("regex"):
+                    value = (regex_node.text or "").strip()
+                    target_file = (regex_node.get("file") or "*").strip().lower()
+                    if value:
+                        try:
+                            regex_rules.append((target_file, re.compile(value, re.IGNORECASE)))
+                        except re.error as exc:
+                            logger.error("Invalid registry regex (%s:%s): %s", platform, name, exc)
+
+            scan_ftypes_text = (node.findtext("scan_ftypes") or "").strip()
+            if scan_ftypes_text:
+                scan_ftypes = [p.strip() for p in scan_ftypes_text.split(",") if p.strip()]
+
+            entries.append({
+                "name": name,
+                "platform": platform,
+                "rule_file": rule_file,
+                "marker_files": marker_files,
+                "dep_rules": dep_rules,
+                "regex_rules": regex_rules,
+                "scan_ftypes": scan_ftypes,
+            })
+        return entries
+
+    registry = _load_framework_registry()
+    if not registry:
+        return {}
+
+    file_index = {}
+    dep_index = {}
+    content_cache = {}
+
+    for root, _, files in os.walk(sourcepath):
+        for fname in files:
+            fpath = os.path.join(root, fname)
+            lower_name = fname.lower()
+            file_index.setdefault(lower_name, []).append(fpath)
+
+            if lower_name.endswith(".json"):
+                raw = _read_text_limited(fpath)
+                if raw:
+                    content_cache[fpath] = raw
+                    try:
+                        data = json.loads(raw)
+                    except json.JSONDecodeError:
+                        data = {}
+                    if isinstance(data, dict):
+                        dep_keys = set()
+                        for section in JSON_DEP_SECTIONS:
+                            section_value = data.get(section, {})
+                            if isinstance(section_value, dict):
+                                dep_keys.update(str(k).lower() for k in section_value.keys())
+                        dep_index[fpath] = dep_keys
+            else:
+                ext = os.path.splitext(lower_name)[1]
+                if ext in {".toml", ".txt", ".xml", ".yml", ".yaml", ".gradle", ".kts", ".csproj", ".sln", ".rb", ".py", ".php", ".js", ".ts", ".java", ".go", ".rs", ".c", ".cpp", ".h", ".hpp", ".m", ".swift", ".config", ".ini", ".plist"}:
+                    raw = _read_text_limited(fpath)
+                    if raw:
+                        content_cache[fpath] = raw
+
+    platform_to_files = {}
+    for entry in registry:
+        platform = entry["platform"]
+        if selected and platform not in selected:
+            continue
+
+        matched = False
+
+        for marker in entry["marker_files"]:
+            if marker in file_index:
+                matched = True
+                break
+
+        if not matched and entry["dep_rules"]:
+            for dep_file, dep_key in entry["dep_rules"]:
+                if dep_file == "*":
+                    candidate_paths = dep_index.keys()
+                elif any(token in dep_file for token in ("*", "?", "[")):
+                    candidate_paths = []
+                    for fname, paths in file_index.items():
+                        if fnmatch.fnmatch(fname, dep_file):
+                            candidate_paths.extend([p for p in paths if p in dep_index])
+                else:
+                    candidate_paths = [p for p in file_index.get(dep_file, []) if p in dep_index]
+                for path_item in candidate_paths:
+                    keys = dep_index.get(path_item, set())
+                    if dep_key in keys:
+                        matched = True
+                        break
+                if matched:
+                    break
+
+        if not matched and entry["regex_rules"]:
+            for target_file, regex_obj in entry["regex_rules"]:
+                if target_file == "*":
+                    candidates = content_cache.items()
+                elif any(token in target_file for token in ("*", "?", "[")):
+                    candidates = []
+                    for fname, paths in file_index.items():
+                        if fnmatch.fnmatch(fname, target_file):
+                            for p in paths:
+                                if p in content_cache:
+                                    candidates.append((p, content_cache[p]))
+                else:
+                    candidates = [(p, content_cache[p]) for p in file_index.get(target_file, []) if p in content_cache]
+                for _, content in candidates:
+                    if regex_obj.search(content):
+                        matched = True
+                        break
+                if matched:
+                    break
+
+        if not matched:
+            continue
+
+        rules_rel_path = rulesops.get_rules_path_or_filetypes(platform, "rules")
+        if not rules_rel_path:
+            continue
+        parent_rel = os.path.dirname(rules_rel_path.strip("/"))
+        if not parent_rel:
+            continue
+        fw_path = runtime.rulesRootDir / parent_rel / "framework" / entry["rule_file"]
+        if fw_path.exists():
+            platform_to_files.setdefault(platform, []).append({
+                "name": entry["name"],
+                "path": fw_path,
+                "scan_ftypes": entry.get("scan_ftypes", []),
+            })
+
+    # De-duplicate per platform/rule file.
+    # Multiple framework markers (e.g., reactnative-ios, ionic-ios) can intentionally
+    # map to the same native pack (e.g., ios/uikit.xml). Apply each pack once.
+    deduped = {}
+    for platform, entries in platform_to_files.items():
+        grouped = {}
+        for entry in entries:
+            path_key = str(entry.get("path", "")).lower()
+            if not path_key:
+                continue
+            group = grouped.setdefault(path_key, {
+                "path": entry.get("path"),
+                "names": [],
+                "scan_ftypes": set(),
+            })
+            name_val = str(entry.get("name", "")).strip()
+            if name_val and name_val not in group["names"]:
+                group["names"].append(name_val)
+            for patt in entry.get("scan_ftypes", []) or []:
+                patt_val = str(patt).strip()
+                if patt_val:
+                    group["scan_ftypes"].add(patt_val)
+
+        normalized_entries = []
+        for grp in grouped.values():
+            names_sorted = sorted(grp["names"])
+            normalized_entries.append({
+                "name": names_sorted[0] if names_sorted else Path(str(grp["path"])).stem,
+                "names": names_sorted,
+                "path": grp["path"],
+                "scan_ftypes": sorted(grp["scan_ftypes"]),
+            })
+
+        deduped[platform] = sorted(
+            normalized_entries,
+            key=lambda e: (str(e.get("path", "")).lower(), str(e.get("name", "")).lower()),
+        )
+
+    return deduped
 
 
 def discover_files(codebase, sourcepath, mode):
@@ -264,8 +624,11 @@ def recon_discover_files(codebase, sourcepath, mode):
 
 def auto_detect_rule_types(sourcepath):
     """
-    Automatically detects which rule platforms (e.g., php, java, cpp) are applicable
-    based on the file extensions found in the target directory.
+    Hybrid auto-detection for rules.
+
+    Core language/platform rules are selected using fast extension matching.
+    Overlap-prone mobile/framework rules are selected only via marker validation
+    (manifest/config/dependency checks from detect_mobile_rule_types).
 
     Parameters:
         sourcepath (str or Path): Directory path to search for files.
@@ -275,9 +638,12 @@ def auto_detect_rule_types(sourcepath):
     """
 
     supported_rules = rulesops.get_available_rules(exclude=["common"])
+    supported_rule_list = [r for r in supported_rules.split(",") if r]
+    marker_validated_rules = AUTO_MARKER_VALIDATED_PLATFORMS.intersection(set(supported_rule_list))
+    extension_matched_rules = [r for r in supported_rule_list if r not in marker_validated_rules]
 
     platform_patterns = {}
-    for rule in supported_rules.split(','):
+    for rule in extension_matched_rules:
         filetypes = rulesops.get_rules_path_or_filetypes(rule, "filetypes")
         patterns = [p.strip() for p in list(dict.fromkeys(filetypes.split(","))) if p.strip()]
         platform_patterns[rule] = patterns
@@ -308,9 +674,10 @@ def auto_detect_rule_types(sourcepath):
                 break
 
     mobile_platforms = detect_mobile_rule_types(sourcepath)
+    validated_mobile_platforms = mobile_platforms.intersection(marker_validated_rules)
 
     # Deduplicate and sort
-    unique_platforms = sorted(detected_platforms.union(mobile_platforms))
+    unique_platforms = sorted(detected_platforms.union(validated_mobile_platforms))
     result_str = ",".join(unique_platforms)
 
     return result_str
@@ -321,3 +688,4 @@ detectMobileRuleTypes = detect_mobile_rule_types
 discoverFiles = discover_files
 reconDiscoverFiles = recon_discover_files
 autoDetectRuleTypes = auto_detect_rule_types
+detectFrameworkRuleFiles = detect_framework_rule_files

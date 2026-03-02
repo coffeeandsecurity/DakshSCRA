@@ -1,0 +1,76 @@
+<root>
+    <category name="Framework-Specific Security">
+        <rule>
+            <name>iOS ATS Arbitrary Loads Enabled</name>
+            <regex><![CDATA[NSAllowsArbitraryLoads\s*</key>\s*<true/>|NSAllowsArbitraryLoads]]></regex>
+            <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads][IF(MISSING:NSExceptionDomains)]]]></rdl>
+            <rule_desc>Detects ATS global relaxation settings.</rule_desc>
+            <vuln_desc>Relaxed ATS permits insecure HTTP traffic and weakens transport security.</vuln_desc>
+            <developer>Keep ATS strict and scope exceptions minimally.</developer>
+            <reviewer>Review Info.plist transport security keys and exception domains.</reviewer>
+        </rule>
+        <rule>
+            <name>iOS Insecure HTTP Exception Enabled</name>
+            <regex>NSExceptionAllowsInsecureHTTPLoads</regex>
+            <rdl><![CDATA[[FLAG:NSExceptionAllowsInsecureHTTPLoads][IF(MISSING:NSIncludesSubdomains\s*</key>\s*<false/>)]]]></rdl>
+            <rule_desc>Detects ATS domain exception allowing insecure HTTP loads.</rule_desc>
+            <vuln_desc>Insecure HTTP exceptions may expose sensitive network traffic.</vuln_desc>
+            <developer>Remove insecure exceptions unless explicitly required and constrained.</developer>
+            <reviewer>Review exception domains and validate risk justification.</reviewer>
+        </rule>
+        <rule>
+            <name>iOS URLSession Trust Bypass Pattern</name>
+            <regex><![CDATA[didReceive\s+challenge.*completionHandler\(\.useCredential|allowInvalidCertificates]]></regex>
+            <rdl><![CDATA[[FLAG:didReceive\s+challenge.*completionHandler\(\.useCredential|allowInvalidCertificates][IF(MISSING:SecTrustEvaluate|SecTrustEvaluateWithError)]]]></rdl>
+            <rule_desc>Detects URLSession trust challenge handling patterns indicating bypass risk.</rule_desc>
+            <vuln_desc>Improper trust handling can disable effective certificate validation.</vuln_desc>
+            <developer>Implement strict trust evaluation and pinning where appropriate.</developer>
+            <reviewer>Review challenge handlers for unconditional trust decisions.</reviewer>
+        </rule>
+        <rule>
+            <name>iOS WKWebView JavaScript Execution Sink</name>
+            <regex><![CDATA[evaluateJavaScript\(|WKWebView]]></regex>
+            <rdl><![CDATA[[FLAG:WKWebView|evaluateJavaScript\(][IF(MISSING:limitsNavigationsToAppBoundDomains\s*=\s*true)]]]></rdl>
+            <rule_desc>Detects dynamic JavaScript execution and WebView usage requiring trust review.</rule_desc>
+            <vuln_desc>Untrusted script execution can enable XSS/data exposure in app context.</vuln_desc>
+            <developer>Restrict script injection and content origins in WebView contexts.</developer>
+            <reviewer>Audit WebView content sources and JS bridge interactions.</reviewer>
+        </rule>
+        <rule>
+            <name>iOS Pasteboard Usage</name>
+            <regex><![CDATA[UIPasteboard\.general|setValue\(.*forPasteboardType]]></regex>
+            <rdl><![CDATA[[FLAG:UIPasteboard\.general|setValue\(.*forPasteboardType][IF(MISSING:expirationDate && MISSING:localOnly)]]]></rdl>
+            <rule_desc>Detects shared pasteboard operations.</rule_desc>
+            <vuln_desc>Sensitive data in pasteboard may be accessible outside intended context.</vuln_desc>
+            <developer>Avoid placing secrets/PII in shared pasteboard.</developer>
+            <reviewer>Review pasteboard writes for sensitive data exposure.</reviewer>
+        </rule>
+        <rule>
+            <name>iOS UserDefaults Secret Storage Marker</name>
+            <regex><![CDATA[UserDefaults\.standard\.set\(.*(token|secret|password|apikey)]]></regex>
+            <rdl><![CDATA[[FLAG:UserDefaults\.standard\.set\(.*(token|secret|password|apikey)][IF(MISSING:Keychain)]]]></rdl>
+            <rule_desc>Detects likely sensitive key material stored in UserDefaults.</rule_desc>
+            <vuln_desc>UserDefaults is not appropriate for storing sensitive secrets.</vuln_desc>
+            <developer>Use Keychain for sensitive tokens and credentials.</developer>
+            <reviewer>Inspect local storage choices for sensitive fields.</reviewer>
+        </rule>
+        <rule>
+            <name>iOS Insecure URL Usage</name>
+            <regex>http://</regex>
+            <rdl><![CDATA[[FLAG:http://][IF(MISSING:https://)]]]></rdl>
+            <rule_desc>Detects plain HTTP endpoint usage in iOS code/config.</rule_desc>
+            <vuln_desc>Cleartext endpoints may expose session and credential data.</vuln_desc>
+            <developer>Use HTTPS endpoints with strong TLS validation.</developer>
+            <reviewer>Audit API endpoint definitions and networking calls.</reviewer>
+        </rule>
+        <rule>
+            <name>iOS Hardcoded Secret Marker</name>
+            <regex><![CDATA[(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"]]></regex>
+            <rdl><![CDATA[[FLAG:(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:DEBUG && MISSING:example|sample|dummy)]]]></rdl>
+            <rule_desc>Detects likely hardcoded secret values in iOS-related code.</rule_desc>
+            <vuln_desc>Embedded secrets can be extracted from source and binaries.</vuln_desc>
+            <developer>Use server-side secret handling and secure runtime token exchange.</developer>
+            <reviewer>Validate no production credentials are embedded in app code.</reviewer>
+        </rule>
+    </category>
+</root>

@@ -24,6 +24,8 @@ rulesRootDir = Path(str(root_dir) + "/rules/scanning/platform")
 
 # Rules config path
 rulesConfig = Path(str(rulesRootDir) + "/../rulesconfig.xml")
+# Framework registry config path
+frameworkConfig = Path(str(rulesRootDir) + "/../frameworkconfig.xml")
 
 # Tool details/version config file
 toolConfig = Path(str(root_dir) + "/config/tool.yaml")

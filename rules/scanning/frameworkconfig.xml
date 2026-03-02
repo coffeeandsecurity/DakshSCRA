@@ -1,0 +1,535 @@
+<root>
+    <!-- PHP -->
+    <framework>
+        <name>laravel</name>
+        <platform>php</platform>
+        <rule_file>laravel.xml</rule_file>
+        <markers>
+            <file>artisan</file>
+            <dep file="composer.json">laravel/framework</dep>
+            <regex file="composer.json">Illuminate\\</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>symfony</name>
+        <platform>php</platform>
+        <rule_file>symfony.xml</rule_file>
+        <markers>
+            <dep file="composer.json">symfony/framework-bundle</dep>
+            <regex file="composer.json">symfony</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>codeigniter</name>
+        <platform>php</platform>
+        <rule_file>codeigniter.xml</rule_file>
+        <markers>
+            <dep file="composer.json">codeigniter4/framework</dep>
+            <regex file="composer.json">codeigniter</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>wordpress</name>
+        <platform>php</platform>
+        <rule_file>wordpress.xml</rule_file>
+        <markers>
+            <file>wp-config.php</file>
+            <regex file="*">wp-content|wordpress</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>drupal</name>
+        <platform>php</platform>
+        <rule_file>drupal.xml</rule_file>
+        <markers>
+            <dep file="composer.json">drupal/core</dep>
+            <regex file="composer.json">drupal</regex>
+        </markers>
+    </framework>
+
+    <!-- Python -->
+    <framework>
+        <name>django</name>
+        <platform>python</platform>
+        <rule_file>django.xml</rule_file>
+        <markers>
+            <file>manage.py</file>
+            <regex file="requirements.txt">django</regex>
+            <regex file="pyproject.toml">django</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>flask</name>
+        <platform>python</platform>
+        <rule_file>flask.xml</rule_file>
+        <markers>
+            <regex file="requirements.txt">flask</regex>
+            <regex file="pyproject.toml">flask</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>fastapi</name>
+        <platform>python</platform>
+        <rule_file>fastapi.xml</rule_file>
+        <markers>
+            <regex file="requirements.txt">fastapi</regex>
+            <regex file="pyproject.toml">fastapi</regex>
+        </markers>
+    </framework>
+
+    <!-- Java -->
+    <framework>
+        <name>spring</name>
+        <platform>java</platform>
+        <rule_file>spring.xml</rule_file>
+        <markers>
+            <regex file="pom.xml">springframework</regex>
+            <regex file="build.gradle">org\.springframework</regex>
+            <regex file="build.gradle.kts">org\.springframework</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>springboot</name>
+        <platform>java</platform>
+        <rule_file>springboot.xml</rule_file>
+        <markers>
+            <regex file="pom.xml">spring-boot</regex>
+            <regex file="build.gradle">spring-boot</regex>
+            <regex file="build.gradle.kts">spring-boot</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>hibernate</name>
+        <platform>java</platform>
+        <rule_file>hibernate.xml</rule_file>
+        <markers>
+            <regex file="pom.xml">hibernate</regex>
+            <regex file="build.gradle">hibernate</regex>
+            <regex file="build.gradle.kts">hibernate</regex>
+        </markers>
+    </framework>
+
+    <!-- JavaScript / TypeScript -->
+    <framework>
+        <name>express</name>
+        <platform>javascript</platform>
+        <rule_file>express.xml</rule_file>
+        <markers>
+            <dep file="package.json">express</dep>
+        </markers>
+    </framework>
+    <framework>
+        <name>nestjs</name>
+        <platform>javascript</platform>
+        <rule_file>nestjs.xml</rule_file>
+        <markers>
+            <dep file="package.json">@nestjs/core</dep>
+        </markers>
+    </framework>
+    <framework>
+        <name>react</name>
+        <platform>javascript</platform>
+        <rule_file>react.xml</rule_file>
+        <markers>
+            <dep file="package.json">react</dep>
+        </markers>
+    </framework>
+    <framework>
+        <name>nextjs</name>
+        <platform>javascript</platform>
+        <rule_file>nextjs.xml</rule_file>
+        <markers>
+            <dep file="package.json">next</dep>
+            <file>next.config.js</file>
+            <file>next.config.ts</file>
+            <file>next.config.mjs</file>
+        </markers>
+    </framework>
+    <framework>
+        <name>vue</name>
+        <platform>javascript</platform>
+        <rule_file>vue.xml</rule_file>
+        <markers>
+            <dep file="package.json">vue</dep>
+        </markers>
+    </framework>
+    <framework>
+        <name>angular</name>
+        <platform>javascript</platform>
+        <rule_file>angular.xml</rule_file>
+        <markers>
+            <dep file="package.json">@angular/core</dep>
+            <file>angular.json</file>
+        </markers>
+    </framework>
+
+    <!-- .NET -->
+    <framework>
+        <name>aspnetcore</name>
+        <platform>dotnet</platform>
+        <rule_file>aspnetcore.xml</rule_file>
+        <markers>
+            <regex file="*.csproj">Microsoft\.AspNetCore|WebApplication\.CreateBuilder</regex>
+            <regex file="*">UseDeveloperExceptionPage\(\)</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>entityframework</name>
+        <platform>dotnet</platform>
+        <rule_file>entityframework.xml</rule_file>
+        <markers>
+            <regex file="*.csproj">Microsoft\.EntityFrameworkCore</regex>
+            <regex file="*">DbContext</regex>
+        </markers>
+    </framework>
+
+    <!-- Go -->
+    <framework>
+        <name>gin</name>
+        <platform>go</platform>
+        <rule_file>gin.xml</rule_file>
+        <markers>
+            <regex file="go.mod">gin-gonic/gin</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>echo</name>
+        <platform>go</platform>
+        <rule_file>echo.xml</rule_file>
+        <markers>
+            <regex file="go.mod">labstack/echo</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>fiber</name>
+        <platform>go</platform>
+        <rule_file>fiber.xml</rule_file>
+        <markers>
+            <regex file="go.mod">gofiber/fiber</regex>
+        </markers>
+    </framework>
+
+    <!-- Ruby -->
+    <framework>
+        <name>rails</name>
+        <platform>ruby</platform>
+        <rule_file>rails.xml</rule_file>
+        <markers>
+            <regex file="gemfile">\brails\b</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>sinatra</name>
+        <platform>ruby</platform>
+        <rule_file>sinatra.xml</rule_file>
+        <markers>
+            <regex file="gemfile">\bsinatra\b</regex>
+        </markers>
+    </framework>
+
+    <!-- Rust -->
+    <framework>
+        <name>actix</name>
+        <platform>rust</platform>
+        <rule_file>actix.xml</rule_file>
+        <markers>
+            <regex file="cargo.toml">\bactix\b</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>rocket</name>
+        <platform>rust</platform>
+        <rule_file>rocket.xml</rule_file>
+        <markers>
+            <regex file="cargo.toml">\brocket\b</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>axum</name>
+        <platform>rust</platform>
+        <rule_file>axum.xml</rule_file>
+        <markers>
+            <regex file="cargo.toml">\baxum\b</regex>
+        </markers>
+    </framework>
+
+    <!-- Kotlin -->
+    <framework>
+        <name>ktor</name>
+        <platform>kotlin</platform>
+        <rule_file>ktor.xml</rule_file>
+        <markers>
+            <regex file="build.gradle">io\.ktor</regex>
+            <regex file="build.gradle.kts">io\.ktor</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>springkotlin</name>
+        <platform>kotlin</platform>
+        <rule_file>springkotlin.xml</rule_file>
+        <markers>
+            <regex file="build.gradle">org\.springframework</regex>
+            <regex file="build.gradle.kts">org\.springframework</regex>
+        </markers>
+    </framework>
+
+    <!-- C -->
+    <framework>
+        <name>freertos</name>
+        <platform>c</platform>
+        <rule_file>freertos.xml</rule_file>
+        <markers>
+            <regex file="*">\bFreeRTOS\b</regex>
+        </markers>
+    </framework>
+
+    <!-- C++ -->
+    <framework>
+        <name>qt</name>
+        <platform>cpp</platform>
+        <rule_file>qt.xml</rule_file>
+        <markers>
+            <regex file="cmakelists.txt">find_package\(Qt|Qt6|Qt5|qt_add_executable</regex>
+            <regex file="*">\bQ_OBJECT\b</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>boost</name>
+        <platform>cpp</platform>
+        <rule_file>boost.xml</rule_file>
+        <markers>
+            <regex file="cmakelists.txt">\bboost\b</regex>
+            <regex file="*">#include\s+[&lt;\&quot;]boost/</regex>
+        </markers>
+    </framework>
+
+    <!-- Mobile Frameworks (Cross-Platform) -->
+    <framework>
+        <name>reactnative</name>
+        <platform>reactnative</platform>
+        <rule_file>reactnative.xml</rule_file>
+        <scan_ftypes>*.js, *.jsx, *.ts, *.tsx, app.json, package.json, metro.config.js, babel.config.js</scan_ftypes>
+        <markers>
+            <dep file="package.json">react-native</dep>
+            <dep file="package.json">expo</dep>
+            <file>app.json</file>
+        </markers>
+    </framework>
+    <framework>
+        <name>reactnative-android</name>
+        <platform>android</platform>
+        <rule_file>jetpack.xml</rule_file>
+        <scan_ftypes>AndroidManifest.xml, android/app/src/main/AndroidManifest.xml, build.gradle, build.gradle.kts, network_security_config.xml, *.kt, *.java, *.xml</scan_ftypes>
+        <markers>
+            <dep file="package.json">react-native</dep>
+            <dep file="package.json">expo</dep>
+            <file>app.json</file>
+        </markers>
+    </framework>
+    <framework>
+        <name>reactnative-ios</name>
+        <platform>ios</platform>
+        <rule_file>uikit.xml</rule_file>
+        <scan_ftypes>Info.plist, *.entitlements, Podfile, project.pbxproj, *.swift, *.m, *.mm, *.plist</scan_ftypes>
+        <markers>
+            <dep file="package.json">react-native</dep>
+            <dep file="package.json">expo</dep>
+            <file>app.json</file>
+        </markers>
+    </framework>
+
+    <framework>
+        <name>flutter</name>
+        <platform>flutter</platform>
+        <rule_file>flutter.xml</rule_file>
+        <scan_ftypes>*.dart, pubspec.yaml, analysis_options.yaml</scan_ftypes>
+        <markers>
+            <file>pubspec.yaml</file>
+            <regex file="pubspec.yaml">(?m)^\s*flutter\s*:</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>flutter-android</name>
+        <platform>android</platform>
+        <rule_file>jetpack.xml</rule_file>
+        <scan_ftypes>AndroidManifest.xml, build.gradle, build.gradle.kts, network_security_config.xml, *.kt, *.java, *.xml, pubspec.yaml</scan_ftypes>
+        <markers>
+            <file>pubspec.yaml</file>
+            <regex file="pubspec.yaml">(?m)^\s*flutter\s*:</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>flutter-ios</name>
+        <platform>ios</platform>
+        <rule_file>swiftui.xml</rule_file>
+        <scan_ftypes>Info.plist, *.entitlements, Podfile, project.pbxproj, *.swift, *.m, *.mm, *.plist, pubspec.yaml</scan_ftypes>
+        <markers>
+            <file>pubspec.yaml</file>
+            <regex file="pubspec.yaml">(?m)^\s*flutter\s*:</regex>
+        </markers>
+    </framework>
+
+    <framework>
+        <name>ionic</name>
+        <platform>ionic</platform>
+        <rule_file>ionic.xml</rule_file>
+        <scan_ftypes>*.ts, *.js, *.html, package.json, ionic.config.json, capacitor.config.json, capacitor.config.ts</scan_ftypes>
+        <markers>
+            <dep file="package.json">@ionic/core</dep>
+            <dep file="package.json">@capacitor/core</dep>
+            <file>ionic.config.json</file>
+            <file>capacitor.config.json</file>
+            <file>capacitor.config.ts</file>
+        </markers>
+    </framework>
+    <framework>
+        <name>ionic-android</name>
+        <platform>android</platform>
+        <rule_file>jetpack.xml</rule_file>
+        <scan_ftypes>AndroidManifest.xml, build.gradle, build.gradle.kts, network_security_config.xml, capacitor.config.json, capacitor.config.ts, ionic.config.json, *.kt, *.java, *.xml</scan_ftypes>
+        <markers>
+            <dep file="package.json">@ionic/core</dep>
+            <dep file="package.json">@capacitor/core</dep>
+            <file>ionic.config.json</file>
+            <file>capacitor.config.json</file>
+            <file>capacitor.config.ts</file>
+        </markers>
+    </framework>
+    <framework>
+        <name>ionic-ios</name>
+        <platform>ios</platform>
+        <rule_file>uikit.xml</rule_file>
+        <scan_ftypes>Info.plist, *.entitlements, Podfile, project.pbxproj, capacitor.config.json, capacitor.config.ts, ionic.config.json, *.swift, *.m, *.mm, *.plist</scan_ftypes>
+        <markers>
+            <dep file="package.json">@ionic/core</dep>
+            <dep file="package.json">@capacitor/core</dep>
+            <file>ionic.config.json</file>
+            <file>capacitor.config.json</file>
+            <file>capacitor.config.ts</file>
+        </markers>
+    </framework>
+
+    <framework>
+        <name>nativescript</name>
+        <platform>nativescript</platform>
+        <rule_file>nativescript.xml</rule_file>
+        <scan_ftypes>*.js, *.ts, package.json, nsconfig.json, webpack.config.js, app.gradle</scan_ftypes>
+        <markers>
+            <dep file="package.json">@nativescript/core</dep>
+            <dep file="package.json">tns-core-modules</dep>
+        </markers>
+    </framework>
+    <framework>
+        <name>nativescript-android</name>
+        <platform>android</platform>
+        <rule_file>jetpack.xml</rule_file>
+        <scan_ftypes>AndroidManifest.xml, app.gradle, build.gradle, build.gradle.kts, *.kt, *.java, *.xml</scan_ftypes>
+        <markers>
+            <dep file="package.json">@nativescript/core</dep>
+            <dep file="package.json">tns-core-modules</dep>
+        </markers>
+    </framework>
+    <framework>
+        <name>nativescript-ios</name>
+        <platform>ios</platform>
+        <rule_file>uikit.xml</rule_file>
+        <scan_ftypes>Info.plist, Podfile, project.pbxproj, *.swift, *.m, *.mm, *.plist</scan_ftypes>
+        <markers>
+            <dep file="package.json">@nativescript/core</dep>
+            <dep file="package.json">tns-core-modules</dep>
+        </markers>
+    </framework>
+
+    <framework>
+        <name>cordova</name>
+        <platform>cordova</platform>
+        <rule_file>cordova.xml</rule_file>
+        <scan_ftypes>config.xml, package.json, *.js, *.ts, *.html, cordova-plugin-*.xml</scan_ftypes>
+        <markers>
+            <file>config.xml</file>
+            <dep file="package.json">cordova</dep>
+            <regex file="config.xml">cordova|phonegap</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>cordova-android</name>
+        <platform>android</platform>
+        <rule_file>jetpack.xml</rule_file>
+        <scan_ftypes>AndroidManifest.xml, config.xml, build.gradle, build.gradle.kts, *.xml, *.kt, *.java</scan_ftypes>
+        <markers>
+            <file>config.xml</file>
+            <dep file="package.json">cordova</dep>
+            <regex file="config.xml">cordova|phonegap</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>cordova-ios</name>
+        <platform>ios</platform>
+        <rule_file>uikit.xml</rule_file>
+        <scan_ftypes>Info.plist, config.xml, Podfile, project.pbxproj, *.plist, *.swift, *.m, *.mm</scan_ftypes>
+        <markers>
+            <file>config.xml</file>
+            <dep file="package.json">cordova</dep>
+            <regex file="config.xml">cordova|phonegap</regex>
+        </markers>
+    </framework>
+
+    <framework>
+        <name>xamarin</name>
+        <platform>xamarin</platform>
+        <rule_file>xamarin.xml</rule_file>
+        <scan_ftypes>*.cs, *.csproj, *.sln, *.config</scan_ftypes>
+        <markers>
+            <regex file="*.csproj">Xamarin|UseMaui|Maui</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>xamarin-android</name>
+        <platform>android</platform>
+        <rule_file>jetpack.xml</rule_file>
+        <scan_ftypes>*.cs, *.csproj, AndroidManifest.xml, *.xml, *.kt, *.java</scan_ftypes>
+        <markers>
+            <regex file="*.csproj">Xamarin|UseMaui|Maui|android</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>xamarin-ios</name>
+        <platform>ios</platform>
+        <rule_file>uikit.xml</rule_file>
+        <scan_ftypes>*.cs, *.csproj, Info.plist, Entitlements.plist, *.plist, *.swift, *.m, *.mm</scan_ftypes>
+        <markers>
+            <regex file="*.csproj">Xamarin|UseMaui|Maui|ios</regex>
+        </markers>
+    </framework>
+
+    <!-- Android -->
+    <framework>
+        <name>jetpack</name>
+        <platform>android</platform>
+        <rule_file>jetpack.xml</rule_file>
+        <scan_ftypes>AndroidManifest.xml, *.kt, *.java, *.xml, build.gradle, build.gradle.kts, network_security_config.xml</scan_ftypes>
+        <markers>
+            <regex file="*">androidx\.|compose\.|RoomDatabase</regex>
+        </markers>
+    </framework>
+
+    <!-- iOS -->
+    <framework>
+        <name>swiftui</name>
+        <platform>ios</platform>
+        <rule_file>swiftui.xml</rule_file>
+        <scan_ftypes>*.swift, Info.plist, *.plist, *.entitlements</scan_ftypes>
+        <markers>
+            <regex file="*">import\s+SwiftUI|@main\s+struct</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>uikit</name>
+        <platform>ios</platform>
+        <rule_file>uikit.xml</rule_file>
+        <scan_ftypes>*.swift, *.m, *.mm, Info.plist, *.plist, *.entitlements</scan_ftypes>
+        <markers>
+            <regex file="*">import\s+UIKit|UIViewController</regex>
+        </markers>
+    </framework>
+</root>
