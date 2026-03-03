@@ -8,9 +8,8 @@
             <rule_desc>Detects cleartext endpoint references in hybrid mobile application code/configuration.</rule_desc>
             <vuln_desc>Using HTTP can expose traffic to interception and tampering.</vuln_desc>
             <developer>Use HTTPS for all production APIs and enforce certificate validation.</developer>
-            <reviewer>Review endpoint configurations and block cleartext transport in production.</reviewer>
+            <reviewer>Review endpoint configurations and block cleartext transport in production. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>Insecure Browser Plugin Usage</name>
             <regex><![CDATA[\b(?:InAppBrowser|cordova\.InAppBrowser|Browser\.open)\s*\(]]></regex>
@@ -18,9 +17,8 @@
             <rule_desc>Detects embedded browser opening flows that need URL allowlist validation.</rule_desc>
             <vuln_desc>Opening attacker-controlled URLs can lead to phishing and token leakage.</vuln_desc>
             <developer>Allowlist destinations and validate any dynamic URL input.</developer>
-            <reviewer>Confirm URL validation and navigation restrictions are enforced.</reviewer>
+            <reviewer>Confirm URL validation and navigation restrictions are enforced. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>Sensitive Data in Local Storage</name>
             <regex><![CDATA[\b(?:localStorage\.setItem|sessionStorage\.setItem|Storage\.set)\s*\(]]></regex>
@@ -28,10 +26,9 @@
             <rule_desc>Detects local storage write paths that may include sensitive data.</rule_desc>
             <vuln_desc>Persisting secrets in web storage can expose tokens/credentials on device compromise.</vuln_desc>
             <developer>Store secrets in secure native storage plugins, not plain web storage.</developer>
-            <reviewer>Review storage key/value usage and verify sensitive data handling.</reviewer>
+            <reviewer>Review storage key/value usage and verify sensitive data handling. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Platform-Specific Issues - Android">
         <rule>
             <name>Android Cleartext Traffic Allowed</name>
@@ -40,10 +37,9 @@
             <rule_desc>Detects Android cleartext traffic configuration in hybrid builds.</rule_desc>
             <vuln_desc>Cleartext transport weakens confidentiality and integrity guarantees.</vuln_desc>
             <developer>Disable cleartext traffic and use secure network security config exceptions only when needed.</developer>
-            <reviewer>Check Android network policy for strict transport protection.</reviewer>
+            <reviewer>Check Android network policy for strict transport protection. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Platform-Specific Issues - iOS">
         <rule>
             <name>iOS ATS Disabled</name>
@@ -52,7 +48,7 @@
             <rule_desc>Detects ATS disablement in hybrid iOS builds.</rule_desc>
             <vuln_desc>Disabling ATS can permit insecure transport and increase MITM risk.</vuln_desc>
             <developer>Keep ATS enabled with narrow exceptions for approved domains only.</developer>
-            <reviewer>Review ATS keys in Info.plist and verify minimal exception scope.</reviewer>
+            <reviewer>Review ATS keys in Info. plist and verify minimal exception scope. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

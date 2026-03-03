@@ -15,6 +15,28 @@ from utils.log_utils import get_logger
 
 logger = get_logger(__name__)
 
+_TAINT_SIGNAL_PATTERN = re.compile(
+    r"(\$_(get|post|request|cookie|server)|request\.getparameter|getparameter\(|requestparameters|"
+    r"document\.cookie|location\.|innerhtml|document\.write|req\.(query|body|params)|"
+    r"intent\.get\w*extra|sharedpreferences|gettext\(\)|querystring|argv|args\[)",
+    re.IGNORECASE,
+)
+
+_SINK_SIGNAL_PATTERN = re.compile(
+    r"(mysqli?_query|preparestatement|execute(query|update)?|runtime\s*\.\s*getruntime\s*\(\)\s*\.\s*exec|"
+    r"processbuilder|eval\s*\(|exec\s*\(|shell_exec|popen|system\s*\(|document\.write|"
+    r"innerhtml|outerhtml|loadurl|contentresolver\.query|unserialize\s*\()",
+    re.IGNORECASE,
+)
+
+_DYNAMIC_CONSTRUCTION_PATTERN = re.compile(
+    r"(\.\s*\$|\+\s*\$|\$\{|concat\s*\(|string\.format|append\s*\(|\$query\b|\$sql\b|"
+    r"template\s*literal|f\"|f')",
+    re.IGNORECASE,
+)
+
+_VARIABLE_ARG_CALL_PATTERN = re.compile(r"\w+\s*\([^)]*\$[a-z_]\w*[^)]*\)", re.IGNORECASE)
+
 
 def _derive_issue_scope(category_name, platform_name):
     """
@@ -37,6 +59,96 @@ def _derive_issue_scope(category_name, platform_name):
         return "framework_specific"
 
     return "platform_specific"
+
+
+def _clamp_score(score, low=0, high=100):
+    return max(low, min(high, int(round(score))))
+
+
+def _confidence_level(score):
+    if score >= 80:
+        return "high"
+    if score >= 60:
+        return "medium"
+    return "low"
+
+
+def _compute_source_confidence_score(evidence, has_regex=False, has_rdl=False, has_descriptions=False):
+    """
+    Heuristic confidence score for source-code matches.
+    """
+    evidence = evidence or []
+    evidence_count = len(evidence)
+    unique_files = len({ev.get("file", "") for ev in evidence if isinstance(ev, dict)})
+
+    # Confidence should represent precision of the match, not only the number of hits.
+    score = 28
+    score += min(10, evidence_count * 2)
+    score += min(6, unique_files * 2)
+    if has_regex:
+        score += 8
+    if has_rdl:
+        score += 6
+    if has_descriptions:
+        score += 2
+
+    placeholder_hits = 0
+    taint_lines = 0
+    sink_lines = 0
+    direct_taint_to_sink_lines = 0
+    dynamic_query_lines = 0
+    sink_only_lines = 0
+
+    for ev in evidence:
+        if not isinstance(ev, dict):
+            continue
+        code = str(ev.get("code", "")).strip().lower()
+        if code in {"[rdl condition matched]", "[rdl matched]"}:
+            placeholder_hits += 1
+            continue
+
+        has_taint_signal = bool(_TAINT_SIGNAL_PATTERN.search(code))
+        has_sink_signal = bool(_SINK_SIGNAL_PATTERN.search(code))
+        has_dynamic_signal = bool(_DYNAMIC_CONSTRUCTION_PATTERN.search(code))
+
+        if has_taint_signal:
+            taint_lines += 1
+        if has_sink_signal:
+            sink_lines += 1
+        if has_sink_signal and has_taint_signal:
+            direct_taint_to_sink_lines += 1
+        if has_sink_signal and has_dynamic_signal:
+            dynamic_query_lines += 1
+        if has_sink_signal and not has_taint_signal and _VARIABLE_ARG_CALL_PATTERN.search(code):
+            sink_only_lines += 1
+
+    score += min(28, direct_taint_to_sink_lines * 12)
+    score += min(16, taint_lines * 4)
+    score += min(12, dynamic_query_lines * 4)
+    score -= min(18, placeholder_hits * 6)
+    score -= min(18, sink_only_lines * 4)
+
+    # Do not mark as high confidence without direct taint-to-sink proof.
+    if direct_taint_to_sink_lines == 0:
+        score -= 10
+        score = min(score, 74)
+        if evidence_count >= 12:
+            score -= 6
+
+    # Penalize noisy broad matches where most evidence is sink-only wrappers.
+    if sink_lines > 0 and sink_only_lines >= sink_lines:
+        score -= 8
+
+    return _clamp_score(score, low=10, high=96)
+
+
+def _compute_paths_confidence_score(path_count):
+    """
+    Heuristic confidence score for filepath-based rules.
+    """
+    count = path_count if isinstance(path_count, int) and path_count > 0 else 0
+    score = 50 + min(36, count * 6)
+    return _clamp_score(score, low=35, high=96)
 
 
 def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=None, progress_callback=None):
@@ -237,7 +349,7 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                                     f"\n\t Rule Description  : {rule_desc}"
                                     f"\n\t Issue Description : {vuln_desc}"
                                     f"\n\t Developer Note    : {dev_note}"
-                                    f"\n\t Reviewer Note     : {rev_note} \n"
+                                    f"\n\t Reviewer Note     : {rev_note}\n"
                                 )
 
                             findings_json.append({
@@ -250,6 +362,8 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                                 "issue_desc": vuln_desc,
                                 "developer_note": dev_note,
                                 "reviewer_note": rev_note,
+                                "confidence_score": 0,
+                                "confidence_level": "low",
                                 "evidence": []
                             })
                             finding_index = len(findings_json) - 1
@@ -264,6 +378,14 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                             "line": linecount,
                             "code": short_line.strip()
                         })
+                        score = _compute_source_confidence_score(
+                            findings_json[finding_index].get("evidence", []),
+                            has_regex=bool(pattern_text),
+                            has_rdl=bool(rdl_text),
+                            has_descriptions=bool(rule_desc or vuln_desc),
+                        )
+                        findings_json[finding_index]["confidence_score"] = score
+                        findings_json[finding_index]["confidence_level"] = _confidence_level(score)
 
                     if callable(progress_callback):
                         progress_callback({
@@ -366,7 +488,9 @@ def paths_parser(rule_path, targetfile, outputfile=None, rule_no=None, findings_
 
                     findings_json.append({
                         "rule_title": pattern_name,
-                        "filepath": [filepath]
+                        "filepath": [filepath],
+                        "confidence_score": _compute_paths_confidence_score(1),
+                        "confidence_level": _confidence_level(_compute_paths_confidence_score(1)),
                     })
 
                     sys.stdout.write("\033[F") #back to previous line
@@ -377,6 +501,10 @@ def paths_parser(rule_path, targetfile, outputfile=None, rule_no=None, findings_
                     if f_scanout:
                         f_scanout.write(("\tFile Path: " + filepath) + "\n")
                     findings_json[-1]["filepath"].append(filepath)
+                    path_count = len(findings_json[-1]["filepath"])
+                    path_score = _compute_paths_confidence_score(path_count)
+                    findings_json[-1]["confidence_score"] = path_score
+                    findings_json[-1]["confidence_level"] = _confidence_level(path_score)
                 
             else:
                 unmatched_rules.append(pattern_name)  # Add unmatched items to the list

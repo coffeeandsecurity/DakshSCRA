@@ -7,7 +7,7 @@
             <rule_desc>Detects React Native debug/development mode usage.</rule_desc>
             <vuln_desc>Debug mode can expose diagnostics and weaken production posture.</vuln_desc>
             <developer>Ensure production builds disable debug/developer features.</developer>
-            <reviewer>Review build variants and runtime debug toggles.</reviewer>
+            <reviewer>Review build variants and runtime debug toggles. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>React Native Insecure HTTP Usage</name>
@@ -16,7 +16,7 @@
             <rule_desc>Detects cleartext network endpoint usage.</rule_desc>
             <vuln_desc>Cleartext transport can expose sensitive app traffic.</vuln_desc>
             <developer>Use HTTPS endpoints and strict TLS validation.</developer>
-            <reviewer>Audit all API base URLs and network clients.</reviewer>
+            <reviewer>Audit all API base URLs and network clients. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>React Native AsyncStorage Secret Marker</name>
@@ -25,7 +25,7 @@
             <rule_desc>Detects likely sensitive values being persisted via AsyncStorage.</rule_desc>
             <vuln_desc>AsyncStorage is not suitable for secrets without additional protection.</vuln_desc>
             <developer>Use secure storage/keychain abstractions for secrets.</developer>
-            <reviewer>Review storage keys and classify sensitive data paths.</reviewer>
+            <reviewer>Review storage keys and classify sensitive data paths. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>React Native WebView Origin Wildcard</name>
@@ -34,7 +34,7 @@
             <rule_desc>Detects wildcard origin allowlist in React Native WebView.</rule_desc>
             <vuln_desc>Wildcard origins can allow untrusted content loading.</vuln_desc>
             <developer>Restrict origin whitelist to trusted domains.</developer>
-            <reviewer>Validate WebView origin restrictions and navigation policies.</reviewer>
+            <reviewer>Validate WebView origin restrictions and navigation policies. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>React Native WebView JavaScript Bridge</name>
@@ -43,7 +43,7 @@
             <rule_desc>Detects JS bridge/script injection capabilities in React Native WebView.</rule_desc>
             <vuln_desc>Unsafe bridge/script usage can increase injection and data exfiltration risk.</vuln_desc>
             <developer>Minimize bridge surface and sanitize message handling.</developer>
-            <reviewer>Audit WebView bridge handlers and untrusted content paths.</reviewer>
+            <reviewer>Audit WebView bridge handlers and untrusted content paths. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>React Native Hardcoded Secret Marker</name>
@@ -52,7 +52,7 @@
             <rule_desc>Detects likely hardcoded secret values in React Native code.</rule_desc>
             <vuln_desc>Embedded secrets can be extracted from source or bundles.</vuln_desc>
             <developer>Use backend-issued short-lived tokens and secure storage.</developer>
-            <reviewer>Verify no long-lived production secrets are bundled.</reviewer>
+            <reviewer>Verify no long-lived production secrets are bundled. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

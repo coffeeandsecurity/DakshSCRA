@@ -139,8 +139,7 @@
         <project_config_ftypes>*.config, web.config, app.config, machine.config, php.ini, .htaccess, composer.json, composer.lock, pom.xml, settings.xml, application.properties, application.yml, package.json, package-lock.json, webpack.config.js, tsconfig.json, build.gradle, settings.gradle, gradle.properties, requirements.txt, setup.py, Pipfile, Pipfile.lock, manage.py, settings.py, wsgi.py, asgi.py, pyproject.toml, go.mod, go.sum, Makefile, configure.ac, config.h, CMakeLists.txt, *.vcxproj, *.props, AndroidManifest.xml, proguard-rules.pro, Info.plist, Podfile, project.pbxproj, pubspec.yaml, Cargo.toml, Gemfile</project_config_ftypes>
         <common_ftypes>*.conf, *.properties, *.env, *.resx, *.settings, *.json, *.lock, *.yml, *.yaml, *.xml, *.log, *.ini, *.txt, .env, *.cfg, *.bash, *.sh, *.ps1, *.bat, *.cmd, *.mod, *.sum</common_ftypes>
     </rule>
-
-<!-- 
+    <!--
     # Enable this rule when you want to create a custom rules file and also scan for custom file types list
     <rule>
         <platform>custom</platform>
@@ -149,28 +148,24 @@
         <project_config_ftypes>*.config, web.config, app.config, machine.config, php.ini, .htaccess, composer.json, composer.lock, pom.xml, settings.xml, application.properties, application.yml, package.json, package-lock.json, webpack.config.js, tsconfig.json, build.gradle, settings.gradle, gradle.properties, requirements.txt, setup.py, Pipfile, Pipfile.lock, manage.py, settings.py, wsgi.py, asgi.py, pyproject.toml, go.mod, go.sum, Makefile, configure.ac, config.h, CMakeLists.txt, *.vcxproj, *.props, AndroidManifest.xml, proguard-rules.pro</project_config_ftypes>
         <common_ftypes>*.conf, *.properties, *.env, *.resx, *.settings, *.json, *.lock, *.yml, *.yaml, *.xml, *.log, *.ini, *.txt, .env, *.cfg, *.bash, *.sh, *.ps1, *.bat, *.cmd, *.mod, *.sum</common_ftypes>
     </rule>
--->
-
+    -->
 </root>
-
-
 <!-- TO BE IMPLEMENTED LATER
-
-    <rule>
-        <platform>database</platform>
-        <path>/database/database.xml</path>
-        <platform_ftypes>*.sql</platform_ftypes>
-        <project_config_ftypes>database.yml, dbconfig.json</project_config_ftypes>
-        <common_ftypes>*.db</common_ftypes>
-        <dbtype>
-            <platform>storedprocedure</platform>
-            <path>/database/sql/sql_sp.xml</path>
-        </dbtype>
-        <dbtype>
-            <platform>postgress</platform>
-            <path>/database/postgress.xml</path>
-            <platform_ftypes>*.psql, *.dbf, *.sqr</platform_ftypes>
-            <common_ftypes>*.sql, *.gdb, *.rbf, *.db, *.spf, *.lis, *.mkd, *.sqs</common_ftypes>
-        </dbtype>
-    </rule>
+<rule>
+    <platform>database</platform>
+    <path>/database/database.xml</path>
+    <platform_ftypes>*.sql</platform_ftypes>
+    <project_config_ftypes>database.yml, dbconfig.json</project_config_ftypes>
+    <common_ftypes>*.db</common_ftypes>
+    <dbtype>
+        <platform>storedprocedure</platform>
+        <path>/database/sql/sql_sp.xml</path>
+    </dbtype>
+    <dbtype>
+        <platform>postgress</platform>
+        <path>/database/postgress.xml</path>
+        <platform_ftypes>*.psql, *.dbf, *.sqr</platform_ftypes>
+        <common_ftypes>*.sql, *.gdb, *.rbf, *.db, *.spf, *.lis, *.mkd, *.sqs</common_ftypes>
+    </dbtype>
+</rule>
 -->

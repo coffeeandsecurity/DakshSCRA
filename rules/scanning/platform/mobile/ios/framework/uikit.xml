@@ -7,7 +7,7 @@
             <rule_desc>Detects ATS global relaxation settings.</rule_desc>
             <vuln_desc>Relaxed ATS permits insecure HTTP traffic and weakens transport security.</vuln_desc>
             <developer>Keep ATS strict and scope exceptions minimally.</developer>
-            <reviewer>Review Info.plist transport security keys and exception domains.</reviewer>
+            <reviewer>Review Info. plist transport security keys and exception domains. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>iOS Insecure HTTP Exception Enabled</name>
@@ -16,7 +16,7 @@
             <rule_desc>Detects ATS domain exception allowing insecure HTTP loads.</rule_desc>
             <vuln_desc>Insecure HTTP exceptions may expose sensitive network traffic.</vuln_desc>
             <developer>Remove insecure exceptions unless explicitly required and constrained.</developer>
-            <reviewer>Review exception domains and validate risk justification.</reviewer>
+            <reviewer>Review exception domains and validate risk justification. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>iOS URLSession Trust Bypass Pattern</name>
@@ -25,7 +25,7 @@
             <rule_desc>Detects URLSession trust challenge handling patterns indicating bypass risk.</rule_desc>
             <vuln_desc>Improper trust handling can disable effective certificate validation.</vuln_desc>
             <developer>Implement strict trust evaluation and pinning where appropriate.</developer>
-            <reviewer>Review challenge handlers for unconditional trust decisions.</reviewer>
+            <reviewer>Review challenge handlers for unconditional trust decisions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>iOS WKWebView JavaScript Execution Sink</name>
@@ -34,7 +34,7 @@
             <rule_desc>Detects dynamic JavaScript execution and WebView usage requiring trust review.</rule_desc>
             <vuln_desc>Untrusted script execution can enable XSS/data exposure in app context.</vuln_desc>
             <developer>Restrict script injection and content origins in WebView contexts.</developer>
-            <reviewer>Audit WebView content sources and JS bridge interactions.</reviewer>
+            <reviewer>Audit WebView content sources and JS bridge interactions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>iOS Pasteboard Usage</name>
@@ -43,7 +43,7 @@
             <rule_desc>Detects shared pasteboard operations.</rule_desc>
             <vuln_desc>Sensitive data in pasteboard may be accessible outside intended context.</vuln_desc>
             <developer>Avoid placing secrets/PII in shared pasteboard.</developer>
-            <reviewer>Review pasteboard writes for sensitive data exposure.</reviewer>
+            <reviewer>Review pasteboard writes for sensitive data exposure. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>iOS UserDefaults Secret Storage Marker</name>
@@ -52,7 +52,7 @@
             <rule_desc>Detects likely sensitive key material stored in UserDefaults.</rule_desc>
             <vuln_desc>UserDefaults is not appropriate for storing sensitive secrets.</vuln_desc>
             <developer>Use Keychain for sensitive tokens and credentials.</developer>
-            <reviewer>Inspect local storage choices for sensitive fields.</reviewer>
+            <reviewer>Inspect local storage choices for sensitive fields. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>iOS Insecure URL Usage</name>
@@ -61,7 +61,7 @@
             <rule_desc>Detects plain HTTP endpoint usage in iOS code/config.</rule_desc>
             <vuln_desc>Cleartext endpoints may expose session and credential data.</vuln_desc>
             <developer>Use HTTPS endpoints with strong TLS validation.</developer>
-            <reviewer>Audit API endpoint definitions and networking calls.</reviewer>
+            <reviewer>Audit API endpoint definitions and networking calls. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>iOS Hardcoded Secret Marker</name>
@@ -70,7 +70,7 @@
             <rule_desc>Detects likely hardcoded secret values in iOS-related code.</rule_desc>
             <vuln_desc>Embedded secrets can be extracted from source and binaries.</vuln_desc>
             <developer>Use server-side secret handling and secure runtime token exchange.</developer>
-            <reviewer>Validate no production credentials are embedded in app code.</reviewer>
+            <reviewer>Validate no production credentials are embedded in app code. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

@@ -6,10 +6,9 @@
             <rdl><![CDATA[[FLAG:<allow-navigation\s+href="\*"\s*/>|<access\s+origin="\*"\s*/>][IF(MISSING:allowlist|whitelist|trusted)]]]></rdl>
             <rule_desc>Detects wildcard navigation/network whitelist entries in Cordova config.</rule_desc>
             <vuln_desc>Wildcard allowlists can expose the app to untrusted content, data leakage, and code abuse.</vuln_desc>
-            <developer>Use strict origin allowlists and remove wildcard entries from production config.xml.</developer>
-            <reviewer>Verify whitelist rules are limited to approved domains and protocols.</reviewer>
+            <developer>Use strict origin allowlists and remove wildcard entries from production config. xml.</developer>
+            <reviewer>Verify whitelist rules are limited to approved domains and protocols. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>Insecure External URL Handling</name>
             <regex><![CDATA[\b(?:window\.open|cordova\.InAppBrowser\.open)\s*\(]]></regex>
@@ -17,9 +16,8 @@
             <rule_desc>Detects browser launch calls that require URL validation and allowlist checks.</rule_desc>
             <vuln_desc>Unvalidated URL launches can enable phishing and malicious redirection.</vuln_desc>
             <developer>Validate target URLs against approved schemes/domains before opening.</developer>
-            <reviewer>Check URL construction and ensure strict allowlist validation exists.</reviewer>
+            <reviewer>Check URL construction and ensure strict allowlist validation exists. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>Sensitive Data Stored in Web Storage</name>
             <regex><![CDATA[\b(?:localStorage\.setItem|sessionStorage\.setItem)\s*\(]]></regex>
@@ -27,10 +25,9 @@
             <rule_desc>Detects web storage writes that may include sensitive values.</rule_desc>
             <vuln_desc>Web storage is not suitable for high-value secrets and may leak data on compromised devices.</vuln_desc>
             <developer>Use secure native storage plugins for credentials and tokens.</developer>
-            <reviewer>Verify sensitive data classes are excluded from web storage usage.</reviewer>
+            <reviewer>Verify sensitive data classes are excluded from web storage usage. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Platform-Specific Issues - Android">
         <rule>
             <name>Android Cleartext Traffic Allowed</name>
@@ -39,10 +36,9 @@
             <rule_desc>Detects insecure cleartext traffic settings in Android-specific Cordova builds.</rule_desc>
             <vuln_desc>Allowing cleartext transport weakens confidentiality and integrity.</vuln_desc>
             <developer>Disable cleartext traffic and use HTTPS for all endpoints.</developer>
-            <reviewer>Validate Android network policy enforces secure transport.</reviewer>
+            <reviewer>Validate Android network policy enforces secure transport. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Platform-Specific Issues - iOS">
         <rule>
             <name>iOS ATS Disabled</name>
@@ -51,7 +47,7 @@
             <rule_desc>Detects App Transport Security disablement in iOS Cordova builds.</rule_desc>
             <vuln_desc>Disabling ATS increases risk of network interception and tampering.</vuln_desc>
             <developer>Retain ATS defaults and define narrow exceptions only when strictly required.</developer>
-            <reviewer>Check Info.plist transport policy and exception domain scope.</reviewer>
+            <reviewer>Check Info. plist transport policy and exception domain scope. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

@@ -7,9 +7,8 @@
             <rule_desc>Detects usage of SharedPreferences which should not store sensitive secrets.</rule_desc>
             <vuln_desc>Persisting tokens/passwords in SharedPreferences can expose secrets through local extraction or backups.</vuln_desc>
             <developer>Use secure storage plugins backed by Keychain/Keystore for secrets.</developer>
-            <reviewer>Confirm sensitive values are not persisted in SharedPreferences.</reviewer>
+            <reviewer>Confirm sensitive values are not persisted in SharedPreferences. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>WebView Unrestricted JavaScript Mode</name>
             <regex><![CDATA[JavaScriptMode\.unrestricted]]></regex>
@@ -17,9 +16,8 @@
             <rule_desc>Detects unrestricted JavaScript execution in Flutter web views.</rule_desc>
             <vuln_desc>Unrestricted script execution in untrusted content contexts can enable malicious interactions and data leakage.</vuln_desc>
             <developer>Limit WebView capabilities and enforce trusted origin loading.</developer>
-            <reviewer>Review WebView initialization, navigation delegates, and content sources.</reviewer>
+            <reviewer>Review WebView initialization, navigation delegates, and content sources. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>Ignoring TLS Certificate Errors</name>
             <regex><![CDATA[badCertificateCallback\s*=|onBadCertificate\s*=]]></regex>
@@ -27,10 +25,9 @@
             <rule_desc>Detects custom HTTP client callbacks that may bypass certificate validation.</rule_desc>
             <vuln_desc>Accepting invalid certificates allows man-in-the-middle attacks.</vuln_desc>
             <developer>Never bypass certificate validation in production; enforce strict TLS checks.</developer>
-            <reviewer>Ensure certificate error callbacks do not return permissive decisions.</reviewer>
+            <reviewer>Ensure certificate error callbacks do not return permissive decisions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Platform-Specific Issues - Android">
         <rule>
             <name>Android Exported Components in Manifest</name>
@@ -39,10 +36,9 @@
             <rule_desc>Detects exported Android components in Flutter's Android configuration.</rule_desc>
             <vuln_desc>Exported components can expose internal app functionality to external apps.</vuln_desc>
             <developer>Export only required components and protect them with permissions where needed.</developer>
-            <reviewer>Validate exported component necessity and access controls.</reviewer>
+            <reviewer>Validate exported component necessity and access controls. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Platform-Specific Issues - iOS">
         <rule>
             <name>iOS ATS Disabled</name>
@@ -51,7 +47,7 @@
             <rule_desc>Detects relaxed iOS transport security settings in Flutter iOS projects.</rule_desc>
             <vuln_desc>Relaxed transport policies can expose communication to interception.</vuln_desc>
             <developer>Keep ATS enabled and use narrow exceptions only when needed.</developer>
-            <reviewer>Review Info.plist transport exceptions and validate domain restrictions.</reviewer>
+            <reviewer>Review Info. plist transport exceptions and validate domain restrictions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

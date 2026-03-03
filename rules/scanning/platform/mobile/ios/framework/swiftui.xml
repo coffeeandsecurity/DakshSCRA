@@ -7,7 +7,7 @@
             <rule_desc>Detects ATS relaxation indicators relevant to SwiftUI apps.</rule_desc>
             <vuln_desc>ATS relaxation can weaken network transport security guarantees.</vuln_desc>
             <developer>Keep ATS strict and minimize exceptions.</developer>
-            <reviewer>Review transport security keys in Info.plist.</reviewer>
+            <reviewer>Review transport security keys in Info. plist. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>SwiftUI Insecure URL Usage</name>
@@ -16,7 +16,7 @@
             <rule_desc>Detects cleartext endpoint references in SwiftUI projects.</rule_desc>
             <vuln_desc>Cleartext transport can leak sensitive request/response data.</vuln_desc>
             <developer>Use HTTPS only and enforce secure networking defaults.</developer>
-            <reviewer>Audit endpoint strings and networking clients.</reviewer>
+            <reviewer>Audit endpoint strings and networking clients. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>SwiftUI Dynamic Web Content Injection Marker</name>
@@ -25,7 +25,7 @@
             <rule_desc>Detects web content execution points in SwiftUI-integrated views.</rule_desc>
             <vuln_desc>Untrusted web/script content can increase XSS-like attack surface.</vuln_desc>
             <developer>Restrict untrusted content and harden web view interactions.</developer>
-            <reviewer>Review web view wrappers and script execution boundaries.</reviewer>
+            <reviewer>Review web view wrappers and script execution boundaries. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>SwiftUI Insecure Certificate Handling Marker</name>
@@ -34,7 +34,7 @@
             <rule_desc>Detects certificate trust bypass indicators in network challenge handlers.</rule_desc>
             <vuln_desc>Weak trust decisions can enable MITM interception.</vuln_desc>
             <developer>Implement strict trust evaluation and remove bypass logic.</developer>
-            <reviewer>Inspect networking trust challenge handlers.</reviewer>
+            <reviewer>Inspect networking trust challenge handlers. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>SwiftUI Sensitive Data in UserDefaults Marker</name>
@@ -43,7 +43,7 @@
             <rule_desc>Detects potential secret storage in UserDefaults.</rule_desc>
             <vuln_desc>Storing secrets in UserDefaults increases extraction risk.</vuln_desc>
             <developer>Use Keychain for sensitive values.</developer>
-            <reviewer>Review storage APIs for token/credential keys.</reviewer>
+            <reviewer>Review storage APIs for token/credential keys. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>SwiftUI Pasteboard Sensitive Data Marker</name>
@@ -52,7 +52,7 @@
             <rule_desc>Detects pasteboard usage that may expose sensitive data.</rule_desc>
             <vuln_desc>Clipboard data may leak to unintended contexts.</vuln_desc>
             <developer>Avoid clipboard for sensitive data where possible.</developer>
-            <reviewer>Audit clipboard operations and data classification.</reviewer>
+            <reviewer>Audit clipboard operations and data classification. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>SwiftUI Hardcoded Secret Marker</name>
@@ -61,7 +61,7 @@
             <rule_desc>Detects likely hardcoded secret literals.</rule_desc>
             <vuln_desc>Hardcoded secrets can be extracted from app artifacts.</vuln_desc>
             <developer>Externalize secrets and rotate compromised values.</developer>
-            <reviewer>Validate no production secrets are committed.</reviewer>
+            <reviewer>Validate no production secrets are committed. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

@@ -5,8 +5,8 @@
         <rdl><![CDATA[[FLAG:(?i)(Login|Signin|Authentication|Authenticated|Oauth|JWT)][IF(PRESENT:(?i)(/|\\\\).*(auth|login|signin|oauth|jwt) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
         <rule_desc>Detects file paths related to authentication functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of authentication-related code files in the project.</vuln_desc>
-        <developer>Developers should review and document authentication-related code, ensuring they are correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and correctness of authentication-related code.</reviewer>
+        <developer>Review and document authentication-related code, ensuring they are correctly implemented.</developer>
+        <reviewer>Verify the presence and correctness of authentication-related code. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Authorization</name>
@@ -14,8 +14,8 @@
         <rdl><![CDATA[[FLAG:(?i)(authorization|authz|access_control)][IF(PRESENT:(?i)(/|\\\\).*(authz|authorization|access|permission|policy) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
         <rule_desc>Detects file paths related to authorization functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to authorization in the project.</vuln_desc>
-        <developer>Developers should review and document authorization-related code, ensuring they are correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and secure implementation of authorization-related code.</reviewer>
+        <developer>Review and document authorization-related code, ensuring they are correctly implemented.</developer>
+        <reviewer>Verify the presence and secure implementation of authorization-related code. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Session Management</name>
@@ -23,8 +23,8 @@
         <rdl><![CDATA[[FLAG:(?i)(session|cookie|token)][IF(PRESENT:(?i)(/|\\\\).*(session|cookie|token) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/|example|sample|dummy|test|placeholder))]]]></rdl>
         <rule_desc>Detects file paths related to session management functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to session management in the project.</vuln_desc>
-        <developer>Developers should review and document session management-related code, ensuring they are correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and correctness of session management-related code.</reviewer>
+        <developer>Review and document session management-related code, ensuring they are correctly implemented.</developer>
+        <reviewer>Verify the presence and correctness of session management-related code. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Permission Management or Handling</name>
@@ -32,8 +32,8 @@
         <rdl><![CDATA[[FLAG:(?i)Permission][IF(PRESENT:(?i)(/|\\\\).*(permission|policy|acl|rbac))]]]></rdl>
         <rule_desc>Detects file paths related to permission management or handling functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of permission management or handling-related code paths in the project.</vuln_desc>
-        <developer>Developers should review and document permission management or handling-related code paths, ensuring they are correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and correctness of permission management or handling-related code paths.</reviewer>
+        <developer>Review and document permission management or handling-related code paths, ensuring they are correctly implemented.</developer>
+        <reviewer>Verify the presence and correctness of permission management or handling-related code paths. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Multi-Factor Validation</name>
@@ -41,8 +41,8 @@
         <rdl><![CDATA[[FLAG:(?i)(mfa|multi_factor|2fa|otp)][IF(PRESENT:(?i)(/|\\\\).*(mfa|2fa|otp|auth))]]]></rdl>
         <rule_desc>Detects file paths that may indicate the implementation or handling of Multi-Factor Validation.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to Multi-Factor Validation in the project.</vuln_desc>
-        <developer>Developers should thoroughly review and document code paths related to Multi-Factor Validation, ensuring they are correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and secure implementation related to Multi-Factor Validation.</reviewer>
+        <developer>Thoroughly review and document code paths related to Multi-Factor Validation, ensuring they are correctly implemented.</developer>
+        <reviewer>Verify the presence and secure implementation related to Multi-Factor Validation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Admin Section</name>
@@ -50,8 +50,8 @@
         <rdl><![CDATA[[FLAG:(?i)(Admin|Administrator)][IF(PRESENT:(?i)(/|\\\\).*(admin|administrator) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
         <rule_desc>Detects file paths related to admin section functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of admin section-related code paths in the project.</vuln_desc>
-        <developer>Developers should review and document admin section-related code paths, ensuring they are correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and correctness of admin section-related code paths.</reviewer>
+        <developer>Review and document admin section-related code paths, ensuring they are correctly implemented.</developer>
+        <reviewer>Verify the presence and correctness of admin section-related code paths. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>User Section</name>
@@ -59,8 +59,8 @@
         <rdl><![CDATA[[FLAG:(?i)\buser\b][IF(PRESENT:(?i)(/|\\\\).*(user|users|profile|account) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
         <rule_desc>Detects file paths related to user section functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of user section-related code paths in the project.</vuln_desc>
-        <developer>Developers should review and document user section-related code paths, ensuring they are correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and correctness of user section-related code paths.</reviewer>
+        <developer>Review and document user section-related code paths, ensuring they are correctly implemented.</developer>
+        <reviewer>Verify the presence and correctness of user section-related code paths. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Password Related Functionality</name>
@@ -68,8 +68,8 @@
         <rdl><![CDATA[[FLAG:(?i)(Password|password|pwd|passwd|credential|forgotpassword)][IF(PRESENT:(?i)(/|\\\\).*(password|credential|auth|secret) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/|example|sample|dummy|test|placeholder))]]]></rdl>
         <rule_desc>Detects file paths related to password-related functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of password-related code paths in the project.</vuln_desc>
-        <developer>Developers should review and document password-related code paths, ensuring they are correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and correctness of password-related code paths.</reviewer>
+        <developer>Review and document password-related code paths, ensuring they are correctly implemented.</developer>
+        <reviewer>Verify the presence and correctness of password-related code paths. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Sensitive Data Handling</name>
@@ -77,8 +77,8 @@
         <rdl><![CDATA[[FLAG:(?i)(sensitive|secret|private_key)][IF(PRESENT:(?i)(/|\\\\).*(secret|key|vault|credential|token) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/|example|sample|dummy|test|placeholder))]]]></rdl>
         <rule_desc>Detects file paths related to sensitive data handling functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to sensitive data handling in the project.</vuln_desc>
-        <developer>Developers should review and document code paths related to sensitive data handling, ensuring they are correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and correctness of code paths related to sensitive data handling.</reviewer>
+        <developer>Review and document code paths related to sensitive data handling, ensuring they are correctly implemented.</developer>
+        <reviewer>Verify the presence and correctness of code paths related to sensitive data handling. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Security Functionality</name>
@@ -86,8 +86,8 @@
         <rdl><![CDATA[[FLAG:(?i)security][IF(PRESENT:(?i)(/|\\\\).*(security|auth|policy|hardening) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
         <rule_desc>Detects file paths related to security functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of security-related code paths in the project.</vuln_desc>
-        <developer>Developers should review and document security-related code paths, ensuring they are correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and correctness of security-related code paths.</reviewer>
+        <developer>Review and document security-related code paths, ensuring they are correctly implemented.</developer>
+        <reviewer>Verify the presence and correctness of security-related code paths. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Input Validation</name>
@@ -95,8 +95,8 @@
         <rdl><![CDATA[[FLAG:(?i)(validation|sanitize|input)][IF(PRESENT:(?i)(/|\\\\).*(validation|validator|sanitize|input) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
         <rule_desc>Detects file paths related to input validation functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to input validation in the project.</vuln_desc>
-        <developer>Developers should review and document input validation-related code, ensuring they are correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and correctness of input validation-related code.</reviewer>
+        <developer>Review and document input validation-related code, ensuring they are correctly implemented.</developer>
+        <reviewer>Verify the presence and correctness of input validation-related code. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>API</name>
@@ -104,8 +104,8 @@
         <rdl><![CDATA[[FLAG:(?i)\bapi\b][IF(PRESENT:(?i)(/|\\\\).*(api|endpoint|route|controller|handler) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
         <rule_desc>Detects file paths related to API functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of API-related code paths in the project.</vuln_desc>
-        <developer>Developers should review and document API-related code paths, ensuring they are correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and correctness of API-related code paths.</reviewer>
+        <developer>Review and document API-related code paths, ensuring they are correctly implemented.</developer>
+        <reviewer>Verify the presence and correctness of API-related code paths. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Libraries | Extensions | Plugins</name>
@@ -113,8 +113,8 @@
         <rdl><![CDATA[[FLAG:(?i)(Libraries|Extension|Plugin)][IF(PRESENT:(?i)(/|\\\\).*(lib|libs|extension|plugin|addons?))]]]></rdl>
         <rule_desc>Detects file paths related to libraries, extensions, or plugins.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to libraries, extensions, or plugins in the project.</vuln_desc>
-        <developer>Developers should review and document code paths related to libraries, extensions, or plugins, ensuring they are correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and correctness of code paths related to libraries, extensions, or plugins.</reviewer>
+        <developer>Review and document code paths related to libraries, extensions, or plugins, ensuring they are correctly implemented.</developer>
+        <reviewer>Verify the presence and correctness of code paths related to libraries, extensions, or plugins. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Monkey Patched Code Files</name>
@@ -122,8 +122,8 @@
         <rdl><![CDATA[[FLAG:(?i)(?:monkey_patch|patched_code|custom_patch)][IF(MISSING:(?i)(/tests?/|/fixtures?/|/mocks?/))]]]></rdl>
         <rule_desc>Detects the presence of monkey patched code in a project.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of monkey patched code in the project. While monkey patches themselves may not inherently contain security issues, they introduce potential maintenance challenges and risks. Ensure that these patches are well-documented, periodically reviewed for necessity, and that they do not introduce security vulnerabilities or regressions.</vuln_desc>
-        <developer>Developers should carefully review and document any monkey patched code in the project. Ensure that the patches are correctly applied and do not introduce compatibility issues or security vulnerabilities. Consider alternatives to monkey patching when possible to maintain code stability and security.</developer>
-        <reviewer>Reviewers should verify the presence of monkey patched code in the project and assess its impact on code stability and security. Particular attention should be paid to patches affecting security-critical components like authentication, authorization, or database queries.</reviewer>
+        <developer>Carefully review and document any monkey patched code in the project. Ensure that the patches are correctly applied and do not introduce compatibility issues or security vulnerabilities. Consider alternatives to monkey patching when possible to maintain code stability and security.</developer>
+        <reviewer>Verify the presence of monkey patched code in the project and assess its impact on code stability and security. Particular attention should be paid to patches affecting security-critical components like authentication, authorization, or database queries. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>CAPTCHA</name>
@@ -131,8 +131,8 @@
         <rdl><![CDATA[[FLAG:(?i)(CAPTCHA)][IF(PRESENT:(?i)(/|\\\\).*(captcha|recaptcha|anti-bot))]]]></rdl>
         <rule_desc>Detects file paths related to CAPTCHA functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to CAPTCHA functionality in the project.</vuln_desc>
-        <developer>Developers should review and document code paths related to CAPTCHA functionality, ensuring they are correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and correctness of code paths related to CAPTCHA functionality.</reviewer>
+        <developer>Review and document code paths related to CAPTCHA functionality, ensuring they are correctly implemented.</developer>
+        <reviewer>Verify the presence and correctness of code paths related to CAPTCHA functionality. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>File Upload</name>
@@ -140,8 +140,8 @@
         <rdl><![CDATA[[FLAG:(?i)Upload][IF(PRESENT:(?i)(/|\\\\).*(upload|uploader|attachments?|files?) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
         <rule_desc>Detects file paths related to file upload functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to file upload functionality in the project.</vuln_desc>
-        <developer>Developers should review and document code paths related to file upload functionality, ensuring they are correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and correctness of code paths related to file upload functionality.</reviewer>
+        <developer>Review and document code paths related to file upload functionality, ensuring they are correctly implemented.</developer>
+        <reviewer>Verify the presence and correctness of code paths related to file upload functionality. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Payment Functionality</name>
@@ -149,8 +149,8 @@
         <rdl><![CDATA[[FLAG:(?i)(payment|pay)][IF(PRESENT:(?i)(/|\\\\).*(payment|billing|checkout|invoice|transaction) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
         <rule_desc>Detects file paths related to payment functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to payment functionality in the project.</vuln_desc>
-        <developer>Developers should review and document code paths related to payment functionality, ensuring they are correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and correctness of code paths related to payment functionality.</reviewer>
+        <developer>Review and document code paths related to payment functionality, ensuring they are correctly implemented.</developer>
+        <reviewer>Verify the presence and correctness of code paths related to payment functionality. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Purchases | Ordering</name>
@@ -158,8 +158,8 @@
         <rdl><![CDATA[[FLAG:(?i)(purchase|order|cart)][IF(PRESENT:(?i)(/|\\\\).*(purchase|order|cart|checkout) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
         <rule_desc>Detects file paths related to purchasing or ordering functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to purchasing or ordering functionality in the project.</vuln_desc>
-        <developer>Developers should review and document code paths related to purchasing or ordering functionality, ensuring they are correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and correctness of code paths related to purchasing or ordering functionality.</reviewer>
+        <developer>Review and document code paths related to purchasing or ordering functionality, ensuring they are correctly implemented.</developer>
+        <reviewer>Verify the presence and correctness of code paths related to purchasing or ordering functionality. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Models</name>
@@ -167,8 +167,8 @@
         <rdl><![CDATA[[FLAG:(?i)/(Models)/][IF(PRESENT:(?i)(/|\\\\).*(models?|entities?))]]]></rdl>
         <rule_desc>Detects file paths related to models.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to models in the project.</vuln_desc>
-        <developer>Developers should review and document code paths related to models, ensuring they are correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and correctness of code paths related to models.</reviewer>
+        <developer>Review and document code paths related to models, ensuring they are correctly implemented.</developer>
+        <reviewer>Verify the presence and correctness of code paths related to models. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Views</name>
@@ -176,8 +176,8 @@
         <rdl><![CDATA[[FLAG:(?i)/(Views|View)/][IF(PRESENT:(?i)(/|\\\\).*(views?|templates?))]]]></rdl>
         <rule_desc>Detects file paths related to views.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to views in the project.</vuln_desc>
-        <developer>Developers should review and document code paths related to views, ensuring they are correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and correctness of code paths related to views.</reviewer>
+        <developer>Review and document code paths related to views, ensuring they are correctly implemented.</developer>
+        <reviewer>Verify the presence and correctness of code paths related to views. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>ViewModel</name>
@@ -185,8 +185,8 @@
         <rdl><![CDATA[[FLAG:(?i)/(ViewModel)/][IF(PRESENT:(?i)(/|\\\\).*(viewmodel|presenter))]]]></rdl>
         <rule_desc>Detects file paths related to view models.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to view models in the project.</vuln_desc>
-        <developer>Developers should review and document code paths related to view models, ensuring they are correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and correctness of code paths related to view models.</reviewer>
+        <developer>Review and document code paths related to view models, ensuring they are correctly implemented.</developer>
+        <reviewer>Verify the presence and correctness of code paths related to view models. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Controllers</name>
@@ -194,8 +194,8 @@
         <rdl><![CDATA[[FLAG:(?i)/(Controllers|Controller)/][IF(PRESENT:(?i)(/|\\\\).*(controllers?|handlers?|routes?))]]]></rdl>
         <rule_desc>Detects file paths related to controllers.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to controllers in the project.</vuln_desc>
-        <developer>Developers should review and document code paths related to controllers, ensuring they are correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and correctness of code paths related to controllers.</reviewer>
+        <developer>Review and document code paths related to controllers, ensuring they are correctly implemented.</developer>
+        <reviewer>Verify the presence and correctness of code paths related to controllers. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Presenter</name>
@@ -203,18 +203,18 @@
         <rdl><![CDATA[[FLAG:(?i)/(Presenter)/][IF(PRESENT:(?i)(/|\\\\).*(presenter|presentation))]]]></rdl>
         <rule_desc>Detects file paths related to presenters.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to presenters in the project.</vuln_desc>
-        <developer>Developers should review and document code paths related to presenters, ensuring they are correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and correctness of code paths related to presenters.</reviewer>
+        <developer>Review and document code paths related to presenters, ensuring they are correctly implemented.</developer>
+        <reviewer>Verify the presence and correctness of code paths related to presenters. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Logging</name>
         <regex><![CDATA[(?i)(log|logging|logger)]]></regex>
         <rdl><![CDATA[[FLAG:(?i)(log|logging|logger)][IF(PRESENT:(?i)(/|\\\\).*(log|logging|logger|audit) && MISSING:(?i)(blog|blogging|/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
-            <exclude>(?i)(blog|blogging)</exclude>
+        <exclude>(?i)(blog|blogging)</exclude>
         <rule_desc>Detects file paths related to logging functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to logging in the project.</vuln_desc>
-        <developer>Developers should review logging functionality, ensuring it is correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and secure implementation of logging functionality.</reviewer>
+        <developer>Review logging functionality, ensuring it is correctly implemented.</developer>
+        <reviewer>Verify the presence and secure implementation of logging functionality. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Exception Handling</name>
@@ -222,8 +222,8 @@
         <rdl><![CDATA[[FLAG:(?i)(exception|error_handling)][IF(PRESENT:(?i)(/|\\\\).*(exception|errors?|handling|fault))]]]></rdl>
         <rule_desc>Detects file paths related to exception handling functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to exception handling in the project.</vuln_desc>
-        <developer>Developers should review exception handling functionality, ensuring it is correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and secure implementation of exception handling functionality.</reviewer>
+        <developer>Review exception handling functionality, ensuring it is correctly implemented.</developer>
+        <reviewer>Verify the presence and secure implementation of exception handling functionality. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Database Interaction</name>
@@ -231,7 +231,7 @@
         <rdl><![CDATA[[FLAG:(?i)(database|db|sql)][IF(PRESENT:(?i)(/|\\\\).*(db|database|sql|repository|dao|migration) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
         <rule_desc>Detects file paths related to database interaction functionality.</rule_desc>
         <vuln_desc>If this rule matches, it indicates the presence of code paths related to database interaction in the project.</vuln_desc>
-        <developer>Developers should review database interaction functionality, ensuring it is correctly implemented.</developer>
-        <reviewer>Reviewers should verify the presence and secure implementation of database interaction functionality.</reviewer>
+        <developer>Review database interaction functionality, ensuring it is correctly implemented.</developer>
+        <reviewer>Verify the presence and secure implementation of database interaction functionality. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
 </root>

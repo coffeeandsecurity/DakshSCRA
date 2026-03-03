@@ -14,7 +14,7 @@
     </div>
     {% for item in items %}
     <details class="long-block path-rule" {% if loop.index <= 8 %}open{% endif %}>
-        <summary>{{ item.keyword }}</summary>
+        <summary>{{ item.keyword }} <span class="pill">Confidence {{ item.confidence_score }}%{% if item.confidence_label %} ({{ item.confidence_label }}){% endif %}</span></summary>
         <div class="long-body">
             {% if item.paths %}
             <ul class="list">

@@ -7,7 +7,7 @@
             <rule_desc>Detects framework debug/development mode enabled.</rule_desc>
             <vuln_desc>Debug mode can expose internals and increase exploitability in production.</vuln_desc>
             <developer>Disable debug mode in production and enforce environment-specific config.</developer>
-            <reviewer>Verify deployment profiles do not enable debug/reload.</reviewer>
+            <reviewer>Verify deployment profiles do not enable debug/reload. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Fastapi Unsafe Deserialization</name>
@@ -15,8 +15,8 @@
             <rdl><![CDATA[[FLAG:pickle\.loads\(|yaml\.load\(\s*[^,\)]*\)|marshal\.loads\(]]]></rdl>
             <rule_desc>Detects unsafe deserialization primitives in framework request/worker flows.</rule_desc>
             <vuln_desc>Unsafe deserialization of untrusted data can lead to code execution.</vuln_desc>
-            <developer>Use safe loaders (e.g., yaml.safe_load) and trusted serialization boundaries.</developer>
-            <reviewer>Trace untrusted input reaching deserialization functions.</reviewer>
+            <developer>Use safe loaders (e.g., yaml. safe_load) and trusted serialization boundaries.</developer>
+            <reviewer>Trace untrusted input reaching deserialization functions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Fastapi SQL Injection Sink</name>
@@ -25,7 +25,7 @@
             <rule_desc>Detects likely string-built SQL execution in framework data access paths.</rule_desc>
             <vuln_desc>String-formatted SQL may be vulnerable to SQL injection.</vuln_desc>
             <developer>Use query parameter binding and ORM-safe APIs.</developer>
-            <reviewer>Review query construction and verify parameterization.</reviewer>
+            <reviewer>Review query construction and verify parameterization. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Fastapi Permissive CORS</name>
@@ -34,7 +34,7 @@
             <rule_desc>Detects wildcard CORS policy definitions.</rule_desc>
             <vuln_desc>Wildcard CORS allows untrusted browser origins to access APIs.</vuln_desc>
             <developer>Restrict allowed origins explicitly.</developer>
-            <reviewer>Validate CORS settings in all environment profiles.</reviewer>
+            <reviewer>Validate CORS settings in all environment profiles. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Fastapi Hardcoded Secret Material</name>
@@ -43,7 +43,7 @@
             <rule_desc>Detects likely hardcoded secret values.</rule_desc>
             <vuln_desc>Hardcoded secrets may leak and be abused if repository/artifacts are exposed.</vuln_desc>
             <developer>Externalize secrets and rotate exposed values.</developer>
-            <reviewer>Confirm no live credentials are embedded in source.</reviewer>
+            <reviewer>Confirm no live credentials are embedded in source. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

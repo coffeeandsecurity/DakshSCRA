@@ -7,7 +7,7 @@
             <rule_desc>Detects development mode markers in NativeScript projects.</rule_desc>
             <vuln_desc>Debug settings may expose diagnostics and weaken runtime posture.</vuln_desc>
             <developer>Ensure release builds disable debug mode.</developer>
-            <reviewer>Review build/runtime environment toggles.</reviewer>
+            <reviewer>Review build/runtime environment toggles. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>NativeScript Insecure HTTP Usage</name>
@@ -16,7 +16,7 @@
             <rule_desc>Detects cleartext endpoint usage in NativeScript code/config.</rule_desc>
             <vuln_desc>Cleartext traffic can expose sensitive network data.</vuln_desc>
             <developer>Use HTTPS endpoints and secure transport defaults.</developer>
-            <reviewer>Audit endpoint declarations and request helpers.</reviewer>
+            <reviewer>Audit endpoint declarations and request helpers. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>NativeScript WebView Script Execution Marker</name>
@@ -25,7 +25,7 @@
             <rule_desc>Detects WebView and dynamic script execution patterns.</rule_desc>
             <vuln_desc>Untrusted WebView/script execution can increase injection risk.</vuln_desc>
             <developer>Restrict content origins and harden JS bridge interactions.</developer>
-            <reviewer>Review webview bindings and message handlers.</reviewer>
+            <reviewer>Review webview bindings and message handlers. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>NativeScript Local Storage Secret Marker</name>
@@ -34,7 +34,7 @@
             <rule_desc>Detects potentially sensitive values written to local storage APIs.</rule_desc>
             <vuln_desc>Improper local persistence can leak credentials/tokens.</vuln_desc>
             <developer>Use secure storage primitives for secrets.</developer>
-            <reviewer>Check storage keys and data classification.</reviewer>
+            <reviewer>Check storage keys and data classification. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>NativeScript TLS Bypass Marker</name>
@@ -43,7 +43,7 @@
             <rule_desc>Detects certificate/trust bypass indicators in networking code.</rule_desc>
             <vuln_desc>TLS bypass weakens channel security and enables MITM attacks.</vuln_desc>
             <developer>Enforce strict certificate validation.</developer>
-            <reviewer>Audit HTTP client trust configuration.</reviewer>
+            <reviewer>Audit HTTP client trust configuration. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>NativeScript Hardcoded Secret Marker</name>
@@ -52,7 +52,7 @@
             <rule_desc>Detects likely hardcoded secrets in NativeScript projects.</rule_desc>
             <vuln_desc>Hardcoded credentials can be extracted from app artifacts.</vuln_desc>
             <developer>Avoid embedding secrets and rotate compromised values.</developer>
-            <reviewer>Confirm no production secrets exist in source/config.</reviewer>
+            <reviewer>Confirm no production secrets exist in source/config. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

@@ -54,6 +54,106 @@ def _ordered_platform_dict(mapping):
     return {name: mapping[name] for name in _ordered_platform_names(mapping.keys())}
 
 
+def _format_platform_display_name(name):
+    raw = str(name or "").strip()
+    if not raw:
+        return raw
+    key = raw.lower()
+    display_map = {
+        "c": "C",
+        "cpp": "C++",
+        "c++": "C++",
+        "csharp": "C#",
+        "c#": "C#",
+        "dotnet": ".NET",
+        "aspnet": "ASP.NET",
+        "aspnetcore": "ASP.NET Core",
+        "javascript": "JavaScript",
+        "typescript": "TypeScript",
+        "php": "PHP",
+        "java": "Java",
+        "kotlin": "Kotlin",
+        "python": "Python",
+        "ruby": "Ruby",
+        "rust": "Rust",
+        "go": "Go",
+        "golang": "Golang",
+        "sql": "SQL",
+        "ios": "iOS",
+        "android": "Android",
+        "reactnative": "React Native",
+        "nextjs": "Next.js",
+        "nestjs": "NestJS",
+        "vue": "Vue",
+        "common": "COMMON",
+    }
+    if key in display_map:
+        return display_map[key]
+    return raw[0].upper() + raw[1:] if raw else raw
+
+
+def _parse_rule_breakdown(value):
+    items = []
+    if isinstance(value, list):
+        raw_parts = [str(v).strip() for v in value if str(v).strip()]
+    else:
+        raw_text = str(value or "").strip()
+        raw_parts = [p.strip() for p in raw_text.split(",") if p.strip()]
+
+    for part in raw_parts:
+        match = re.match(r"^(.*?)\[(\d+)\]\s*$", part)
+        if match:
+            name = match.group(1).strip()
+            count = int(match.group(2))
+        else:
+            name = part
+            count = None
+        items.append({
+            "name": _format_platform_display_name(name),
+            "count": count,
+            "raw": part,
+        })
+    return items
+
+
+def _normalize_confidence_score(value, default=50):
+    try:
+        score = int(round(float(value)))
+    except (TypeError, ValueError):
+        score = default
+    return max(0, min(100, score))
+
+
+def _confidence_label(score):
+    if score >= 80:
+        return "High"
+    if score >= 60:
+        return "Medium"
+    return "Low"
+
+
+def _fallback_source_confidence(item):
+    evidence = item.get("evidence", []) if isinstance(item, dict) else []
+    if not isinstance(evidence, list):
+        evidence = []
+    evidence_count = len(evidence)
+    unique_files = len({ev.get("file", "") for ev in evidence if isinstance(ev, dict)})
+    # Conservative fallback for legacy findings without explicit confidence fields.
+    # Keep this below "High" because evidence quality signals are unavailable here.
+    score = 35 + min(14, evidence_count * 2) + min(8, unique_files * 2)
+    if evidence_count >= 12:
+        score -= 4
+    return max(20, min(74, int(score)))
+
+
+def _fallback_paths_confidence(item):
+    paths = item.get("filepath", []) if isinstance(item, dict) else []
+    if not isinstance(paths, list):
+        paths = []
+    score = 50 + min(36, len(paths) * 6)
+    return max(35, min(96, int(score)))
+
+
 def gen_pdf_report_modern(html_path, pdf_path):
     try:
         started_at = time.time()
@@ -256,6 +356,8 @@ def _build_pdf_report_context(
     inputs = scan_summary.get("inputs_received", {})
     detection = scan_summary.get("detection_summary", {})
     timeline = scan_summary.get("scanning_timeline", {})
+    platform_rules_breakdown = _parse_rule_breakdown(inputs.get("platform_specific_rules", ""))
+    common_rules_breakdown = _parse_rule_breakdown(inputs.get("common_rules", ""))
 
     aoi_list = _normalize_aoi_data(aoi_raw)
     findings = []
@@ -302,6 +404,10 @@ def _build_pdf_report_context(
                         "code": ev_code,
                     })
 
+        confidence_score = _normalize_confidence_score(
+            item.get("confidence_score"),
+            default=_fallback_source_confidence(item),
+        )
         finding = {
             "platform": platform,
             "rule_title": rule_title,
@@ -316,7 +422,9 @@ def _build_pdf_report_context(
             "files": files[:8],
             "evidence_samples": evidence_samples[:12],
             "evidence_label": _infer_pdf_evidence_label(issue_scope, category, files),
+            "confidence_score": confidence_score,
         }
+        finding["confidence_label"] = _confidence_label(finding["confidence_score"])
         findings.append(finding)
         platform_counter[platform] += 1
         category_counter[category] += 1
@@ -363,6 +471,14 @@ def _build_pdf_report_context(
                     "keyword": str(item.get("rule_title", "")).strip() or "Unnamed rule",
                     "paths": paths,
                     "count": len(paths),
+                    "confidence_score": _normalize_confidence_score(
+                        item.get("confidence_score"),
+                        default=_fallback_paths_confidence(item),
+                    ),
+                    "confidence_label": _confidence_label(_normalize_confidence_score(
+                        item.get("confidence_score"),
+                        default=_fallback_paths_confidence(item),
+                    )),
                 })
     file_index.sort(key=lambda x: (-x["count"], x["rule_title"].lower()))
 
@@ -416,6 +532,8 @@ def _build_pdf_report_context(
         "platform_filter": platform_filter,
         "cards": cards,
         "inputs": inputs,
+        "platform_rules_breakdown": platform_rules_breakdown,
+        "common_rules_breakdown": common_rules_breakdown,
         "detection": detection,
         "timeline": timeline,
         "extension_rows": extension_rows,
@@ -566,6 +684,8 @@ def gen_html_report_modern(scan_summary, snippets, filepaths, filepaths_aoi, rep
     detection = scan_summary.get("detection_summary", {}) if isinstance(scan_summary, dict) else {}
     inputs = scan_summary.get("inputs_received", {}) if isinstance(scan_summary, dict) else {}
     timeline = scan_summary.get("scanning_timeline", {}) if isinstance(scan_summary, dict) else {}
+    platform_rules_breakdown = _parse_rule_breakdown(inputs.get("platform_specific_rules", ""))
+    common_rules_breakdown = _parse_rule_breakdown(inputs.get("common_rules", ""))
 
     total_findings = sum(len(items) for items in snippets.values())
     platform_counts = {
@@ -581,6 +701,8 @@ def gen_html_report_modern(scan_summary, snippets, filepaths, filepaths_aoi, rep
         reportDate=datetime.now().strftime("%b %d, %Y"),
         logoImagePath=f"data:image/jpg;base64,{encoded_logo_image.decode('utf-8')}",
         inputs=inputs,
+        platform_rules_breakdown=platform_rules_breakdown,
+        common_rules_breakdown=common_rules_breakdown,
         detection=detection,
         timeline=timeline,
         snippets=snippets,
@@ -616,6 +738,10 @@ def get_areas_of_interest(input_file):
     findings = raw.values() if isinstance(raw, dict) else raw
     for item in findings:
         platform = item.get("platform", "UNKNOWN")
+        confidence_score = _normalize_confidence_score(
+            item.get("confidence_score"),
+            default=_fallback_source_confidence(item),
+        )
         snippet = {
             "platform": platform,
             "rulecount": item.get("rule_id", ""),
@@ -626,8 +752,11 @@ def get_areas_of_interest(input_file):
             "issue_desc": html.escape(item.get("issue_desc", "")),
             "dev_note": html.escape(item.get("developer_note", "")),
             "rev_note": html.escape(item.get("reviewer_note", "")),
+            "confidence_score": confidence_score,
+            "confidence_label": "",
             "sources": [],
         }
+        snippet["confidence_label"] = _confidence_label(snippet["confidence_score"])
         evidence = item.get("evidence", [])
         file_groups = defaultdict(list)
         for ev in evidence:
@@ -655,7 +784,15 @@ def get_filepaths_of_aoi(input_file):
             for item in data:
                 mapped.append({
                     "keyword": item.get("rule_title", ""),
-                    "paths": item.get("filepath", [])
+                    "paths": item.get("filepath", []),
+                    "confidence_score": _normalize_confidence_score(
+                        item.get("confidence_score"),
+                        default=_fallback_paths_confidence(item),
+                    ),
+                    "confidence_label": _confidence_label(_normalize_confidence_score(
+                        item.get("confidence_score"),
+                        default=_fallback_paths_confidence(item),
+                    )),
                 })
             return mapped
     except (OSError, json.JSONDecodeError, TypeError, ValueError) as exc:

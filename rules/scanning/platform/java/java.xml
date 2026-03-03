@@ -6,8 +6,8 @@
             <rdl><![CDATA[[FLAG:requestParameters][IF(PRESENT:(execute|query|print|write|redirect|Runtime|ProcessBuilder|File|URL|Http) && MISSING:(validate|sanitize|escape|encode|PreparedStatement|allowlist|whitelist))]]]></rdl>
             <rule_desc>Detects the usage of `requestParameters`, which can introduce untrusted inputs into the code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using user input from `requestParameters` without proper validation and sanitization. Improper handling of untrusted inputs can lead to security vulnerabilities, such as injection attacks (e.g., SQL, OS, LDAP), cross-site scripting (XSS), or remote code execution. Attackers can manipulate the `requestParameters` to provide malicious or unexpected values, potentially compromising the integrity and security of the application.</vuln_desc>
-            <developer>Developers should validate and sanitize user input received from `requestParameters` before using it in any sensitive operations. They should implement strong input validation mechanisms, ensuring that only expected and sanitized values are accepted. Additionally, developers should be aware of the potential risks associated with using user-supplied data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
-            <reviewer>Reviewers should ensure that proper input handling is in place for `requestParameters`. They should verify that developers have implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. Reviewers should also assess the sensitivity of the data handled through `requestParameters` and confirm that relevant security measures, such as output encoding and protection against injection attacks, are implemented correctly.</reviewer>
+            <developer>Validate and sanitize user input received from `requestParameters` before using it in any sensitive operations. Implement strong input validation mechanisms, ensuring that only expected and sanitized values are accepted. Additionally, developers should be aware of the potential risks associated with using user-supplied data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
+            <reviewer>Ensure that proper input handling is in place for `requestParameters`. Verify that developers have implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. Also assess the sensitivity of the data handled through `requestParameters` and confirm that relevant security measures, such as output encoding and protection against injection attacks, are implemented correctly. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted Input(s): getParameter</name>
@@ -15,8 +15,8 @@
             <rdl><![CDATA[[FLAG:getParameter\(][IF(PRESENT:(execute|query|print|write|redirect|Runtime|ProcessBuilder|File|URL|Http) && MISSING:(validate|sanitize|escape|encode|PreparedStatement|allowlist|whitelist))]]]></rdl>
             <rule_desc>Detects the usage of the `getParameter` method, which can introduce untrusted inputs into the code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using user input from the `getParameter` method without proper validation and sanitization. Attackers can manipulate the input parameters to provide malicious or unexpected values, potentially leading to security vulnerabilities, such as injection attacks (e.g., SQL, OS, LDAP), cross-site scripting (XSS), or unauthorized access to sensitive information.</vuln_desc>
-            <developer>Developers should carefully validate and sanitize user input received from the `getParameter` method before using it in any sensitive operations. They should implement strong input validation, ensuring that only expected and sanitized values are accepted from input parameters. Additionally, developers should be aware of the risks associated with using user-supplied data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
-            <reviewer>Reviewers should check for appropriate input handling for the `getParameter` method. They should assess if developers have implemented proper input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. Reviewers should also verify the usage of output encoding and protection against injection attacks to ensure the secure handling of user input received through input parameters.</reviewer>
+            <developer>Carefully validate and sanitize user input received from the `getParameter` method before using it in any sensitive operations. Implement strong input validation, ensuring that only expected and sanitized values are accepted from input parameters. Additionally, developers should be aware of the risks associated with using user-supplied data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
+            <reviewer>Check for appropriate input handling for the `getParameter` method. Assess whether developers have implemented proper input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. Also verify the usage of output encoding and protection against injection attacks to ensure the secure handling of user input received through input parameters. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted Input(s) in Application Response</name>
@@ -24,8 +24,8 @@
             <rdl><![CDATA[[FLAG:((\bprint|out\.print(ln)?|response\.write)\(.*|response\.getWriter|out\.write)(\s)*\((\s)*("|')[^("|')]*][IF(PRESENT:(request|getParameter|requestParameters|cookie|header) && MISSING:(escapeHtml|StringEscapeUtils|Encode\.forHtml|htmlspecialchars|sanitize))]]]></rdl>
             <rule_desc>Detects potential untrusted inputs in Java code that are included in application responses. The identified functions can be used to print content either to a web page or to the console, depending on the code implementation and context.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the presence of potentially untrusted data being included in application responses. Untrusted data, if not properly validated or sanitized, can lead to security vulnerabilities, including cross-site scripting (XSS). It is important to ensure that all inputs are validated and properly escaped before being included in the application response to prevent potential security risks.</vuln_desc>
-            <developer>Developers should implement proper input validation and sanitization techniques to ensure that untrusted data is not included in application responses. They should also use appropriate output encoding mechanisms, such as HTML escaping, to prevent potential XSS attacks. Thoroughly validate and sanitize any user-generated or external inputs before incorporating them into the application response.</developer>
-            <reviewer>Reviewers should assess whether the Java code implements adequate input validation, sanitization, and output encoding techniques to prevent security vulnerabilities. They should verify that untrusted data is properly handled and escaped before being included in application responses. Additionally, reviewers should evaluate the effectiveness of security controls in place to mitigate the risks of cross-site scripting attacks.</reviewer>
+            <developer>Implement proper input validation and sanitization techniques to ensure that untrusted data is not included in application responses. Also use appropriate output encoding mechanisms, such as HTML escaping, to prevent potential XSS attacks. Thoroughly validate and sanitize any user-generated or external inputs before incorporating them into the application response.</developer>
+            <reviewer>Assess whether the Java code implements adequate input validation, sanitization, and output encoding techniques to prevent security vulnerabilities. Verify that untrusted data is properly handled and escaped before being included in application responses. Additionally, reviewers should evaluate the effectiveness of security controls in place to mitigate the risks of cross-site scripting attacks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted Input(s) in SQL Query (PreparedStatement)</name>
@@ -33,8 +33,8 @@
             <rdl><![CDATA[[FLAG:PreparedStatement(\s)*(\.|->)execute( |Query|Update)][IF(PRESENT:(\+|String\.format|MessageFormat|append\() && MISSING:setString\(|setInt\(|setLong\(|setObject\())]]]></rdl>
             <rule_desc>Detects potential SQL injection vulnerabilities in Java code that uses prepared statements.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of SQL injection. SQL injection attacks can occur when user-supplied data is not properly sanitized or validated before being used in database queries. Attackers can manipulate the input to execute arbitrary SQL statements, potentially leading to unauthorized access, data loss, or other security breaches.</vuln_desc>
-            <developer>Developers should use prepared statements or parameterized queries to prevent SQL injection vulnerabilities. By using placeholders and binding user input as parameters, developers can ensure that user data is treated as data and not as executable code. It is essential to avoid constructing SQL queries dynamically by concatenating user input directly.</developer>
-            <reviewer>Reviewers should verify that Java code uses prepared statements or parameterized queries to prevent SQL injection. They should check if user input is properly bound as parameters and not concatenated directly into SQL queries. Reviewers should also assess the overall security of the database interactions and confirm that proper input validation and sanitization techniques are implemented.</reviewer>
+            <developer>Use prepared statements or parameterized queries to prevent SQL injection vulnerabilities. By using placeholders and binding user input as parameters, developers can ensure that user data is treated as data and not as executable code. It is essential to avoid constructing SQL queries dynamically by concatenating user input directly.</developer>
+            <reviewer>Verify that Java code uses prepared statements or parameterized queries to prevent SQL injection. Check whether user input is properly bound as parameters and not concatenated directly into SQL queries. Also assess the overall security of the database interactions and confirm that proper input validation and sanitization techniques are implemented. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Serialization/Deserialization Handling</name>
@@ -42,8 +42,8 @@
             <rdl><![CDATA[[FLAG:\.readObject|\.writeObject|ObjectInputStream|ObjectOutputStream]]]></rdl>
             <rule_desc>Detects potential serialization/deserialization vulnerabilities in Java code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using serialization/deserialization methods or classes without proper validation and precautions. Attackers can exploit serialization/deserialization vulnerabilities to execute arbitrary code, tamper with data, or perform unauthorized actions.</vuln_desc>
-            <developer>Developers should be cautious when using serialization/deserialization methods or classes and follow secure coding practices. It is important to validate and sanitize serialized data, enforce strict type checking, and implement integrity checks to prevent serialization/deserialization attacks. Additionally, developers should consider using frameworks or libraries that provide secure serialization/deserialization mechanisms and avoid using custom serialization/deserialization solutions.</developer>
-            <reviewer>Reviewers should verify that appropriate measures are taken to mitigate serialization/deserialization vulnerabilities. They should ensure that input validation, integrity checks, and secure coding practices are implemented for serialization and deserialization operations. Reviewers should also assess the sensitivity of the serialized data and confirm that safeguards, such as input validation, proper exception handling, and the use of secure serialization/deserialization frameworks or libraries, are in place to prevent serialization/deserialization attacks.</reviewer>
+            <developer>Be cautious when using serialization/deserialization methods or classes and follow secure coding practices. It is important to validate and sanitize serialized data, enforce strict type checking, and implement integrity checks to prevent serialization/deserialization attacks. Additionally, developers should consider using frameworks or libraries that provide secure serialization/deserialization mechanisms and avoid using custom serialization/deserialization solutions.</developer>
+            <reviewer>Verify that appropriate measures are taken to mitigate serialization/deserialization vulnerabilities. Ensure that input validation, integrity checks, and secure coding practices are implemented for serialization and deserialization operations. Also assess the sensitivity of the serialized data and confirm that safeguards, such as input validation, proper exception handling, and the use of secure serialization/deserialization frameworks or libraries, are in place to prevent serialization/deserialization attacks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Command Injection</name>
@@ -51,22 +51,12 @@
             <rdl><![CDATA[[FLAG:(Runtime(\s)*\.getRuntime(\s)*(\.|->)exec|ProcessBuilder(\s)*(\.|->)start)][IF(PRESENT:(getParameter|requestParameters|System\.getProperty|args\[) && MISSING:(allowlist|whitelist))]]]></rdl>
             <rule_desc>Detects potential command injection vulnerabilities in Java code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of command injection. Command injection vulnerabilities occur when user-supplied data is passed to system commands without proper validation or sanitization, allowing attackers to execute arbitrary commands on the underlying operating system.</vuln_desc>
-            <developer>Developers should avoid constructing commands by concatenating user inputs and instead use safe mechanisms, such as parameterized commands or libraries with built-in protection against command injection.</developer>
-            <reviewer>Reviewers should verify that safe mechanisms, such as parameterized commands or libraries with built-in protection, are used to prevent command injection vulnerabilities. They should assess if user inputs are properly validated and sanitized before being used in command execution.</reviewer>
-        </rule>
-        <rule>
-            <name>Remote OS Command Execution - (child_process.exec())</name>
-            <regex><![CDATA[child_process\.exec\s*\([^)]*\)]]></regex>
-            <rdl><![CDATA[[FLAG:child_process\.exec\s*\([^)]*\)]]]></rdl>
-            <rule_desc>Detects the usage of `child_process.exec()` function, which can lead to remote OS command execution vulnerabilities if not handled securely.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using the `child_process.exec()` function without proper input validation and sanitization. The `child_process.exec()` function in Node.js allows the execution of arbitrary shell commands, making it susceptible to remote OS command execution vulnerabilities. Attackers can manipulate input parameters to execute malicious commands on the underlying operating system, potentially leading to unauthorized access, data breaches, or remote code execution.</vuln_desc>
-            <developer>Developers should exercise caution when using the `child_process.exec()` function and ensure that all input parameters are properly validated, sanitized, and securely handled. Input validation should include strict whitelisting or filtering to only allow trusted commands or command options. Additionally, developers should consider using safer alternatives, such as `child_process.execFile()`, which restricts execution to predefined executable files, reducing the risk of arbitrary command execution.</developer>
-            <reviewer>Reviewers should verify that the usage of `child_process.exec()` function is justified and necessary. They should assess if developers have implemented appropriate input validation and sanitization techniques to prevent remote OS command execution vulnerabilities. Reviewers should also ensure that commands passed to `child_process.exec()` are securely constructed and that any user-provided or untrusted input is properly validated, sanitized, and restricted to trusted values.</reviewer>
+            <developer>Avoid constructing commands by concatenating user inputs and instead use safe mechanisms, such as parameterized commands or libraries with built-in protection against command injection.</developer>
+            <reviewer>Verify that safe mechanisms, such as parameterized commands or libraries with built-in protection, are used to prevent command injection vulnerabilities. Assess whether user inputs are properly validated and sanitized before being used in command execution. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Internal Storage - Insecure File Permissions">
-        <!-- Applicable to Java/Kotlin source files (e.g., .java, .kt) -->    
+        <!-- Applicable to Java/Kotlin source files (e.g., .java, .kt) -->
         <rule>
             <name>Deprecated MODE_WORLD_WRITEABLE Usage</name>
             <regex><![CDATA[M(?:ODE_)?WORLD_WRITEABLE]]></regex>
@@ -74,9 +64,8 @@
             <rule_desc>Detects usage of the deprecated MODE_WORLD_WRITEABLE mode.</rule_desc>
             <vuln_desc>The MODE_WORLD_WRITEABLE mode allows any application to write to your app's files, leading to potential data corruption or unauthorized modifications.</vuln_desc>
             <developer>Avoid using MODE_WORLD_WRITEABLE. Consider using content providers or other mechanisms to share data securely.</developer>
-            <reviewer>Check Java/Kotlin source files for occurrences of MODE_WORLD_WRITEABLE and ensure that secure alternatives are used.</reviewer>
+            <reviewer>Check Java/Kotlin source files for occurrences of MODE_WORLD_WRITEABLE and ensure that secure alternatives are used. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>Deprecated MODE_WORLD_READABLE Usage</name>
             <regex><![CDATA[M(?:ODE_)?WORLD_READABLE]]></regex>
@@ -84,9 +73,8 @@
             <rule_desc>Detects usage of the deprecated MODE_WORLD_READABLE mode.</rule_desc>
             <vuln_desc>The MODE_WORLD_READABLE mode allows any application to read your app's files, potentially exposing sensitive data to unauthorized access.</vuln_desc>
             <developer>Avoid using MODE_WORLD_READABLE. Use content providers or define explicit permissions to control data access.</developer>
-            <reviewer>Check Java/Kotlin source files for occurrences of MODE_WORLD_READABLE and ensure secure data sharing mechanisms are in place.</reviewer>
+            <reviewer>Check Java/Kotlin source files for occurrences of MODE_WORLD_READABLE and ensure secure data sharing mechanisms are in place. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-        
         <rule>
             <name>Insecure File Operations</name>
             <regex><![CDATA[openFile(?:Output|Input)\s*\([^,]*,\s*M(?:ODE_)?WORLD_(?:WRITEABLE|READABLE)]]></regex>
@@ -94,9 +82,8 @@
             <rule_desc>Detects insecure file operations using deprecated world-readable or world-writable modes.</rule_desc>
             <vuln_desc>Using world-readable or world-writable modes in file operations can lead to unauthorized access or modifications to the app's files.</vuln_desc>
             <developer>Replace the use of MODE_WORLD_READABLE and MODE_WORLD_WRITEABLE with private modes or secure sharing mechanisms such as content providers.</developer>
-            <reviewer>Review Java/Kotlin source files for file operations that use insecure modes, ensuring that secure alternatives are implemented.</reviewer>
+            <reviewer>Review Java/Kotlin source files for file operations that use insecure modes, ensuring that secure alternatives are implemented. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-        
         <rule>
             <name>File Sharing Without Content Provider</name>
             <regex><![CDATA[Intent\s*\(\s*(?:[^,]*,\s*)?Uri\.parse]]></regex>
@@ -104,10 +91,9 @@
             <rule_desc>Detects file sharing operations that use URIs without a content provider.</rule_desc>
             <vuln_desc>Sharing files directly using URIs without a content provider can expose sensitive data to unauthorized applications. Content providers offer a controlled mechanism for sharing files securely.</vuln_desc>
             <developer>Use a content provider to securely share files between applications, ensuring proper access control and data protection.</developer>
-            <reviewer>Check Java/Kotlin source files for file sharing operations using `Intent` with `Uri.parse`. Verify that files are shared through content providers with appropriate permissions.</reviewer>
+            <reviewer>Check Java/Kotlin source files for file sharing operations using `Intent` with `Uri.parse`. Verify that files are shared through content providers with appropriate permissions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="External Storage - Insecure Practices">
         <!-- Applicable to Java/Kotlin source files (e.g., .java, .kt) -->
         <rule>
@@ -117,7 +103,7 @@
             <rule_desc>Detects writing to external storage without proper validation or encryption.</rule_desc>
             <vuln_desc>Writing sensitive information to external storage can lead to unauthorized access or modification, as external storage is globally writable and can be accessed by any application or user.</vuln_desc>
             <developer>Store only non-sensitive information on external storage. For sensitive data, use internal storage or encrypt the data before writing it to external storage.</developer>
-            <reviewer>Verify that external storage is used only for non-sensitive data. Ensure that sensitive information is encrypted or stored securely.</reviewer>
+            <reviewer>Verify that external storage is used only for non-sensitive data. Ensure that sensitive information is encrypted or stored securely. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Dynamic Loading from External Storage</name>
@@ -126,7 +112,7 @@
             <rule_desc>Detects dynamic loading of files from external storage.</rule_desc>
             <vuln_desc>Loading executables or class files from external storage without cryptographic verification can lead to code execution vulnerabilities if the files are tampered with.</vuln_desc>
             <developer>Avoid loading executables or class files from external storage. If necessary, ensure files are cryptographically signed and verified before loading.</developer>
-            <reviewer>Check for usage of `DexClassLoader` or `PathClassLoader` with files retrieved from external storage. Verify that proper cryptographic verification mechanisms are in place.</reviewer>
+            <reviewer>Check for usage of `DexClassLoader` or `PathClassLoader` with files retrieved from external storage. Verify that proper cryptographic verification mechanisms are in place. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure External Storage Read</name>
@@ -135,7 +121,7 @@
             <rule_desc>Detects reading data from external storage without proper input validation.</rule_desc>
             <vuln_desc>Reading unvalidated data from external storage can lead to vulnerabilities such as malicious file execution or unexpected application behavior.</vuln_desc>
             <developer>Validate and sanitize all data read from external storage as it may come from untrusted sources.</developer>
-            <reviewer>Ensure that data read from external storage is properly validated and sanitized before use.</reviewer>
+            <reviewer>Ensure that data read from external storage is properly validated and sanitized before use. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Executable File Storage on External Storage</name>
@@ -144,10 +130,9 @@
             <rule_desc>Detects storage of executable files on external storage.</rule_desc>
             <vuln_desc>Storing executable files on external storage can lead to unauthorized code execution if the files are tampered with by other applications or users.</vuln_desc>
             <developer>Avoid storing executable files on external storage. If necessary, ensure files are cryptographically signed and verified before usage.</developer>
-            <reviewer>Review external storage usage to ensure that executable files are not stored insecurely. Verify that any necessary executables are cryptographically signed and verified.</reviewer>
+            <reviewer>Review external storage usage to ensure that executable files are not stored insecurely. Verify that any necessary executables are cryptographically signed and verified. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Untrusted File Handling">
         <rule>
             <name>File Upload Functionality</name>
@@ -155,21 +140,19 @@
             <rdl><![CDATA[[FLAG:(?i)(FileUpload|MultipartFile|CommonsMultipartFile)\s*\(.*\)|\bPart\s*\(.*\)]]]></rdl>
             <rule_desc>Detects potential unvalidated file uploads in Java applications, which can lead to security vulnerabilities such as remote code execution or denial of service.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of unvalidated file uploads. Attackers can exploit this vulnerability by uploading malicious files that can be executed on the server or cause other security risks. It is crucial to validate and sanitize file uploads to ensure that only authorized and safe files are processed.</vuln_desc>
-            <developer>Developers should implement proper validation and sanitization of file uploads. They should verify the file type, size, and content to prevent the execution of malicious files. Additionally, developers should store uploaded files in a secure location and apply access controls to restrict unauthorized access.</developer>
-            <reviewer>Reviewers should verify that file uploads are properly validated and sanitized. They should assess if the necessary checks, such as file type and size validation, are in place. Reviewers should also ensure that uploaded files are stored securely and that access controls are applied appropriately.</reviewer>
+            <developer>Implement proper validation and sanitization of file uploads. Verify the file type, size, and content to prevent the execution of malicious files. Additionally, developers should store uploaded files in a secure location and apply access controls to restrict unauthorized access.</developer>
+            <reviewer>Verify that file uploads are properly validated and sanitized. Assess whether the necessary checks, such as file type and size validation, are in place. Also ensure that uploaded files are stored securely and that access controls are applied appropriately. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>File Inclusion Vulnerability</name>
             <regex><![CDATA[(request\.getParameter|response\.sendRedirect|response\.setHeader|response\.addHeader)\s*\(\s*("|')[^\s'"]+\.(jsp|php|txt|html|xml|json|csv|log)("|')]]></regex>
             <rdl><![CDATA[[FLAG:(request\.getParameter|response\.sendRedirect|response\.setHeader|response\.addHeader)\s*\(\s*("|')[^\s'"]+\.(jsp|php|txt|html|xml|json|csv|log)("|')][IF(MISSING:allowlist|whitelist|isLocalUrl|validateUrl|same-origin)]]]></rdl>
             <rule_desc>Detects potential file inclusion vulnerabilities in Java code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of file inclusion. File inclusion vulnerabilities occur when user-supplied input is used to construct file paths or URLs without proper validation, allowing attackers to include arbitrary files from the server or external sources.</vuln_desc>
-            <developer>Developers should validate and sanitize user-supplied input used for constructing file paths or URLs. They should ensure that only trusted and authorized files are accessed and implement proper input validation to prevent directory traversal attacks.</developer>
-            <reviewer>Reviewers should verify that proper input validation and sanitization techniques are used to mitigate file inclusion vulnerabilities. They should assess if user-supplied input used for constructing file paths or URLs is properly validated and if the application is protected against directory traversal attacks.</reviewer>
+            <developer>Validate and sanitize user-supplied input used for constructing file paths or URLs. Ensure that only trusted and authorized files are accessed and implement proper input validation to prevent directory traversal attacks.</developer>
+            <reviewer>Verify that proper input validation and sanitization techniques are used to mitigate file inclusion vulnerabilities. Assess whether user-supplied input used for constructing file paths or URLs is properly validated and if the application is protected against directory traversal attacks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Insecure/Deprecated Libraries">
         <rule>
             <name>Insecure Package: java.util.Random</name>
@@ -177,61 +160,55 @@
             <rdl><![CDATA[[FLAG:java\.util\.Random]]]></rdl>
             <rule_desc>Detects the usage of the java.util.Random package, which can lead to predictable and easily reproducible values if the seed is known.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using the java.util.Random package without proper precautions. The java.util.Random class generates pseudorandom values that can become predictable if the seed is known, which can lead to security vulnerabilities in cryptographic algorithms, simulations, or other scenarios where unpredictability is crucial.</vuln_desc>
-            <developer>Developers should avoid using the java.util.Random class for generating secure random values, especially in cryptographic or security-sensitive applications. Instead, they should use the java.security.SecureRandom class, which provides a more secure and unpredictable source of random numbers. Developers should also review the usage of the java.util.Random package and consider whether a more suitable alternative is available for their specific use case.</developer>
-            <reviewer>Reviewers should verify that the java.util.Random package is used appropriately and assess the security implications. They should check if the java.security.SecureRandom class is used where secure random values are required. Reviewers should also evaluate the context in which the java.util.Random package is used and determine if there are any security risks associated with the predictable nature of its random number generation.</reviewer>
+            <developer>Avoid using the java.util.Random class for generating secure random values, especially in cryptographic or security-sensitive applications. Instead, Use the java.security.SecureRandom class, which provides a more secure and unpredictable source of random numbers. Also review the usage of the java.util.Random package and consider whether a more suitable alternative is available for their specific use case.</developer>
+            <reviewer>Verify that the java.util.Random package is used appropriately and assess the security implications. Check whether the java.security.SecureRandom class is used where secure random values are required. Also evaluate the context in which the java.util.Random package is used and determine if there are any security risks associated with the predictable nature of its random number generation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>Insecure Package: java.net.HttpURLConnection</name>
             <regex><![CDATA[java\.net\.HttpURLConnection]]></regex>
             <rdl><![CDATA[[FLAG:java\.net\.HttpURLConnection]]]></rdl>
             <rule_desc>Detects the usage of the java.net.HttpURLConnection package, which may expose applications to insecure HTTP connections.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential use of insecure HTTP connections without SSL/TLS. This can lead to man-in-the-middle attacks and data interception.</vuln_desc>
-            <developer>Developers should ensure that all network connections use HTTPS instead of HTTP. They should validate SSL certificates and handle SSL/TLS connections securely using the HttpsURLConnection class.</developer>
-            <reviewer>Reviewers should check for the proper usage of HTTP connections and verify that secure protocols (like HTTPS) are enforced for all communications.</reviewer>
+            <developer>All network connections use HTTPS instead of HTTP. Validate SSL certificates and handle SSL/TLS connections securely using the HttpsURLConnection class.</developer>
+            <reviewer>Check for the proper usage of HTTP connections and verify that secure protocols (like HTTPS) are enforced for all communications. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>Insecure Package: org.apache.commons.collections</name>
             <regex><![CDATA[org\.apache\.commons\.collections]]></regex>
             <rdl><![CDATA[[FLAG:org\.apache\.commons\.collections]]]></rdl>
             <rule_desc>Detects the usage of the Apache Commons Collections library, which has known vulnerabilities related to deserialization.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential risk of deserialization attacks due to insecure handling of untrusted data. Vulnerabilities in this library can allow attackers to execute arbitrary code.</vuln_desc>
-            <developer>Developers should avoid using insecure deserialization practices and update to the latest version of the library that addresses known vulnerabilities. Use safe alternatives for data handling whenever possible.</developer>
-            <reviewer>Reviewers should evaluate the use of the Apache Commons Collections library and assess whether it is being used securely and with proper data validation.</reviewer>
+            <developer>Avoid using insecure deserialization practices and update to the latest version of the library that addresses known vulnerabilities. Use safe alternatives for data handling whenever possible.</developer>
+            <reviewer>Evaluate the use of the Apache Commons Collections library and assess whether it is being used securely and with proper data validation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>Insecure Package: javax.xml.parsers.DocumentBuilderFactory</name>
             <regex><![CDATA[javax\.xml\.parsers\.DocumentBuilderFactory]]></regex>
             <rdl><![CDATA[[FLAG:javax\.xml\.parsers\.DocumentBuilderFactory]]]></rdl>
             <rule_desc>Detects the use of javax.xml.parsers.DocumentBuilderFactory, which may lead to XML external entity (XXE) attacks.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential for XXE vulnerabilities, where an attacker can control the XML parser to access sensitive files or perform server-side requests.</vuln_desc>
-            <developer>Developers should configure the DocumentBuilderFactory to prevent XXE attacks by disabling external entity processing and using secure parsing configurations.</developer>
-            <reviewer>Reviewers should ensure that the XML parsing is done securely, with proper configurations in place to mitigate XXE vulnerabilities.</reviewer>
+            <developer>Configure the DocumentBuilderFactory to prevent XXE attacks by disabling external entity processing and using secure parsing configurations.</developer>
+            <reviewer>Ensure that the XML parsing is done securely, with proper configurations in place to mitigate XXE vulnerabilities. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>Insecure Package: org.springframework.web.multipart.MultipartFile</name>
             <regex><![CDATA[org\.springframework\.web\.multipart\.MultipartFile]]></regex>
             <rdl><![CDATA[[FLAG:org\.springframework\.web\.multipart\.MultipartFile]]]></rdl>
             <rule_desc>Detects the use of MultipartFile for file uploads without validation, which can lead to file upload vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential risk of accepting unvalidated file uploads, which can lead to the upload of malicious files.</vuln_desc>
-            <developer>Developers should implement file validation checks on uploaded files, ensuring only allowed file types and sizes are accepted. Proper sanitization should also be enforced.</developer>
-            <reviewer>Reviewers should assess the file upload implementation and confirm that appropriate validation and sanitization processes are in place to mitigate risks.</reviewer>
+            <developer>Implement file validation checks on uploaded files, ensuring only allowed file types and sizes are accepted. Proper sanitization should also be enforced.</developer>
+            <reviewer>Assess the file upload implementation and confirm that appropriate validation and sanitization processes are in place to mitigate risks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>Insecure Package: org.apache.poi.hssf.usermodel.HSSFWorkbook</name>
             <regex><![CDATA[org\.apache\.poi\.hssf\.usermodel\.HSSFWorkbook]]></regex>
             <rdl><![CDATA[[FLAG:org\.apache\.poi\.hssf\.usermodel\.HSSFWorkbook]]]></rdl>
             <rule_desc>Detects the use of HSSFWorkbook for Excel file manipulation, which may expose applications to vulnerabilities due to outdated libraries.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential risk of using deprecated or vulnerable libraries for handling Excel files.</vuln_desc>
-            <developer>Developers should use the latest versions of the Apache POI library or alternatives for handling Excel files. Ensure that the library used is actively maintained and secure.</developer>
-            <reviewer>Reviewers should confirm that the latest secure libraries are used for handling file formats and assess any associated vulnerabilities.</reviewer>
+            <developer>Use the latest versions of the Apache POI library or alternatives for handling Excel files. Ensure that the library used is actively maintained and secure.</developer>
+            <reviewer>Confirm that the latest secure libraries are used for handling file formats and assess any associated vulnerabilities. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Disabled/Missing Security Controls">
         <rule>
             <name>Missing 'httpOnly' Flag in Cookie</name>
@@ -239,8 +216,8 @@
             <rdl><![CDATA[[FLAG:(\bSet-Cookie:\s*)(?!(.*;\s*)*HttpOnly\b).*]]]></rdl>
             <rule_desc>Detects cookies that are missing the 'httpOnly' flag, which can expose them to client-side attacks.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of cookies missing the 'httpOnly' flag. The 'httpOnly' flag is a security attribute that ensures cookies are not accessible by JavaScript code, reducing the risk of client-side attacks such as cross-site scripting (XSS). Without the 'httpOnly' flag, cookies may be exposed to unauthorized access, potentially leading to session hijacking or sensitive information leakage.</vuln_desc>
-            <developer>Developers should ensure that the 'httpOnly' flag is set for cookies that contain sensitive information or are involved in session management. By setting the 'httpOnly' flag, cookies become inaccessible to JavaScript code, thereby mitigating the risk of client-side attacks. Developers should review the cookies used in their applications and enable the 'httpOnly' flag when appropriate, following secure coding practices.</developer>
-            <reviewer>Reviewers should verify that the 'httpOnly' flag is properly set for cookies handling sensitive information or participating in session management. They should check if the 'httpOnly' attribute is included in the Set-Cookie header for relevant cookies. Reviewers should also assess the impact of missing 'httpOnly' flags and confirm that the necessary security measures are in place to prevent client-side attacks.</reviewer>
+            <developer>The 'httpOnly' flag is set for cookies that contain sensitive information or are involved in session management. By setting the 'httpOnly' flag, cookies become inaccessible to JavaScript code, thereby mitigating the risk of client-side attacks. Developers should review the cookies used in their applications and enable the 'httpOnly' flag when appropriate, following secure coding practices.</developer>
+            <reviewer>Verify that the 'httpOnly' flag is properly set for cookies handling sensitive information or participating in session management. Check whether the 'httpOnly' attribute is included in the Set-Cookie header for relevant cookies. Also assess the impact of missing 'httpOnly' flags and confirm that the necessary security measures are in place to prevent client-side attacks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Disabled CSRF Protection</name>
@@ -248,8 +225,8 @@
             <rdl><![CDATA[[FLAG:(\b.disable\(\s*['"]csrf['"]\s*\))]]]></rdl>
             <rule_desc>Detects disabled CSRF (Cross-Site Request Forgery) protection in Java code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates that CSRF protection is disabled for certain requests. CSRF attacks occur when malicious websites trick authenticated users into performing unintended actions on other websites. Disabling CSRF protection exposes the application to CSRF attacks, potentially leading to unauthorized actions, data tampering, or information disclosure.</vuln_desc>
-            <developer>Developers should ensure that CSRF protection mechanisms are enabled for all relevant requests. CSRF tokens or other techniques should be implemented to validate and authenticate requests originating from trusted sources. Developers should review their application's request handling logic and enable CSRF protection to mitigate the risk of CSRF attacks.</developer>
-            <reviewer>Reviewers should verify that CSRF protection mechanisms are properly implemented and enabled for all relevant requests. They should check for any instances where CSRF protection is explicitly disabled and assess the impact of such configurations. Reviewers should also evaluate the effectiveness of the implemented CSRF protection measures in preventing CSRF attacks.</reviewer>
+            <developer>CSRF protection mechanisms are enabled for all relevant requests. CSRF tokens or other techniques should be implemented to validate and authenticate requests originating from trusted sources. Developers should review their application's request handling logic and enable CSRF protection to mitigate the risk of CSRF attacks.</developer>
+            <reviewer>Verify that CSRF protection mechanisms are properly implemented and enabled for all relevant requests. Check for any instances where CSRF protection is explicitly disabled and assess the impact of such configurations. Also evaluate the effectiveness of the implemented CSRF protection measures in preventing CSRF attacks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Disabled Input Validation</name>
@@ -257,11 +234,10 @@
             <rdl><![CDATA[[FLAG:(\bvalidateInput\s*=\s*['"]false['"])]]]></rdl>
             <rule_desc>Detects disabled input validation in Java code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates that input validation is disabled for certain data inputs. Input validation is a crucial security measure that ensures data integrity, preventing malicious inputs from causing code execution, SQL injection, or other vulnerabilities. Disabling input validation exposes the application to various security risks and potential attacks.</vuln_desc>
-            <developer>Developers should ensure that input validation is enabled for all relevant data inputs. Proper input validation techniques, such as white-listing, input sanitization, or regular expression checks, should be implemented based on the expected data format and security requirements. Developers should review their application's input handling logic and enable input validation to mitigate the risk of security vulnerabilities.</developer>
-            <reviewer>Reviewers should verify that input validation mechanisms are properly implemented and enabled for all relevant data inputs. They should identify any instances where input validation is explicitly disabled and assess the impact of such configurations. Reviewers should also evaluate the effectiveness of the implemented input validation measures in preventing common security vulnerabilities.</reviewer>
+            <developer>Input validation is enabled for all relevant data inputs. Proper input validation techniques, such as white-listing, input sanitization, or regular expression checks, should be implemented based on the expected data format and security requirements. Developers should review their application's input handling logic and enable input validation to mitigate the risk of security vulnerabilities.</developer>
+            <reviewer>Verify that input validation mechanisms are properly implemented and enabled for all relevant data inputs. Identify any instances where input validation is explicitly disabled and assess the impact of such configurations. Also evaluate the effectiveness of the implemented input validation measures in preventing common security vulnerabilities. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Information Disclosure">
         <rule>
             <name>Logger Functions</name>
@@ -269,41 +245,37 @@
             <rdl><![CDATA[[FLAG:logger\.(error|warn|info|debug|trace)][IF(MISSING:release|production)]]]></rdl>
             <rule_desc>Detects the usage of Java logger functions (error, warn, info, debug, trace), which can introduce potential security vulnerabilities if not handled properly.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the use of logger functions in Java code without proper validation. This can result in logging sensitive information or error messages that may expose valuable information to attackers, potentially aiding them in further exploitation.</vuln_desc>
-            <developer>Developers should ensure that the logger functions (error, warn, info, debug, trace) in Java code are used securely. They should carefully validate the logged data to prevent the inclusion of sensitive information. Additionally, developers should review and configure the logging framework to avoid the exposure of sensitive data through the logs.</developer>
-            <reviewer>Reviewers should verify that the usage of logger functions (error, warn, info, debug, trace) in Java code is appropriate and adheres to secure coding practices. They should assess if proper validation mechanisms are in place to prevent the logging of sensitive information. Reviewers should also review the log configurations to ensure that log levels are set appropriately and sensitive data is not leaked through the logs.</reviewer>
+            <developer>The logger functions (error, warn, info, debug, trace) in Java code are used securely. Carefully validate the logged data to prevent the inclusion of sensitive information. Additionally, developers should review and configure the logging framework to avoid the exposure of sensitive data through the logs.</developer>
+            <reviewer>Verify that the usage of logger functions (error, warn, info, debug, trace) in Java code is appropriate and adheres to secure coding practices. Assess whether proper validation mechanisms are in place to prevent the logging of sensitive information. Also review the log configurations to ensure that log levels are set appropriately and sensitive data is not leaked through the logs. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>Debugging and Logging Statements</name>
             <regex><![CDATA[(System\.out\.print|System\.err\.print|System\.out\.println|System\.err\.println|log\.(debug|trace))]]></regex>
             <rdl><![CDATA[[FLAG:(System\.out\.print|System\.err\.print|System\.out\.println|System\.err\.println|log\.(debug|trace))][IF(MISSING:release|production)]]]></rdl>
             <rule_desc>Detects the usage of debugging and logging statements (System.out.print, System.err.print, System.out.println, System.err.println, log.debug, log.trace), which may expose sensitive backend information if used in the production environment.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the presence of debugging and logging statements, which may inadvertently log sensitive information. These statements can disclose sensitive data, such as passwords or authentication tokens, to the application logs or console output, increasing the risk of information exposure in the production environment.</vuln_desc>
-            <developer>Developers should ensure that debugging and logging statements are not present in production code. They should review and remove or disable any logging statements that may log sensitive information. Additionally, developers should follow secure coding practices to prevent the accidental inclusion of debugging statements in production code.</developer>
-            <reviewer>Reviewers should verify that debugging and logging statements are appropriately handled in production code. They should assess if sensitive information is inadvertently logged and if proper mechanisms are in place to prevent it. Reviewers should also evaluate the code review and release processes to ensure that debugging statements are removed or disabled before deploying to production environments.</reviewer>
+            <developer>Debugging and logging statements are not present in production code. Review and remove or disable any logging statements that may log sensitive information. Additionally, developers should follow secure coding practices to prevent the accidental inclusion of debugging statements in production code.</developer>
+            <reviewer>Verify that debugging and logging statements are appropriately handled in production code. Assess whether sensitive information is inadvertently logged and if proper mechanisms are in place to prevent it. Also evaluate the code review and release processes to ensure that debugging statements are removed or disabled before deploying to production environments. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-        
         <rule>
             <name>Stack Trace or Error Disclosure</name>
             <regex><![CDATA[(?i)(e\.printStackTrace\(\)|e\.getCause\(\)\.printStackTrace\(\)|System\.out\.print\(.*Exception.*\)|throw new \w+Exception\(.+\))]]></regex>
             <rdl><![CDATA[[FLAG:(?i)(e\.printStackTrace\(\)|e\.getCause\(\)\.printStackTrace\(\)|System\.out\.print\(.*Exception.*\)|throw new \w+Exception\(.+\))]]]></rdl>
             <rule_desc>Detects unsafe stack trace logging or error handling in Java code.</rule_desc>
             <vuln_desc>Directly printing stack traces or detailed exceptions (e.g., via `e.printStackTrace` or `e.getCause().printStackTrace`) can expose sensitive information, such as implementation details and file paths.</vuln_desc>
-            <developer>Developers should replace direct stack trace printing with centralized logging frameworks like Log4j or SLF4J, ensuring sensitive information is excluded from logs.</developer>
-            <reviewer>Reviewers should check for improper use of `printStackTrace` and `getCause().printStackTrace` and ensure exceptions are logged securely and not exposed in production environments.</reviewer>
+            <developer>Replace direct stack trace printing with centralized logging frameworks like Log4j or SLF4J, ensuring sensitive information is excluded from logs.</developer>
+            <reviewer>Check for improper use of `printStackTrace` and `getCause().printStackTrace` and ensure exceptions are logged securely and not exposed in production environments. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-        
         <rule>
             <name>Unencrypted Data Transmission over HTTP</name>
             <regex><![CDATA[new\s*HttpGet|new\s*HttpPost|new\s*HttpPut|new\s*HttpDelete|new\s*HttpURLConnection]]></regex>
             <rdl><![CDATA[[FLAG:new\s*HttpGet|new\s*HttpPost|new\s*HttpPut|new\s*HttpDelete|new\s*HttpURLConnection][IF(PRESENT:http:// && MISSING:https://)]]]></rdl>
             <rule_desc>Detects the usage of HTTP client classes (HttpGet, HttpPost, HttpPut, HttpDelete, HttpURLConnection) without encryption, potentially resulting in information leaks.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the use of HTTP client classes without encryption, which can lead to the transmission of sensitive information over unsecured channels. Attackers can intercept and extract the data, potentially compromising the confidentiality and integrity of the transmitted information.</vuln_desc>
-            <developer>Developers should ensure that sensitive data is transmitted over secure channels, such as HTTPS, to prevent information leaks. They should use appropriate HTTP client classes with encryption capabilities and validate server certificates to establish secure connections.</developer>
-            <reviewer>Reviewers should verify that sensitive data is not transmitted over unencrypted HTTP connections. They should assess if appropriate encryption mechanisms are implemented using HTTP client classes and ensure the proper validation of server certificates. Reviewers should also evaluate the overall security architecture and ensure that secure communication practices are followed.</reviewer>
+            <developer>Sensitive data is transmitted over secure channels, such as HTTPS, to prevent information leaks. Use appropriate HTTP client classes with encryption capabilities and validate server certificates to establish secure connections.</developer>
+            <reviewer>Verify that sensitive data is not transmitted over unencrypted HTTP connections. Assess whether appropriate encryption mechanisms are implemented using HTTP client classes and ensure the proper validation of server certificates. Also evaluate the overall security architecture and ensure that secure communication practices are followed. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Database Queries">
         <rule>
             <name>SQL Query: SELECT Statements with WHERE or ORDER BY</name>
@@ -311,39 +283,35 @@
             <rdl><![CDATA[[FLAG:(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*][IF(PRESENT:(\+|String\.format|MessageFormat|requestParameters|getParameter) && MISSING:PreparedStatement|setString\(|setInt\(|setLong\(|setObject\())]]]></rdl>
             <rule_desc>Detects instances of SELECT statements with WHERE or ORDER BY clauses in SQL queries, which may be vulnerable to SQL injection if user input is not handled securely.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the use of potentially vulnerable SELECT statements with WHERE or ORDER BY clauses. Improper handling of user input in these clauses can lead to SQL injection, allowing attackers to manipulate query behavior and gain unauthorized access to data.</vuln_desc>
-            <developer>Developers should validate and implement secure alternatives, such as using `PreparedStatement` to prevent SQL injection vulnerabilities.</developer>
-            <reviewer>Reviewers should check if parameterized queries with `PreparedStatement` are used for SELECT statements with WHERE or ORDER BY clauses to prevent SQL injection risks.</reviewer>
+            <developer>Validate and implement secure alternatives, such as using `PreparedStatement` to prevent SQL injection vulnerabilities.</developer>
+            <reviewer>Check if parameterized queries with `PreparedStatement` are used for SELECT statements with WHERE or ORDER BY clauses to prevent SQL injection risks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>SQL Query: Unrestricted SELECT *</name>
             <regex><![CDATA[\bSELECT\s+\*\s+FROM\b]]></regex>
             <rdl><![CDATA[[FLAG:\bSELECT\s+\*\s+FROM\b][IF(MISSING:LIMIT\s+[0-9]+)]]]></rdl>
             <rule_desc>Detects "SELECT * FROM" in SQL queries, which can expose unnecessary or sensitive data.</rule_desc>
             <vuln_desc>If this rule matches, it suggests that the query retrieves more data than necessary, potentially exposing sensitive information and increasing the attack surface.</vuln_desc>
-            <developer>Developers should validate queries to include only necessary columns and avoid using "SELECT *" to reduce exposure risks.</developer>
-            <reviewer>Reviewers should verify whether only required columns are used in SQL queries to avoid data overexposure.</reviewer>
+            <developer>Validate queries to include only necessary columns and avoid using "SELECT *" to reduce exposure risks.</developer>
+            <reviewer>Verify whether only required columns are used in SQL queries to avoid data overexposure. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>SQL Query: Non-parameterized DELETE Statements</name>
             <regex><![CDATA[(?i)\bDELETE\s+FROM\s+[^\s]+\s+WHERE\s+.*=.*\$.*]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\bDELETE\s+FROM\s+[^\s]+\s+WHERE\s+.*=.*\$.*][IF(MISSING:PreparedStatement|setString\(|setInt\(|setLong\(|setObject\())]]]></rdl>
             <rule_desc>Detects DELETE statements with direct use of user input, increasing the risk of SQL injection.</rule_desc>
             <vuln_desc>If this rule matches, it suggests a potentially vulnerable DELETE query that could allow SQL injection if user input is not parameterized.</vuln_desc>
-            <developer>Developers should use parameterized queries or prepared statements for DELETE operations to prevent SQL injection.</developer>
-            <reviewer>Reviewers should examine DELETE statements with user input and confirm that parameterized queries are used to avoid injection vulnerabilities.</reviewer>
+            <developer>Use parameterized queries or prepared statements for DELETE operations to prevent SQL injection.</developer>
+            <reviewer>Examine DELETE statements with user input and confirm that parameterized queries are used to avoid injection vulnerabilities. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>SQL Query: Querying Sensitive Information Directly in Code</name>
             <regex><![CDATA[(?i)\bSELECT\s+(password|ssn|creditcard|api_key|token|pin)\s+FROM\s+[^\s]+\b]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\bSELECT\s+(password|ssn|creditcard|api_key|token|pin)\s+FROM\s+[^\s]+\b][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
             <rule_desc>Detects SQL statements querying sensitive data directly, which could expose data if logs or exceptions are mishandled.</rule_desc>
             <vuln_desc>If this rule matches, it suggests the use of sensitive data queries in code, which could lead to data leakage risks.</vuln_desc>
-            <developer>Developers should ensure secure handling of sensitive data and prevent direct logging of SQL statements querying sensitive fields.</developer>
-            <reviewer>Reviewers should check if sensitive data fields are queried and confirm that data protection practices and secure logging methods are applied.</reviewer>
+            <developer>Ensure secure handling of sensitive data and prevent direct logging of SQL statements querying sensitive fields.</developer>
+            <reviewer>Check if sensitive data fields are queried and confirm that data protection practices and secure logging methods are applied. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>
-

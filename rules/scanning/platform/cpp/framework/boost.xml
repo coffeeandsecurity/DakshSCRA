@@ -7,7 +7,7 @@
             <rule_desc>Detects unsafe memory/string APIs in C++ code.</rule_desc>
             <vuln_desc>Improper memory operations can cause overflow and memory safety issues.</vuln_desc>
             <developer>Use safer abstractions and explicit bounds checks.</developer>
-            <reviewer>Inspect unsafe calls for size validation and tainted input.</reviewer>
+            <reviewer>Inspect unsafe calls for size validation and tainted input. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Boost Command Execution Sink</name>
@@ -16,7 +16,7 @@
             <rule_desc>Detects OS command execution APIs in C++ code paths.</rule_desc>
             <vuln_desc>User-influenced command strings can lead to command injection.</vuln_desc>
             <developer>Avoid shell execution or strictly validate/allow-list inputs.</developer>
-            <reviewer>Trace untrusted data flow into command execution.</reviewer>
+            <reviewer>Trace untrusted data flow into command execution. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Boost TLS Validation Bypass Marker</name>
@@ -25,7 +25,7 @@
             <rule_desc>Detects TLS validation bypass markers in C++/Qt networking code.</rule_desc>
             <vuln_desc>TLS bypass permits interception and spoofing attacks.</vuln_desc>
             <developer>Enforce strict certificate validation and remove bypasses.</developer>
-            <reviewer>Audit all network client TLS settings.</reviewer>
+            <reviewer>Audit all network client TLS settings. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Boost Hardcoded Secret Material</name>
@@ -34,7 +34,7 @@
             <rule_desc>Detects likely hardcoded secrets in C++ source.</rule_desc>
             <vuln_desc>Hardcoded credentials may leak through source/binary exposure.</vuln_desc>
             <developer>Externalize secrets and rotate keys.</developer>
-            <reviewer>Confirm no production credentials are embedded.</reviewer>
+            <reviewer>Confirm no production credentials are embedded. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Boost Insecure Serialization/Deserialization Marker</name>
@@ -43,7 +43,7 @@
             <rule_desc>Detects serialization/deserialization APIs that need trust-boundary review.</rule_desc>
             <vuln_desc>Deserializing untrusted data can lead to memory and logic vulnerabilities.</vuln_desc>
             <developer>Validate input formats and enforce strict schema checks.</developer>
-            <reviewer>Review deserialization boundaries and source trust assumptions.</reviewer>
+            <reviewer>Review deserialization boundaries and source trust assumptions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

@@ -31,6 +31,7 @@
                 <div class="finding-header">
                     <div class="finding-id">{{ entry.rulecount }}</div>
                     <div class="finding-title">{{ entry.keyword }}</div>
+                    <div class="pill">Confidence {{ entry.confidence_score }}%{% if entry.confidence_label %} ({{ entry.confidence_label }}){% endif %}</div>
                 </div>
             </summary>
             <div class="aoi-body">

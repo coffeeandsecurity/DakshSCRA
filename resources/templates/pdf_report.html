@@ -152,6 +152,29 @@
       background: var(--soft);
       padding: 8px 9px;
     }
+    .rule-breakdown {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .rule-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border: 1px solid #bfd4ec;
+      border-radius: 999px;
+      padding: 2px 8px;
+      background: #f7fbff;
+      color: #103f67;
+      font-size: 10px;
+      line-height: 1.3;
+      white-space: nowrap;
+    }
+    .rule-chip-count {
+      color: #315f8a;
+      font-weight: 700;
+    }
     .bars {
       margin-top: 8px;
     }
@@ -280,6 +303,18 @@
       gap: 8px;
       align-items: center;
       margin-bottom: 5px;
+      padding: 6px 8px;
+      border: 1px solid #b9d4ec;
+      border-left: 5px solid #1f6fb2;
+      border-radius: 8px;
+      background: #edf6ff;
+    }
+    .rule-head-meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
     .pill {
       border: 1px solid #b8cee8;
@@ -289,6 +324,28 @@
       color: #123f64;
       background: #eef6ff;
       white-space: nowrap;
+    }
+    .confidence-chip {
+      border-radius: 999px;
+      padding: 2px 7px;
+      font-size: 10px;
+      border: 1px solid;
+      white-space: nowrap;
+    }
+    .confidence-high {
+      color: #0f5132;
+      background: #d1fae5;
+      border-color: #86efac;
+    }
+    .confidence-medium {
+      color: #7c4a03;
+      background: #fef3c7;
+      border-color: #fcd34d;
+    }
+    .confidence-low {
+      color: #7f1d1d;
+      background: #fee2e2;
+      border-color: #fca5a5;
     }
     .muted { color: var(--muted); }
     .file-list {
@@ -412,8 +469,36 @@
         <div><b>Rule Selection:</b> {{ inputs.get("rule_selected", "-") }}</div>
         <div><b>File Type Selection:</b> {{ inputs.get("filetypes_selected", "-") }}</div>
         <div><b>Total Rules Loaded:</b> {{ inputs.get("total_rules_loaded", "-") }}</div>
-        <div><b>Platform Rules:</b> {{ inputs.get("platform_specific_rules", "-") }}</div>
-        <div><b>Common Rules:</b> {{ inputs.get("common_rules", "-") }}</div>
+        <div>
+          <b>Platform Rules:</b>
+          {% if platform_rules_breakdown %}
+          <div class="rule-breakdown">
+            {% for item in platform_rules_breakdown %}
+            <span class="rule-chip">
+              <span>{{ item.name }}</span>
+              {% if item.count is not none %}<span class="rule-chip-count">{{ item.count }} rules</span>{% endif %}
+            </span>
+            {% endfor %}
+          </div>
+          {% else %}
+          -
+          {% endif %}
+        </div>
+        <div>
+          <b>Common Rules:</b>
+          {% if common_rules_breakdown %}
+          <div class="rule-breakdown">
+            {% for item in common_rules_breakdown %}
+            <span class="rule-chip">
+              <span>{{ item.name }}</span>
+              {% if item.count is not none %}<span class="rule-chip-count">{{ item.count }} rules</span>{% endif %}
+            </span>
+            {% endfor %}
+          </div>
+          {% else %}
+          -
+          {% endif %}
+        </div>
       </div>
 
       {% if extension_rows %}
@@ -572,9 +657,13 @@
           <div class="finding-card">
             <div class="rule-head">
               <div><b>{{ finding.rule_title }}</b></div>
-              <span class="pill">{{ finding.evidence_count }} source(s)</span>
+              <div class="rule-head-meta">
+                <span class="confidence-chip confidence-{{ finding.confidence_label|lower }}">Confidence {{ finding.confidence_score }}% ({{ finding.confidence_label }})</span>
+                <span class="pill">{{ finding.evidence_count }} source(s)</span>
+              </div>
             </div>
             <div class="finding-details">
+              <div class="detail-row"><b>Confidence Score:</b> {{ finding.confidence_score }}% ({{ finding.confidence_label }})</div>
               {% if finding.rule_id %}<div class="detail-row"><b>ID:</b> {{ finding.rule_id }}</div>{% endif %}
               {% if finding.rule_desc %}<div class="detail-row"><b>Rule Description:</b> {{ finding.rule_desc }}</div>{% endif %}
               {% if finding.category %}<div class="detail-row"><b>Issue Category:</b> {{ finding.category }}</div>{% endif %}
@@ -619,7 +708,10 @@
         <div class="finding-card">
           <div class="rule-head">
             <div><b>{{ item.keyword }}</b></div>
-            <span class="pill">{{ item.count }} path(s)</span>
+            <div class="rule-head-meta">
+              <span class="confidence-chip confidence-{{ item.confidence_label|lower }}">Confidence {{ item.confidence_score }}% ({{ item.confidence_label }})</span>
+              <span class="pill">{{ item.count }} path(s)</span>
+            </div>
           </div>
           <div class="paths">
             {% for path in item.paths %}

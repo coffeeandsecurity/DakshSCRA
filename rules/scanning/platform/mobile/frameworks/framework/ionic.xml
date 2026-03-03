@@ -7,7 +7,7 @@
             <rule_desc>Detects wildcard navigation/origin allowlist settings.</rule_desc>
             <vuln_desc>Wildcard allowlists can expose app web context to untrusted content.</vuln_desc>
             <developer>Restrict navigation/access allowlists to trusted origins.</developer>
-            <reviewer>Review config.xml allowlist entries and CSP alignment.</reviewer>
+            <reviewer>Review config. xml allowlist entries and CSP alignment. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Ionic Insecure HTTP Endpoint Usage</name>
@@ -16,7 +16,7 @@
             <rule_desc>Detects cleartext endpoint references in Ionic/Capacitor apps.</rule_desc>
             <vuln_desc>Cleartext transport can leak sensitive traffic.</vuln_desc>
             <developer>Use HTTPS and secure transport configuration.</developer>
-            <reviewer>Audit endpoint constants and environment config files.</reviewer>
+            <reviewer>Audit endpoint constants and environment config files. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Ionic/CSP Unsafe Directives</name>
@@ -25,7 +25,7 @@
             <rule_desc>Detects weak CSP directives often used in webview apps.</rule_desc>
             <vuln_desc>Unsafe CSP directives increase XSS/script injection exploitability.</vuln_desc>
             <developer>Harden CSP and avoid unsafe directives whenever possible.</developer>
-            <reviewer>Review index.html/meta headers/CSP configuration files.</reviewer>
+            <reviewer>Review index. html/meta headers/CSP configuration files. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Ionic Capacitor Cleartext Permitted</name>
@@ -34,7 +34,7 @@
             <rule_desc>Detects platform transport relaxations in hybrid config.</rule_desc>
             <vuln_desc>Transport relaxations can permit insecure network communication.</vuln_desc>
             <developer>Disable cleartext/ATS relaxations for production.</developer>
-            <reviewer>Validate Android/iOS transport security configurations.</reviewer>
+            <reviewer>Validate Android/iOS transport security configurations. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Ionic Storage Secret Marker</name>
@@ -43,7 +43,7 @@
             <rule_desc>Detects potentially sensitive values stored in web storage.</rule_desc>
             <vuln_desc>Web storage is not suitable for long-lived secrets.</vuln_desc>
             <developer>Use secure storage plugins and minimize client secret persistence.</developer>
-            <reviewer>Review client storage keys and data sensitivity.</reviewer>
+            <reviewer>Review client storage keys and data sensitivity. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Ionic Hardcoded Secret Marker</name>
@@ -52,7 +52,7 @@
             <rule_desc>Detects likely hardcoded secrets in Ionic/Capacitor code.</rule_desc>
             <vuln_desc>Embedded secrets can be extracted from bundles/artifacts.</vuln_desc>
             <developer>Move secrets server-side and rotate exposed credentials.</developer>
-            <reviewer>Verify no production secrets are committed.</reviewer>
+            <reviewer>Verify no production secrets are committed. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

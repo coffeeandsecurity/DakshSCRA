@@ -7,7 +7,7 @@
             <rule_desc>Detects potential debug logging exposure points requiring review.</rule_desc>
             <vuln_desc>Verbose logs in production can leak sensitive runtime details.</vuln_desc>
             <developer>Use production-safe log levels and scrub sensitive data.</developer>
-            <reviewer>Review logger initialization and production env defaults.</reviewer>
+            <reviewer>Review logger initialization and production env defaults. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Rocket Insecure TLS Handling</name>
@@ -16,7 +16,7 @@
             <rule_desc>Detects TLS certificate/hostname validation bypass in Rust HTTP clients.</rule_desc>
             <vuln_desc>TLS bypass allows interception and spoofing attacks.</vuln_desc>
             <developer>Remove bypass options and enforce strict validation.</developer>
-            <reviewer>Audit reqwest/native-tls/rustls client builder settings.</reviewer>
+            <reviewer>Audit reqwest/native-tls/rustls client builder settings. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Rocket SQL Injection Sink</name>
@@ -25,7 +25,7 @@
             <rule_desc>Detects likely formatted SQL query construction.</rule_desc>
             <vuln_desc>String-built SQL can be vulnerable to injection.</vuln_desc>
             <developer>Use parameterized query APIs and query builders.</developer>
-            <reviewer>Review data flow into formatted SQL fragments.</reviewer>
+            <reviewer>Review data flow into formatted SQL fragments. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Rocket Permissive CORS</name>
@@ -34,7 +34,7 @@
             <rule_desc>Detects permissive CORS configurations.</rule_desc>
             <vuln_desc>Wildcard origins can expose endpoints to untrusted origins.</vuln_desc>
             <developer>Restrict allowed origins explicitly.</developer>
-            <reviewer>Validate CORS middleware settings in server bootstrap.</reviewer>
+            <reviewer>Validate CORS middleware settings in server bootstrap. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Rocket Hardcoded Secret Material</name>
@@ -43,7 +43,7 @@
             <rule_desc>Detects likely hardcoded secret values.</rule_desc>
             <vuln_desc>Hardcoded secrets risk credential leakage.</vuln_desc>
             <developer>Externalize secrets via environment or secure stores.</developer>
-            <reviewer>Verify no production credentials in code/config.</reviewer>
+            <reviewer>Verify no production credentials in code/config. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

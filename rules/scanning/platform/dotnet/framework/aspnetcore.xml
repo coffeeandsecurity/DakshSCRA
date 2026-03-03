@@ -7,7 +7,7 @@
             <rule_desc>Detects developer exception middleware usage.</rule_desc>
             <vuln_desc>Detailed exception output in production can leak sensitive internals.</vuln_desc>
             <developer>Enable developer exception page only in development environment.</developer>
-            <reviewer>Verify environment guard around UseDeveloperExceptionPage.</reviewer>
+            <reviewer>Verify environment guard around UseDeveloperExceptionPage. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Aspnetcore Insecure Certificate Validation Callback</name>
@@ -16,7 +16,7 @@
             <rule_desc>Detects TLS certificate validation bypass patterns.</rule_desc>
             <vuln_desc>Bypassing certificate validation enables MITM attacks.</vuln_desc>
             <developer>Remove bypass callbacks and enforce strict certificate validation.</developer>
-            <reviewer>Inspect all HTTP client handlers for certificate bypass.</reviewer>
+            <reviewer>Inspect all HTTP client handlers for certificate bypass. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Aspnetcore Raw SQL Execution Sink</name>
@@ -25,7 +25,7 @@
             <rule_desc>Detects raw SQL execution APIs in EF/.NET code.</rule_desc>
             <vuln_desc>Raw SQL with untrusted data can cause SQL injection.</vuln_desc>
             <developer>Use parameter binding and input validation.</developer>
-            <reviewer>Review callsites for untrusted argument flow.</reviewer>
+            <reviewer>Review callsites for untrusted argument flow. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Aspnetcore Permissive CORS</name>
@@ -34,7 +34,7 @@
             <rule_desc>Detects overly broad CORS policy configuration.</rule_desc>
             <vuln_desc>Permissive CORS may expose APIs to malicious web origins.</vuln_desc>
             <developer>Restrict CORS origins to known trusted domains.</developer>
-            <reviewer>Verify policy registration and environment overrides.</reviewer>
+            <reviewer>Verify policy registration and environment overrides. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Aspnetcore Hardcoded Secret Material</name>
@@ -43,7 +43,7 @@
             <rule_desc>Detects likely hardcoded secret literals.</rule_desc>
             <vuln_desc>Hardcoded secrets may be exposed through source and logs.</vuln_desc>
             <developer>Move secrets to secure configuration providers.</developer>
-            <reviewer>Review secret handling and rotate exposed values.</reviewer>
+            <reviewer>Review secret handling and rotate exposed values. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

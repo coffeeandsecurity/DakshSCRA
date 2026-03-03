@@ -46,7 +46,6 @@
             <regex file="composer.json">drupal</regex>
         </markers>
     </framework>
-
     <!-- Python -->
     <framework>
         <name>django</name>
@@ -76,7 +75,6 @@
             <regex file="pyproject.toml">fastapi</regex>
         </markers>
     </framework>
-
     <!-- Java -->
     <framework>
         <name>spring</name>
@@ -108,7 +106,6 @@
             <regex file="build.gradle.kts">hibernate</regex>
         </markers>
     </framework>
-
     <!-- JavaScript / TypeScript -->
     <framework>
         <name>express</name>
@@ -162,7 +159,6 @@
             <file>angular.json</file>
         </markers>
     </framework>
-
     <!-- .NET -->
     <framework>
         <name>aspnetcore</name>
@@ -182,7 +178,6 @@
             <regex file="*">DbContext</regex>
         </markers>
     </framework>
-
     <!-- Go -->
     <framework>
         <name>gin</name>
@@ -208,7 +203,6 @@
             <regex file="go.mod">gofiber/fiber</regex>
         </markers>
     </framework>
-
     <!-- Ruby -->
     <framework>
         <name>rails</name>
@@ -226,7 +220,6 @@
             <regex file="gemfile">\bsinatra\b</regex>
         </markers>
     </framework>
-
     <!-- Rust -->
     <framework>
         <name>actix</name>
@@ -252,7 +245,6 @@
             <regex file="cargo.toml">\baxum\b</regex>
         </markers>
     </framework>
-
     <!-- Kotlin -->
     <framework>
         <name>ktor</name>
@@ -272,7 +264,6 @@
             <regex file="build.gradle.kts">org\.springframework</regex>
         </markers>
     </framework>
-
     <!-- C -->
     <framework>
         <name>freertos</name>
@@ -282,7 +273,6 @@
             <regex file="*">\bFreeRTOS\b</regex>
         </markers>
     </framework>
-
     <!-- C++ -->
     <framework>
         <name>qt</name>
@@ -302,7 +292,6 @@
             <regex file="*">#include\s+[&lt;\&quot;]boost/</regex>
         </markers>
     </framework>
-
     <!-- Mobile Frameworks (Cross-Platform) -->
     <framework>
         <name>reactnative</name>
@@ -337,7 +326,6 @@
             <file>app.json</file>
         </markers>
     </framework>
-
     <framework>
         <name>flutter</name>
         <platform>flutter</platform>
@@ -368,7 +356,6 @@
             <regex file="pubspec.yaml">(?m)^\s*flutter\s*:</regex>
         </markers>
     </framework>
-
     <framework>
         <name>ionic</name>
         <platform>ionic</platform>
@@ -408,7 +395,6 @@
             <file>capacitor.config.ts</file>
         </markers>
     </framework>
-
     <framework>
         <name>nativescript</name>
         <platform>nativescript</platform>
@@ -439,7 +425,6 @@
             <dep file="package.json">tns-core-modules</dep>
         </markers>
     </framework>
-
     <framework>
         <name>cordova</name>
         <platform>cordova</platform>
@@ -473,7 +458,6 @@
             <regex file="config.xml">cordova|phonegap</regex>
         </markers>
     </framework>
-
     <framework>
         <name>xamarin</name>
         <platform>xamarin</platform>
@@ -501,7 +485,6 @@
             <regex file="*.csproj">Xamarin|UseMaui|Maui|ios</regex>
         </markers>
     </framework>
-
     <!-- Android -->
     <framework>
         <name>jetpack</name>
@@ -512,7 +495,6 @@
             <regex file="*">androidx\.|compose\.|RoomDatabase</regex>
         </markers>
     </framework>
-
     <!-- iOS -->
     <framework>
         <name>swiftui</name>

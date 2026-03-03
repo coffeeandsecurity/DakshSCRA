@@ -7,7 +7,7 @@
             <rule_desc>Detects debug/development flags in Kotlin app/service code.</rule_desc>
             <vuln_desc>Debug-enabled builds can increase runtime information exposure.</vuln_desc>
             <developer>Disable debuggable flags in production builds.</developer>
-            <reviewer>Validate release build config and runtime debug guards.</reviewer>
+            <reviewer>Validate release build config and runtime debug guards. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Ktor Insecure Trust Manager / TLS Bypass</name>
@@ -16,7 +16,7 @@
             <rule_desc>Detects TLS certificate/hostname verification bypass patterns.</rule_desc>
             <vuln_desc>Bypassing TLS validation can enable MITM attacks.</vuln_desc>
             <developer>Use strict certificate and hostname verification.</developer>
-            <reviewer>Inspect HTTP client TLS configuration for bypasses.</reviewer>
+            <reviewer>Inspect HTTP client TLS configuration for bypasses. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Ktor SQL Injection Sink</name>
@@ -25,7 +25,7 @@
             <rule_desc>Detects dynamic SQL concatenation patterns.</rule_desc>
             <vuln_desc>Concatenated SQL may lead to injection vulnerabilities.</vuln_desc>
             <developer>Use parameterized queries and prepared statements.</developer>
-            <reviewer>Trace untrusted input into SQL construction sites.</reviewer>
+            <reviewer>Trace untrusted input into SQL construction sites. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Ktor Permissive CORS/Origin</name>
@@ -34,7 +34,7 @@
             <rule_desc>Detects wildcard origin policy settings.</rule_desc>
             <vuln_desc>Wildcard origins may expose sensitive endpoints/data.</vuln_desc>
             <developer>Restrict origins to trusted domains.</developer>
-            <reviewer>Review HTTP/security config for least privilege.</reviewer>
+            <reviewer>Review HTTP/security config for least privilege. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Ktor Hardcoded Secret Material</name>
@@ -43,7 +43,7 @@
             <rule_desc>Detects likely hardcoded secrets.</rule_desc>
             <vuln_desc>Hardcoded secrets can be extracted from source/apk artifacts.</vuln_desc>
             <developer>Use secure config/secret stores and rotate leaked values.</developer>
-            <reviewer>Validate no production secrets are committed.</reviewer>
+            <reviewer>Validate no production secrets are committed. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

@@ -7,7 +7,7 @@
             <rule_desc>Detects unsafe string APIs common in memory-corruption vulnerabilities.</rule_desc>
             <vuln_desc>Unsafe string handling may lead to buffer overflows and memory corruption.</vuln_desc>
             <developer>Use bounded alternatives (snprintf/strlcpy) and explicit length checks.</developer>
-            <reviewer>Review bounds checks around unsafe C string APIs.</reviewer>
+            <reviewer>Review bounds checks around unsafe C string APIs. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Freertos Command Execution Sink</name>
@@ -16,7 +16,7 @@
             <rule_desc>Detects command execution APIs requiring strict input control review.</rule_desc>
             <vuln_desc>User-influenced command execution can lead to OS command injection.</vuln_desc>
             <developer>Avoid shell invocation or enforce strict allow-lists and escaping.</developer>
-            <reviewer>Trace untrusted data flow into command execution calls.</reviewer>
+            <reviewer>Trace untrusted data flow into command execution calls. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Freertos Insecure Transport/Cert Bypass Marker</name>
@@ -25,7 +25,7 @@
             <rule_desc>Detects TLS verification disablement in C HTTP clients.</rule_desc>
             <vuln_desc>Disabling TLS verification allows MITM attacks.</vuln_desc>
             <developer>Enable strict certificate and hostname verification.</developer>
-            <reviewer>Audit transport settings in network code.</reviewer>
+            <reviewer>Audit transport settings in network code. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Freertos Hardcoded Secret Material</name>
@@ -34,7 +34,7 @@
             <rule_desc>Detects likely hardcoded secret values in C source.</rule_desc>
             <vuln_desc>Hardcoded credentials can be extracted from firmware/binaries.</vuln_desc>
             <developer>Provision secrets securely at runtime.</developer>
-            <reviewer>Review credential handling strategy and key rotation.</reviewer>
+            <reviewer>Review credential handling strategy and key rotation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Freertos FreeRTOS Privileged API Review Marker</name>
@@ -43,7 +43,7 @@
             <rule_desc>Detects privileged task/queue operations that require security review context.</rule_desc>
             <vuln_desc>Improper task privilege and IPC handling can create reliability and security risks.</vuln_desc>
             <developer>Apply least privilege and validate message boundary checks.</developer>
-            <reviewer>Review task privilege and queue data validation boundaries.</reviewer>
+            <reviewer>Review task privilege and queue data validation boundaries. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

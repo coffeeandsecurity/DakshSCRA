@@ -7,9 +7,8 @@
             <rule_desc>Detects shell command execution APIs in Ruby that can be dangerous when fed untrusted input.</rule_desc>
             <vuln_desc>Command execution with untrusted input can lead to command injection and unauthorized code execution.</vuln_desc>
             <developer>Avoid shelling out with user-supplied data. Prefer native APIs and strict allowlists for command parameters.</developer>
-            <reviewer>Verify command arguments are not derived from untrusted input and are validated/escaped safely.</reviewer>
+            <reviewer>Verify command arguments are not derived from untrusted input and are validated/escaped safely. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>Potential SQL Injection via String Interpolation</name>
             <regex><![CDATA[\b(?:where|find_by_sql|execute|order|joins)\s*\(\s*["'][^"']*#\{]]></regex>
@@ -17,10 +16,9 @@
             <rule_desc>Detects SQL query construction using string interpolation in ActiveRecord or raw SQL calls.</rule_desc>
             <vuln_desc>Interpolating user-controlled values into SQL can enable SQL injection and unauthorized data access.</vuln_desc>
             <developer>Use parameterized query APIs and bind variables instead of interpolation.</developer>
-            <reviewer>Check all dynamic query fragments for parameterization and robust input validation.</reviewer>
+            <reviewer>Check all dynamic query fragments for parameterization and robust input validation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Deserialization and Code Execution Risks">
         <rule>
             <name>Unsafe YAML Deserialization</name>
@@ -28,10 +26,9 @@
             <rdl><![CDATA[[FLAG:\bYAML\.load\s*\(]]]></rdl>
             <rule_desc>Detects use of YAML.load which can deserialize arbitrary objects.</rule_desc>
             <vuln_desc>Unsafe deserialization may allow object injection, leading to code execution or data tampering.</vuln_desc>
-            <developer>Use safe loaders such as YAML.safe_load and enforce permitted classes if needed.</developer>
-            <reviewer>Confirm untrusted YAML is processed only through safe deserialization methods.</reviewer>
+            <developer>Use safe loaders such as YAML. safe_load and enforce permitted classes if needed.</developer>
+            <reviewer>Confirm untrusted YAML is processed only through safe deserialization methods. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>Dynamic Code Evaluation</name>
             <regex><![CDATA[\b(?:eval|instance_eval|class_eval|module_eval)\s*\(]]></regex>
@@ -39,10 +36,9 @@
             <rule_desc>Detects dynamic code evaluation methods.</rule_desc>
             <vuln_desc>Evaluating dynamic strings can allow remote code execution if inputs are attacker-controlled.</vuln_desc>
             <developer>Avoid runtime code evaluation; refactor to explicit logic paths and whitelisted behavior.</developer>
-            <reviewer>Assess whether any evaluated content can be influenced by external inputs.</reviewer>
+            <reviewer>Assess whether any evaluated content can be influenced by external inputs. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Authentication and Session Security">
         <rule>
             <name>Weak Session Secret Configuration</name>
@@ -51,9 +47,8 @@
             <rule_desc>Detects likely weak or default session secret values.</rule_desc>
             <vuln_desc>Weak secrets may let attackers forge session cookies and impersonate users.</vuln_desc>
             <developer>Use high-entropy secrets from secure secret managers and rotate when exposed.</developer>
-            <reviewer>Ensure session secrets are not defaults and are securely provisioned per environment.</reviewer>
+            <reviewer>Ensure session secrets are not defaults and are securely provisioned per environment. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>Cookies Missing Secure or HttpOnly Flags</name>
             <regex><![CDATA[\bcookies\[[^\]]+\]\s*=\s*\{(?![^\}]*\b(?:secure|httponly)\b)]]></regex>
@@ -61,9 +56,8 @@
             <rule_desc>Detects cookie assignments without explicit secure and HttpOnly attributes.</rule_desc>
             <vuln_desc>Missing secure flags can expose cookies to theft over insecure channels or client-side scripts.</vuln_desc>
             <developer>Set `secure: true`, `httponly: true`, and `same_site` appropriately for sensitive cookies.</developer>
-            <reviewer>Review cookie-setting code to verify transport and script access protections are enforced.</reviewer>
+            <reviewer>Review cookie-setting code to verify transport and script access protections are enforced. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>CSRF Protection Disabled or Relaxed</name>
             <regex><![CDATA[(?i)\b(?:skip_before_action\s*:verify_authenticity_token|protect_from_forgery\s+with:\s*:null_session|protect_from_forgery\s+except:)]]></regex>
@@ -71,10 +65,9 @@
             <rule_desc>Detects Rails patterns that disable or weaken default CSRF protections.</rule_desc>
             <vuln_desc>Disabling CSRF verification can allow forged state-changing requests from attacker-controlled origins.</vuln_desc>
             <developer>Keep CSRF protection enabled for state-changing endpoints and use targeted, justified exceptions only when required.</developer>
-            <reviewer>Verify each exception has a strong trust boundary and compensating controls (authn, origin checks, tokens, API design).</reviewer>
+            <reviewer>Verify each exception has a strong trust boundary and compensating controls (authn, origin checks, tokens, API design). This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Information Disclosure and Logging">
         <rule>
             <name>Stack Trace or Sensitive Exception Disclosure</name>
@@ -84,7 +77,7 @@
             <rule_desc>Detects logging or printing of exception/backtrace details.</rule_desc>
             <vuln_desc>Exposing stack traces can leak internals such as file paths, secrets, and implementation details.</vuln_desc>
             <developer>Log exceptions securely with redaction policies and avoid returning internal errors to clients.</developer>
-            <reviewer>Verify sensitive internals are not exposed in logs or user-facing responses.</reviewer>
+            <reviewer>Verify sensitive internals are not exposed in logs or user-facing responses. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

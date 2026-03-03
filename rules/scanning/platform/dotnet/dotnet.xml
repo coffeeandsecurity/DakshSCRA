@@ -6,8 +6,8 @@
             <rdl><![CDATA[[FLAG:Request\.Form][IF(PRESENT:(SqlCommand|Execute|Response\.Write|Redirect|File|Path|Process|Xml) && MISSING:(ValidateInput|HtmlEncode|UrlEncode|Sanitize|TryParse|Regex\.IsMatch))]]]></rdl>
             <rule_desc>Detects the usage of Request.Form, which can introduce untrusted inputs into the code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using user input from the Request.Form collection without proper validation and sanitization. Attackers can manipulate form data to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks (SQL, OS, or LDAP), cross-site scripting (XSS), or remote code execution.</vuln_desc>
-            <developer>Developers should validate and sanitize user input received from the Request.Form collection before using it in any sensitive operations. They should implement strong input validation, ensuring that only expected and sanitized values are accepted from form submissions. Additionally, developers should be cautious about the potential risks associated with using user-supplied data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
-            <reviewer>Reviewers should ensure that proper input handling is in place for the Request.Form collection. They should verify that developers have implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. Reviewers should also assess the sensitivity of the data handled through form submissions and confirm that relevant security measures, such as output encoding and protection against injection attacks, are implemented correctly.</reviewer>
+            <developer>Validate and sanitize user input received from the Request. Form collection before using it in any sensitive operations. Implement strong input validation, ensuring that only expected and sanitized values are accepted from form submissions. Additionally, developers should be cautious about the potential risks associated with using user-supplied data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
+            <reviewer>Ensure that proper input handling is in place for the Request. Form collection. Verify that developers have implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. Also assess the sensitivity of the data handled through form submissions and confirm that relevant security measures, such as output encoding and protection against injection attacks, are implemented correctly. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted Input: Request.QueryString</name>
@@ -15,8 +15,8 @@
             <rdl><![CDATA[[FLAG:Request\.QueryString][IF(PRESENT:(SqlCommand|Execute|Response\.Write|Redirect|File|Path|Process|Xml) && MISSING:(ValidateInput|HtmlEncode|UrlEncode|Sanitize|TryParse|Regex\.IsMatch))]]]></rdl>
             <rule_desc>Identifies the usage of Request.QueryString, which may lead to untrusted inputs being used in the code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using user input from the Request.QueryString collection without proper validation and sanitization. Attackers can manipulate URL query parameters to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks (SQL, OS, or LDAP), cross-site scripting (XSS), or unauthorized access to sensitive information.</vuln_desc>
-            <developer>Developers should carefully validate and sanitize user input received from the Request.QueryString collection before using it in any sensitive operations. They should implement strong input validation, ensuring that only expected and sanitized values are accepted from URL query parameters. Additionally, developers should be aware of the risks associated with using user-supplied data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
-            <reviewer>Reviewers should check for appropriate input handling for the Request.QueryString collection. They should assess if developers have implemented proper input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. Reviewers should also verify the usage of output encoding and protection against injection attacks to ensure the secure handling of user input received through URL query parameters.</reviewer>
+            <developer>Carefully validate and sanitize user input received from the Request. QueryString collection before using it in any sensitive operations. Implement strong input validation, ensuring that only expected and sanitized values are accepted from URL query parameters. Additionally, developers should be aware of the risks associated with using user-supplied data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
+            <reviewer>Check for appropriate input handling for the Request. QueryString collection. Assess whether developers have implemented proper input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. Also verify the usage of output encoding and protection against injection attacks to ensure the secure handling of user input received through URL query parameters. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted Input Handling in HTLM Output: Response.Write</name>
@@ -24,8 +24,8 @@
             <rdl><![CDATA[[FLAG:Response\.Write\(.*\)][IF(PRESENT:(Request\.|HttpContext\.Current\.Request) && MISSING:(HtmlEncode|HttpUtility\.HtmlEncode|AntiXssEncoder|TagBuilder))]]]></rdl>
             <rule_desc>Detects the usage of Response.Write without output encoding, which can lead to cross-site scripting vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using Response.Write without proper output encoding. Attackers can inject malicious scripts or HTML code, which may be executed by the victim's browser, leading to cross-site scripting attacks and potential theft of sensitive information.</vuln_desc>
-            <developer>Developers should use output encoding techniques, such as HTML encoding, when displaying user-generated or dynamic content in the web application. They should avoid directly outputting untrusted data without proper sanitization to prevent cross-site scripting vulnerabilities. Additionally, developers should implement content security policies and follow secure coding practices to ensure the proper handling of user input and protection against XSS attacks.</developer>
-            <reviewer>Reviewers should inspect the usage of Response.Write and verify if appropriate output encoding is applied to mitigate XSS vulnerabilities. They should assess the output handling and ensure that user-generated content or dynamic data is properly sanitized and displayed in a secure manner, preventing the execution of malicious scripts or HTML code.</reviewer>
+            <developer>Use output encoding techniques, such as HTML encoding, when displaying user-generated or dynamic content in the web application. Avoid directly outputting untrusted data without proper sanitization to prevent cross-site scripting vulnerabilities. Additionally, developers should implement content security policies and follow secure coding practices to ensure the proper handling of user input and protection against XSS attacks.</developer>
+            <reviewer>Inspect the usage of Response. Write and verify if appropriate output encoding is applied to mitigate XSS vulnerabilities. assess the output handling and ensure that user-generated content or dynamic data is properly sanitized and displayed in a secure manner, preventing the execution of malicious scripts or HTML code. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted Input Handling in SQL Query: SqlCommand</name>
@@ -33,8 +33,8 @@
             <rdl><![CDATA[[FLAG:new SqlCommand\(.*\)][IF(PRESENT:(\+|String\.Format|Request\.|QueryString|Form) && MISSING:(SqlParameter|AddWithValue|Parameters\.Add|Parameters\.AddWithValue))]]]></rdl>
             <rule_desc>Detects the usage of SqlCommand without parameterized queries, which can lead to SQL injection vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using SqlCommand with string concatenation instead of parameterized queries. Attackers can exploit SQL injection vulnerabilities by manipulating input values, potentially executing arbitrary SQL queries and gaining unauthorized access to the database.</vuln_desc>
-            <developer>Developers should use parameterized queries or stored procedures with bound parameters when constructing SQL queries. They should avoid string concatenation of user-supplied values in SQL statements to prevent SQL injection attacks. Additionally, developers should enforce strict input validation and implement appropriate security measures, such as input sanitization and output encoding, to ensure the integrity and security of database operations.</developer>
-            <reviewer>Reviewers should carefully examine the usage of SqlCommand and verify if proper parameterization techniques are employed to mitigate SQL injection vulnerabilities. They should assess the input handling and SQL query construction to ensure that user input is properly validated, sanitized, and used in a secure manner.</reviewer>
+            <developer>Use parameterized queries or stored procedures with bound parameters when constructing SQL queries. Avoid string concatenation of user-supplied values in SQL statements to prevent SQL injection attacks. Additionally, developers should enforce strict input validation and implement appropriate security measures, such as input sanitization and output encoding, to ensure the integrity and security of database operations.</developer>
+            <reviewer>Carefully examine the usage of SqlCommand and verify if proper parameterization techniques are employed to mitigate SQL injection vulnerabilities. assess the input handling and SQL query construction to ensure that user input is properly validated, sanitized, and used in a secure manner. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted Input Handling in XML Query</name>
@@ -42,8 +42,8 @@
             <rdl><![CDATA[[FLAG:(?i)(XmlDocument\.Load|XmlDocument\.LoadXml|XmlTextReader\.Create|XmlReader\.Create|XmlSerializer\.Deserialize|XDocument\.Load|XDocument\.Parse|XElement\.Load|XElement\.Parse|XPathDocument\.Create|XPathDocument\.Load|XPathDocument\.LoadXml|XPathNavigator\.Create|XPathNavigator\.Load|XPathNavigator\.LoadXml|XslCompiledTransform\.Load|XslCompiledTransform\.LoadXml|XslTransform\.Load|XslTransform\.LoadXml|XmlSchema\.Read|XmlSchemaSet\.Add|XmlSchemaSet\.Read)][IF(MISSING:(DtdProcessing\s*=\s*Prohibit|XmlResolver\s*=\s*null|MaxCharactersFromEntities|ProhibitDtd\s*=\s*true))]]]></rdl>
             <rule_desc>Detects the usage of XML processing methods in .NET that can introduce XML External Entity (XXE) vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using XML processing methods without proper input validation and sanitization. Attackers can exploit XML External Entity (XXE) vulnerabilities to read arbitrary files, perform server-side request forgery (SSRF), or launch denial-of-service attacks.</vuln_desc>
-            <developer>Developers should validate and sanitize any user-provided XML data before processing it with the mentioned methods in .NET. They should consider disabling external entity resolution or implementing secure XML parsers with strict settings to prevent XXE vulnerabilities. Additionally, developers should follow secure coding practices and avoid dynamically constructing XML documents using untrusted data.</developer>
-            <reviewer>Reviewers should ensure that proper input validation and sanitization techniques are implemented for XML processing methods in .NET. They should verify that developers have taken appropriate measures to prevent XXE vulnerabilities, such as disabling external entity resolution or using secure XML parsers. Reviewers should also assess the sensitivity of the XML data processed and confirm that relevant security controls are in place.</reviewer>
+            <developer>Validate and sanitize any user-provided XML data before processing it with the mentioned methods in. NET. consider disabling external entity resolution or implementing secure XML parsers with strict settings to prevent XXE vulnerabilities. Additionally, developers should follow secure coding practices and avoid dynamically constructing XML documents using untrusted data.</developer>
+            <reviewer>Ensure that proper input validation and sanitization techniques are implemented for XML processing methods in. NET. Verify that developers have taken appropriate measures to prevent XXE vulnerabilities, such as disabling external entity resolution or using secure XML parsers. Also assess the sensitivity of the XML data processed and confirm that relevant security controls are in place. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted URL Concatenation: Append Method</name>
@@ -51,8 +51,8 @@
             <rdl><![CDATA[[FLAG:\.Append\(.*HttpContext\.Current\.Request\.Url][IF(MISSING:(Uri\.EscapeDataString|UrlEncode|IsLocalUrl|allowlist|whitelist))]]]></rdl>
             <rule_desc>Detects the usage of untrusted URL concatenation using the Append method, which may lead to security vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using untrusted URL concatenation with the Append method. Attackers can manipulate the URL concatenation process to inject malicious or unexpected content, leading to security vulnerabilities such as open redirect, cross-site scripting (XSS), or other injection attacks.</vuln_desc>
-            <developer>Developers should avoid directly concatenating untrusted user input or URL components using the Append method. Instead, they should use appropriate URL encoding and validation techniques, such as the Uri.EscapeDataString method, to ensure that the resulting URL is properly formed and secure. Developers should also implement input validation and output encoding to prevent injection attacks and other security vulnerabilities.</developer>
-            <reviewer>Reviewers should check for the presence of untrusted URL concatenation using the Append method. They should verify if developers have implemented proper URL encoding, validation, and input/output handling techniques to prevent security vulnerabilities. Reviewers should also assess the sensitivity of the URLs being concatenated and confirm the presence of appropriate security controls.</reviewer>
+            <developer>Avoid directly concatenating untrusted user input or URL components using the Append method. Instead, Use appropriate URL encoding and validation techniques, such as the Uri. EscapeDataString method, to ensure that the resulting URL is properly formed and secure. Also implement input validation and output encoding to prevent injection attacks and other security vulnerabilities.</developer>
+            <reviewer>Check for the presence of untrusted URL concatenation using the Append method. Verify if developers have implemented proper URL encoding, validation, and input/output handling techniques to prevent security vulnerabilities. Also assess the sensitivity of the URLs being concatenated and confirm the presence of appropriate security controls. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted Data Output: HttpContext.Current.Request</name>
@@ -60,8 +60,8 @@
             <rdl><![CDATA[[FLAG:\.(Append|WriteLine)\([^\)]*?HttpContext\.Current\.Request\.(Url|Form|QueryString)][IF(MISSING:(HtmlEncode|UrlEncode|Sanitize|AntiXssEncoder))]]]></rdl>
             <rule_desc>Detects the usage of untrusted data output with HttpContext.Current.Request, which may lead to security vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using untrusted data output with HttpContext.Current.Request. Attackers can manipulate the data output to inject malicious or unexpected content, leading to security vulnerabilities such as cross-site scripting (XSS), injection attacks, or sensitive information exposure.</vuln_desc>
-            <developer>Developers should ensure that any data output involving HttpContext.Current.Request is properly validated, sanitized, and encoded. They should avoid directly outputting untrusted data without appropriate measures in place to mitigate security risks. Developers should implement input validation, output encoding, and secure data handling practices to prevent vulnerabilities.</developer>
-            <reviewer>Reviewers should check for the presence of untrusted data output involving HttpContext.Current.Request. They should verify if developers have implemented proper input validation, output encoding, and secure data handling techniques to prevent security vulnerabilities. Reviewers should also assess the sensitivity of the output data and confirm the presence of appropriate security controls.</reviewer>
+            <developer>Any data output involving HttpContext. Current. Request is properly validated, sanitized, and encoded. Avoid directly outputting untrusted data without appropriate measures in place to mitigate security risks. Developers should implement input validation, output encoding, and secure data handling practices to prevent vulnerabilities.</developer>
+            <reviewer>Check for the presence of untrusted data output involving HttpContext. Current. Request. Verify if developers have implemented proper input validation, output encoding, and secure data handling techniques to prevent security vulnerabilities. Also assess the sensitivity of the output data and confirm the presence of appropriate security controls. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <!--
         <rule>
@@ -70,8 +70,8 @@
             <rdl><![CDATA[[FLAG:\.WriteLine\(.*HttpContext\.Current\.Request\.Url|\.WriteLine\(.*HttpContext\.Current\.Request\.Form|\.WriteLine\(.*HttpContext\.Current\.Request\.QueryString]]]></rdl>
             <rule_desc>Detects the usage of untrusted data output with HttpContext.Current.Request, which may lead to security vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using untrusted data output with HttpContext.Current.Request. Attackers can manipulate the data output to inject malicious or unexpected content, leading to security vulnerabilities such as cross-site scripting (XSS), injection attacks, or sensitive information exposure.</vuln_desc>
-            <developer>Developers should ensure that any data output involving HttpContext.Current.Request is properly validated, sanitized, and encoded. They should avoid directly outputting untrusted data without appropriate measures in place to mitigate security risks. Developers should implement input validation, output encoding, and secure data handling practices to prevent vulnerabilities.</developer>
-            <reviewer>Reviewers should check for the presence of untrusted data output involving HttpContext.Current.Request. They should verify if developers have implemented proper input validation, output encoding, and secure data handling techniques to prevent security vulnerabilities. Reviewers should also assess the sensitivity of the output data and confirm the presence of appropriate security controls.</reviewer>
+            <developer>Any data output involving HttpContext. Current. Request is properly validated, sanitized, and encoded. Avoid directly outputting untrusted data without appropriate measures in place to mitigate security risks. Developers should implement input validation, output encoding, and secure data handling practices to prevent vulnerabilities.</developer>
+            <reviewer>Check for the presence of untrusted data output involving HttpContext. Current. Request. Verify if developers have implemented proper input validation, output encoding, and secure data handling techniques to prevent security vulnerabilities. Also assess the sensitivity of the output data and confirm the presence of appropriate security controls. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         -->
         <rule>
@@ -80,8 +80,8 @@
             <rdl><![CDATA[[FLAG:\.Append\(.*HttpContext\.Current\.Request\.Form][IF(MISSING:(HtmlEncode|UrlEncode|Sanitize|AntiXssEncoder))]]]></rdl>
             <rule_desc>Detects the usage of untrusted data output with HttpContext.Current.Request.Form, which may lead to security vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using untrusted data output with HttpContext.Current.Request.Form. Attackers can manipulate the data output to inject malicious or unexpected content, leading to security vulnerabilities such as cross-site scripting (XSS), injection attacks, or sensitive information exposure.</vuln_desc>
-            <developer>Developers should ensure that any data output involving HttpContext.Current.Request.Form is properly validated, sanitized, and encoded. They should avoid directly outputting untrusted data without appropriate measures in place to mitigate security risks. Developers should implement input validation, output encoding, and secure data handling practices to prevent vulnerabilities.</developer>
-            <reviewer>Reviewers should check for the presence of untrusted data output involving HttpContext.Current.Request.Form. They should verify if developers have implemented proper input validation, output encoding, and secure data handling techniques to prevent security vulnerabilities. Reviewers should also assess the sensitivity of the output data and confirm the presence of appropriate security controls.</reviewer>
+            <developer>Any data output involving HttpContext. Current. Request. Form is properly validated, sanitized, and encoded. Avoid directly outputting untrusted data without appropriate measures in place to mitigate security risks. Developers should implement input validation, output encoding, and secure data handling practices to prevent vulnerabilities.</developer>
+            <reviewer>Check for the presence of untrusted data output involving HttpContext. Current. Request. Form. Verify if developers have implemented proper input validation, output encoding, and secure data handling techniques to prevent security vulnerabilities. Also assess the sensitivity of the output data and confirm the presence of appropriate security controls. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted Data Output: HttpContext.Current.Request.QueryString</name>
@@ -89,11 +89,10 @@
             <rdl><![CDATA[[FLAG:\.Append\(.*HttpContext\.Current\.Request\.QueryString][IF(MISSING:(HtmlEncode|UrlEncode|Sanitize|AntiXssEncoder))]]]></rdl>
             <rule_desc>Detects the usage of untrusted data output with HttpContext.Current.Request.QueryString, which may lead to security vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using untrusted data output with HttpContext.Current.Request.QueryString. Attackers can manipulate the data output to inject malicious or unexpected content, leading to security vulnerabilities such as cross-site scripting (XSS), injection attacks, or sensitive information exposure.</vuln_desc>
-            <developer>Developers should ensure that any data output involving HttpContext.Current.Request.QueryString is properly validated, sanitized, and encoded. They should avoid directly outputting untrusted data without appropriate measures in place to mitigate security risks. Developers should implement input validation, output encoding, and secure data handling practices to prevent vulnerabilities.</developer>
-            <reviewer>Reviewers should check for the presence of untrusted data output involving HttpContext.Current.Request.QueryString. They should verify if developers have implemented proper input validation, output encoding, and secure data handling techniques to prevent security vulnerabilities. Reviewers should also assess the sensitivity of the output data and confirm the presence of appropriate security controls.</reviewer>
+            <developer>Any data output involving HttpContext. Current. Request. QueryString is properly validated, sanitized, and encoded. Avoid directly outputting untrusted data without appropriate measures in place to mitigate security risks. Developers should implement input validation, output encoding, and secure data handling practices to prevent vulnerabilities.</developer>
+            <reviewer>Check for the presence of untrusted data output involving HttpContext. Current. Request. QueryString. Verify if developers have implemented proper input validation, output encoding, and secure data handling techniques to prevent security vulnerabilities. Also assess the sensitivity of the output data and confirm the presence of appropriate security controls. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="File System Vulnerabilities">
         <rule>
             <name>Path Traversal: Directory.GetFiles</name>
@@ -101,11 +100,10 @@
             <rdl><![CDATA[[FLAG:Directory\.GetFiles\(.*\)][IF(PRESENT:(Request\.|QueryString|Form|userInput|path) && MISSING:(Path\.GetFullPath|Path\.Combine|StartsWith|allowlist|whitelist))]]]></rdl>
             <rule_desc>Detects the usage of Directory.GetFiles without proper input validation, which can lead to path traversal vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using Directory.GetFiles without validating user-supplied input. Attackers can manipulate file path inputs to traverse directories and access unauthorized files on the system, potentially exposing sensitive information or executing arbitrary code.</vuln_desc>
-            <developer>Developers should carefully validate and sanitize user input used in file path operations. They should implement input validation techniques to restrict file access to authorized directories and prevent path traversal attacks. Additionally, developers should enforce proper authorization and access control mechanisms to ensure the security and integrity of file system operations.</developer>
-            <reviewer>Reviewers should examine the usage of Directory.GetFiles and verify if proper input validation is performed to prevent path traversal vulnerabilities. They should assess the file path handling and confirm that user-supplied input is restricted to authorized directories, preventing unauthorized access to sensitive files.</reviewer>
+            <developer>Carefully validate and sanitize user input used in file path operations. Implement input validation techniques to restrict file access to authorized directories and prevent path traversal attacks. Additionally, developers should enforce proper authorization and access control mechanisms to ensure the security and integrity of file system operations.</developer>
+            <reviewer>Examine the usage of Directory. GetFiles and verify if proper input validation is performed to prevent path traversal vulnerabilities. assess the file path handling and confirm that user-supplied input is restricted to authorized directories, preventing unauthorized access to sensitive files. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-    
     <category name="Insecure Method/Function Call">
         <rule>
             <name>Unsafe Method: Command Execution</name>
@@ -113,11 +111,10 @@
             <rdl><![CDATA[[FLAG:(?i)execute\s(\@|\()][IF(PRESENT:(Request\.|QueryString|Form|userInput|args) && MISSING:(allowlist|whitelist|argument escaping|ProcessStartInfo))]]]></rdl>
             <rule_desc>Detects the usage of command execution methods that can introduce security vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using command execution methods without proper input validation and sanitization. Attackers can exploit command execution vulnerabilities to execute arbitrary commands on the underlying system, leading to unauthorized access, data leakage, or system compromise.</vuln_desc>
-            <developer>Developers should carefully validate and sanitize any user-supplied input before using it in command execution methods. They should consider using safer alternatives, such as parameterized queries or prepared statements, to prevent command injection vulnerabilities. Additionally, developers should follow secure coding practices and avoid executing commands with user-controlled input directly.</developer>
-            <reviewer>Reviewers should ensure that proper input validation and sanitization techniques are implemented for command execution methods. They should verify that developers have taken appropriate measures to prevent command injection vulnerabilities, such as using parameterized queries or prepared statements. Reviewers should also assess the sensitivity of the commands executed and confirm that relevant security controls are in place.</reviewer>
+            <developer>Carefully validate and sanitize any user-supplied input before using it in command execution methods. consider using safer alternatives, such as parameterized queries or prepared statements, to prevent command injection vulnerabilities. Additionally, developers should follow secure coding practices and avoid executing commands with user-controlled input directly.</developer>
+            <reviewer>Ensure that proper input validation and sanitization techniques are implemented for command execution methods. Verify that developers have taken appropriate measures to prevent command injection vulnerabilities, such as using parameterized queries or prepared statements. Also assess the sensitivity of the commands executed and confirm that relevant security controls are in place. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-    
     <category name="Trust-boundary Validation or 3rd-Party Interactions">
         <rule>
             <name>Unvalidated Redirects and Forwards</name>
@@ -125,11 +122,10 @@
             <rdl><![CDATA[[FLAG:(?i)Response\.Redirect][IF(MISSING:(IsLocalUrl|allowlist|whitelist|Uri\.TryCreate))]]]></rdl>
             <rule_desc>Detects the usage of open redirect methods that can introduce security vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using open redirect methods without proper validation and sanitization. Attackers can abuse open redirect vulnerabilities to trick users into visiting malicious websites or perform phishing attacks.</vuln_desc>
-            <developer>Developers should validate and sanitize any redirect URLs before using them in open redirect methods. They should ensure that the target URLs are trusted and belong to the same domain or a whitelist of allowed domains. Additionally, developers should follow secure coding practices and avoid constructing redirect URLs using untrusted or user-controlled input.</developer>
-            <reviewer>Reviewers should ensure that proper input validation and sanitization techniques are implemented for open redirect methods. They should verify that developers have taken appropriate measures to prevent open redirect vulnerabilities, such as validating and constraining redirect URLs to trusted domains. Reviewers should also assess the sensitivity of the redirect destinations and confirm that relevant security controls are in place.</reviewer>
+            <developer>Validate and sanitize any redirect URLs before using them in open redirect methods. Ensure that the target URLs are trusted and belong to the same domain or a whitelist of allowed domains. Additionally, developers should follow secure coding practices and avoid constructing redirect URLs using untrusted or user-controlled input.</developer>
+            <reviewer>Ensure that proper input validation and sanitization techniques are implemented for open redirect methods. Verify that developers have taken appropriate measures to prevent open redirect vulnerabilities, such as validating and constraining redirect URLs to trusted domains. Also assess the sensitivity of the redirect destinations and confirm that relevant security controls are in place. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Database Queries">
         <rule>
             <name>SQL Query: SELECT Statements with WHERE or ORDER BY</name>
@@ -137,41 +133,37 @@
             <rdl><![CDATA[[FLAG:(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*][IF(PRESENT:(\+|String\.Format|Request\.|QueryString|Form) && MISSING:(SqlParameter|AddWithValue|Parameters\.Add|Parameters\.AddWithValue))]]]></rdl>
             <rule_desc>Detects instances of SELECT statements with WHERE or ORDER BY clauses in SQL queries, which may be vulnerable to SQL injection if user input is not handled securely.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the use of potentially vulnerable SELECT statements with WHERE or ORDER BY clauses. Improper handling of user input in these clauses can lead to SQL injection, allowing attackers to manipulate query behavior and gain unauthorized access to data.</vuln_desc>
-            <developer>Developers should validate and implement secure alternatives, such as using parameterized queries with `SqlParameter` objects to prevent SQL injection vulnerabilities.</developer>
-            <reviewer>Reviewers should check whether parameterized queries with `SqlParameter` are used in SELECT statements to mitigate SQL injection risks.</reviewer>
+            <developer>Validate and implement secure alternatives, such as using parameterized queries with `SqlParameter` objects to prevent SQL injection vulnerabilities.</developer>
+            <reviewer>Check whether parameterized queries with `SqlParameter` are used in SELECT statements to mitigate SQL injection risks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>SQL Query: Unrestricted SELECT *</name>
             <regex><![CDATA[\bSELECT\s+\*\s+FROM\b]]></regex>
             <rdl><![CDATA[[FLAG:\bSELECT\s+\*\s+FROM\b][IF(MISSING:TOP\s+\d+|LIMIT\s+\d+)]]]></rdl>
             <rule_desc>Detects "SELECT * FROM" in SQL queries, which can expose unnecessary or sensitive data.</rule_desc>
             <vuln_desc>If this rule matches, it suggests that the query retrieves more data than necessary, potentially exposing sensitive information and increasing the attack surface.</vuln_desc>
-            <developer>Developers should validate and specify only necessary columns in SQL queries rather than using "SELECT *" to reduce data exposure risks.</developer>
-            <reviewer>Reviewers should check if "SELECT *" is avoided in favor of selecting specific columns to limit data exposure.</reviewer>
+            <developer>Validate and specify only necessary columns in SQL queries rather than using "SELECT *" to reduce data exposure risks.</developer>
+            <reviewer>Check if "SELECT *" is avoided in favor of selecting specific columns to limit data exposure. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>SQL Query: Non-parameterized INSERT Statements</name>
             <regex><![CDATA[(?i)\bINSERT INTO\s+[^\s]+\s+\(.*=.*\$.*]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\bINSERT INTO\s+[^\s]+\s+\(.*=.*\$.*][IF(MISSING:(SqlParameter|AddWithValue|Parameters\.Add|Parameters\.AddWithValue))]]]></rdl>
             <rule_desc>Detects INSERT statements with direct use of user input, which can lead to SQL injection.</rule_desc>
             <vuln_desc>If this rule matches, it suggests an unparameterized INSERT query that may allow SQL injection attacks.</vuln_desc>
-            <developer>Developers should always use parameterized queries or prepared statements in INSERT queries to prevent SQL injection.</developer>
-            <reviewer>Reviewers should examine if INSERT statements use parameterized queries to prevent injection risks from user input.</reviewer>
+            <developer>Always use parameterized queries or prepared statements in INSERT queries to prevent SQL injection.</developer>
+            <reviewer>Examine if INSERT statements use parameterized queries to prevent injection risks from user input. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>SQL Query: UNION Queries with User Input</name>
             <regex><![CDATA[(?i)\bUNION\s+SELECT\s+.*\$.*]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\bUNION\s+SELECT\s+.*\$.*][IF(MISSING:(SqlParameter|AddWithValue|Parameters\.Add|Parameters\.AddWithValue))]]]></rdl>
             <rule_desc>Detects UNION queries that incorporate user input, which could allow SQL injection if not parameterized securely.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a UNION query that may allow SQL injection if user input is included without proper handling.</vuln_desc>
-            <developer>Developers should use parameterized queries for UNION statements to prevent SQL injection vulnerabilities.</developer>
-            <reviewer>Reviewers should check UNION queries for direct user input and confirm if secure parameterization is implemented to avoid injection risks.</reviewer>
+            <developer>Use parameterized queries for UNION statements to prevent SQL injection vulnerabilities.</developer>
+            <reviewer>Check UNION queries for direct user input and confirm if secure parameterization is implemented to avoid injection risks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Information Disclosure">
         <rule>
             <name>Stack Trace or Error Disclosure</name>
@@ -179,11 +171,10 @@
             <rdl><![CDATA[[FLAG:(?i)(Response\.Write\s*\([^)]{0,200}StackTrace|ex\.ToString\(\)|Console\.WriteLine\([^)]{0,200}Exception[^)]*\)|throw new \w*Exception\([^)]{0,200}\))]]]></rdl>
             <rule_desc>Detects unsafe error handling and stack trace exposure in .NET applications.</rule_desc>
             <vuln_desc>Using `Response.Write`, `ex.ToString()`, or similar methods to output exception details can expose sensitive stack trace information, aiding attackers in identifying vulnerabilities.</vuln_desc>
-            <developer>Developers should avoid exposing stack traces or detailed exceptions directly to users. Use secure logging frameworks (e.g., Serilog, NLog) and custom error pages in web applications.</developer>
-            <reviewer>Reviewers should ensure that stack traces and exceptions are not exposed to users and are logged securely. Verify proper error handling mechanisms in both web and non-web contexts.</reviewer>
+            <developer>Avoid exposing stack traces or detailed exceptions directly to users. Use secure logging frameworks (e.g., Serilog, NLog) and custom error pages in web applications.</developer>
+            <reviewer>Ensure that stack traces and exceptions are not exposed to users and are logged securely. Verify proper error handling mechanisms in both web and non-web contexts. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-    
     <category name="Insecure Configuration">
         <rule>
             <name>API Route Prefix: Improper Usage</name>
@@ -191,11 +182,10 @@
             <rdl><![CDATA[[FLAG:\[RoutePrefix\("]]]></rdl>
             <rule_desc>Detects the usage of [RoutePrefix] attribute in an API controller, potentially indicating improper route prefix configuration.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using [RoutePrefix] attribute in an API controller without proper configuration. Improper usage of route prefixes can lead to incorrect or insecure routing, potentially exposing sensitive APIs or introducing functional errors.</vuln_desc>
-            <developer>Developers should carefully configure [RoutePrefix] attribute in API controllers to ensure proper route prefixing. They should follow established routing conventions and ensure that route prefixes are correctly applied, avoiding conflicts and potential security risks. Additionally, developers should thoroughly test the routing configuration to ensure expected behavior and avoid functional errors.</developer>
-            <reviewer>Reviewers should check for the presence of [RoutePrefix] attribute in API controllers and assess the configuration for proper route prefixing. They should verify that developers have followed established routing conventions and consider any potential conflicts or security risks. Reviewers should also ensure that the routing configuration has been thoroughly tested to avoid functional errors.</reviewer>
+            <developer>Carefully configure [RoutePrefix] attribute in API controllers to ensure proper route prefixing. Follow established routing conventions and ensure that route prefixes are correctly applied, avoiding conflicts and potential security risks. Additionally, developers should thoroughly test the routing configuration to ensure expected behavior and avoid functional errors.</developer>
+            <reviewer>Check for the presence of [RoutePrefix] attribute in API controllers and assess the configuration for proper route prefixing. Verify that developers have followed established routing conventions and consider any potential conflicts or security risks. Also ensure that the routing configuration has been thoroughly tested to avoid functional errors. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-    
     <category name="Disabled/Missing Security Controls">
         <rule>
             <name>Request Validation: Disabled Configuration</name>
@@ -203,8 +193,8 @@
             <rdl><![CDATA[[FLAG:%@\s?Page\s?.*\s?ValidateRequest\s?=\s?(\'|\")false(\'|\")]]]></rdl>
             <rule_desc>Detects the disabled configuration of request validation in ASP.NET Web Forms, which may lead to security vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of having request validation disabled in ASP.NET Web Forms. Disabling request validation can allow attackers to inject malicious content, such as HTML, JavaScript, or SQL, leading to cross-site scripting (XSS) or other security vulnerabilities.</vuln_desc>
-            <developer>Developers should ensure that request validation is enabled in ASP.NET Web Forms to protect against common web application vulnerabilities. They should avoid disabling request validation unless there is a specific requirement, in which case, proper input validation and output encoding must be implemented to mitigate the associated risks.</developer>
-            <reviewer>Reviewers should check for the presence of disabled request validation in ASP.NET Web Forms pages. They should verify if developers have provided a valid reason for disabling request validation and have implemented appropriate input validation and output encoding techniques to prevent security vulnerabilities related to user input.</reviewer>
+            <developer>Request validation is enabled in ASP. NET Web Forms to protect against common web application vulnerabilities. Avoid disabling request validation unless there is a specific requirement, in which case, proper input validation and output encoding must be implemented to mitigate the associated risks.</developer>
+            <reviewer>Check for the presence of disabled request validation in ASP. NET Web Forms pages. Verify if developers have provided a valid reason for disabling request validation and have implemented appropriate input validation and output encoding techniques to prevent security vulnerabilities related to user input. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Server Certificate Validation: Insecure Configuration</name>
@@ -212,11 +202,10 @@
             <rdl><![CDATA[[FLAG:ServerCertificateValidationCallback\s*?\(.*?(\=|false|true)]]]></rdl>
             <rule_desc>Detects insecure configuration of the ServerCertificateValidationCallback, which may lead to improper validation of server certificates.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of insecurely configuring the ServerCertificateValidationCallback, which can result in improper validation of server certificates. Attackers can exploit this to perform man-in-the-middle attacks or bypass security measures that rely on proper certificate validation.</vuln_desc>
-            <developer>Developers should ensure that the ServerCertificateValidationCallback is securely configured to properly validate server certificates. They should follow best practices for certificate validation, including verifying the certificate's chain of trust, checking for revocation status, and validating the server's hostname. Additionally, developers should consider using well-established libraries and frameworks that provide robust certificate validation mechanisms.</developer>
-            <reviewer>Reviewers should check for the presence of insecure configuration of the ServerCertificateValidationCallback. They should assess if developers have followed best practices for certificate validation, such as verifying the certificate's chain of trust, checking for revocation status, and validating the server's hostname. Reviewers should also verify the usage of well-established libraries or frameworks that provide robust certificate validation mechanisms.</reviewer>
+            <developer>The ServerCertificateValidationCallback is securely configured to properly validate server certificates. Follow best practices for certificate validation, including verifying the certificate's chain of trust, checking for revocation status, and validating the server's hostname. Additionally, developers should consider using well-established libraries and frameworks that provide robust certificate validation mechanisms.</developer>
+            <reviewer>Check for the presence of insecure configuration of the ServerCertificateValidationCallback. Assess whether developers have followed best practices for certificate validation, such as verifying the certificate's chain of trust, checking for revocation status, and validating the server's hostname. Also verify the usage of well-established libraries or frameworks that provide robust certificate validation mechanisms. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-    
     <category name="Effective/Standard Mitigations Implemented">
         <rule>
             <name>XSS Mitigation: HTML Encoding using Razor</name>
@@ -224,8 +213,8 @@
             <rdl><![CDATA[[FLAG:\@Html\.Raw\(.*\)]]]></rdl>
             <rule_desc>Detects the usage of HTML encoding using Razor to mitigate XSS vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates that HTML encoding using Razor's `Html.Raw` method is being used to mitigate XSS vulnerabilities. This is a recommended best practice to prevent the execution of untrusted user input as HTML or script code.</vuln_desc>
-            <developer>Developers should ensure that HTML encoding using Razor's `Html.Raw` method is implemented to mitigate XSS vulnerabilities. By properly encoding user-generated or dynamic content before rendering it in HTML templates, the risk of injecting malicious code can be significantly reduced.</developer>
-            <reviewer>Reviewers should check for the presence of HTML encoding using Razor's `Html.Raw` method as a mitigation against XSS vulnerabilities. They should verify if developers have consistently applied encoding to user-generated or dynamic content and assess the effectiveness of this mitigation in preventing the injection of malicious code. Reviewers should also ensure that secure coding practices are followed in conjunction with HTML encoding to provide comprehensive protection against XSS attacks.</reviewer>
+            <developer>HTML encoding using Razor's `Html. Raw` method is implemented to mitigate XSS vulnerabilities. By properly encoding user-generated or dynamic content before rendering it in HTML templates, the risk of injecting malicious code can be significantly reduced.</developer>
+            <reviewer>Check for the presence of HTML encoding using Razor's `Html. Raw` method as a mitigation against XSS vulnerabilities. Verify if developers have consistently applied encoding to user-generated or dynamic content and assess the effectiveness of this mitigation in preventing the injection of malicious code. Also ensure that secure coding practices are followed in conjunction with HTML encoding to provide comprehensive protection against XSS attacks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>CORS Mitigation: Allow Specific Origins</name>
@@ -233,8 +222,8 @@
             <rdl><![CDATA[[FLAG:\[EnableCors\s*\(\s*\"AllowSpecificOrigins\"\s*\)\]]]]></rdl>
             <rule_desc>Detects the usage of specific origin-based CORS configuration.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using a specific origin-based CORS configuration. Allowing specific origins without careful consideration can lead to insecure Cross-Origin Resource Sharing (CORS) settings and potential security vulnerabilities.</vuln_desc>
-            <developer>Developers should review and validate the specific origins allowed in CORS configurations. They should ensure that only trusted origins are explicitly permitted to access resources, and consider using other CORS-related security measures such as handling preflight requests, setting appropriate response headers, and implementing access controls based on authentication and authorization.</developer>
-            <reviewer>Reviewers should verify if the CORS configuration restricts resource access to specific origins in a secure and controlled manner. They should ensure that the list of allowed origins is reviewed and approved, and that additional CORS-related security measures are in place to prevent unauthorized cross-origin requests and protect sensitive data.</reviewer>
+            <developer>Review and validate the specific origins allowed in CORS configurations. Ensure that only trusted origins are explicitly permitted to access resources, and consider using other CORS-related security measures such as handling preflight requests, setting appropriate response headers, and implementing access controls based on authentication and authorization.</developer>
+            <reviewer>The CORS configuration restricts resource access to specific origins in a secure and controlled manner. Ensure that the list of allowed origins is reviewed and approved, and that additional CORS-related security measures are in place to prevent unauthorized cross-origin requests and protect sensitive data. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

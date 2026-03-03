@@ -7,7 +7,7 @@
             <rule_desc>Detects debug mode settings in Go web frameworks.</rule_desc>
             <vuln_desc>Debug mode can expose internals and verbose diagnostics.</vuln_desc>
             <developer>Use release/production mode in deployment.</developer>
-            <reviewer>Verify framework mode defaults in production runtime.</reviewer>
+            <reviewer>Verify framework mode defaults in production runtime. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Echo TLS Validation Bypass</name>
@@ -16,7 +16,7 @@
             <rule_desc>Detects TLS certificate verification bypass in HTTP/TLS clients.</rule_desc>
             <vuln_desc>Skipping cert validation enables MITM attacks.</vuln_desc>
             <developer>Keep certificate validation enabled and implement proper trust chains.</developer>
-            <reviewer>Inspect all transport/client configs for bypass settings.</reviewer>
+            <reviewer>Inspect all transport/client configs for bypass settings. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Echo SQL Query Concatenation Sink</name>
@@ -25,7 +25,7 @@
             <rule_desc>Detects dynamic SQL construction via string formatting.</rule_desc>
             <vuln_desc>Formatted SQL may introduce SQL injection vulnerabilities.</vuln_desc>
             <developer>Use parameterized query APIs and strict input validation.</developer>
-            <reviewer>Trace user input into query format strings.</reviewer>
+            <reviewer>Trace user input into query format strings. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Echo Permissive CORS</name>
@@ -34,7 +34,7 @@
             <rule_desc>Detects wildcard CORS policies in Go services.</rule_desc>
             <vuln_desc>Wildcard origins can expose APIs to arbitrary websites.</vuln_desc>
             <developer>Limit CORS to explicit trusted origins.</developer>
-            <reviewer>Validate CORS policy builders and middleware config.</reviewer>
+            <reviewer>Validate CORS policy builders and middleware config. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Echo Hardcoded Secret Material</name>
@@ -43,7 +43,7 @@
             <rule_desc>Detects likely hardcoded secrets in Go source/config.</rule_desc>
             <vuln_desc>Hardcoded secrets can be extracted from code or binaries.</vuln_desc>
             <developer>Use environment/config secret providers and rotate keys.</developer>
-            <reviewer>Confirm no production secrets are committed.</reviewer>
+            <reviewer>Confirm no production secrets are committed. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

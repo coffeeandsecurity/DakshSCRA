@@ -7,10 +7,9 @@
             <rdl><![CDATA[[FLAG:\b(?:std::cin|getline)\b]]]></rdl>
             <rule_desc>Detects usage of standard input functions that can introduce untrusted input into the program.</rule_desc>
             <vuln_desc>If matched, this indicates potential vulnerabilities from untrusted input without validation. Malicious inputs can lead to buffer overflows, injection attacks, or unexpected behavior.</vuln_desc>
-            <developer>Developers should validate and sanitize input received through `cin` and `getline` to prevent injection attacks. Consider setting length limits and using regex patterns to filter input where applicable.</developer>
-            <reviewer>Reviewers should ensure proper input handling for functions like `cin` or `getline`. They should confirm that developers have implemented input validation techniques to handle edge cases and ensure safe processing.</reviewer>
+            <developer>Validate and sanitize input received through `cin` and `getline` to prevent injection attacks. Consider setting length limits and using regex patterns to filter input where applicable.</developer>
+            <reviewer>Reviewers should ensure proper input handling for functions like `cin` or `getline`. Confirm that developers have implemented input validation techniques to handle edge cases and ensure safe processing. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-        
         <rule>
             <!-- Applicable for C and C++ -->
             <name>Unsafe Use of Command Execution Functions</name>
@@ -19,9 +18,8 @@
             <rule_desc>Detects the usage of command execution functions that may introduce command injection risks and unauthorized access to system resources.</rule_desc>
             <vuln_desc>Improper use of commands like `system()`, `popen()`, `exec()`, and `CreateProcess()` can expose applications to command injection vulnerabilities and allow unauthorized access to critical system functionalities.</vuln_desc>
             <developer>Minimize the use of command execution functions. When necessary, validate and sanitize any user input passed to these commands. Prefer safer alternatives such as `std::filesystem` operations or libraries like `boost::process`.</developer>
-            <reviewer>Reviewers should ensure that calls to command execution functions are justified, that inputs are thoroughly sanitized, and that safer alternatives are considered. Look for proper error handling and minimal privileges when interacting with system resources.</reviewer>
+            <reviewer>Reviewers should ensure that calls to command execution functions are justified, that inputs are thoroughly sanitized, and that safer alternatives are considered. Look for proper error handling and minimal privileges when interacting with system resources. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <!-- Applicable for C and C++ -->
             <name>Unsafe Loop Handling Over Arrays or Vectors</name>
@@ -30,10 +28,9 @@
             <rule_desc>Detects loops iterating over arrays, vectors, or strings.</rule_desc>
             <vuln_desc>Improperly bounded loops can cause buffer or integer overflows, compromising program stability.</vuln_desc>
             <developer>Use bounds-checked loops, such as range-based `for` loops, to prevent overflows.</developer>
-            <reviewer>Ensure all loops use proper bounds to avoid access violations.</reviewer>
+            <reviewer>Ensure all loops use proper bounds to avoid access violations. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Memory Safety Issues">
         <rule>
             <!-- Applicable for C and C++ -->
@@ -43,9 +40,8 @@
             <rule_desc>Detects usage of unsafe string manipulation functions that can lead to buffer overflows.</rule_desc>
             <vuln_desc>These functions are not safe for use with untrusted input and can cause buffer overflows or memory corruption.</vuln_desc>
             <developer>Use `std::string` or `std::snprintf()` to handle strings safely in C++.</developer>
-            <reviewer>Reviewers should look for unsafe string functions and ensure safe C++ standard library alternatives are used.</reviewer>
+            <reviewer>Reviewers should look for unsafe string functions and ensure safe C++ standard library alternatives are used. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <!-- Applicable for C++ -->
             <name>Unsafe Use of std::vector::at()</name>
@@ -54,9 +50,8 @@
             <rule_desc>Detects unsafe access to `std::vector` elements without boundary checks.</rule_desc>
             <vuln_desc>Out-of-range access can cause exceptions or undefined behavior.</vuln_desc>
             <developer>Ensure vector access is within bounds.</developer>
-            <reviewer>Check for proper error handling during vector access.</reviewer>
+            <reviewer>Check for proper error handling during vector access. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <!-- Applicable for C++ -->
             <name>Dangling Pointer: delete without nullptr</name>
@@ -64,10 +59,9 @@
             <rdl><![CDATA[[FLAG:\bdelete\s+\b(?:[^\s]+)\b]]]></rdl>
             <rule_desc>Detects use of `delete` without setting the pointer to `nullptr`, which can result in dangling pointers.</rule_desc>
             <vuln_desc>Using `delete` without setting the pointer to `nullptr` can cause dangling pointers, leading to undefined behavior or security vulnerabilities.</vuln_desc>
-            <developer>Developers should set pointers to `nullptr` after deletion to prevent dangling references. Using smart pointers (like `std::unique_ptr`) is recommended for automatic memory management.</developer>
-            <reviewer>Reviewers should ensure that pointers are set to `nullptr` after deletion, or smart pointers are employed to handle memory safely.</reviewer>
+            <developer>Set pointers to `nullptr` after deletion to prevent dangling references. Using smart pointers (like `std::unique_ptr`) is recommended for automatic memory management.</developer>
+            <reviewer>Reviewers should ensure that pointers are set to `nullptr` after deletion, or smart pointers are employed to handle memory safely. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>Access to Freed Memory</name>
             <regex><![CDATA[\bfree\s*\(|delete\s*\[?\]?]]></regex>
@@ -75,10 +69,9 @@
             <rule_desc>Detects access to memory that has already been freed.</rule_desc>
             <vuln_desc>Using memory after it has been freed can lead to undefined behavior, crashes, or security vulnerabilities.</vuln_desc>
             <developer>Set pointers to `nullptr` after freeing or deleting memory to avoid reuse.</developer>
-            <reviewer>Look for any use-after-free patterns in the code, especially in complex control flows.</reviewer>
+            <reviewer>Look for any use-after-free patterns in the code, especially in complex control flows. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Memory Management and Allocation">
         <rule>
             <!-- Applicable for C and C++ -->
@@ -88,9 +81,8 @@
             <rule_desc>Detects usage of `new` or `malloc()` for manual memory allocation.</rule_desc>
             <vuln_desc>Manual memory allocation requires careful handling. Failing to check for successful allocation can lead to null pointer dereferencing. It is also prone to memory leaks if deallocation is not handled correctly.</vuln_desc>
             <developer>Avoid manual memory management where possible. Use smart pointers (like `std::unique_ptr`) or standard containers (like `std::vector`) to manage memory safely. Always check for null pointers if using `new` or `malloc()`.</developer>
-            <reviewer>Reviewers should ensure that all manual memory allocations are followed by appropriate null checks or are replaced with smart pointers or standard containers.</reviewer>
+            <reviewer>Reviewers should ensure that all manual memory allocations are followed by appropriate null checks or are replaced with smart pointers or standard containers. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <!-- Applicable for C++ -->
             <name>Potential Memory Leak: Use of `new` Without `delete`</name>
@@ -99,9 +91,8 @@
             <rule_desc>Detects dynamic memory allocation using `new` but no matching `delete`, potentially leading to memory leaks.</rule_desc>
             <vuln_desc>Using `new` for manual memory management requires an explicit `delete` call. Failure to release allocated memory can result in memory leaks, degrading performance and stability.</vuln_desc>
             <developer>Avoid raw pointers where possible. Use smart pointers (e.g., `std::unique_ptr`, `std::shared_ptr`) to manage memory safely and prevent leaks.</developer>
-            <reviewer>Check whether allocated memory is properly deallocated using `delete` or managed by smart pointers. If raw pointers are unavoidable, ensure all `new` calls have corresponding `delete` calls.</reviewer>
+            <reviewer>Check whether allocated memory is properly deallocated using `delete` or managed by smart pointers. If raw pointers are unavoidable, ensure all `new` calls have corresponding `delete` calls. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <!-- Applicable for C++ -->
             <name>Null Pointer Dereference with Smart Pointers</name>
@@ -110,9 +101,8 @@
             <rule_desc>Detects potential misuse of smart pointers, leading to null pointer dereference.</rule_desc>
             <vuln_desc>Smart pointers should be properly checked before use to avoid dereferencing null values.</vuln_desc>
             <developer>Perform null checks on smart pointers before dereferencing them.</developer>
-            <reviewer>Ensure all smart pointers are validated before use.</reviewer>
+            <reviewer>Ensure all smart pointers are validated before use. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <!-- Applicable for C and C++ -->
             <name>Access to Freed Memory</name>
@@ -121,9 +111,8 @@
             <rule_desc>Detects potential access to memory that has already been freed.</rule_desc>
             <vuln_desc>Using memory after it has been freed can lead to undefined behavior, crashes, or security vulnerabilities.</vuln_desc>
             <developer>Set pointers to `nullptr` after freeing or deleting memory to avoid reuse.</developer>
-            <reviewer>Look for any use-after-free patterns in the code, especially in complex control flows.</reviewer>
+            <reviewer>Look for any use-after-free patterns in the code, especially in complex control flows. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <!-- Applicable for C and C++ -->
             <name>Unsafe Use of realloc()</name>
@@ -132,9 +121,8 @@
             <rule_desc>Detects usage of `realloc()` which may modify object alignment.</rule_desc>
             <vuln_desc>Changing the alignment of objects through `realloc()` can lead to undefined behavior.</vuln_desc>
             <developer>Consider alternatives to `realloc()` for resizing memory, ensuring alignment remains correct.</developer>
-            <reviewer>Check if memory resizing affects object alignment or introduces memory access issues.</reviewer>
+            <reviewer>Check if memory resizing affects object alignment or introduces memory access issues. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <!-- Applicable for C++ -->
             <name>Memory Deallocation: delete vs. delete[]</name>
@@ -143,10 +131,9 @@
             <rule_desc>Detects improper usage of `delete` vs. `delete[]` for memory deallocation.</rule_desc>
             <vuln_desc>Using `delete` on an array allocated with `new[]` can lead to undefined behavior.</vuln_desc>
             <developer>Use `delete[]` for arrays allocated with `new[]` to ensure proper deallocation of memory.</developer>
-            <reviewer>Ensure that the appropriate deallocation function (`delete` vs. `delete[]`) is used based on how memory was allocated.</reviewer>
+            <reviewer>Ensure that the appropriate deallocation function (`delete` vs. `delete[]`) is used based on how memory was allocated. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Arithmetic and Numeric Errors">
         <rule>
             <!-- Applicable for C and C++ -->
@@ -156,10 +143,9 @@
             <rule_desc>Detects arithmetic operations prone to overflow or wraparound.</rule_desc>
             <vuln_desc>Operations involving large constants or values near boundaries may cause integer overflows or wraparound, leading to undefined behavior or security vulnerabilities.</vuln_desc>
             <developer>Use safe arithmetic libraries or perform boundary checks to prevent overflow.</developer>
-            <reviewer>Ensure arithmetic operations include overflow protection mechanisms, such as boundary checks or safer arithmetic functions.</reviewer>
+            <reviewer>Ensure arithmetic operations include overflow protection mechanisms, such as boundary checks or safer arithmetic functions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Type Safety and Casting">
         <rule>
             <!-- Applicable for C++ -->
@@ -168,11 +154,10 @@
             <rdl><![CDATA[[FLAG:\breinterpret_cast<[^>]+>\(]]]></rdl>
             <rule_desc>Detects the usage of `reinterpret_cast`, which can lead to unsafe type conversions.</rule_desc>
             <vuln_desc>If matched, this indicates a potential vulnerability due to incorrect or dangerous type casting, possibly resulting in undefined behavior or security issues.</vuln_desc>
-            <developer>Developers should use `reinterpret_cast` cautiously, ensuring the cast is necessary and safe. Where possible, safer alternatives like `static_cast` should be preferred.</developer>
-            <reviewer>Reviewers should check for the proper use of `reinterpret_cast` and assess whether safer casting techniques could be applied. They should also validate the correctness of such casts.</reviewer>
+            <developer>Use `reinterpret_cast` cautiously, ensuring the cast is necessary and safe. Where possible, safer alternatives like `static_cast` should be preferred.</developer>
+            <reviewer>Reviewers should check for the proper use of `reinterpret_cast` and assess whether safer casting techniques could be applied. Also validate the correctness of such casts. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Exception Safety and Resource Management">
         <rule>
             <!-- Applicable for C++ -->
@@ -182,10 +167,9 @@
             <rule_desc>Detects dynamic memory allocations inside `try` blocks that may lead to memory leaks if an exception is thrown.</rule_desc>
             <vuln_desc>If an exception occurs before resources are released, it can result in memory leaks or resource exhaustion.</vuln_desc>
             <developer>Use RAII (Resource Acquisition Is Initialization) patterns or smart pointers to ensure proper resource cleanup, even if exceptions are thrown.</developer>
-            <reviewer>Reviewers should confirm that resources are managed using RAII or released safely in `catch` blocks to prevent leaks.</reviewer>
+            <reviewer>Reviewers should confirm that resources are managed using RAII or released safely in `catch` blocks to prevent leaks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="File Handling and Permissions">
         <rule>
             <!-- Applicable for C++ -->
@@ -195,9 +179,8 @@
             <rule_desc>Detects the use of `std::ofstream` for file creation without specifying secure permissions.</rule_desc>
             <vuln_desc>Files created with `std::ofstream` may have insecure default permissions, potentially exposing sensitive data to unauthorized access.</vuln_desc>
             <developer>Use `umask()` or platform-specific APIs to enforce appropriate file permissions during creation.</developer>
-            <reviewer>Ensure that files are created with correct permissions to prevent unauthorized access to sensitive data.</reviewer>
+            <reviewer>Ensure that files are created with correct permissions to prevent unauthorized access to sensitive data. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <!-- Applicable for C++ -->
             <name>Unsafe File Handling: Insecure File Path Usage</name>
@@ -206,10 +189,9 @@
             <rule_desc>Detects file handling operations (`ifstream`, `ofstream`, `fstream`) to ensure they are secure and protected against path traversal vulnerabilities.</rule_desc>
             <vuln_desc>Improper use of file streams (e.g., `ifstream`, `ofstream`, `fstream`) without validating file paths can lead to path traversal vulnerabilities. Attackers may exploit this to access sensitive files outside the intended directory.</vuln_desc>
             <developer>Ensure that file paths are properly validated to prevent path traversal. Avoid using user-supplied input directly for file paths. Use safe libraries or mechanisms (e.g., `std::filesystem`) to handle paths securely. Always close file streams after use to avoid resource leaks.</developer>
-            <reviewer>Verify that file paths are sanitized to prevent traversal attacks. Look for proper error handling for file operations and confirm that all streams are closed after use. Ensure that user input is not directly passed into `open()` without validation.</reviewer>
+            <reviewer>Verify that file paths are sanitized to prevent traversal attacks. Look for proper error handling for file operations and confirm that all streams are closed after use. Ensure that user input is not directly passed into `open()` without validation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Format String Vulnerabilities">
         <rule>
             <!-- Applicable for C++ -->
@@ -219,9 +201,8 @@
             <rule_desc>Detects unsafe use of format strings with `printf`-like functions.</rule_desc>
             <vuln_desc>Using untrusted input as a format string may introduce vulnerabilities similar to those in C.</vuln_desc>
             <developer>Always use fixed format strings when printing user input to avoid format string vulnerabilities.</developer>
-            <reviewer>Check for any direct use of user input in format strings.</reviewer>
+            <reviewer>Check for any direct use of user input in format strings. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <!-- Applicable for C and C++ -->
             <name>Potential Format String Attack</name>
@@ -230,10 +211,9 @@
             <rule_desc>Detects usage of format functions with potentially unsafe input.</rule_desc>
             <vuln_desc>Format string attacks can expose memory content or execute arbitrary code.</vuln_desc>
             <developer>Use format specifiers and avoid direct user input.</developer>
-            <reviewer>Ensure input sanitization and safe usage of format functions.</reviewer>
+            <reviewer>Ensure input sanitization and safe usage of format functions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Privilege Management">
         <rule>
             <!-- Applicable for C and C++ -->
@@ -243,10 +223,9 @@
             <rule_desc>Detects the use of privilege-changing functions and ensures proper handling practices.</rule_desc>
             <vuln_desc>Failure to drop privileges correctly or improper use of privilege-dropping functions may lead to privilege escalation vulnerabilities.</vuln_desc>
             <developer>Follow the correct sequence: `initgroups()` → `setgid()` → `setuid()`. Ensure error codes are checked and privileges are dropped early in the program.</developer>
-            <reviewer>Review privilege management logic to ensure correct ordering, error handling, and that privilege changes are handled securely.</reviewer>
+            <reviewer>Review privilege management logic to ensure correct ordering, error handling, and that privilege changes are handled securely. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Process Environment Issues">
         <rule>
             <!-- Applicable for C and C++ -->
@@ -256,10 +235,9 @@
             <rule_desc>Detects use of `std::getenv()` for accessing environment variables.</rule_desc>
             <vuln_desc>Accessing environment variables for sensitive data exposes information to risks, as environment values can be manipulated or accessed by other processes.</vuln_desc>
             <developer>Use more secure mechanisms (e.g., IPC or sockets) for sensitive data transmission. Avoid using `std::getenv()` for passwords or secrets.</developer>
-            <reviewer>Verify that environment variables are not used to store or transmit sensitive data.</reviewer>
+            <reviewer>Verify that environment variables are not used to store or transmit sensitive data. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Sensitive Information Handling">
         <rule>
             <!-- Applicable for C++, but concepts are relevant in C -->
@@ -269,10 +247,9 @@
             <rule_desc>Detects the improper handling of sensitive data.</rule_desc>
             <vuln_desc>Using immutable strings (like `std::string`) for passwords can result in sensitive data being retained in memory longer than necessary. Improper deletion may lead to information leakage.</vuln_desc>
             <developer>Use arrays or custom data structures instead of `std::string` for sensitive information. Overwrite buffers using `memset()` before releasing memory, and apply `mlock()` to prevent swapping.</developer>
-            <reviewer>Check that sensitive data is managed using mutable structures and erased properly before releasing memory.</reviewer>
+            <reviewer>Check that sensitive data is managed using mutable structures and erased properly before releasing memory. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Concurrency and Race Conditions">
         <rule>
             <!-- Applicable for C++ code using std::thread -->
@@ -281,10 +258,9 @@
             <rdl><![CDATA[[FLAG:\bstd::thread\b\s*\(]]]></rdl>
             <rule_desc>Detects the usage of threads without mutex protection, which can lead to race conditions.</rule_desc>
             <vuln_desc>If matched, this indicates that shared data might not be protected properly, leading to race conditions and undefined behavior.</vuln_desc>
-            <developer>Developers should use mutexes (`std::mutex`) or other synchronization mechanisms to protect shared data accessed by multiple threads.</developer>
-            <reviewer>Reviewers should ensure that appropriate synchronization primitives, such as mutexes or atomic variables, are used with `std::thread` to avoid race conditions.</reviewer>
+            <developer>Use mutexes (`std::mutex`) or other synchronization mechanisms to protect shared data accessed by multiple threads.</developer>
+            <reviewer>Reviewers should ensure that appropriate synchronization primitives, such as mutexes or atomic variables, are used with `std::thread` to avoid race conditions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <!-- Applicable for C and C++ code using pthreads -->
             <name>Race Condition with Shared Resource</name>
@@ -293,10 +269,9 @@
             <rule_desc>Detects potential race conditions in multi-threaded applications.</rule_desc>
             <vuln_desc>Race conditions occur when multiple threads access shared resources simultaneously.</vuln_desc>
             <developer>Use mutexes or semaphores to synchronize access.</developer>
-            <reviewer>Check that shared resources are properly synchronized.</reviewer>
+            <reviewer>Check that shared resources are properly synchronized. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Declarations and Initialization">
         <rule>
             <!-- Applicable for C++ -->
@@ -306,9 +281,8 @@
             <rule_desc>Detects the definition of C-style variadic functions, which can lead to type safety issues.</rule_desc>
             <vuln_desc>Using variadic functions can introduce risks due to the lack of type checking, potentially leading to undefined behavior.</vuln_desc>
             <developer>Consider alternatives that provide type safety, as variadic functions can lead to serious security vulnerabilities.</developer>
-            <reviewer>Investigate the use of variadic functions and assess their impact on type safety and security.</reviewer>
+            <reviewer>Investigate the use of variadic functions and assess their impact on type safety and security. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <!-- Applicable for C++ -->
             <name>Information Leakage Across Trust Boundaries: Security Risk</name>
@@ -317,9 +291,8 @@
             <rule_desc>Detects passing class objects that may leak sensitive information across trust boundaries.</rule_desc>
             <vuln_desc>Improper handling of class objects can expose internal state or sensitive data, posing security threats.</vuln_desc>
             <developer>Encapsulate sensitive data within objects to avoid leakage during transitions across trust boundaries.</developer>
-            <reviewer>Investigate class interfaces for potential information leakage that could be exploited.</reviewer>
+            <reviewer>Investigate class interfaces for potential information leakage that could be exploited. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <!-- Applicable for C++ -->
             <name>Static Object Initialization Cycles: Undefined Behavior Risk</name>
@@ -328,9 +301,8 @@
             <rule_desc>Detects potential cycles during the initialization of static objects, which can lead to undefined behavior.</rule_desc>
             <vuln_desc>Initialization cycles can cause static initialization order issues, leading to crashes or undefined states.</vuln_desc>
             <developer>Use function-local static variables or ensure initialization order is well-defined to avoid issues.</developer>
-            <reviewer>Investigate static object initializations for potential cycles that could lead to undefined behavior.</reviewer>
+            <reviewer>Investigate static object initializations for potential cycles that could lead to undefined behavior. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <!-- Applicable for C++ -->
             <name>Exceptions in Destructors: Risk of Unhandled Behavior</name>
@@ -339,9 +311,8 @@
             <rule_desc>Detects exceptions thrown from destructors or deallocation functions.</rule_desc>
             <vuln_desc>Throwing exceptions from destructors can cause program termination and resource leaks, posing security risks.</vuln_desc>
             <developer>Catch and handle exceptions within destructors or deallocation functions to prevent unexpected behavior.</developer>
-            <reviewer>Investigate destructors that may throw exceptions, ensuring proper handling to avoid security issues.</reviewer>
+            <reviewer>Investigate destructors that may throw exceptions, ensuring proper handling to avoid security issues. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <!-- Applicable for C and C++ -->
             <name>Information Leakage with Structures: Security Concern</name>
@@ -350,10 +321,9 @@
             <rule_desc>Detects passing structures across trust boundaries, potentially leaking sensitive information.</rule_desc>
             <vuln_desc>Improper handling of structures can expose sensitive data across boundaries, leading to security vulnerabilities.</vuln_desc>
             <developer>Encapsulate sensitive data within structures and provide secure access methods for crossing trust boundaries.</developer>
-            <reviewer>Investigate structures for potential information leakage that could be exploited.</reviewer>
+            <reviewer>Investigate structures for potential information leakage that could be exploited. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Compiler and Build Configuration Issues">
         <rule>
             <!-- Applicable for C++ -->
@@ -363,9 +333,8 @@
             <rule_desc>Detects missing compiler flags that enforce runtime security mitigations.</rule_desc>
             <vuln_desc>Without these flags, binaries are vulnerable to attacks like buffer overflows or ROP.</vuln_desc>
             <developer>Use `/NXCOMPAT`, `/GS`, and `/guard:cf` to enable runtime protections.</developer>
-            <reviewer>Ensure these flags are present in build configurations.</reviewer>
+            <reviewer>Ensure these flags are present in build configurations. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <!-- Applicable for C++ -->
             <name>Insufficient Code Provenance Guarantees in Build Configuration</name>
@@ -374,7 +343,7 @@
             <rule_desc>Detects missing compiler flags that ensure strong code provenance.</rule_desc>
             <vuln_desc>Lack of these guarantees can hinder incident response and code tracing.</vuln_desc>
             <developer>Enable `/ZH:SHA_SHA256` and `/SOURCELINK` for secure builds.</developer>
-            <reviewer>Verify that builds include source link and symbol archive generation.</reviewer>
+            <reviewer>Verify that builds include source link and symbol archive generation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

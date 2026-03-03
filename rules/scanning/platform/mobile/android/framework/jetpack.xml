@@ -7,7 +7,7 @@
             <rule_desc>Detects cleartext transport allowances in Android app manifest/network config.</rule_desc>
             <vuln_desc>Cleartext traffic can expose sensitive data to interception.</vuln_desc>
             <developer>Disable cleartext traffic and enforce TLS for all endpoints.</developer>
-            <reviewer>Review AndroidManifest and network security config for cleartext allowances.</reviewer>
+            <reviewer>Review AndroidManifest and network security config for cleartext allowances. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Android Backup Allowed</name>
@@ -16,7 +16,7 @@
             <rule_desc>Detects app backup enabled in AndroidManifest.</rule_desc>
             <vuln_desc>Backup-enabled apps may leak sensitive app data via backup channels.</vuln_desc>
             <developer>Set allowBackup to false unless explicitly required and risk-assessed.</developer>
-            <reviewer>Validate backup policy for apps handling sensitive data.</reviewer>
+            <reviewer>Validate backup policy for apps handling sensitive data. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Android Debuggable Build Flag</name>
@@ -25,7 +25,7 @@
             <rule_desc>Detects debuggable builds/configuration.</rule_desc>
             <vuln_desc>Debuggable apps are easier to tamper with and introspect in production.</vuln_desc>
             <developer>Ensure release builds are non-debuggable.</developer>
-            <reviewer>Verify manifest and Gradle build types for release-safe values.</reviewer>
+            <reviewer>Verify manifest and Gradle build types for release-safe values. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Android Exported Component</name>
@@ -34,7 +34,7 @@
             <rule_desc>Detects explicitly exported app components.</rule_desc>
             <vuln_desc>Exported components may be invoked by other apps if not permission-protected.</vuln_desc>
             <developer>Restrict exports and require permissions where exposure is necessary.</developer>
-            <reviewer>Review all exported components for authorization and input validation.</reviewer>
+            <reviewer>Review all exported components for authorization and input validation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Android WebView JavaScript Enabled</name>
@@ -43,7 +43,7 @@
             <rule_desc>Detects JavaScript enabled in WebView.</rule_desc>
             <vuln_desc>WebView JavaScript with untrusted content can enable script injection paths.</vuln_desc>
             <developer>Disable JavaScript unless required and harden content sources.</developer>
-            <reviewer>Audit WebView content origins and bridge exposure.</reviewer>
+            <reviewer>Audit WebView content origins and bridge exposure. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Android WebView File URL Universal Access</name>
@@ -52,7 +52,7 @@
             <rule_desc>Detects permissive WebView file URL access settings.</rule_desc>
             <vuln_desc>File URL access can enable local file disclosure and script abuse.</vuln_desc>
             <developer>Disable permissive file URL access flags unless strictly needed.</developer>
-            <reviewer>Verify WebView file access settings are hardened.</reviewer>
+            <reviewer>Verify WebView file access settings are hardened. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Android JavaScript Interface Exposure</name>
@@ -61,7 +61,7 @@
             <rule_desc>Detects JavaScript bridge exposure into WebView.</rule_desc>
             <vuln_desc>Improperly exposed JS interfaces can lead to code execution/data leakage.</vuln_desc>
             <developer>Expose minimal interfaces and restrict untrusted content loading.</developer>
-            <reviewer>Review annotated bridge methods and content trust boundaries.</reviewer>
+            <reviewer>Review annotated bridge methods and content trust boundaries. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Android Hardcoded Secret Marker</name>
@@ -70,7 +70,7 @@
             <rule_desc>Detects likely hardcoded secret material in Android code/config.</rule_desc>
             <vuln_desc>Hardcoded secrets can be extracted from source or app package artifacts.</vuln_desc>
             <developer>Move secrets to server-side issuance/secure runtime retrieval.</developer>
-            <reviewer>Validate no production secrets are embedded in mobile clients.</reviewer>
+            <reviewer>Validate no production secrets are embedded in mobile clients. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

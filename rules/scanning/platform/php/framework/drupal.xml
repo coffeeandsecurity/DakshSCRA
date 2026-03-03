@@ -7,7 +7,7 @@
             <rule_desc>Detects framework/application debug mode enabled in deployable configuration.</rule_desc>
             <vuln_desc>Debug mode can expose stack traces, internal paths, and sensitive runtime details.</vuln_desc>
             <developer>Disable debug mode in production and separate dev/prod config.</developer>
-            <reviewer>Verify production config and runtime env disable debug flags.</reviewer>
+            <reviewer>Verify production config and runtime env disable debug flags. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Drupal Dangerous Dynamic Eval/Template Execution</name>
@@ -16,7 +16,7 @@
             <rule_desc>Detects dangerous dynamic code execution primitives in PHP code paths.</rule_desc>
             <vuln_desc>Dynamic execution APIs can lead to remote code execution when user input is involved.</vuln_desc>
             <developer>Avoid dynamic execution; use strict allow-lists and safer alternatives.</developer>
-            <reviewer>Review data flow into dynamic execution sinks for user-controlled input.</reviewer>
+            <reviewer>Review data flow into dynamic execution sinks for user-controlled input. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Drupal Raw SQL Query Construction</name>
@@ -25,7 +25,7 @@
             <rule_desc>Detects raw/dynamic SQL construction in framework and DB access calls.</rule_desc>
             <vuln_desc>Dynamic SQL with untrusted input can introduce SQL injection vulnerabilities.</vuln_desc>
             <developer>Use parameterized queries/prepared statements and validate input.</developer>
-            <reviewer>Check whether untrusted data reaches raw SQL APIs without binding.</reviewer>
+            <reviewer>Check whether untrusted data reaches raw SQL APIs without binding. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Drupal Permissive CORS Configuration</name>
@@ -34,7 +34,7 @@
             <rule_desc>Detects wildcard CORS settings in application or framework config.</rule_desc>
             <vuln_desc>Wildcard CORS may allow untrusted origins to access sensitive endpoints.</vuln_desc>
             <developer>Restrict CORS origins to explicit trusted domains.</developer>
-            <reviewer>Validate CORS policies are environment-specific and least-privilege.</reviewer>
+            <reviewer>Validate CORS policies are environment-specific and least-privilege. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Drupal Hardcoded Secret Material</name>
@@ -43,7 +43,7 @@
             <rule_desc>Detects likely hardcoded secret material in source/config.</rule_desc>
             <vuln_desc>Hardcoded secrets risk leakage through source exposure and artifact distribution.</vuln_desc>
             <developer>Move secrets to secure secret management and rotate compromised values.</developer>
-            <reviewer>Review whether detected literals are real credentials and enforce secret hygiene.</reviewer>
+            <reviewer>Review whether detected literals are real credentials and enforce secret hygiene. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

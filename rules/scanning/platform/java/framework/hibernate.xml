@@ -7,7 +7,7 @@
             <rule_desc>Detects potentially overexposed management endpoints.</rule_desc>
             <vuln_desc>Overexposed management endpoints can leak operational and sensitive data.</vuln_desc>
             <developer>Limit exposed endpoints and enforce auth/network restrictions.</developer>
-            <reviewer>Verify actuator/management endpoints are hardened in production.</reviewer>
+            <reviewer>Verify actuator/management endpoints are hardened in production. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Hibernate SQL Query Concatenation Sink</name>
@@ -16,7 +16,7 @@
             <rule_desc>Detects dynamic SQL/HQL query concatenation patterns.</rule_desc>
             <vuln_desc>Concatenated queries may be vulnerable to SQL injection.</vuln_desc>
             <developer>Use parameterized queries/prepared statements.</developer>
-            <reviewer>Inspect tainted data flow into query construction APIs.</reviewer>
+            <reviewer>Inspect tainted data flow into query construction APIs. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Hibernate Permissive CORS</name>
@@ -25,7 +25,7 @@
             <rule_desc>Detects wildcard CORS in controller/global config.</rule_desc>
             <vuln_desc>Wildcard CORS can expose endpoints to untrusted web origins.</vuln_desc>
             <developer>Use explicit trusted origin allow-lists.</developer>
-            <reviewer>Validate CORS settings across all controllers and profiles.</reviewer>
+            <reviewer>Validate CORS settings across all controllers and profiles. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Hibernate Insecure Transport Setting</name>
@@ -34,7 +34,7 @@
             <rule_desc>Detects insecure transport usage/settings in code or config.</rule_desc>
             <vuln_desc>Insecure transport can expose credentials and session data.</vuln_desc>
             <developer>Enforce TLS and secure transport defaults.</developer>
-            <reviewer>Review transport settings for production hardening.</reviewer>
+            <reviewer>Review transport settings for production hardening. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Hibernate Hardcoded Secret Material</name>
@@ -43,7 +43,7 @@
             <rule_desc>Detects likely hardcoded secret values.</rule_desc>
             <vuln_desc>Hardcoded credentials can be extracted and abused.</vuln_desc>
             <developer>Use secret managers or runtime environment variables.</developer>
-            <reviewer>Verify credentials are not stored in source/config.</reviewer>
+            <reviewer>Verify credentials are not stored in source/config. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

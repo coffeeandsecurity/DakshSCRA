@@ -8,9 +8,8 @@
             <rule_desc>Detects network request usage that may involve insecure HTTP transport.</rule_desc>
             <vuln_desc>Cleartext network traffic can be intercepted or modified by attackers.</vuln_desc>
             <developer>Enforce HTTPS endpoints and reject insecure transport for production traffic.</developer>
-            <reviewer>Inspect request construction and endpoint policy for transport security controls.</reviewer>
+            <reviewer>Inspect request construction and endpoint policy for transport security controls. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>Weak Local Secret Storage</name>
             <regex><![CDATA[\b(?:application-settings|ApplicationSettings\.set|setString\s*\()]]></regex>
@@ -18,9 +17,8 @@
             <rule_desc>Detects persistence APIs commonly used for local settings storage.</rule_desc>
             <vuln_desc>Storing secrets in plain settings storage can expose credentials/tokens on compromised devices.</vuln_desc>
             <developer>Store secrets in platform secure storage plugins.</developer>
-            <reviewer>Verify secret material is not persisted in application settings APIs.</reviewer>
+            <reviewer>Verify secret material is not persisted in application settings APIs. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-
         <rule>
             <name>WebView Usage with Dynamic Sources</name>
             <regex><![CDATA[<WebView|webView\.src\s*=]]></regex>
@@ -28,10 +26,9 @@
             <rule_desc>Detects embedded WebView usage that requires trusted source enforcement.</rule_desc>
             <vuln_desc>Loading untrusted content in WebViews can enable malicious script execution or phishing flows.</vuln_desc>
             <developer>Restrict sources to trusted origins and sanitize dynamic navigation paths.</developer>
-            <reviewer>Review WebView content source controls and navigation policies.</reviewer>
+            <reviewer>Review WebView content source controls and navigation policies. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Platform-Specific Issues - Android">
         <rule>
             <name>Android Debuggable Build Enabled</name>
@@ -40,10 +37,9 @@
             <rule_desc>Detects debug-enabled Android build settings in NativeScript projects.</rule_desc>
             <vuln_desc>Debuggable builds can expose runtime internals and facilitate reverse engineering.</vuln_desc>
             <developer>Disable debugging for release builds and verify production build variants.</developer>
-            <reviewer>Confirm release pipeline produces non-debuggable APK/AAB artifacts.</reviewer>
+            <reviewer>Confirm release pipeline produces non-debuggable APK/AAB artifacts. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-
     <category name="Platform-Specific Issues - iOS">
         <rule>
             <name>iOS ATS Relaxed Settings</name>
@@ -52,7 +48,7 @@
             <rule_desc>Detects ATS policy relaxation in iOS settings.</rule_desc>
             <vuln_desc>Relaxed ATS settings can expose app communication to interception.</vuln_desc>
             <developer>Keep ATS defaults and scope exceptions tightly to trusted endpoints.</developer>
-            <reviewer>Validate ATS exceptions in iOS configuration files.</reviewer>
+            <reviewer>Validate ATS exceptions in iOS configuration files. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

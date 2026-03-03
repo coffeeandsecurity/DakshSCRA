@@ -6,8 +6,8 @@
             <rdl><![CDATA[[FLAG:RAILS_ENV\s*=\s*[\'\"]development[\'\"]|config\.consider_all_requests_local\s*=\s*true][IF(MISSING:release|production)]]]></rdl>
             <rule_desc>Detects development/debug settings in deployable Ruby app configs.</rule_desc>
             <vuln_desc>Development settings can leak detailed error diagnostics.</vuln_desc>
-            <developer>Harden production.rb and deployment env settings.</developer>
-            <reviewer>Validate production environment configuration separation.</reviewer>
+            <developer>Harden production. rb and deployment env settings.</developer>
+            <reviewer>Validate production environment configuration separation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Sinatra Unsafe Deserialization</name>
@@ -16,7 +16,7 @@
             <rule_desc>Detects unsafe deserialization primitives.</rule_desc>
             <vuln_desc>Unsafe deserialization of untrusted payloads can lead to code execution.</vuln_desc>
             <developer>Use safe loaders and trusted serialization boundaries.</developer>
-            <reviewer>Review user input flow to deserialization APIs.</reviewer>
+            <reviewer>Review user input flow to deserialization APIs. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Sinatra SQL Injection Sink</name>
@@ -25,7 +25,7 @@
             <rule_desc>Detects raw/dynamic SQL construction patterns in Ruby frameworks.</rule_desc>
             <vuln_desc>Dynamic query strings may be vulnerable to injection.</vuln_desc>
             <developer>Prefer parameterized ActiveRecord queries.</developer>
-            <reviewer>Check tainted values reaching SQL strings.</reviewer>
+            <reviewer>Check tainted values reaching SQL strings. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Sinatra Permissive CORS</name>
@@ -34,7 +34,7 @@
             <rule_desc>Detects wildcard CORS/origin permissions.</rule_desc>
             <vuln_desc>Permissive CORS may expose sensitive API endpoints.</vuln_desc>
             <developer>Restrict origins to trusted domains.</developer>
-            <reviewer>Validate rack-cors and proxy header configs.</reviewer>
+            <reviewer>Validate rack-cors and proxy header configs. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Sinatra Hardcoded Secret Material</name>
@@ -43,7 +43,7 @@
             <rule_desc>Detects likely hardcoded secret material.</rule_desc>
             <vuln_desc>Hardcoded credentials can be leaked and abused.</vuln_desc>
             <developer>Store secrets outside source and rotate regularly.</developer>
-            <reviewer>Review secrets management and commit history exposure.</reviewer>
+            <reviewer>Review secrets management and commit history exposure. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>
