@@ -87,6 +87,11 @@
       padding: 14px;
       margin: 10px 0;
       page-break-inside: avoid;
+      break-inside: avoid-page;
+    }
+    .panel-flow {
+      page-break-inside: auto;
+      break-inside: auto;
     }
     h2 {
       margin: 0 0 10px;
@@ -231,13 +236,43 @@
       background: #f0f7ff;
       color: #11456f;
     }
-    .rule-card {
+    .platform-card {
       border: 1px solid var(--line);
       border-radius: 9px;
       background: #fcfeff;
       padding: 9px;
       margin-bottom: 8px;
-      page-break-inside: avoid;
+      page-break-inside: auto;
+      break-inside: auto;
+    }
+    .platform-break {
+      page-break-before: always;
+      break-before: page;
+    }
+    .finding-card {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #fcfeff;
+      padding: 9px;
+      margin-bottom: 8px;
+      page-break-inside: auto;
+      break-inside: auto;
+    }
+    .finding-details {
+      margin-top: 6px;
+      display: grid;
+      gap: 6px;
+    }
+    .detail-row {
+      border: 1px solid #d9e6f4;
+      border-radius: 8px;
+      background: #f8fbff;
+      padding: 6px 8px;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+    .detail-row b {
+      color: #103f67;
     }
     .rule-head {
       display: flex;
@@ -288,6 +323,23 @@
       word-break: break-word;
       color: #163b61;
     }
+    .paths {
+      max-height: 420px;
+      overflow: auto;
+      border: 1px solid #d7e5f5;
+      border-radius: 10px;
+      padding: 8px;
+      background: #fbfdff;
+    }
+    .paths-item {
+      padding: 8px;
+      border-bottom: 1px dashed #cfddf0;
+      font-size: 11px;
+      word-break: break-word;
+    }
+    .paths-item:last-child {
+      border-bottom: none;
+    }
     .section-anchor {
       display: block;
       position: relative;
@@ -329,12 +381,13 @@
       <h2>Table of Contents</h2>
       <ol class="toc">
         <li><a href="#executive-summary">Executive Summary</a></li>
-        <li><a href="#scan-context">Scan Context</a></li>
+        <li><a href="#scan-inputs">Scan Inputs</a></li>
         <li><a href="#metrics-charts">Metrics & Graphs</a></li>
-        <li><a href="#findings-by-platform">Findings by Platform</a></li>
+        <li><a href="#areas-of-interest">Areas of Interest</a></li>
+        <li><a href="#paths-aoi">Parsed Paths - Areas of Interest</a></li>
+        <li><a href="#paths-all">All Identified File Paths</a></li>
         <li><a href="#rule-index">Rule Index</a></li>
-        <li><a href="#file-index">File Index</a></li>
-        <li><a href="#timeline">Timeline</a></li>
+        <li><a href="#timeline">Scanning Timeline</a></li>
       </ol>
     </section>
 
@@ -351,9 +404,9 @@
       </div>
     </section>
 
-    <span id="scan-context" class="section-anchor"></span>
+    <span id="scan-inputs" class="section-anchor"></span>
     <section class="panel">
-      <h2>Scan Context</h2>
+      <h2>Scan Inputs</h2>
       <div class="kv">
         <div><b>Target Directory:</b> {{ inputs.get("target_directory", "-") }}</div>
         <div><b>Rule Selection:</b> {{ inputs.get("rule_selected", "-") }}</div>
@@ -391,7 +444,7 @@
       <h2>Metrics & Graphs</h2>
       <div class="metric-note">Bar length is relative to the highest value in each group. Right side shows count and share.</div>
 
-      <h3>Findings by Platform</h3>
+      <h3>Areas of Interest by Platform</h3>
       <div class="bars">
         {% if chart_platforms %}
           {% for row in chart_platforms %}
@@ -503,31 +556,35 @@
       {% endif %}
     </section>
 
-    <span id="findings-by-platform" class="section-anchor"></span>
-    <section class="panel page-break">
-      <h2>Findings by Platform</h2>
+    <span id="areas-of-interest" class="section-anchor"></span>
+    <section class="panel panel-flow page-break">
+      <h2>Areas of Interest</h2>
       {% if platform_sections %}
         {% for platform in platform_sections %}
         <span id="platform-{{ platform.slug }}" class="section-anchor"></span>
-        <div class="rule-card">
+        <div class="platform-card{% if not loop.first %} platform-break{% endif %}">
           <div class="rule-head">
-            <h3 style="margin:0;">{{ platform.name }}</h3>
+            <h3 style="margin:0;">{{ platform.name }} - Areas of Interest</h3>
             <span class="pill">{{ platform.count }} finding{% if platform.count != 1 %}s{% endif %}</span>
           </div>
 
           {% for finding in platform.findings %}
-          <div class="rule-card">
+          <div class="finding-card">
             <div class="rule-head">
               <div><b>{{ finding.rule_title }}</b></div>
-              <span class="pill">{{ finding.evidence_count }} evidence</span>
+              <span class="pill">{{ finding.evidence_count }} source(s)</span>
             </div>
-            <div class="muted" style="margin-bottom:4px;">
-              Category: {{ finding.category }} | Scope: {{ finding.issue_scope }}{% if finding.rule_id %} | Rule ID: {{ finding.rule_id }}{% endif %}
+            <div class="finding-details">
+              {% if finding.rule_id %}<div class="detail-row"><b>ID:</b> {{ finding.rule_id }}</div>{% endif %}
+              {% if finding.rule_desc %}<div class="detail-row"><b>Rule Description:</b> {{ finding.rule_desc }}</div>{% endif %}
+              {% if finding.category %}<div class="detail-row"><b>Issue Category:</b> {{ finding.category }}</div>{% endif %}
+              {% if finding.issue_scope %}<div class="detail-row"><b>Issue Scope:</b> {{ finding.issue_scope }}</div>{% endif %}
+              {% if finding.issue_desc %}<div class="detail-row"><b>Issue Description:</b> {{ finding.issue_desc }}</div>{% endif %}
+              {% if finding.developer_note %}<div class="detail-row"><b>Developer Note:</b> {{ finding.developer_note }}</div>{% endif %}
+              {% if finding.reviewer_note %}<div class="detail-row"><b>Reviewer Note:</b> {{ finding.reviewer_note }}</div>{% endif %}
             </div>
-            {% if finding.issue_desc %}<div><b>Issue:</b> {{ finding.issue_desc }}</div>{% endif %}
-            {% if finding.rule_desc %}<div><b>Rule:</b> {{ finding.rule_desc }}</div>{% endif %}
             {% if finding.files %}
-            <div style="margin-top:5px;"><b>Sample Files:</b></div>
+            <div style="margin-top:5px;"><b>Flagged Files (Rule Matches):</b></div>
             <ul class="file-list">
               {% for path in finding.files %}
               <li>{{ path }}</li>
@@ -535,7 +592,7 @@
             </ul>
             {% endif %}
             {% if finding.evidence_samples %}
-            <div style="margin-top:5px;"><b>{{ finding.evidence_label if finding.evidence_label else "Matched Evidence" }}:</b></div>
+            <div style="margin-top:5px;"><b>Sources:</b></div>
             <ul class="snippet-list">
               {% for ev in finding.evidence_samples %}
               <li>
@@ -551,6 +608,42 @@
         {% endfor %}
       {% else %}
         <div class="muted">No findings available for report rendering.</div>
+      {% endif %}
+    </section>
+
+    <span id="paths-aoi" class="section-anchor"></span>
+    <section class="panel page-break">
+      <h2>Parsed Paths - Areas of Interest</h2>
+      {% if parsed_paths_aoi %}
+        {% for item in parsed_paths_aoi %}
+        <div class="finding-card">
+          <div class="rule-head">
+            <div><b>{{ item.keyword }}</b></div>
+            <span class="pill">{{ item.count }} path(s)</span>
+          </div>
+          <div class="paths">
+            {% for path in item.paths %}
+            <div class="paths-item">{{ path }}</div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+      <div class="muted">No file-path findings were recorded for this run.</div>
+      {% endif %}
+    </section>
+
+    <span id="paths-all" class="section-anchor"></span>
+    <section class="panel page-break">
+      <h2>All Identified File Paths</h2>
+      {% if all_filepaths %}
+      <div class="paths">
+        {% for path in all_filepaths %}
+        <div class="paths-item">{{ path }}</div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="muted">No identified file paths were recorded for this run.</div>
       {% endif %}
     </section>
 
@@ -577,71 +670,9 @@
       </div>
     </section>
 
-    <span id="file-index" class="section-anchor"></span>
-    <section class="panel page-break">
-      <h2>File Index</h2>
-      {% if top_files %}
-      <h3>Most Frequently Flagged Files</h3>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>File Path</th>
-              <th style="width: 80px;">Hits</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for file in top_files %}
-            <tr>
-              <td>{{ file.path }}</td>
-              <td>{{ file.hits }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      {% endif %}
-
-      {% if file_index %}
-      <h3 style="margin-top:12px;">Rule to File Mapping (AOI File Paths)</h3>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th style="width: 260px;">Rule Title</th>
-              <th style="width: 70px;">Count</th>
-              <th>Sample Paths</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for item in file_index %}
-            <tr>
-              <td>{{ item.rule_title }}</td>
-              <td>{{ item.count }}</td>
-              <td>
-                {% if item.paths %}
-                <ul class="file-list">
-                  {% for path in item.paths %}
-                  <li>{{ path }}</li>
-                  {% endfor %}
-                </ul>
-                {% else %}
-                -
-                {% endif %}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      {% else %}
-      <div class="muted">No AOI file index data available.</div>
-      {% endif %}
-    </section>
-
     <span id="timeline" class="section-anchor"></span>
     <section class="panel">
-      <h2>Timeline</h2>
+      <h2>Scanning Timeline</h2>
       <div class="kv">
         <div><b>Scan Start:</b> {{ timeline.get("scan_start_time", "-") }}</div>
         <div><b>Scan End:</b> {{ timeline.get("scan_end_time", "-") }}</div>

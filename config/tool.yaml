@@ -1,6 +1,6 @@
 tool_name: Daksh SCRA (Source Code Review Assist)
 author: Debasis Mohanty (d3basis.m0hanty@gmail.com)
-release: 0.32
+release: 0.33
 state_management:
   enabled: false
   resume_mode: manual

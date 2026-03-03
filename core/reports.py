@@ -36,6 +36,24 @@ from utils.log_utils import get_logger
 logger = get_logger(__name__)
 
 
+def _is_common_platform(platform_name):
+    return str(platform_name or "").strip().lower() == "common"
+
+
+def _platform_sort_key(platform_name):
+    name = str(platform_name or "").strip()
+    # Keep COMMON findings after all platform-specific findings.
+    return (1 if _is_common_platform(name) else 0, name.lower())
+
+
+def _ordered_platform_names(platform_names):
+    return sorted(platform_names, key=_platform_sort_key)
+
+
+def _ordered_platform_dict(mapping):
+    return {name: mapping[name] for name in _ordered_platform_names(mapping.keys())}
+
+
 def gen_pdf_report_modern(html_path, pdf_path):
     try:
         started_at = time.time()
@@ -144,10 +162,22 @@ def _normalize_aoi_data(raw_aoi):
     return []
 
 
-def _bar_rows_from_counter(counter_map, top_n=12):
+def _bar_rows_from_counter(counter_map, top_n=12, sort_by_value=True, label_sort_key=None):
     if not counter_map:
         return []
-    top = sorted(counter_map.items(), key=lambda x: x[1], reverse=True)[:top_n]
+    if sort_by_value:
+        top = sorted(
+            counter_map.items(),
+            key=lambda x: (
+                -x[1],
+                label_sort_key(x[0]) if label_sort_key else str(x[0]).lower(),
+            ),
+        )[:top_n]
+    else:
+        top = sorted(
+            counter_map.items(),
+            key=lambda x: label_sort_key(x[0]) if label_sort_key else str(x[0]).lower(),
+        )[:top_n]
     max_value = max(v for _, v in top) or 1
     total_value = sum(v for _, v in top) or 1
     return [
@@ -206,6 +236,7 @@ def _build_pdf_report_context(
     summary_json_path=None,
     aoi_json_path=None,
     filepaths_aoi_json_path=None,
+    filepaths_json_path=None,
     project_config_path=None,
 ):
     summary_json_path = Path(summary_json_path) if summary_json_path else Path(state.outputSummary_JSON)
@@ -213,11 +244,13 @@ def _build_pdf_report_context(
     filepaths_aoi_json_path = (
         Path(filepaths_aoi_json_path) if filepaths_aoi_json_path else Path(state.outputAoI_Fpaths_JSON)
     )
+    filepaths_json_path = Path(filepaths_json_path) if filepaths_json_path else Path(state.output_Fpaths_JSON)
     project_config_path = Path(project_config_path) if project_config_path else Path(state.projectConfig)
 
     scan_summary = _load_json_file(summary_json_path, default={}, label="scan summary") or {}
     aoi_raw = _load_json_file(aoi_json_path, default=[], label="areas of interest") or []
     filepaths_aoi = _load_json_file(filepaths_aoi_json_path, default=[], label="filepaths aoi") or []
+    filepaths_all_raw = _load_json_file(filepaths_json_path, default=[], label="filepaths") or []
     config = _load_yaml_file(project_config_path, default={}, label="project config") or {}
 
     inputs = scan_summary.get("inputs_received", {})
@@ -290,14 +323,14 @@ def _build_pdf_report_context(
         scope_counter[issue_scope] += 1
         rule_counter[rule_title] += 1
 
-    findings.sort(key=lambda f: (f["platform"].lower(), f["rule_title"].lower()))
+    findings.sort(key=lambda f: (_platform_sort_key(f["platform"]), f["rule_title"].lower()))
 
     findings_by_platform = defaultdict(list)
     for finding in findings:
         findings_by_platform[finding["platform"]].append(finding)
 
     platform_sections = []
-    for platform_name in sorted(findings_by_platform.keys(), key=lambda s: s.lower()):
+    for platform_name in _ordered_platform_names(findings_by_platform.keys()):
         slug = re.sub(r"[^a-z0-9]+", "-", platform_name.lower()).strip("-") or "platform"
         platform_sections.append({
             "name": platform_name,
@@ -312,6 +345,7 @@ def _build_pdf_report_context(
     ]
 
     file_index = []
+    parsed_paths_aoi = []
     if isinstance(filepaths_aoi, list):
         for item in filepaths_aoi:
             if not isinstance(item, dict):
@@ -324,12 +358,30 @@ def _build_pdf_report_context(
                 "count": len(paths),
                 "paths": paths[:20],
             })
+            if paths:
+                parsed_paths_aoi.append({
+                    "keyword": str(item.get("rule_title", "")).strip() or "Unnamed rule",
+                    "paths": paths,
+                    "count": len(paths),
+                })
     file_index.sort(key=lambda x: (-x["count"], x["rule_title"].lower()))
+
+    all_filepaths = []
+    if isinstance(filepaths_all_raw, list):
+        for item in filepaths_all_raw:
+            if isinstance(item, dict):
+                path = str(item.get("path", "")).strip()
+                loc = item.get("loc")
+                if path:
+                    all_filepaths.append(f"{path}" + (f" (LOC: {loc})" if loc is not None else ""))
+            elif item:
+                all_filepaths.append(str(item))
 
     file_extensions = detection.get("file_extensions_identified", {})
     extension_rows = []
     if isinstance(file_extensions, dict):
-        for pf, ext_list in sorted(file_extensions.items()):
+        for pf in _ordered_platform_names(file_extensions.keys()):
+            ext_list = file_extensions.get(pf)
             if isinstance(ext_list, list):
                 extension_rows.append({"platform": pf, "extensions": ", ".join(ext_list)})
 
@@ -370,8 +422,15 @@ def _build_pdf_report_context(
         "platform_sections": platform_sections,
         "rule_index": rule_index,
         "file_index": file_index,
+        "parsed_paths_aoi": parsed_paths_aoi,
+        "all_filepaths": all_filepaths,
         "top_files": top_files,
-        "chart_platforms": _bar_rows_from_counter(platform_counter, top_n=16),
+        "chart_platforms": _bar_rows_from_counter(
+            platform_counter,
+            top_n=16,
+            sort_by_value=False,
+            label_sort_key=_platform_sort_key,
+        ),
         "chart_categories": _bar_rows_from_counter(category_counter, top_n=12),
         "chart_scopes": _bar_rows_from_counter(scope_counter, top_n=12),
     }
@@ -510,8 +569,8 @@ def gen_html_report_modern(scan_summary, snippets, filepaths, filepaths_aoi, rep
 
     total_findings = sum(len(items) for items in snippets.values())
     platform_counts = {
-        platform: len(items)
-        for platform, items in snippets.items()
+        platform: len(snippets[platform])
+        for platform in _ordered_platform_names(snippets.keys())
     }
 
     env = Environment(loader=FileSystemLoader(state.htmltemplates_dir))
@@ -581,7 +640,7 @@ def get_areas_of_interest(input_file):
                 "code": _highlight_code(statements)
             })
         grouped[platform].append(snippet)
-    return grouped
+    return _ordered_platform_dict(grouped)
 
 
 
@@ -654,7 +713,8 @@ def get_summary(input_file):
     exts = det.get("file_extensions_identified", {})
     if exts:
         lines.append("    [-] File Extensions Identified (Based on Selected Rule):")
-        for platform, extensions in exts.items():
+        for platform in _ordered_platform_names(exts.keys()):
+            extensions = exts.get(platform, [])
             lines.append(f"        [-] {platform}: [{', '.join(extensions)}]")
     lines.append(f"    [-] Code Files - Areas-of-Interest (Rules Matched): {det.get('areas_of_interest_identified','')}")
     lines.append(f"    [-] File Paths - Areas-of-Interest (Rules Matched): {det.get('file_paths_areas_of_interest_identified','')}")
