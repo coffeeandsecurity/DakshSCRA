@@ -41,7 +41,14 @@ Additionally, the tool offers the following functionalities:
 - Options to extend or add new rules for any new or existing languages
 - Generates report in text, HTML and PDF format for inspection
 
-Refer to the wiki for the tool setup and usage details - [https://github.com/coffeeandsecurity/DakshSCRA/wiki](https://github.com/coffeeandsecurity/DakshSCRA/wiki)
+Refer to the wiki for setup and quick usage details:
+[https://github.com/coffeeandsecurity/DakshSCRA/wiki](https://github.com/coffeeandsecurity/DakshSCRA/wiki)
+
+DakshLabs is the dedicated portal for tool updates, blogs, tutorials, examples and documentation:
+[https://dakshlabs.com/#docs](https://dakshlabs.com/#docs)
+
+Detailed documentation can be found on:
+[https://dakshlabs.com/#docs](https://dakshlabs.com/#docs)
 
 Feel free to contribute towards updating or adding new rules and future development.
 
@@ -176,7 +183,7 @@ usage: dakshscra.py [-h] [-r RULES] [-f FILE_TYPES] [-v] [-t TARGET_DIR]
                     [--pdf-from-json] [--json-input-dir PATH]
                     [--pdf-output PATH] [--pdf-multi-dir PATH]
                     [--pdf-single-only]
-                    [--analysis] [--loc] [--baseline-file PATH]
+                    [--analysis] [--no-analysis] [--loc] [--baseline-file PATH]
                     [--baseline-generate] [--no-baseline] [--resume-scan]
                     [--state-file PATH] [--state-disable] [--state-enable]
 
@@ -186,7 +193,7 @@ options:
 -f FILE_TYPES              Override default filetypes for scanning
 -v                         Verbosity level (-v, -vv, -vvv)
 -t TARGET_DIR              Target source code directory
--l {R,RF}, --list {R,RF}   List rules [R] OR rules and filetypes [RF]
+-l {R,RF}, --list {R,RF}   List platform rules + frameworks [R] or include filetypes [RF]
 -recon                     Detect platform/framework/language stack
 -rs, --recon-strict        Strict recon filter for high-confidence detections
 -estimate                  Estimate review effort
@@ -196,7 +203,8 @@ options:
 --pdf-output PATH          Output path for single PDF report (default: ./reports/pdf/report.pdf)
 --pdf-multi-dir PATH       Output directory for multi-file PDF report set (default: ./reports/pdf/multi-file)
 --pdf-single-only          Generate only single PDF (skip multi-file PDF set)
---analysis, --analyse      Experimental data/control flow analysis
+--analysis, --analyse      Force-enable analyzer stage (overrides tool config)
+--no-analysis              Disable analyzer stage for this run (overrides tool config)
 --loc                      Count effective lines of code
 --baseline-file PATH       Suppression baseline file (JSON)
 --baseline-generate        Generate baseline from current findings
@@ -206,6 +214,48 @@ options:
 --state-disable            Disable scan state checkpointing for current run
 --state-enable             Force enable scan state checkpointing for current run
 ```
+
+### Configuration Reference (`config/tool.yaml`)
+
+Daksh SCRA runtime defaults are controlled through `config/tool.yaml`.
+
+```yaml
+state_management:
+  enabled: false
+  resume_mode: manual
+  persist_after_seconds: 300
+  persist_interval_seconds: 30
+  default_state_file: runtime/scan_state.json
+  cleanup_on_success: false
+
+analysis:
+  run_by_default: true
+  include_frameworks: true
+  report_theme: hacker_mode
+```
+
+Analyzer config options:
+
+- `analysis.run_by_default`
+  - `true`: analyzer runs automatically for scan runs
+  - `false`: analyzer stays off unless explicitly enabled using `--analysis`
+- `analysis.include_frameworks`
+  - `true`: include framework-level analyzer entries where framework detection exists
+  - `false`: platform-level analyzer output only
+- `analysis.report_theme`
+  - `hacker_mode`: dark high-contrast modern analyzer theme (default)
+  - `professional_mode`: light modern analyzer theme
+  - `both`: generate both modern theme variants for side-by-side comparison
+
+Analyzer report output paths:
+
+- Existing/legacy analyzer reports (unchanged):
+  - `reports/analysis/<platform>/analysis.html`
+  - `reports/analysis/<platform>/analysis_xref.html`
+  - `reports/analysis/<platform>/analysis.json`
+- Modern themed analyzer reports:
+  - `reports/analysis-modern/hacker-mode/<platform>/...`
+  - `reports/analysis-modern/professional-mode/<platform>/...` (if enabled)
 
 ### Example Usage
 
@@ -265,18 +315,22 @@ options:
 - dakshscra.py --pdf-from-json --pdf-single-only
 ```
 
-### View List of Supported Rules
+### View Supported Platform Rules and Frameworks
 
 ```
-dakshscra.py -l R   # List all supported rule types
+dakshscra.py -l R    # List platform rules and framework mappings
+dakshscra.py -l RF   # List platform rules, framework mappings and filetypes
 ```
 
-Currently supported:
+Current platform rules:
 
 - dotnet, php, java, javascript,
 - kotlin, python, go, c, cpp,
 - android, ios, reactnative, flutter, xamarin, ionic, nativescript, cordova,
 - ruby, rust, common
+
+For a formatted reference table, see:
+[https://github.com/coffeeandsecurity/DakshSCRA/wiki/Supported-Rules-and-Frameworks](https://github.com/coffeeandsecurity/DakshSCRA/wiki/Supported-Rules-and-Frameworks)
 
 
 
