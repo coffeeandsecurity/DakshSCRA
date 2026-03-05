@@ -322,15 +322,41 @@ dakshscra.py -l R    # List platform rules and framework mappings
 dakshscra.py -l RF   # List platform rules, framework mappings and filetypes
 ```
 
-Current platform rules:
+Current supported platforms and framework mappings:
 
-- dotnet, php, java, javascript,
-- kotlin, python, go, c, cpp,
-- android, ios, reactnative, flutter, xamarin, ionic, nativescript, cordova,
-- ruby, rust, common
+| Platform | Frameworks |
+| --- | --- |
+| dotnet | aspnetcore, entityframework |
+| php | codeigniter, drupal, laravel, symfony, wordpress |
+| java | hibernate, spring, springboot |
+| javascript | angular, express, nestjs, nextjs, react, vue |
+| kotlin | ktor, springkotlin |
+| python | django, fastapi, flask |
+| go | echo, fiber, gin |
+| c | freertos |
+| cpp | boost, qt |
+| android | cordova-android, flutter-android, ionic-android, jetpack, nativescript-android, reactnative-android, xamarin-android |
+| ios | cordova-ios, flutter-ios, ionic-ios, nativescript-ios, reactnative-ios, swiftui, uikit, xamarin-ios |
+| reactnative | reactnative |
+| flutter | flutter |
+| xamarin | xamarin |
+| ionic | ionic |
+| nativescript | nativescript |
+| cordova | cordova |
+| ruby | rails, sinatra |
+| rust | actix, axum, rocket |
+| common | - |
+
+To get the latest supported platforms and frameworks, run:
+
+```bash
+python3 dakshscra.py -l R
+```
 
 For a formatted reference table, see:
 [https://github.com/coffeeandsecurity/DakshSCRA/wiki/Supported-Rules-and-Frameworks](https://github.com/coffeeandsecurity/DakshSCRA/wiki/Supported-Rules-and-Frameworks)
+
+Last updated: March 5, 2026
 
 
 
