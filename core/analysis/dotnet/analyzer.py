@@ -16,5 +16,5 @@ def analyze_dotnet_flows(source_root: Path):
 
 def run(source_root: Path):
     flows = analyze_dotnet_flows(source_root)
-    out_dir = Path(state.root_dir) / "reports/analysis/dotnet"
+    out_dir = Path(state.reports_dirpath) / "analysis/dotnet"
     return write_reports(flows, out_dir, title=".NET Dataflow Analysis", platform="dotnet")

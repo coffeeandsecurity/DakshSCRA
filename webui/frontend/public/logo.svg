@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <!-- DakshSCRA flat-color pinwheel starfish logo -->
+  <!-- Arm path tip pointing up, pivot at center 200,200 -->
+  <!-- Dots per arm: (200,90) (191,122) (209,152) r=11 color=#141414 -->
+  <!-- Render order back→front: purple(144°), green(216°), yellow(288°), blue(72°), pink(0°) -->
+
+  <!-- Purple arm (144°) -->
+  <g transform="rotate(144, 200, 200)">
+    <path d="M 200,200 C 244,188 255,115 215,72 Q 200,52 185,72 C 145,115 156,188 200,200 Z" fill="#9d52de"/>
+    <circle cx="200" cy="90" r="11" fill="#141414"/>
+    <circle cx="191" cy="122" r="11" fill="#141414"/>
+    <circle cx="209" cy="152" r="11" fill="#141414"/>
+  </g>
+
+  <!-- Green arm (216°) -->
+  <g transform="rotate(216, 200, 200)">
+    <path d="M 200,200 C 244,188 255,115 215,72 Q 200,52 185,72 C 145,115 156,188 200,200 Z" fill="#2dc98a"/>
+    <circle cx="200" cy="90" r="11" fill="#141414"/>
+    <circle cx="191" cy="122" r="11" fill="#141414"/>
+    <circle cx="209" cy="152" r="11" fill="#141414"/>
+  </g>
+
+  <!-- Yellow arm (288°) -->
+  <g transform="rotate(288, 200, 200)">
+    <path d="M 200,200 C 244,188 255,115 215,72 Q 200,52 185,72 C 145,115 156,188 200,200 Z" fill="#f5bf1e"/>
+    <circle cx="200" cy="90" r="11" fill="#141414"/>
+    <circle cx="191" cy="122" r="11" fill="#141414"/>
+    <circle cx="209" cy="152" r="11" fill="#141414"/>
+  </g>
+
+  <!-- Blue arm (72°) -->
+  <g transform="rotate(72, 200, 200)">
+    <path d="M 200,200 C 244,188 255,115 215,72 Q 200,52 185,72 C 145,115 156,188 200,200 Z" fill="#17b2f0"/>
+    <circle cx="200" cy="90" r="11" fill="#141414"/>
+    <circle cx="191" cy="122" r="11" fill="#141414"/>
+    <circle cx="209" cy="152" r="11" fill="#141414"/>
+  </g>
+
+  <!-- Pink arm (0° - front) -->
+  <g transform="rotate(0, 200, 200)">
+    <path d="M 200,200 C 244,188 255,115 215,72 Q 200,52 185,72 C 145,115 156,188 200,200 Z" fill="#f0357a"/>
+    <circle cx="200" cy="90" r="11" fill="#141414"/>
+    <circle cx="191" cy="122" r="11" fill="#141414"/>
+    <circle cx="209" cy="152" r="11" fill="#141414"/>
+  </g>
+</svg>

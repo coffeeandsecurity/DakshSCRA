@@ -1,3 +1,25 @@
+# ─── Taint Analysis Configuration ─────────────────────────────────────────────
+# Each platform section follows this schema:
+#
+#   sources    : list of regex strings that match tainted input expressions
+#   sinks      : list of [name, description, regex] triples
+#   sanitizers : list of regex strings that indicate a value was sanitized
+#   safe_callees: list of call names that should NOT generate partial-flow
+#                 findings (logging, type conversions, framework responses, etc.)
+#   analyzer   : optional block enabling the platform without code changes:
+#                  globs         : list of file glob patterns
+#                  mode          : "brace" | "indent" | "end_keyword"
+#                  function_def_re : regex with groups (name, params)
+#
+# Top-level keys control global engine behaviour.
+# ───────────────────────────────────────────────────────────────────────────────
+
+# Number of taint-propagation passes over all functions.
+# 7 reliably traces chains up to 6 hops deep while converging early via the
+# built-in change-detection short-circuit.
+max_taint_passes: 7
+
+# ─── Ranking & Scoring ─────────────────────────────────────────────────────────
 ranking:
   base_score: 35
   bucket_scores:
@@ -24,6 +46,11 @@ ranking:
       - "scriptengine"
       - "command execution"
       - "dynamic code"
+      - "os command"
+      - "processbuilder"
+      - "marshal.load"
+      - "pickle.load"
+      - "unserialize"
     high:
       - "sql"
       - "query"
@@ -31,27 +58,40 @@ ranking:
       - "innerhtml"
       - "outerhtml"
       - "document.write"
-      - "template"
+      - "template injection"
+      - "ssti"
+      - "jndi"
+      - "ldap"
+      - "xpath"
+      - "ssrf"
+      - "open redirect"
+      - "deserialization"
     medium:
       - "httpclient"
       - "openconnection"
       - "webrequest"
       - "file write"
       - "deserialize"
-      - "pickle"
+      - "log injection"
+      - "path traversal"
+      - "response write"
+      - "redirect"
   platform_overrides:
     javascript:
       bucket_scores:
         high: 32
       keywords:
-        high:
+        critical:
           - "innerhtml"
           - "outerhtml"
           - "document.write"
+          - "dangerouslysetinnerhtml"
+        high:
           - "eval"
           - "function("
           - "settimeout"
           - "setinterval"
+          - "child_process"
     golang:
       bucket_scores:
         critical: 44
@@ -64,147 +104,957 @@ ranking:
           - "db.exec"
           - "db.queryrow"
           - "template.parse"
+    c:
+      bucket_scores:
+        critical: 42
+      keywords:
+        critical:
+          - "system"
+          - "popen"
+          - "execv"
+          - "execl"
+        high:
+          - "sprintf"
+          - "strcpy"
+          - "strcat"
+          - "gets"
+          - "printf"
 
+# ─── Python ────────────────────────────────────────────────────────────────────
 python:
   sources:
-    - "\\binput\\b"
+    # Built-in
+    - "\\binput\\s*\\("
+    - "\\bos\\.environ\\.get\\s*\\("
+    - "\\bos\\.environ\\b"
+    # Flask
     - "\\brequest\\.args\\.get\\b"
+    - "\\brequest\\.args\\b"
     - "\\brequest\\.form\\.get\\b"
+    - "\\brequest\\.form\\b"
     - "\\brequest\\.get_json\\b"
-    - "\\bos\\.environ\\.get\\b"
+    - "\\brequest\\.json\\b"
+    - "\\brequest\\.data\\b"
+    - "\\brequest\\.files\\b"
+    - "\\brequest\\.cookies\\.get\\b"
+    - "\\brequest\\.cookies\\b"
+    - "\\brequest\\.headers\\.get\\b"
+    - "\\brequest\\.headers\\b"
+    - "\\brequest\\.values\\b"
+    - "\\brequest\\.view_args\\b"
+    - "\\brequest\\.url\\b"
+    - "\\brequest\\.path\\b"
+    # Django
+    - "\\brequest\\.GET\\.get\\b"
+    - "\\brequest\\.GET\\b"
+    - "\\brequest\\.POST\\.get\\b"
+    - "\\brequest\\.POST\\b"
+    - "\\brequest\\.FILES\\b"
+    - "\\brequest\\.COOKIES\\.get\\b"
+    - "\\brequest\\.COOKIES\\b"
+    - "\\brequest\\.META\\.get\\b"
+    - "\\brequest\\.META\\b"
+    - "\\brequest\\.body\\b"
+    - "\\brequest\\.path_info\\b"
+    - "\\bself\\.kwargs\\b"
+    - "\\bself\\.args\\b"
+    # FastAPI
+    - "\\bQuery\\s*\\("
+    - "\\bPath\\s*\\("
+    - "\\bBody\\s*\\("
+    - "\\bHeader\\s*\\("
+    - "\\bCookie\\s*\\("
+    - "\\bForm\\s*\\("
+    - "\\bFile\\s*\\("
+    - "\\bDepends\\s*\\("
+    # Tornado
+    - "\\bself\\.get_argument\\s*\\("
+    - "\\bself\\.get_arguments\\s*\\("
+    - "\\bself\\.get_body_argument\\s*\\("
+    - "\\bself\\.get_query_argument\\s*\\("
+    - "\\bself\\.request\\.body\\b"
+    - "\\bself\\.request\\.arguments\\b"
+    # aiohttp
+    - "\\brequest\\.match_info\\b"
+    - "\\brequest\\.rel_url\\.query\\b"
   sinks:
-    - ["eval", "Dynamic code execution", "\\beval\\b"]
-    - ["exec", "Dynamic code execution", "\\bexec\\b"]
-    - ["os.system", "OS command execution", "\\bos\\.system\\b"]
-    - ["subprocess.run", "Process execution", "\\bsubprocess\\.(run|Popen|call|check_output)\\b"]
+    - ["eval", "Dynamic code execution", "\\beval\\s*\\("]
+    - ["exec", "Dynamic code execution", "\\bexec\\s*\\("]
+    - ["compile", "Dynamic code compilation", "\\bcompile\\s*\\("]
+    - ["os.system", "OS command execution", "\\bos\\.system\\s*\\("]
+    - ["os.popen", "OS command execution", "\\bos\\.popen\\s*\\("]
+    - ["subprocess", "Process execution", "\\bsubprocess\\.(run|Popen|call|check_output|check_call|getoutput|getstatusoutput)\\b"]
     - ["pickle.loads", "Insecure deserialization", "\\bpickle\\.(loads|load)\\b"]
+    - ["marshal.loads", "Insecure deserialization", "\\bmarshal\\.(loads|load)\\b"]
+    - ["shelve.open", "Insecure deserialization", "\\bshelve\\.open\\b"]
+    - ["yaml.load", "Insecure YAML deserialization", "\\byaml\\.load\\s*\\("]
+    - ["SQL (cursor)", "SQL injection", "\\b(?:cursor|db|conn|connection|session)\\.(?:execute|executemany|executescript)\\s*\\("]
+    - ["SQL (Django ORM raw)", "SQL injection (raw query)", "\\b\\.raw\\s*\\(|\\bRawSQL\\s*\\("]
+    - ["SQL (SQLAlchemy text)", "SQL injection (raw query)", "\\btext\\s*\\(|\\bsession\\.execute\\b|\\bengine\\.execute\\b"]
+    - ["SSTI (render_template_string)", "Server-side template injection", "\\brender_template_string\\s*\\("]
+    - ["SSTI (Jinja2 Template)", "Server-side template injection", "\\bTemplate\\s*\\(|\\bjinja2\\.Template\\b"]
+    - ["open (file write)", "Arbitrary file write/read", "\\bopen\\s*\\([^,)]+,\\s*['\"]w|\\bopen\\s*\\([^,)]+,\\s*['\"]a"]
+    - ["urllib.request", "SSRF", "\\burllib\\.request\\.(?:urlopen|urlretrieve)\\s*\\("]
+    - ["requests", "SSRF", "\\brequests\\.(?:get|post|put|patch|delete|head|request)\\s*\\("]
+    - ["httpx", "SSRF", "\\bhttpx\\.(?:get|post|put|patch|delete|request|AsyncClient|Client)\\b"]
+    - ["smtplib", "Email header injection", "\\bsmtplib\\.SMTP\\b|\\b\\.sendmail\\s*\\("]
+    - ["hashlib (weak)", "Weak hash", "\\bhashlib\\.(?:md5|sha1)\\s*\\("]
   sanitizers:
     - "\\bshlex\\.quote\\b"
     - "\\bhtml\\.escape\\b"
+    - "\\bmarkupsafe\\.escape\\b"
+    - "\\bMarkup\\s*\\("
+    - "\\bbleach\\.clean\\b"
+    - "\\bconditional_escape\\b"
+    - "\\bformat_html\\b"
+    - "\\bdjango\\.utils\\.html\\.escape\\b"
+    - "\\bdjangoutils\\.html\\.escape\\b"
+    - "\\bPreparedStatement\\b"
+    - "\\bparameterize\\b"
+    - "\\bsanitize\\b"
+    - "\\bvalidate\\b"
+    - "\\bSerializer\\.is_valid\\b"
+    - "\\bWTForms\\b"
+    - "\\bre\\.escape\\b"
+    - "\\burllib\\.parse\\.quote\\b"
+    - "\\burllib\\.parse\\.quote_plus\\b"
+  safe_callees:
+    # Flask/Django response helpers
+    - "render_template"
+    - "render"
+    - "redirect"
+    - "url_for"
+    - "jsonify"
+    - "make_response"
+    - "abort"
+    - "flash"
+    - "send_file"
+    - "send_from_directory"
+    - "HttpResponse"
+    - "JsonResponse"
+    - "HttpResponseRedirect"
+    - "reverse"
+    # Logging
+    - "print"
+    - "logging.debug"
+    - "logging.info"
+    - "logging.warning"
+    - "logging.warn"
+    - "logging.error"
+    - "logging.critical"
+    - "logger.debug"
+    - "logger.info"
+    - "logger.warning"
+    - "logger.warn"
+    - "logger.error"
+    - "logger.critical"
+    # Type conversions
+    - "str"
+    - "int"
+    - "float"
+    - "bool"
+    - "list"
+    - "dict"
+    - "set"
+    - "tuple"
+    - "bytes"
+    - "bytearray"
+    # Introspection / safety checks
+    - "len"
+    - "type"
+    - "isinstance"
+    - "issubclass"
+    - "hasattr"
+    - "getattr"
+    - "setattr"
+    - "callable"
+    # Misc safe
+    - "sorted"
+    - "enumerate"
+    - "zip"
+    - "map"
+    - "filter"
+    - "range"
+    - "reversed"
+    - "repr"
+    - "id"
+    - "hash"
 
+# ─── PHP ───────────────────────────────────────────────────────────────────────
 php:
   sources:
-    - "\\$_(GET|POST|REQUEST|COOKIE)\\b"
+    # Superglobals
+    - "\\$_(GET|POST|REQUEST|COOKIE|SERVER|ENV|FILES)\\b"
+    # Laravel / Illuminate
+    - "\\brequest\\s*->\\s*(input|get|post|query|cookie|header|all|file|only|except|merge|flash|old)\\s*\\("
+    - "\\$this\\s*->\\s*input\\s*->\\s*(get|post|cookie|request)\\s*\\("
+    - "\\bRequest\\s*::\\s*(input|get|post|query|cookie|header|all|route)\\s*\\("
+    - "\\brequest\\s*\\(\\s*\\)\\s*->\\s*(input|get|post|query|cookie|header|all|route)\\s*\\("
+    - "\\bInput\\s*::\\s*(get|all|except|only)\\s*\\("
+    # Symfony
+    - "\\$request\\s*->\\s*(get|query|request|cookies|headers|server|files)\\s*(->\\s*get\\s*\\(|\\[)"
+    # CodeIgniter
+    - "\\$this\\s*->\\s*input\\s*->\\s*(server|request_headers|get|post|cookie|get_post|post_get|raw_input_stream)\\s*\\("
+    # Slim
+    - "\\$request\\s*->\\s*(getQueryParam|getParsedBody|getUploadedFiles|getHeaders|getCookieParams|getAttribute)\\s*\\("
+    # PHP request functions
+    - "\\bgetallheaders\\s*\\("
+    - "\\bphp_sapi_name\\b"
+    - "\\bhttp_response_code\\b"
+    # Type hints in function signature (framework injection)
+    - "\\b(Illuminate\\\\Http\\\\Request|Symfony\\\\Component\\\\HttpFoundation\\\\Request|CodeIgniter\\\\HTTP\\\\IncomingRequest|Slim\\\\Http\\\\ServerRequest)\\b"
+    - "\\b(ServerRequestInterface|RequestInterface)\\b"
   sinks:
     - ["eval", "Dynamic execution with tainted input", "\\beval\\s*\\("]
-    - ["exec", "Command execution with tainted input", "\\b(exec|system|passthru|shell_exec)\\s*\\("]
-    - ["mysqli_query", "SQL query execution with possible injection", "\\bmysqli_query\\s*\\("]
-    - ["mysql_query", "SQL query execution with possible injection", "\\bmysql_query\\s*\\("]
-    - ["pdo_query", "PDO query execution with tainted input", "->\\s*(query|exec)\\s*\\("]
+    - ["exec/system", "Command execution with tainted input", "\\b(exec|system|passthru|shell_exec|popen|proc_open)\\s*\\("]
+    - ["preg_replace /e", "Dynamic code via preg_replace with /e modifier", "\\bpreg_replace\\s*\\(\\s*['\"].*\\/e"]
+    - ["assert (string)", "Dynamic code via string assertion", "\\bassert\\s*\\(\\s*[\\$\\\"']"]
+    - ["mysqli_query", "SQL injection (mysqli)", "\\bmysqli_query\\s*\\("]
+    - ["mysql_query", "SQL injection (mysql_*)", "\\bmysql_query\\s*\\("]
+    - ["PDO query", "SQL injection (PDO)", "->\\s*(query|exec)\\s*\\("]
+    - ["unserialize", "PHP object injection / insecure deserialization", "\\bunserialize\\s*\\("]
+    - ["include/require", "File inclusion (LFI/RFI)", "\\b(include|include_once|require|require_once)\\s*[\\$('\"(]"]
+    - ["file_put_contents", "Arbitrary file write", "\\bfile_put_contents\\s*\\("]
+    - ["file_get_contents (remote)", "SSRF", "\\bfile_get_contents\\s*\\("]
+    - ["curl", "SSRF", "\\bcurl_setopt\\s*\\([^,]+,\\s*CURLOPT_URL|\\bcurl_exec\\b"]
+    - ["header (redirect)", "Open redirect / header injection", "\\bheader\\s*\\(\\s*['\"]Location"]
+    - ["ldap_search", "LDAP injection", "\\bldap_search\\s*\\("]
+    - ["xpath", "XPath injection", "\\bsimplexml_load_string\\b|\\b->xpath\\s*\\("]
+    - ["mail", "Email header injection", "\\bmail\\s*\\("]
+    - ["echo/print (XSS)", "Cross-site scripting", "\\b(echo|print)\\s+\\$"]
   sanitizers:
     - "\\bmysqli_real_escape_string\\b"
+    - "\\bmysql_real_escape_string\\b"
     - "\\bhtmlspecialchars\\b"
+    - "\\bhtmlentities\\b"
+    - "\\bstrip_tags\\b"
+    - "\\baddslashes\\b"
+    - "\\bintval\\b"
+    - "\\bfloatval\\b"
+    - "\\bpreg_replace\\b.*[^e]\\)"
+    - "\\bfilter_var\\s*\\("
+    - "\\bfilter_input\\s*\\("
+    - "\\bprepare\\s*\\("
+    - "\\bPDOStatement\\b"
+    - "\\bsanitize\\b"
+    - "\\bvalidate\\b"
+    - "\\bescape\\b"
+  safe_callees:
+    - "header"
+    - "redirect"
+    - "view"
+    - "response"
+    - "json_response"
+    - "abort"
+    - "redirect_to"
+    - "error_log"
+    - "var_dump"
+    - "print_r"
+    - "intval"
+    - "floatval"
+    - "strval"
+    - "strlen"
+    - "isset"
+    - "empty"
+    - "in_array"
+    - "array_key_exists"
+    - "count"
+    - "is_array"
+    - "is_string"
+    - "is_int"
+    - "is_numeric"
+    - "is_null"
 
+# ─── JavaScript / TypeScript ───────────────────────────────────────────────────
 javascript:
   sources:
+    # Express / generic Node
     - "\\breq\\.(body|query|params|headers|cookies)\\b"
     - "\\brequest\\.(body|query|params|headers|cookies)\\b"
-    - "\\bctx\\.(request\\.)?(body|query|params|headers)\\b"
-    - "\\bprocess\\.env\\b"
-    - "\\bURLSearchParams\\b"
+    - "\\b(req|request)\\.get\\s*\\(['\"](?:body|query|param|header|cookie)s?['\"]\\)"
+    # Koa
+    - "\\bctx\\.(request\\.)?(?:body|query|params|headers)\\b"
+    - "\\bctx\\.cookies\\.get\\s*\\("
+    # Hapi
+    - "\\brequest\\.(?:params|query|payload|headers|state)\\b"
+    # NestJS decorators
+    - "@(?:Body|Param|Query|Headers|Req|Request|Session|Cookies)\\b"
+    # Client-side DOM
     - "\\bdocument\\.cookie\\b"
-    - "\\blocation\\.search\\b"
-    - "\\blocation\\.hash\\b"
+    - "\\blocation\\.(?:search|hash|href|pathname)\\b"
     - "\\bwindow\\.name\\b"
     - "\\blocalStorage\\.getItem\\b"
     - "\\bsessionStorage\\.getItem\\b"
+    - "\\bURLSearchParams\\b"
+    - "\\bdocument\\.referrer\\b"
+    - "\\bdocument\\.URL\\b"
+    # React / Next.js
+    - "\\buseSearchParams\\s*\\("
+    - "\\buseParams\\s*\\("
+    - "\\buseRouter\\s*\\("
+    - "\\brouter\\.query\\b"
+    - "\\bNext(?:Request|ApiRequest)\\b"
+    - "\\brequest\\.nextUrl\\.searchParams\\b"
+    - "\\bsearchParams\\.get\\b"
+    - "\\bparams\\.[A-Za-z_$][A-Za-z0-9_$]*\\b"
+    - "\\bcontext\\.params\\b"
+    # process.env
+    - "\\bprocess\\.env\\b"
   sinks:
     - ["innerHTML", "DOM XSS sink", "\\.innerHTML\\b"]
     - ["outerHTML", "DOM XSS sink", "\\.outerHTML\\b"]
-    - ["document.write", "DOM XSS sink", "\\bdocument\\.write\\b"]
-    - ["eval", "Dynamic execution", "\\beval\\b"]
-    - ["Function", "Dynamic execution", "\\bFunction\\s*\\("]
-    - ["setTimeout", "Timer execution", "\\bsetTimeout\\s*\\("]
-    - ["setInterval", "Timer execution", "\\bsetInterval\\s*\\("]
+    - ["document.write", "DOM XSS sink", "\\bdocument\\.write\\s*\\("]
+    - ["document.writeln", "DOM XSS sink", "\\bdocument\\.writeln\\s*\\("]
+    - ["dangerouslySetInnerHTML", "React XSS sink", "dangerouslySetInnerHTML\\s*=\\s*\\{\\{"]
+    - ["eval", "Dynamic code execution", "\\beval\\s*\\("]
+    - ["Function constructor", "Dynamic code execution", "\\bnew\\s+Function\\s*\\("]
+    - ["setTimeout (string)", "Dynamic code execution via timer", "\\bsetTimeout\\s*\\(\\s*[^,)]+,"]
+    - ["setInterval (string)", "Dynamic code execution via timer", "\\bsetInterval\\s*\\(\\s*[^,)]+,"]
+    - ["child_process", "OS command execution", "\\bchild_process\\.(exec|execSync|spawn|spawnSync|execFile|fork)\\s*\\("]
+    - ["require('child_process')", "OS command execution", "require\\s*\\(\\s*['\"]child_process['\"]\\s*\\)"]
+    - ["SQL (raw query)", "SQL injection", "\\b(?:db|pool|client|connection|sequelize|knex)\\.(query|execute|raw)\\s*\\("]
+    - ["SQL (Sequelize literal)", "SQL injection", "\\bSequelize\\.literal\\s*\\("]
+    - ["SQL (Mongoose $where)", "NoSQL injection", "\\$where\\b|\\$regex\\b|\\$ne\\b"]
+    - ["fetch (SSRF)", "Server-side request forgery", "\\bfetch\\s*\\("]
+    - ["axios (SSRF)", "Server-side request forgery", "\\baxios\\.(get|post|put|patch|delete|request)\\s*\\("]
+    - ["http/https (SSRF)", "Server-side request forgery", "\\b(?:http|https)\\.(?:get|request)\\s*\\("]
+    - ["open redirect (res)", "Open redirect", "\\bres\\.redirect\\s*\\("]
+    - ["open redirect (window)", "Open redirect (client)", "\\bwindow\\.location\\s*=|\\blocation\\.href\\s*=|\\blocation\\.replace\\s*\\("]
+    - ["path.join traversal", "Path traversal", "\\bpath\\.join\\s*\\(\\s*__dirname|\\bpath\\.resolve\\s*\\(\\s*__dirname"]
+    - ["fs write", "Arbitrary file write", "\\bfs\\.(?:writeFile|writeFileSync|appendFile|appendFileSync|createWriteStream)\\s*\\("]
+    - ["fs read", "Arbitrary file read / path traversal", "\\bfs\\.(?:readFile|readFileSync|createReadStream)\\s*\\("]
+    - ["vm.runInContext", "Sandbox escape", "\\bvm\\.(?:runInContext|runInNewContext|runInThisContext|Script)\\b"]
+    - ["serialize-javascript", "Script injection", "\\bserialize\\s*\\("]
   sanitizers:
     - "\\bencodeURI\\b"
     - "\\bencodeURIComponent\\b"
     - "\\bDOMPurify\\.sanitize\\b"
+    - "\\bxss\\s*\\("
+    - "\\bxss\\.filterXSS\\s*\\("
+    - "\\bhe\\.encode\\s*\\("
+    - "\\bhe\\.escape\\s*\\("
+    - "\\bsanitizeHtml\\s*\\("
+    - "\\bescapeHtml\\s*\\("
+    - "\\bescapeXml\\s*\\("
+    - "\\bvalidator\\.escape\\s*\\("
+    - "\\bvalidator\\.isAlphanumeric\\s*\\("
+    - "\\bsanitize\\s*\\("
+    - "\\bvalidate\\s*\\("
+    - "\\bPreparedStatement\\b"
+    - "\\bparameterizedQuery\\b"
+  safe_callees:
+    - "res.json"
+    - "res.send"
+    - "res.redirect"
+    - "res.render"
+    - "res.status"
+    - "res.end"
+    - "next"
+    - "console.log"
+    - "console.debug"
+    - "console.error"
+    - "console.warn"
+    - "console.info"
+    - "JSON.stringify"
+    - "JSON.parse"
+    - "parseInt"
+    - "parseFloat"
+    - "isNaN"
+    - "isFinite"
+    - "String"
+    - "Number"
+    - "Boolean"
+    - "Array.from"
+    - "Array.isArray"
+    - "Object.keys"
+    - "Object.values"
+    - "Object.entries"
+    - "Math.floor"
+    - "Math.ceil"
+    - "Math.round"
+    - "Math.abs"
+    - "encodeURIComponent"
+    - "encodeURI"
+    - "decodeURIComponent"
+    - "decodeURI"
 
+# ─── Java ──────────────────────────────────────────────────────────────────────
 java:
   sources:
+    # Spring MVC annotations
     - "\\@RequestParam\\b"
     - "\\@PathVariable\\b"
     - "\\@RequestBody\\b"
     - "\\@RequestHeader\\b"
     - "\\@CookieValue\\b"
     - "\\@ModelAttribute\\b"
+    - "\\@MatrixVariable\\b"
+    - "\\@RequestPart\\b"
+    - "@(?:RequestParam|PathVariable|RequestBody|RequestHeader|CookieValue|ModelAttribute)\\b"
+    # Jakarta / Servlet API
     - "\\bHttpServletRequest\\b"
     - "\\bServletRequest\\b"
-    - "\\brequestEntity\\.getUrl\\b"
-    - "\\bgetParameter\\b"
-    - "\\bgetHeader\\b"
-    - "\\bgetCookies\\b"
-    - "\\bgetQueryString\\b"
-    - "\\bgetParameterValues\\b"
-    - "\\bgetParameterMap\\b"
-    - "\\bgetInputStream\\b"
-    - "\\bgetReader\\b"
-    - "\\bgetRequestURI\\b"
-    - "\\bgetPathInfo\\b"
-    - "\\bgetParts?\\b"
-    - "\\bgetRemoteAddr\\b"
-    - "\\bgetRemoteHost\\b"
-    - "\\bgetAttribute\\b"
+    - "\\bgetParameter\\s*\\("
+    - "\\bgetParameterValues\\s*\\("
+    - "\\bgetParameterMap\\s*\\("
+    - "\\bgetHeader\\s*\\("
+    - "\\bgetHeaders\\s*\\("
+    - "\\bgetCookies\\s*\\("
+    - "\\bgetQueryString\\s*\\("
+    - "\\bgetInputStream\\s*\\("
+    - "\\bgetReader\\s*\\("
+    - "\\bgetRequestURI\\s*\\("
+    - "\\bgetPathInfo\\s*\\("
+    - "\\bgetParts?\\s*\\("
+    - "\\bgetRemoteAddr\\s*\\("
+    - "\\bgetAttribute\\s*\\("
     - "\\bgetSession\\(\\)\\.getAttribute\\b"
-    - "\\bSystem\\.getenv\\b"
-    - "\\bSystem\\.getProperty\\b"
+    # JAX-RS
+    - "\\@QueryParam\\b"
+    - "\\@PathParam\\b"
+    - "\\@HeaderParam\\b"
+    - "\\@CookieParam\\b"
+    - "\\@FormParam\\b"
+    # Reactive Spring
+    - "\\bServerHttpRequest\\b"
+    - "\\b(?:ServerRequest|NativeWebRequest|WebRequest|ServerWebExchange)\\b"
+    # Environment
+    - "\\bSystem\\.getenv\\s*\\("
+    - "\\bSystem\\.getProperty\\s*\\("
   sinks:
-    - ["Runtime.exec", "Command execution", "\\bRuntime\\.getRuntime\\(\\)\\.exec\\b"]
-    - ["ProcessBuilder", "Command execution", "\\bProcessBuilder\\b"]
-    - ["SQL", "SQL execution", "\\bprepareStatement\\b|\\bcreateStatement\\b|\\bexecute(Query|Update|LargeUpdate|)\\b|\\bexecuteBatch\\b|\\bexecute\\s*\\(|\\baddBatch\\b|\\bjdbcTemplate\\.(query|queryForList|queryForMap|queryForObject|update|execute|batchUpdate)\\b"]
-    - ["JPA/ORM", "SQL execution", "\\bcreateNativeQuery\\b|\\bcreateQuery\\b|\\bnativeQuery\\b|\\bcreateSQLQuery\\b|\\bentityManager\\.(createNativeQuery|createQuery)\\b|\\bJpaRepository\\b|\\bCrudRepository\\b|\\bJdbcTemplate\\.(query|update|execute)\\b"]
-    - ["URL.openConnection", "External request/SSRF", "\\bnew\\s+URL\\s*\\(.*\\)\\s*\\.openConnection\\b"]
-    - ["HttpClient", "External request/SSRF", "\\bHttp(Client|Request)\\b.*\\b(send|execute)\\b"]
+    - ["Runtime.exec", "OS command execution", "\\bRuntime\\.getRuntime\\(\\)\\.exec\\b"]
+    - ["ProcessBuilder", "OS command execution", "\\bProcessBuilder\\b"]
+    - ["SQL (Statement)", "SQL injection", "\\b(?:prepareStatement|createStatement|execute(?:Query|Update|LargeUpdate|Batch)?|addBatch)\\s*\\("]
+    - ["SQL (JdbcTemplate)", "SQL injection", "\\bjdbcTemplate\\.(?:query|queryForList|queryForMap|queryForObject|update|execute|batchUpdate)\\b"]
+    - ["SQL (JPA native)", "SQL injection", "\\b(?:createNativeQuery|createQuery|createSQLQuery|nativeQuery)\\s*\\("]
+    - ["SQL (Hibernate HQL)", "HQL injection", "\\bsession\\.createQuery\\s*\\(|\\bgetHibernateTemplate\\(\\)\\.(find|bulkUpdate)\\s*\\("]
+    - ["JNDI lookup", "JNDI injection (e.g. Log4Shell)", "\\bnew\\s+InitialContext\\(\\)\\.lookup\\b|\\bcontext\\.lookup\\s*\\("]
     - ["ScriptEngine", "Dynamic script execution", "\\bScriptEngineManager\\b|\\bScriptEngine\\b|\\bengine\\.eval\\b"]
+    - ["SSRF (URL.openConnection)", "Server-side request forgery", "\\bnew\\s+URL\\s*\\(.*\\)\\.openConnection\\b"]
+    - ["SSRF (HttpClient)", "Server-side request forgery", "\\bHttpClient\\b.*\\b(?:send|execute)\\b|\\bRestTemplate\\b.*\\.(?:getForObject|getForEntity|postForObject|exchange)\\b"]
+    - ["SSRF (WebClient)", "Server-side request forgery", "\\bWebClient\\b.*\\.(?:get|post|put|delete|method)\\b"]
+    - ["Deserialization (ObjectInputStream)", "Insecure deserialization", "\\bObjectInputStream\\b|\\breadObject\\s*\\("]
+    - ["OGNL / SpEL injection", "Expression language injection", "\\bExpressionParser\\b|\\bOgnlContext\\b|\\bStandardEvaluationContext\\b"]
+    - ["XML (XXE)", "XML external entity injection", "\\bDocumentBuilderFactory\\b|\\bSAXParserFactory\\b|\\bXMLInputFactory\\b"]
+    - ["LDAP injection", "LDAP injection", "\\bDirContext\\.search\\s*\\(|\\bLdapTemplate\\b"]
+    - ["Path traversal", "Arbitrary file read/write", "\\bnew\\s+File\\s*\\(|\\bPaths\\.get\\s*\\(|\\bFiles\\.(?:readAll|write)\\b"]
+    - ["Log injection (SLF4J)", "Log injection / Log4Shell vector", "\\blog(?:ger)?\\s*\\.(?:error|warn|info|debug|trace)\\s*\\(.*\\+"]
   sanitizers:
-    - "\\bESAPI\\.encoder\\.encodeForSQL\\b"
-    - "\\bESAPI\\.encoder\\.encodeForHTML\\b"
-    - "\\bStringEscapeUtils\\.escapeHtml4\\b"
+    - "\\bESAPI\\.encoder\\(\\)\\.encodeForSQL\\b"
+    - "\\bESAPI\\.encoder\\(\\)\\.encodeForHTML\\b"
+    - "\\bStringEscapeUtils\\.escape(?:Html4|Xml|Java|JavaScript)\\b"
     - "\\bPreparedStatement\\s+\\w+\\s*=\\s*conn\\.prepareStatement\\b"
+    - "\\bHtmlUtils\\.htmlEscape\\b"
+    - "\\bMarkdownSanitizer\\b"
+    - "\\bAntiSamy\\b"
+    - "\\bOwasp\\b"
+    - "\\bPattern\\.compile\\b.*matches\\b"
+    - "\\bwhitelist\\b"
+    - "\\bvalidate\\b"
+    - "\\bsanitize\\b"
+  safe_callees:
+    - "ResponseEntity"
+    - "model.addAttribute"
+    - "redirectAttributes"
+    - "redirect"
+    - "view"
+    - "toString"
+    - "equals"
+    - "hashCode"
+    - "compareTo"
+    - "System.out.println"
+    - "System.err.println"
+    - "logger.info"
+    - "logger.debug"
+    - "logger.warn"
+    - "logger.error"
+    - "logger.trace"
+    - "log.info"
+    - "log.debug"
+    - "log.warn"
+    - "log.error"
+    - "Integer.parseInt"
+    - "Integer.valueOf"
+    - "Long.parseLong"
+    - "Double.parseDouble"
+    - "Boolean.parseBoolean"
+    - "String.valueOf"
+    - "String.format"
+    - "String.isEmpty"
+    - "String.isBlank"
+    - "Objects.requireNonNull"
+    - "Optional.of"
+    - "Optional.empty"
+    - "Collections.unmodifiableList"
+    - "Arrays.asList"
 
+# ─── .NET (C#) ─────────────────────────────────────────────────────────────────
 dotnet:
   sources:
-    - "\\bRequest\\.(QueryString|Form|Cookies|Headers)\\b"
-    - "\\bRequest\\.(Query|Form)\\b"
-    - "\\bHttpContext\\.Current\\.Request\\.(QueryString|Form|Cookies|Headers|Params|Item)\\b"
+    - "\\bRequest\\.(?:QueryString|Form|Cookies|Headers|Query|Body|Path|Url|RawUrl)\\b"
+    - "\\bHttpContext\\.Current\\.Request\\.(?:QueryString|Form|Cookies|Headers|Params|Item)\\b"
     - "\\bRequest\\[.+\\]"
-    - "\\bRequest\\.Body\\b"
     - "\\bRequest\\.InputStream\\b"
-    - "\\bRequest\\.Path\\b"
-    - "\\bRequest\\.Url\\b"
-    - "\\bEnvironment\\.Get(Environment)?Variable\\b"
-    - "\\bConfigurationManager\\.(AppSettings|ConnectionStrings)\\b"
-    - "\\bHttpRequest\\b.*\\.(Query|Form|Cookies|Headers)"
+    - "\\bEnvironment\\.GetEnvironmentVariable\\b"
+    - "\\bConfigurationManager\\.(?:AppSettings|ConnectionStrings)\\b"
+    - "\\bHttpRequest\\b.*\\.(?:Query|Form|Cookies|Headers)"
+    - "\\b(?:Request|HttpContext)\\.RouteValues\\b"
+    - "\\bIQueryCollection\\b"
+    - "\\bIFormCollection\\b"
+    - "\\bBindAsync\\b"
+    - "\\b\\[(?:FromBody|FromQuery|FromRoute|FromHeader|FromForm)\\b"
   sinks:
-    - ["Process.Start", "Command execution", "\\bProcess\\.Start\\b"]
-    - ["SqlCommand", "SQL execution", "\\bSqlCommand\\b.*\\.(ExecuteReader|ExecuteNonQuery|ExecuteScalar|ExecuteXmlReader|Execute|ExecuteAsync)\\b|\\bExecute(Reader|NonQuery|Scalar)\\b"]
-    - ["OleDbCommand", "SQL execution", "\\bOleDbCommand\\b.*\\.(ExecuteReader|ExecuteNonQuery|ExecuteScalar)\\b"]
-    - ["MySqlCommand", "SQL execution", "\\bMySqlCommand\\b.*\\.(ExecuteReader|ExecuteNonQuery|ExecuteScalar)\\b"]
-    - ["DataAdapter", "SQL execution", "\\b(DataAdapter|SqlDataAdapter|OleDbDataAdapter)\\b"]
-    - ["EF Raw SQL", "SQL execution (raw)", "\\bDatabase\\.(ExecuteSqlCommand|SqlQuery)\\b|\\bFromSqlRaw\\b"]
-    - ["Dapper", "SQL execution (dapper)", "\\bConnection\\.(Execute|Query|QueryFirst|QuerySingle)\\b"]
-    - ["Eval", "Dynamic code execution", "\\bEval\\b|\\bDataBinder\\.Eval\\b"]
-    - ["CodeDom", "Dynamic code compilation", "\\bCSharpCodeProvider\\b|\\bCodeDomProvider\\b"]
-    - ["ScriptEngine", "Script execution", "\\bMicrosoft\\.ClearScript\\b|\\bJint\\b|\\bChakraCore\\b|\\bScriptEngine\\b"]
-    - ["HttpClient/WebRequest", "External request/SSRF", "\\bHttpClient\\b.*\\.(Send|SendAsync|GetAsync|PostAsync)\\b|\\bWebRequest\\b.*\\.(Create|GetResponse)\\b|\\bWebClient\\b.*\\.(DownloadString|UploadString|OpenRead)\\b"]
-    - ["File IO", "File write", "\\bFile\\.(WriteAllText|WriteAllBytes|Create|AppendAllText)\\b|\\bStreamWriter\\b"]
-    - ["ProcessStartInfo", "Command execution", "\\bProcessStartInfo\\b"]
+    - ["Process.Start", "OS command execution", "\\bProcess\\.Start\\b"]
+    - ["ProcessStartInfo", "OS command execution", "\\bProcessStartInfo\\b"]
+    - ["SqlCommand", "SQL injection (SqlCommand)", "\\bSqlCommand\\b.*\\.(?:ExecuteReader|ExecuteNonQuery|ExecuteScalar|ExecuteXmlReader|Execute(?:Async)?)\\b|\\bExecute(?:Reader|NonQuery|Scalar)\\b"]
+    - ["OleDbCommand", "SQL injection (OleDbCommand)", "\\bOleDbCommand\\b.*\\.(?:ExecuteReader|ExecuteNonQuery|ExecuteScalar)\\b"]
+    - ["MySqlCommand", "SQL injection (MySQL Connector)", "\\bMySqlCommand\\b.*\\.(?:ExecuteReader|ExecuteNonQuery|ExecuteScalar)\\b"]
+    - ["DataAdapter", "SQL injection (DataAdapter)", "\\b(?:DataAdapter|SqlDataAdapter|OleDbDataAdapter)\\b"]
+    - ["EF Raw SQL", "SQL injection (Entity Framework raw)", "\\bDatabase\\.(?:ExecuteSqlCommand|SqlQuery|ExecuteSqlRaw|FromSqlRaw|FromSqlInterpolated)\\b"]
+    - ["Dapper", "SQL injection (Dapper)", "\\bConnection\\.(?:Execute|Query|QueryFirst|QuerySingle|QueryMultiple)\\b"]
+    - ["Eval / DataBinder", "Dynamic code execution", "\\bEval\\b|\\bDataBinder\\.Eval\\b"]
+    - ["CSharpCodeProvider", "Dynamic code compilation", "\\bCSharpCodeProvider\\b|\\bCodeDomProvider\\b"]
+    - ["ScriptEngine", "Dynamic script execution", "\\bMicrosoft\\.ClearScript\\b|\\bJint\\b|\\bChakraCore\\b|\\bScriptEngine\\b"]
+    - ["SSRF (HttpClient)", "Server-side request forgery", "\\bHttpClient\\b.*\\.(?:Send|SendAsync|GetAsync|PostAsync|PutAsync|DeleteAsync)\\b|\\bWebRequest\\b.*\\.(?:Create|GetResponse)\\b|\\bWebClient\\b.*\\.(?:DownloadString|UploadString|OpenRead)\\b"]
+    - ["Redirect / Response.Write", "Open redirect / response injection", "\\b(?:Response|HttpResponse)\\.(?:Redirect|Write|WriteAsync)\\b"]
+    - ["File IO", "Arbitrary file write/read", "\\bFile\\.(?:WriteAllText|WriteAllBytes|Create|AppendAllText|ReadAllText|ReadAllBytes)\\b|\\bStreamWriter\\b"]
+    - ["Deserialization (BinaryFormatter)", "Insecure deserialization", "\\bBinaryFormatter\\b|\\bJavaScriptSerializer\\b|\\bTypeNameHandling\\b"]
+    - ["LDAP injection", "LDAP injection", "\\bDirectorySearcher\\b|\\bLdapConnection\\b"]
+    - ["XML (XXE)", "XML external entity injection", "\\bXmlDocument\\b|\\bXmlReader\\.Create\\b|\\bXDocument\\.Load\\b"]
+    - ["Path traversal", "Arbitrary file access", "\\bPath\\.Combine\\s*\\(|\\bDirectory\\.GetFiles\\s*\\("]
   sanitizers:
     - "\\bHttpUtility\\.HtmlEncode\\b"
     - "\\bHttpUtility\\.UrlEncode\\b"
     - "\\bAntiXssEncoder\\.HtmlEncode\\b"
+    - "\\bEncoder\\.HtmlEncode\\b"
     - "\\bRegex\\.Escape\\b"
     - "\\bSqlParameter\\b"
+    - "\\bSqlParameterCollection\\b"
+    - "\\bDbParameter\\b"
+    - "\\bsanitize\\b"
+    - "\\bvalidate\\b"
+    - "\\bWhitelist\\b"
+    - "\\bint\\.Parse\\b"
+    - "\\bint\\.TryParse\\b"
+    - "\\bGuid\\.Parse\\b"
+    - "\\bEnum\\.Parse\\b"
+  safe_callees:
+    - "Ok"
+    - "BadRequest"
+    - "NotFound"
+    - "Unauthorized"
+    - "Forbid"
+    - "NoContent"
+    - "Created"
+    - "View"
+    - "Json"
+    - "Redirect"
+    - "RedirectToAction"
+    - "LocalRedirect"
+    - "File"
+    - "Content"
+    - "ToString"
+    - "Equals"
+    - "GetHashCode"
+    - "Console.WriteLine"
+    - "Console.Write"
+    - "_logger.LogInformation"
+    - "_logger.LogDebug"
+    - "_logger.LogWarning"
+    - "_logger.LogError"
+    - "_logger.LogCritical"
+    - "int.Parse"
+    - "int.TryParse"
+    - "long.Parse"
+    - "double.Parse"
+    - "bool.Parse"
+    - "Guid.Parse"
+    - "Enum.Parse"
+    - "Convert.ToInt32"
+    - "Convert.ToString"
+    - "Convert.ToBoolean"
+    - "String.IsNullOrEmpty"
+    - "String.IsNullOrWhiteSpace"
+    - "string.IsNullOrEmpty"
+    - "string.IsNullOrWhiteSpace"
 
+# ─── Go ────────────────────────────────────────────────────────────────────────
 golang:
   sources:
-    - "\\br\\.FormValue\\b"
-    - "\\br\\.URL\\.Query\\b"
+    # Standard net/http
+    - "\\br\\.FormValue\\s*\\("
+    - "\\br\\.PostFormValue\\s*\\("
+    - "\\br\\.URL\\.Query\\(\\)"
+    - "\\br\\.URL\\.Query\\(\\)\\.Get\\s*\\("
+    - "\\br\\.Header\\.Get\\s*\\("
+    - "\\br\\.Cookie\\s*\\("
+    - "\\br\\.Body\\b"
+    - "\\bjson\\.NewDecoder\\s*\\(\\s*r\\.Body\\b"
+    # gin
+    - "\\bc\\.Param\\s*\\("
+    - "\\bc\\.Query\\s*\\("
+    - "\\bc\\.PostForm\\s*\\("
+    - "\\bc\\.GetHeader\\s*\\("
+    - "\\bc\\.Cookie\\s*\\("
+    - "\\bc\\.ShouldBind(?:JSON|Query|Form)?\\s*\\("
+    - "\\bc\\.BindJSON\\s*\\("
+    - "\\bc\\.GetRawData\\s*\\("
+    # echo
+    - "\\bc\\.QueryParam\\s*\\("
+    - "\\bc\\.FormValue\\s*\\("
+    - "\\bc\\.Param\\s*\\("
+    # fiber
+    - "\\bc\\.Params\\s*\\("
+    - "\\bc\\.BodyParser\\s*\\("
+    - "\\bc\\.Get\\s*\\("
+    # chi / gorilla
+    - "\\bchi\\.URLParam\\s*\\("
+    - "\\bmux\\.Vars\\s*\\("
+    - "\\bvars\\[\\s*['\"]"
+    # Standard lib
+    - "\\bos\\.Getenv\\s*\\("
+    - "\\bos\\.LookupEnv\\s*\\("
+    - "\\bos\\.Args\\b"
   sinks:
-    - ["exec", "Command execution", "\\bexec\\.Command\\b"]
-    - ["sql", "SQL execution", "\\bdb\\.Query\\b|\\bdb\\.Exec\\b|\\bdb\\.QueryRow\\b"]
-    - ["template", "Template rendering", "\\btemplate\\.Must\\b|\\btemplate\\.Parse\\b"]
+    - ["exec.Command", "OS command execution", "\\bexec\\.Command\\s*\\("]
+    - ["SQL (db.Query/Exec)", "SQL injection", "\\bdb\\.(Query|Exec|QueryRow|QueryContext|ExecContext|QueryRowContext)\\s*\\("]
+    - ["SQL (sqlx)", "SQL injection (sqlx)", "\\b(db|sqlx)\\.(NamedExec|NamedQuery|QueryxContext|ExecContext|QueryContext|Get|Select)\\s*\\("]
+    - ["template/html", "XSS via unsafe template rendering", "\\btemplate\\.(Must|New|ParseFiles|ParseGlob)\\b"]
+    - ["text/template (unsafe)", "Injection via text/template (no auto-escape)", "\\btext\\/template\\b"]
+    - ["fmt.Fprintf (response)", "Response injection / XSS", "\\bfmt\\.Fprintf\\s*\\(\\s*w\\b"]
+    - ["http.Redirect", "Open redirect", "\\bhttp\\.Redirect\\s*\\("]
+    - ["os.OpenFile (write)", "Arbitrary file write", "\\bos\\.(?:OpenFile|Create)\\s*\\(|\\bioutil\\.WriteFile\\b|\\bos\\.WriteFile\\b"]
+    - ["net/http client (SSRF)", "Server-side request forgery", "\\bhttp\\.(?:Get|Post)\\s*\\(|\\bclient\\.(?:Do|Get|Post)\\s*\\("]
+    - ["log.Printf (format)", "Log injection via format string", "\\blog\\.(?:Printf|Fatalf|Panicf)\\s*\\("]
   sanitizers:
     - "\\btemplate\\.HTMLEscapeString\\b"
+    - "\\btemplate\\.JSEscapeString\\b"
     - "\\burl\\.QueryEscape\\b"
+    - "\\burl\\.PathEscape\\b"
+    - "\\bhtml\\.EscapeString\\b"
+    - "\\bstrconv\\.Quote\\b"
+    - "\\bregexp\\.QuoteMeta\\b"
+    - "\\bsanitize\\b"
+    - "\\bvalidate\\b"
+    - "\\bgovalidator\\b"
+    - "\\bValidator\\.Struct\\b"
+  safe_callees:
+    - "c.JSON"
+    - "c.String"
+    - "c.HTML"
+    - "c.Status"
+    - "c.Next"
+    - "c.Abort"
+    - "c.Set"
+    - "c.Redirect"
+    - "w.Write"
+    - "w.WriteHeader"
+    - "json.Marshal"
+    - "json.MarshalIndent"
+    - "json.Unmarshal"
+    - "fmt.Println"
+    - "fmt.Printf"
+    - "fmt.Sprintf"
+    - "log.Println"
+    - "log.Printf"
+    - "log.Fatal"
+    - "errors.New"
+    - "errors.Wrap"
+    - "fmt.Errorf"
+    - "len"
+    - "cap"
+    - "append"
+    - "make"
+    - "new"
+    - "copy"
+    - "close"
+    - "strconv.Itoa"
+    - "strconv.Atoi"
+    - "strconv.ParseInt"
+    - "strconv.ParseFloat"
+    - "strconv.FormatInt"
+    - "strings.TrimSpace"
+    - "strings.ToLower"
+    - "strings.ToUpper"
+    - "strings.Contains"
+    - "strings.HasPrefix"
+    - "strings.HasSuffix"
+    - "strings.Replace"
+    - "strings.ReplaceAll"
+    - "strings.Split"
+    - "strings.Join"
+    - "bytes.Buffer"
+    - "ioutil.ReadAll"
+
+# ─── Ruby / Rails ──────────────────────────────────────────────────────────────
+ruby:
+  analyzer:
+    globs: ["*.rb"]
+    mode: end_keyword
+    function_def_re: '^\s*def\s+(?:self\.)?([A-Za-z_][A-Za-z0-9_?!]*)\s*(?:\(([^)]*)\))?\s*$'
+  sources:
+    - "\\bparams\\[:"
+    - "\\bparams\\b"
+    - "\\brequest\\.body\\.read\\b"
+    - "\\brequest\\.env\\b"
+    - "\\brequest\\.headers\\b"
+    - "\\brequest\\.query_string\\b"
+    - "\\bcookies\\[:"
+    - "\\bsession\\[:"
+    - "\\bENV\\[["
+    - "\\baction_dispatch\\.request\\.parameters\\b"
+  sinks:
+    - ["eval", "Dynamic code execution", "\\beval\\s*\\(|\\beval\\s+['\"]|\\bObject\\.const_get\\b"]
+    - ["system/exec", "OS command execution", "\\bsystem\\s*\\(|\\bexec\\s*\\(|`[^`]*`|\\%x\\{|\\bspawn\\s*\\(|\\bIO\\.popen\\b|\\bOpen3\\b"]
+    - ["SQL (ActiveRecord raw)", "SQL injection", "\\b\\.where\\s*\\([\"'].*\\#\\{|\\b\\.find_by_sql\\s*\\(|\\bActiveRecord::Base\\.connection\\.execute\\b|\\b\\.execute\\s*\\("]
+    - ["ERB/template injection", "Template injection / XSS", "\\bERB\\.new\\s*\\(|\\brender\\s+inline:\\s*['\"].*\\#\\{"]
+    - ["redirect_to (user params)", "Open redirect", "\\bredirect_to\\s+params|\\bredirect_to\\s+\\@"]
+    - ["send_file", "Path traversal", "\\bsend_file\\s*\\("]
+    - ["Marshal.load", "Insecure deserialization", "\\bMarshal\\.(?:load|restore)\\b"]
+    - ["YAML.load (unsafe)", "Insecure YAML deserialization", "\\bYAML\\.load\\b(?!.*safe_load)"]
+    - ["Kernel.open (SSRF/RCE)", "SSRF / arbitrary command execution via open()", "\\bKernel\\.open\\b|\\bopen\\s*\\(['\"]\\|"]
+  sanitizers:
+    - "\\bCGI\\.escape_html\\b"
+    - "\\bERB::Util\\.html_escape\\b"
+    - "\\bh\\s*\\("
+    - "\\bsanitize\\b"
+    - "\\bhtml_escape\\b"
+    - "\\b\\.html_safe\\b"
+    - "\\b\\.permit!?\\s*\\("
+    - "\\bActiveRecord::Base\\.sanitize_sql\\b"
+    - "\\bActiveRecord::Base\\.sanitize_sql_for_conditions\\b"
+    - "\\bvalidate\\b"
+    - "\\bescaped?\\b"
+  safe_callees:
+    - "render"
+    - "redirect_to"
+    - "head"
+    - "respond_to"
+    - "respond_with"
+    - "flash"
+    - "logger.info"
+    - "logger.debug"
+    - "logger.warn"
+    - "logger.error"
+    - "Rails.logger.info"
+    - "Rails.logger.error"
+    - "puts"
+    - "pp"
+    - "p"
+    - "inspect"
+    - "to_s"
+    - "to_i"
+    - "to_f"
+    - "to_a"
+    - "to_h"
+    - "nil?"
+    - "empty?"
+    - "present?"
+    - "blank?"
+    - "length"
+    - "size"
+    - "count"
+
+# ─── Kotlin ────────────────────────────────────────────────────────────────────
+kotlin:
+  analyzer:
+    globs: ["*.kt", "*.kts"]
+    mode: brace
+    function_def_re: '^\s*(?:(?:public|private|protected|internal|override|suspend|open|final|abstract|inline|tailrec|operator|infix|external|expect|actual)\s+)*fun\s+(?:<[^>]+>\s+)?(?:\([^)]*\)\s*\.\s*)?([A-Za-z_][A-Za-z0-9_]*)\s*\(([^)]*)\)'
+  sources:
+    # Spring Boot / Spring MVC
+    - "\\@RequestParam\\b"
+    - "\\@PathVariable\\b"
+    - "\\@RequestBody\\b"
+    - "\\@RequestHeader\\b"
+    - "\\@CookieValue\\b"
+    - "\\bHttpServletRequest\\b"
+    - "\\bgetParameter\\s*\\("
+    - "\\bgetHeader\\s*\\("
+    # Ktor
+    - "\\bcall\\.parameters\\b"
+    - "\\bcall\\.request\\.queryParameters\\b"
+    - "\\bcall\\.request\\.headers\\b"
+    - "\\bcall\\.receiveParameters\\s*\\(\\)"
+    - "\\bcall\\.receive\\s*\\("
+    - "\\bcall\\.request\\.cookies\\b"
+    # Environment / config
+    - "\\bSystem\\.getenv\\s*\\("
+    - "\\bSystem\\.getProperty\\s*\\("
+    # Android
+    - "\\bintent\\.extras\\b"
+    - "\\bintent\\.getStringExtra\\s*\\("
+    - "\\bintent\\.getExtra\\b"
+    - "\\bBundle\\.getString\\s*\\("
+    - "\\bSharedPreferences\\b.*getString"
+  sinks:
+    - ["Runtime.exec", "OS command execution", "\\bRuntime\\.getRuntime\\(\\)\\.exec\\b"]
+    - ["ProcessBuilder", "OS command execution", "\\bProcessBuilder\\b"]
+    - ["SQL (JDBC)", "SQL injection", "\\b(?:prepareStatement|createStatement|execute(?:Query|Update)?)\\s*\\("]
+    - ["SQL (JdbcTemplate)", "SQL injection", "\\bjdbcTemplate\\.(?:query|update|execute)\\b"]
+    - ["SQL (JPA native)", "SQL injection", "\\bcreatNativeQuery\\s*\\(|\\bcreateQuery\\s*\\("]
+    - ["ScriptEngine", "Dynamic script execution", "\\bScriptEngineManager\\b|\\bengine\\.eval\\b"]
+    - ["SSRF", "Server-side request forgery", "\\bURL\\s*\\([^)]+\\)\\.openConnection\\b|\\bHttpClient\\b|\\bOkHttpClient\\b"]
+    - ["WebView.loadUrl", "JavaScript injection via WebView", "\\bWebView\\b.*\\.loadUrl\\s*\\(|\\bevaluateJavascript\\s*\\("]
+    - ["Deserialization", "Insecure deserialization", "\\bObjectInputStream\\b|\\breadObject\\s*\\("]
+    - ["JNDI", "JNDI injection", "\\bnew\\s+InitialContext\\(\\)\\.lookup\\b|\\bcontext\\.lookup\\s*\\("]
+  sanitizers:
+    - "\\bPreparedStatement\\b"
+    - "\\bHtmlUtils\\.htmlEscape\\b"
+    - "\\bESAPI\\b"
+    - "\\bHtmlUtils\\.htmlEscape\\b"
+    - "\\bsanitize\\b"
+    - "\\bvalidate\\b"
+    - "\\bescapeHtml\\b"
+  safe_callees:
+    - "call.respond"
+    - "call.respondText"
+    - "call.respondHtml"
+    - "println"
+    - "print"
+    - "logger.info"
+    - "logger.debug"
+    - "logger.warn"
+    - "logger.error"
+    - "log.info"
+    - "log.debug"
+    - "log.warn"
+    - "log.error"
+    - "toString"
+    - "toInt"
+    - "toLong"
+    - "toDouble"
+    - "toFloat"
+    - "toBoolean"
+    - "isNullOrEmpty"
+    - "isNullOrBlank"
+    - "listOf"
+    - "mapOf"
+    - "setOf"
+    - "mutableListOf"
+
+# ─── C ─────────────────────────────────────────────────────────────────────────
+c:
+  analyzer:
+    globs: ["*.c", "*.h"]
+    mode: brace
+    function_def_re: '^(?:(?:static|inline|extern|volatile|const)\s+)*(?:unsigned\s+)?(?:[\w\*]+\s+)+([A-Za-z_][A-Za-z0-9_]*)\s*\(([^;{]*)\)\s*(?:\{|$)'
+  sources:
+    - "\\bgetenv\\s*\\("
+    - "\\bfgets\\s*\\("
+    - "\\bfread\\s*\\("
+    - "\\bgetchar\\s*\\("
+    - "\\bgets\\s*\\("
+    - "\\bscanf\\s*\\("
+    - "\\bfscanf\\s*\\("
+    - "\\bsscanf\\s*\\("
+    - "\\bread\\s*\\("
+    - "\\brecv\\s*\\("
+    - "\\brecvfrom\\s*\\("
+    - "\\bargv\\b"
+    - "\\bcgetopt\\s*\\("
+  sinks:
+    - ["system", "OS command injection", "\\bsystem\\s*\\("]
+    - ["popen", "OS command injection", "\\bpopen\\s*\\("]
+    - ["exec family", "OS command execution", "\\b(?:execl|execv|execle|execve|execlp|execvp)\\s*\\("]
+    - ["sprintf (overflow)", "Buffer overflow / format string", "\\bsprintf\\s*\\("]
+    - ["strcpy (overflow)", "Buffer overflow", "\\bstrcpy\\s*\\("]
+    - ["strcat (overflow)", "Buffer overflow", "\\bstrcat\\s*\\("]
+    - ["gets (overflow)", "Buffer overflow", "\\bgets\\s*\\("]
+    - ["scanf (overflow)", "Buffer overflow", "\\bscanf\\s*\\(\\s*['\"]%s['\"]"]
+    - ["printf (format)", "Format string injection", "\\bprintf\\s*\\(\\s*[^'\"]"]
+    - ["fprintf (format)", "Format string injection", "\\bfprintf\\s*\\([^,]+,\\s*[^'\"L]"]
+    - ["SQL (sqlite3_exec)", "SQL injection", "\\bsqlite3_exec\\s*\\("]
+    - ["SQL (mysql_query)", "SQL injection", "\\bmysql_query\\s*\\("]
+    - ["SQL (PQexec)", "SQL injection", "\\bPQexec\\s*\\("]
+  sanitizers:
+    - "\\bsnprintf\\b"
+    - "\\bstrlcpy\\b"
+    - "\\bstrlcat\\b"
+    - "\\bstrncpy\\b"
+    - "\\bstrncat\\b"
+    - "\\bsanitize\\b"
+    - "\\bvalidate\\b"
+    - "\\bsprintf_s\\b"
+    - "\\bstrcpy_s\\b"
+  safe_callees:
+    - "printf"
+    - "fprintf"
+    - "fclose"
+    - "fopen"
+    - "free"
+    - "malloc"
+    - "calloc"
+    - "realloc"
+    - "memset"
+    - "memcpy"
+    - "memmove"
+    - "strlen"
+    - "strcmp"
+    - "strncmp"
+    - "strchr"
+    - "strstr"
+    - "atoi"
+    - "atof"
+    - "atol"
+    - "strtol"
+    - "strtod"
+    - "strtoul"
+    - "assert"
+    - "perror"
+
+# ─── C++ ───────────────────────────────────────────────────────────────────────
+cpp:
+  analyzer:
+    globs: ["*.cpp", "*.cc", "*.cxx", "*.hpp", "*.hh"]
+    mode: brace
+    function_def_re: '^(?:(?:static|inline|virtual|explicit|constexpr|noexcept|override|const|friend|extern)\s+)*(?:[\w\*\&:<>~]+\s+)+([A-Za-z_~][A-Za-z0-9_]*)\s*\(([^;{=]*)\)\s*(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:\{|$)'
+  sources:
+    - "\\bstd::cin\\b"
+    - "\\bgetenv\\s*\\("
+    - "\\bstd::getenv\\s*\\("
+    - "\\bargv\\b"
+    - "\\bboost::program_options\\b"
+    - "\\bQLineEdit\\b.*text\\b"
+    - "\\bQTextEdit\\b.*toPlainText\\b"
+    - "\\bcpprestsdk\\b"
+    - "\\bweb::http::experimental::listener\\b"
+  sinks:
+    - ["system", "OS command injection", "\\bsystem\\s*\\("]
+    - ["popen", "OS command injection", "\\bpopen\\s*\\("]
+    - ["exec family", "OS command execution", "\\b(?:execl|execv|execle|execve|execlp|execvp)\\s*\\("]
+    - ["sprintf (overflow)", "Buffer overflow / format string", "\\bsprintf\\s*\\("]
+    - ["strcpy (overflow)", "Buffer overflow", "\\bstrcpy\\s*\\("]
+    - ["SQL", "SQL injection", "\\bsqlite3_exec\\s*\\(|\\bmysql_query\\s*\\(|\\bPQexec\\s*\\("]
+    - ["printf (format)", "Format string injection", "\\bprintf\\s*\\(\\s*[^'\"]"]
+    - ["std::system", "OS command injection", "\\bstd::system\\s*\\("]
+  sanitizers:
+    - "\\bsnprintf\\b"
+    - "\\bstd::regex_replace\\b"
+    - "\\bstd::string\\b"
+    - "\\bboost::regex_replace\\b"
+    - "\\bsanitize\\b"
+    - "\\bvalidate\\b"
+    - "\\bstrcpy_s\\b"
+    - "\\bsprintf_s\\b"
+  safe_callees:
+    - "std::cout"
+    - "std::cerr"
+    - "std::endl"
+    - "printf"
+    - "fprintf"
+    - "free"
+    - "delete"
+    - "std::make_shared"
+    - "std::make_unique"
+    - "std::move"
+    - "std::forward"
+    - "std::string"
+    - "std::to_string"
+    - "std::stoi"
+    - "std::stol"
+    - "std::stod"
+    - "std::stof"
+    - "strlen"
+    - "strcmp"
+    - "assert"

@@ -6,5 +6,5 @@ __pycache__/
 venv/
 reports/
 runtime/
-frontend/node_modules/
-frontend/dist/
+webui/frontend/node_modules/
+webui/frontend/dist/

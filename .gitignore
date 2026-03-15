@@ -18,14 +18,9 @@ env/
 # Runtime and generated outputs
 # -----------------------------
 runtime/*
-reports/html/
-reports/pdf/
-reports/text/
-reports/json/
+reports/data/
+reports/scan/
 reports/analysis/
-
-!reports/!Sample-Reports/
-!reports/!Sample-Reports/**
 
 # -----------------------------
 # Local environment/secrets
@@ -37,16 +32,11 @@ reports/analysis/
 # -----------------------------
 # Editor/OS artifacts
 # -----------------------------
-.DS_Store
 Thumbs.db
-.idea/
-.vscode/
+.*
+
 
 # -----------------------------
-# Legacy/local-only paths
+# Local-only paths
 # -----------------------------
 /exclude/
-/exclude/**
-daksh-web/
-docs/
-Dockerfile

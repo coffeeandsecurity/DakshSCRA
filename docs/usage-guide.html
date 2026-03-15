@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DakshSCRA — Usage Guide</title>
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #181c25;
+  --surface2: #1e2330;
+  --border: #2a3040;
+  --primary: #4f8ef7;
+  --primary-dim: #2a4a8a;
+  --text: #d4d8e8;
+  --text-muted: #7a8099;
+  --text-strong: #eef0f8;
+  --code-bg: #141820;
+  --tag-blue: #1a3a6e;
+  --tag-blue-text: #7eb3fa;
+  --tag-green: #143a20;
+  --tag-green-text: #6acf8a;
+  --tag-orange: #3a2a10;
+  --tag-orange-text: #f0b060;
+  --tag-purple: #2a1a4a;
+  --tag-purple-text: #b088f8;
+  --sidebar-w: 260px;
+  --radius: 6px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 15px; line-height: 1.7; display: flex; min-height: 100vh; }
+
+/* ── Sidebar ── */
+#sidebar {
+  width: var(--sidebar-w); min-width: var(--sidebar-w);
+  background: var(--surface); border-right: 1px solid var(--border);
+  position: fixed; top: 0; left: 0; height: 100vh;
+  overflow-y: auto; display: flex; flex-direction: column;
+  padding: 0 0 24px 0; z-index: 100;
+}
+#sidebar::-webkit-scrollbar { width: 4px; }
+#sidebar::-webkit-scrollbar-track { background: transparent; }
+#sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.sidebar-brand {
+  display: flex; align-items: center; gap: 10px;
+  padding: 20px 18px 16px; border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: var(--surface); z-index: 1;
+}
+.brand-icon {
+  width: 32px; height: 32px; border-radius: var(--radius);
+  background: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.brand-name { font-size: 13px; font-weight: 700; color: var(--text-strong); letter-spacing: .5px; }
+.brand-sub { font-size: 11px; color: var(--text-muted); }
+.nav-section { padding: 18px 12px 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+.nav-link {
+  display: block; padding: 7px 18px 7px 22px; font-size: 13px; color: var(--text-muted);
+  text-decoration: none; border-left: 2px solid transparent; transition: all .15s;
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+.nav-link:hover { color: var(--text); background: var(--surface2); }
+.nav-link.active { color: var(--primary); border-left-color: var(--primary); background: rgba(79,142,247,.07); }
+.nav-sub { padding-left: 34px; font-size: 12px; }
+
+/* ── Main ── */
+#main { margin-left: var(--sidebar-w); flex: 1; padding: 48px 56px 80px; max-width: 900px; }
+
+/* ── Typography ── */
+h1 { font-size: 30px; font-weight: 700; color: var(--text-strong); margin-bottom: 8px; }
+h2 { font-size: 22px; font-weight: 600; color: var(--text-strong); margin-top: 56px; margin-bottom: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+h2:first-of-type { margin-top: 32px; border-top: none; }
+h3 { font-size: 16px; font-weight: 600; color: var(--text-strong); margin-top: 32px; margin-bottom: 10px; }
+h4 { font-size: 14px; font-weight: 600; color: var(--primary); margin-top: 24px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .5px; }
+p { margin-bottom: 14px; }
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+strong { color: var(--text-strong); font-weight: 600; }
+.subtitle { font-size: 17px; color: var(--text-muted); margin-bottom: 32px; }
+.lead { font-size: 16px; color: var(--text); margin-bottom: 20px; line-height: 1.8; }
+
+/* ── Code ── */
+code {
+  font-family: var(--mono); font-size: 13px;
+  background: var(--code-bg); color: #e8c97d;
+  padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border);
+}
+pre {
+  background: var(--code-bg); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px; margin: 16px 0;
+  overflow-x: auto; position: relative;
+}
+pre code { background: none; border: none; padding: 0; color: #abb2d6; font-size: 13px; line-height: 1.6; }
+.comment { color: #5a6a8a; }
+.flag { color: #6fc3df; }
+.value { color: #a8d8a8; }
+.cmd { color: #abb2d6; }
+
+/* ── Tables ── */
+.table-wrap { overflow-x: auto; margin: 16px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { background: var(--surface2); color: var(--text-muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+td code { font-size: 12px; }
+
+/* ── Callouts ── */
+.note { background: rgba(79,142,247,.08); border-left: 3px solid var(--primary); border-radius: 0 var(--radius) var(--radius) 0; padding: 12px 16px; margin: 16px 0; font-size: 14px; }
+.tip { background: rgba(106,207,138,.08); border-left: 3px solid #6acf8a; border-radius: 0 var(--radius) var(--radius) 0; padding: 12px 16px; margin: 16px 0; font-size: 14px; }
+.warn { background: rgba(240,176,96,.08); border-left: 3px solid #f0b060; border-radius: 0 var(--radius) var(--radius) 0; padding: 12px 16px; margin: 16px 0; font-size: 14px; }
+.callout-label { font-weight: 700; color: var(--text-strong); margin-bottom: 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
+
+/* ── Tags ── */
+.tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin: 1px; }
+.tag-blue { background: var(--tag-blue); color: var(--tag-blue-text); }
+.tag-green { background: var(--tag-green); color: var(--tag-green-text); }
+.tag-orange { background: var(--tag-orange); color: var(--tag-orange-text); }
+.tag-purple { background: var(--tag-purple); color: var(--tag-purple-text); }
+
+/* ── Sections ── */
+.section { margin-bottom: 8px; }
+.divider { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+.page-header { margin-bottom: 40px; }
+.page-header h1 { line-height: 1.2; }
+
+/* ── Platform grid ── */
+.platform-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin: 16px 0; }
+.platform-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
+.platform-card .name { font-weight: 600; color: var(--text-strong); font-size: 14px; }
+.platform-card .flag { color: var(--primary); font-family: var(--mono); font-size: 12px; margin-top: 2px; background: none; border: none; padding: 0; }
+.platform-card .ext { color: var(--text-muted); font-size: 12px; margin-top: 4px; }
+
+/* ── Steps ── */
+.steps { list-style: none; counter-reset: steps; padding: 0; margin: 16px 0; }
+.steps li { counter-increment: steps; display: flex; gap: 14px; margin-bottom: 14px; }
+.steps li::before { content: counter(steps); display: flex; align-items: center; justify-content: center; min-width: 26px; height: 26px; background: var(--primary-dim); color: var(--primary); border-radius: 50%; font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+
+/* ── Responsive ── */
+@media (max-width: 800px) {
+  #sidebar { display: none; }
+  #main { margin-left: 0; padding: 24px 20px 60px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     SIDEBAR
+════════════════════════════════════════ -->
+<nav id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+    </div>
+    <div>
+      <div class="brand-name">DAKSH SCRA</div>
+      <div class="brand-sub">Usage Guide</div>
+    </div>
+  </div>
+
+  <div class="nav-section">Overview</div>
+  <a class="nav-link" href="#what-is">What is DakshSCRA?</a>
+  <a class="nav-link" href="#installation">Installation</a>
+
+  <div class="nav-section">CLI</div>
+  <a class="nav-link" href="#cli-syntax">Syntax</a>
+  <a class="nav-link" href="#scan-options">Scan Options</a>
+  <a class="nav-link" href="#mode-options">Mode Options</a>
+  <a class="nav-link" href="#output-options">Output Options</a>
+  <a class="nav-link" href="#advanced-options">Advanced Options</a>
+  <a class="nav-link" href="#cli-examples">Examples</a>
+  <a class="nav-link" href="#output-structure">Output Structure</a>
+
+  <div class="nav-section">Web UI</div>
+  <a class="nav-link" href="#webui-start">Starting the Web UI</a>
+  <a class="nav-link" href="#webui-dashboard">Dashboard</a>
+  <a class="nav-link" href="#webui-projects">Projects</a>
+  <a class="nav-link" href="#webui-scans">Scans &amp; Findings</a>
+  <a class="nav-link nav-sub" href="#scan-form">Scan Form</a>
+  <a class="nav-link nav-sub" href="#scan-table">Scan Table</a>
+  <a class="nav-link nav-sub" href="#scan-detail">Scan Detail</a>
+  <a class="nav-link" href="#webui-artifacts">Reports &amp; Artifacts</a>
+
+  <div class="nav-section">Reference</div>
+  <a class="nav-link" href="#findings-ref">Understanding Findings</a>
+  <a class="nav-link" href="#platforms">Platforms &amp; Rules</a>
+  <a class="nav-link" href="#pdf">PDF Reports</a>
+  <a class="nav-link" href="#tips">Tips &amp; Patterns</a>
+</nav>
+
+<!-- ════════════════════════════════════════
+     MAIN CONTENT
+════════════════════════════════════════ -->
+<main id="main">
+
+  <!-- ── Header ── -->
+  <div class="page-header">
+    <h1>DakshSCRA — Usage Guide</h1>
+    <p class="subtitle">Source Code Review Assist &mdash; CLI &amp; Web UI Reference</p>
+  </div>
+
+  <!-- ════════════════ OVERVIEW ════════════════ -->
+  <section id="what-is">
+    <h2>What is DakshSCRA?</h2>
+    <p class="lead">DakshSCRA is a security-focused static analysis tool designed to support manual code review engagements. It surfaces areas of interest so security reviewers can focus attention where it matters most.</p>
+
+    <div class="tip"><div class="callout-label">Purpose</div>DakshSCRA is a <strong>review assist</strong> tool, not an automated vulnerability scanner. Its findings represent areas requiring manual review, not confirmed vulnerabilities.</div>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>Capability</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Rule-based scanning</strong></td><td>Matches platform-specific patterns — SQL queries, command execution, file I/O, authentication constructs — against source files</td></tr>
+        <tr><td><strong>Reconnaissance</strong></td><td>Detects languages, frameworks, and technology stack from file contents and structure</td></tr>
+        <tr><td><strong>Taint analysis</strong></td><td>Traces data flows from user-controlled sources to security-sensitive sinks across files and functions</td></tr>
+        <tr><td><strong>Effort estimation</strong></td><td>Estimates manual review time based on codebase size, complexity, and finding volume</td></tr>
+        <tr><td><strong>Report generation</strong></td><td>Produces single-file and per-platform HTML reports and optionally PDF</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- ════════════════ INSTALLATION ════════════════ -->
+  <section id="installation">
+    <h2>Installation</h2>
+
+    <h3>Requirements</h3>
+    <ul style="margin: 0 0 16px 20px;">
+      <li>Python 3.9 or later</li>
+      <li>pip</li>
+      <li>Playwright Chromium — <em>only required for PDF generation</em></li>
+    </ul>
+
+    <h3>Setup</h3>
+    <pre><code><span class="comment"># Create and activate a virtual environment</span>
+<span class="cmd">python3.9 -m venv venv</span>
+<span class="cmd">source venv/bin/activate</span>         <span class="comment"># Windows: venv\Scripts\activate</span>
+
+<span class="comment"># Install dependencies</span>
+<span class="cmd">pip install -r requirements.txt</span>
+
+<span class="comment"># Install Chromium (PDF generation only)</span>
+<span class="cmd">playwright install chromium</span></code></pre>
+
+    <h3>Docker — Web UI</h3>
+    <pre><code><span class="cmd">docker compose up --build</span></code></pre>
+    <p>Open <code>http://localhost:8080</code> — change port with <code>DAKSH_PORT=9090 docker compose up</code>.</p>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ════════════════ CLI ════════════════ -->
+  <section id="cli-syntax">
+    <h2>CLI Usage</h2>
+    <h3>Syntax</h3>
+    <pre><code><span class="cmd">python dakshscra.py [SCAN OPTIONS] [MODE OPTIONS] [OUTPUT OPTIONS] [ADVANCED OPTIONS]</span></code></pre>
+    <p>Run with no arguments to display the full help screen:</p>
+    <pre><code><span class="cmd">python dakshscra.py</span></code></pre>
+  </section>
+
+  <section id="scan-options">
+    <h3>Scan Options</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Option</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>-r RULES</code></td><td>Platform rules to apply. Comma-separated (e.g. <code>php,java</code>) or <code>auto</code> for automatic detection.</td></tr>
+        <tr><td><code>-f FILE_TYPES</code></td><td>Override default file extensions for the selected platform.</td></tr>
+        <tr><td><code>-t TARGET_DIR</code></td><td>Path to the source code directory to scan.</td></tr>
+        <tr><td><code>-v / -vv / -vvv</code></td><td>Verbosity level. Higher levels show more detail during scanning.</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="note"><div class="callout-label">Auto mode</div>Use <code>-r auto</code> to automatically detect languages and apply the appropriate rules. Recommended for unfamiliar codebases.<br><br>
+    <code>python dakshscra.py -r auto -t ./codebase</code></div>
+  </section>
+
+  <section id="mode-options">
+    <h3>Mode Options</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Option</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>--recon</code></td><td>Run technology stack reconnaissance. Detects languages, frameworks, libraries. Can run alone or alongside <code>-r</code>.</td></tr>
+        <tr><td><code>--rs / --recon-strict</code></td><td>Filter recon output to high-confidence detections only. Use with <code>--recon</code> to reduce noise.</td></tr>
+        <tr><td><code>--estimate</code></td><td>Generate a manual review effort estimation report.</td></tr>
+        <tr><td><code>--pdf-from-json</code></td><td>Generate PDF reports from existing JSON output without re-running a scan.</td></tr>
+        <tr><td><code>-l {R,RF}</code></td><td>List available platform rules. <code>R</code> = rules only, <code>RF</code> = rules + file types.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h4>Combining Modes</h4>
+    <pre><code><span class="comment"># Recon + scan + estimate in one pass</span>
+<span class="cmd">python dakshscra.py --recon --estimate <span class="flag">-r</span> <span class="value">php</span> <span class="flag">-t</span> <span class="value">./app</span></span>
+
+<span class="comment"># Recon only — no scanning</span>
+<span class="cmd">python dakshscra.py --recon <span class="flag">-t</span> <span class="value">./app</span></span>
+
+<span class="comment"># Recon with strict confidence filter</span>
+<span class="cmd">python dakshscra.py --recon --rs <span class="flag">-t</span> <span class="value">./app</span></span></code></pre>
+  </section>
+
+  <section id="output-options">
+    <h3>Output Options</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Option</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>-rpt FORMATS</code></td><td><code>html</code></td><td>Report formats: <code>html</code>, <code>pdf</code>, or <code>html,pdf</code>.</td></tr>
+        <tr><td><code>--json-input-dir PATH</code></td><td><code>./reports/json</code></td><td>JSON input directory for <code>--pdf-from-json</code>.</td></tr>
+        <tr><td><code>--pdf-output PATH</code></td><td><code>./reports/pdf/report.pdf</code></td><td>Custom path for the single combined PDF.</td></tr>
+        <tr><td><code>--pdf-multi-dir PATH</code></td><td><code>./reports/pdf/multi-file</code></td><td>Custom directory for the per-platform PDF set.</td></tr>
+        <tr><td><code>--pdf-single-only</code></td><td>off</td><td>Generate only the combined single PDF; skip per-platform PDFs. Works in both scan and <code>--pdf-from-json</code> mode.</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="warn"><div class="callout-label">PDF not default</div>PDF is <strong>not generated by default</strong>. After any scan without PDF, the tool prints a reminder showing how to generate it from the saved JSON output.</div>
+  </section>
+
+  <section id="advanced-options">
+    <h3>Advanced Options</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Option</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>--skip-analysis</code></td><td>Disable taint analysis for this run. Scanning and recon still run normally.</td></tr>
+        <tr><td><code>--loc</code></td><td>Count effective lines of code. Included in effort estimation output.</td></tr>
+        <tr><td><code>--baseline-file PATH</code></td><td>Path to a suppression baseline JSON file.</td></tr>
+        <tr><td><code>--baseline-generate</code></td><td>Generate a new suppression baseline from current findings.</td></tr>
+        <tr><td><code>--no-baseline</code></td><td>Ignore the baseline suppression file for this run.</td></tr>
+        <tr><td><code>--resume-scan</code></td><td>Resume a previously interrupted scan from its last checkpoint.</td></tr>
+        <tr><td><code>--review-config PATH</code></td><td>Apply a findings triage file (JSON). Previously reviewed FPs and suppressed findings are excluded from reports.</td></tr>
+        <tr><td><code>--state-file PATH</code></td><td>Custom path for the scan state/checkpoint file.</td></tr>
+        <tr><td><code>--no-state</code></td><td>Disable scan state checkpointing for this run.</td></tr>
+        <tr><td><code>--state</code></td><td>Force enable scan state checkpointing for this run.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section id="cli-examples">
+    <h3>CLI Examples</h3>
+    <pre><code><span class="comment"># Basic PHP scan</span>
+<span class="cmd">python dakshscra.py <span class="flag">-r</span> <span class="value">php</span> <span class="flag">-t</span> <span class="value">./src</span></span>
+
+<span class="comment"># Multi-platform scan with verbose output</span>
+<span class="cmd">python dakshscra.py <span class="flag">-r</span> <span class="value">php,java</span> -vv <span class="flag">-t</span> <span class="value">/path/to/code</span></span>
+
+<span class="comment"># Auto-detect platforms and scan</span>
+<span class="cmd">python dakshscra.py <span class="flag">-r</span> <span class="value">auto</span> <span class="flag">-t</span> <span class="value">./codebase</span></span>
+
+<span class="comment"># Full scan: recon + estimate + HTML + PDF</span>
+<span class="cmd">python dakshscra.py --recon --estimate <span class="flag">-r</span> <span class="value">php</span> <span class="flag">-t</span> <span class="value">./app</span> <span class="flag">-rpt</span> <span class="value">html,pdf</span></span>
+
+<span class="comment"># Recon only</span>
+<span class="cmd">python dakshscra.py --recon <span class="flag">-t</span> <span class="value">./api</span></span>
+
+<span class="comment"># Recon with strict confidence filter</span>
+<span class="cmd">python dakshscra.py --recon --rs <span class="flag">-t</span> <span class="value">./mobile_app</span></span>
+
+<span class="comment"># Skip taint analysis for faster scan</span>
+<span class="cmd">python dakshscra.py <span class="flag">-r</span> <span class="value">php</span> <span class="flag">-t</span> <span class="value">./app</span> --skip-analysis</span>
+
+<span class="comment"># Generate PDF from previous scan output</span>
+<span class="cmd">python dakshscra.py --pdf-from-json</span>
+<span class="cmd">python dakshscra.py --pdf-from-json --pdf-single-only</span>
+<span class="cmd">python dakshscra.py --pdf-from-json --json-input-dir <span class="value">./custom/reports/json</span></span>
+
+<span class="comment"># Resume an interrupted scan</span>
+<span class="cmd">python dakshscra.py --resume-scan <span class="flag">-r</span> <span class="value">php</span> <span class="flag">-t</span> <span class="value">./app</span></span>
+
+<span class="comment"># List available rules</span>
+<span class="cmd">python dakshscra.py -l R</span>
+<span class="cmd">python dakshscra.py -l RF</span></code></pre>
+  </section>
+
+  <section id="output-structure">
+    <h3>Output Structure</h3>
+    <pre><code>reports/
+  html/
+    report.html                <span class="comment">← Single-file HTML report (all platforms)</span>
+    multi-file/
+      index.html               <span class="comment">← Multi-file report index</span>
+      &lt;platform&gt;/              <span class="comment">← Per-platform HTML report</span>
+    reconnaissance.html        <span class="comment">← Recon report (if --recon used)</span>
+    estimation.html            <span class="comment">← Effort estimate (if --estimate used)</span>
+  pdf/
+    report.pdf                 <span class="comment">← Single combined PDF</span>
+    multi-file/                <span class="comment">← Per-platform PDFs</span>
+  json/
+    areas_of_interest.json     <span class="comment">← Scanner findings</span>
+    filepaths_aoi.json         <span class="comment">← Path findings</span>
+    analysis.json              <span class="comment">← Taint analysis findings</span>
+    summary.json               <span class="comment">← Scan summary metadata</span>
+    recon.json                 <span class="comment">← Recon results</span>
+runtime/
+  scan_summary.json            <span class="comment">← Live scan state</span>
+  filepaths.json               <span class="comment">← Discovered file inventory</span></code></pre>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ════════════════ WEB UI ════════════════ -->
+  <section id="webui-start">
+    <h2>Web UI Usage</h2>
+
+    <h3>Starting the Web UI</h3>
+    <pre><code><span class="cmd">docker compose up --build</span></code></pre>
+    <p>Open <code>http://localhost:8080</code>. The UI auto-refreshes as scans run.</p>
+
+    <p>The sidebar on the left provides navigation between three main areas:</p>
+    <ul style="margin: 0 0 16px 20px; line-height: 2;">
+      <li><strong>Dashboard</strong> — overview, metrics, and quick navigation</li>
+      <li><strong>Projects</strong> — organise and browse scan history by project</li>
+      <li><strong>Scans</strong> — run new scans and review findings</li>
+    </ul>
+  </section>
+
+  <section id="webui-dashboard">
+    <h3>Dashboard</h3>
+    <p>The landing page. Shows:</p>
+    <ul style="margin: 0 0 16px 20px; line-height: 2;">
+      <li>Summary metrics — total projects, scans, success/failure counts and rate</li>
+      <li>Daily scan activity bar chart</li>
+      <li>Project list with scan counts and last-scan timestamps</li>
+      <li>Quick navigation to any project or to start a new scan</li>
+    </ul>
+  </section>
+
+  <section id="webui-projects">
+    <h3>Projects</h3>
+    <p>Scans are grouped into projects. A project is created automatically the first time a scan is submitted with a given project name.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Column</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>Project Name</td><td>The name assigned when creating the scan</td></tr>
+        <tr><td>Rules</td><td>Platform rules used</td></tr>
+        <tr><td>Target</td><td>The scanned source directory</td></tr>
+        <tr><td>Total Scans</td><td>Number of scans run under this project</td></tr>
+        <tr><td>Running</td><td>Scans currently in progress</td></tr>
+        <tr><td>Last Scanned</td><td>Timestamp of the most recent scan</td></tr>
+      </tbody>
+    </table></div>
+    <p>Click any project row to jump directly to its scan history in the Scans view.</p>
+  </section>
+
+  <section id="webui-scans">
+    <h3>Scans &amp; Findings</h3>
+    <p>The primary working area, divided into three panels.</p>
+
+    <section id="scan-form">
+      <h4>Scan Form</h4>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Field</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Project Name</strong></td><td>Groups this scan with previous runs. Leave blank for an unnamed scan.</td></tr>
+          <tr><td><strong>Target Directory</strong></td><td>Path to the source code. Use the <strong>Browse</strong> button to navigate the filesystem safely.</td></tr>
+          <tr><td><strong>Platform Rules</strong></td><td>Which rule set to apply. <code>auto</code> detects the platform automatically.</td></tr>
+          <tr><td><strong>File Types</strong></td><td>Override default file extensions. <code>auto</code> uses platform defaults.</td></tr>
+          <tr><td><strong>Report Format</strong></td><td><code>html</code> (default) or <code>html,pdf</code>. PDF requires Playwright/Chromium.</td></tr>
+          <tr><td><strong>Verbosity</strong></td><td>Output detail level 1–3.</td></tr>
+          <tr><td><strong>Recon</strong></td><td>Enable technology stack detection alongside scanning.</td></tr>
+          <tr><td><strong>Effort Estimate</strong></td><td>Generate a review effort estimation report.</td></tr>
+          <tr><td><strong>LOC Count</strong></td><td>Include effective lines of code in the scan summary.</td></tr>
+          <tr><td><strong>Skip Analysis</strong></td><td>Skip the taint analysis stage (faster for very large codebases).</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="scan-table">
+      <h4>Scan Table</h4>
+      <p>Lists all scans for the selected project, most recent first. Each row shows:</p>
+      <ul style="margin: 0 0 16px 20px; line-height: 2;">
+        <li>Status badge — <span class="tag tag-blue">running</span> <span class="tag tag-green">success</span> <span class="tag tag-orange">failed</span></li>
+        <li>Scan timestamp and UUID</li>
+        <li>Duration</li>
+        <li>Platform rules used</li>
+      </ul>
+      <p>Click a row to load its full detail in the panel below.</p>
+    </section>
+
+    <section id="scan-detail">
+      <h4>Scan Detail Tabs</h4>
+
+      <p><strong>Log</strong> — Live streaming output from the scan process. Shows each stage (file discovery, scanning, analysis, reporting) as it progresses.</p>
+
+      <p><strong>Findings</strong> — Two sub-tabs:</p>
+      <ul style="margin: 0 0 12px 20px; line-height: 2;">
+        <li><em>Scanner</em> — Rule-based source code findings. Each shows rule name, file path, matched line, and code context.</li>
+        <li><em>Paths</em> — Suspicious filenames, backup files, and configuration files.</li>
+      </ul>
+
+      <p><strong>Taint Analysis</strong> — Dataflow findings showing source-to-sink traces. Each finding includes:</p>
+      <ul style="margin: 0 0 12px 20px; line-height: 2;">
+        <li>Confidence level (high / medium / low)</li>
+        <li>Source location — where user-controlled data enters the application</li>
+        <li>Sink location — where it reaches a security-sensitive call</li>
+        <li>Full trace path with intermediate assignment and call steps</li>
+        <li>Cross-file indicator — whether the flow spans multiple files</li>
+      </ul>
+
+      <p><strong>Insights</strong> — Three sub-sections:</p>
+      <ul style="margin: 0 0 12px 20px; line-height: 2;">
+        <li><em>File Paths</em> — Full inventory of discovered source files</li>
+        <li><em>Recon</em> — Technology stack detection results (requires <code>--recon</code>)</li>
+        <li><em>Effort Estimate</em> — Link to the estimation report (requires <code>--estimate</code>)</li>
+      </ul>
+    </section>
+  </section>
+
+  <section id="webui-artifacts">
+    <h3>Reports &amp; Artifacts</h3>
+    <p>After a scan completes, all generated files are accessible from the Scan Detail view. Available artifacts include:</p>
+    <ul style="margin: 0 0 16px 20px; line-height: 2;">
+      <li>HTML report — single combined file</li>
+      <li>HTML multi-file report set — per-platform pages with an index</li>
+      <li>Taint analysis cross-reference report</li>
+      <li>Effort estimation report</li>
+      <li>JSON data files (raw findings, summary, recon)</li>
+      <li>Scan log</li>
+    </ul>
+    <p>Click <strong>Open Report</strong> to view in a new browser tab, or <strong>Download</strong> to save locally.</p>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ════════════════ FINDINGS REFERENCE ════════════════ -->
+  <section id="findings-ref">
+    <h2>Understanding Findings</h2>
+
+    <h3>Scanner Findings</h3>
+    <p>Each scanner finding represents a pattern match against a known-risky code construct. They are <em>areas of interest</em> — not confirmed vulnerabilities. Manual review is required to determine exploitability.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Field</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>Rule</td><td>The rule name (e.g. <code>sql_injection</code>, <code>command_exec</code>)</td></tr>
+        <tr><td>File</td><td>Source file path relative to the scan target</td></tr>
+        <tr><td>Line</td><td>Line number of the match</td></tr>
+        <tr><td>Snippet</td><td>Surrounding code context</td></tr>
+        <tr><td>Platform</td><td>Language/framework the rule belongs to</td></tr>
+      </tbody>
+    </table></div>
+    <div class="tip"><div class="callout-label">Common False Positives</div>Commented-out code, test fixtures, safe wrapper functions, and vendor library code all commonly match scanner rules. Always review context before treating a finding as a vulnerability.</div>
+
+    <h3>Taint Analysis Findings</h3>
+    <p>Taint findings are higher-signal than scanner findings because they trace actual data flow paths through the code.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Field</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>Confidence</td><td><span class="tag tag-purple">high</span> cross-file, multiple steps &nbsp; <span class="tag tag-blue">medium</span> same-file, partial trace &nbsp; <span class="tag tag-orange">low</span> file-scope fallback</td></tr>
+        <tr><td>Source</td><td>Where user-controlled data originates (request param, env var, file input, etc.)</td></tr>
+        <tr><td>Sink</td><td>The security-sensitive call that receives the tainted data</td></tr>
+        <tr><td>Trace</td><td>Ordered list of intermediate steps connecting source to sink</td></tr>
+        <tr><td>Cross-file</td><td>Whether the flow spans more than one file — increases confidence</td></tr>
+      </tbody>
+    </table></div>
+
+    <h4>Confidence Interpretation</h4>
+    <ul style="margin: 0 0 16px 20px; line-height: 2.2;">
+      <li><span class="tag tag-purple">high</span> — Cross-file flows with assignment steps. Highest priority for review.</li>
+      <li><span class="tag tag-blue">medium</span> — Same-file flows with partial tracing. Likely worth reviewing.</li>
+      <li><span class="tag tag-orange">low</span> — File-scope fallback or single-step match. May be noise; verify manually.</li>
+    </ul>
+
+    <h3>Recon Results</h3>
+    <p>Recon output is categorised by technology type (Framework, Language, Frontend, Backend, etc.). Each detection shows the technology name, confidence level, and evidence files that triggered the detection.</p>
+    <div class="note"><div class="callout-label">Reducing Noise</div>Use <code>--recon --rs</code> to show only high/medium-confidence detections when a large or generic codebase generates excessive low-confidence matches.</div>
+  </section>
+
+  <!-- ════════════════ PLATFORMS ════════════════ -->
+  <section id="platforms">
+    <h2>Platforms &amp; Rules</h2>
+    <div class="platform-grid">
+      <div class="platform-card"><div class="name">PHP</div><div class="flag">-r php</div><div class="ext">.php</div></div>
+      <div class="platform-card"><div class="name">Java</div><div class="flag">-r java</div><div class="ext">.java</div></div>
+      <div class="platform-card"><div class="name">.NET / C#</div><div class="flag">-r dotnet</div><div class="ext">.cs .aspx .cshtml</div></div>
+      <div class="platform-card"><div class="name">Python</div><div class="flag">-r python</div><div class="ext">.py</div></div>
+      <div class="platform-card"><div class="name">JavaScript</div><div class="flag">-r javascript</div><div class="ext">.js .ts .jsx .tsx</div></div>
+      <div class="platform-card"><div class="name">Go</div><div class="flag">-r golang</div><div class="ext">.go</div></div>
+      <div class="platform-card"><div class="name">Ruby</div><div class="flag">-r ruby</div><div class="ext">.rb</div></div>
+      <div class="platform-card"><div class="name">Kotlin</div><div class="flag">-r kotlin</div><div class="ext">.kt .kts</div></div>
+      <div class="platform-card"><div class="name">C</div><div class="flag">-r c</div><div class="ext">.c .h</div></div>
+      <div class="platform-card"><div class="name">C++</div><div class="flag">-r cpp</div><div class="ext">.cpp .cc .hpp</div></div>
+    </div>
+    <p>Combine platforms: <code>-r php,java,javascript</code></p>
+    <pre><code><span class="comment"># List all rules</span>
+<span class="cmd">python dakshscra.py -l R</span>
+
+<span class="comment"># List rules with file types</span>
+<span class="cmd">python dakshscra.py -l RF</span></code></pre>
+
+    <h3>Common Rule Categories</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Category</th><th>Examples</th></tr></thead>
+      <tbody>
+        <tr><td>Injection</td><td>SQL, command, LDAP, XPath, template injection</td></tr>
+        <tr><td>File operations</td><td>Path traversal, arbitrary file read/write, include/require</td></tr>
+        <tr><td>Authentication</td><td>Hardcoded credentials, weak hashing, session mismanagement</td></tr>
+        <tr><td>Cryptography</td><td>Weak algorithms, insecure random, hardcoded keys</td></tr>
+        <tr><td>Deserialization</td><td>Unsafe object deserialization</td></tr>
+        <tr><td>SSRF / Open redirect</td><td>Unvalidated URL construction and redirects</td></tr>
+        <tr><td>Information disclosure</td><td>Debug output, error exposure, sensitive data logging</td></tr>
+        <tr><td>Configuration</td><td>Dangerous settings, debug mode enabled</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- ════════════════ PDF ════════════════ -->
+  <section id="pdf">
+    <h2>PDF Reports</h2>
+    <p>PDF generation requires Playwright's Chromium browser to be installed:</p>
+    <pre><code><span class="cmd">playwright install chromium</span></code></pre>
+
+    <h3>Generate PDF during a scan</h3>
+    <pre><code><span class="cmd">python dakshscra.py <span class="flag">-r</span> <span class="value">php</span> <span class="flag">-t</span> <span class="value">./app</span> <span class="flag">-rpt</span> <span class="value">html,pdf</span></span></code></pre>
+
+    <h3>Generate PDF after a scan</h3>
+    <pre><code><span class="comment"># Both single and per-platform PDFs</span>
+<span class="cmd">python dakshscra.py --pdf-from-json</span>
+
+<span class="comment"># Single combined PDF only</span>
+<span class="cmd">python dakshscra.py --pdf-from-json --pdf-single-only</span>
+
+<span class="comment"># From a custom JSON directory</span>
+<span class="cmd">python dakshscra.py --pdf-from-json --json-input-dir <span class="value">./custom/reports/json</span></span></code></pre>
+
+    <div class="note"><div class="callout-label">JSON is always saved</div>JSON output is saved regardless of the <code>-rpt</code> setting. PDF can always be generated later from the JSON without re-running the scan.</div>
+  </section>
+
+  <!-- ════════════════ TIPS ════════════════ -->
+  <section id="tips">
+    <h2>Tips &amp; Common Patterns</h2>
+
+    <h3>First scan on an unknown codebase</h3>
+    <pre><code><span class="cmd">python dakshscra.py -r auto --recon --estimate <span class="flag">-t</span> <span class="value">./target</span></span></code></pre>
+    <p>Detects the technology stack, applies the relevant rules, and produces an effort estimate — the recommended starting point for a new engagement.</p>
+
+    <h3>Large codebases — fast initial pass</h3>
+    <pre><code><span class="cmd">python dakshscra.py -r auto --skip-analysis <span class="flag">-t</span> <span class="value">./large_app</span></span></code></pre>
+    <p>Skipping taint analysis significantly reduces scan time. Run the full analysis separately once you have recon and scanner results to guide you.</p>
+
+    <h3>Resuming an interrupted scan</h3>
+    <pre><code><span class="cmd">python dakshscra.py --resume-scan <span class="flag">-r</span> <span class="value">php</span> <span class="flag">-t</span> <span class="value">./app</span></span></code></pre>
+    <p>Scan state is checkpointed by default. Use <code>--resume-scan</code> to continue from the last saved point rather than starting over.</p>
+
+    <h3>Suppressing known false positives</h3>
+    <ol class="steps">
+      <li>Run the initial scan and review findings.</li>
+      <li>Generate a baseline from current findings: <code>python dakshscra.py -r php -t ./app --baseline-generate</code></li>
+      <li>On subsequent scans the baseline is loaded automatically, suppressing known-benign findings from reports.</li>
+      <li>Use <code>--no-baseline</code> to temporarily ignore the baseline if needed.</li>
+    </ol>
+  </section>
+
+</main>
+
+<script>
+// Highlight active nav link on scroll
+const links = document.querySelectorAll('#sidebar .nav-link');
+const sections = Array.from(links).map(l => {
+  const id = l.getAttribute('href').slice(1);
+  return { link: l, el: document.getElementById(id) };
+}).filter(s => s.el);
+
+function update() {
+  let active = sections[0];
+  for (const s of sections) {
+    if (s.el.getBoundingClientRect().top <= 80) active = s;
+  }
+  links.forEach(l => l.classList.remove('active'));
+  if (active) active.link.classList.add('active');
+}
+window.addEventListener('scroll', update, { passive: true });
+update();
+</script>
+</body>
+</html>

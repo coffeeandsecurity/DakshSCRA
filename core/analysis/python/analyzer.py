@@ -16,5 +16,5 @@ def analyze_python_flows(source_root: Path):
 
 def run(source_root: Path):
     flows = analyze_python_flows(source_root)
-    out_dir = Path(state.root_dir) / "reports/analysis/python"
+    out_dir = Path(state.reports_dirpath) / "analysis/python"
     return write_reports(flows, out_dir, title="Python Dataflow Analysis", platform="python")

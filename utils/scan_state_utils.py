@@ -61,6 +61,7 @@ class ScanStateManager:
             "progress": {
                 "current_stage": "initialization",
                 "cursor": {},
+                "heartbeat": {},
                 "stages": {
                     "discovery": {"status": "pending"},
                     "pattern_matching": {
@@ -142,7 +143,11 @@ class ScanStateManager:
         if details and isinstance(details, dict):
             stage.update(details)
         self.data["updated_at"] = self._now()
-        self.persist()
+        self.data.setdefault("progress", {})["heartbeat"] = {
+            "timestamp": self._now(),
+            "message": f"{stage_name}:{status}",
+        }
+        self.persist(force=True)
 
     def update_cursor(self, cursor_payload):
         if not self.enabled or not self.data or not isinstance(cursor_payload, dict):
@@ -160,6 +165,20 @@ class ScanStateManager:
         curr.update(counters)
         self.data["updated_at"] = self._now()
         self.persist()
+
+    def touch_heartbeat(self, message="", details=None):
+        if not self.enabled or not self.data:
+            return
+        progress = self.data.setdefault("progress", {})
+        payload = {
+            "timestamp": self._now(),
+            "message": str(message or "").strip(),
+        }
+        if isinstance(details, dict):
+            payload.update(details)
+        progress["heartbeat"] = payload
+        self.data["updated_at"] = self._now()
+        self.persist(force=True)
 
     def mark_platform_completed(self, platform_name):
         if not self.enabled or not self.data:

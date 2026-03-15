@@ -1,0 +1,29 @@
+services:
+  api:
+    build:
+      context: ../..
+      dockerfile: webui/deploy/docker/api.Dockerfile
+    container_name: daksh-api
+    environment:
+      DAKSH_NON_INTERACTIVE: "1"
+      PYTHONPATH: /app/webui
+      DAKSH_BROWSE_ROOTS: ${DAKSH_BROWSE_ROOTS:-/app,/scan-targets,/host,/host/c,/host/d,/run/desktop/mnt/host,/mnt,/Volumes,/Users}
+    volumes:
+      - ../..:/app
+      - ${DAKSH_SCAN_ROOT:-/mnt/c}:/scan-targets
+      - ${DAKSH_HOST_MOUNT:-/mnt}:/host
+      - ${DAKSH_HOST_MOUNT:-/mnt}:/mnt
+      - ${DAKSH_HOST_C:-/mnt/c}:/host/c
+      - ${DAKSH_HOST_D:-/mnt/d}:/host/d
+      - ${DAKSH_DESKTOP_MOUNT:-/run/desktop/mnt/host}:/run/desktop/mnt/host
+
+  web:
+    build:
+      context: ../..
+      dockerfile: webui/deploy/docker/frontend-nginx.Dockerfile
+    container_name: webui
+    ports:
+      - "8080:80"
+    depends_on:
+      api:
+        condition: service_started

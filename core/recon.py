@@ -598,13 +598,16 @@ def summarize_recon(json_file_path):
         except OSError as exc:
             logger.error("Failed to write recon summary to %s: %s", out_path, exc)
 
-    # Cleanup: text recon report is deprecated in favor of JSON + HTML outputs.
-    legacy_txt_report = Path(str(state.root_dir) + "/reports/text/reconnaissance.txt")
-    try:
-        if legacy_txt_report.exists():
-            legacy_txt_report.unlink()
-    except OSError as exc:
-        logger.error("Failed to remove deprecated recon text report %s: %s", legacy_txt_report, exc)
+    # Cleanup: remove any legacy text/html recon report from old output paths.
+    for legacy_path in [
+        Path(str(state.root_dir)) / "reports" / "text" / "reconnaissance.txt",
+        Path(str(state.reports_dirpath)) / "html" / "reconnaissance.html",
+    ]:
+        try:
+            if legacy_path.exists():
+                legacy_path.unlink()
+        except OSError as exc:
+            logger.error("Failed to remove legacy recon report %s: %s", legacy_path, exc)
 
     recon_summary_html_report(runtime_summary_path, state.reconreport_Fpath)
     return str(runtime_summary_path)

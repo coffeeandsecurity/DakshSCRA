@@ -16,5 +16,5 @@ def analyze_go_flows(source_root: Path):
 
 def run(source_root: Path):
     flows = analyze_go_flows(source_root)
-    out_dir = Path(state.root_dir) / "reports/analysis/golang"
+    out_dir = Path(state.reports_dirpath) / "analysis/golang"
     return write_reports(flows, out_dir, title="Golang Dataflow Analysis", platform="golang")

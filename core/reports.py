@@ -30,6 +30,7 @@ from playwright.sync_api import sync_playwright
 # Local application imports
 import state.runtime_state as state
 import utils.cli_utils as cli
+import utils.config_utils as cutils
 from utils.cli_utils import spinner
 from utils.log_utils import get_logger
 
@@ -154,12 +155,15 @@ def _fallback_paths_confidence(item):
     return max(35, min(96, int(score)))
 
 
-def gen_pdf_report_modern(html_path, pdf_path):
+def gen_pdf_report_modern(html_path, pdf_path, print_header=True):
     try:
         started_at = time.time()
-        cli.section_print(f"[*] Modern PDF Report Generation")
+        start_dt = datetime.now()
 
-        print(f"    [-] Started at       : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        if print_header:
+            cli.section_print("[*] PDF Report Generation")
+            print(f"    [-] Started at       : {start_dt.strftime('%Y-%m-%d %H:%M:%S')}")
+
         print("    [-] Rendering JSON-driven professional PDF report... ", end="", flush=True)
         spinner("start")
 
@@ -175,20 +179,23 @@ def gen_pdf_report_modern(html_path, pdf_path):
                 pass
 
         spinner("stop")
-        print(f"    [-] Completed at     : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        end_dt = datetime.now()
+        elapsed = time.time() - started_at
 
-        hours, rem = divmod(time.time() - started_at, 3600)
-        minutes, seconds = divmod(rem, 60)
-        seconds, milliseconds = str(seconds).split('.')
-        print("    [-] Total time taken : {:0>2}Hr:{:0>2}Min:{:0>2}s:{}ms".format(int(hours), int(minutes), seconds, milliseconds[:3]))
+        if print_header:
+            print(f"    [-] Completed at     : {end_dt.strftime('%Y-%m-%d %H:%M:%S')}")
+            hours, rem = divmod(elapsed, 3600)
+            minutes, seconds = divmod(rem, 60)
+            seconds, milliseconds = str(seconds).split('.')
+            print("    [-] Total time taken : {:0>2}Hr:{:0>2}Min:{:0>2}s:{}ms".format(int(hours), int(minutes), seconds, milliseconds[:3]))
 
-        return pdf_path
+        return pdf_path, start_dt, end_dt, elapsed
 
     except Exception as e:
         spinner("stop")
         logger.exception("Error during modern PDF generation: %s", e)
 
-    return pdf_path
+    return pdf_path, None, None, 0
 
 
 def export_pdf_from_html(html_file_path, output_pdf_path, expand_all_details=False):
@@ -337,6 +344,7 @@ def _build_pdf_report_context(
     aoi_json_path=None,
     filepaths_aoi_json_path=None,
     filepaths_json_path=None,
+    analysis_json_path=None,
     project_config_path=None,
 ):
     summary_json_path = Path(summary_json_path) if summary_json_path else Path(state.outputSummary_JSON)
@@ -345,6 +353,7 @@ def _build_pdf_report_context(
         Path(filepaths_aoi_json_path) if filepaths_aoi_json_path else Path(state.outputAoI_Fpaths_JSON)
     )
     filepaths_json_path = Path(filepaths_json_path) if filepaths_json_path else Path(state.output_Fpaths_JSON)
+    analysis_json_path = Path(analysis_json_path) if analysis_json_path else Path(state.outputAnalysis_JSON)
     project_config_path = Path(project_config_path) if project_config_path else Path(state.projectConfig)
 
     scan_summary = _load_json_file(summary_json_path, default={}, label="scan summary") or {}
@@ -561,7 +570,7 @@ def _render_pdf_html(context):
 
 
 def _write_temp_pdf_html(rendered_html):
-    pdf_temp_root = Path(state.root_dir) / "reports/pdf"
+    pdf_temp_root = Path(state.reports_dirpath) / "scan" / "pdf"
     pdf_temp_root.mkdir(parents=True, exist_ok=True)
     fd, path_str = tempfile.mkstemp(prefix="report-json-", suffix=".html", dir=str(pdf_temp_root))
     os.close(fd)
@@ -585,10 +594,11 @@ def gen_pdf_reports_from_json(
       - areas_of_interest.json
       - filepaths_aoi.json (optional)
     """
-    json_root = Path(json_dir) if json_dir else (Path(state.root_dir) / "reports/json")
+    json_root = Path(json_dir) if json_dir else (Path(state.reports_dirpath) / "data")
     summary_path = json_root / "summary.json"
     aoi_path = json_root / "areas_of_interest.json"
     filepaths_aoi_path = json_root / "filepaths_aoi.json"
+    analysis_path = json_root / "analysis.json"
 
     if not summary_path.exists():
         raise FileNotFoundError(f"Missing required JSON: {summary_path}")
@@ -596,7 +606,7 @@ def gen_pdf_reports_from_json(
         raise FileNotFoundError(f"Missing required JSON: {aoi_path}")
 
     single_pdf_path = Path(output_pdf_path) if output_pdf_path else Path(state.pdfreport_Fpath)
-    multi_pdf_root = Path(multifile_output_dir) if multifile_output_dir else (Path(state.root_dir) / "reports/pdf/multi-file")
+    multi_pdf_root = Path(multifile_output_dir) if multifile_output_dir else (Path(state.reports_dirpath) / "scan" / "pdf" / "multi-file")
 
     single_pdf_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -604,6 +614,7 @@ def gen_pdf_reports_from_json(
         summary_json_path=summary_path,
         aoi_json_path=aoi_path,
         filepaths_aoi_json_path=filepaths_aoi_path,
+        analysis_json_path=analysis_path if analysis_path.exists() else None,
         project_config_path=project_config_path,
     )
     rendered_html = _render_pdf_html(context_all)
@@ -644,6 +655,7 @@ def gen_pdf_reports_from_json(
                 summary_json_path=summary_path,
                 aoi_json_path=aoi_path,
                 filepaths_aoi_json_path=filepaths_aoi_path,
+                analysis_json_path=analysis_path if analysis_path.exists() else None,
                 project_config_path=project_config_path,
             )
             platform_html = _render_pdf_html(platform_ctx)
@@ -820,6 +832,87 @@ def get_filepaths(input_file):
     return []
 
 
+def get_analysis_results(input_file):
+    json_path = Path(input_file)
+    data = _load_json_file(json_path, default={}, label="analysis summary") or {}
+    if not isinstance(data, dict):
+        return {"summary": {}, "results": []}
+
+    summary_raw = data.get("summary", {})
+    results_raw = data.get("results", [])
+    if not isinstance(summary_raw, dict):
+        summary_raw = {}
+    if not isinstance(results_raw, list):
+        results_raw = []
+
+    normalized_results = []
+    for entry in results_raw:
+        if not isinstance(entry, dict):
+            continue
+        target_type = str(entry.get("target_type", "platform")).strip().lower() or "platform"
+        target = str(entry.get("target", "")).strip()
+        platform = str(entry.get("platform", "")).strip()
+        framework = str(entry.get("framework", "")).strip()
+        score = _normalize_confidence_score(entry.get("confidence_score"), default=0)
+        analysis_kind = str(entry.get("analysis_kind", "")).strip().lower()
+        findings = entry.get("findings", [])
+        if not isinstance(findings, list):
+            findings = []
+
+        normalized_findings = []
+        for finding in findings[:50]:
+            if not isinstance(finding, dict):
+                continue
+            f_score = _normalize_confidence_score(finding.get("confidence_score"), default=score)
+            normalized_findings.append({
+                "id": str(finding.get("id", "")).strip(),
+                "title": str(finding.get("title", "")).strip() or "Analyzer finding",
+                "description": str(finding.get("description", "")).strip(),
+                "analysis_kind": str(finding.get("analysis_kind", analysis_kind or "heuristic")).strip().lower(),
+                "source": str(finding.get("source", "")).strip(),
+                "sink": str(finding.get("sink", "")).strip(),
+                "trace_chain": finding.get("trace_chain", []) if isinstance(finding.get("trace_chain"), list) else [],
+                "source_count": finding.get("source_count", 0),
+                "confidence_score": f_score,
+                "confidence_label": _confidence_label(f_score),
+            })
+
+        display_target = target
+        if target_type == "platform":
+            display_target = _format_platform_display_name(target)
+        normalized_results.append({
+            "target_type": target_type,
+            "target": display_target,
+            "platform": _format_platform_display_name(platform) if platform else "",
+            "framework": framework,
+            "engine": str(entry.get("engine", "")).strip(),
+            "analysis_kind": analysis_kind or ("taint_flow" if str(entry.get("engine", "")).strip() == "dataflow_controlflow" else "heuristic"),
+            "status": str(entry.get("status", "")).strip() or "completed",
+            "confidence_score": score,
+            "confidence_label": _confidence_label(score),
+            "artifacts": entry.get("artifacts", {}) if isinstance(entry.get("artifacts"), dict) else {},
+            "findings": normalized_findings,
+        })
+
+    taint_results = [item for item in normalized_results if item.get("engine") == "dataflow_controlflow"]
+    fallback_results = [item for item in normalized_results if item.get("engine") != "dataflow_controlflow"]
+
+    summary = {
+        "enabled": bool(summary_raw.get("enabled", False)),
+        "targets_total": int(summary_raw.get("targets_total", len(normalized_results)) or 0),
+        "targets_analyzed": int(summary_raw.get("targets_analyzed", len(normalized_results)) or 0),
+        "taint_targets": int(summary_raw.get("taint_targets", len(taint_results)) or 0),
+        "findings_identified": int(summary_raw.get("findings_identified", sum(len(x.get("findings", [])) for x in normalized_results)) or 0),
+        "generated_at": str(summary_raw.get("generated_at", "")).strip(),
+    }
+    return {
+        "summary": summary,
+        "results": normalized_results,
+        "taint_results": taint_results,
+        "fallback_results": fallback_results,
+    }
+
+
 
 def get_summary(input_file):
     json_path = Path(input_file)
@@ -868,13 +961,9 @@ def get_summary(input_file):
 
 
 # Generate the HTML and PDF reports
-def gen_report(formats="html,pdf"):
+def gen_report(formats="html,pdf", include_multifile_pdf=True):
     multifile_result = None
-    started_at = time.time()
     state.htmlreport_Fpath.parent.mkdir(parents=True, exist_ok=True)
-    cli.section_print("[*] HTML Report Generation")
-    single_start = datetime.now()
-    print(f"    [-] Started at       : {single_start.strftime('%Y-%m-%d %H:%M:%S')}")
 
     snippets = get_areas_of_interest(state.outputAoI_JSON)
     filepaths_aoi = get_filepaths_of_aoi(state.outputAoI_Fpaths_JSON)
@@ -885,6 +974,8 @@ def gen_report(formats="html,pdf"):
     pdf_report_path = state.pdfreport_Fpath
 
     htmlfile = None
+    single_start = cutils.get_now()
+    single_elapsed_start = time.time()
 
     if "html" in formats or "pdf" in formats:
         render_result = gen_html_report_modern(
@@ -896,61 +987,116 @@ def gen_report(formats="html,pdf"):
         )
         if render_result:
             htmlfile, _ = render_result
-    single_end = datetime.now()
-    print(f"    [-] Completed at     : {single_end.strftime('%Y-%m-%d %H:%M:%S')}")
-    hours, rem = divmod(time.time() - started_at, 3600)
-    minutes, seconds = divmod(rem, 60)
-    seconds, milliseconds = str(seconds).split('.')
-    print("    [-] Total time taken : {:0>2}Hr:{:0>2}Min:{:0>2}s:{}ms".format(int(hours), int(minutes), seconds, milliseconds[:3]))
+    single_end = cutils.get_now()
+    single_elapsed = time.time() - single_elapsed_start
 
     if isinstance(formats, str):
         formats_csv = ",".join([fmt.strip() for fmt in formats.split(",") if fmt.strip()]) or "html,pdf"
     else:
         formats_csv = "html,pdf"
 
-    # Multi-file timing
-    mp_started = datetime.now()
-    mp_elapsed_start = time.time()
-    try:
-        multifile_result = gen_report_multifile(
-            formats=formats_csv,
-            output_dir=Path(state.root_dir) / "reports/html/multi-file",
-            pdf_output_dir=Path(state.root_dir) / "reports/pdf/multi-file",
-            expand_all_details_in_pdf=True,
-        )
-    except (OSError, RuntimeError, ValueError) as exc:
-        logger.error("Multi-file report generation failed: %s", exc)
-    mp_hours, mp_rem = divmod(time.time() - mp_elapsed_start, 3600)
-    mp_minutes, mp_seconds = divmod(mp_rem, 60)
-    mp_seconds, mp_milliseconds = str(mp_seconds).split('.')
-    mp_completed = datetime.now()
+    # Multi-file HTML generation (always run when html in formats)
+    mp_html_result = None
+    mp_html_started = mp_html_completed = None
+    mp_html_hours = mp_html_minutes = 0
+    mp_html_seconds = mp_html_milliseconds = "0"
+    if "html" in formats_csv:
+        mp_html_started = cutils.get_now()
+        mp_html_elapsed_start = time.time()
+        try:
+            mp_html_result = gen_report_multifile(
+                formats="html",
+                output_dir=Path(state.reports_dirpath) / "scan" / "html" / "multi-file",
+                pdf_output_dir=Path(state.reports_dirpath) / "scan" / "pdf" / "multi-file",
+                expand_all_details_in_pdf=True,
+            )
+        except (OSError, RuntimeError, ValueError) as exc:
+            logger.error("Multi-file HTML report generation failed: %s", exc)
+        mp_html_hours, mp_html_rem = divmod(time.time() - mp_html_elapsed_start, 3600)
+        mp_html_minutes, mp_html_sec = divmod(mp_html_rem, 60)
+        mp_html_seconds, mp_html_milliseconds = str(mp_html_sec).split('.')
+        mp_html_completed = cutils.get_now()
 
+    # Multi-file PDF generation (only when pdf in formats and not suppressed)
+    mp_pdf_result = None
+    mp_pdf_started = mp_pdf_completed = None
+    mp_pdf_hours = mp_pdf_minutes = 0
+    mp_pdf_seconds = mp_pdf_milliseconds = "0"
+    if "pdf" in formats_csv and include_multifile_pdf:
+        mp_pdf_started = cutils.get_now()
+        mp_pdf_elapsed_start = time.time()
+        try:
+            mp_pdf_result = gen_report_multifile(
+                formats="pdf",
+                output_dir=Path(state.reports_dirpath) / "scan" / "html" / "multi-file",
+                pdf_output_dir=Path(state.reports_dirpath) / "scan" / "pdf" / "multi-file",
+                expand_all_details_in_pdf=True,
+            )
+        except (OSError, RuntimeError, ValueError) as exc:
+            logger.error("Multi-file PDF report generation failed: %s", exc)
+        mp_pdf_hours, mp_pdf_rem = divmod(time.time() - mp_pdf_elapsed_start, 3600)
+        mp_pdf_minutes, mp_pdf_sec = divmod(mp_pdf_rem, 60)
+        mp_pdf_seconds, mp_pdf_milliseconds = str(mp_pdf_sec).split('.')
+        mp_pdf_completed = cutils.get_now()
+
+    # Unified multifile_result for downstream checks (html_root from html pass, pdf_root from pdf pass)
+    multifile_result = {}
+    if mp_html_result:
+        multifile_result.update(mp_html_result)
+    if mp_pdf_result:
+        multifile_result.update(mp_pdf_result)
+
+    # Single-file HTML timing
+    sf_hours = int(single_elapsed // 3600)
+    sf_minutes = int((single_elapsed % 3600) // 60)
+    _sf_sec_parts = str(single_elapsed % 60).split('.')
+    sf_seconds = _sf_sec_parts[0]
+    sf_milliseconds = _sf_sec_parts[1] if len(_sf_sec_parts) > 1 else "0"
+
+    # Single-file PDF generation (suppress internal header; timing captured here)
+    pdf_sf_start = pdf_sf_end = None
+    pdf_sf_elapsed = 0.0
     if "pdf" in formats and htmlfile:
-        gen_pdf_report_modern(htmlfile, pdf_report_path)
+        _, pdf_sf_start, pdf_sf_end, pdf_sf_elapsed = gen_pdf_report_modern(htmlfile, pdf_report_path, print_header=False)
+    pdf_sf_hours = int(pdf_sf_elapsed // 3600)
+    pdf_sf_minutes = int((pdf_sf_elapsed % 3600) // 60)
+    _pdf_sf_sec_parts = str(pdf_sf_elapsed % 60).split('.')
+    pdf_sf_seconds = _pdf_sf_sec_parts[0]
+    pdf_sf_milliseconds = _pdf_sf_sec_parts[1] if len(_pdf_sf_sec_parts) > 1 else "0"
 
     # Report path output
     if "html" in formats:
         cli.section_print("[*] HTML Report:")
         if htmlfile:
-            print("     [-] HTML Report Path : " + re.sub(str(state.root_dir), "", str(htmlfile)))
-        if multifile_result and multifile_result.get("html_root"):
-            print("     [-] Multi-file HTML Started at  : " + mp_started.strftime('%Y-%m-%d %H:%M:%S'))
-            print("     [-] Multi-file HTML Completed at: " + mp_completed.strftime('%Y-%m-%d %H:%M:%S'))
-            print("     [-] Multi-file HTML time       : {:0>2}Hr:{:0>2}Min:{:0>2}s:{}ms".format(int(mp_hours), int(mp_minutes), mp_seconds, mp_milliseconds[:3]))
-            print("     [-] Multi-file HTML report     : " + re.sub(str(state.root_dir), "", str(multifile_result["html_root"] / "index.html")))
-            if multifile_result.get("pdf_root"):
-                print("     [-] Multi-file PDF root        : " + re.sub(str(state.root_dir), "", str(multifile_result["pdf_root"])))
-            if multifile_result.get("pdf_pages"):
-                print("     [-] Multi-file PDFs generated  : " + str(len(multifile_result["pdf_pages"])))
+            print("     [-] Single-file:")
+            print("         Path      : " + re.sub(str(state.root_dir), "", str(htmlfile)))
+            print("         Started   : " + single_start.strftime('%Y-%m-%d %H:%M:%S'))
+            print("         Completed : " + single_end.strftime('%Y-%m-%d %H:%M:%S'))
+            print("         Time      : {:0>2}Hr:{:0>2}Min:{:0>2}s:{}ms".format(sf_hours, sf_minutes, sf_seconds, sf_milliseconds[:3]))
+        if mp_html_result and mp_html_result.get("html_root") and mp_html_started:
+            print("     [-] Multi-file:")
+            print("         Path      : " + re.sub(str(state.root_dir), "", str(mp_html_result["html_root"] / "index.html")))
+            print("         Started   : " + mp_html_started.strftime('%Y-%m-%d %H:%M:%S'))
+            print("         Completed : " + mp_html_completed.strftime('%Y-%m-%d %H:%M:%S'))
+            print("         Time      : {:0>2}Hr:{:0>2}Min:{:0>2}s:{}ms".format(int(mp_html_hours), int(mp_html_minutes), mp_html_seconds, mp_html_milliseconds[:3]))
 
     if "pdf" in formats:
         cli.section_print("[*] PDF Report:")
         if htmlfile:
-            print("     [-] PDF Report Path : " + re.sub(str(state.root_dir), "", str(pdf_report_path)))
-        if multifile_result and multifile_result.get("pdf_root"):
-            print("     [-] Multi-file PDF root : " + re.sub(str(state.root_dir), "", str(multifile_result["pdf_root"])))
-        if multifile_result and multifile_result.get("pdf_pages"):
-            print("     [-] Multi-file PDFs     : " + str(len(multifile_result["pdf_pages"])))
+            print("     [-] Single-file:")
+            print("         Path      : " + re.sub(str(state.root_dir), "", str(pdf_report_path)))
+            if pdf_sf_start:
+                print("         Started   : " + pdf_sf_start.strftime('%Y-%m-%d %H:%M:%S'))
+            if pdf_sf_end:
+                print("         Completed : " + pdf_sf_end.strftime('%Y-%m-%d %H:%M:%S'))
+            print("         Time      : {:0>2}Hr:{:0>2}Min:{:0>2}s:{}ms".format(pdf_sf_hours, pdf_sf_minutes, pdf_sf_seconds, pdf_sf_milliseconds[:3]))
+        if mp_pdf_result and mp_pdf_result.get("pdf_root") and mp_pdf_started:
+            print("     [-] Multi-file:")
+            pdf_count = "({} PDF(s))".format(len(mp_pdf_result["pdf_pages"])) if mp_pdf_result.get("pdf_pages") else ""
+            print("         Path      : " + re.sub(str(state.root_dir), "", str(mp_pdf_result["pdf_root"])) + (" " + pdf_count if pdf_count else ""))
+            print("         Started   : " + mp_pdf_started.strftime('%Y-%m-%d %H:%M:%S'))
+            print("         Completed : " + mp_pdf_completed.strftime('%Y-%m-%d %H:%M:%S'))
+            print("         Time      : {:0>2}Hr:{:0>2}Min:{:0>2}s:{}ms".format(int(mp_pdf_hours), int(mp_pdf_minutes), mp_pdf_seconds, mp_pdf_milliseconds[:3]))
 
     cli.section_print("[*] Structured Reports:")
     if os.path.isfile(state.outputRecSummary_JSON):
@@ -961,6 +1107,8 @@ def gen_report(formats="html,pdf"):
         print("     [-] Filepaths (AoI) JSON:", re.sub(str(state.root_dir), "", str(state.outputAoI_Fpaths_JSON)))
     if os.path.isfile(state.output_Fpaths_JSON):
         print("     [-] All Discovered Files (JSON):", re.sub(str(state.root_dir), "", str(state.output_Fpaths_JSON)))
+    if os.path.isfile(state.outputAnalysis_JSON):
+        print("     [-] Analyzer Results (JSON):", re.sub(str(state.root_dir), "", str(state.outputAnalysis_JSON)))
 
     print("\nNote: The tool generates reports in HTML and PDF formats, with JSON available for structured data. "
           "Reports continue to be refined with each iteration.")
@@ -999,8 +1147,8 @@ def gen_report_multifile(formats="html,pdf", output_dir=None, pdf_output_dir=Non
     Creates a lightweight index + per-section pages to reduce HTML/PDF size for large scans.
     """
     started_at = time.time()
-    output_root = Path(output_dir) if output_dir else Path(state.root_dir) / "reports/html/multi-file"
-    pdf_output_root = Path(pdf_output_dir) if pdf_output_dir else Path(state.root_dir) / "reports/pdf/multi-file"
+    output_root = Path(output_dir) if output_dir else Path(state.reports_dirpath) / "scan" / "html" / "multi-file"
+    pdf_output_root = Path(pdf_output_dir) if pdf_output_dir else Path(state.reports_dirpath) / "scan" / "pdf" / "multi-file"
     aoi_dir = output_root / "aoi"
     filepaths_dir = output_root / "filepaths"
 

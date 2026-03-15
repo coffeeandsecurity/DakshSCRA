@@ -5,6 +5,9 @@ from collections import Counter
 from pathlib import Path
 from typing import List, Dict, Tuple
 
+import yaml
+
+import state.runtime_state as state
 from core.analysis.common import load_analysis_config
 
 
@@ -35,6 +38,8 @@ DEFAULT_RANKING = {
     },
 }
 
+_THEME_CACHE = None
+
 
 def _merge_dict(base: Dict, override: Dict) -> Dict:
     merged = dict(base)
@@ -58,22 +63,72 @@ def _load_ranking_profile(platform: str = None) -> Dict:
     return profile
 
 
+def _get_report_theme() -> str:
+    global _THEME_CACHE
+    if _THEME_CACHE:
+        return _THEME_CACHE
+    theme = "hacker_mode"
+    try:
+        cfg_path = Path(state.toolConfig)
+        if cfg_path.exists():
+            data = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
+            analysis_cfg = data.get("analysis", {}) if isinstance(data, dict) else {}
+            if isinstance(analysis_cfg, dict):
+                candidate = str(analysis_cfg.get("report_theme", "hacker_mode")).strip().lower()
+                if candidate in {"hacker_mode", "professional_mode", "both"}:
+                    theme = candidate
+    except Exception:
+        theme = "hacker_mode"
+    _THEME_CACHE = theme
+    return theme
+
+
 def _flow_key(flow: Dict) -> Tuple:
     path_key = tuple(
         (step.get("file"), step.get("line"), step.get("role"), (step.get("code") or "").strip())
         for step in flow.get("path", [])
     )
+    termination_key = tuple(
+        (
+            node.get("file"),
+            node.get("line"),
+            node.get("reason"),
+            (node.get("code") or "").strip(),
+        )
+        for node in flow.get("termination_nodes", [])
+    )
     return (
+        flow.get("flow_kind", "sink"),
+        flow.get("trace_status", "complete"),
         flow.get("sink"),
         flow.get("file"),
         flow.get("function"),
         flow.get("line"),
         path_key,
+        termination_key,
     )
 
 
 def _escape_html(text: str) -> str:
     return str(text or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def _trace_status(flow: Dict) -> str:
+    status = str(flow.get("trace_status", "")).strip().lower()
+    return status if status in {"complete", "partial"} else "complete"
+
+
+def _termination_summary(flow: Dict) -> List[str]:
+    lines: List[str] = []
+    for node in flow.get("termination_nodes", []) or []:
+        reason = str(node.get("reason", "unresolved")).replace("_", " ")
+        location = f"{node.get('file', '-')}" + (f":{node.get('line')}" if node.get("line") else "")
+        symbol = str(node.get("symbol", "")).strip()
+        text = f"{reason} at {location}"
+        if symbol:
+            text += f" via {symbol}"
+        lines.append(text)
+    return lines
 
 
 def _ensure_source_step(flow: Dict) -> Dict:
@@ -180,10 +235,12 @@ def rank_and_dedupe_flows(flows: List[Dict], platform: str = None) -> List[Dict]
         if prev is None or normalized["risk_score"] > prev["risk_score"]:
             best_by_key[key] = normalized
 
+    _CONFIDENCE_ORDER = {"high": 2, "medium": 1, "low": 0}
     ranked = sorted(
         best_by_key.values(),
         key=lambda f: (
             -int(f.get("risk_score", 0)),
+            -_CONFIDENCE_ORDER.get(str(f.get("confidence", "low")).lower(), 0),
             -int(bool(f.get("cross_file", False))),
             -len(f.get("path", []) or []),
             str(f.get("file", "")),
@@ -198,12 +255,20 @@ def rank_and_dedupe_flows(flows: List[Dict], platform: str = None) -> List[Dict]
 
 def render_html(flows: List[Dict], output_path: Path, title: str = "Dataflow Analysis"):
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    attack_summary = _attack_surface_summary(flows)
+    complete_count = sum(1 for flow in flows if _trace_status(flow) == "complete")
+    partial_count = sum(1 for flow in flows if _trace_status(flow) == "partial")
 
     lines = [
         "<!DOCTYPE html>",
         "<html><head><meta charset='utf-8'><title>{}</title>".format(title),
         "<style>",
         "body{font-family:Segoe UI,Arial,sans-serif;background:#0b1120;color:#e2e8f0;padding:24px;}",
+        ".summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0;}",
+        ".summary-card{background:#0f172a;border:1px solid #1f2937;border-radius:12px;padding:14px;}",
+        ".summary-k{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#94a3b8;}",
+        ".summary-v{font-size:26px;font-weight:700;margin-top:6px;color:#93c5fd;}",
+        ".section-card{background:#0f172a;border:1px solid #1f2937;border-radius:12px;padding:16px;margin:16px 0;}",
         "table{border-collapse:separate;border-spacing:0 8px;width:100%;margin-top:12px;}",
         "th{background:#0f172a;text-align:left;font-size:12px;letter-spacing:0.05em;color:#94a3b8;padding:8px 10px;}",
         "td{background:#0f172a;border:1px solid #1f2937;padding:12px 10px;font-size:14px;vertical-align:top;border-radius:10px;}",
@@ -215,28 +280,65 @@ def render_html(flows: List[Dict], output_path: Path, title: str = "Dataflow Ana
         ".path-step.param{border-color:#60a5fa;background:linear-gradient(135deg,rgba(96,165,250,0.18),rgba(96,165,250,0.08));}",
         ".path-step.call{border-color:#a78bfa;background:linear-gradient(135deg,rgba(167,139,250,0.18),rgba(167,139,250,0.08));}",
         ".path-step.sink{border-color:#f97316;background:linear-gradient(135deg,rgba(249,115,22,0.18),rgba(249,115,22,0.08));}",
+        ".path-step.termination{border-color:#facc15;background:linear-gradient(135deg,rgba(250,204,21,0.18),rgba(250,204,21,0.08));}",
         ".code-block{margin-top:6px;padding:10px;border-radius:8px;background:#0b1220;font-family:SFMono-Regular,Consolas,monospace;white-space:pre-wrap;line-height:1.5;border:1px solid #1f2937;}",
-        ".file-pill{display:inline-block;padding:6px 12px;border-radius:999px;background:#111827;border:1px solid #1f2937;font-size:13px;font-weight:700;margin-bottom:6px;}",
         ".flow-chain{margin-top:8px;padding:10px;border-radius:8px;background:#0b1220;border:1px dashed #334155;font-family:SFMono-Regular,Consolas,monospace;font-size:12px;line-height:1.4;}",
         ".sev{display:inline-block;padding:3px 8px;border-radius:8px;font-size:11px;font-weight:700;margin-right:6px;}",
         ".sev-critical{background:#7f1d1d;color:#fecaca;border:1px solid #dc2626;}",
         ".sev-high{background:#7c2d12;color:#fed7aa;border:1px solid #f97316;}",
         ".sev-medium{background:#1e3a8a;color:#bfdbfe;border:1px solid #3b82f6;}",
         ".sev-low{background:#065f46;color:#a7f3d0;border:1px solid #10b981;}",
+        ".trace-complete{background:#065f46;color:#d1fae5;border:1px solid #10b981;}",
+        ".trace-partial{background:#78350f;color:#fef3c7;border:1px solid #f59e0b;}",
+        ".conf-high{background:#4c1d95;color:#ddd6fe;border:1px solid #7c3aed;}",
+        ".conf-medium{background:#1e3a5f;color:#bae6fd;border:1px solid #0ea5e9;}",
+        ".conf-low{background:#374151;color:#d1d5db;border:1px solid #6b7280;}",
         ".xref-link{display:inline-block;margin-top:8px;padding:6px 10px;border-radius:8px;background:#0f172a;border:1px solid #334155;color:#93c5fd;text-decoration:none;font-size:12px;}",
         "</style>",
         "</head><body>",
         f"<h2>{title} (experimental)</h2>",
-        "<p class='muted'>This report lists flows where tainted data (from common sources) reaches sensitive sinks."
+        "<p class='muted'>This report lists complete source-to-sink traces and partial trace terminations."
         " XREF details are moved to a separate report for readability.</p>",
+        "<div class='summary-grid'>",
+        f"<div class='summary-card'><div class='summary-k'>Analyzer Flows</div><div class='summary-v'>{len(flows)}</div></div>",
+        f"<div class='summary-card'><div class='summary-k'>Complete Traces</div><div class='summary-v'>{complete_count}</div></div>",
+        f"<div class='summary-card'><div class='summary-k'>Partial Traces</div><div class='summary-v'>{partial_count}</div></div>",
+        f"<div class='summary-card'><div class='summary-k'>Attack Vectors</div><div class='summary-v'>{len(attack_summary)}</div></div>",
+        "</div>",
+        "<div class='section-card'><h3>Attack Vector Summary</h3>",
+        "<p class='muted'>Attack vectors are tracked separately from trace completeness.</p>",
         "<table>",
-        "<tr><th>#</th><th>File</th><th>Function</th><th>Line</th><th>Sink</th><th>Description</th><th>Flow Trace</th><th>XREF</th></tr>",
+        "<tr><th>Vector</th><th>Count</th><th>Example</th></tr>",
     ]
 
+    if attack_summary:
+        for row in attack_summary:
+            lines.append(
+                f"<tr><td>{_escape_html(row.get('label', row.get('kind', 'vector')))}</td>"
+                f"<td>{int(row.get('count', 0) or 0)}</td>"
+                f"<td>{_escape_html(row.get('example', ''))}</td></tr>"
+            )
+    else:
+        lines.append("<tr><td colspan='3' class='muted'>No attack vectors inferred</td></tr>")
+
+    lines.extend(
+        [
+            "</table></div>",
+            "<table>",
+            "<tr><th>#</th><th>File</th><th>Function</th><th>Line</th><th>End Node</th><th>Description</th><th>Attack Surface</th><th>Flow Trace</th><th>XREF</th></tr>",
+        ]
+    )
+
     if not flows:
-        lines.append("<tr><td colspan='8' class='muted'>No flows detected.</td></tr>")
+        lines.append("<tr><td colspan='9' class='muted'>No flows detected.</td></tr>")
     else:
         for flow in flows:
+            input_surface = flow.get("input_surface") or _infer_input_surface(flow)
+            flow["input_surface"] = input_surface
+            attack_vectors = flow.get("attack_vectors") or _derive_attack_vectors(flow)
+            flow["attack_vectors"] = attack_vectors
+            trace_status = _trace_status(flow)
+            termination_lines = _termination_summary(flow)
             path_parts = []
             arrow_chain = []
             for step in flow.get("path", []):
@@ -251,10 +353,16 @@ def render_html(flows: List[Dict], output_path: Path, title: str = "Dataflow Ana
                     f"<span class='muted'>({step_loc})</span>"
                     f"<div class='code-block'>{code}</div></div>"
                 )
-            flow_chain_html = (
-                f"<div class='flow-chain'>{' &rarr; '.join(arrow_chain)}</div>" if arrow_chain else ""
-            )
-
+            for node in flow.get("termination_nodes", [])[:4]:
+                label = f"Termination: {str(node.get('reason', 'unresolved')).replace('_', ' ')}"
+                code = _escape_html(str(node.get("code", "")).rstrip())
+                step_loc = f"{_escape_html(node.get('file'))}:{_escape_html(node.get('line'))}"
+                path_parts.append(
+                    f"<div class='path-step termination'><span class='badge'>{_escape_html(label)}</span> "
+                    f"<span class='muted'>({step_loc})</span>"
+                    f"<div class='code-block'>{code}</div></div>"
+                )
+            flow_chain_html = f"<div class='flow-chain'>{' &rarr; '.join(arrow_chain)}</div>" if arrow_chain else ""
             path_html = "".join(path_parts) if path_parts else "<span class='muted'>No path details</span>"
             explanation = flow.get("explanation", "")
             description = flow.get("description", "")
@@ -265,26 +373,123 @@ def render_html(flows: List[Dict], output_path: Path, title: str = "Dataflow Ana
                 "Medium": "sev-medium",
                 "Low": "sev-low",
             }.get(severity, "sev-low")
+            confidence = str(flow.get("confidence", "low")).lower()
+            conf_class = {"high": "conf-high", "medium": "conf-medium"}.get(confidence, "conf-low")
             desc_html = (
-                f"<div><span class='sev {sev_class}'>{severity}</span><strong>Score:</strong> {flow.get('risk_score', 0)}</div>"
+                f"<div><span class='sev {sev_class}'>{severity}</span>"
+                f"<span class='sev trace-{trace_status}'>{trace_status.capitalize()}</span>"
+                f"<span class='sev {conf_class}'>Confidence: {confidence.capitalize()}</span>"
+                f"<strong>Score:</strong> {flow.get('risk_score', 0)}</div>"
                 f"<div style='margin-top:6px;'>{_escape_html(description)}</div>"
                 + (f"<div class='muted' style='margin-top:6px;'><strong>Why this matters:</strong> {_escape_html(explanation)}</div>" if explanation else "")
+                + (f"<div class='muted' style='margin-top:6px;'><strong>Termination:</strong> {_escape_html(' | '.join(termination_lines))}</div>" if termination_lines else "")
             )
+            attack_html = "".join(
+                f"<div class='path-step'><strong>{_escape_html(vector.get('label','vector'))}</strong>"
+                f"<div class='muted' style='margin-top:4px;'>{_escape_html(vector.get('reason',''))}</div>"
+                f"<div class='code-block'>{_escape_html(' | '.join(vector.get('examples', [])[:2]))}</div></div>"
+                for vector in attack_vectors[:3]
+            ) or "<span class='muted'>No attack surface details</span>"
             xref_link = f"analysis_xref.html#flow-{flow.get('rank', '')}"
+            end_node = _escape_html(flow.get("sink", "") or "trace termination")
+            if termination_lines:
+                end_node = _escape_html(termination_lines[0])
             lines.append(
                 f"<tr>"
                 f"<td>{flow.get('rank','')}</td>"
                 f"<td>{_escape_html(flow.get('file',''))}</td>"
                 f"<td>{_escape_html(flow.get('function',''))}</td>"
                 f"<td>{flow.get('line','')}</td>"
-                f"<td><span class='badge'>{_escape_html(flow.get('sink',''))}</span></td>"
+                f"<td><span class='badge'>{end_node}</span></td>"
                 f"<td>{desc_html}</td>"
+                f"<td>{attack_html}</td>"
                 f"<td>{flow_chain_html}{path_html}</td>"
                 f"<td><a class='xref-link' href='{xref_link}'>Open XREF</a></td>"
                 f"</tr>"
             )
     lines.append("</table></body></html>")
     output_path.write_text("\n".join(lines), encoding="utf-8")
+    return output_path
+
+
+def _inject_modern_style(html_text: str, variant: str = "main", theme: str = "hacker_mode") -> str:
+    if "</head>" not in html_text:
+        return html_text
+
+    if theme == "professional_mode":
+        base_style = [
+            "<style id='analysis-modern-override'>",
+            ":root{--bg:#f4f8fc;--panel:#ffffff;--line:#c8d7ea;--text:#102a43;--muted:#486581;--accent:#0f4a8a;--accent-soft:#e7f0fb;--graph-bg:#0b1322;}",
+            "body{background:var(--bg) !important;color:var(--text) !important;font-family:Segoe UI,Arial,sans-serif !important;line-height:1.45 !important;}",
+            "h1,h2,h3,h4,h5,h6,.h1,.meta,.k,.v,summary.head,td,th,.panel,.mcard,.sec,.quick,.chip,.badge,.lg{color:var(--text) !important;}",
+            "table{border-collapse:separate !important;border-spacing:0 8px !important;}",
+            "th{background:#eaf1f9 !important;color:#243b53 !important;border:1px solid var(--line) !important;font-weight:700 !important;}",
+            "td{background:var(--panel) !important;color:var(--text) !important;border:1px solid var(--line) !important;}",
+            ".muted{color:var(--muted) !important;}",
+            ".badge{background:var(--accent-soft) !important;color:var(--accent) !important;border:1px solid #a7c5e6 !important;font-weight:700 !important;}",
+            ".chip,.file-pill,.lg{background:#edf4fd !important;color:#153e75 !important;border:1px solid #a7c5e6 !important;}",
+            ".panel,.mcard,.sec,details.card,.path-step{background:var(--panel) !important;border:1px solid var(--line) !important;box-shadow:none !important;}",
+            ".code-block,.code{background:#f0f6fd !important;color:#102a43 !important;border:1px solid #bfd1e5 !important;}",
+            ".xref-link,.back,.quick{background:#edf4fd !important;color:#0f4a8a !important;border:1px solid #a7c5e6 !important;font-weight:600 !important;}",
+            ".flow-chain,.graph-note{background:#f0f6fd !important;border:1px solid #bfd1e5 !important;color:#243b53 !important;}",
+            ".graph{background:var(--graph-bg) !important;border:1px solid #324d69 !important;}",
+            ".graph svg text{fill:#e6edf7 !important;font-weight:600 !important;}",
+            ".graph svg path,.graph svg line,.graph svg polyline{stroke-width:2 !important;stroke-opacity:1 !important;}",
+            ".graph svg rect{stroke-width:1.6 !important;}",
+            ".search{color:var(--text) !important;-webkit-text-fill-color:var(--text) !important;}",
+            "</style>",
+        ]
+    else:
+        # Hacker mode (default): dark high-contrast theme tuned for flow tracing.
+        base_style = [
+            "<style id='analysis-modern-override'>",
+            ":root{--bg:#060b14;--panel:#0a1322;--line:#1b3554;--text:#e6f1ff;--muted:#9db3cc;--accent:#36c2ff;--accent-soft:#0f2742;}",
+            "body{background:radial-gradient(circle at 20% 0%,#0a1a30 0%,#060b14 55%) !important;color:var(--text) !important;font-family:Segoe UI,Arial,sans-serif !important;line-height:1.45 !important;}",
+            "h1,h2,h3,h4,h5,h6,.h1,.meta,.k,.v,summary.head,td,th,.panel,.mcard,.sec,.quick,.chip,.badge,.lg{color:var(--text) !important;}",
+            "table{border-collapse:separate !important;border-spacing:0 8px !important;}",
+            "th{background:#0d1a2d !important;color:#b8d9ff !important;border:1px solid var(--line) !important;font-weight:700 !important;}",
+            "td{background:var(--panel) !important;color:var(--text) !important;border:1px solid var(--line) !important;}",
+            ".muted{color:var(--muted) !important;}",
+            ".badge{background:var(--accent-soft) !important;color:#8adfff !important;border:1px solid #1f5f8a !important;font-weight:700 !important;}",
+            ".chip,.file-pill,.lg{background:#0e2036 !important;color:#8adfff !important;border:1px solid #1f5f8a !important;}",
+            ".panel,.mcard,.sec,details.card,.path-step{background:var(--panel) !important;border:1px solid var(--line) !important;box-shadow:0 0 0 1px rgba(15,65,111,0.25) inset !important;}",
+            ".code-block,.code{background:#071224 !important;color:#c7e6ff !important;border:1px solid #214467 !important;}",
+            ".xref-link,.back,.quick{background:#0f2742 !important;color:#7fd8ff !important;border:1px solid #2a6897 !important;font-weight:600 !important;}",
+            ".flow-chain,.graph-note{background:#081728 !important;border:1px solid #244a6f !important;color:#c1dffb !important;}",
+            ".graph{background:#040a13 !important;border:1px solid #31587f !important;}",
+            ".graph svg text{fill:#ecf6ff !important;font-weight:700 !important;}",
+            ".graph svg path,.graph svg line,.graph svg polyline{stroke-width:2.2 !important;stroke-opacity:1 !important;}",
+            ".graph svg rect{stroke-width:1.8 !important;}",
+            ".search{color:var(--text) !important;-webkit-text-fill-color:var(--text) !important;background:#081728 !important;border:1px solid #2a6897 !important;}",
+            "</style>",
+        ]
+
+    if variant == "xref":
+        base_style.extend(
+            [
+                "<style id='analysis-modern-override-xref'>",
+                ".layout{grid-template-columns:280px 1fr !important;}",
+                ".side{background:" + ("#eaf1f9" if theme == "professional_mode" else "#081120") + " !important;border-right:1px solid " + ("#c3d4e8" if theme == "professional_mode" else "#1f4569") + " !important;}",
+                ".legend .lg{background:" + ("#edf4fd" if theme == "professional_mode" else "#0e2036") + " !important;border-color:" + ("#a7c5e6" if theme == "professional_mode" else "#1f5f8a") + " !important;color:" + ("#243b53" if theme == "professional_mode" else "#9fdfff") + " !important;}",
+                "</style>",
+            ]
+        )
+
+    injected = "\n".join(base_style)
+    return html_text.replace("</head>", injected + "\n</head>", 1)
+
+
+def render_html_modern(flows: List[Dict], output_path: Path, title: str = "Dataflow Analysis", theme: str = "hacker_mode"):
+    temp_path = output_path.parent / f"{output_path.stem}.legacy.tmp"
+    render_html(flows, temp_path, title=title)
+    html_text = temp_path.read_text(encoding="utf-8")
+    modern_text = _inject_modern_style(html_text, variant="main", theme=theme)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(modern_text, encoding="utf-8")
+    try:
+        temp_path.unlink()
+    except OSError:
+        pass
     return output_path
 
 
@@ -301,6 +506,11 @@ NOISE_TOKENS = {
     "private", "protected", "static", "return", "const", "let", "var", "function",
     "string", "int", "bool", "void", "object", "array", "dict", "list", "json",
 }
+
+LOCAL_FILE_RE = re.compile(r"\b(open|read(all|text|bytes)?|file|getcontentas|string|readfile|fopen|ifstream|filereader|multipartfile|iformfile|upload(edfile)?)\b", re.IGNORECASE)
+ENDPOINT_RE = re.compile(r"\b(@RequestMapping|@GetMapping|@PostMapping|router\.(get|post|put|patch|delete)|Map(Get|Post|Put|Patch|Delete)|Route\(|endpoint|restcontroller|controllerbase)\b", re.IGNORECASE)
+ENV_INPUT_RE = re.compile(r"\b(process\.env|system\.getenv|environment\.get(environment)?variable|configurationmanager|appsettings|getproperty)\b", re.IGNORECASE)
+NETWORK_INPUT_RE = re.compile(r"\b(httpclient|webrequest|webclient|resttemplate|webclient|fetch\(|axios\.|socket|websocket|recv\(|listen\(|accept\()\b", re.IGNORECASE)
 
 
 def _extract_call_names(code: str) -> List[str]:
@@ -606,6 +816,109 @@ def _infer_input_surface(flow: Dict) -> Dict:
     }
 
 
+def _derive_attack_vectors(flow: Dict) -> List[Dict]:
+    vectors: List[Dict] = []
+    path = flow.get("path", []) or []
+    input_surface = flow.get("input_surface") or _infer_input_surface(flow)
+    collected_vars: List[str] = []
+    for step in path:
+        for name in (step.get("variables") or []):
+            token = str(name).strip()
+            if token and token not in collected_vars:
+                collected_vars.append(token)
+        for key in ("source_symbol", "target_symbol", "symbol"):
+            token = str(step.get(key, "")).strip().lstrip("$@")
+            if token and token not in collected_vars:
+                collected_vars.append(token)
+    taint_symbols = collected_vars[:6] or ["input"]
+
+    def add(kind: str, label: str, reason: str, examples: List[str]) -> None:
+        if any(existing.get("kind") == kind for existing in vectors):
+            return
+        vectors.append({"kind": kind, "label": label, "reason": reason, "examples": examples[:3], "taint_symbols": taint_symbols[:4]})
+
+    joined = "\n".join(
+        [
+            str(flow.get("file", "")),
+            str(flow.get("function", "")),
+            str(flow.get("description", "")),
+            str(flow.get("explanation", "")),
+        ]
+        + [str(step.get("code", "")) for step in path]
+    )
+    joined_l = joined.lower()
+
+    if input_surface.get("channel") in {"web-app", "api"} or ENDPOINT_RE.search(joined):
+        examples = input_surface.get("examples") or []
+        add(
+            "endpoint",
+            "Endpoint-facing input",
+            "Tainted data appears reachable from request handlers, routes, or API endpoints.",
+            examples or [f"{method} {uri}" for method in (input_surface.get('methods') or ['GET']) for uri in (input_surface.get('uris') or ['/endpoint'])][:3],
+        )
+
+    if any(token in joined_l for token in ["request", "query", "params", "body", "form", "cookie", "header"]):
+        add(
+            "user_input",
+            "User-controlled request input",
+            "Request parameters, body fields, headers, or cookies appear to seed the tainted flow.",
+            input_surface.get("examples") or [", ".join(input_surface.get("params") or ["input"])],
+        )
+
+    if LOCAL_FILE_RE.search(joined):
+        add(
+            "local_file",
+            "Local disk or uploaded file input",
+            "The path references file reads, uploads, or local content sources that may be attacker-influenced.",
+            [f"File-derived value influencing {flow.get('sink', 'sink')}", "User-controlled file name, path, or content"],
+        )
+
+    if ENV_INPUT_RE.search(joined):
+        add(
+            "environment",
+            "Environment or configuration input",
+            "Runtime configuration, environment variables, or app settings can influence the tainted path.",
+            ["Environment variable override", "Configuration value influencing sensitive sink"],
+        )
+
+    if NETWORK_INPUT_RE.search(joined):
+        add(
+            "network",
+            "Upstream service or network input",
+            "Remote services, sockets, or upstream endpoints appear capable of feeding data into this flow.",
+            ["Upstream API response influences local sink", "Socket/message payload influences local execution path"],
+        )
+
+    if not vectors:
+        add(
+            "code_path",
+            "Code-path reachable input",
+            "The analyzer found a tainted route to a sink, but the exact external entry point is still weakly resolved.",
+            input_surface.get("examples") or ["Manual review required to confirm external entry point"],
+        )
+
+    return vectors
+
+
+def _attack_surface_summary(flows: List[Dict]) -> List[Dict]:
+    counts: Counter = Counter()
+    examples: Dict[str, str] = {}
+    for flow in flows:
+        for vector in flow.get("attack_vectors", []) or []:
+            kind = str(vector.get("kind", "")).strip()
+            label = str(vector.get("label", kind)).strip()
+            if not kind:
+                continue
+            counts[(kind, label)] += 1
+            if kind not in examples:
+                sample = (vector.get("examples") or [""])[0]
+                examples[kind] = str(sample)
+    return [
+        {"kind": kind, "label": label, "count": count, "example": examples.get(kind, "")}
+        for (kind, label), count in counts.most_common()
+    ]
+
+
 def render_xref_html(flows: List[Dict], output_path: Path, title: str = "Dataflow XREF"):
     output_path.parent.mkdir(parents=True, exist_ok=True)
     total_xref = sum(len(f.get("xref", []) or []) for f in flows)
@@ -631,7 +944,9 @@ def render_xref_html(flows: List[Dict], output_path: Path, title: str = "Dataflo
         value_rows = _flow_value_hotspots(flow, limit=10)
         for row in value_rows:
             value_counter[row["token"]] += row["count"]
-        input_surface = _infer_input_surface(flow)
+        input_surface = flow.get("input_surface") or _infer_input_surface(flow)
+        flow["input_surface"] = input_surface
+        flow["attack_vectors"] = flow.get("attack_vectors") or _derive_attack_vectors(flow)
 
         tags = " ".join(
             [
@@ -655,6 +970,7 @@ def render_xref_html(flows: List[Dict], output_path: Path, title: str = "Dataflo
             {
                 "rank": flow.get("rank", ""),
                 "severity": flow.get("severity", "Low"),
+                "trace_status": _trace_status(flow),
                 "risk_score": int(flow.get("risk_score", 0) or 0),
                 "sink": str(flow.get("sink", "")),
                 "file": str(flow.get("file", "")),
@@ -662,6 +978,7 @@ def render_xref_html(flows: List[Dict], output_path: Path, title: str = "Dataflo
                 "line": flow.get("line", ""),
                 "path_len": len(flow.get("path", []) or []),
                 "cross_file": bool(flow.get("cross_file")),
+                "confidence": str(flow.get("confidence", "low")),
                 "xref_count": len(xref),
                 "tags": tags,
                 "description": str(flow.get("description", "")),
@@ -671,6 +988,8 @@ def render_xref_html(flows: List[Dict], output_path: Path, title: str = "Dataflo
                 "value_hotspots": value_rows,
                 "graph": _build_flow_graph_data(flow),
                 "input_surface": input_surface,
+                "attack_vectors": flow.get("attack_vectors", []),
+                "termination_nodes": flow.get("termination_nodes", []) or [],
             }
         )
         flow_payload[-1]["graph_narrative"] = _flow_graph_narrative(flow, flow_payload[-1]["graph"])
@@ -679,6 +998,7 @@ def render_xref_html(flows: List[Dict], output_path: Path, title: str = "Dataflo
     top_symbols = [{"symbol": s, "count": c} for s, c in symbol_counter.most_common(12)]
     top_files = [{"file": f, "count": c} for f, c in file_counter.most_common(12)]
     top_values = [{"token": t, "count": c} for t, c in value_counter.most_common(12)]
+    attack_summary = _attack_surface_summary(flows)
 
     lines = [
         "<!DOCTYPE html>",
@@ -711,6 +1031,9 @@ def render_xref_html(flows: List[Dict], output_path: Path, title: str = "Dataflo
         ".sev-high{background:#7c2d12;color:#fed7aa;border:1px solid #f97316;}",
         ".sev-medium{background:#1e3a8a;color:#bfdbfe;border:1px solid #3b82f6;}",
         ".sev-low{background:#065f46;color:#a7f3d0;border:1px solid #10b981;}",
+        ".conf-high{background:#4c1d95;color:#ddd6fe;border:1px solid #7c3aed;}",
+        ".conf-medium{background:#1e3a5f;color:#bae6fd;border:1px solid #0ea5e9;}",
+        ".conf-low{background:#374151;color:#d1d5db;border:1px solid #6b7280;}",
         ".meta{color:#93c5fd;font-size:13px;}",
         ".card-body{padding:12px 14px;border-top:1px solid #1f2937;display:grid;gap:10px;}",
         ".grid{display:grid;grid-template-columns:1.2fr 1fr;gap:10px;}",
@@ -765,6 +1088,11 @@ def render_xref_html(flows: List[Dict], output_path: Path, title: str = "Dataflo
         for row in top_values:
             lines.append(f"<div class='quick'>{_escape_html(row['token'])} <span class='muted'>x{row['count']}</span></div>")
         lines.append("</div>")
+    if attack_summary:
+        lines.append("<div class='sec'><h4>Attack Surface</h4>")
+        for row in attack_summary[:10]:
+            lines.append(f"<div class='quick'>{_escape_html(row['label'])} <span class='muted'>x{row['count']}</span></div>")
+        lines.append("</div>")
 
     lines.append("</aside><main class='main'>")
     lines.append("<div class='cards'>")
@@ -799,16 +1127,46 @@ def render_xref_html(flows: List[Dict], output_path: Path, title: str = "Dataflo
             f"{_escape_html(fp['file'])}:{_escape_html(fp['line'])}</span>"
         )
         lines.append("</div>")
-        lines.append(f"<div class='chips'><span class='chip'>Risk {fp['risk_score']}</span><span class='chip'>Path {fp['path_len']}</span><span class='chip'>XREF {fp['xref_count']}</span></div>")
+        _conf = str(fp.get("confidence", "low")).lower()
+        _conf_cls = {"high": "conf-high", "medium": "conf-medium"}.get(_conf, "conf-low")
+        lines.append(
+            f"<div class='chips'><span class='chip'>Risk {fp['risk_score']}</span>"
+            f"<span class='chip'>Path {fp['path_len']}</span><span class='chip'>XREF {fp['xref_count']}</span>"
+            f"<span class='chip'>Trace { _escape_html(str(fp.get('trace_status', 'complete')).capitalize()) }</span>"
+            f"<span class='sev {_conf_cls}'>Confidence: {_escape_html(_conf.capitalize())}</span></div>"
+        )
         lines.append("</summary><div class='card-body'>")
         lines.append(f"<div class='muted'>{_escape_html(fp['description'])}</div>")
         if fp.get("explanation"):
             lines.append(f"<div class='muted'><strong>Why it matters:</strong> {_escape_html(fp['explanation'])}</div>")
+        if fp.get("termination_nodes"):
+            lines.append("<div class='panel'><h5>Trace Termination</h5><table><tr><th>Reason</th><th>Location</th><th>Code</th></tr>")
+            for node in fp.get("termination_nodes", [])[:8]:
+                location = f"{node.get('file', '-')}" + (f":{node.get('line')}" if node.get("line") else "")
+                lines.append(
+                    f"<tr><td>{_escape_html(str(node.get('reason', 'unresolved')).replace('_', ' '))}</td>"
+                    f"<td>{_escape_html(location)}</td>"
+                    f"<td class='code'>{_escape_html(node.get('code', ''))}</td></tr>"
+                )
+            lines.append("</table></div>")
         surf = fp.get("input_surface", {}) or {}
         methods = ", ".join(surf.get("methods", []) or []) or "N/A"
         uris = surf.get("uris", []) or []
         params = ", ".join(surf.get("params", []) or []) or "N/A"
         examples = surf.get("examples", []) or []
+        vectors = fp.get("attack_vectors", []) or []
+        lines.append("<div class='panel'><h5>Attack Vectors</h5><table><tr><th>Vector</th><th>Why it matters</th><th>Taint Details</th><th>Examples</th></tr>")
+        if not vectors:
+            lines.append("<tr><td colspan='4' class='muted'>No attack vectors inferred</td></tr>")
+        else:
+            for vector in vectors:
+                lines.append(
+                    f"<tr><td>{_escape_html(vector.get('label','vector'))}</td>"
+                    f"<td>{_escape_html(vector.get('reason',''))}</td>"
+                    f"<td class='code'>{_escape_html(', '.join(vector.get('taint_symbols', [])[:4]))}</td>"
+                    f"<td class='code'>{_escape_html(' | '.join(vector.get('examples', [])[:2]))}</td></tr>"
+                )
+        lines.append("</table></div>")
         lines.append("<div class='panel'><h5>Input Surface / Pentest Hints</h5><table>")
         lines.append(f"<tr><th>Interface</th><td>{_escape_html(surf.get('channel', 'code-path'))}</td></tr>")
         lines.append(f"<tr><th>Methods / Input Mode</th><td>{_escape_html(methods)}</td></tr>")
@@ -935,15 +1293,52 @@ def render_xref_html(flows: List[Dict], output_path: Path, title: str = "Dataflo
     return output_path
 
 
+def render_xref_html_modern(flows: List[Dict], output_path: Path, title: str = "Dataflow XREF", theme: str = "hacker_mode"):
+    temp_path = output_path.parent / f"{output_path.stem}.legacy.tmp"
+    render_xref_html(flows, temp_path, title=title)
+    html_text = temp_path.read_text(encoding="utf-8")
+    modern_text = _inject_modern_style(html_text, variant="xref", theme=theme)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(modern_text, encoding="utf-8")
+    try:
+        temp_path.unlink()
+    except OSError:
+        pass
+    return output_path
+
+
 def write_reports(flows: List[Dict], output_dir: Path, title: str, platform: str = None):
     output_dir.mkdir(parents=True, exist_ok=True)
     json_path = output_dir / "analysis.json"
     html_path = output_dir / "analysis.html"
     xref_html_path = output_dir / "analysis_xref.html"
 
+    print(f"     [-] Ranking flows      : deduplicating and scoring {len(flows)} flow(s)", flush=True)
     ranked_flows = rank_and_dedupe_flows(flows, platform=platform)
+    print(f"     [-] Enriching flows    : inferring input surface and attack vectors", flush=True)
+    for flow in ranked_flows:
+        flow["input_surface"] = flow.get("input_surface") or _infer_input_surface(flow)
+        flow["attack_vectors"] = flow.get("attack_vectors") or _derive_attack_vectors(flow)
+    print(f"     [-] Writing JSON       : {len(ranked_flows)} ranked flow(s)", flush=True)
     json_path.write_text(json.dumps(ranked_flows, indent=2), encoding="utf-8")
-    render_html(ranked_flows, html_path, title=title)
-    render_xref_html(ranked_flows, xref_html_path, title=f"{title} - XREF")
 
+    # Write themed HTML output directly into output_dir.
+    # For theme=both, the default (hacker) uses the standard filenames and
+    # the professional variant gets a _professional suffix.
+    configured_theme = _get_report_theme()
+    themes = ["hacker_mode", "professional_mode"] if configured_theme == "both" else [configured_theme]
+    for theme in themes:
+        title_suffix = "Hacker Mode" if theme == "hacker_mode" else "Professional Mode"
+        if theme == "professional_mode" and configured_theme == "both":
+            themed_html_path = output_dir / "analysis_professional.html"
+            themed_xref_path = output_dir / "analysis_xref_professional.html"
+        else:
+            themed_html_path = html_path
+            themed_xref_path = xref_html_path
+        print(f"     [-] Rendering report   : {title_suffix} analysis HTML", flush=True)
+        render_html_modern(ranked_flows, themed_html_path, title=f"{title} - {title_suffix}", theme=theme)
+        print(f"     [-] Rendering xref     : {title_suffix} xref HTML", flush=True)
+        render_xref_html_modern(ranked_flows, themed_xref_path, title=f"{title} - XREF {title_suffix}", theme=theme)
+
+    print(f"     [-] Reports written    : {output_dir}", flush=True)
     return json_path, html_path

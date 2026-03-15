@@ -110,12 +110,17 @@ def dir_cleanup(dirname):
         None
     """
 
-    dir_path = Path(parentPath) / ".." / dirname
+    dir_path = Path(dirname)
+    if not dir_path.is_absolute():
+        dir_path = Path(parentPath) / ".." / dirname
     if dir_path.exists():
         for file in dir_path.iterdir():
             if file.is_file():
                 try:
                     file.unlink()
+                except FileNotFoundError:
+                    # Ignore races where another process already removed the file.
+                    continue
                 except Exception as e:
                     print(f"Error removing file {file}: {e}")
     else:
@@ -129,7 +134,9 @@ def dir_cleanup_recursive(dirname):
 
     This variant clears nested directories as well, unlike dir_cleanup().
     """
-    dir_path = Path(parentPath) / ".." / dirname
+    dir_path = Path(dirname)
+    if not dir_path.is_absolute():
+        dir_path = Path(parentPath) / ".." / dirname
     if dir_path.exists():
         shutil.rmtree(dir_path, ignore_errors=True)
     dir_path.mkdir(parents=True, exist_ok=True)

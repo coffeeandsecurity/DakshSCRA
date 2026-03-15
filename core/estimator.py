@@ -1,5 +1,6 @@
 # Standard libraries
 import json
+from pathlib import Path
 
 # Third-party libraries
 import yaml
@@ -43,8 +44,11 @@ def effort_estimator(json_file_path):
         data = json.load(json_file)
 
     # Extract information for Backend and Frontend
-    backend_data = data.get("Backend", {})
-    frontend_data = data.get("Frontend", {})
+    # recon_summary.json wraps categories under a "categories" key;
+    # fall back to top-level for backward compatibility.
+    categories = data.get("categories", data)
+    backend_data = categories.get("Backend", {})
+    frontend_data = categories.get("Frontend", {})
 
     # Calculate total frontend and backend files count
     total_frontend_min = 0
@@ -135,6 +139,7 @@ def generate_report(report_data):
     rendered_html = template.render(**report_data)
 
     # Save the rendered HTML report to the global path
+    Path(estimation_Fpath).parent.mkdir(parents=True, exist_ok=True)
     with open(estimation_Fpath, 'w') as report_file:
         report_file.write(rendered_html)
 

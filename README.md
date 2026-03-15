@@ -1,331 +1,223 @@
 # Daksh SCRA (Source Code Review Assist)
 
 ```
-Author: 	
+Author:
 - Debasis Mohanty (d3basis.m0hanty@gmail.com)
-- Twitter: @coffeensecurity
+- Twitter / X: @coffeensecurity
 - www.coffeeandsecurity.com
 ```
 
 ## About Daksh SCRA
 
-Daksh SCRA (Source Code Review Assist) tool is built to enhance the efficiency of the source code review process, providing a well-structured and organized approach for code reviewers.
+Daksh SCRA (Source Code Review Assist) tool is built to enhance the efficiency of the source code review process, providing a well-structured and organised approach for code reviewers.
 
 Rather than indiscriminately flagging everything as a potential issue, Daksh SCRA promotes thoughtful analysis, urging the investigation and confirmation of potential problems. This approach mitigates the scramble to tag every potential concern as a bug, cutting back on the confusion and wasted time spent on false positives.
 
-What sets Daksh SCRA apart is its emphasis on avoiding unnecessary bug tagging. Unlike conventional methods, it advocates for thorough investigation and confirmation of potential issues before tagging them as bugs. This approach helps mitigate the issue of false positives, which often consume valuable time and resources, thereby fostering a more productive and efficient code review process.
-
 ## Debut
 
-Daksh SCRA was initially introduced during a source code review training session I conducted at Black Hat USA 2022 (August 6 - 9), where it was subtly presented to a specific audience. However, this introduction was carried out with a low-profile approach, avoiding any major announcements.
-
-While this tool was quietly published on GitHub after the 2022 training, its official public debut took place at Black Hat USA 2023 in Las Vegas.
+Daksh SCRA was initially introduced during a source code review training session at Black Hat USA 2022 (August 6-9), where it was subtly presented to a specific audience. Its official public debut took place at Black Hat USA 2023 in Las Vegas.
 
 ## Features and Functionalities
 
-### Distinctive Features (Multiple World’s First)
+### Distinctive Features
 
-- **Identifies Areas of Interest in Source Code:** Encourage focused investigation and confirmation rather than indiscriminately labeling everything as a bug.
-
-- **Identifies Areas of Interest in File Paths (World’s First):** Recognises patterns in file paths to pinpoint relevant sections for review.
-
+- **Identifies Areas of Interest in Source Code:** Encourage focused investigation and confirmation rather than indiscriminately labelling everything as a bug.
+- **Identifies Areas of Interest in File Paths (World's First):** Recognises patterns in file paths to pinpoint relevant sections for review.
 - **Software-Level Reconnaissance to Identify Technologies Utilised:** Identifies project technologies, enabling code reviewers to conduct precise scans with appropriate rules.
+- **Automated Scientific Effort Estimation for Code Review (World's First):** Providing a measurable approach for estimating efforts required for a code review process.
+- **Framework-Aware Scanning:** Automatically applies framework-specific rules when the project's framework is detected.
+- **Taint Analysis Reports:** Per-platform HTML taint flow reports with hacker-mode and professional-mode themes.
+- **RDL (Rule Description Language):** Conditional rule logic beyond regex — supports `FLAG`, `IF`, `MISSING`, `PRESENT`, `EXISTS`, `&&`, `||`, `!`.
+- **Scan State / Resume:** Checkpoint long scans and resume after interruption.
+- **Suppression Baseline:** Generate and apply a baseline of known false positives to suppress them from future reports.
+- **Web UI:** Browser-based scan launcher with real-time console feed and job artifact browser.
 
-- **Automated Scientific Effort Estimation for Code Review (World’s First):** Providing a measurable approach for estimating efforts required for a code review process.
-
-> Although this tool has progressed beyond its early stages, it has reached a functional state that is quite usable and delivers on its promised capabilities. Nevertheless, active enhancements are currently underway, and there are multiple new features and improvements expected to be added in the upcoming months.
-
-Additionally, the tool offers the following functionalities:
-
-- Options to use platform-specific rules specific for finding areas of interests
-- Options to extend or add new rules for any new or existing languages
-- Generates report in text, HTML and PDF format for inspection
-
-Refer to the wiki for setup and quick usage details:
-[https://github.com/coffeeandsecurity/DakshSCRA/wiki](https://github.com/coffeeandsecurity/DakshSCRA/wiki)
-
-DakshLabs is the dedicated portal for tool updates, blogs, tutorials, examples and documentation:
-[https://dakshlabs.com/#docs](https://dakshlabs.com/#docs)
-
-Detailed documentation can be found on:
-[https://dakshlabs.com/#docs](https://dakshlabs.com/#docs)
+> Active enhancements are ongoing. Multiple new features and improvements are planned for upcoming releases.
 
 Feel free to contribute towards updating or adding new rules and future development.
 
-If you find any bugs, report them to [d3basis.m0hanty@gmail.com](mailto\:d3basis.m0hanty@gmail.com).
+If you find any bugs, report them to [d3basis.m0hanty@gmail.com](mailto:d3basis.m0hanty@gmail.com).
+
+Detailed documentation: [https://dakshlabs.com/#docs](https://dakshlabs.com/#docs)
+
+---
 
 ## Tool Setup
 
 ### Pre-requisites
 
 - Python 3.8+
-- All the libraries listed in `requirements.txt`
-
-
+- All libraries listed in `requirements.txt`
 
 ### 1. Download Daksh SCRA
 
-Download and save the latest build from here: [https://github.com/coffeeandsecurity/DakshSCRA](https://github.com/coffeeandsecurity/DakshSCRA) Save it to your desired folder/directory. Must make sure you have unzipped it.
-
-Alternatively, 'cd' into your desired folder/directory and download using the 'git' command:
-
-```
+```bash
 git clone https://github.com/coffeeandsecurity/DakshSCRA.git
 ```
 
-
+Or download the latest zip from [https://github.com/coffeeandsecurity/DakshSCRA](https://github.com/coffeeandsecurity/DakshSCRA) and unzip it.
 
 ### 2. Setup a Virtual Environment
 
-> 💡 *You can create the virtual environment in any directory. It does not have to be inside the DakshSCRA folder.*
+> 💡 The virtual environment can be created in any directory — it does not need to be inside the DakshSCRA folder.
 
-You have two options:
+#### Option A: One-Step Setup (Recommended)
 
-#### ✅ Option A: One-Step Setup (Recommended) — Use `setup_env.py`
-
-This script automates the full environment setup, including creating a virtual environment, installing dependencies, and installing Playwright's Chromium browser.
-
-```
+```bash
 python setup_env.py
 ```
 
-What it does:
+This script creates the virtual environment, installs all dependencies, and installs Playwright's Chromium browser (required for PDF export).
 
-- Creates an isolated virtual environment
-- Activates the environment
-- Installs required packages from `requirements.txt`
-- Installs Chromium (required by Playwright for PDF export)
-
-
-
-#### 🔧 Option B: Manual Setup
-
-##### Step 1: Create a Virtual Environment
+#### Option B: Manual Setup
 
 **Windows:**
-
-```
+```bash
 python -m venv daksh-env
 .\daksh-env\Scripts\activate
 ```
 
-**macOS/Linux:**
-
-```
+**macOS / Linux:**
+```bash
 python3 -m venv daksh-env
 source daksh-env/bin/activate
 ```
 
-##### Step 2: Install Required Libraries
-
-Navigate to your DakshSCRA directory:
-
-```
+Then install dependencies:
+```bash
 cd path/to/DakshSCRA
 pip install -r requirements.txt
-```
-
-##### Step 3: Install Playwright & Chromium
-
-```
-pip install playwright
 playwright install chromium
 ```
 
-> ✅ After activation, your terminal prompt should show your environment name.
-
-You’re now ready to use DakshSCRA.
-
-
+---
 
 ## Tool Usage
-💡 Use python if you're inside a virtual environment. Otherwise, use python3 or the appropriate Python version installed on your system.
 
-### RDL Rule Authoring (Quick Note)
+Use `python` inside a virtual environment, or `python3` outside one.
 
-Rules can now include optional `<rdl>` for conditional checks in addition to `<regex>`.
-
-Example:
-
-```xml
-<rule>
-  <name>Conditional SQLi Check</name>
-  <regex><![CDATA[(?i)\b(?:mysql_query|mysqli_query|->query)\s*\(]]></regex>
-  <rdl><![CDATA[[FLAG:\$_(GET|POST|REQUEST|COOKIE)][IF(MISSING:\b(?:prepare|bindParam|bindValue|PDO::prepare)\b)]]></rdl>
-  <rule_desc>...</rule_desc>
-  <vuln_desc>...</vuln_desc>
-  <developer>...</developer>
-  <reviewer>...</reviewer>
-</rule>
-```
-
-Supported RDL operators:
-- `FLAG:<regex>`
-- `IF(...)`
-- predicates: `MISSING:`, `PRESENT:`, `EXISTS:`
-- boolean operators: `&&`, `||`, `!`
+### Command-Line Options
 
 ```
-# To view tool usage along with examples
-$ python dakshscra.py          # Inside virtual environment
-# OR
-$ python3 dakshscra.py         # If running outside the venv
-
-# To view help and available options
-$ python dakshscra.py -h       # Inside virtual environment
-# OR
-$ python3 dakshscra.py -h      # Outside virtual environment
-```
-
-```text
 usage: dakshscra.py [-h] [-r RULES] [-f FILE_TYPES] [-v] [-t TARGET_DIR]
-                    [-l {R,RF}] [-recon] [-rs] [-estimate] [-rpt FORMATS]
-                    [--pdf-from-json] [--json-input-dir PATH]
-                    [--pdf-output PATH] [--pdf-multi-dir PATH]
-                    [--pdf-single-only]
-                    [--analysis] [--no-analysis] [--loc] [--baseline-file PATH]
-                    [--baseline-generate] [--no-baseline] [--resume-scan]
-                    [--state-file PATH] [--state-disable] [--state-enable]
-
-options:
--h, --help                 Show this help message and exit
--r RULES                   Platform rules (e.g. php,java,cpp) or "auto"
--f FILE_TYPES              Override default filetypes for scanning
--v                         Verbosity level (-v, -vv, -vvv)
--t TARGET_DIR              Target source code directory
--l {R,RF}, --list {R,RF}   List platform rules + frameworks [R] or include filetypes [RF]
--recon                     Detect platform/framework/language stack
--rs, --recon-strict        Strict recon filter for high-confidence detections
--estimate                  Estimate review effort
---pdf-from-json            Generate PDF report(s) from existing JSON outputs without re-running scan
--rpt, --report FORMATS     Report types: html, pdf, or html,pdf
---json-input-dir PATH      Path to JSON report directory (default: ./reports/json)
---pdf-output PATH          Output path for single PDF report (default: ./reports/pdf/report.pdf)
---pdf-multi-dir PATH       Output directory for multi-file PDF report set (default: ./reports/pdf/multi-file)
---pdf-single-only          Generate only single PDF (skip multi-file PDF set)
---analysis, --analyse      Force-enable analyzer stage (overrides tool config)
---no-analysis              Disable analyzer stage for this run (overrides tool config)
---loc                      Count effective lines of code
---baseline-file PATH       Suppression baseline file (JSON)
---baseline-generate        Generate baseline from current findings
---no-baseline              Disable baseline suppression for current run
---resume-scan              Resume a previously interrupted scan from state file
---state-file PATH          Custom scan state/checkpoint file path
---state-disable            Disable scan state checkpointing for current run
---state-enable             Force enable scan state checkpointing for current run
+                    [-l {R,RF}] [--recon] [--rs] [--estimate]
+                    [-rpt FORMATS] [--pdf-from-json]
+                    [--json-input-dir PATH] [--pdf-output PATH]
+                    [--pdf-multi-dir PATH] [--pdf-single-only]
+                    [--skip-analysis] [--loc]
+                    [--baseline-file PATH] [--baseline-generate] [--no-baseline]
+                    [--review-config PATH]
+                    [--resume-scan] [--state-file PATH] [--no-state] [--state]
 ```
 
-### Configuration Reference (`config/tool.yaml`)
-
-Daksh SCRA runtime defaults are controlled through `config/tool.yaml`.
-
-```yaml
-state_management:
-  enabled: false
-  resume_mode: manual
-  persist_after_seconds: 300
-  persist_interval_seconds: 30
-  default_state_file: runtime/scan_state.json
-  cleanup_on_success: false
-
-analysis:
-  run_by_default: true
-  include_frameworks: true
-  report_theme: hacker_mode
-```
-
-Analyzer config options:
-
-- `analysis.run_by_default`
-  - `true`: analyzer runs automatically for scan runs
-  - `false`: analyzer stays off unless explicitly enabled using `--analysis`
-- `analysis.include_frameworks`
-  - `true`: include framework-level analyzer entries where framework detection exists
-  - `false`: platform-level analyzer output only
-- `analysis.report_theme`
-  - `hacker_mode`: dark high-contrast modern analyzer theme (default)
-  - `professional_mode`: light modern analyzer theme
-  - `both`: generate both modern theme variants for side-by-side comparison
-
-Analyzer report output paths:
-
-- Existing/legacy analyzer reports (unchanged):
-  - `reports/analysis/<platform>/analysis.html`
-  - `reports/analysis/<platform>/analysis_xref.html`
-  - `reports/analysis/<platform>/analysis.json`
-- Modern themed analyzer reports:
-  - `reports/analysis-modern/hacker-mode/<platform>/...`
-  - `reports/analysis-modern/professional-mode/<platform>/...` (if enabled)
+| Option | Description |
+|---|---|
+| `-r RULES` | Platform rules (e.g. `php`, `java`, `php,java`) or `auto` for auto-detection |
+| `-f FILE_TYPES` | Override default filetypes for scanning |
+| `-v` | Verbosity level (`-v`, `-vv`, `-vvv`) |
+| `-t TARGET_DIR` | Target source code directory |
+| `-l {R,RF}` | List platform rules + frameworks `[R]` or include filetypes `[RF]` |
+| `--recon` | Run reconnaissance (platform / framework / language detection) |
+| `--rs`, `--recon-strict` | Strict recon: high-confidence detections only (use with `--recon`) |
+| `--estimate` | Estimate code review effort based on codebase size |
+| `-rpt`, `--report FORMATS` | Report formats: `html`, `pdf`, or `html,pdf` (default: `html`) |
+| `--pdf-from-json` | Generate PDF report(s) from existing JSON outputs without re-scanning |
+| `--json-input-dir PATH` | JSON report directory (default: `./reports/data`) |
+| `--pdf-output PATH` | Single PDF output path (default: `./reports/scan/pdf/report.pdf`) |
+| `--pdf-multi-dir PATH` | Multi-file PDF output directory (default: `./reports/scan/pdf/multi-file`) |
+| `--pdf-single-only` | Generate only the combined single-file PDF; skip per-platform multi-file set |
+| `--skip-analysis` | Disable the analyzer stage for this run |
+| `--loc` | Count effective lines of code |
+| `--baseline-file PATH` | Suppression baseline file (JSON) |
+| `--baseline-generate` | Generate suppression baseline from current findings |
+| `--no-baseline` | Disable baseline suppression for this run |
+| `--review-config PATH` | Findings triage file (JSON); suppress previously reviewed false positives from reports |
+| `--resume-scan` | Resume a previously interrupted scan from state file |
+| `--state-file PATH` | Custom scan state / checkpoint file path |
+| `--no-state` | Disable scan state checkpointing for this run |
+| `--state` | Force enable scan state checkpointing for this run |
 
 ### Example Usage
 
-📝 Note:
--f (file types) is optional. If not specified, DakshSCRA uses the default file types for the selected platform(s).
+> `-f` (file types) is optional. If not specified, DakshSCRA uses the default filetypes for the selected platform(s).
 
-```
-# Specify platforms with '-r' (single or multiple) for platform-specific rules:
-- Single platform:     dakshscra.py -r php -t /source_dir_path
-- Multiple platforms:  dakshscra.py -r php,java,cpp -t /source_dir_path
-- Auto-detect:         dakshscra.py -r auto -t /source_dir_path
+```bash
+# Single platform scan
+python dakshscra.py -r php -t /path/to/source
 
-# Override filetypes using '-f' (optional)
-- dakshscra.py -r php -f dotnet -t /source_dir_path
-- dakshscra.py -r java -f custom -t /source_dir_path
+# Multiple platforms
+python dakshscra.py -r php,java,cpp -t /path/to/source
 
-# Perform Reconnaissance and Rule-Based Scanning
-- dakshscra.py -recon -r php -t /source_dir_path
+# Auto-detect platform and apply matching rules
+python dakshscra.py -r auto -t /path/to/source
 
-# Perform Recon Only (No Rule-Based Scanning)
-- dakshscra.py -recon -t /source_dir_path
+# Override filetypes
+python dakshscra.py -r php -f dotnet -t /path/to/source
 
-# Effort Estimation (without scanning)
-- dakshscra.py -estimate -t /source_dir_path
+# Reconnaissance only (no scanning)
+python dakshscra.py --recon -t /path/to/source
 
-# Verbosity: '-v' is default, '-vvv' will show all pattern checks
-- dakshscra.py -r php -vvv -t /source_dir_path
+# Reconnaissance + scanning
+python dakshscra.py --recon -r php -t /path/to/source
 
-# Generate baseline suppression from current findings
-- dakshscra.py -r auto -t /source_dir_path --baseline-generate
+# Strict recon (high-confidence detections only)
+python dakshscra.py --recon --rs -t /path/to/source
 
-# Apply baseline suppression for recurring known FPs
-- dakshscra.py -r auto -t /source_dir_path --baseline-file config/suppressions.json
+# Effort estimation
+python dakshscra.py --estimate -t /path/to/source
 
-# Run without suppression baseline
-- dakshscra.py -r auto -t /source_dir_path --no-baseline
+# Scan with HTML + PDF report output
+python dakshscra.py -r auto -t /path/to/source -rpt html,pdf
 
-# Start long scan with checkpoint state enabled
-- dakshscra.py -r auto -t /source_dir_path --state-enable
+# Verbosity levels
+python dakshscra.py -r php -v -t /path/to/source     # default
+python dakshscra.py -r php -vvv -t /path/to/source   # show all pattern checks
+
+# Generate suppression baseline from current findings
+python dakshscra.py -r auto -t /path/to/source --baseline-generate
+
+# Apply suppression baseline (suppress known FPs)
+python dakshscra.py -r auto -t /path/to/source --baseline-file config/suppressions.json
+
+# Disable baseline for this run
+python dakshscra.py -r auto -t /path/to/source --no-baseline
+
+# Apply findings triage / review config
+python dakshscra.py -r auto -t /path/to/source --review-config config/review.json
+
+# Scan with checkpoint state enabled
+python dakshscra.py -r auto -t /path/to/source --state
 
 # Resume an interrupted scan
-- dakshscra.py -r auto -t /source_dir_path --resume-scan
+python dakshscra.py -r auto -t /path/to/source --resume-scan
 
-# Resume with custom state file
-- dakshscra.py -r auto -t /source_dir_path --resume-scan --state-file runtime/scan_state.json
+# Resume with a custom state file
+python dakshscra.py -r auto -t /path/to/source --resume-scan --state-file runtime/scan_state.json
 
-# Generate PDF report(s) from existing JSON (without scanning again)
-- dakshscra.py --pdf-from-json
+# Generate PDF from existing JSON outputs (no re-scan)
+python dakshscra.py --pdf-from-json
 
-# Generate PDF report(s) from custom JSON directory
-- dakshscra.py --pdf-from-json --json-input-dir ./custom/reports/json
+# Generate PDF from a custom JSON directory
+python dakshscra.py --pdf-from-json --json-input-dir ./custom/reports/data
 
-# Custom single PDF output and multi-file PDF directory
-- dakshscra.py --pdf-from-json --pdf-output ./reports/pdf/custom-report.pdf --pdf-multi-dir ./reports/pdf/multi-file
+# Custom output paths for PDF
+python dakshscra.py --pdf-from-json --pdf-output ./reports/scan/pdf/custom.pdf --pdf-multi-dir ./reports/scan/pdf/multi-file
 
-# Only generate single PDF from JSON
-- dakshscra.py --pdf-from-json --pdf-single-only
+# Single combined PDF only (skip per-platform set)
+python dakshscra.py --pdf-from-json --pdf-single-only
 ```
 
 ### View Supported Platform Rules and Frameworks
 
-```
-dakshscra.py -l R    # List platform rules and framework mappings
-dakshscra.py -l RF   # List platform rules, framework mappings and filetypes
+```bash
+python dakshscra.py -l R    # List platform rules and framework mappings
+python dakshscra.py -l RF   # List platform rules, framework mappings, and filetypes
 ```
 
 Current supported platforms and framework mappings:
 
 | Platform | Frameworks |
-| --- | --- |
+|---|---|
 | dotnet | aspnetcore, entityframework |
 | php | codeigniter, drupal, laravel, symfony, wordpress |
 | java | hibernate, spring, springboot |
@@ -345,37 +237,202 @@ Current supported platforms and framework mappings:
 | cordova | cordova |
 | ruby | rails, sinatra |
 | rust | actix, axum, rocket |
-| common | - |
+| common | — |
 
-To get the latest supported platforms and frameworks, run:
+To get the latest supported platforms and frameworks, always run:
 
 ```bash
-python3 dakshscra.py -l R
+python dakshscra.py -l R
 ```
 
-For a formatted reference table, see:
-[https://github.com/coffeeandsecurity/DakshSCRA/wiki/Supported-Rules-and-Frameworks](https://github.com/coffeeandsecurity/DakshSCRA/wiki/Supported-Rules-and-Frameworks)
+---
 
-Last updated: March 5, 2026
+## Configuration Reference
 
+### `config/tool.yaml`
 
+Daksh SCRA runtime defaults are controlled through `config/tool.yaml`.
 
-## Reports
+```yaml
+state_management:
+  enabled: false
+  resume_mode: manual
+  persist_after_seconds: 300
+  persist_interval_seconds: 30
+  default_state_file: runtime/scan_state.json
+  cleanup_on_success: false
 
-The tool produces HTML/PDF reports and structured JSON outputs.
+analysis:
+  run_by_default: true
+  include_frameworks: true
+  report_theme: hacker_mode
+```
 
-### Scanning Report Outputs
+**Analyzer config options:**
 
-- Single-file HTML report: `./reports/html/report.html`
-- Multi-file HTML report set root: `./reports/html/multi-file`
-- Single-file PDF report: `./reports/pdf/report.pdf`
-- Multi-file PDF report set root: `./reports/pdf/multi-file`
-- Multi-file report sets include a consolidated/full report and platform-specific files.
-- JSON findings (AoI, file-path AoI, summary, recon summary)
-- Runtime inventory output
+- `analysis.run_by_default`
+  - `true`: analyzer runs automatically during scan
+  - `false`: analyzer disabled unless re-enabled in config or via CLI
+- `analysis.include_frameworks`
+  - `true`: include framework-level analyzer entries where framework detection exists
+  - `false`: platform-level analyzer output only
+- `analysis.report_theme`
+  - `hacker_mode`: dark high-contrast modern analyzer theme (default)
+  - `professional_mode`: light modern analyzer theme
+  - `both`: generate both theme variants side-by-side
 
-### Effort Estimation Report
+### RDL Rule Authoring
 
-- HTML estimation report
+Rules can include an optional `<rdl>` block for conditional checks in addition to `<regex>`.
 
-> Note: This feature is in early stage. Future versions will improve the accuracy and add PDF support.
+```xml
+<rule>
+  <name>Conditional SQLi Check</name>
+  <regex><![CDATA[(?i)\b(?:mysql_query|mysqli_query|->query)\s*\(]]></regex>
+  <rdl><![CDATA[[FLAG:\$_(GET|POST|REQUEST|COOKIE)][IF(MISSING:\b(?:prepare|bindParam|bindValue|PDO::prepare)\b)]]></rdl>
+  <rule_desc>...</rule_desc>
+  <vuln_desc>...</vuln_desc>
+  <developer>...</developer>
+  <reviewer>...</reviewer>
+</rule>
+```
+
+Supported RDL operators:
+- `FLAG:<regex>` — flag a condition in the file context
+- `IF(...)` — conditional evaluation
+- Predicates: `MISSING:`, `PRESENT:`, `EXISTS:`
+- Boolean: `&&`, `||`, `!`
+
+---
+
+## Report Output Structure
+
+All outputs are written under the `reports/` directory:
+
+```
+reports/
+├── scan/
+│   ├── html/
+│   │   ├── report.html                 # Single-file HTML scan report
+│   │   └── multi-file/                 # Per-platform HTML report set
+│   ├── pdf/
+│   │   ├── report.pdf                  # Single-file PDF scan report
+│   │   └── multi-file/                 # Per-platform PDF report set
+│   ├── recon/
+│   │   └── reconnaissance.html         # Reconnaissance HTML report
+│   └── estimate/
+│       └── estimation.html             # Effort estimation HTML report
+├── analysis/
+│   └── <platform>/
+│       ├── analysis.html               # Taint analysis report (default theme)
+│       ├── analysis_professional.html  # Professional theme (if theme=both)
+│       ├── analysis_xref.html          # Cross-reference report
+│       └── analysis.json               # Structured analysis data
+└── data/
+    ├── areas_of_interest.json          # AoI findings
+    ├── filepaths_aoi.json              # File path AoI findings
+    ├── summary.json                    # Scan summary
+    ├── recon.json                      # Recon summary
+    └── analysis.json                   # Analyzer output
+```
+
+Runtime files (scan state, logs, inventory) are written under `runtime/`.
+
+---
+
+## Web UI
+
+Daksh SCRA includes a browser-based frontend for launching scans and watching progress in real time.
+
+```bash
+python3 webapp.py
+```
+
+Then open: [http://127.0.0.1:8787](http://127.0.0.1:8787)
+
+**Web UI capabilities:**
+
+- Responsive command builder for scan, recon, estimate, recon+estimate, list, and PDF-from-JSON modes
+- Real-time console feed during execution
+- Per-job artifact snapshots for HTML / PDF / JSON outputs
+- Fast in-browser navigation across run form, live feed, artifacts, and recent jobs
+- Built-in directory browser for selecting target paths (OS-aware: Windows, macOS, Linux / Docker)
+
+**Execution model:**
+
+- The CLI remains the source of truth and generates all HTML / PDF / JSON outputs
+- The web UI supports one active job at a time (the CLI writes to shared `runtime/` and `reports/` paths)
+- Completed jobs snapshot outputs into `runtime/webui/jobs/<job-id>/artifacts/` so previous reports stay accessible
+
+---
+
+## Docker
+
+The Docker setup supports web UI and CLI independently using separate Compose services built from the same image.
+
+**Launch the web UI:**
+
+```bash
+docker compose up --build webui
+```
+
+Then open: [http://127.0.0.1:8787](http://127.0.0.1:8787)
+
+**Run the CLI in Docker:**
+
+```bash
+docker compose run --rm cli -h
+docker compose run --rm cli -r auto -t /scan-targets/path/to/source
+```
+
+**Stop the stack:**
+
+```bash
+docker compose down
+```
+
+**What Docker includes:**
+
+- FastAPI + web frontend
+- Full Daksh SCRA CLI as a separate service
+- Playwright Chromium for PDF generation
+- Persistent `reports/` and `runtime/` volumes
+- Host path mounts so scans can reach source trees from inside the container
+
+**Key mount points:**
+
+| Mount | Path inside container |
+|---|---|
+| Project source | `/app` |
+| Default scan root | `/scan-targets` |
+| Host drive aliases | `/host`, `/host/c`, `/host/d` |
+| WSL mounts | `/mnt`, `/run/desktop/mnt/host` |
+
+**Environment variables (configure in `.env`):**
+
+| Variable | Description |
+|---|---|
+| `DAKSH_WEBUI_PORT` | Web UI port (default: `8787`) |
+| `DAKSH_SCAN_ROOT` | Default target directory inside the container |
+| `DAKSH_HOST_SOURCE` | Host path to mount as `/scan-targets` (default: `/tmp`) |
+| `DAKSH_HOST_MOUNT` | Additional host mount root |
+| `DAKSH_HOST_C` | Windows C: drive path (WSL) |
+| `DAKSH_HOST_D` | Windows D: drive path (WSL) |
+| `DAKSH_DESKTOP_MOUNT` | WSL desktop mount path |
+| `DAKSH_BROWSE_ROOTS` | Override directory browser roots (comma-separated) |
+
+Copy `.env.example` to `.env` and set the paths for your machine before running Docker.
+
+---
+
+## Author
+
+| | |
+|---|---|
+| Website | [coffeeandsecurity.com](https://www.coffeeandsecurity.com) |
+| Email | d3basis.m0hanty@gmail.com |
+| Twitter / X | [@coffeensecurity](https://x.com/coffeensecurity) |
+| Source | [github.com/coffeeandsecurity/DakshSCRA](https://github.com/coffeeandsecurity/DakshSCRA) |
+| License | GNU General Public License v3.0 (GPL-3.0) |
+
+Found a bug or want to contribute? Open an issue or pull request on GitHub.

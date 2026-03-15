@@ -6,7 +6,7 @@ Daksh SCRA (Source Code Review Assist) - Beta v{version}
 
 Developed by: Debasis Mohanty
 Website     : https://www.coffeeandsecurity.com
-Twitter     : @coffensecurity
+Twitter     : @coffeensecurity
 Email       : d3basis.m0hanty@gmail.com
 =============================================================
 '''

@@ -16,5 +16,5 @@ def analyze_java_flows(source_root: Path):
 
 def run(source_root: Path):
     flows = analyze_java_flows(source_root)
-    out_dir = Path(state.root_dir) / "reports/analysis/java"
+    out_dir = Path(state.reports_dirpath) / "analysis/java"
     return write_reports(flows, out_dir, title="Java Dataflow Analysis", platform="java")

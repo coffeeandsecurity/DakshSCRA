@@ -55,7 +55,7 @@ def tool_usage(option):
     print(f"  {yellow}-recon{reset}            Perform platform detection only or with rule scanning")
     print(f"  {yellow}-rs{reset}               Recon strict mode (use with -recon; high-confidence detections only)")
     print(f"  {yellow}-estimate{reset}         Estimate code review effort based on codebase size")
-    print(f"  {yellow}-l [R|RF]{reset}         List available rules [R] or rules + filetypes [RF]")
+    print(f"  {yellow}-l [R|RF]{reset}         List platform rules + frameworks [R] or include filetypes [RF]")
     print(f"  {yellow}-h, --help{reset}        Show this help message\n")
 
     print(f"{cyan}Examples:{reset}")

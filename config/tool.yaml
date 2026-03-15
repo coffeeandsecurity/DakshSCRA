@@ -1,6 +1,17 @@
 tool_name: Daksh SCRA (Source Code Review Assist)
 author: Debasis Mohanty (d3basis.m0hanty@gmail.com)
 release: 0.33
+display:
+  # Timezone used for all timestamps in CLI output and reports.
+  # Leave empty to use the server's local time (default).
+  # Examples:
+  #   timezone: UTC
+  #   timezone: America/New_York
+  #   timezone: Europe/London
+  #   timezone: Asia/Kolkata
+  #   timezone: Asia/Singapore
+  #   timezone: Australia/Sydney
+  timezone: ''
 state_management:
   enabled: false
   resume_mode: manual
@@ -8,3 +19,18 @@ state_management:
   persist_interval_seconds: 30
   default_state_file: runtime/scan_state.json
   cleanup_on_success: false
+analysis:
+  # Run analyzer stage automatically for each scan.
+  # Set to false to keep analyzer off unless explicitly enabled via CLI.
+  run_by_default: true
+  # Include detected frameworks in analyzer output along with platform-level analysis.
+  include_frameworks: true
+  # Analyzer modern report theme:
+  # - hacker_mode       : dark high-contrast theme (default)
+  # - professional_mode : light professional theme
+  # - both              : generate both theme variants for comparison
+  report_theme: hacker_mode
+  # Safety limits to prevent unbounded analysis on large codebases.
+  # Increase these values if you want deeper coverage on bigger repos.
+  max_files_per_platform: 300
+  max_functions_per_platform: 1500

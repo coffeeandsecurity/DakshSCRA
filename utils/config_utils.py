@@ -10,7 +10,6 @@ from ruamel.yaml import YAML
 
 # Local application imports
 import state.runtime_state as runtime
-import utils.cli_utils as cli
 
 
 def _safe_config_text(value):
@@ -107,8 +106,67 @@ def get_state_management_config():
     }
 
 
+def get_display_config():
+    """
+    Get display settings (timezone) with sane defaults.
+    """
+    tool_cfg = get_tool_config()
+    display_cfg = tool_cfg.get("display", {}) if isinstance(tool_cfg, dict) else {}
+    if not isinstance(display_cfg, dict):
+        display_cfg = {}
+    return {
+        "timezone": str(display_cfg.get("timezone", "")).strip(),
+    }
+
+
+def get_now():
+    """
+    Return the current datetime in the configured timezone.
+    Falls back to server local time if no timezone is set or the value is invalid.
+    """
+    from datetime import datetime
+    tz_name = get_display_config().get("timezone", "").strip()
+    if not tz_name:
+        return datetime.now()
+    try:
+        from zoneinfo import ZoneInfo
+        return datetime.now(ZoneInfo(tz_name))
+    except Exception:
+        return datetime.now()
+
+
+def get_analysis_config():
+    """
+    Get analyzer settings with sane defaults.
+    """
+    tool_cfg = get_tool_config()
+    analysis_cfg = tool_cfg.get("analysis", {}) if isinstance(tool_cfg, dict) else {}
+    if not isinstance(analysis_cfg, dict):
+        analysis_cfg = {}
+
+    report_theme = str(analysis_cfg.get("report_theme", "hacker_mode")).strip().lower() or "hacker_mode"
+    if report_theme not in {"hacker_mode", "professional_mode", "both"}:
+        report_theme = "hacker_mode"
+
+    def _pos_int(val, default):
+        try:
+            v = int(val)
+            return v if v > 0 else default
+        except (TypeError, ValueError):
+            return default
+
+    return {
+        "run_by_default": bool(analysis_cfg.get("run_by_default", True)),
+        "include_frameworks": bool(analysis_cfg.get("include_frameworks", True)),
+        "report_theme": report_theme,
+        "max_files_per_platform": _pos_int(analysis_cfg.get("max_files_per_platform"), 300),
+        "max_functions_per_platform": _pos_int(analysis_cfg.get("max_functions_per_platform"), 1500),
+    }
+
 
 def init_or_prompt_project_config():
+    import utils.cli_utils as cli
+
     """
     Initialize or prompt for project title/subtitle from project.yaml.
 
@@ -155,7 +213,7 @@ def init_or_prompt_project_config():
             except EOFError:
                 user_input.append("")
 
-        input_thread = threading.Thread(target=timed_input)
+        input_thread = threading.Thread(target=timed_input, daemon=True)
         input_thread.start()
         input_thread.join(timeout=6)
 

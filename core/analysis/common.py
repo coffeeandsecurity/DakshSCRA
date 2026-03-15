@@ -32,8 +32,18 @@ def get_platform_patterns(platform: str) -> Dict[str, List[re.Pattern]]:
             except re.error:
                 continue
         return out
+    sinks = {}
+    for entry in plat_cfg.get("sinks", []):
+        try:
+            name, desc, pattern = entry
+            sinks[name] = (re.compile(pattern), desc)
+        except (ValueError, re.error):
+            continue
     return {
         "sources": compile_list("sources"),
-        "sinks": {name: (re.compile(pattern), desc) for name, desc, pattern in plat_cfg.get("sinks", [])},
+        "sinks": sinks,
         "sanitizers": compile_list("sanitizers"),
+        "safe_callees": set(plat_cfg.get("safe_callees", [])),
+        "max_taint_passes": int(cfg.get("max_taint_passes", 7)),
+        "_analyzer_block": plat_cfg.get("analyzer", {}),
     }

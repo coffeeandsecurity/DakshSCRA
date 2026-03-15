@@ -3,7 +3,6 @@ import sys
 import xml.etree.ElementTree as ET
 
 # Third-party libraries
-import pandas as pd
 from tabulate import tabulate
 
 # Local application imports
@@ -100,33 +99,59 @@ def list_rules_filetypes(option):
         int: 1 if file types are listed, otherwise 0.
     """
 
-    rule_dict = {}
+    option = (option or "").strip().upper()
+    rows = []
+    framework_map = {}
 
     # Load filetypes XML config file
     xmltree = ET.parse(runtime_utils.rulesConfig)
     rule = xmltree.getroot()
 
+    # Load framework registry config file
+    try:
+        fw_tree = ET.parse(runtime_utils.frameworkConfig)
+        fw_root = fw_tree.getroot()
+        for fw in fw_root.findall("framework"):
+            fw_name = (fw.findtext("name") or "").strip()
+            fw_platform = (fw.findtext("platform") or "").strip()
+            if not fw_name or not fw_platform:
+                continue
+            framework_map.setdefault(fw_platform, set()).add(fw_name)
+    except (ET.ParseError, FileNotFoundError):
+        framework_map = {}
 
     if option == 'R':
-        print("\nList of all available rules")
+        print("\nAvailable platform rules and framework mappings\n")
         for r in rule:
-            print("\t" + r.find("platform").text)        # Return supported platforms
+            platform = (r.findtext("platform") or "").strip()
+            frameworks = sorted(framework_map.get(platform, set()))
+            framework_text = ", ".join(frameworks) if frameworks else "-"
+            rows.append([platform, framework_text])
+        if rows:
+            print(tabulate(rows, headers=["Platform Rule", "Framework Rules"], tablefmt="grid", maxcolwidths=[18, 60]))
+            print()
+        else:
+            print("No rule entries found.\n")
 
     elif option == 'RF':
-        print("\nList both available rules and filetypes")
+        print("\nAvailable platform rules, framework mappings and file types\n")
         for r in rule:
-            rule_dict[r.find("platform").text] = r.find("platform_ftypes").text
+            platform = (r.findtext("platform") or "").strip()
+            file_types = (r.findtext("platform_ftypes") or "").strip()
+            frameworks = sorted(framework_map.get(platform, set()))
+            framework_text = ", ".join(frameworks) if frameworks else "-"
+            rows.append([platform, framework_text, file_types])
 
-        if rule_dict:
-            df = pd.DataFrame.from_dict(rule_dict, orient='index')
-            print("\n" + tabulate(df, headers=["Platform", "File Types"], tablefmt="grid", maxcolwidths=[None, 40]) + "\n")
+        if rows:
+            print(tabulate(rows, headers=["Platform Rule", "Framework Rules", "File Types"], tablefmt="grid", maxcolwidths=[18, 36, 50]))
+            print()
         else:
-            print("No rules and filetypes found.")
+            print("No rule or file type entries found.\n")
 
     else:
-        print("Invalid option")
+        print("Invalid option. Use R or RF.")
 
-    return 1 if rule_dict else 0
+    return 1 if rows else 0
 
 
 

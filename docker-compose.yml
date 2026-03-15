@@ -1,0 +1,81 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: webui/deploy/docker/api.Dockerfile
+    container_name: daksh-api
+    environment:
+      DAKSH_NON_INTERACTIVE: "1"
+      PYTHONPATH: /app/webui
+      # Override which directories are browsable in the Web UI.
+      # Defaults to auto-detected OS roots when unset (see .env.example).
+      DAKSH_BROWSE_ROOTS: "${DAKSH_BROWSE_ROOTS:-/app,/scan-targets,/host,/host/c,/host/d,/host/source,/run/desktop/mnt/host,/mnt,/Volumes,/Users}"
+    volumes:
+      - .:/app
+      # Keep runtime data (DB + logs) on a Linux named volume so SQLite works
+      # reliably. NTFS (Windows-mounted) paths break SQLite locking.
+      - daksh_runtime:/app/runtime
+
+      # ── Primary scan target ───────────────────────────────────────────────
+      # Set DAKSH_SCAN_ROOT in .env to the host path you want to scan.
+      #   Windows/WSL: DAKSH_SCAN_ROOT=/mnt/c
+      #   Linux:       DAKSH_SCAN_ROOT=/home
+      #   macOS:       DAKSH_SCAN_ROOT=/Users
+      - ${DAKSH_SCAN_ROOT:-/tmp}:/scan-targets
+
+      # ── Generic host mount ────────────────────────────────────────────────
+      # Mounted as both /host and /mnt inside the container.
+      #   Windows/WSL: DAKSH_HOST_MOUNT=/mnt
+      #   Linux/macOS: DAKSH_HOST_MOUNT=/
+      - ${DAKSH_HOST_MOUNT:-/tmp}:/host
+      - ${DAKSH_HOST_MOUNT:-/tmp}:/mnt
+
+      # ── Windows drive mounts (WSL only) ───────────────────────────────────
+      # Expose individual drives as /host/c and /host/d.
+      # Remove or comment out these lines if not on Windows/WSL.
+      #   DAKSH_HOST_C=/mnt/c   DAKSH_HOST_D=/mnt/d
+      - ${DAKSH_HOST_C:-/tmp}:/host/c
+      - ${DAKSH_HOST_D:-/tmp}:/host/d
+
+      # ── Optional: specific source directory ───────────────────────────────
+      # Set DAKSH_HOST_SOURCE to mount one directory directly as /host/source.
+      # Leave unset (or remove this line) if not needed.
+      #   Example: DAKSH_HOST_SOURCE=/home/user/projects
+      - ${DAKSH_HOST_SOURCE:-/tmp}:/host/source
+
+      # ── Docker Desktop host bridge (Windows / macOS) ──────────────────────
+      - ${DAKSH_DESKTOP_MOUNT:-/run/desktop/mnt/host}:/run/desktop/mnt/host
+
+  web:
+    build:
+      context: .
+      dockerfile: webui/deploy/docker/frontend-nginx.Dockerfile
+    container_name: webui
+    ports:
+      - "${DAKSH_PORT:-8080}:80"
+    depends_on:
+      api:
+        condition: service_started
+
+  cli:
+    build:
+      context: .
+      dockerfile: webui/deploy/docker/api.Dockerfile
+    container_name: daksh-cli
+    environment:
+      DAKSH_NON_INTERACTIVE: "1"
+    working_dir: /app
+    entrypoint: ["python", "dakshscra.py"]
+    volumes:
+      - .:/app
+      - daksh_runtime:/app/runtime
+      - ${DAKSH_SCAN_ROOT:-/tmp}:/scan-targets
+      - ${DAKSH_HOST_MOUNT:-/tmp}:/host
+      - ${DAKSH_HOST_MOUNT:-/tmp}:/mnt
+      - ${DAKSH_HOST_C:-/tmp}:/host/c
+      - ${DAKSH_HOST_D:-/tmp}:/host/d
+      - ${DAKSH_HOST_SOURCE:-/tmp}:/host/source
+      - ${DAKSH_DESKTOP_MOUNT:-/run/desktop/mnt/host}:/run/desktop/mnt/host
+
+volumes:
+  daksh_runtime:

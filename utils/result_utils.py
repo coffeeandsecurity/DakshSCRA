@@ -42,6 +42,19 @@ def _default_summary():
             "matched_rules": [],
             "unmatched_rules": [],
         },
+        "analyzer_summary": {
+            "enabled": False,
+            "targets_total": 0,
+            "targets_analyzed": 0,
+            "taint_targets": 0,
+            "findings_identified": 0,
+            "output_json": "",
+            "platform_targets_total": 0,
+            "platform_targets_completed": 0,
+            "current_target": "",
+            "last_heartbeat_at": "",
+            "heartbeat_message": "",
+        },
     }
 
 

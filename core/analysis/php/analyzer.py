@@ -16,5 +16,5 @@ def analyze_php_flows(source_root: Path):
 
 def run(source_root: Path):
     flows = analyze_php_flows(source_root)
-    out_dir = Path(state.root_dir) / "reports/analysis/php"
+    out_dir = Path(state.reports_dirpath) / "analysis/php"
     return write_reports(flows, out_dir, title="PHP Dataflow Analysis", platform="php")
