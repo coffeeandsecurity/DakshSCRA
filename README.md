@@ -345,10 +345,10 @@ Runtime files (scan state, logs, inventory) are written under `runtime/`.
 Daksh SCRA includes a browser-based frontend for launching scans and watching progress in real time.
 
 ```bash
-python3 webapp.py
+docker compose up --build
 ```
 
-Then open: [http://127.0.0.1:8787](http://127.0.0.1:8787)
+Then open: [http://localhost:8080](http://localhost:8080)
 
 **Web UI capabilities:**
 
@@ -373,10 +373,10 @@ The Docker setup supports web UI and CLI independently using separate Compose se
 **Launch the web UI:**
 
 ```bash
-docker compose up --build webui
+docker compose up --build
 ```
 
-Then open: [http://127.0.0.1:8787](http://127.0.0.1:8787)
+Then open: [http://localhost:8080](http://localhost:8080)
 
 **Run the CLI in Docker:**
 
@@ -412,7 +412,7 @@ docker compose down
 
 | Variable | Description |
 |---|---|
-| `DAKSH_WEBUI_PORT` | Web UI port (default: `8787`) |
+| `DAKSH_PORT` | Web UI port (default: `8080`) |
 | `DAKSH_SCAN_ROOT` | Default target directory inside the container |
 | `DAKSH_HOST_SOURCE` | Host path to mount as `/scan-targets` (default: `/tmp`) |
 | `DAKSH_HOST_MOUNT` | Additional host mount root |
