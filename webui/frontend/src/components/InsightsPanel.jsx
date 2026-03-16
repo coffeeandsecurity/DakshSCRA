@@ -307,6 +307,129 @@ function EffortEstimate({ artifactIndex, ranEstimate }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   LINES OF CODE SECTION
+   loc_breakdown: string[] | {path, loc}[]
+   scan_meta.detection_summary: {total_loc, total_files_scanned, ...}
+═══════════════════════════════════════════════════════════════ */
+function LoCSection({ locBreakdown, scanMeta }) {
+  const [search, setSearch] = useState('')
+  const [sortBy, setSortBy] = useState('loc')   // 'loc' | 'path'
+  const [sortDir, setSortDir] = useState('desc')
+  const [page, setPage] = useState(0)
+  const PAGE_SIZE = 100
+
+  const det = scanMeta?.detection_summary || {}
+  const totalLoc = det.total_loc != null ? Number(det.total_loc) : null
+  const totalFiles = det.total_files_scanned ?? det.total_files_identified
+  const hasLocData = Array.isArray(locBreakdown) && locBreakdown.length > 0 && typeof locBreakdown[0] === 'object'
+
+  const rows = useMemo(() => {
+    if (!hasLocData) return []
+    const q = search.toLowerCase()
+    const filtered = locBreakdown.filter((r) => !q || r.path.toLowerCase().includes(q))
+    const sorted = [...filtered].sort((a, b) => {
+      if (sortBy === 'loc') return sortDir === 'desc' ? (b.loc - a.loc) : (a.loc - b.loc)
+      const ap = (a.path || '').toLowerCase()
+      const bp = (b.path || '').toLowerCase()
+      return sortDir === 'desc' ? bp.localeCompare(ap) : ap.localeCompare(bp)
+    })
+    return sorted
+  }, [locBreakdown, search, sortBy, sortDir, hasLocData])
+
+  function toggleSort(col) {
+    if (sortBy === col) setSortDir((d) => d === 'desc' ? 'asc' : 'desc')
+    else { setSortBy(col); setSortDir('desc') }
+    setPage(0)
+  }
+
+  const pageRows = rows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+  const totalPages = Math.ceil(rows.length / PAGE_SIZE)
+
+  if (!hasLocData && totalLoc == null) {
+    return (
+      <div className="empty-state" style={{ padding: '40px 20px' }}>
+        <svg className="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+        </svg>
+        <div className="empty-title">Lines of Code not counted</div>
+        <div className="empty-msg">Enable <strong>Count Lines of Code</strong> in scan options to see per-file LoC breakdown and totals.</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="ip-section-body">
+      {/* Summary stats strip */}
+      <div className="ip-loc-stats">
+        {totalFiles != null && (
+          <div className="ip-loc-stat">
+            <span className="ip-loc-stat-val">{Number(totalFiles).toLocaleString()}</span>
+            <span className="ip-loc-stat-label">Files Scanned</span>
+          </div>
+        )}
+        {totalLoc != null && (
+          <div className="ip-loc-stat">
+            <span className="ip-loc-stat-val">{Number(totalLoc).toLocaleString()}</span>
+            <span className="ip-loc-stat-label">Total Effective LoC</span>
+          </div>
+        )}
+        {hasLocData && totalLoc > 0 && (
+          <div className="ip-loc-stat">
+            <span className="ip-loc-stat-val">{Math.round(totalLoc / locBreakdown.length).toLocaleString()}</span>
+            <span className="ip-loc-stat-label">Avg LoC / File</span>
+          </div>
+        )}
+      </div>
+
+      {hasLocData && (
+        <>
+          <div className="ip-toolbar" style={{ marginTop: 12 }}>
+            <span className="ip-count-badge">{rows.length} file{rows.length !== 1 ? 's' : ''}{search ? ' matched' : ''}</span>
+            <div className="ip-search-wrap">
+              <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" className="ip-search-icon">
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+              </svg>
+              <input className="ip-search" placeholder="Filter by file path…" value={search} onChange={(e) => { setSearch(e.target.value); setPage(0) }} />
+            </div>
+          </div>
+
+          <div className="ip-loc-table-wrap">
+            <table className="ip-loc-table">
+              <thead>
+                <tr>
+                  <th className="ip-loc-th ip-loc-th-path" onClick={() => toggleSort('path')} style={{ cursor: 'pointer' }}>
+                    File Path {sortBy === 'path' ? (sortDir === 'desc' ? '▼' : '▲') : ''}
+                  </th>
+                  <th className="ip-loc-th ip-loc-th-loc" onClick={() => toggleSort('loc')} style={{ cursor: 'pointer' }}>
+                    Eff. LoC {sortBy === 'loc' ? (sortDir === 'desc' ? '▼' : '▲') : ''}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {pageRows.map((r, i) => (
+                  <tr key={i} className="ip-loc-row">
+                    <td className="ip-loc-td ip-loc-path">{r.path}</td>
+                    <td className="ip-loc-td ip-loc-val">{r.loc?.toLocaleString() ?? '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {totalPages > 1 && (
+            <div className="ip-loc-pagination">
+              <button className="btn btn-ghost btn-sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>← Prev</button>
+              <span className="text-sm text-muted">Page {page + 1} of {totalPages}</span>
+              <button className="btn btn-ghost btn-sm" disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)}>Next →</button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════════
    MAIN InsightsPanel
 ═══════════════════════════════════════════════════════════════ */
 const SECTIONS = [
@@ -339,6 +462,15 @@ const SECTIONS = [
       </svg>
     ),
   },
+  {
+    id: 'loc',
+    label: 'Lines of Code',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+      </svg>
+    ),
+  },
 ]
 
 export default function InsightsPanel({ findingsData, artifactIndex, run }) {
@@ -347,12 +479,16 @@ export default function InsightsPanel({ findingsData, artifactIndex, run }) {
   const filepaths = findingsData?.filepaths || []
   const recon = findingsData?.recon
   const ranEstimate = run?.estimate
+  const locBreakdown = findingsData?.loc_breakdown || []
+  const scanMeta = findingsData?.scan_meta
+  const hasLoc = run?.loc || (scanMeta?.detection_summary?.total_loc != null)
 
   const counts = {
     filepaths: filepaths.length,
     recon: recon ? Object.keys(recon.categories || recon).filter((k) => k !== 'meta').length : 0,
     estimate: (artifactIndex?.other_html || []).filter((a) => a.toLowerCase().includes('estimate')).length
       + (artifactIndex?.pdf_files || []).filter((a) => a.toLowerCase().includes('estimate')).length,
+    loc: locBreakdown.filter((r) => typeof r === 'object').length,
   }
 
   return (
@@ -361,7 +497,7 @@ export default function InsightsPanel({ findingsData, artifactIndex, run }) {
       <div className="ip-nav">
         {SECTIONS.map(({ id, label, icon }) => {
           const count = counts[id]
-          const hasData = count > 0 || (id === 'estimate' && ranEstimate)
+          const hasData = count > 0 || (id === 'estimate' && ranEstimate) || (id === 'loc' && hasLoc)
           return (
             <button
               key={id}
@@ -374,6 +510,9 @@ export default function InsightsPanel({ findingsData, artifactIndex, run }) {
               {id === 'estimate' && ranEstimate && count === 0 && (
                 <span className="ip-nav-dot" title="Estimate was run" />
               )}
+              {id === 'loc' && hasLoc && count === 0 && (
+                <span className="ip-nav-dot" title="LoC counted" />
+              )}
             </button>
           )
         })}
@@ -385,6 +524,9 @@ export default function InsightsPanel({ findingsData, artifactIndex, run }) {
         {activeSection === 'recon' && <Recon recon={recon} />}
         {activeSection === 'estimate' && (
           <EffortEstimate artifactIndex={artifactIndex} ranEstimate={ranEstimate} />
+        )}
+        {activeSection === 'loc' && (
+          <LoCSection locBreakdown={locBreakdown} scanMeta={scanMeta} />
         )}
       </div>
     </div>

@@ -47,7 +47,7 @@ const NAV_ITEMS = [
   },
 ]
 
-export default function Sidebar({ active, onChange, health, runningCount = 0 }) {
+export default function Sidebar({ active, onChange, health, runningCount = 0, version }) {
   return (
     <aside className="sidebar">
       {/* Brand */}
@@ -115,7 +115,7 @@ export default function Sidebar({ active, onChange, health, runningCount = 0 }) 
           <span className="dot" />
           API {health}
         </div>
-        <span className="sidebar-version">v1.1.0</span>
+        <span className="sidebar-version">{version ? `v${version}` : 'v1.1.0'}</span>
       </div>
     </aside>
   )

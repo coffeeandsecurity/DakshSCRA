@@ -49,9 +49,9 @@ body { background: var(--bg); color: var(--text); font-family: var(--font); font
   padding: 20px 18px 16px; border-bottom: 1px solid var(--border);
   position: sticky; top: 0; background: var(--surface); z-index: 1;
 }
-.brand-icon {
-  width: 32px; height: 32px; border-radius: var(--radius);
-  background: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+.brand-logo {
+  width: 36px; height: 36px; flex-shrink: 0;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,.35));
 }
 .brand-name { font-size: 13px; font-weight: 700; color: var(--text-strong); letter-spacing: .5px; }
 .brand-sub { font-size: 11px; color: var(--text-muted); }
@@ -151,9 +151,38 @@ td code { font-size: 12px; }
 ════════════════════════════════════════ -->
 <nav id="sidebar">
   <div class="sidebar-brand">
-    <div class="brand-icon">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    <div class="brand-logo">
+      <svg viewBox="0 0 400 400" width="36" height="36" xmlns="http://www.w3.org/2000/svg">
+        <g transform="rotate(144, 200, 200)">
+          <path d="M 200,200 C 244,188 255,115 215,72 Q 200,52 185,72 C 145,115 156,188 200,200 Z" fill="#9d52de"/>
+          <circle cx="200" cy="90" r="11" fill="#141414"/>
+          <circle cx="191" cy="122" r="11" fill="#141414"/>
+          <circle cx="209" cy="152" r="11" fill="#141414"/>
+        </g>
+        <g transform="rotate(216, 200, 200)">
+          <path d="M 200,200 C 244,188 255,115 215,72 Q 200,52 185,72 C 145,115 156,188 200,200 Z" fill="#2dc98a"/>
+          <circle cx="200" cy="90" r="11" fill="#141414"/>
+          <circle cx="191" cy="122" r="11" fill="#141414"/>
+          <circle cx="209" cy="152" r="11" fill="#141414"/>
+        </g>
+        <g transform="rotate(288, 200, 200)">
+          <path d="M 200,200 C 244,188 255,115 215,72 Q 200,52 185,72 C 145,115 156,188 200,200 Z" fill="#f5bf1e"/>
+          <circle cx="200" cy="90" r="11" fill="#141414"/>
+          <circle cx="191" cy="122" r="11" fill="#141414"/>
+          <circle cx="209" cy="152" r="11" fill="#141414"/>
+        </g>
+        <g transform="rotate(72, 200, 200)">
+          <path d="M 200,200 C 244,188 255,115 215,72 Q 200,52 185,72 C 145,115 156,188 200,200 Z" fill="#17b2f0"/>
+          <circle cx="200" cy="90" r="11" fill="#141414"/>
+          <circle cx="191" cy="122" r="11" fill="#141414"/>
+          <circle cx="209" cy="152" r="11" fill="#141414"/>
+        </g>
+        <g transform="rotate(0, 200, 200)">
+          <path d="M 200,200 C 244,188 255,115 215,72 Q 200,52 185,72 C 145,115 156,188 200,200 Z" fill="#f0357a"/>
+          <circle cx="200" cy="90" r="11" fill="#141414"/>
+          <circle cx="191" cy="122" r="11" fill="#141414"/>
+          <circle cx="209" cy="152" r="11" fill="#141414"/>
+        </g>
       </svg>
     </div>
     <div>
@@ -187,6 +216,10 @@ td code { font-size: 12px; }
 
   <div class="nav-section">Reference</div>
   <a class="nav-link" href="#findings-ref">Understanding Findings</a>
+  <a class="nav-link" href="#rdl">RDL — Conditional Rules</a>
+  <a class="nav-link nav-sub" href="#rdl-operators">Operators</a>
+  <a class="nav-link nav-sub" href="#rdl-examples">Examples</a>
+  <a class="nav-link nav-sub" href="#rdl-fp">How FPs Are Reduced</a>
   <a class="nav-link" href="#platforms">Platforms &amp; Rules</a>
   <a class="nav-link" href="#pdf">PDF Reports</a>
   <a class="nav-link" href="#tips">Tips &amp; Patterns</a>
@@ -564,7 +597,89 @@ runtime/
     <div class="note"><div class="callout-label">Reducing Noise</div>Use <code>--recon --rs</code> to show only high/medium-confidence detections when a large or generic codebase generates excessive low-confidence matches.</div>
   </section>
 
+
+  <!-- ════════════════ RDL ════════════════ -->
+  <section id="rdl">
+    <h2>RDL &mdash; Rule Description Language</h2>
+    <p>RDL is DakshSCRA's second-pass conditional filter applied <strong>after</strong> a regex match. Every rule can include an optional <code>&lt;rdl&gt;</code> block that adds context-aware conditions, significantly reducing false positives without writing separate rules for every edge case.</p>
+    <div class="tip"><div class="callout-label">World's First (Open Source)</div>Conditional rule logic — previously found only in commercial security scanners — now available in open source. Rules can express multi-condition logic using <code>FLAG</code>, <code>IF</code>, <code>PRESENT</code>, <code>MISSING</code>, and boolean operators.</div>
+
+    <p>RDL conditions are evaluated against the <strong>entire file content</strong> of each matched file, not just the matched line. If the condition is not satisfied, the match is suppressed before it reaches the report.</p>
+
+    <section id="rdl-operators">
+      <h3>Operators</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Operator</th><th>Behaviour</th><th>When to use</th></tr></thead>
+        <tbody>
+          <tr><td><code>FLAG:&lt;pattern&gt;</code></td><td>Anchors the condition &mdash; the subject the rule is built around.</td><td>Always the first clause in an RDL expression</td></tr>
+          <tr><td><code>IF(condition)</code></td><td>Match is only reported when this condition evaluates to true.</td><td>Wraps PRESENT / MISSING predicates</td></tr>
+          <tr><td><code>PRESENT:&lt;pattern&gt;</code></td><td>True when the pattern <strong>is</strong> found anywhere in the file.</td><td>Require a co-occurring risky call</td></tr>
+          <tr><td><code>MISSING:&lt;pattern&gt;</code></td><td>True when the pattern is <strong>not</strong> found anywhere in the file.</td><td>Suppress when a mitigation is already present</td></tr>
+          <tr><td><code>EXISTS:&lt;pattern&gt;</code></td><td>Like PRESENT but evaluated at file-path level.</td><td>Check for presence of a related config file</td></tr>
+          <tr><td><code>&amp;&amp;</code></td><td>Both conditions must hold.</td><td>Require multiple simultaneous conditions</td></tr>
+          <tr><td><code>||</code></td><td>Either condition must hold.</td><td>Match any one of several conditions</td></tr>
+          <tr><td><code>!</code></td><td>Negation.</td><td>Invert a predicate</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="rdl-examples">
+      <h3>Examples</h3>
+
+      <h4>Example 1 &mdash; PHP SQL injection with missing parameterisation</h4>
+      <pre><code><span class="comment">&lt;!-- Regex matches any mysql_query / mysqli_query call --&gt;</span>
+&lt;regex&gt;&lt;![CDATA[(?i)(?:mysql_query|mysqli_query|-&gt;query)\s*\(]]&gt;&lt;/regex&gt;
+
+<span class="comment">&lt;!-- RDL: only flag when user input present AND no prepared statements found --&gt;</span>
+&lt;rdl&gt;&lt;![CDATA[[FLAG:\$_(GET|POST|REQUEST|COOKIE)][IF(MISSING:(?:prepare|bindParam|bindValue|PDO::prepare))]]&gt;&lt;/rdl&gt;</code></pre>
+      <p>Fires when user-controlled input (<code>$_GET</code>, <code>$_POST</code>, etc.) is present <strong>and</strong> no parameterised query methods are found in the file. A file already using <code>PDO::prepare</code> is <strong>not</strong> flagged.</p>
+
+      <h4>Example 2 &mdash; Android SharedPreferences storing sensitive data without encryption</h4>
+      <pre><code>&lt;rdl&gt;&lt;![CDATA[[FLAG:getSharedPreferences\(]
+  [IF(PRESENT:(token|secret|password|auth|session)
+   &amp;&amp; MISSING:(EncryptedSharedPreferences|MasterKey|KeyStore|Cipher|encrypt))]
+]]&gt;&lt;/rdl&gt;</code></pre>
+      <p>Only fires when the file references sensitive field names (token, password, etc.) <strong>and</strong> no Android encryption APIs are present. Files using <code>EncryptedSharedPreferences</code> are automatically suppressed.</p>
+
+      <h4>Example 3 &mdash; Hardcoded secrets excluding environment-variable reads</h4>
+      <pre><code>&lt;rdl&gt;&lt;![CDATA[[FLAG:(api_key|secret|token|password)\s*[:=]\s*"[^"]{8,}"]
+  [IF(MISSING:System\.getenv\s*\(|System\.getProperty\s*\(|BuildConfig\.
+   &amp;&amp; MISSING:example|sample|dummy|test|placeholder)]
+]]&gt;&lt;/rdl&gt;</code></pre>
+      <p>Without this RDL, <code>TOKEN = "${System.getenv("TOKEN")}"</code> would be flagged as a hardcoded secret. The <code>MISSING</code> conditions exclude reads from environment variables, build config, and placeholder values in tests or comments.</p>
+
+      <h4>Full rule XML structure</h4>
+      <pre><code>&lt;rule&gt;
+  &lt;name&gt;Rule Name&lt;/name&gt;
+  &lt;regex&gt;&lt;![CDATA[regex_to_match]]&gt;&lt;/regex&gt;
+  &lt;rdl&gt;&lt;![CDATA[[FLAG:anchor_pattern][IF(PRESENT:risky_pattern &amp;&amp; MISSING:mitigation_pattern)]]&gt;&lt;/rdl&gt;
+  &lt;exclude&gt;&lt;![CDATA[pattern_to_exclude_lines]]&gt;&lt;/exclude&gt;  <span class="comment">&lt;!-- optional --&gt;</span>
+  &lt;rule_desc&gt;Short description.&lt;/rule_desc&gt;
+  &lt;vuln_desc&gt;Vulnerability class explanation.&lt;/vuln_desc&gt;
+  &lt;developer&gt;Fix guidance for developers.&lt;/developer&gt;
+  &lt;reviewer&gt;Confirmation guidance for reviewers.&lt;/reviewer&gt;
+&lt;/rule&gt;</code></pre>
+    </section>
+
+    <section id="rdl-fp">
+      <h3>How RDL Reduces False Positives</h3>
+      <p>Without RDL, every regex match is reported regardless of context &mdash; leading to high noise. RDL adds a second pass that checks the broader file context before a match is reported:</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Pattern</th><th>Without RDL</th><th>With RDL</th></tr></thead>
+        <tbody>
+          <tr><td><code>getSharedPreferences()</code></td><td>Flags every preference access (high FP rate)</td><td>Only flags when sensitive keys AND no encryption present</td></tr>
+          <tr><td><code>loadUrl(someVar)</code></td><td>Flags hardcoded safe URLs like <code>about:blank</code></td><td>Only flags dynamic / interpolated URLs</td></tr>
+          <tr><td><code>Room.databaseBuilder()</code></td><td>Flags DB setup calls &mdash; zero injection risk (100% FP)</td><td>Replaced with <code>@Query</code> string interpolation pattern only</td></tr>
+          <tr><td><code>System.getenv("TOKEN")</code></td><td>Flags as hardcoded secret (FP &mdash; it is a safe read)</td><td>Suppressed by <code>MISSING:System.getenv</code> condition</td></tr>
+          <tr><td><code>viewModelScope.launch {}</code></td><td>Flags every coroutine dispatch including benign UI commands</td><td>Only flags when body contains sensitive ops without error handling</td></tr>
+        </tbody>
+      </table></div>
+      <div class="warn"><div class="callout-label">File-scope limitation</div>PRESENT and MISSING conditions are evaluated against the <strong>entire file</strong>, not per-line. If a mitigation pattern appears <em>anywhere</em> in the file, all matches in that file are suppressed &mdash; even an unprotected call in the same file. This is a deliberate trade-off: lower noise at the cost of occasionally missing an issue in an otherwise-safe file. The reviewer note on every finding always advises manual confirmation for this reason.</div>
+    </section>
+  </section>
+
   <!-- ════════════════ PLATFORMS ════════════════ -->
+
   <section id="platforms">
     <h2>Platforms &amp; Rules</h2>
     <div class="platform-grid">

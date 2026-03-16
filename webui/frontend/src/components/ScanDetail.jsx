@@ -386,6 +386,27 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
               <div className="info-label">Duration</div>
               <div className="info-value">{niceDuration(run.duration_sec)}</div>
             </div>
+            {(() => {
+              const det = findingsData?.scan_meta?.detection_summary
+              const totalFiles = det?.total_files_scanned ?? det?.total_files_identified
+              const totalLoc = det?.total_loc
+              return (
+                <>
+                  {totalFiles != null && (
+                    <div className="info-item">
+                      <div className="info-label">Total Files Scanned</div>
+                      <div className="info-value">{Number(totalFiles).toLocaleString()}</div>
+                    </div>
+                  )}
+                  {totalLoc != null && (
+                    <div className="info-item">
+                      <div className="info-label">Total Lines of Code</div>
+                      <div className="info-value">{Number(totalLoc).toLocaleString()}</div>
+                    </div>
+                  )}
+                </>
+              )
+            })()}
           </div>
 
           <div className="info-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>

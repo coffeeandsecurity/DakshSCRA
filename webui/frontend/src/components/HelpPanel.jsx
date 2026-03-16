@@ -20,6 +20,10 @@ const TOC = [
   { id: 'webui-artifacts', label: '↳ Reports & Artifacts', indent: true },
   { id: 'webui-dirbrowser', label: '↳ Directory Browser', indent: true },
   { id: 'platforms', label: 'Platforms & Rules' },
+  { id: 'rdl', label: 'RDL — Conditional Rules' },
+  { id: 'rdl-operators', label: '↳ Operators', indent: true },
+  { id: 'rdl-examples', label: '↳ Examples', indent: true },
+  { id: 'rdl-fp-reduction', label: '↳ How FPs Are Reduced', indent: true },
   { id: 'findings-reference', label: 'Findings Reference' },
   { id: 'pdf-reports', label: 'PDF Reports' },
   { id: 'tips', label: 'Tips & Patterns' },
@@ -543,6 +547,94 @@ DAKSH_BROWSE_ROOTS=/home/user/projects uvicorn api.main:app`}</CodeBlock>
   )
 }
 
+function RDLSection() {
+  return (
+    <section className="help-section">
+      <SectionHeading id="rdl">RDL — Rule Description Language</SectionHeading>
+      <P>
+        RDL is DakshSCRA's second-pass conditional filter applied <em>after</em> a regex match.
+        Every rule can include an optional <Code>&lt;rdl&gt;</Code> block that adds context-aware
+        conditions, significantly reducing false positives without writing separate rules for every
+        edge case.
+      </P>
+      <Note type="info">
+        RDL is a world-first concept in open-source code scanners — conditional rule logic
+        previously found only in commercial security tools.
+      </Note>
+
+      <SubHeading id="rdl-operators">Operators</SubHeading>
+      <P>The RDL expression is evaluated against the <strong>entire file content</strong> of each matched file, not just the matched line.</P>
+      <Table
+        headers={['Operator', 'Behaviour', 'When to use']}
+        rows={[
+          ['FLAG:<pattern>', 'Anchors the condition — defines what the rule is built around. Same as the regex but used as the RDL subject.', 'Always the first clause in an RDL expression'],
+          ['IF(condition)', 'The match is only reported when this condition evaluates to true.', 'Wraps PRESENT / MISSING predicates'],
+          ['PRESENT:<pattern>', 'Condition is true when the pattern IS found anywhere in the file.', 'Require a co-occurring risky call (e.g. JS enabled before flagging JS bridge)'],
+          ['MISSING:<pattern>', 'Condition is true when the pattern is NOT found anywhere in the file.', 'Suppress when a mitigation is already present (e.g. EncryptedSharedPreferences)'],
+          ['EXISTS:<pattern>', 'Similar to PRESENT but evaluated at file-path level rather than file content.', 'Check for presence of a related config file'],
+          ['&&', 'Both conditions must hold.', 'Require multiple simultaneous conditions'],
+          ['||', 'Either condition must hold.', 'Match when any one of several conditions applies'],
+          ['!', 'Negation.', 'Invert a predicate'],
+        ]}
+      />
+
+      <SubHeading id="rdl-examples">Examples</SubHeading>
+      <P><strong>Example 1 — PHP SQL injection with missing parameterisation:</strong></P>
+      <CodeBlock>{`<regex><!\[CDATA[(?i)\b(?:mysql_query|mysqli_query|->query)\s*\(]]></regex>
+<rdl><!\[CDATA[[FLAG:\$_(GET|POST|REQUEST|COOKIE)][IF(MISSING:\b(?:prepare|bindParam|bindValue|PDO::prepare)\b)]]]></rdl>`}</CodeBlock>
+      <P>
+        The rule fires when user-controlled input (<Code>$_GET</Code>, <Code>$_POST</Code>, etc.)
+        is present in the file <em>and</em> no parameterised query methods (<Code>prepare</Code>,
+        <Code>bindParam</Code>) are found anywhere in the file. A file that already uses PDO
+        prepared statements will <strong>not</strong> be flagged.
+      </P>
+
+      <P><strong>Example 2 — Android SharedPreferences storing sensitive data without encryption:</strong></P>
+      <CodeBlock>{`<regex><!\[CDATA[getSharedPreferences\(\s*[^,]+,\s*Context\.MODE_PRIVATE\s*\)]]></regex>
+<rdl><!\[CDATA[[FLAG:getSharedPreferences\(][IF(PRESENT:(token|secret|password|auth|session) && MISSING:(EncryptedSharedPreferences|MasterKey|KeyStore|Cipher|encrypt))]]]></rdl>`}</CodeBlock>
+      <P>
+        Only fires when the file references security-sensitive field names (token, password, etc.)
+        <em>and</em> no encryption APIs are present. Files using <Code>EncryptedSharedPreferences</Code>
+        are automatically suppressed.
+      </P>
+
+      <P><strong>Example 3 — Hardcoded secrets excluding environment-variable reads:</strong></P>
+      <CodeBlock>{`<regex><!\[CDATA[(?i)(api_key|secret|token|password)\s*[:=]\s*"[^"]{8,}"]]></regex>
+<rdl><!\[CDATA[[FLAG:(api_key|secret|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:System\.getenv\s*\(|System\.getProperty\s*\(|BuildConfig\. && MISSING:example|sample|dummy|test|placeholder)]]]></rdl>`}</CodeBlock>
+      <P>
+        Without this RDL, any assignment like{' '}
+        <Code>{'TOKEN = "${System.getenv("TOKEN")}"'}</Code> would be flagged as a hardcoded
+        secret. The MISSING conditions exclude reads from environment variables, build config
+        constants, and placeholder values.
+      </P>
+
+      <SubHeading id="rdl-fp-reduction">How RDL Reduces False Positives</SubHeading>
+      <P>
+        Without RDL, every regex match is reported regardless of context — leading to high noise.
+        RDL adds a second pass that checks the broader file context before a match is reported:
+      </P>
+      <Table
+        headers={['Pattern', 'Without RDL', 'With RDL']}
+        rows={[
+          ['getSharedPreferences()', 'Flags every preference access (high FP rate)', 'Only flags when sensitive keys AND no encryption are present'],
+          ['loadUrl(someVar)', 'Flags every loadUrl call including hardcoded safe URLs', 'Only flags dynamic/interpolated URLs; suppresses about:blank, android_asset'],
+          ['Room.databaseBuilder()', 'Flags DB setup calls — zero injection risk (100% FP)', 'Replaced with @Query interpolation pattern — actual injection risk only'],
+          ['addJavascriptInterface()', 'Misses real calls due to wrong argument pattern', 'Simplified regex catches all calls; always flagged for review'],
+          ['System.getenv("SECRET")', 'Flags as hardcoded secret (FP — it is a safe read)', 'Suppressed by MISSING:System.getenv condition'],
+        ]}
+      />
+      <Note type="warn">
+        <strong>File-scope limitation:</strong> PRESENT and MISSING conditions are evaluated
+        against the <em>entire file</em>, not just the matched line. If a mitigation pattern
+        appears <em>anywhere</em> in the file, all matches in that file are suppressed — even
+        if one call in the same file is unprotected. This is a deliberate trade-off: lower noise
+        at the cost of occasionally missing an issue in an otherwise-safe file. The reviewer note
+        on every finding always advises manual confirmation for this reason.
+      </Note>
+    </section>
+  )
+}
+
 function PlatformsSection() {
   return (
     <section className="help-section">
@@ -779,6 +871,7 @@ export default function HelpPanel() {
           <InstallationSection />
           <CliUsageSection />
           <WebUISection />
+          <RDLSection />
           <PlatformsSection />
           <FindingsReferenceSection />
           <PdfReportsSection />

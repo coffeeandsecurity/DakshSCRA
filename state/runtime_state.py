@@ -53,7 +53,7 @@ rulesFpaths = Path(str(rulesRootDir) + "/filepaths.xml")
 staticPdfCssFpath = Path(str(root_dir) + "/resources/static/pdf.css")
 
 # Logo
-staticLogo = Path(str(root_dir) + "/resources/static/logo_for_report.jpg")
+staticLogo = Path(str(root_dir) + "/resources/static/logo_for_report.svg")
 
 ## ------------- <Counters> ------------- ##
 totalFilesIdentified = 0

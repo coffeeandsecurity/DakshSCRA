@@ -105,3 +105,26 @@ export function getSettings() {
 export function saveSettings(payload) {
   return request('/api/v1/settings', { method: 'PUT', body: JSON.stringify(payload) })
 }
+
+export function getVersion() {
+  return request('/api/v1/version')
+}
+
+/** Check GitHub for the latest release tag. Cached in sessionStorage for the session. */
+export async function getLatestGithubRelease(repo) {
+  const cacheKey = `gh_latest_${repo}`
+  const cached = sessionStorage.getItem(cacheKey)
+  if (cached) return JSON.parse(cached)
+  try {
+    const res = await fetch(`https://api.github.com/repos/${repo}/releases/latest`, {
+      headers: { Accept: 'application/vnd.github+json' }
+    })
+    if (!res.ok) return null
+    const data = await res.json()
+    const result = { tag: data.tag_name, url: data.html_url, name: data.name }
+    sessionStorage.setItem(cacheKey, JSON.stringify(result))
+    return result
+  } catch {
+    return null
+  }
+}

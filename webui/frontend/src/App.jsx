@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   createScan,
   deleteProject,
   getHealth,
+  getLatestGithubRelease,
   getMetrics,
   getScan,
   getScanArtifacts,
   getScanLog,
+  getVersion,
   listProjects,
   listScans,
 } from './api'
@@ -97,6 +99,9 @@ export default function App() {
   const [error, setError] = useState('')
 
   const [toasts, setToasts] = useState([])
+  const [versionInfo, setVersionInfo] = useState(null)      // { version, release_date, github_repo }
+  const [latestRelease, setLatestRelease] = useState(null)  // { tag, url, name } | null
+  const [githubChecked, setGithubChecked] = useState(false) // true once GitHub check resolves (ok or failed)
 
   const addToast = useCallback((message, level = 'info', title = '') => {
     const id = ++toastCounter
@@ -201,6 +206,14 @@ export default function App() {
   useEffect(() => {
     getHealth().then(() => setHealth('online')).catch(() => setHealth('offline'))
     refreshOverview()
+
+    // Fetch current version then check GitHub for latest release
+    getVersion().then((info) => {
+      setVersionInfo(info)
+      getLatestGithubRelease(info.github_repo)
+        .then((rel) => { setLatestRelease(rel); setGithubChecked(true) })
+        .catch(() => setGithubChecked(true))   // failed = still "checked" (offline)
+    }).catch(() => setGithubChecked(true))
   }, [])
 
   useEffect(() => {
@@ -248,6 +261,7 @@ export default function App() {
         onChange={(s) => { setSection(s); setError('') }}
         health={health}
         runningCount={runningCount}
+        version={versionInfo?.version}
       />
 
       {/* Main */}
@@ -291,6 +305,9 @@ export default function App() {
               runs={runs}
               onNavigate={handleNavigate}
               onDeleteProject={handleDeleteProject}
+              versionInfo={versionInfo}
+              latestRelease={latestRelease}
+              githubChecked={githubChecked}
             />
           )}
 

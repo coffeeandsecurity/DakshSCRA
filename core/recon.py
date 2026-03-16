@@ -646,7 +646,7 @@ def recon_summary_html_report(json_file_path, output_file_path):
 
     try:
         with open(state.staticLogo, "rb") as logo_file:
-            logo_image_path = f"data:image/jpg;base64,{base64.b64encode(logo_file.read()).decode('utf-8')}"
+            logo_image_path = f"data:image/svg+xml;base64,{base64.b64encode(logo_file.read()).decode('utf-8')}"
     except OSError as exc:
         logger.error("Failed to load logo image %s: %s", state.staticLogo, exc)
 

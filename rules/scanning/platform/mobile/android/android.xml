@@ -38,13 +38,13 @@
             <reviewer>Verify that sensitive data is not being backed up insecurely by checking the value of the allowBackup attribute in the AndroidManifest.xml file. Ensure that sensitive data is properly protected and not exposed to unauthorized access through backup mechanisms. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
-            <name>Unprotected Components</name>
-            <regex><![CDATA[android:permission\s*=\s*"(?!android\.)]]></regex>
-            <rdl><![CDATA[[FLAG:android:permission\s*=\s*"(?!android\.)]]]></rdl>
-            <rule_desc>Detects components that do not require specific permissions.</rule_desc>
-            <vuln_desc>Components without the android:permission attribute or with a permission that does not start with "android." may not be properly protected. This can allow unauthorized applications or components to access the functionality provided by the component, leading to security vulnerabilities.</vuln_desc>
-            <developer>Specify appropriate permissions for components to ensure that only authorized entities can access them. Components that require specific permissions should have the android:permission attribute set accordingly.</developer>
-            <reviewer>Verify that components requiring specific permissions have the android:permission attribute set appropriately in the AndroidManifest.xml file. Ensure that sensitive functionality is protected from unauthorized access. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+            <name>Unprotected Components: Empty Permission Attribute</name>
+            <regex><![CDATA[android:permission\s*=\s*(?:""|'')]]></regex>
+            <rdl><![CDATA[[FLAG:android:permission\s*=\s*(?:""|'')]]]></rdl>
+            <rule_desc>Detects components with an explicitly empty android:permission attribute, which removes all access control.</rule_desc>
+            <vuln_desc>Setting android:permission="" explicitly grants any application access to the component, equivalent to having no protection at all. This is more dangerous than omitting the attribute because it overrides any parent-level permission and signals an intentional but misconfigured access policy.</vuln_desc>
+            <developer>Remove the empty permission attribute and replace it with a meaningful custom permission (e.g. com.example.permission.MY_FEATURE) or use android:exported="false" to restrict access to the current app only.</developer>
+            <reviewer>Confirm that no component has android:permission set to an empty string. Verify that sensitive components are protected by appropriate permissions or restricted via exported="false". This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Debuggable Application</name>
@@ -137,6 +137,26 @@
             <vuln_desc>Enabling JavaScript in WebView without additional security measures can expose the application to XSS attacks.</vuln_desc>
             <developer>Restrict JavaScript usage in WebView and enable additional safeguards, such as strict URL validation.</developer>
             <reviewer>Verify WebView configurations in layout XML files and associated Java/Kotlin files for secure settings. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="Insecure Code Patterns">
+        <rule>
+            <name>SQLite Raw Query with Potential Injection</name>
+            <regex><![CDATA[\.rawQuery\s*\(|\.execSQL\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:\.rawQuery\s*\(|\.execSQL\s*\(][IF(MISSING:selectionArgs\s*=|bindString\s*\(|bindLong\s*\(|\?,\s*new\s+String)]]]></rdl>
+            <rule_desc>Detects direct SQLite rawQuery or execSQL calls that may construct queries without parameterisation.</rule_desc>
+            <vuln_desc>rawQuery() and execSQL() calls that concatenate user-controlled strings into SQL are directly injectable. Unlike Room @Query with :params, these methods offer no automatic parameterisation. An attacker who controls any string component of the query can read, modify, or delete data.</vuln_desc>
+            <developer>Always pass user input as the selectionArgs array rather than embedding it in the SQL string. Use ? placeholders in the query and supply values via the args parameter.</developer>
+            <reviewer>Verify that all rawQuery/execSQL calls use ? placeholders with a corresponding selectionArgs array. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Deep Link Without App Link Verification</name>
+            <regex><![CDATA[android:scheme\s*=\s*"(?!https)[^"]+"|<data\s[^>]*android:host\s*=]]></regex>
+            <rdl><![CDATA[[FLAG:android:scheme\s*=\s*"(?!https)[^"]+"|<data\s[^>]*android:host\s*=][IF(MISSING:android:autoVerify\s*=\s*"true" && MISSING:android:exported\s*=\s*"false")]]]></rdl>
+            <rule_desc>Detects custom URI scheme deep links without Android App Links autoVerify, which allows any app to intercept them.</rule_desc>
+            <vuln_desc>Custom URI scheme deep links (myapp://) without autoVerify="true" can be hijacked by any installed app that registers the same scheme. An attacker app can intercept sensitive deep link data (OAuth tokens, reset codes, invite links) delivered via these URIs. HTTPS App Links with autoVerify are the safe alternative.</vuln_desc>
+            <developer>Migrate custom URI schemes to HTTPS App Links with android:autoVerify="true" and a hosted assetlinks.json file. If custom schemes are necessary, validate all incoming data from Intent.getData() before use.</developer>
+            <reviewer>Check all deep link intent filters for autoVerify="true". Confirm that sensitive data (tokens, codes) is not delivered via unverified custom schemes. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

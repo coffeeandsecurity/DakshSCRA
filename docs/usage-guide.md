@@ -484,6 +484,87 @@ See `.env.example` in the repository root for the full list of variables and per
 
 ---
 
+---
+
+## RDL — Rule Description Language
+
+RDL is DakshSCRA's second-pass conditional filter applied **after** a regex match. Every rule can optionally include an `<rdl>` block that adds context-aware conditions, significantly reducing false positives without writing separate rules for every edge case.
+
+> **World's first in open source** — conditional rule logic previously found only in commercial security scanners.
+
+### How it works
+
+When the scanner finds a regex match, it evaluates the RDL expression against the **entire file content** — not just the matched line. If the RDL condition is not satisfied, the match is suppressed and never reaches the report.
+
+### Operators
+
+| Operator | Behaviour | When to use |
+|---|---|---|
+| `FLAG:<pattern>` | Anchors the condition — the subject the rule is built around | Always the first clause |
+| `IF(condition)` | Match is reported only when this condition is true | Wraps PRESENT / MISSING predicates |
+| `PRESENT:<pattern>` | True when the pattern **is** found anywhere in the file | Require a co-occurring risky call |
+| `MISSING:<pattern>` | True when the pattern is **not** found anywhere in the file | Suppress when a mitigation is already present |
+| `EXISTS:<pattern>` | Like PRESENT but evaluated at file-path level | Check for a related config file |
+| `&&` | Both conditions must hold | Require multiple simultaneous conditions |
+| `\|\|` | Either condition must hold | Match any one of several conditions |
+| `!` | Negation | Invert a predicate |
+
+### How RDL reduces false positives
+
+| Pattern | Without RDL | With RDL (result) |
+|---|---|---|
+| `getSharedPreferences()` | Flags every preference access (high FP rate) | Only flags when sensitive keys AND no encryption present |
+| `loadUrl(someVar)` | Flags hardcoded safe URLs like `about:blank`, `file:///android_asset` | Only flags dynamic / interpolated URLs |
+| `Room.databaseBuilder()` | Flags DB setup calls — zero injection risk (100% FP) | Replaced with `@Query` string interpolation pattern only |
+| `System.getenv("SECRET")` | Flags as hardcoded secret (FP — it is a safe read) | Suppressed by `MISSING:System.getenv` condition |
+| `viewModelScope.launch {}` | Flags every coroutine dispatch including benign UI commands | Only flags when body contains sensitive ops without error handling |
+
+> **File-scope limitation:** PRESENT and MISSING conditions are evaluated against the entire file, not per-line. If a mitigation pattern appears *anywhere* in the file, all matches in that file are suppressed — even an unprotected call in the same file. This is a deliberate trade-off: lower noise at the cost of occasionally missing an issue in an otherwise-safe file. The reviewer note on every finding always advises manual confirmation.
+
+### Example 1 — PHP SQL injection with missing parameterisation
+
+```xml
+<rule>
+  <name>Conditional SQLi Check</name>
+  <regex><![CDATA[(?i)(?:mysql_query|mysqli_query|->query)\s*\(]]></regex>
+  <rdl><![CDATA[[FLAG:\$_(GET|POST|REQUEST|COOKIE)][IF(MISSING:(?:prepare|bindParam|bindValue|PDO::prepare))]]></rdl>
+  <rule_desc>...</rule_desc>
+</rule>
+```
+
+Fires when user-controlled input (`$_GET`, `$_POST`, etc.) is present **and** no parameterised query APIs are found in the file. A file that already uses `PDO::prepare` is not flagged.
+
+### Example 2 — Android SharedPreferences storing sensitive data without encryption
+
+```xml
+<rdl><![CDATA[[FLAG:getSharedPreferences\(][IF(PRESENT:(token|secret|password|auth|session) && MISSING:(EncryptedSharedPreferences|MasterKey|KeyStore|Cipher|encrypt))]]]></rdl>
+```
+
+Fires only when the file references sensitive field names (token, password, etc.) **and** no Android encryption APIs are present. Files using `EncryptedSharedPreferences` are automatically suppressed.
+
+### Example 3 — Hardcoded secrets excluding environment-variable reads
+
+```xml
+<rdl><![CDATA[[FLAG:(api_key|secret|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:System\.getenv\s*\(|System\.getProperty\s*\(|BuildConfig\. && MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+```
+
+Without this RDL, `TOKEN = "${System.getenv("TOKEN")}"` would be flagged as hardcoded. The MISSING conditions exclude reads from environment variables, build config, and placeholder values in comments or tests.
+
+### Rule XML structure reference
+
+```xml
+<rule>
+  <name>Rule Name</name>
+  <regex><![CDATA[regex_to_match]]></regex>
+  <rdl><![CDATA[[FLAG:anchor_pattern][IF(PRESENT:risky_pattern && MISSING:mitigation_pattern)]]]></rdl>
+  <exclude><![CDATA[pattern_to_exclude_lines]]></exclude>  <!-- optional -->
+  <rule_desc>Short description of what the rule detects.</rule_desc>
+  <vuln_desc>Explanation of the vulnerability class.</vuln_desc>
+  <developer>Guidance for developers on how to fix.</developer>
+  <reviewer>Guidance for reviewers on how to confirm the issue.</reviewer>
+</rule>
+```
+
 ## Platforms & Rules
 
 DakshSCRA includes built-in rules for the following platforms:

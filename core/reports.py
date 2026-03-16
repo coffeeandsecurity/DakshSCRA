@@ -255,7 +255,7 @@ def _load_report_logo_data_uri():
     try:
         with open(state.staticLogo, "rb") as f:
             encoded_logo_image = base64.b64encode(f.read()).decode("utf-8")
-            return f"data:image/jpg;base64,{encoded_logo_image}"
+            return f"data:image/svg+xml;base64,{encoded_logo_image}"
     except OSError as exc:
         logger.error("Failed to load logo image %s: %s", state.staticLogo, exc)
         return None
@@ -711,7 +711,7 @@ def gen_html_report_modern(scan_summary, snippets, filepaths, filepaths_aoi, rep
         reportTitle=config["title"],
         reportSubTitle=config["subtitle"] if config["subtitle"].lower() != 'none' and config["subtitle"] != "" else None,
         reportDate=datetime.now().strftime("%b %d, %Y"),
-        logoImagePath=f"data:image/jpg;base64,{encoded_logo_image.decode('utf-8')}",
+        logoImagePath=f"data:image/svg+xml;base64,{encoded_logo_image.decode('utf-8')}",
         inputs=inputs,
         platform_rules_breakdown=platform_rules_breakdown,
         common_rules_breakdown=common_rules_breakdown,
@@ -1169,7 +1169,7 @@ def gen_report_multifile(formats="html,pdf", output_dir=None, pdf_output_dir=Non
     try:
         with open(state.staticLogo, "rb") as f:
             encoded_logo_image = base64.b64encode(f.read()).decode("utf-8")
-            logo_image_path = f"data:image/jpg;base64,{encoded_logo_image}"
+            logo_image_path = f"data:image/svg+xml;base64,{encoded_logo_image}"
     except OSError as exc:
         logger.error("Failed to load logo image %s: %s", state.staticLogo, exc)
 

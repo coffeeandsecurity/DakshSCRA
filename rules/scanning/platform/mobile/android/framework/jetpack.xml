@@ -57,7 +57,7 @@
         <rule>
             <name>Android JavaScript Interface Exposure</name>
             <regex><![CDATA[addJavascriptInterface\(]]></regex>
-            <rdl><![CDATA[[FLAG:addJavascriptInterface\(][IF(PRESENT:setJavaScriptEnabled\(\s*true\s*\) && MISSING:shouldOverrideUrlLoading\() ]]]></rdl>
+            <rdl><![CDATA[[FLAG:addJavascriptInterface\(]]]></rdl>
             <rule_desc>Detects JavaScript bridge exposure into WebView.</rule_desc>
             <vuln_desc>Improperly exposed JS interfaces can lead to code execution/data leakage.</vuln_desc>
             <developer>Expose minimal interfaces and restrict untrusted content loading.</developer>
@@ -66,7 +66,7 @@
         <rule>
             <name>Android Hardcoded Secret Marker</name>
             <regex><![CDATA[(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"]]></regex>
-            <rdl><![CDATA[[FLAG:(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:BuildConfig\.DEBUG\s*=\s*true && MISSING:example|sample|dummy)]]]></rdl>
+            <rdl><![CDATA[[FLAG:(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:System\.getenv\s*\(|System\.getProperty\s*\(|BuildConfig\.[A-Z_]+ && MISSING:example|sample|dummy|test|placeholder|TODO|\$\{)]]]></rdl>
             <rule_desc>Detects likely hardcoded secret material in Android code/config.</rule_desc>
             <vuln_desc>Hardcoded secrets can be extracted from source or app package artifacts.</vuln_desc>
             <developer>Move secrets to server-side issuance/secure runtime retrieval.</developer>

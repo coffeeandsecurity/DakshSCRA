@@ -28,13 +28,13 @@
             <reviewer>Ensure that proper input handling is in place for user input fields. Verify that developers have implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. Also assess the sensitivity of the data retrieved from user input fields and confirm that relevant security measures, such as output encoding and protection against injection attacks, are implemented correctly. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
-            <name>SQL Injection: Room Database Queries</name>
-            <regex><![CDATA[Room\.databaseBuilder\(.*\)]]></regex>
-            <rdl><![CDATA[[FLAG:Room\.databaseBuilder\(.*\)]]]></rdl>
-            <rule_desc>Detects the usage of Room database queries, which may be vulnerable to SQL injection.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using Room database queries without proper parameterization or validation. Attackers can exploit SQL injection vulnerabilities to manipulate database operations, retrieve unauthorized data, or perform malicious actions.</vuln_desc>
-            <developer>Room database queries are properly parameterized or sanitized to prevent SQL injection attacks. Use Room's built-in support for parameterized queries or sanitize user input before incorporating it into database queries.</developer>
-            <reviewer>Verify the presence of secure coding practices, such as parameterized queries or proper input validation and sanitization, to mitigate the risk of SQL injection vulnerabilities in Room database queries. Also assess the sensitivity of the data retrieved from Room queries and confirm that relevant security measures are implemented correctly. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+            <name>SQL Injection: Room @Query / Raw SQL with Dynamic Input</name>
+            <regex><![CDATA[@Query\s*\(\s*"[^"]*\$[^"]*"|\brawQuery\s*\(|\.execSQL\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:@Query\s*\(\s*"[^"]*\$[^"]*"|\brawQuery\s*\(|\.execSQL\s*\(][IF(MISSING:prepare\s*\(|bindString\s*\(|bindParam\s*\(|\?,\s*arrayOf)]]]></rdl>
+            <rule_desc>Detects Room @Query annotations with Kotlin string interpolation, and direct SQLite rawQuery/execSQL calls, which may allow SQL injection.</rule_desc>
+            <vuln_desc>Room @Query annotations that embed Kotlin string interpolation (e.g. "SELECT * WHERE id = ${input}") bypass Room's parameterisation and are directly injectable. Similarly, rawQuery() and execSQL() with user-controlled strings allow direct SQL manipulation. Attackers can exploit these paths to extract, modify, or delete data.</vuln_desc>
+            <developer>Use named or positional parameters in Room @Query annotations (e.g. :param) instead of Kotlin string interpolation. Prefer Room's @Query binding over rawQuery/execSQL. Where raw SQL is necessary, use parameterised binding (bindString, bindLong, etc.).</developer>
+            <reviewer>Confirm that no @Query annotation embeds $-interpolated Kotlin expressions in the SQL string. Verify rawQuery and execSQL calls use binding arguments rather than string concatenation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
     <category name="Insecure Method/Function Call">
@@ -48,13 +48,13 @@
             <reviewer>Check for the secure usage of Runtime. exec() and assess if user input is properly validated, sanitized, and appropriately used as command parameters. Ensure that developers have implemented strong input validation measures, command parameterization techniques, and proper context-aware security controls to mitigate command injection vulnerabilities. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
-            <name>Insecure Method Call: WebView.loadUrl()</name>
-            <regex><![CDATA[WebView\.loadUrl\(".*"\)]]></regex>
-            <rdl><![CDATA[[FLAG:WebView\.loadUrl\(".*"\)]]]></rdl>
-            <rule_desc>Detects insecure usage of WebView.loadUrl() method, which may lead to JavaScript injection vulnerabilities.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of JavaScript injection. Attackers can exploit insecure usage of WebView.loadUrl() with unsanitized user input to inject malicious JavaScript code into web pages loaded by the WebView, leading to cross-site scripting (XSS) vulnerabilities.</vuln_desc>
-            <developer>Avoid using WebView.loadUrl() with untrusted user input directly concatenated into the URL string. Instead, Use proper input validation, output encoding, and secure mechanisms for injecting dynamic content into web pages loaded by WebView.</developer>
-            <reviewer>Verify that WebView.loadUrl() is used securely and that any user input incorporated into URL strings is properly validated, sanitized, and encoded to prevent JavaScript injection vulnerabilities. Also ensure that developers follow best practices for securely loading and displaying web content in WebView. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+            <name>Insecure Method Call: WebView.loadUrl() with Dynamic Content</name>
+            <regex><![CDATA[\.loadUrl\s*\(\s*(?:"[^"]*\$[^"]*"|`[^`]*\$[^`]*`|[^\s"'(][^)]*\))]]></regex>
+            <rdl><![CDATA[[FLAG:\.loadUrl\s*\(][IF(MISSING:loadUrl\s*\(\s*"(?:about:|javascript:window\.|file:///android_asset) && MISSING:loadUrl\s*\(\s*"https://[a-zA-Z0-9])]]]></rdl>
+            <rule_desc>Detects WebView.loadUrl() calls where the URL argument is a variable or contains Kotlin string interpolation, which may allow JavaScript or URL injection.</rule_desc>
+            <vuln_desc>Passing a dynamically-constructed or interpolated string to WebView.loadUrl() can allow an attacker to inject javascript: URIs, manipulate the loaded URL, or redirect the WebView to an attacker-controlled page. Hardcoded safe URLs (about:blank, file:///android_asset/...) are excluded.</vuln_desc>
+            <developer>Validate and whitelist URLs before passing them to WebView.loadUrl(). Avoid Kotlin string interpolation directly inside the URL string. Use Uri.Builder to construct URLs safely and apply an allowlist of permitted hosts.</developer>
+            <reviewer>Confirm that the URL passed to loadUrl() is not derived from untrusted external input. Check for Kotlin template literals (${ }) or variable arguments that could be influenced by intent extras, web content, or external data. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure Method Call: ContentResolver.query()</name>
@@ -75,13 +75,13 @@
             <reviewer>Sensitive data is stored in SharedPreferences without proper encryption or secure storage. Ensure that developers have implemented appropriate security measures, such as encryption or secure storage solutions, to protect sensitive data stored on the device. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
-            <name>Insecure Method Call: viewModelScope.launch</name>
-            <regex><![CDATA[viewModelScope\.launch\s*{[^}]*}]]></regex>
-            <rdl><![CDATA[[FLAG:viewModelScope\.launch\s*{[^}]*}]]]></rdl>
-            <rule_desc>Detects insecure usage of viewModelScope.launch without proper error handling or exception logging.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of not properly handling exceptions or errors that occur within the coroutine launched by viewModelScope.launch. Unhandled exceptions or errors can lead to unexpected behavior, crashes, or security vulnerabilities in the application.</vuln_desc>
-            <developer>ViewModelScope. launch is used with proper error handling mechanisms, such as try-catch blocks or error propagation, to handle exceptions or errors that occur within the coroutine. Additionally, developers should log exceptions or errors for debugging and monitoring purposes.</developer>
-            <reviewer>ViewModelScope. launch is used with proper error handling mechanisms to handle exceptions or errors that occur within the coroutine. Ensure that developers have implemented appropriate error handling and logging mechanisms to address potential security vulnerabilities or unexpected behavior. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+            <name>Insecure Method Call: viewModelScope.launch (No Error Handling)</name>
+            <regex><![CDATA[viewModelScope\.launch\s*\{[^}]*(?:query|rawQuery|execSQL|getPassword|getToken|decrypt|encrypt|hash|credential|authToken|network|http|https)[^}]*\}]]></regex>
+            <rdl><![CDATA[[FLAG:viewModelScope\.launch\s*\{[^}]*(?:query|rawQuery|execSQL|getPassword|getToken|decrypt|encrypt|credential|authToken)[^}]*\}][IF(MISSING:try\s*\{|catch\s*\(|runCatching|CoroutineExceptionHandler)]]]></rdl>
+            <rule_desc>Detects security-sensitive operations inside viewModelScope.launch without exception handling.</rule_desc>
+            <vuln_desc>Coroutines launched with viewModelScope.launch that perform security-sensitive operations (database queries, cryptographic operations, credential handling) without try-catch, runCatching, or a CoroutineExceptionHandler may silently swallow errors, hide authentication failures, or leave resources in an inconsistent state.</vuln_desc>
+            <developer>Wrap security-sensitive operations inside viewModelScope.launch with runCatching { } or try-catch, and log or handle errors appropriately. Consider setting a CoroutineExceptionHandler on the scope for consistent error handling.</developer>
+            <reviewer>Verify that coroutines performing security-sensitive operations (queries, crypto, auth) have explicit error handling and do not silently discard exceptions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure Method Call: setHtmlText</name>
@@ -124,12 +124,12 @@
         </rule>
         <rule>
             <name>File Sharing Without Content Provider</name>
-            <regex><![CDATA[Intent\s*\(\s*(?:[^,]*,\s*)?Uri\.parse]]></regex>
-            <rdl><![CDATA[[FLAG:Intent\s*\(\s*(?:[^,]*,\s*)?Uri\.parse]]]></rdl>
-            <rule_desc>Detects file sharing operations that use URIs without a content provider.</rule_desc>
-            <vuln_desc>Sharing files directly using URIs without a content provider can expose sensitive data to unauthorized applications. Content providers offer a controlled mechanism for sharing files securely.</vuln_desc>
-            <developer>Use a content provider to securely share files between applications, ensuring proper access control and data protection.</developer>
-            <reviewer>Check Java/Kotlin source files for file sharing operations using `Intent` with `Uri.parse`. Verify that files are shared through content providers with appropriate permissions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+            <regex><![CDATA[Intent\s*\(\s*(?:[^,]*,\s*)?Uri\.parse\s*\(\s*"(?!(?:https?|smsto|sms|tel|mailto|about|geo|market):)]]></regex>
+            <rdl><![CDATA[[FLAG:Intent\s*\(\s*(?:[^,]*,\s*)?Uri\.parse][IF(MISSING:Uri\.parse\s*\(\s*"(?:https?:|smsto:|sms:|tel:|mailto:|about:|geo:|market:|content:))]]]></rdl>
+            <rule_desc>Detects file sharing via raw file-path URIs without going through a ContentProvider/FileProvider.</rule_desc>
+            <vuln_desc>Sharing files by passing a raw file:// URI in an Intent exposes the file directly to the receiving app without access control. On Android 7.0+ this causes a FileUriExposedException; on older versions it silently grants read access to the physical file path. Use FileProvider (content://) URIs with grantUriPermissions instead. System protocol URIs (https, tel, sms, etc.) are excluded as they are not file-sharing paths.</vuln_desc>
+            <developer>Replace file:// URIs with a FileProvider content:// URI and set Intent.FLAG_GRANT_READ_URI_PERMISSION. Define the FileProvider in AndroidManifest and a res/xml/file_paths.xml resource.</developer>
+            <reviewer>Confirm that no file:// URIs are passed in Intents for file sharing. Verify FileProvider is configured and content:// URIs with grant flags are used instead. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
     <category name="External Storage - Insecure Practices">
@@ -173,13 +173,13 @@
     </category>
     <category name="Insecure Mitigations">
         <rule>
-            <name>Insecure Mitigation: WebView.addJavascriptInterface()</name>
-            <regex><![CDATA[WebView\.addJavascriptInterface\(".*"\)]]></regex>
-            <rdl><![CDATA[[FLAG:WebView\.addJavascriptInterface\(".*"\)]]]></rdl>
-            <rule_desc>Detects insecure usage of WebView.addJavascriptInterface() method, which may introduce JavaScript injection vulnerabilities.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of JavaScript injection. Attackers can exploit insecure usage of WebView.addJavascriptInterface() with unsanitized input to inject malicious JavaScript code into web pages loaded by the WebView, leading to cross-site scripting (XSS) vulnerabilities.</vuln_desc>
-            <developer>Avoid using WebView.addJavascriptInterface() with untrusted input directly passed as the interface object. Instead, carefully validate and sanitize any input passed to this method to prevent JavaScript injection vulnerabilities. Alternatively, consider using safer alternatives for communication between JavaScript and native code.</developer>
-            <reviewer>Verify that WebView.addJavascriptInterface() is used securely and that any input passed as the interface object is properly validated, sanitized, and limited to trusted values to prevent JavaScript injection vulnerabilities. Also ensure that developers follow best practices for securely communicating between JavaScript and native code. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+            <name>JavaScript Bridge Exposure: WebView.addJavascriptInterface()</name>
+            <regex><![CDATA[\.addJavascriptInterface\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:\.addJavascriptInterface\s*\(]]]></rdl>
+            <rule_desc>Detects any call to addJavascriptInterface(), which exposes a native object to JavaScript running in a WebView.</rule_desc>
+            <vuln_desc>addJavascriptInterface() exposes a Kotlin/Java object as a JavaScript object inside the WebView. If the WebView loads content from untrusted origins (web URLs, injected HTML), any @JavascriptInterface-annotated method becomes callable from JavaScript. On Android &lt; 4.2 all public methods are exposed. Exploitation can lead to arbitrary Java/Kotlin method calls, data exfiltration, or RCE via reflection.</vuln_desc>
+            <developer>Annotate only the minimal required methods with @JavascriptInterface. Restrict WebView content to trusted first-party origins. Disable setAllowFileAccess and setAllowUniversalAccessFromFileURLs. Validate all data passed back from JavaScript before acting on it.</developer>
+            <reviewer>Review every addJavascriptInterface() call: identify all @JavascriptInterface-annotated methods, confirm content origins are trusted, and verify that returned data is validated before use in sensitive operations. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
     <category name="Effective/Standard Mitigations Implemented">
@@ -191,6 +191,26 @@
             <vuln_desc>This rule checks if Room database queries are constructed using Room's query builder methods, which inherently parameterize or sanitize inputs, effectively mitigating SQL injection vulnerabilities. By using Room's built-in mechanisms for query construction, developers avoid the risk of SQL injection vulnerabilities that arise from improper input handling.</vuln_desc>
             <developer>Room database queries are constructed using Room's query builder methods, such as createQuery(), which automatically handle input parameterization or sanitization. By leveraging these mechanisms, developers can effectively mitigate SQL injection vulnerabilities in Room database queries.</developer>
             <reviewer>Room database queries are constructed using Room's query builder methods, such as createQuery(), to ensure proper input parameterization or sanitization, thereby mitigating SQL injection vulnerabilities. Additionally, confirm that developers consistently apply these secure coding practices throughout the application's database interactions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="Data Leakage">
+        <rule>
+            <name>Sensitive Data in Logcat Output</name>
+            <regex><![CDATA[Log\.[deiwtv]\s*\(\s*\w+\s*,\s*[^")][^)]*\)|Log\.[deiwtv]\s*\(\s*\w+\s*,\s*"[^"]*\$[^"]*"\)]]></regex>
+            <rdl><![CDATA[[FLAG:Log\.[deiwtv]\s*\(][IF(PRESENT:password|token|secret|credential|auth|session|key|pin|ssn|dob|credit|cvv|privateKey|accessToken|refreshToken && MISSING:BuildConfig\.DEBUG\s*&&\s*Log\.|if\s*\(\s*BuildConfig\.DEBUG)]]]></rdl>
+            <rule_desc>Detects Logcat calls that may write security-sensitive variable data to the Android log.</rule_desc>
+            <vuln_desc>Log.d/e/i/w/v calls that include sensitive variables (tokens, passwords, credentials) or Kotlin string interpolation expose data to logcat, which is readable by any app holding READ_LOGS permission and accessible to anyone with ADB access. Even DEBUG-only logs can be forgotten in release builds.</vuln_desc>
+            <developer>Remove all Log statements that include sensitive data before release. Gate debug logging behind BuildConfig.DEBUG checks. Use structured logging with field redaction for production logging.</developer>
+            <reviewer>Search for Log.* calls that reference security-sensitive field names or variables. Verify that sensitive values are redacted or omitted in production log output. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Dynamic Code Loading</name>
+            <regex><![CDATA[DexClassLoader\s*\(|PathClassLoader\s*\(|URLClassLoader\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:DexClassLoader\s*\(|PathClassLoader\s*\(|URLClassLoader\s*\(][IF(MISSING:android_asset|getFilesDir\(\)|getCodeCacheDir\(\)|getCacheDir\(\)|Context\.getDir\()]]]></rdl>
+            <rule_desc>Detects dynamic class loading from potentially untrusted paths.</rule_desc>
+            <vuln_desc>Loading DEX or class files dynamically from paths outside the app's internal storage (assets, filesDir, cacheDir) risks loading tampered or malicious code. External storage, downloaded files, and user-supplied paths can all be attacker-controlled.</vuln_desc>
+            <developer>Only load classes from paths inside the app's internal storage. Verify the integrity of any dynamically loaded code with a cryptographic signature before loading it.</developer>
+            <reviewer>Identify all dynamic class loader instantiations and confirm the source path is within the app's own internal storage or assets. Verify signature checks are in place if loading from downloaded content. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

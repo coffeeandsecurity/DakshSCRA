@@ -86,6 +86,10 @@ _spinner_running = False
 def spinner(mode):
     global _spinner_thread, _spinner_running
 
+    # Skip spinner when stdout is not a TTY (e.g. captured to log file in web UI)
+    if not sys.stdout.isatty():
+        return
+
     if mode == "start":
         def spin():
             while _spinner_running:

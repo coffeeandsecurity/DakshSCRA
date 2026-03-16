@@ -58,6 +58,8 @@ def startup():
     WEB_RUNS_DIR.mkdir(parents=True, exist_ok=True)
     Base.metadata.create_all(bind=engine)
     _ensure_schema_compatibility()
+    port = os.environ.get("DAKSH_PORT", "8080")
+    print(f"\n  DakshSCRA Web UI  →  http://localhost:{port}\n", flush=True)
 
 
 def _ensure_schema_compatibility() -> None:
@@ -322,6 +324,26 @@ def health():
     return {"status": "ok", "service": "dakshscra-api"}
 
 
+@app.get("/api/v1/version")
+def get_version():
+    try:
+        import sys as _sys
+        _sys.path.insert(0, str(ROOT_DIR))
+        import yaml as _yaml
+        with open(ROOT_DIR / "config" / "tool.yaml", "r") as _f:
+            _cfg = _yaml.safe_load(_f)
+        ver = str(_cfg.get("release", "unknown"))
+        release_date = str(_cfg.get("release_date", "")) or None
+    except Exception:
+        ver = "unknown"
+        release_date = None
+    return {
+        "version": ver,
+        "release_date": release_date,
+        "github_repo": "coffeeandsecurity/DakshSCRA",
+    }
+
+
 @app.post("/api/v1/scans", response_model=ScanDetails)
 def create_scan(payload: ScanCreate, db: Session = Depends(db_session)):
     run_uuid = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S") + "-" + uuid4().hex[:8]
@@ -426,6 +448,10 @@ def stream_scan_log(run_uuid: str):
                 except Exception:
                     pass
 
+            if new_chunk:
+                # Strip ANSI escape codes and lone backspace/carriage-return chars
+                new_chunk = re.sub(r"\[[0-9;]*[mABCDEFGHJKSTfhilmnprsu]", "", new_chunk)
+                new_chunk = re.sub(r"[\x08\r]+", "", new_chunk)
             if new_chunk or current_status not in ("running", "queued"):
                 data = json.dumps({"log": new_chunk, "status": current_status})
                 yield f"data: {data}\n\n"
@@ -540,6 +566,7 @@ def get_scan_findings(run_uuid: str, db: Session = Depends(db_session)):
     analysis = _load_json_safe(json_dir / "analysis.json")
     recon = _load_json_safe(json_dir / "recon.json")
     scan_meta = _load_json_safe(runtime_dir / "scan_summary.json")
+    loc_breakdown = _load_json_safe(runtime_dir / "filepaths.json") or []
 
     return {
         "run_uuid": run_uuid,
@@ -550,6 +577,7 @@ def get_scan_findings(run_uuid: str, db: Session = Depends(db_session)):
         "analysis": analysis,
         "recon": recon,
         "scan_meta": scan_meta,
+        "loc_breakdown": loc_breakdown,
     }
 
 

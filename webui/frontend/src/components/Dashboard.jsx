@@ -198,7 +198,119 @@ function niceDate(iso) {
   return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
-export default function Dashboard({ metrics, projects = [], runs = [], onNavigate, onDeleteProject }) {
+/* ─── localStorage keys ──────────────────────────────────────── */
+const LS_UPDATE   = 'daksh_update_pref'     // { dontShowTag: string }
+const LS_OFFLINE  = 'daksh_offline_pref'    // { dontShowAgain: bool, remindAfter: number }
+const REMIND_MS   = 7 * 24 * 60 * 60 * 1000  // 7 days
+
+function lsGet(key) {
+  try { return JSON.parse(localStorage.getItem(key) || 'null') } catch { return null }
+}
+function lsSet(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)) } catch {}
+}
+
+/* ─── Version notification component ───────────────────────────
+   Handles three states:
+   'update'   – GitHub reachable, newer version found
+   'offline'  – GitHub unreachable, current release is > 30 days old
+   null       – nothing to show
+────────────────────────────────────────────────────────────────── */
+function VersionNotification({ versionInfo, latestRelease, githubChecked }) {
+  const [dismissed, setDismissed] = useState(false)
+
+  if (dismissed || !versionInfo) return null
+
+  const current = String(versionInfo.version).replace(/^v/i, '').trim()
+  const repoUrl = `https://github.com/${versionInfo.github_repo || 'coffeeandsecurity/DakshSCRA'}`
+
+  /** Parse only the leading numeric portion — ignore -beta, -alpha, etc. */
+  function numericVer(tag) {
+    const m = String(tag).replace(/^v/i, '').match(/^[\d.]+/)
+    return m ? m[0].split('.').map(Number) : [0]
+  }
+
+  /** Returns true only when b's numeric version is strictly greater than a's */
+  function isNewer(current, latest) {
+    const a = numericVer(current)
+    const b = numericVer(latest)
+    const len = Math.max(a.length, b.length)
+    for (let i = 0; i < len; i++) {
+      const av = a[i] ?? 0
+      const bv = b[i] ?? 0
+      if (bv > av) return true
+      if (bv < av) return false
+    }
+    return false
+  }
+
+  /* ── Case 1: new version available ── */
+  if (latestRelease) {
+    const latest = String(latestRelease.tag).replace(/^v/i, '').trim()
+    if (!latest || !isNewer(current, latest)) return null
+
+    const latestNumericKey = numericVer(latest).join('.')
+    const pref = lsGet(LS_UPDATE)
+    if (pref?.dontShowTag === latestNumericKey) return null
+
+    return (
+      <div className="update-banner update-banner-new">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" className="update-banner-icon">
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+        </svg>
+        <span className="update-banner-text">
+          New version available — <strong>{latestRelease.tag}</strong>
+          <span className="update-banner-sub"> (you are on v{current})</span>
+        </span>
+        <a href={latestRelease.url} target="_blank" rel="noreferrer" className="btn btn-sm update-banner-btn">
+          View release ↗
+        </a>
+        <button className="btn btn-ghost btn-sm update-banner-action"
+          onClick={() => { lsSet(LS_UPDATE, { dontShowTag: latestNumericKey }); setDismissed(true) }}>
+          Don't show again
+        </button>
+        <button className="btn-icon update-banner-dismiss" onClick={() => setDismissed(true)} title="Dismiss for this session">✕</button>
+      </div>
+    )
+  }
+
+  /* ── Case 2: GitHub unreachable — check if release is stale ── */
+  if (!githubChecked) return null   // still loading
+
+  const releaseDate = versionInfo.release_date ? new Date(versionInfo.release_date) : null
+  const ageMs = releaseDate ? (Date.now() - releaseDate.getTime()) : 0
+  const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000
+  if (ageMs < THIRTY_DAYS) return null   // recent release, no warning needed
+
+  const pref = lsGet(LS_OFFLINE)
+  if (pref?.dontShowAgain) return null
+  if (pref?.remindAfter && Date.now() < pref.remindAfter) return null
+
+  const ageDays = Math.floor(ageMs / (24 * 60 * 60 * 1000))
+
+  return (
+    <div className="update-banner update-banner-offline">
+      <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" className="update-banner-icon">
+        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+      </svg>
+      <span className="update-banner-text">
+        Unable to check for updates — no internet access.
+        <span className="update-banner-sub"> Current release v{current} is {ageDays} days old. Check <a href={repoUrl + '/releases'} target="_blank" rel="noreferrer" className="update-banner-link">GitHub releases</a> manually.</span>
+      </span>
+      <button className="btn btn-ghost btn-sm update-banner-action"
+        onClick={() => { lsSet(LS_OFFLINE, { dontShowAgain: false, remindAfter: Date.now() + REMIND_MS }); setDismissed(true) }}>
+        Remind in 7 days
+      </button>
+      <button className="btn btn-ghost btn-sm update-banner-action"
+        onClick={() => { lsSet(LS_OFFLINE, { dontShowAgain: true }); setDismissed(true) }}>
+        Don't show again
+      </button>
+      <button className="btn-icon update-banner-dismiss" onClick={() => setDismissed(true)} title="Ignore for this session">✕</button>
+    </div>
+  )
+}
+
+export default function Dashboard({ metrics, projects = [], runs = [], onNavigate, onDeleteProject, versionInfo, latestRelease, githubChecked }) {
   const statusCounts = {
     success: metrics?.success_scans || 0,
     running: metrics?.running_scans || 0,
@@ -210,6 +322,11 @@ export default function Dashboard({ metrics, projects = [], runs = [], onNavigat
 
   return (
     <div>
+      <VersionNotification
+        versionInfo={versionInfo}
+        latestRelease={latestRelease}
+        githubChecked={githubChecked}
+      />
       {/* Stat Cards */}
       <div className="stat-grid">
         <div className="stat-card accent-blue">
