@@ -38,8 +38,8 @@ DakshSCRA introduced several capabilities that were first-of-their-kind in open 
 
 | Feature | Why it matters |
 |---|---|
-| **File path areas of interest** *(World's First)* | Scans file and directory names themselves — not just code — to flag suspicious paths like backup files, debug endpoints, config dumps, and credential files that reviewers often miss |
-| **Scientific effort estimation** *(World's First)* | Produces a quantified, defensible estimate of how long a manual review will take based on codebase size, file count, and finding volume — not a guess |
+| **File path areas of interest** *(World's First)* | Scans file and directory names themselves - not just code - to flag suspicious paths like backup files, debug endpoints, config dumps, and credential files that reviewers often miss |
+| **Scientific effort estimation** *(World's First)* | Produces a quantified, defensible estimate of how long a manual review will take based on codebase size, file count, and finding volume - not a guess |
 | **Areas of interest, not bug flags** | Surfaces patterns worth investigating rather than tagging everything as a vulnerability. Reduces false-positive noise and keeps the reviewer in control |
 | **Software reconnaissance** | Detects languages, frameworks, and infrastructure from file contents and structure before scanning, so the right rules get applied automatically |
 | **Cross-file taint analysis** | Traces user-controlled data from source to sink across file boundaries, not just within a single file |
@@ -486,21 +486,21 @@ See `.env.example` in the repository root for the full list of variables and per
 
 ---
 
-## RDL — Rule Description Language
+## RDL - Rule Description Language
 
 RDL is DakshSCRA's second-pass conditional filter applied **after** a regex match. Every rule can optionally include an `<rdl>` block that adds context-aware conditions, significantly reducing false positives without writing separate rules for every edge case.
 
-> **World's first in open source** — conditional rule logic previously found only in commercial security scanners.
+> **World's first in open source** - conditional rule logic previously found only in commercial security scanners.
 
 ### How it works
 
-When the scanner finds a regex match, it evaluates the RDL expression against the **entire file content** — not just the matched line. If the RDL condition is not satisfied, the match is suppressed and never reaches the report.
+When the scanner finds a regex match, it evaluates the RDL expression against the **entire file content** - not just the matched line. If the RDL condition is not satisfied, the match is suppressed and never reaches the report.
 
 ### Operators
 
 | Operator | Behaviour | When to use |
 |---|---|---|
-| `FLAG:<pattern>` | Anchors the condition — the subject the rule is built around | Always the first clause |
+| `FLAG:<pattern>` | Anchors the condition - the subject the rule is built around | Always the first clause |
 | `IF(condition)` | Match is reported only when this condition is true | Wraps PRESENT / MISSING predicates |
 | `PRESENT:<pattern>` | True when the pattern **is** found anywhere in the file | Require a co-occurring risky call |
 | `MISSING:<pattern>` | True when the pattern is **not** found anywhere in the file | Suppress when a mitigation is already present |
@@ -515,13 +515,13 @@ When the scanner finds a regex match, it evaluates the RDL expression against th
 |---|---|---|
 | `getSharedPreferences()` | Flags every preference access (high FP rate) | Only flags when sensitive keys AND no encryption present |
 | `loadUrl(someVar)` | Flags hardcoded safe URLs like `about:blank`, `file:///android_asset` | Only flags dynamic / interpolated URLs |
-| `Room.databaseBuilder()` | Flags DB setup calls — zero injection risk (100% FP) | Replaced with `@Query` string interpolation pattern only |
-| `System.getenv("SECRET")` | Flags as hardcoded secret (FP — it is a safe read) | Suppressed by `MISSING:System.getenv` condition |
+| `Room.databaseBuilder()` | Flags DB setup calls - zero injection risk (100% FP) | Replaced with `@Query` string interpolation pattern only |
+| `System.getenv("SECRET")` | Flags as hardcoded secret (FP - it is a safe read) | Suppressed by `MISSING:System.getenv` condition |
 | `viewModelScope.launch {}` | Flags every coroutine dispatch including benign UI commands | Only flags when body contains sensitive ops without error handling |
 
-> **File-scope limitation:** PRESENT and MISSING conditions are evaluated against the entire file, not per-line. If a mitigation pattern appears *anywhere* in the file, all matches in that file are suppressed — even an unprotected call in the same file. This is a deliberate trade-off: lower noise at the cost of occasionally missing an issue in an otherwise-safe file. The reviewer note on every finding always advises manual confirmation.
+> **File-scope limitation:** PRESENT and MISSING conditions are evaluated against the entire file, not per-line. If a mitigation pattern appears *anywhere* in the file, all matches in that file are suppressed - even an unprotected call in the same file. This is a deliberate trade-off: lower noise at the cost of occasionally missing an issue in an otherwise-safe file. The reviewer note on every finding always advises manual confirmation.
 
-### Example 1 — PHP SQL injection with missing parameterisation
+### Example 1 - PHP SQL injection with missing parameterisation
 
 ```xml
 <rule>
@@ -534,7 +534,7 @@ When the scanner finds a regex match, it evaluates the RDL expression against th
 
 Fires when user-controlled input (`$_GET`, `$_POST`, etc.) is present **and** no parameterised query APIs are found in the file. A file that already uses `PDO::prepare` is not flagged.
 
-### Example 2 — Android SharedPreferences storing sensitive data without encryption
+### Example 2 - Android SharedPreferences storing sensitive data without encryption
 
 ```xml
 <rdl><![CDATA[[FLAG:getSharedPreferences\(][IF(PRESENT:(token|secret|password|auth|session) && MISSING:(EncryptedSharedPreferences|MasterKey|KeyStore|Cipher|encrypt))]]]></rdl>
@@ -542,7 +542,7 @@ Fires when user-controlled input (`$_GET`, `$_POST`, etc.) is present **and** no
 
 Fires only when the file references sensitive field names (token, password, etc.) **and** no Android encryption APIs are present. Files using `EncryptedSharedPreferences` are automatically suppressed.
 
-### Example 3 — Hardcoded secrets excluding environment-variable reads
+### Example 3 - Hardcoded secrets excluding environment-variable reads
 
 ```xml
 <rdl><![CDATA[[FLAG:(api_key|secret|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:System\.getenv\s*\(|System\.getProperty\s*\(|BuildConfig\. && MISSING:example|sample|dummy|test|placeholder)]]]></rdl>

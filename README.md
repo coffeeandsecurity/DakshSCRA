@@ -27,7 +27,7 @@ Daksh SCRA was initially introduced during a source code review training session
 - **Automated Scientific Effort Estimation for Code Review (World's First):** Providing a measurable approach for estimating efforts required for a code review process.
 - **Framework-Aware Scanning:** Automatically applies framework-specific rules when the project's framework is detected.
 - **Taint Analysis Reports:** Per-platform HTML taint flow reports with hacker-mode and professional-mode themes.
-- **RDL (Rule Description Language):** Conditional rule logic beyond regex — supports `FLAG`, `IF`, `MISSING`, `PRESENT`, `EXISTS`, `&&`, `||`, `!`.
+- **RDL (Rule Description Language):** Conditional rule logic beyond regex - supports `FLAG`, `IF`, `MISSING`, `PRESENT`, `EXISTS`, `&&`, `||`, `!`.
 - **Scan State / Resume:** Checkpoint long scans and resume after interruption.
 - **Suppression Baseline:** Generate and apply a baseline of known false positives to suppress them from future reports.
 - **Web UI:** Browser-based scan launcher with real-time console feed and job artifact browser.
@@ -59,7 +59,7 @@ Or download the latest zip from [https://github.com/coffeeandsecurity/DakshSCRA]
 
 ### 2. Setup a Virtual Environment
 
-> 💡 The virtual environment can be created in any directory — it does not need to be inside the DakshSCRA folder.
+> 💡 The virtual environment can be created in any directory - it does not need to be inside the DakshSCRA folder.
 
 #### Option A: One-Step Setup (Recommended)
 
@@ -237,7 +237,7 @@ Current supported platforms and framework mappings:
 | cordova | cordova |
 | ruby | rails, sinatra |
 | rust | actix, axum, rocket |
-| common | — |
+| common | - |
 
 To get the latest supported platforms and frameworks, always run:
 
@@ -285,7 +285,7 @@ analysis:
 
 RDL (Rule Description Language) is DakshSCRA's second-pass conditional filter applied **after** a regex match. Every rule can include an optional `<rdl>` block that adds context-aware conditions, significantly reducing false positives without writing separate rules for every edge case.
 
-> RDL is a world-first concept in open-source code scanners — conditional rule logic previously found only in commercial security tools.
+> RDL is a world-first concept in open-source code scanners - conditional rule logic previously found only in commercial security tools.
 
 #### Operators
 
@@ -293,7 +293,7 @@ RDL conditions are evaluated against the **entire file content** of each matched
 
 | Operator | Behaviour | When to use |
 |---|---|---|
-| `FLAG:<pattern>` | Anchors the condition — defines what the rule is built around | Always the first clause |
+| `FLAG:<pattern>` | Anchors the condition - defines what the rule is built around | Always the first clause |
 | `IF(condition)` | Match is only reported when this condition is true | Wraps PRESENT / MISSING predicates |
 | `PRESENT:<pattern>` | True when the pattern **is** found anywhere in the file | Require a co-occurring risky call |
 | `MISSING:<pattern>` | True when the pattern is **not** found anywhere in the file | Suppress when a mitigation is already present |
@@ -308,12 +308,12 @@ RDL conditions are evaluated against the **entire file content** of each matched
 |---|---|---|
 | `getSharedPreferences()` | Flags every preference access | Only flags when sensitive keys AND no encryption present |
 | `loadUrl(someVar)` | Flags hardcoded safe URLs like `about:blank` | Only flags dynamic / interpolated URLs |
-| `Room.databaseBuilder()` | Flags DB setup — zero injection risk (100% FP) | Replaced with `@Query` interpolation pattern |
+| `Room.databaseBuilder()` | Flags DB setup - zero injection risk (100% FP) | Replaced with `@Query` interpolation pattern |
 | `System.getenv("SECRET")` | Flags as hardcoded secret (FP) | Suppressed by `MISSING:System.getenv` |
 
-> **File-scope limitation:** PRESENT and MISSING are evaluated against the entire file, not just the matched line. If a mitigation appears *anywhere* in the file, all matches in that file are suppressed — even an unprotected call in the same file. This is a deliberate FP trade-off; the reviewer note on every finding always advises manual confirmation.
+> **File-scope limitation:** PRESENT and MISSING are evaluated against the entire file, not just the matched line. If a mitigation appears *anywhere* in the file, all matches in that file are suppressed - even an unprotected call in the same file. This is a deliberate FP trade-off; the reviewer note on every finding always advises manual confirmation.
 
-#### Example 1 — PHP SQL injection with missing parameterisation
+#### Example 1 - PHP SQL injection with missing parameterisation
 
 ```xml
 <rule>
@@ -329,7 +329,7 @@ RDL conditions are evaluated against the **entire file content** of each matched
 
 Fires when user-controlled input (`$_GET`, `$_POST`, etc.) is present **and** no parameterised query methods are found in the file. A file already using PDO prepared statements is **not** flagged.
 
-#### Example 2 — Android SharedPreferences storing sensitive data without encryption
+#### Example 2 - Android SharedPreferences storing sensitive data without encryption
 
 ```xml
 <rdl><![CDATA[[FLAG:getSharedPreferences\(][IF(PRESENT:(token|secret|password|auth|session) && MISSING:(EncryptedSharedPreferences|MasterKey|KeyStore|Cipher|encrypt))]]]></rdl>
@@ -337,7 +337,7 @@ Fires when user-controlled input (`$_GET`, `$_POST`, etc.) is present **and** no
 
 Only fires when the file references sensitive field names **and** no encryption APIs are present. Files using `EncryptedSharedPreferences` are automatically suppressed.
 
-#### Example 3 — Hardcoded secrets excluding environment-variable reads
+#### Example 3 - Hardcoded secrets excluding environment-variable reads
 
 ```xml
 <rdl><![CDATA[[FLAG:(api_key|secret|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:System\.getenv\s*\(|System\.getProperty\s*\(|BuildConfig\. && MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
@@ -346,8 +346,8 @@ Only fires when the file references sensitive field names **and** no encryption 
 Without this RDL, `TOKEN = "${System.getenv("TOKEN")}"` would be flagged as a hardcoded secret. The MISSING conditions exclude reads from environment variables, build config, and placeholder values.
 
 Supported RDL operators (summary):
-- `FLAG:<regex>` — anchor condition in the file context
-- `IF(...)` — conditional evaluation
+- `FLAG:<regex>` - anchor condition in the file context
+- `IF(...)` - conditional evaluation
 - Predicates: `MISSING:`, `PRESENT:`, `EXISTS:`
 - Boolean: `&&`, `||`, `!`
 

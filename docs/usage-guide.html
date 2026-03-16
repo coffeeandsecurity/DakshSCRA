@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DakshSCRA — Usage Guide</title>
+<title>DakshSCRA - Usage Guide</title>
 <style>
 :root {
   --bg: #0f1117;
@@ -216,7 +216,7 @@ td code { font-size: 12px; }
 
   <div class="nav-section">Reference</div>
   <a class="nav-link" href="#findings-ref">Understanding Findings</a>
-  <a class="nav-link" href="#rdl">RDL — Conditional Rules</a>
+  <a class="nav-link" href="#rdl">RDL - Conditional Rules</a>
   <a class="nav-link nav-sub" href="#rdl-operators">Operators</a>
   <a class="nav-link nav-sub" href="#rdl-examples">Examples</a>
   <a class="nav-link nav-sub" href="#rdl-fp">How FPs Are Reduced</a>
@@ -232,7 +232,7 @@ td code { font-size: 12px; }
 
   <!-- ── Header ── -->
   <div class="page-header">
-    <h1>DakshSCRA — Usage Guide</h1>
+    <h1>DakshSCRA - Usage Guide</h1>
     <p class="subtitle">Source Code Review Assist &mdash; CLI &amp; Web UI Reference</p>
   </div>
 
@@ -246,7 +246,7 @@ td code { font-size: 12px; }
     <div class="table-wrap"><table>
       <thead><tr><th>Capability</th><th>Description</th></tr></thead>
       <tbody>
-        <tr><td><strong>Rule-based scanning</strong></td><td>Matches platform-specific patterns — SQL queries, command execution, file I/O, authentication constructs — against source files</td></tr>
+        <tr><td><strong>Rule-based scanning</strong></td><td>Matches platform-specific patterns - SQL queries, command execution, file I/O, authentication constructs - against source files</td></tr>
         <tr><td><strong>Reconnaissance</strong></td><td>Detects languages, frameworks, and technology stack from file contents and structure</td></tr>
         <tr><td><strong>Taint analysis</strong></td><td>Traces data flows from user-controlled sources to security-sensitive sinks across files and functions</td></tr>
         <tr><td><strong>Effort estimation</strong></td><td>Estimates manual review time based on codebase size, complexity, and finding volume</td></tr>
@@ -263,7 +263,7 @@ td code { font-size: 12px; }
     <ul style="margin: 0 0 16px 20px;">
       <li>Python 3.9 or later</li>
       <li>pip</li>
-      <li>Playwright Chromium — <em>only required for PDF generation</em></li>
+      <li>Playwright Chromium - <em>only required for PDF generation</em></li>
     </ul>
 
     <h3>Setup</h3>
@@ -277,9 +277,9 @@ td code { font-size: 12px; }
 <span class="comment"># Install Chromium (PDF generation only)</span>
 <span class="cmd">playwright install chromium</span></code></pre>
 
-    <h3>Docker — Web UI</h3>
+    <h3>Docker - Web UI</h3>
     <pre><code><span class="cmd">docker compose up --build</span></code></pre>
-    <p>Open <code>http://localhost:8080</code> — change port with <code>DAKSH_PORT=9090 docker compose up</code>.</p>
+    <p>Open <code>http://localhost:8080</code> - change port with <code>DAKSH_PORT=9090 docker compose up</code>.</p>
   </section>
 
   <hr class="divider">
@@ -326,7 +326,7 @@ td code { font-size: 12px; }
     <pre><code><span class="comment"># Recon + scan + estimate in one pass</span>
 <span class="cmd">python dakshscra.py --recon --estimate <span class="flag">-r</span> <span class="value">php</span> <span class="flag">-t</span> <span class="value">./app</span></span>
 
-<span class="comment"># Recon only — no scanning</span>
+<span class="comment"># Recon only - no scanning</span>
 <span class="cmd">python dakshscra.py --recon <span class="flag">-t</span> <span class="value">./app</span></span>
 
 <span class="comment"># Recon with strict confidence filter</span>
@@ -440,9 +440,9 @@ runtime/
 
     <p>The sidebar on the left provides navigation between three main areas:</p>
     <ul style="margin: 0 0 16px 20px; line-height: 2;">
-      <li><strong>Dashboard</strong> — overview, metrics, and quick navigation</li>
-      <li><strong>Projects</strong> — organise and browse scan history by project</li>
-      <li><strong>Scans</strong> — run new scans and review findings</li>
+      <li><strong>Dashboard</strong> - overview, metrics, and quick navigation</li>
+      <li><strong>Projects</strong> - organise and browse scan history by project</li>
+      <li><strong>Scans</strong> - run new scans and review findings</li>
     </ul>
   </section>
 
@@ -450,7 +450,7 @@ runtime/
     <h3>Dashboard</h3>
     <p>The landing page. Shows:</p>
     <ul style="margin: 0 0 16px 20px; line-height: 2;">
-      <li>Summary metrics — total projects, scans, success/failure counts and rate</li>
+      <li>Summary metrics - total projects, scans, success/failure counts and rate</li>
       <li>Daily scan activity bar chart</li>
       <li>Project list with scan counts and last-scan timestamps</li>
       <li>Quick navigation to any project or to start a new scan</li>
@@ -501,7 +501,7 @@ runtime/
       <h4>Scan Table</h4>
       <p>Lists all scans for the selected project, most recent first. Each row shows:</p>
       <ul style="margin: 0 0 16px 20px; line-height: 2;">
-        <li>Status badge — <span class="tag tag-blue">running</span> <span class="tag tag-green">success</span> <span class="tag tag-orange">failed</span></li>
+        <li>Status badge - <span class="tag tag-blue">running</span> <span class="tag tag-green">success</span> <span class="tag tag-orange">failed</span></li>
         <li>Scan timestamp and UUID</li>
         <li>Duration</li>
         <li>Platform rules used</li>
@@ -512,28 +512,28 @@ runtime/
     <section id="scan-detail">
       <h4>Scan Detail Tabs</h4>
 
-      <p><strong>Log</strong> — Live streaming output from the scan process. Shows each stage (file discovery, scanning, analysis, reporting) as it progresses.</p>
+      <p><strong>Log</strong> - Live streaming output from the scan process. Shows each stage (file discovery, scanning, analysis, reporting) as it progresses.</p>
 
-      <p><strong>Findings</strong> — Two sub-tabs:</p>
+      <p><strong>Findings</strong> - Two sub-tabs:</p>
       <ul style="margin: 0 0 12px 20px; line-height: 2;">
-        <li><em>Scanner</em> — Rule-based source code findings. Each shows rule name, file path, matched line, and code context.</li>
-        <li><em>Paths</em> — Suspicious filenames, backup files, and configuration files.</li>
+        <li><em>Scanner</em> - Rule-based source code findings. Each shows rule name, file path, matched line, and code context.</li>
+        <li><em>Paths</em> - Suspicious filenames, backup files, and configuration files.</li>
       </ul>
 
-      <p><strong>Taint Analysis</strong> — Dataflow findings showing source-to-sink traces. Each finding includes:</p>
+      <p><strong>Taint Analysis</strong> - Dataflow findings showing source-to-sink traces. Each finding includes:</p>
       <ul style="margin: 0 0 12px 20px; line-height: 2;">
         <li>Confidence level (high / medium / low)</li>
-        <li>Source location — where user-controlled data enters the application</li>
-        <li>Sink location — where it reaches a security-sensitive call</li>
+        <li>Source location - where user-controlled data enters the application</li>
+        <li>Sink location - where it reaches a security-sensitive call</li>
         <li>Full trace path with intermediate assignment and call steps</li>
-        <li>Cross-file indicator — whether the flow spans multiple files</li>
+        <li>Cross-file indicator - whether the flow spans multiple files</li>
       </ul>
 
-      <p><strong>Insights</strong> — Three sub-sections:</p>
+      <p><strong>Insights</strong> - Three sub-sections:</p>
       <ul style="margin: 0 0 12px 20px; line-height: 2;">
-        <li><em>File Paths</em> — Full inventory of discovered source files</li>
-        <li><em>Recon</em> — Technology stack detection results (requires <code>--recon</code>)</li>
-        <li><em>Effort Estimate</em> — Link to the estimation report (requires <code>--estimate</code>)</li>
+        <li><em>File Paths</em> - Full inventory of discovered source files</li>
+        <li><em>Recon</em> - Technology stack detection results (requires <code>--recon</code>)</li>
+        <li><em>Effort Estimate</em> - Link to the estimation report (requires <code>--estimate</code>)</li>
       </ul>
     </section>
   </section>
@@ -542,8 +542,8 @@ runtime/
     <h3>Reports &amp; Artifacts</h3>
     <p>After a scan completes, all generated files are accessible from the Scan Detail view. Available artifacts include:</p>
     <ul style="margin: 0 0 16px 20px; line-height: 2;">
-      <li>HTML report — single combined file</li>
-      <li>HTML multi-file report set — per-platform pages with an index</li>
+      <li>HTML report - single combined file</li>
+      <li>HTML multi-file report set - per-platform pages with an index</li>
       <li>Taint analysis cross-reference report</li>
       <li>Effort estimation report</li>
       <li>JSON data files (raw findings, summary, recon)</li>
@@ -559,7 +559,7 @@ runtime/
     <h2>Understanding Findings</h2>
 
     <h3>Scanner Findings</h3>
-    <p>Each scanner finding represents a pattern match against a known-risky code construct. They are <em>areas of interest</em> — not confirmed vulnerabilities. Manual review is required to determine exploitability.</p>
+    <p>Each scanner finding represents a pattern match against a known-risky code construct. They are <em>areas of interest</em> - not confirmed vulnerabilities. Manual review is required to determine exploitability.</p>
     <div class="table-wrap"><table>
       <thead><tr><th>Field</th><th>Description</th></tr></thead>
       <tbody>
@@ -581,15 +581,15 @@ runtime/
         <tr><td>Source</td><td>Where user-controlled data originates (request param, env var, file input, etc.)</td></tr>
         <tr><td>Sink</td><td>The security-sensitive call that receives the tainted data</td></tr>
         <tr><td>Trace</td><td>Ordered list of intermediate steps connecting source to sink</td></tr>
-        <tr><td>Cross-file</td><td>Whether the flow spans more than one file — increases confidence</td></tr>
+        <tr><td>Cross-file</td><td>Whether the flow spans more than one file - increases confidence</td></tr>
       </tbody>
     </table></div>
 
     <h4>Confidence Interpretation</h4>
     <ul style="margin: 0 0 16px 20px; line-height: 2.2;">
-      <li><span class="tag tag-purple">high</span> — Cross-file flows with assignment steps. Highest priority for review.</li>
-      <li><span class="tag tag-blue">medium</span> — Same-file flows with partial tracing. Likely worth reviewing.</li>
-      <li><span class="tag tag-orange">low</span> — File-scope fallback or single-step match. May be noise; verify manually.</li>
+      <li><span class="tag tag-purple">high</span> - Cross-file flows with assignment steps. Highest priority for review.</li>
+      <li><span class="tag tag-blue">medium</span> - Same-file flows with partial tracing. Likely worth reviewing.</li>
+      <li><span class="tag tag-orange">low</span> - File-scope fallback or single-step match. May be noise; verify manually.</li>
     </ul>
 
     <h3>Recon Results</h3>
@@ -602,7 +602,7 @@ runtime/
   <section id="rdl">
     <h2>RDL &mdash; Rule Description Language</h2>
     <p>RDL is DakshSCRA's second-pass conditional filter applied <strong>after</strong> a regex match. Every rule can include an optional <code>&lt;rdl&gt;</code> block that adds context-aware conditions, significantly reducing false positives without writing separate rules for every edge case.</p>
-    <div class="tip"><div class="callout-label">World's First (Open Source)</div>Conditional rule logic — previously found only in commercial security scanners — now available in open source. Rules can express multi-condition logic using <code>FLAG</code>, <code>IF</code>, <code>PRESENT</code>, <code>MISSING</code>, and boolean operators.</div>
+    <div class="tip"><div class="callout-label">World's First (Open Source)</div>Conditional rule logic - previously found only in commercial security scanners - now available in open source. Rules can express multi-condition logic using <code>FLAG</code>, <code>IF</code>, <code>PRESENT</code>, <code>MISSING</code>, and boolean operators.</div>
 
     <p>RDL conditions are evaluated against the <strong>entire file content</strong> of each matched file, not just the matched line. If the condition is not satisfied, the match is suppressed before it reaches the report.</p>
 
@@ -745,9 +745,9 @@ runtime/
 
     <h3>First scan on an unknown codebase</h3>
     <pre><code><span class="cmd">python dakshscra.py -r auto --recon --estimate <span class="flag">-t</span> <span class="value">./target</span></span></code></pre>
-    <p>Detects the technology stack, applies the relevant rules, and produces an effort estimate — the recommended starting point for a new engagement.</p>
+    <p>Detects the technology stack, applies the relevant rules, and produces an effort estimate - the recommended starting point for a new engagement.</p>
 
-    <h3>Large codebases — fast initial pass</h3>
+    <h3>Large codebases - fast initial pass</h3>
     <pre><code><span class="cmd">python dakshscra.py -r auto --skip-analysis <span class="flag">-t</span> <span class="value">./large_app</span></span></code></pre>
     <p>Skipping taint analysis significantly reduces scan time. Run the full analysis separately once you have recon and scanner results to guide you.</p>
 
