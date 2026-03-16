@@ -1,0 +1,22 @@
+<root>
+    <category name="Framework-Specific Issues - Alamofire (iOS)">
+        <rule>
+            <name>ServerTrustEvaluating Disabled with DisabledTrustEvaluator</name>
+            <regex><![CDATA[DisabledTrustEvaluator\s*\(\s*\)|DisabledEvaluation|trustAllCertificates|serverTrustManager\s*=\s*nil]]></regex>
+            <rdl><![CDATA[[FLAG:DisabledTrustEvaluator\s*\(\s*\)|trustAllCertificates|serverTrustManager\s*=\s*nil]]]></rdl>
+            <rule_desc>Detects Alamofire configurations that disable TLS server trust evaluation.</rule_desc>
+            <vuln_desc>DisabledTrustEvaluator accepts any certificate presented by the server, completely disabling TLS authentication and enabling MITM attacks against all Alamofire network requests in the app.</vuln_desc>
+            <developer>Use PinnedCertificatesTrustEvaluator or PublicKeysTrustEvaluator for certificate pinning. Use DefaultTrustEvaluator for standard validation against system trust anchors. Never use DisabledTrustEvaluator in production.</developer>
+            <reviewer>DisabledTrustEvaluator is a critical finding. Confirm removal from all production configurations. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Alamofire Request Without TLS Pinning</name>
+            <regex><![CDATA[AF\.request\s*\(|Session\.default\s*\.|Alamofire\.request\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:AF\.request\s*\(|Session\.default\s*\.][IF(MISSING:ServerTrustManager|PinnedCertificatesTrustEvaluator|PublicKeysTrustEvaluator)]]]></rdl>
+            <rule_desc>Detects Alamofire sessions making requests without a configured ServerTrustManager for pinning.</rule_desc>
+            <vuln_desc>Using AF.request() or Session.default without a custom ServerTrustManager relies solely on system CA validation, which is vulnerable to rogue CA attacks, corporate proxy interception, and user-installed certificates.</vuln_desc>
+            <developer>Create a custom Session instance with a ServerTrustManager that pins certificates or public keys for your API endpoints.</developer>
+            <reviewer>Confirm sensitive API calls use sessions with explicit trust evaluation policies. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+</root>

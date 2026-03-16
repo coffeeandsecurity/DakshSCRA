@@ -1,0 +1,31 @@
+<root>
+    <category name="Framework-Specific Issues - Kotlin Exposed">
+        <rule>
+            <name>exec() with String Template SQL</name>
+            <regex><![CDATA[exec\s*\(\s*["'][^"']*["']\s*\+|exec\s*\(\s*"""[^"]*"""\s*\+|exec\s*\(\s*"[^"]*\$\{]]></regex>
+            <rdl><![CDATA[[FLAG:exec\s*\(\s*["'][^"']*["']\s*\+|exec\s*\(\s*"[^"]*\$\{]]]></rdl>
+            <rule_desc>Detects Kotlin Exposed exec() calls with SQL built via string templates or concatenation.</rule_desc>
+            <vuln_desc>Using Kotlin string templates (${variable}) or concatenation to build SQL strings passed to exec() bypasses Exposed's parameterization, introducing SQL injection vulnerabilities.</vuln_desc>
+            <developer>Use Exposed's DSL query builders (selectAll(), select { ... }, insert { ... }) for type-safe parameterized queries. If raw SQL is necessary, use exec() with a PreparedStatement and bound parameters.</developer>
+            <reviewer>Confirm exec() calls do not use string templates or concatenation to insert user values. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>addLogger in Production Code Path</name>
+            <regex><![CDATA[addLogger\s*\(\s*StdOutSqlLogger\s*\)|addLogger\s*\(\s*Slf4jSqlDebugLogger\s*\)]]></regex>
+            <rdl><![CDATA[[FLAG:addLogger\s*\(\s*StdOutSqlLogger\s*\)|addLogger\s*\(\s*Slf4jSqlDebugLogger\s*\)][IF(MISSING:if.*debug|DEBUG|isDevelopment|isTest|\.debug)]]]></rdl>
+            <rule_desc>Detects Kotlin Exposed SQL loggers enabled without debug/development build gating.</rule_desc>
+            <vuln_desc>SQL debug loggers output full query strings including parameterized values to stdout or application logs, potentially exposing sensitive data such as user credentials, tokens, or PII in production log aggregation systems.</vuln_desc>
+            <developer>Gate SQL loggers behind environment or build mode checks: if (isDevelopment) { addLogger(StdOutSqlLogger) }. Remove all SQL loggers from production code paths.</developer>
+            <reviewer>Confirm SQL loggers are not active in production builds or configurations. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Exposed Transaction Without Exception Handling</name>
+            <regex><![CDATA[transaction\s*\{]]></regex>
+            <rdl><![CDATA[[FLAG:transaction\s*\{][IF(MISSING:try|catch|runCatching|rollback)]]]></rdl>
+            <rule_desc>Detects Exposed transaction blocks that perform mutations without exception handling for rollback.</rule_desc>
+            <vuln_desc>Transactions without proper exception handling may partially commit data on unexpected errors, leading to data integrity violations and inconsistent application state that could be exploited.</vuln_desc>
+            <developer>Wrap transaction bodies in try/catch or use Kotlin's runCatching. Exposed automatically rolls back transactions on exceptions, but calling code should handle and log failures appropriately.</developer>
+            <reviewer>Verify mutating transactions have appropriate error handling and that partial failures are detected and handled. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+</root>

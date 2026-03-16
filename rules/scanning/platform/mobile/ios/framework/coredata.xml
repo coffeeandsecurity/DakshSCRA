@@ -1,0 +1,22 @@
+<root>
+    <category name="Framework-Specific Issues - Core Data (iOS)">
+        <rule>
+            <name>NSFetchRequest Predicate from User Input</name>
+            <regex><![CDATA[NSPredicate\s*\(\s*format\s*:\s*["'][^"']*%@|NSPredicate\s*\(\s*format\s*:\s*["'][^"']*\\\(|predicateWithFormat\s*:\s*[@][^,)]*\+]]></regex>
+            <rdl><![CDATA[[FLAG:NSPredicate\s*\(\s*format\s*:\s*["'][^"']*%@][IF(MISSING:argumentArray|CVarArg|predicateWithValue)]]]></rdl>
+            <rule_desc>Detects NSPredicate format strings that interpolate values without using the argument array pattern.</rule_desc>
+            <vuln_desc>NSPredicate format strings using %@ with directly concatenated or interpolated user values are vulnerable to predicate injection, allowing attackers to manipulate fetch logic, bypass filters, or extract unintended data from Core Data stores.</vuln_desc>
+            <developer>Use NSPredicate with an argument array: NSPredicate(format: "name == %@", argumentArray: [userInput]). This ensures proper escaping of special predicate characters.</developer>
+            <reviewer>Confirm all NSPredicate format strings use proper argument array binding for user-supplied values. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Core Data Store Without Data Protection</name>
+            <regex><![CDATA[NSPersistentStoreCoordinator|addPersistentStore|NSPersistentContainer\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:NSPersistentStoreCoordinator|NSPersistentContainer\s*\(][IF(MISSING:NSFileProtectionComplete|NSFileProtectionCompleteUnlessOpen|fileProtection|NSPersistentStoreFileProtectionKey)]]]></rdl>
+            <rule_desc>Detects Core Data persistent store creation without file protection attributes.</rule_desc>
+            <vuln_desc>Core Data stores without NSFileProtectionComplete are accessible when the device is locked or in certain backup scenarios, exposing sensitive data to physical device attacks and backup extraction.</vuln_desc>
+            <developer>Set NSFileProtectionComplete on the persistent store URL: try FileManager.default.setAttributes([.protectionKey: .complete], ofItemAtPath: storeURL.path). Or pass NSPersistentStoreFileProtectionKey in store options.</developer>
+            <reviewer>Confirm Core Data stores containing sensitive data have appropriate file protection levels. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+</root>

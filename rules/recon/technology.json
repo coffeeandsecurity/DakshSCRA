@@ -54,10 +54,16 @@
     {"name": "SQL Server", "regex": "sqlserver|mssql|jdbc:sqlserver", "regexFlag": "1", "fileExtensions": [".sql", ".py", ".js", ".ts", ".java", ".yml", ".yaml", ".json"]}
   ],
   "Shell Scripts": [
-    {"name": "Bash", "regex": "#!/bin/bash|#!/usr/bin/env bash", "regexFlag": "1", "fileExtensions": [".sh"]},
+    {"name": "Bash", "regex": "#!/bin/bash|#!/usr/bin/env bash", "regexFlag": "1", "fileExtensions": [".sh", ".bash", ".bsh"]},
     {"name": "Zsh", "regex": "#!/bin/zsh|#!/usr/bin/env zsh", "regexFlag": "1", "fileExtensions": [".zsh"]},
-    {"name": "PowerShell", "regex": "\\bFunction\\b|\\bparam\\(|\\.ps1$", "regexFlag": "1", "fileExtensions": [".ps1"]},
+    {"name": "PowerShell", "regex": "\\bFunction\\b|\\bparam\\(|\\.ps1$", "regexFlag": "1", "fileExtensions": [".ps1", ".psm1", ".psd1"]},
     {"name": "Batch", "regex": "@echo\\s+off|\\.bat$", "regexFlag": "1", "fileExtensions": [".bat", ".cmd"]}
+  ],
+  "Infrastructure": [
+    {"name": "Docker", "regex": "^FROM\\s+\\S+|^RUN\\s+|^COPY\\s+|^EXPOSE\\s+|docker-compose", "regexFlag": "1", "fileExtensions": ["Dockerfile", ".dockerfile", ".yml", ".yaml"]},
+    {"name": "Terraform", "regex": "resource\\s+\"\\w+\"|provider\\s+\"\\w+\"|terraform\\s+\\{|variable\\s+\"\\w+\"", "regexFlag": "1", "fileExtensions": [".tf", ".tfvars"]},
+    {"name": "Kubernetes", "regex": "apiVersion:\\s*\\w+|kind:\\s*(Pod|Deployment|Service|ConfigMap|Secret|Ingress|StatefulSet|DaemonSet|Job|CronJob|ClusterRole|RoleBinding)", "regexFlag": "1", "fileExtensions": [".yaml", ".yml"]},
+    {"name": "Helm", "regex": "\\{\\{\\s*\\.Values\\.|helm\\.sh/chart|apiVersion:\\s*v2", "regexFlag": "1", "fileExtensions": [".yaml", ".yml", ".tpl"]}
   ],
   "System Programs": [
     {"name": "C", "regex": "#include\\s+<stdio\\.h>|\\.c$", "regexFlag": "1", "fileExtensions": [".c", ".h"]},

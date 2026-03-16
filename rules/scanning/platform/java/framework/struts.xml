@@ -1,0 +1,31 @@
+<root>
+    <category name="Framework-Specific Issues - Apache Struts">
+        <rule>
+            <name>OGNL Expression Injection via Action Name</name>
+            <regex><![CDATA[ActionContext\.getContext\(\)\.getValueStack\(\)|getValue\s*\(\s*[^)]*\+|findValue\s*\(\s*[^)]*(?:request|param|getParameter)]]></regex>
+            <rdl><![CDATA[[FLAG:getValue\s*\(\s*[^)]*\+|findValue\s*\(\s*[^)]*(?:request|param|getParameter)][IF(MISSING:ESAPI\.encoder|AntiXss|sanitize|escapeHtml)]]]></rdl>
+            <rule_desc>Detects OGNL expression evaluation with user-controlled input via the ValueStack.</rule_desc>
+            <vuln_desc>OGNL injection in Struts (as exploited in CVE-2017-5638 and related CVEs) allows remote code execution by injecting OGNL expressions through action names, tag attributes, or error messages that are evaluated against the ValueStack.</vuln_desc>
+            <developer>Never evaluate user-supplied input as OGNL expressions. Validate all input strictly and apply ExcludedClasses/ExcludedPackages in struts.xml to restrict OGNL access.</developer>
+            <reviewer>Confirm no user-controlled data is passed to ValueStack evaluation methods. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Dynamic Method Invocation Enabled</name>
+            <regex><![CDATA[struts\.enable\.DynamicMethodInvocation\s*=\s*true|<constant\s+name="struts\.enable\.DynamicMethodInvocation"\s+value="true"]]></regex>
+            <rdl><![CDATA[[FLAG:struts\.enable\.DynamicMethodInvocation\s*=\s*true|<constant\s+name="struts\.enable\.DynamicMethodInvocation"\s+value="true"]]]></rdl>
+            <rule_desc>Detects Struts configuration with Dynamic Method Invocation (DMI) enabled.</rule_desc>
+            <vuln_desc>DMI allows callers to invoke any public method on an Action class via the URL (e.g., Action!methodName), bypassing declarative security configurations and enabling unauthorized action execution.</vuln_desc>
+            <developer>Set struts.enable.DynamicMethodInvocation = false and define explicit action methods in struts.xml. Use strict method invocation (SMI) introduced in Struts 2.5.</developer>
+            <reviewer>Confirm DMI is disabled in all Struts configuration files. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>File Upload Without Type and Size Restrictions</name>
+            <regex><![CDATA[<interceptor-ref\s+name="fileUpload"(?![^>]*maximumSize)|FileUploadInterceptor(?![^;]*allowedTypes)]]></regex>
+            <rdl><![CDATA[[FLAG:<interceptor-ref\s+name="fileUpload"][IF(MISSING:maximumSize|allowedTypes|allowedExtensions)]]]></rdl>
+            <rule_desc>Detects Struts file upload configurations without size or type restrictions.</rule_desc>
+            <vuln_desc>Unrestricted file uploads allow attackers to upload malicious files (JSP shells, large archives) that can execute on the server or cause denial of service.</vuln_desc>
+            <developer>Configure allowedTypes, allowedExtensions, and maximumSize parameters on the fileUpload interceptor. Validate file content server-side beyond extension checking.</developer>
+            <reviewer>Confirm file upload interceptors enforce type allowlists and size limits. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+</root>

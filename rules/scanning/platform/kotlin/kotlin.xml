@@ -3,7 +3,7 @@
         <rule>
             <name>Untrusted Inputs: Intent Extras</name>
             <regex><![CDATA[Intent\.get.*Extra\(".*"]]></regex>
-            <rdl><![CDATA[[FLAG:Intent\.get.*Extra\(".*"]]]></rdl>
+            <rdl><![CDATA[[FLAG:Intent\.get.*Extra\(".*"][IF(PRESENT:(execute|query|rawQuery|execSQL|Runtime|ProcessBuilder|File\s*\(|URL\s*\(|startActivity|intent\.) && MISSING:(validate|sanitize|escape|encode|allowlist|whitelist))]]]></rdl>
             <rule_desc>Detects the usage of Intent extras, which may contain untrusted inputs.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using Intent extras without proper validation and sanitization. Attackers can manipulate Intent extras to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks (SQL, OS, or other), data tampering, or unauthorized access.</vuln_desc>
             <developer>Validate and sanitize Intent extras before using them in any sensitive operations. Implement strong input validation, ensuring that only expected and sanitized values are accepted from Intent extras. Additionally, developers should be cautious about the potential risks associated with using untrusted data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
@@ -12,7 +12,7 @@
         <rule>
             <name>Untrusted Inputs: Shared Preferences</name>
             <regex><![CDATA[SharedPreferences\.get.*\(".*"]]></regex>
-            <rdl><![CDATA[[FLAG:SharedPreferences\.get.*\(".*"]]]></rdl>
+            <rdl><![CDATA[[FLAG:SharedPreferences\.get.*\(".*"][IF(PRESENT:(execute|query|rawQuery|execSQL|Runtime|ProcessBuilder|File\s*\(|URL\s*\() && MISSING:(validate|sanitize|escape|encode))]]]></rdl>
             <rule_desc>Identifies the usage of Shared Preferences, which may contain untrusted inputs.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using Shared Preferences without proper validation and sanitization. Attackers can manipulate Shared Preferences to provide malicious or unexpected values, potentially leading to security vulnerabilities such as data tampering, information disclosure, or unauthorized access.</vuln_desc>
             <developer>Carefully validate and sanitize data retrieved from Shared Preferences before using it in any sensitive operations. Implement strong input validation, ensuring that only expected and sanitized values are accepted from Shared Preferences. Additionally, developers should be aware of the risks associated with using untrusted data and follow secure coding practices, such as input validation, output encoding, and appropriate data encryption techniques.</developer>
@@ -21,7 +21,7 @@
         <rule>
             <name>Untrusted Inputs: User Input Fields</name>
             <regex><![CDATA[EditText\.getText\(\)]]></regex>
-            <rdl><![CDATA[[FLAG:EditText\.getText\(\)]]]></rdl>
+            <rdl><![CDATA[[FLAG:EditText\.getText\(\)][IF(PRESENT:(execute|query|rawQuery|execSQL|Runtime|ProcessBuilder|File\s*\(|URL\s*\(|WebView|loadUrl|loadData) && MISSING:(validate|sanitize|escape|encode|allowlist|whitelist))]]]></rdl>
             <rule_desc>Detects the usage of user input fields, such as EditTexts, which may contain untrusted inputs.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using user input fields without proper validation and sanitization. Attackers can manipulate user input fields to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks (SQL, OS, or other), cross-site scripting (XSS), or unauthorized access.</vuln_desc>
             <developer>Validate and sanitize user input retrieved from EditTexts or other user input fields before using it in any sensitive operations. Implement strong input validation, ensuring that only expected and sanitized values are accepted from user input fields. Additionally, developers should be cautious about the potential risks associated with using untrusted data and follow secure coding practices, such as input validation, output encoding, and appropriate data filtering techniques.</developer>

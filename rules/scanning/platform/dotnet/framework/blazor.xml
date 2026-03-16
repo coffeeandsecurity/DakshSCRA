@@ -1,0 +1,31 @@
+<root>
+    <category name="Framework-Specific Issues - Blazor">
+        <rule>
+            <name>MarkupString Cast from User Input</name>
+            <regex><![CDATA[@\(\s*\(MarkupString\)\s*|new\s+MarkupString\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:@\(\s*\(MarkupString\)\s*|new\s+MarkupString\s*\(][IF(MISSING:HtmlEncoder|Sanitize|AntiXss|allowlist)]]]></rdl>
+            <rule_desc>Detects MarkupString usage that renders raw HTML without sanitization.</rule_desc>
+            <vuln_desc>Casting user-controlled strings to MarkupString disables Blazor's automatic HTML encoding and renders raw HTML directly into the DOM, enabling stored or reflected XSS attacks.</vuln_desc>
+            <developer>Avoid MarkupString with user-supplied content. Use HtmlEncoder.Default.Encode() for text rendering. If HTML rendering is required, use a vetted HTML sanitizer library (e.g., HtmlSanitizer).</developer>
+            <reviewer>Confirm MarkupString is only used with fully trusted, server-controlled HTML content. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>IJSRuntime InvokeVoidAsync with User Input</name>
+            <regex><![CDATA[InvokeVoidAsync\s*\(\s*["'][^"']*["']\s*,.*(?:request\.|Request\.|HttpContext\.|model\.|Model\.|Input\.|input\.)|\bInvokeAsync\s*<[^>]+>\s*\(\s*["'][^"']*["']\s*,.*(?:request\.|Request\.))]]></regex>
+            <rdl><![CDATA[[FLAG:InvokeVoidAsync\s*\(\s*["']\s*eval\s*["']|InvokeVoidAsync\s*\(\s*["']\s*Function\s*["']]]]></rdl>
+            <rule_desc>Detects IJSRuntime JavaScript invocations calling eval or Function constructor.</rule_desc>
+            <vuln_desc>Passing user-controlled data to JavaScript eval or Function constructor via IJSRuntime enables client-side code injection and XSS from the Blazor component boundary.</vuln_desc>
+            <developer>Never invoke eval, Function, or similar dynamic code execution mechanisms via IJSRuntime. Use dedicated JavaScript functions with typed parameters instead.</developer>
+            <reviewer>Review all IJSRuntime invocations for eval or dynamic code execution patterns. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Blazor WebAssembly with Sensitive Logic</name>
+            <regex><![CDATA[\[Authorize\]|\.HasClaim\s*\(|\.IsInRole\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:\[Authorize\]][IF(MISSING:@rendermode\s+InteractiveServer|HttpContext|server-side)]]]></rdl>
+            <rule_desc>Detects authorization logic in Blazor WebAssembly components where server-side enforcement may be absent.</rule_desc>
+            <vuln_desc>Authorization checks in Blazor WASM components run in the browser and can be bypassed by an attacker who manipulates the client-side state. Server-side API authorization must always be enforced independently.</vuln_desc>
+            <developer>Treat Blazor WASM authorization as UI-only guidance. Enforce all authorization decisions server-side via ASP.NET Core API controllers or Blazor Server with proper [Authorize] attributes.</developer>
+            <reviewer>Confirm that any data or operations protected by client-side authorization are also protected by server-side API authorization. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+</root>

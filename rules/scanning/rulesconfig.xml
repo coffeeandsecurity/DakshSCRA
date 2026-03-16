@@ -78,45 +78,80 @@
     </rule>
     <rule>
         <platform>reactnative</platform>
-        <path>/mobile/frameworks/reactnative.xml</path>
+        <path>/mobile/xplat/reactnative/reactnative.xml</path>
         <platform_ftypes>*.js, *.jsx, *.ts, *.tsx, app.json, metro.config.js, babel.config.js</platform_ftypes>
         <project_config_ftypes>package.json, app.json, metro.config.js, babel.config.js</project_config_ftypes>
         <common_ftypes>*.json, *.config.js, *.ts, *.js, *.yml, *.yaml, *.log</common_ftypes>
     </rule>
     <rule>
         <platform>flutter</platform>
-        <path>/mobile/frameworks/flutter.xml</path>
+        <path>/mobile/xplat/flutter/flutter.xml</path>
         <platform_ftypes>*.dart, pubspec.yaml, AndroidManifest.xml, Info.plist</platform_ftypes>
         <project_config_ftypes>pubspec.yaml, analysis_options.yaml, AndroidManifest.xml, Info.plist</project_config_ftypes>
         <common_ftypes>*.dart, *.yaml, *.yml, *.json, *.plist, *.gradle, *.log</common_ftypes>
     </rule>
     <rule>
         <platform>xamarin</platform>
-        <path>/mobile/frameworks/xamarin.xml</path>
+        <path>/mobile/xplat/xamarin/xamarin.xml</path>
         <platform_ftypes>*.cs, *.csproj, AndroidManifest.xml, Info.plist, Entitlements.plist</platform_ftypes>
         <project_config_ftypes>*.csproj, *.sln, AndroidManifest.xml, Info.plist, Entitlements.plist</project_config_ftypes>
         <common_ftypes>*.config, *.plist, *.json, *.xml, *.resx, *.log</common_ftypes>
     </rule>
     <rule>
         <platform>ionic</platform>
-        <path>/mobile/frameworks/ionic.xml</path>
+        <path>/mobile/xplat/ionic/ionic.xml</path>
         <platform_ftypes>*.ts, *.js, *.html, capacitor.config.json, capacitor.config.ts, ionic.config.json</platform_ftypes>
         <project_config_ftypes>package.json, capacitor.config.json, capacitor.config.ts, ionic.config.json</project_config_ftypes>
         <common_ftypes>*.json, *.yaml, *.yml, *.xml, *.gradle, *.plist, *.log</common_ftypes>
     </rule>
     <rule>
         <platform>nativescript</platform>
-        <path>/mobile/frameworks/nativescript.xml</path>
+        <path>/mobile/xplat/nativescript/nativescript.xml</path>
         <platform_ftypes>*.js, *.ts, app.gradle, AndroidManifest.xml, Info.plist</platform_ftypes>
         <project_config_ftypes>package.json, app.gradle, webpack.config.js, nsconfig.json</project_config_ftypes>
         <common_ftypes>*.json, *.ts, *.js, *.xml, *.gradle, *.plist, *.log</common_ftypes>
     </rule>
     <rule>
         <platform>cordova</platform>
-        <path>/mobile/frameworks/cordova.xml</path>
+        <path>/mobile/xplat/cordova/cordova.xml</path>
         <platform_ftypes>config.xml, *.js, *.ts, *.html</platform_ftypes>
         <project_config_ftypes>config.xml, package.json, cordova-plugin-*.xml</project_config_ftypes>
         <common_ftypes>*.json, *.xml, *.plist, *.gradle, *.properties, *.log</common_ftypes>
+    </rule>
+    <rule>
+        <platform>bash</platform>
+        <path>/bash/bash.xml</path>
+        <platform_ftypes>*.sh, *.bash, *.bsh</platform_ftypes>
+        <project_config_ftypes>.bashrc, .bash_profile, .profile, .bash_aliases</project_config_ftypes>
+        <common_ftypes>*.sh, *.bash, *.env, *.conf, *.log</common_ftypes>
+    </rule>
+    <rule>
+        <platform>powershell</platform>
+        <path>/powershell/powershell.xml</path>
+        <platform_ftypes>*.ps1, *.psm1, *.psd1, *.ps1xml</platform_ftypes>
+        <project_config_ftypes>*.psd1, *.psm1, PSScriptAnalyzerSettings.psd1</project_config_ftypes>
+        <common_ftypes>*.ps1, *.xml, *.json, *.csv, *.log, *.env</common_ftypes>
+    </rule>
+    <rule>
+        <platform>dockerfile</platform>
+        <path>/dockerfile/dockerfile.xml</path>
+        <platform_ftypes>Dockerfile, Dockerfile.*, *.dockerfile</platform_ftypes>
+        <project_config_ftypes>Dockerfile, docker-compose.yml, docker-compose.yaml, .dockerignore</project_config_ftypes>
+        <common_ftypes>Dockerfile, docker-compose.yml, docker-compose.yaml, *.env, *.conf, *.sh</common_ftypes>
+    </rule>
+    <rule>
+        <platform>terraform</platform>
+        <path>/terraform/terraform.xml</path>
+        <platform_ftypes>*.tf, *.tfvars, *.tf.json</platform_ftypes>
+        <project_config_ftypes>*.tf, *.tfvars, terraform.tfvars, *.tfstate, backend.tf, variables.tf, outputs.tf</project_config_ftypes>
+        <common_ftypes>*.tf, *.tfvars, *.json, *.yaml, *.yml, *.env, *.log</common_ftypes>
+    </rule>
+    <rule>
+        <platform>kubernetes</platform>
+        <path>/kubernetes/kubernetes.xml</path>
+        <platform_ftypes>*.yaml, *.yml</platform_ftypes>
+        <project_config_ftypes>*.yaml, *.yml, kustomization.yaml, Chart.yaml, values.yaml</project_config_ftypes>
+        <common_ftypes>*.yaml, *.yml, *.json, *.env, *.conf, *.log</common_ftypes>
     </rule>
     <rule>
         <platform>ruby</platform>

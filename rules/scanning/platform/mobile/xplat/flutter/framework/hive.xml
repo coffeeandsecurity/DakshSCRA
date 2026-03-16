@@ -1,0 +1,22 @@
+<root>
+    <category name="Framework-Specific Issues - Hive (Flutter)">
+        <rule>
+            <name>Hive Box Opened Without Encryption</name>
+            <regex><![CDATA[Hive\.openBox\s*\(|Hive\.openLazyBox\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:Hive\.openBox\s*\(|Hive\.openLazyBox\s*\(][IF(MISSING:encryptionCipher|HiveAesCipher|encryptionKey)]]]></rdl>
+            <rule_desc>Detects Hive boxes opened without an encryption cipher for sensitive data storage.</rule_desc>
+            <vuln_desc>Hive boxes opened without an encryptionCipher store all data as plaintext in the app's data directory. On rooted Android or jailbroken iOS devices, or via adb backup, this data is fully accessible without authentication.</vuln_desc>
+            <developer>Use HiveAesCipher with a key derived from flutter_secure_storage: final encryptedKey = await secureStorage.read(key: 'hiveKey'); await Hive.openBox('box', encryptionCipher: HiveAesCipher(key)).</developer>
+            <reviewer>Confirm Hive boxes containing sensitive data (tokens, PII, credentials) are opened with encryption. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Hive Encryption Key Stored Insecurely</name>
+            <regex><![CDATA[Hive\.generateSecureKey\s*\(\s*\)|HiveAesCipher\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:HiveAesCipher\s*\(|Hive\.generateSecureKey\s*\(\s*\)][IF(MISSING:flutter_secure_storage|FlutterSecureStorage|SecureStoragePlugin)]]]></rdl>
+            <rule_desc>Detects Hive AES cipher key usage without secure storage for the key material.</rule_desc>
+            <vuln_desc>Storing the Hive encryption key in SharedPreferences, a file, or hardcoded in source defeats the encryption, as the key is accessible through the same attack vectors as the unencrypted data.</vuln_desc>
+            <developer>Store the Hive encryption key exclusively in flutter_secure_storage (which uses Android Keystore / iOS Keychain). Generate the key once on first run and persist it securely.</developer>
+            <reviewer>Confirm Hive encryption keys are stored in platform-backed secure storage, not SharedPreferences or plaintext files. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+</root>

@@ -63,7 +63,7 @@
         <rule>
             <name>Risky Memory Allocation: malloc() and Related Functions</name>
             <regex><![CDATA[^[^*/]*\b(malloc|calloc|realloc)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:^[^*/]*\b(malloc|calloc|realloc)\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:^[^*/]*\b(malloc|calloc|realloc)\s*\(][IF(PRESENT:user_input|argv|getenv|scanf|fgets|recv\s*\(|read\s*\(|atoi|atol|strtol|strtoul|input|request|len\s*\*|size\s*\*)]]]></rdl>
             <rule_desc>Detects usage of memory allocation functions in code.</rule_desc>
             <vuln_desc>If external input influences the size, it can lead to denial-of-service by allocating too much memory or integer overflows, resulting in heap overflows.</vuln_desc>
             <developer>Use `size_t` for size variables. Validate the size and check for overflow conditions using safe arithmetic checks.</developer>
@@ -114,7 +114,7 @@
         <rule>
             <name>Unsafe Loop Handling Over Arrays or Strings</name>
             <regex><![CDATA[\b(?:for|while)\s*\([^)]*(?:<|<=|>|>=)[^)]*(?:len|size|count|index|idx|i|j|k)[^)]*\)]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:for|while)\s*\([^)]*(?:<|<=|>|>=)[^)]*(?:len|size|count|index|idx|i|j|k)[^)]*\)]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(?:for|while)\s*\([^)]*(?:<|<=|>|>=)[^)]*(?:len|size|count|index|idx|i|j|k)[^)]*\)][IF(PRESENT:user_input|argv|getenv|scanf|fgets|recv\s*\(|read\s*\(|atoi|atol|strtol|strlen\s*\(.*argv|input|buf\[|buffer\[)]]]></rdl>
             <rule_desc>Detects loops iterating over arrays, strings, or lists with potentially unsafe bounds.</rule_desc>
             <vuln_desc>Unbounded loops or those influenced by incorrect size checks may cause buffer or integer overflows.</vuln_desc>
             <developer>Ensure loops terminate based on array size or valid upper/lower limits.</developer>
@@ -245,10 +245,10 @@
         </rule>
         <rule>
             <name>Hardcoded Secrets in Environment Variables</name>
-            <regex><![CDATA[export\s+\w+=.*]]></regex>
-            <rdl><![CDATA[[FLAG:export\s+\w+=.*]]]></rdl>
-            <rule_desc>Detects use of environment variables to store hardcoded secrets.</rule_desc>
-            <vuln_desc>Hardcoding secrets in environment variables may expose them to unauthorized access.</vuln_desc>
+            <regex><![CDATA[(?i)export\s+(?:PASSWORD|SECRET|API_KEY|APIKEY|TOKEN|ACCESS_KEY|PRIVATE_KEY|AUTH_TOKEN|PASSWD|CREDENTIAL)\s*=\s*\S]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)export\s+(?:PASSWORD|SECRET|API_KEY|APIKEY|TOKEN|ACCESS_KEY|PRIVATE_KEY|AUTH_TOKEN|PASSWD|CREDENTIAL)\s*=\s*\S][IF(MISSING:\$\(|example|sample|test|placeholder)]]]></rdl>
+            <rule_desc>Detects hardcoded credentials or secrets assigned to environment variable exports in Makefiles and shell scripts.</rule_desc>
+            <vuln_desc>Hardcoding secrets in exported environment variables may expose them to unauthorized access via process listings, logs, or version control.</vuln_desc>
             <developer>Use secure vaults or encrypted storage for sensitive data.</developer>
             <reviewer>Ensure that secrets are not exposed in environment variables. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>

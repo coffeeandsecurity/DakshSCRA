@@ -60,6 +60,14 @@ MANIFEST_RULES = [
     {"category": "Backend", "name": "Java", "file": "build.gradle.kts", "confidence": "high"},
     {"category": "Backend", "name": ".NET", "file": "*.csproj", "confidence": "high"},
     {"category": "Backend", "name": ".NET", "file": "*.sln", "confidence": "high"},
+    {"category": "Infrastructure", "name": "Docker", "file": "Dockerfile", "confidence": "high"},
+    {"category": "Infrastructure", "name": "Docker", "file": "docker-compose.yml", "confidence": "high"},
+    {"category": "Infrastructure", "name": "Docker", "file": "docker-compose.yaml", "confidence": "high"},
+    {"category": "Infrastructure", "name": "Terraform", "file": "*.tf", "confidence": "high"},
+    {"category": "Infrastructure", "name": "Terraform", "file": "terraform.tfvars", "confidence": "high"},
+    {"category": "Infrastructure", "name": "Kubernetes", "file": "kustomization.yaml", "confidence": "high"},
+    {"category": "Infrastructure", "name": "Kubernetes", "file": "kustomization.yml", "confidence": "high"},
+    {"category": "Infrastructure", "name": "Helm", "file": "Chart.yaml", "confidence": "high"},
 ]
 
 

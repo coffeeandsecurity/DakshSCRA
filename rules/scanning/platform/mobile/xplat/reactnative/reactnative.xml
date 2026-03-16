@@ -1,4 +1,33 @@
 <root>
+    <category name="Framework-Specific Issues - React Native">
+        <rule>
+            <name>Insecure AsyncStorage for Sensitive Data</name>
+            <regex><![CDATA[\bAsyncStorage\.(?:setItem|multiSet)\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:\bAsyncStorage\.(?:setItem|multiSet)\s*\(]]]></rdl>
+            <rule_desc>Detects storage of values using AsyncStorage, which is unsuitable for secrets.</rule_desc>
+            <vuln_desc>AsyncStorage is not intended for sensitive secrets and may expose tokens or credentials on compromised devices.</vuln_desc>
+            <developer>Store secrets in platform-backed secure storage (Keychain/Keystore wrappers).</developer>
+            <reviewer>Verify sensitive values are not persisted in AsyncStorage. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>WebView JavaScript Enabled</name>
+            <regex><![CDATA[<WebView[^>]*javaScriptEnabled\s*=\s*\{?true\}?]]></regex>
+            <rdl><![CDATA[[FLAG:<WebView[^>]*javaScriptEnabled\s*=\s*\{?true\}?]]]></rdl>
+            <rule_desc>Detects JavaScript-enabled React Native WebView usage.</rule_desc>
+            <vuln_desc>Improper WebView restrictions can allow script injection, malicious redirects, or data exfiltration.</vuln_desc>
+            <developer>Restrict navigation targets and disable JavaScript unless required.</developer>
+            <reviewer>Confirm WebView origin allowlist and navigation blocking logic are enforced. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Arbitrary External URL Opening</name>
+            <regex><![CDATA[\bLinking\.openURL\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:\bLinking\.openURL\s*\(]]]></rdl>
+            <rule_desc>Detects external URL launches that require strict allowlist validation.</rule_desc>
+            <vuln_desc>Opening attacker-controlled URLs can trigger phishing, malicious apps, or sensitive action abuse.</vuln_desc>
+            <developer>Validate URI schemes and host allowlists before opening external URLs.</developer>
+            <reviewer>Review URL construction paths and enforce allowlists. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
     <category name="Framework-Specific Security">
         <rule>
             <name>React Native Debug Mode Marker</name>
@@ -53,6 +82,28 @@
             <vuln_desc>Embedded secrets can be extracted from source or bundles.</vuln_desc>
             <developer>Use backend-issued short-lived tokens and secure storage.</developer>
             <reviewer>Verify no long-lived production secrets are bundled. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="Platform-Specific Issues - Android">
+        <rule>
+            <name>Android Cleartext Traffic Enabled</name>
+            <regex><![CDATA[usesCleartextTraffic\s*=\s*"?(?:true|TRUE)"?]]></regex>
+            <rdl><![CDATA[[FLAG:usesCleartextTraffic\s*=\s*"?(?:true|TRUE)"?]]]></rdl>
+            <rule_desc>Detects cleartext traffic allowance in Android-side configuration files.</rule_desc>
+            <vuln_desc>Allowing cleartext traffic weakens confidentiality and enables man-in-the-middle interception.</vuln_desc>
+            <developer>Disable cleartext traffic and enforce HTTPS endpoints.</developer>
+            <reviewer>Check Android networking policy for cleartext exceptions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="Platform-Specific Issues - iOS">
+        <rule>
+            <name>ATS Arbitrary Loads Enabled</name>
+            <regex><![CDATA[NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]></regex>
+            <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]]></rdl>
+            <rule_desc>Detects iOS transport policy relaxation in React Native iOS projects.</rule_desc>
+            <vuln_desc>Relaxed ATS controls can permit insecure HTTP traffic and increase interception risk.</vuln_desc>
+            <developer>Use ATS defaults and limit exceptions to specific trusted domains.</developer>
+            <reviewer>Validate ATS exceptions and domain scoping in iOS plist files. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

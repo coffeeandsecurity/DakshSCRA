@@ -305,4 +305,75 @@
             <reviewer>Check for the use of Django's Safe Filter and assess if the content passed to it is properly sanitized and validated to prevent XSS vulnerabilities. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
+    <category name="Server-Side Request Forgery (SSRF)">
+        <rule>
+            <name>SSRF: requests Library with User-Controlled URL</name>
+            <regex><![CDATA[requests\.(get|post|put|delete|patch|head|request)\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:requests\.(get|post|put|delete|patch|head|request)\s*\(][IF(PRESENT:request\.GET|request\.POST|request\.args|request\.form|input\(|argv|\+ && MISSING:allowlist|whitelist|urlparse|ipaddress|is_private|validators\.url)]]]></rdl>
+            <rule_desc>Detects HTTP requests made with user-supplied URL values that may enable SSRF.</rule_desc>
+            <vuln_desc>Passing attacker-controlled URLs to the requests library can allow the server to be used as a proxy to reach internal services, cloud metadata endpoints, or perform network reconnaissance.</vuln_desc>
+            <developer>Validate URL scheme and host against an explicit allowlist before making outbound requests. Block access to private IP ranges and cloud metadata addresses (169.254.169.254).</developer>
+            <reviewer>Trace URL parameter origin to outbound request sinks and verify that destination validation is present. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>SSRF: urllib with User-Controlled URL</name>
+            <regex><![CDATA[urllib\.request\.urlopen\s*\(|urllib\.urlopen\s*\(|httplib|http\.client\.HTTPConnection\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:urllib\.request\.urlopen\s*\(|urllib\.urlopen\s*\(][IF(PRESENT:request\.|input\(|argv|\+ && MISSING:allowlist|whitelist|urlparse|is_private)]]]></rdl>
+            <rule_desc>Detects urllib-based outbound requests potentially influenced by user input.</rule_desc>
+            <vuln_desc>User-controlled URLs passed to urllib can be used for SSRF attacks targeting internal infrastructure.</vuln_desc>
+            <developer>Sanitize and validate URLs before use in urllib calls. Enforce scheme restrictions and block private IP ranges.</developer>
+            <reviewer>Inspect urllib call sites for user-input paths and verify URL destination controls. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="XML External Entity (XXE)">
+        <rule>
+            <name>XXE: lxml etree Parser Without Resolve Entities Disabled</name>
+            <regex><![CDATA[lxml\.etree\.parse\s*\(|etree\.fromstring\s*\(|etree\.XMLParser\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:lxml\.etree\.parse\s*\(|etree\.fromstring\s*\(|etree\.XMLParser\s*\(][IF(MISSING:resolve_entities\s*=\s*False|no_network\s*=\s*True|XMLParser\s*\(.*resolve_entities\s*=\s*False)]]]></rdl>
+            <rule_desc>Detects lxml XML parsing without external entity resolution disabled.</rule_desc>
+            <vuln_desc>lxml parsers that resolve external entities by default can be exploited via XXE to leak files or perform SSRF.</vuln_desc>
+            <developer>Create an XMLParser with resolve_entities=False and no_network=True, then use it for all XML parsing operations.</developer>
+            <reviewer>Confirm all lxml parse/fromstring calls use a hardened XMLParser instance. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>XXE: stdlib xml.etree.ElementTree Vulnerable Parser</name>
+            <regex><![CDATA[xml\.etree\.ElementTree\.parse\s*\(|ElementTree\.parse\s*\(|xml\.dom\.minidom\.parse\s*\(|xml\.sax\.parse\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:xml\.etree\.ElementTree\.parse\s*\(|ElementTree\.parse\s*\(|xml\.dom\.minidom\.parse\s*\(|xml\.sax\.parse\s*\(][IF(MISSING:defusedxml|no_network|resolve_entities\s*=\s*False)]]]></rdl>
+            <rule_desc>Detects standard library XML parsers known to be vulnerable to XXE when parsing untrusted input.</rule_desc>
+            <vuln_desc>Python's built-in xml modules (ElementTree, minidom, sax) do not protect against XXE by default. Parsing attacker-controlled XML can lead to file disclosure or SSRF.</vuln_desc>
+            <developer>Replace stdlib XML parsers with the defusedxml library which disables all dangerous XML features by default.</developer>
+            <reviewer>Verify that defusedxml is used wherever XML is parsed from untrusted sources. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="Server-Side Template Injection (SSTI)">
+        <rule>
+            <name>SSTI: Jinja2 Template from User Input</name>
+            <regex><![CDATA[jinja2\.Template\s*\(|Environment\s*\(.*\)\.from_string\s*\(|render_template_string\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:jinja2\.Template\s*\(|Environment\s*\(.*\)\.from_string\s*\(|render_template_string\s*\(][IF(PRESENT:request\.|input\(|argv|query|\+ && MISSING:autoescape\s*=\s*True|sandbox)]]]></rdl>
+            <rule_desc>Detects Jinja2 template creation or rendering from user-supplied strings.</rule_desc>
+            <vuln_desc>Rendering user-controlled strings as Jinja2 templates allows attackers to execute arbitrary code on the server via template injection (SSTI).</vuln_desc>
+            <developer>Never construct Jinja2 templates from user input. Use render_template() with static template files and pass user data as context variables only.</developer>
+            <reviewer>Confirm that template strings are never derived from user-controlled values. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>SSTI: Mako/Chameleon Template Rendering with User Input</name>
+            <regex><![CDATA[mako\.template\.Template\s*\(|Template\s*\(\s*text\s*=|chameleon\.PageTemplate\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:mako\.template\.Template\s*\(|chameleon\.PageTemplate\s*\(][IF(PRESENT:request\.|input\(|argv|\+ && MISSING:strict_undefined|escape)]]]></rdl>
+            <rule_desc>Detects Mako or Chameleon template construction from potentially user-controlled values.</rule_desc>
+            <vuln_desc>SSTI in Mako/Chameleon templates can provide direct Python expression evaluation, leading to remote code execution.</vuln_desc>
+            <developer>Load templates from files on disk, never from user-supplied strings.</developer>
+            <reviewer>Inspect template instantiation paths for user-controlled source strings. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="Path Traversal">
+        <rule>
+            <name>Path Traversal: open() with User-Controlled Path</name>
+            <regex><![CDATA[\bopen\s*\(\s*(?:os\.path\.join\s*\(|request\.|input\(|argv)]]></regex>
+            <rdl><![CDATA[[FLAG:\bopen\s*\(][IF(PRESENT:request\.|input\(|argv|os\.path\.join && MISSING:os\.path\.realpath|os\.path\.abspath|startswith|allowlist|whitelist)]]]></rdl>
+            <rule_desc>Detects file open calls that incorporate user-controlled path components.</rule_desc>
+            <vuln_desc>Unvalidated path components in file open calls allow attackers to traverse directories and access arbitrary files using ../ sequences.</vuln_desc>
+            <developer>Normalize paths with os.path.realpath() and verify they fall within an allowed base directory before opening.</developer>
+            <reviewer>Verify path normalization and base-directory containment checks around all user-influenced file open operations. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
 </root>

@@ -1,0 +1,129 @@
+<root>
+    <category name="Container Security">
+        <rule>
+            <name>Privileged Container Enabled</name>
+            <regex><![CDATA[privileged\s*:\s*true]]></regex>
+            <rdl><![CDATA[[FLAG:privileged\s*:\s*true]]]></rdl>
+            <rule_desc>Detects containers configured to run in privileged mode.</rule_desc>
+            <vuln_desc>Privileged containers have near-complete access to the host kernel, bypassing namespace isolation and enabling container escape, kernel module loading, and full host takeover.</vuln_desc>
+            <developer>Remove privileged: true. Grant only the specific Linux capabilities required using securityContext.capabilities.add. Use Pod Security Admission to enforce non-privileged constraints cluster-wide.</developer>
+            <reviewer>Privileged containers are a critical finding. Verify any exceptions are justified by a specific operational need (e.g., node-level DaemonSets). This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>allowPrivilegeEscalation Not Disabled</name>
+            <regex><![CDATA[allowPrivilegeEscalation\s*:\s*true]]></regex>
+            <rdl><![CDATA[[FLAG:allowPrivilegeEscalation\s*:\s*true]]]></rdl>
+            <rule_desc>Detects containers with privilege escalation explicitly enabled.</rule_desc>
+            <vuln_desc>Allowing privilege escalation permits container processes to gain more privileges than the parent process, enabling setuid binary abuse and namespace escapes.</vuln_desc>
+            <developer>Set allowPrivilegeEscalation: false in all container securityContexts as part of a hardened baseline.</developer>
+            <reviewer>Confirm allowPrivilegeEscalation is false or absent (default should be false in restricted PSA). This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Container Running as Root User</name>
+            <regex><![CDATA[runAsUser\s*:\s*0\b|runAsNonRoot\s*:\s*false]]></regex>
+            <rdl><![CDATA[[FLAG:runAsUser\s*:\s*0\b|runAsNonRoot\s*:\s*false]]]></rdl>
+            <rule_desc>Detects containers explicitly configured to run as root (UID 0) or with runAsNonRoot disabled.</rule_desc>
+            <vuln_desc>Running as root increases the impact of any container compromise and is counter to container security hardening guidelines (NSA/CISA, CIS Benchmarks).</vuln_desc>
+            <developer>Set runAsNonRoot: true and specify a non-zero runAsUser UID. Ensure the container image supports running as non-root.</developer>
+            <reviewer>Verify all workloads run as non-root UIDs. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Read-Only Root Filesystem Not Enforced</name>
+            <regex><![CDATA[readOnlyRootFilesystem\s*:\s*false]]></regex>
+            <rdl><![CDATA[[FLAG:readOnlyRootFilesystem\s*:\s*false]]]></rdl>
+            <rule_desc>Detects containers with a writable root filesystem.</rule_desc>
+            <vuln_desc>A writable root filesystem allows attackers to modify application binaries, drop backdoors, or alter configurations post-exploitation, enabling persistence inside the container.</vuln_desc>
+            <developer>Set readOnlyRootFilesystem: true and mount writable volumes only for specific paths that require write access.</developer>
+            <reviewer>Confirm containers use read-only root filesystems wherever possible. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="Host Namespace Sharing">
+        <rule>
+            <name>Host PID Namespace Shared</name>
+            <regex><![CDATA[hostPID\s*:\s*true]]></regex>
+            <rdl><![CDATA[[FLAG:hostPID\s*:\s*true]]]></rdl>
+            <rule_desc>Detects pods configured to share the host's PID namespace.</rule_desc>
+            <vuln_desc>Sharing the host PID namespace allows containers to see and interact with all host processes, enabling process injection, secret extraction from memory, and privilege escalation via setuid binaries.</vuln_desc>
+            <developer>Remove hostPID: true unless specifically required by a host monitoring DaemonSet. Limit to node-level observability tools.</developer>
+            <reviewer>Confirm hostPID usage is justified by a node-level operational requirement. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Host Network Namespace Shared</name>
+            <regex><![CDATA[hostNetwork\s*:\s*true]]></regex>
+            <rdl><![CDATA[[FLAG:hostNetwork\s*:\s*true]]]></rdl>
+            <rule_desc>Detects pods configured to share the host's network namespace.</rule_desc>
+            <vuln_desc>Host network access allows pods to bind to any host port, sniff host network traffic, and interact with node-level network services, enabling lateral movement and eavesdropping.</vuln_desc>
+            <developer>Use hostNetwork: true only for specific node-level networking components (e.g., CNI plugins). All other workloads should use pod-level networking.</developer>
+            <reviewer>Verify hostNetwork usage is limited to justified infrastructure components. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Host IPC Namespace Shared</name>
+            <regex><![CDATA[hostIPC\s*:\s*true]]></regex>
+            <rdl><![CDATA[[FLAG:hostIPC\s*:\s*true]]]></rdl>
+            <rule_desc>Detects pods configured to share the host IPC namespace.</rule_desc>
+            <vuln_desc>Host IPC sharing allows a container to read and write to shared memory segments used by host processes, enabling information disclosure and inter-process attacks.</vuln_desc>
+            <developer>Remove hostIPC: true unless required by a specific high-performance workload that uses shared memory. Document and limit scope.</developer>
+            <reviewer>Confirm hostIPC is restricted to justified low-level infrastructure workloads. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="RBAC and Access Control">
+        <rule>
+            <name>Wildcard RBAC Verb Permission</name>
+            <regex><![CDATA[verbs\s*:\s*\[?\s*["']?\*["']?\s*\]?]]></regex>
+            <rdl><![CDATA[[FLAG:verbs\s*:\s*\[?\s*["']?\*["']?\s*\]?]]]></rdl>
+            <rule_desc>Detects RBAC roles or cluster roles granting all verbs (*) on resources.</rule_desc>
+            <vuln_desc>Wildcard verb permissions grant full control over the matched resources, including destructive operations and escalation paths (e.g., update secrets, exec into pods).</vuln_desc>
+            <developer>Enumerate only the required verbs per resource (get, list, watch for read-only). Avoid wildcards in production RBAC policies.</developer>
+            <reviewer>Wildcard verbs in RBAC are high-risk and should be individually justified. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Wildcard RBAC Resource</name>
+            <regex><![CDATA[resources\s*:\s*\[?\s*["']?\*["']?\s*\]?]]></regex>
+            <rdl><![CDATA[[FLAG:resources\s*:\s*\[?\s*["']?\*["']?\s*\]?]]]></rdl>
+            <rule_desc>Detects RBAC policies granting permissions over all resource types.</rule_desc>
+            <vuln_desc>Wildcard resource permissions grant access to all Kubernetes resource types, including secrets, configmaps, and service accounts, enabling broad privilege escalation.</vuln_desc>
+            <developer>Specify the exact resource types required. Avoid wildcards, especially when combined with broad verbs or cluster-wide scope.</developer>
+            <reviewer>Confirm wildcard resource permissions are not used in any non-admin roles. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>ClusterRoleBinding to cluster-admin</name>
+            <regex><![CDATA[roleRef\s*:[^}]*name\s*:\s*cluster-admin]]></regex>
+            <rdl><![CDATA[[FLAG:roleRef\s*:[^}]*name\s*:\s*cluster-admin]]]></rdl>
+            <rule_desc>Detects ClusterRoleBindings that grant the cluster-admin role to subjects.</rule_desc>
+            <vuln_desc>cluster-admin bindings grant unrestricted access to all cluster operations, representing the highest privilege level and maximum blast radius in a Kubernetes cluster.</vuln_desc>
+            <developer>Replace cluster-admin bindings with scoped roles that grant only the minimum permissions required. Audit all existing cluster-admin bindings.</developer>
+            <reviewer>cluster-admin bindings are critical findings. Each one requires explicit justification. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="Secrets Management">
+        <rule>
+            <name>Secret Exposed as Environment Variable</name>
+            <regex><![CDATA[secretKeyRef\s*:|valueFrom\s*:[^}]*secretKeyRef]]></regex>
+            <rdl><![CDATA[[FLAG:secretKeyRef\s*:|valueFrom\s*:[^}]*secretKeyRef][IF(MISSING:volumes\s*:|volumeMounts\s*:)]]]></rdl>
+            <rule_desc>Detects Kubernetes Secrets mounted as environment variables rather than projected volumes.</rule_desc>
+            <vuln_desc>Secrets injected as environment variables are visible in process listings (/proc/*/environ), crash dumps, and logging output, and cannot be rotated without pod restart.</vuln_desc>
+            <developer>Mount secrets as projected volumes with fine-grained path control. Use external secret stores (Vault, AWS Secrets Manager) with the Secrets Store CSI Driver for rotation support.</developer>
+            <reviewer>Verify secrets are mounted as volumes rather than environment variables where possible. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="Resource Management">
+        <rule>
+            <name>No Resource Limits Defined</name>
+            <regex><![CDATA[containers\s*:]]></regex>
+            <rdl><![CDATA[[FLAG:containers\s*:][IF(MISSING:resources\s*:|limits\s*:|requests\s*:)]]]></rdl>
+            <rule_desc>Detects container specifications missing resource limits and requests.</rule_desc>
+            <vuln_desc>Containers without resource limits can consume unbounded CPU and memory, enabling denial-of-service conditions that affect co-located workloads and cluster stability.</vuln_desc>
+            <developer>Define both resources.limits and resources.requests for CPU and memory on every container. Use LimitRange objects to enforce defaults namespace-wide.</developer>
+            <reviewer>Confirm all containers have defined resource limits. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Default Service Account Token Auto-Mounted</name>
+            <regex><![CDATA[automountServiceAccountToken\s*:\s*true]]></regex>
+            <rdl><![CDATA[[FLAG:automountServiceAccountToken\s*:\s*true]]]></rdl>
+            <rule_desc>Detects pods or service accounts with automatic service account token mounting enabled.</rule_desc>
+            <vuln_desc>Auto-mounted service account tokens are available to any process inside the pod. If a container is compromised, the attacker can use the token to access the Kubernetes API with the service account's permissions.</vuln_desc>
+            <developer>Set automountServiceAccountToken: false on pods and service accounts that do not need API access. Mount tokens explicitly only in pods that require it.</developer>
+            <reviewer>Confirm automountServiceAccountToken is false for all workloads that do not explicitly require Kubernetes API access. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+</root>

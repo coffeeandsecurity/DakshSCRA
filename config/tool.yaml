@@ -1,6 +1,6 @@
 tool_name: Daksh SCRA (Source Code Review Assist)
 author: Debasis Mohanty (d3basis.m0hanty@gmail.com)
-release: 0.34
+release: 0.35
 release_date: 2026-03-17
 display:
   # Timezone used for all timestamps in CLI output and reports.

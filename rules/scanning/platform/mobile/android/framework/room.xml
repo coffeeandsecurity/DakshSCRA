@@ -1,0 +1,22 @@
+<root>
+    <category name="Framework-Specific Issues - Room (Android)">
+        <rule>
+            <name>RawQuery with User-Controlled Input</name>
+            <regex><![CDATA[@RawQuery|rawQuery\s*\(\s*[^,)]*\+|rawQuery\s*\(\s*[^,)]*\$\{]]></regex>
+            <rdl><![CDATA[[FLAG:@RawQuery|rawQuery\s*\(\s*[^,)]*\+][IF(MISSING:SupportSQLiteQuery|SimpleSQLiteQuery|bindArgs)]]]></rdl>
+            <rule_desc>Detects use of Room @RawQuery or rawQuery() with potential for unsanitized input.</rule_desc>
+            <vuln_desc>@RawQuery annotations accept arbitrary SQL strings at runtime. When query strings are built from user input without parameterization, SQL injection is possible in the local SQLite database, potentially exposing or corrupting stored data.</vuln_desc>
+            <developer>Avoid @RawQuery where possible. Use @Query with compile-time verified SQL and typed parameters. If @RawQuery is necessary, pass a SupportSQLiteQuery with bound parameters using SimpleSQLiteQuery.</developer>
+            <reviewer>Confirm @RawQuery implementations construct queries from controlled sources or use SupportSQLiteQuery with bound arguments. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Database Without Encryption</name>
+            <regex><![CDATA[Room\.databaseBuilder\s*\(|Room\.inMemoryDatabaseBuilder\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:Room\.databaseBuilder\s*\(][IF(MISSING:SQLCipher|net\.zetetic\.database|openHelperFactory|SupportFactory)]]]></rdl>
+            <rule_desc>Detects Room database creation without an encrypted database factory.</rule_desc>
+            <vuln_desc>Unencrypted Room databases are stored as plaintext SQLite files on the device. On rooted devices or via USB debugging with adb backup, all database contents are accessible without authentication.</vuln_desc>
+            <developer>Use SQLCipher for Android with Room's SupportFactory to encrypt the database at rest: val factory = SupportFactory(SQLiteDatabase.getBytes(passphrase.toCharArray())).</developer>
+            <reviewer>Confirm Room databases containing sensitive data use an encrypted storage backend. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+</root>

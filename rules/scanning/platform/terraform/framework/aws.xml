@@ -1,0 +1,82 @@
+<root>
+    <category name="AWS Compute Security">
+        <rule>
+            <name>EC2 Instance Metadata Service v1 Enabled</name>
+            <regex><![CDATA[resource\s+"aws_instance"[^}]*http_tokens\s*=\s*"optional"]]></regex>
+            <rdl><![CDATA[[FLAG:resource\s+"aws_instance"][IF(MISSING:http_tokens\s*=\s*"required")]]]></rdl>
+            <rule_desc>Detects EC2 instances that allow IMDSv1 (unauthenticated metadata service access).</rule_desc>
+            <vuln_desc>IMDSv1 allows any process with network access to the metadata endpoint to retrieve credentials and user data, enabling SSRF-to-credential-theft attacks (as demonstrated in the Capital One breach).</vuln_desc>
+            <developer>Set metadata_options { http_tokens = "required" } on all EC2 instances to enforce IMDSv2 with session-oriented requests.</developer>
+            <reviewer>Confirm http_tokens is set to "required" on all EC2 instances. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>EC2 Instance with Public IP</name>
+            <regex><![CDATA[associate_public_ip_address\s*=\s*true]]></regex>
+            <rdl><![CDATA[[FLAG:associate_public_ip_address\s*=\s*true]]]></rdl>
+            <rule_desc>Detects EC2 instances configured to receive a public IP address.</rule_desc>
+            <vuln_desc>Assigning public IPs to EC2 instances directly exposes them to internet scanning and exploitation without requiring a load balancer or NAT gateway as a protective intermediary.</vuln_desc>
+            <developer>Place EC2 instances in private subnets. Use a NAT gateway for outbound internet access and load balancers for inbound traffic.</developer>
+            <reviewer>Verify public IP assignment is intentional and that the instance has appropriate security group restrictions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="AWS Database Security">
+        <rule>
+            <name>RDS Instance Publicly Accessible</name>
+            <regex><![CDATA[resource\s+"aws_db_instance"[^}]*publicly_accessible\s*=\s*true]]></regex>
+            <rdl><![CDATA[[FLAG:resource\s+"aws_db_instance"[^}]*publicly_accessible\s*=\s*true]]]></rdl>
+            <rule_desc>Detects RDS instances configured to be publicly accessible from the internet.</rule_desc>
+            <vuln_desc>Publicly accessible RDS instances expose database endpoints to internet-wide scanning, credential brute-force, and exploitation of database vulnerabilities.</vuln_desc>
+            <developer>Set publicly_accessible = false and place RDS instances in private subnets. Use bastion hosts or SSM for administrative access.</developer>
+            <reviewer>RDS public accessibility is a high-severity finding. Verify this is not required. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>RDS Storage Not Encrypted</name>
+            <regex><![CDATA[resource\s+"aws_db_instance"[^}]*storage_encrypted\s*=\s*false]]></regex>
+            <rdl><![CDATA[[FLAG:resource\s+"aws_db_instance"][IF(MISSING:storage_encrypted\s*=\s*true)]]]></rdl>
+            <rule_desc>Detects RDS instances without storage encryption enabled.</rule_desc>
+            <vuln_desc>Unencrypted RDS storage leaves data at risk from unauthorized volume access, snapshot sharing, and regulatory compliance violations.</vuln_desc>
+            <developer>Set storage_encrypted = true and specify a KMS key via kms_key_id for customer-managed encryption.</developer>
+            <reviewer>Confirm all RDS instances have storage encryption enabled. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>RDS Multi-AZ Disabled</name>
+            <regex><![CDATA[resource\s+"aws_db_instance"[^}]*multi_az\s*=\s*false]]></regex>
+            <rdl><![CDATA[[FLAG:resource\s+"aws_db_instance"[^}]*multi_az\s*=\s*false]]]></rdl>
+            <rule_desc>Detects production RDS instances with Multi-AZ failover disabled.</rule_desc>
+            <vuln_desc>Single-AZ RDS instances have no automatic failover, creating availability risk from AZ failures that can cause extended outages for data-dependent applications.</vuln_desc>
+            <developer>Enable multi_az = true for production workloads to ensure automatic failover across availability zones.</developer>
+            <reviewer>Verify single-AZ configurations are limited to development or non-critical environments. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="AWS Lambda Security">
+        <rule>
+            <name>Lambda Function with Broad IAM Role</name>
+            <regex><![CDATA[resource\s+"aws_iam_role_policy"[^}]*lambda[^}]*Action\s*":\s*"\*"]]></regex>
+            <rdl><![CDATA[[FLAG:resource\s+"aws_iam_role_policy"[^}]*Action\s*":\s*"\*"]]]></rdl>
+            <rule_desc>Detects Lambda execution roles with wildcard Action policies.</rule_desc>
+            <vuln_desc>Lambda functions with overly broad IAM roles can perform unintended actions across AWS services if the function is exploited or has logic flaws.</vuln_desc>
+            <developer>Apply least-privilege IAM policies to Lambda execution roles. Enumerate only the specific API actions the function must perform.</developer>
+            <reviewer>Confirm Lambda IAM roles follow least-privilege. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Lambda Environment Variable Contains Secret</name>
+            <regex><![CDATA[resource\s+"aws_lambda_function"[^}]*environment\s*\{[^}]*variables\s*=\s*\{[^}]*(?i)(?:password|secret|api_key|token)\s*=\s*"[^"]{8,}"]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)(?:password|secret|api_key|token)\s*=\s*"[^"]{8,}"][IF(MISSING:aws_secretsmanager|var\.|data\.)]]]></rdl>
+            <rule_desc>Detects hardcoded secrets in Lambda environment variable definitions.</rule_desc>
+            <vuln_desc>Lambda environment variables are visible in the AWS console, CloudTrail, and Terraform state files, exposing secrets to any operator with read access.</vuln_desc>
+            <developer>Reference secrets from AWS Secrets Manager or SSM Parameter Store at runtime using the AWS SDK. Use var references with sensitive = true for non-static values.</developer>
+            <reviewer>Confirm Lambda environment variables do not contain literal secret values. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="AWS Logging and Monitoring">
+        <rule>
+            <name>S3 Access Logging Disabled</name>
+            <regex><![CDATA[resource\s+"aws_s3_bucket"[^}]*\}(?![^}]*logging)]]></regex>
+            <rdl><![CDATA[[FLAG:resource\s+"aws_s3_bucket"\b][IF(MISSING:logging\s*\{|aws_s3_bucket_logging)]]]></rdl>
+            <rule_desc>Detects S3 buckets without access logging configured.</rule_desc>
+            <vuln_desc>S3 buckets without access logging cannot be audited for unauthorized data access, exfiltration, or configuration changes, limiting incident detection and forensic capability.</vuln_desc>
+            <developer>Enable S3 server access logging via aws_s3_bucket_logging and direct logs to a dedicated centralized logging bucket.</developer>
+            <reviewer>Confirm all production S3 buckets have access logging enabled. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+</root>

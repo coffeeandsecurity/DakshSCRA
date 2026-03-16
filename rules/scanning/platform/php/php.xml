@@ -77,7 +77,7 @@
         <rule>
             <name>Insecure File Inclusion: include(), require()</name>
             <regex><![CDATA[\b(?:include|require)(_once)?\s*\(\s*(?:(?:\'[^\']*\'|\"[^\"]*\")\s*\.\s*)?\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\.\s*(?:\'[^\']*\'|\"[^\"]*\"))?\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:include|require)(_once)?\s*\(\s*(?:(?:\'[^\']*\'|\"[^\"]*\")\s*\.\s*)?\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\.\s*(?:\'[^\']*\'|\"[^\"]*\"))?\s*\)]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(?:include|require)(_once)?\s*\(\s*(?:(?:\'[^\']*\'|\"[^\"]*\")\s*\.\s*)?\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\.\s*(?:\'[^\']*\'|\"[^\"]*\"))?\s*\)][IF(MISSING:realpath|basename|__DIR__|allowlist|whitelist|in_array)]]]></rdl>
             <rule_desc>Detects insecure usage of include() and require() functions, especially with user input in file paths.</rule_desc>
             <vuln_desc>Using user input in file paths of include() or require() statements can lead to file inclusion vulnerabilities, potentially allowing attackers to load arbitrary files and execute unauthorized code.</vuln_desc>
             <developer>Verify whether include or require paths can be influenced by untrusted input. If confirmed, ensure canonical path validation with strict allowlisting is implemented for all inclusion paths.</developer>
@@ -104,7 +104,7 @@
         <rule>
             <name>Insecure File Operations: fopen(), file_get_contents(), file_put_contents()</name>
             <regex><![CDATA[(fopen|file_get_contents|file_put_contents)\s*\(\s*(?:(?:\'[^\']*\'|\"[^\"]*\")\s*\.\s*)?\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\.\s*(?:\'[^\']*\'|\"[^\"]*\"))?\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:(fopen|file_get_contents|file_put_contents)\s*\(\s*(?:(?:\'[^\']*\'|\"[^\"]*\")\s*\.\s*)?\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\.\s*(?:\'[^\']*\'|\"[^\"]*\"))?\s*\)]]]></rdl>
+            <rdl><![CDATA[[FLAG:(fopen|file_get_contents|file_put_contents)\s*\(\s*(?:(?:\'[^\']*\'|\"[^\"]*\")\s*\.\s*)?\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\.\s*(?:\'[^\']*\'|\"[^\"]*\"))?\s*\)][IF(MISSING:realpath|basename|open_basedir|filter_input|allowlist|whitelist|__DIR__)]]]></rdl>
             <rule_desc>Detects insecure usage of file operations with untrusted input in file paths, potentially leading to file inclusion or manipulation vulnerabilities.</rule_desc>
             <vuln_desc>Using unvalidated input in file operations such as fopen(), file_get_contents(), or file_put_contents() can enable attackers to access or modify unintended files, leading to unauthorized access or data corruption.</vuln_desc>
             <developer>Verify whether file operation paths use untrusted input. If confirmed, ensure path normalization, directory restrictions, and strict validation controls are implemented comprehensively.</developer>
@@ -254,6 +254,46 @@
             <vuln_desc>If this rule matches, it indicates a potentially vulnerable DELETE statement that could allow SQL injection if user input is used without proper parameterization.</vuln_desc>
             <developer>Verify whether untrusted input reaches SQL statement construction in this path. If confirmed, ensure parameterized queries with strict controls are fully implemented for all query variants.</developer>
             <reviewer>Inspect SQL construction and execution for direct input concatenation and parameterization gaps. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="XML External Entity (XXE)">
+        <rule>
+            <name>XXE: DOMDocument loadXML Without Entity Disablement</name>
+            <regex><![CDATA[\$dom\s*=\s*new\s+DOMDocument|DOMDocument\s*\(\s*\)|simplexml_load_string\s*\(|simplexml_load_file\s*\(|SimpleXMLElement\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:\$dom\s*=\s*new\s+DOMDocument|simplexml_load_string\s*\(|simplexml_load_file\s*\(][IF(MISSING:LIBXML_NOENT\s*=\s*0|libxml_disable_entity_loader\s*\(\s*true\s*\)|LIBXML_DTDLOAD)]]]></rdl>
+            <rule_desc>Detects PHP XML parsing functions that may be vulnerable to XXE attacks.</rule_desc>
+            <vuln_desc>PHP XML parsers that resolve external entities by default can be exploited to read arbitrary files or perform SSRF when parsing attacker-controlled XML input.</vuln_desc>
+            <developer>Call libxml_disable_entity_loader(true) before parsing. When using DOMDocument, set validateOnParse=false and do not pass LIBXML_NOENT. Use LIBXML_NONET to prevent network access.</developer>
+            <reviewer>Confirm that libxml_disable_entity_loader(true) or equivalent protections are applied before all XML parsing of untrusted data. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>XXE: XMLReader or XMLParser Without External Entity Protection</name>
+            <regex><![CDATA[xml_parser_create\s*\(|XMLReader::open\s*\(|new\s+XMLReader\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:xml_parser_create\s*\(|XMLReader::open\s*\(|new\s+XMLReader\s*\(][IF(MISSING:libxml_disable_entity_loader|XML_OPTION_SKIP_WHITE|LIBXML_NOENT\s*=\s*0)]]]></rdl>
+            <rule_desc>Detects XMLReader and xml_parser_create usage without external entity protection.</rule_desc>
+            <vuln_desc>Unprotected XML readers can resolve external entities from attacker-supplied input, enabling file disclosure and SSRF.</vuln_desc>
+            <developer>Disable external entity loading and set appropriate XMLReader properties before parsing untrusted XML.</developer>
+            <reviewer>Verify entity loading is disabled for all XML reader instances that process external data. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="Server-Side Request Forgery (SSRF)">
+        <rule>
+            <name>SSRF: curl_exec with User-Controlled URL</name>
+            <regex><![CDATA[curl_setopt\s*\(\s*\$\w+\s*,\s*CURLOPT_URL|curl_init\s*\(\s*\$_(GET|POST|REQUEST|COOKIE)]]></regex>
+            <rdl><![CDATA[[FLAG:curl_setopt\s*\(\s*\$\w+\s*,\s*CURLOPT_URL|curl_init\s*\(\s*\$_(GET|POST|REQUEST|COOKIE)][IF(MISSING:allowlist|whitelist|filter_var\s*\(.*FILTER_VALIDATE_URL|parse_url|CURLOPT_PROTOCOLS)]]]></rdl>
+            <rule_desc>Detects cURL requests configured with potentially user-controlled destination URLs.</rule_desc>
+            <vuln_desc>Allowing user input to control the URL in cURL requests enables SSRF, letting attackers reach internal services, metadata endpoints, or enumerate internal network resources.</vuln_desc>
+            <developer>Validate the URL against an allowlist of trusted hosts/schemes. Restrict protocols via CURLOPT_PROTOCOLS. Block private IP ranges including 169.254.169.254.</developer>
+            <reviewer>Inspect curl URL construction paths for user input and verify destination validation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>SSRF: file_get_contents with User-Controlled URL</name>
+            <regex><![CDATA[file_get_contents\s*\(\s*\$_(GET|POST|REQUEST|COOKIE)|\$\w+\s*=\s*file_get_contents\s*\(\s*\$]]></regex>
+            <rdl><![CDATA[[FLAG:file_get_contents\s*\(\s*\$_(GET|POST|REQUEST|COOKIE)|\$\w+\s*=\s*file_get_contents\s*\(\s*\$][IF(MISSING:allowlist|whitelist|parse_url|filter_var|stream_context_create)]]]></rdl>
+            <rule_desc>Detects file_get_contents used with a user-controlled URL parameter.</rule_desc>
+            <vuln_desc>file_get_contents can fetch remote URLs; using attacker-controlled values enables SSRF attacks against internal infrastructure.</vuln_desc>
+            <developer>Validate URL destination against a strict allowlist of approved hosts and block dangerous protocols (file://, gopher://, dict://).</developer>
+            <reviewer>Verify URL validation controls wherever file_get_contents is called with variable arguments. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

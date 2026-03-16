@@ -1,6 +1,7 @@
 {
   "Python": [
     {"name": "Django", "regex": "\\bdjango\\b|INSTALLED_APPS|manage\\.py", "regexFlag": "1", "fileExtensions": [".py", "*"]},
+    {"name": "SQLAlchemy", "regex": "from\\s+sqlalchemy|import\\s+sqlalchemy|create_engine\\s*\\(|declarative_base\\s*\\(", "regexFlag": "1", "fileExtensions": [".py"]},
     {"name": "Flask", "regex": "\\bfrom\\s+flask\\s+import\\b|\\bFlask\\(", "regexFlag": "1", "fileExtensions": [".py"]},
     {"name": "FastAPI", "regex": "\\bfrom\\s+fastapi\\s+import\\b|\\bFastAPI\\(", "regexFlag": "1", "fileExtensions": [".py"]},
     {"name": "Pyramid", "regex": "\\bpyramid\\b", "regexFlag": "1", "fileExtensions": [".py"]},
@@ -9,6 +10,7 @@
     {"name": "Celery", "regex": "\\bcelery\\b|from\\s+celery\\s+import", "regexFlag": "1", "fileExtensions": [".py"]}
   ],
   "JavaScript": [
+    {"name": "Electron", "regex": "require\\(['\"]electron['\"]\\)|from\\s+['\"]electron['\"]|BrowserWindow\\s*\\(", "regexFlag": "1", "fileExtensions": [".js", ".mjs", ".cjs", ".ts", ".json"]},
     {"name": "Express", "regex": "\\bexpress\\b|require\\(['\"]express['\"]\\)", "regexFlag": "1", "fileExtensions": [".js", ".mjs", ".cjs"]},
     {"name": "Koa", "regex": "\\bkoa\\b", "regexFlag": "1", "fileExtensions": [".js", ".mjs", ".cjs"]},
     {"name": "Hapi", "regex": "@hapi/hapi|\\bhapi\\b", "regexFlag": "1", "fileExtensions": [".js", ".mjs", ".cjs"]},
@@ -41,6 +43,7 @@
     {"name": "Spring Boot", "regex": "@SpringBootApplication|spring-boot", "regexFlag": "1", "fileExtensions": [".java", ".properties", ".yml", ".yaml", "*"]},
     {"name": "Hibernate", "regex": "org\\.hibernate|@Entity", "regexFlag": "1", "fileExtensions": [".java", "*"]},
     {"name": "Struts", "regex": "org\\.apache\\.struts", "regexFlag": "1", "fileExtensions": [".java", ".xml"]},
+    {"name": "MyBatis", "regex": "org\\.apache\\.ibatis|@Mapper\\b|@MapperScan\\b|SqlSessionFactory", "regexFlag": "1", "fileExtensions": [".java", ".xml"]},
     {"name": "Micronaut", "regex": "io\\.micronaut", "regexFlag": "1", "fileExtensions": [".java", ".yml", ".yaml"]},
     {"name": "Quarkus", "regex": "io\\.quarkus|quarkus", "regexFlag": "1", "fileExtensions": [".java", ".properties", ".yml", ".yaml"]}
   ],
@@ -69,10 +72,14 @@
   ".NET": [
     {"name": "ASP.NET Core", "regex": "Microsoft\\.AspNetCore|WebApplication\\.CreateBuilder", "regexFlag": "1", "fileExtensions": [".cs", ".csproj", "*"]},
     {"name": "Entity Framework", "regex": "Microsoft\\.EntityFrameworkCore|DbContext", "regexFlag": "1", "fileExtensions": [".cs"]},
+    {"name": "Blazor", "regex": "\\.razor$|Microsoft\\.AspNetCore\\.Components|@rendermode\\s+Interactive", "regexFlag": "1", "fileExtensions": [".razor", ".cs", "*"]},
+    {"name": "ASP.NET Core Identity", "regex": "Microsoft\\.AspNetCore\\.Identity|AddDefaultIdentity|AddIdentity<|UserManager<|SignInManager<", "regexFlag": "1", "fileExtensions": [".cs", ".csproj", "*"]},
     {"name": "MAUI", "regex": "UseMauiApp|MauiProgram", "regexFlag": "1", "fileExtensions": [".cs", ".csproj", "*"]},
     {"name": "Xamarin", "regex": "Xamarin\\.|monoandroid|xamarinios", "regexFlag": "1", "fileExtensions": [".cs", ".csproj", "*"]}
   ],
   "Go": [
+    {"name": "GORM", "regex": "gorm\\.io/gorm|github\\.com/jinzhu/gorm", "regexFlag": "1", "fileExtensions": [".go", "*"]},
+    {"name": "Gorilla", "regex": "github\\.com/gorilla/", "regexFlag": "1", "fileExtensions": [".go", "*"]},
     {"name": "Gin", "regex": "github\\.com/gin-gonic/gin", "regexFlag": "1", "fileExtensions": [".go", "*"]},
     {"name": "Echo", "regex": "github\\.com/labstack/echo", "regexFlag": "1", "fileExtensions": [".go", "*"]},
     {"name": "Fiber", "regex": "github\\.com/gofiber/fiber", "regexFlag": "1", "fileExtensions": [".go", "*"]},
@@ -100,13 +107,22 @@
     {"name": "Ktor", "regex": "\\bio\\.ktor\\b", "regexFlag": "1", "fileExtensions": [".kt", ".kts"]},
     {"name": "Spring (Kotlin)", "regex": "org\\.springframework", "regexFlag": "1", "fileExtensions": [".kt", ".kts"]},
     {"name": "Android Jetpack", "regex": "androidx\\.|compose\\.|RoomDatabase", "regexFlag": "1", "fileExtensions": [".kt", ".kts", "*"]},
+    {"name": "Exposed", "regex": "org\\.jetbrains\\.exposed|import\\s+org\\.jetbrains\\.exposed", "regexFlag": "1", "fileExtensions": [".kt", ".kts"]},
     {"name": "Kotlin Multiplatform", "regex": "kotlin\\(\\\"multiplatform\\\"\\)|kotlin-multiplatform", "regexFlag": "1", "fileExtensions": [".kts", ".gradle", "*"]}
+  ],
+  "Dart": [
+    {"name": "Flutter", "regex": "package:flutter/|MaterialApp\\(|CupertinoApp\\(", "regexFlag": "1", "fileExtensions": [".dart", ".yaml", "*"]},
+    {"name": "Dio", "regex": "package:dio/|import\\s+['\"]package:dio", "regexFlag": "1", "fileExtensions": [".dart"]},
+    {"name": "Hive", "regex": "package:hive/|HiveAesCipher|Hive\\.openBox\\s*\\(", "regexFlag": "1", "fileExtensions": [".dart", ".yaml"]}
+  ],
+  "Android": [
+    {"name": "Room", "regex": "@Database\\s*\\(|@Entity\\s*\\(|@Dao\\b|RoomDatabase\\b|androidx\\.room", "regexFlag": "1", "fileExtensions": [".kt", ".java", ".gradle", ".kts"]},
+    {"name": "Retrofit", "regex": "retrofit2\\.|import\\s+retrofit2\\.|@GET\\s*\\(|@POST\\s*\\(|@PUT\\s*\\(|OkHttpClient", "regexFlag": "1", "fileExtensions": [".kt", ".java", ".gradle", ".kts"]}
   ],
   "Swift": [
     {"name": "SwiftUI", "regex": "import\\s+SwiftUI|@main\\s+struct", "regexFlag": "1", "fileExtensions": [".swift"]},
-    {"name": "UIKit", "regex": "import\\s+UIKit|UIViewController", "regexFlag": "1", "fileExtensions": [".swift"]}
-  ],
-  "Dart": [
-    {"name": "Flutter", "regex": "package:flutter/|MaterialApp\\(|CupertinoApp\\(", "regexFlag": "1", "fileExtensions": [".dart", ".yaml", "*"]}
+    {"name": "UIKit", "regex": "import\\s+UIKit|UIViewController", "regexFlag": "1", "fileExtensions": [".swift"]},
+    {"name": "Alamofire", "regex": "import\\s+Alamofire|AF\\.request\\s*\\(|Session\\.default", "regexFlag": "1", "fileExtensions": [".swift"]},
+    {"name": "Core Data", "regex": "import\\s+CoreData|NSPersistentContainer|NSManagedObjectContext|NSFetchRequest", "regexFlag": "1", "fileExtensions": [".swift", ".m", ".mm"]}
   ]
 }

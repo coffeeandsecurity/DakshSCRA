@@ -314,4 +314,57 @@
             <reviewer>Check if sensitive data fields are queried and confirm that data protection practices and secure logging methods are applied. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
+    <category name="XML External Entity (XXE)">
+        <rule>
+            <name>XXE: DocumentBuilderFactory Without Secure Processing</name>
+            <regex><![CDATA[DocumentBuilderFactory\.newInstance\s*\(|SAXParserFactory\.newInstance\s*\(|XMLInputFactory\.newInstance\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:DocumentBuilderFactory\.newInstance\s*\(|SAXParserFactory\.newInstance\s*\(|XMLInputFactory\.newInstance\s*\(][IF(MISSING:setFeature\s*\(.*FEATURE_SECURE_PROCESSING|setExpandEntityReferences\s*\(\s*false|DISALLOW_DOCTYPE_DECL|SUPPORT_DTD\s*,\s*false)]]]></rdl>
+            <rule_desc>Detects XML parser factory instantiation without XXE-hardening features.</rule_desc>
+            <vuln_desc>Parsers not configured to disable external entity resolution can be exploited via XXE to read arbitrary server files, perform SSRF, or cause DoS.</vuln_desc>
+            <developer>Disable DOCTYPE declarations and external entity resolution on all XML parsers. Set FEATURE_SECURE_PROCESSING, DISALLOW_DOCTYPE_DECL, and setExpandEntityReferences(false).</developer>
+            <reviewer>Verify that all XML parser instantiations are followed by feature disablement for external entities and DTDs. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>XXE: TransformerFactory Without Secure Processing</name>
+            <regex><![CDATA[TransformerFactory\.newInstance\s*\(|SchemaFactory\.newInstance\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:TransformerFactory\.newInstance\s*\(|SchemaFactory\.newInstance\s*\(][IF(MISSING:setFeature\s*\(.*FEATURE_SECURE_PROCESSING|setAttribute\s*\(.*ACCESS_EXTERNAL)]]]></rdl>
+            <rule_desc>Detects TransformerFactory or SchemaFactory use without external access restrictions.</rule_desc>
+            <vuln_desc>Unprotected XSLT transformations can be exploited for XXE and SSRF by loading attacker-controlled stylesheets or schemas.</vuln_desc>
+            <developer>Set XMLConstants.ACCESS_EXTERNAL_STYLESHEET and ACCESS_EXTERNAL_DTD to empty strings to block external resource access.</developer>
+            <reviewer>Check that TransformerFactory instances restrict external DTD and stylesheet access. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="LDAP Injection">
+        <rule>
+            <name>LDAP Injection: InitialDirContext Search with User Input</name>
+            <regex><![CDATA[InitialDirContext|InitialLdapContext|DirContext\.search\s*\(|new\s+SearchControls\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:InitialDirContext|InitialLdapContext|DirContext\.search\s*\(][IF(PRESENT:request|getParameter|getHeader|query|input && MISSING:escapeLDAPSearchFilter|ESAPI\.encoder\(\)\.encodeForLDAP|ldapEscape)]]]></rdl>
+            <rule_desc>Detects LDAP context or search operations that may incorporate unescaped user input.</rule_desc>
+            <vuln_desc>Injecting unsanitized user data into LDAP filter strings can allow attackers to bypass authentication, enumerate directory entries, or read sensitive attributes.</vuln_desc>
+            <developer>Escape all user-supplied values using LDAP-safe encoding (e.g., ESAPI.encoder().encodeForLDAP()) before constructing filter strings.</developer>
+            <reviewer>Trace user input flow into LDAP filter construction and verify proper escaping at every injection point. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="XPath Injection">
+        <rule>
+            <name>XPath Injection: XPathExpression with Concatenation</name>
+            <regex><![CDATA[xpath\.evaluate\s*\(|XPathExpression\.evaluate\s*\(|XPath\.compile\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:xpath\.evaluate\s*\(|XPathExpression\.evaluate\s*\(|XPath\.compile\s*\(][IF(PRESENT:request|getParameter|input|query|\+ && MISSING:XPathVariableResolver|parameterized|encodeForXPath)]]]></rdl>
+            <rule_desc>Detects XPath evaluation calls that may use user-supplied input in the expression.</rule_desc>
+            <vuln_desc>Concatenating user input into XPath expressions can allow attackers to alter query logic and extract unauthorized data from XML documents.</vuln_desc>
+            <developer>Use parameterized XPath queries via XPathVariableResolver, or sanitize input with XPath-safe escaping functions.</developer>
+            <reviewer>Inspect XPath expression construction for user-controlled string components. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="JNDI Injection">
+        <rule>
+            <name>JNDI Injection: InitialContext Lookup with User Input</name>
+            <regex><![CDATA[InitialContext\s*\(\s*\)|new\s+InitialContext\s*\(|context\.lookup\s*\(|jndiContext\.lookup\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:context\.lookup\s*\(|jndiContext\.lookup\s*\(][IF(PRESENT:request|getParameter|getHeader|input|\+ && MISSING:allowlist|whitelist|validateJndiName)]]]></rdl>
+            <rule_desc>Detects JNDI lookup calls that may resolve attacker-controlled names (Log4Shell-class pattern).</rule_desc>
+            <vuln_desc>JNDI lookups with user-controlled input can trigger remote class loading from attacker-controlled servers, leading to remote code execution (as exploited in Log4Shell CVE-2021-44228).</vuln_desc>
+            <developer>Never pass user-controlled data to JNDI lookup calls. If lookups are necessary, restrict to an allowlist of trusted names and disable com.sun.jndi.rmi.object.trustURLCodebase.</developer>
+            <reviewer>Verify that no user-controlled data reaches JNDI lookup paths. Check JVM properties disabling remote class loading. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
 </root>

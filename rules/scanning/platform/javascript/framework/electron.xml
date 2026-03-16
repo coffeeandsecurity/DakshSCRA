@@ -1,0 +1,49 @@
+<root>
+    <category name="Framework-Specific Issues - Electron">
+        <rule>
+            <name>nodeIntegration Enabled in Renderer Process</name>
+            <regex><![CDATA[nodeIntegration\s*:\s*true]]></regex>
+            <rdl><![CDATA[[FLAG:nodeIntegration\s*:\s*true]]]></rdl>
+            <rule_desc>Detects Electron BrowserWindow configurations with nodeIntegration enabled.</rule_desc>
+            <vuln_desc>Enabling nodeIntegration in renderer processes that load remote or untrusted content allows XSS or content injection to execute arbitrary Node.js code with full OS access, effectively achieving RCE.</vuln_desc>
+            <developer>Set nodeIntegration: false (the default from Electron 5+) and use a contextBridge preload script to expose only the specific APIs required.</developer>
+            <reviewer>Confirm nodeIntegration: false is set for all BrowserWindow instances that load remote content or user-supplied URLs. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>contextIsolation Disabled</name>
+            <regex><![CDATA[contextIsolation\s*:\s*false]]></regex>
+            <rdl><![CDATA[[FLAG:contextIsolation\s*:\s*false]]]></rdl>
+            <rule_desc>Detects Electron BrowserWindow configurations with context isolation disabled.</rule_desc>
+            <vuln_desc>Disabling context isolation allows renderer JavaScript to access and manipulate the preload script and Electron internals, enabling privilege escalation from renderer to main process.</vuln_desc>
+            <developer>Set contextIsolation: true (the default from Electron 12+) and use contextBridge.exposeInMainWorld to safely expose APIs to renderer processes.</developer>
+            <reviewer>Confirm contextIsolation: true is set for all BrowserWindow instances. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>webSecurity Disabled</name>
+            <regex><![CDATA[webSecurity\s*:\s*false]]></regex>
+            <rdl><![CDATA[[FLAG:webSecurity\s*:\s*false]]]></rdl>
+            <rule_desc>Detects Electron BrowserWindow configurations with web security disabled.</rule_desc>
+            <vuln_desc>Disabling webSecurity removes same-origin policy enforcement, cross-origin request restrictions, and HTTPS enforcement, enabling cross-origin data theft and mixed-content attacks.</vuln_desc>
+            <developer>Remove webSecurity: false. If cross-origin requests are required, configure proper CORS headers on the server side instead.</developer>
+            <reviewer>Confirm webSecurity: false is not present in production builds. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>allowRunningInsecureContent Enabled</name>
+            <regex><![CDATA[allowRunningInsecureContent\s*:\s*true]]></regex>
+            <rdl><![CDATA[[FLAG:allowRunningInsecureContent\s*:\s*true]]]></rdl>
+            <rule_desc>Detects Electron configurations that allow loading insecure (HTTP) content in HTTPS pages.</rule_desc>
+            <vuln_desc>Allowing mixed content defeats HTTPS protections by permitting scripts, stylesheets, and media to load over unencrypted HTTP, enabling MITM injection of malicious content.</vuln_desc>
+            <developer>Remove allowRunningInsecureContent: true and ensure all resources are served over HTTPS.</developer>
+            <reviewer>Confirm mixed content loading is not allowed in production. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Remote Module Usage (Deprecated)</name>
+            <regex><![CDATA[require\s*\(\s*['"]electron['"]\s*\)\s*\.\s*remote|@electron/remote]]></regex>
+            <rdl><![CDATA[[FLAG:require\s*\(\s*['"]electron['"]\s*\)\s*\.\s*remote|@electron/remote]]]></rdl>
+            <rule_desc>Detects use of Electron's deprecated remote module in renderer processes.</rule_desc>
+            <vuln_desc>The remote module creates synchronous IPC calls from renderer to main process, allowing renderer-side vulnerabilities to directly invoke main-process operations and expand the attack surface.</vuln_desc>
+            <developer>Migrate to ipcRenderer/ipcMain with explicit message channels and use contextBridge to expose only required APIs. The remote module is deprecated and removed from Electron core.</developer>
+            <reviewer>Confirm remote module usage has been migrated to explicit IPC patterns. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+</root>

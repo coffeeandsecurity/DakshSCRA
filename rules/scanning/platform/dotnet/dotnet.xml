@@ -226,4 +226,64 @@
             <reviewer>The CORS configuration restricts resource access to specific origins in a secure and controlled manner. Ensure that the list of allowed origins is reviewed and approved, and that additional CORS-related security measures are in place to prevent unauthorized cross-origin requests and protect sensitive data. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
+    <category name="Insecure Deserialization">
+        <rule>
+            <name>Insecure Deserialization: BinaryFormatter</name>
+            <regex><![CDATA[BinaryFormatter\s*\(\s*\)|new\s+BinaryFormatter|BinaryFormatter\.Deserialize\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:BinaryFormatter\s*\(\s*\)|new\s+BinaryFormatter|BinaryFormatter\.Deserialize\s*\(]]]></rdl>
+            <rule_desc>Detects use of BinaryFormatter, which is insecure and produces deserialization gadget chains.</rule_desc>
+            <vuln_desc>BinaryFormatter is insecure by design — it cannot be made safe when deserializing data from untrusted sources. Attackers can craft payloads that trigger remote code execution through deserialization gadget chains. Microsoft has marked it obsolete and recommends removal.</vuln_desc>
+            <developer>Replace BinaryFormatter with secure alternatives: System.Text.Json, XmlSerializer, DataContractSerializer with known types, or MessagePack with strict type resolution.</developer>
+            <reviewer>Flag all BinaryFormatter usage as a critical finding regardless of input source. Verify migration to a safe serializer. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Insecure Deserialization: ObjectStateFormatter and LosFormatter</name>
+            <regex><![CDATA[ObjectStateFormatter\.Deserialize\s*\(|LosFormatter\.Deserialize\s*\(|NetDataContractSerializer\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:ObjectStateFormatter\.Deserialize\s*\(|LosFormatter\.Deserialize\s*\(|NetDataContractSerializer\s*\(]]]></rdl>
+            <rule_desc>Detects additional insecure .NET serialization formatters susceptible to gadget-chain attacks.</rule_desc>
+            <vuln_desc>ObjectStateFormatter, LosFormatter, and NetDataContractSerializer all allow arbitrary type deserialization and have known gadget chains enabling RCE.</vuln_desc>
+            <developer>Migrate to safe serializers (System.Text.Json, XmlSerializer with known types). Never deserialize data from untrusted sources using these formatters.</developer>
+            <reviewer>Identify all deserialization calls with these formatters and confirm they are being replaced with safe alternatives. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="Server-Side Request Forgery (SSRF)">
+        <rule>
+            <name>SSRF: HttpClient with User-Controlled URL</name>
+            <regex><![CDATA[httpClient\.(GetAsync|PostAsync|PutAsync|DeleteAsync|SendAsync|GetStringAsync|GetByteArrayAsync)\s*\(|new\s+HttpClient\s*\(\s*\)]]></regex>
+            <rdl><![CDATA[[FLAG:httpClient\.(GetAsync|PostAsync|PutAsync|DeleteAsync|SendAsync|GetStringAsync|GetByteArrayAsync)\s*\(][IF(PRESENT:Request\.|QueryString|Form|userInput|\+ && MISSING:allowlist|whitelist|Uri\.IsWellFormedUriString|IsLocalUrl)]]]></rdl>
+            <rule_desc>Detects HttpClient requests that may use user-controlled URLs, enabling SSRF.</rule_desc>
+            <vuln_desc>Allowing user input to control HttpClient request URLs can enable SSRF attacks targeting internal services, cloud metadata APIs (169.254.169.254), or internal DNS.</vuln_desc>
+            <developer>Validate request URLs against an allowlist of approved hosts and schemes. Block private IP ranges. Use Uri.Host comparison against approved destinations.</developer>
+            <reviewer>Inspect HttpClient usage for user-controlled URL parameters and verify destination validation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>SSRF: WebRequest/WebClient with User-Controlled URL</name>
+            <regex><![CDATA[WebRequest\.Create\s*\(|new\s+WebClient\s*\(\s*\)|new\s+HttpWebRequest\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:WebRequest\.Create\s*\(|new\s+WebClient\s*\(\s*\)|new\s+HttpWebRequest\s*\(][IF(PRESENT:Request\.|QueryString|Form|userInput|\+ && MISSING:allowlist|whitelist|Uri\.IsWellFormedUriString)]]]></rdl>
+            <rule_desc>Detects legacy outbound HTTP requests potentially driven by user-supplied URLs.</rule_desc>
+            <vuln_desc>WebRequest/WebClient usage with user-controlled URLs can enable SSRF in .NET applications.</vuln_desc>
+            <developer>Validate URL destination before creating the request. Prefer HttpClient with a handler that validates DNS resolution results.</developer>
+            <reviewer>Trace URL origin to WebRequest/WebClient calls and verify allowlist-based validation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="LDAP Injection">
+        <rule>
+            <name>LDAP Injection: DirectorySearcher Filter with User Input</name>
+            <regex><![CDATA[new\s+DirectorySearcher\s*\(|DirectorySearcher\.Filter\s*=|new\s+DirectoryEntry\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:new\s+DirectorySearcher\s*\(|DirectorySearcher\.Filter\s*=][IF(PRESENT:Request\.|QueryString|Form|userInput|\+ && MISSING:EscapeLdapFilter|ldapEscape|Encoder\.LdapFilterEncode|AntiXss\.LdapFilterEncode)]]]></rdl>
+            <rule_desc>Detects DirectorySearcher usage with filter strings that may incorporate unescaped user input.</rule_desc>
+            <vuln_desc>Injecting unsanitized user values into LDAP filter strings allows attackers to bypass authentication or enumerate directory objects.</vuln_desc>
+            <developer>Escape all user input using AntiXssEncoder.LdapFilterEncode() or equivalent before inserting into LDAP filter strings.</developer>
+            <reviewer>Verify LDAP filter construction escapes all user-supplied components. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>LDAP Injection: LdapConnection Bind or Search</name>
+            <regex><![CDATA[LdapConnection\s*\(|new\s+LdapConnection|LdapConnection\.Bind\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:LdapConnection\s*\(|new\s+LdapConnection][IF(PRESENT:Request\.|QueryString|Form|userInput|\+ && MISSING:EscapeLdapFilter|AntiXss\.LdapFilterEncode)]]]></rdl>
+            <rule_desc>Detects LdapConnection usage in .NET where search queries may use unvalidated user input.</rule_desc>
+            <vuln_desc>Unescaped input in LDAP searches over LdapConnection can enable injection attacks against directory services.</vuln_desc>
+            <developer>Use parameterized LDAP query construction and escape all user-controlled values before embedding in queries.</developer>
+            <reviewer>Inspect LdapConnection query construction for user-controlled values. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
 </root>

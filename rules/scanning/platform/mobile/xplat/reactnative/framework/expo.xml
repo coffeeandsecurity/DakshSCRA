@@ -1,0 +1,31 @@
+<root>
+    <category name="Framework-Specific Issues - Expo (React Native)">
+        <rule>
+            <name>Expo Updates Without Code Signing</name>
+            <regex><![CDATA["expo-updates"|expoConfig.*updates|updates\.url|runtimeVersion]]></regex>
+            <rdl><![CDATA[[FLAG:"expo-updates"|expoConfig.*updates][IF(MISSING:codeSigningCertificate|codeSigningMetadata|code-signing)]]]></rdl>
+            <rule_desc>Detects Expo OTA updates configuration without code signing enabled.</rule_desc>
+            <vuln_desc>Expo OTA updates without code signing allow a compromised update server or MITM attacker to push malicious JavaScript bundles to production devices, achieving remote code execution without an App Store update.</vuln_desc>
+            <developer>Enable Expo code signing: configure codeSigningCertificate and codeSigningMetadata in app.json/app.config.js. Use EAS Update with signed updates for all production OTA deployments.</developer>
+            <reviewer>Confirm expo-updates is configured with code signing for production builds. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Expo Linking Without Deep Link Validation</name>
+            <regex><![CDATA[Linking\.addEventListener\s*\(\s*['"]url['"]|Linking\.getInitialURL\s*\(\s*\)|expo-linking|useURL\s*\(\s*\)]]></regex>
+            <rdl><![CDATA[[FLAG:Linking\.addEventListener\s*\(\s*['"]url['"]|Linking\.getInitialURL\s*\(\s*\)][IF(MISSING:validate|allowlist|startsWith|parse|sanitize)]]]></rdl>
+            <rule_desc>Detects Expo Linking deep link handlers without URL validation logic.</rule_desc>
+            <vuln_desc>Deep link handlers that do not validate the incoming URL scheme, host, and path allow malicious apps or websites to trigger unintended app actions, navigate to sensitive screens, or pass malicious parameters via deep links.</vuln_desc>
+            <developer>Validate deep link URLs against an allowlist of expected schemes and hosts. Sanitize and validate all query parameters before using them for navigation or data loading.</developer>
+            <reviewer>Confirm all deep link event handlers validate the URL structure and parameters. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Expo SecureStore Fallback to Unencrypted</name>
+            <regex><![CDATA[SecureStore\.setItemAsync|SecureStore\.getItemAsync]]></regex>
+            <rdl><![CDATA[[FLAG:SecureStore\.setItemAsync|SecureStore\.getItemAsync][IF(MISSING:keychainAccessible|keychainService|requireAuthentication)]]]></rdl>
+            <rule_desc>Detects Expo SecureStore usage without explicit accessibility and authentication options.</rule_desc>
+            <vuln_desc>Without specifying keychainAccessible options, SecureStore may use a permissive default accessibility level, allowing secret access when the device is locked or by other apps in some configurations.</vuln_desc>
+            <developer>Specify explicit options: SecureStore.setItemAsync(key, value, { keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY }). Use requireAuthentication: true for high-sensitivity secrets.</developer>
+            <reviewer>Verify SecureStore calls include appropriate accessibility options for the sensitivity of stored data. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+</root>

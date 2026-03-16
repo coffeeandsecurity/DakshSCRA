@@ -159,4 +159,33 @@
             <reviewer>Check all deep link intent filters for autoVerify="true". Confirm that sensitive data (tokens, codes) is not delivered via unverified custom schemes. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
+    <category name="Framework-Specific Security">
+        <rule>
+            <name>WebView Universal File Access Enabled</name>
+            <regex><![CDATA[setAllowUniversalAccessFromFileURLs\s*\(\s*true\s*\)|setAllowFileAccessFromFileURLs\s*\(\s*true\s*\)]]></regex>
+            <rdl><![CDATA[[FLAG:setAllowUniversalAccessFromFileURLs\s*\(\s*true\s*\)|setAllowFileAccessFromFileURLs\s*\(\s*true\s*\)]]]></rdl>
+            <rule_desc>Detects WebView settings that enable cross-origin file access, breaking the same-origin policy.</rule_desc>
+            <vuln_desc>Enabling universal file access in WebView allows JavaScript in file:// pages to read any file accessible to the app, including sensitive data and private storage. This can be leveraged for data theft if attacker-controlled HTML is rendered in the WebView.</vuln_desc>
+            <developer>Set setAllowUniversalAccessFromFileURLs(false) and setAllowFileAccessFromFileURLs(false). Use content providers or HTTPS to serve local content instead of file:// URLs.</developer>
+            <reviewer>Verify WebView settings explicitly disable cross-origin and file-URL access. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Insecure PendingIntent: Missing Immutability Flag</name>
+            <regex><![CDATA[PendingIntent\.(getBroadcast|getActivity|getService|getForegroundService)\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:PendingIntent\.(getBroadcast|getActivity|getService|getForegroundService)\s*\(][IF(MISSING:FLAG_IMMUTABLE|FLAG_UPDATE_CURRENT\s*\|\s*FLAG_IMMUTABLE|PendingIntentCompat)]]]></rdl>
+            <rule_desc>Detects PendingIntent creation without the FLAG_IMMUTABLE flag, enabling intent injection on Android 12+.</rule_desc>
+            <vuln_desc>Mutable PendingIntents can be intercepted and modified by other applications. An attacker could replace the base Intent with arbitrary content, leading to privilege escalation or unauthorized access to app components.</vuln_desc>
+            <developer>Use FLAG_IMMUTABLE for PendingIntents that do not need modification. If modification is required, use FLAG_MUTABLE only with explicit Intent fields set.</developer>
+            <reviewer>Confirm all PendingIntent creations specify FLAG_IMMUTABLE where appropriate. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Insecure Random Number Generation</name>
+            <regex><![CDATA[\bnew\s+Random\s*\(\s*\)|\bMath\.random\s*\(\s*\)]]></regex>
+            <rdl><![CDATA[[FLAG:\bnew\s+Random\s*\(\s*\)|\bMath\.random\s*\(\s*\)][IF(PRESENT:token|key|secret|nonce|session|otp|password|salt && MISSING:SecureRandom)]]]></rdl>
+            <rule_desc>Detects use of non-cryptographic random number generators in security-sensitive contexts.</rule_desc>
+            <vuln_desc>java.util.Random and Math.random() are not cryptographically secure and produce predictable values. Using them for tokens, session IDs, or cryptographic keys weakens security.</vuln_desc>
+            <developer>Use java.security.SecureRandom for all security-sensitive random values (tokens, nonces, keys, session IDs).</developer>
+            <reviewer>Verify that Random and Math.random() are not used in security-critical code paths. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
 </root>

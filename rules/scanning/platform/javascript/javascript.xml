@@ -63,21 +63,21 @@
     <category name="Cryptographic Issues">
         <rule>
             <name>Weak Cryptography</name>
-            <regex><![CDATA[(CryptoJS\.DES\.encrypt|CryptoJS\.AES\.encrypt|MD5|SHA-1|RC4)\(.+\)]]></regex>
-            <rdl><![CDATA[[FLAG:(CryptoJS\.DES\.encrypt|CryptoJS\.AES\.encrypt|MD5|SHA-1|RC4)\(.+\)]]]></rdl>
+            <regex><![CDATA[(CryptoJS\.DES\.encrypt|MD5|SHA-1|RC4)\(.+\)]]></regex>
+            <rdl><![CDATA[[FLAG:(CryptoJS\.DES\.encrypt|MD5|SHA-1|RC4)\(.+\)]]]></rdl>
             <rule_desc>Detects the usage of weak cryptographic functions.</rule_desc>
-            <vuln_desc>This rule matches instances where weak cryptographic functions, such as `CryptoJS.DES.encrypt`, `CryptoJS.AES.encrypt`, `MD5`, `SHA-1`, or `RC4`, are used. These functions are considered weak and can lead to security vulnerabilities in cryptographic operations.</vuln_desc>
+            <vuln_desc>This rule matches instances where weak cryptographic functions, such as `CryptoJS.DES.encrypt`, `MD5`, `SHA-1`, or `RC4`, are used. These algorithms are cryptographically broken or weak and should not be used for security-sensitive operations.</vuln_desc>
             <developer>Use stronger and more secure cryptographic functions and algorithms, such as AES-256 or SHA-256, for encryption and hashing operations. Also follow best practices for key management and encryption protocols.</developer>
             <reviewer>Weak cryptographic functions are used in the code. Assess whether the code uses secure cryptographic algorithms and if best practices for encryption and hashing are followed. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Weak Random Number Generation</name>
-            <regex><![CDATA[(Math\.random|crypto\.getRandomValues)\(.*\)]]></regex>
+            <regex><![CDATA[Math\.random\(.*\)]]></regex>
             <rdl><![CDATA[[FLAG:Math\.random\(.*\)][IF(PRESENT:(token|secret|nonce|otp|session|password|key))]]]></rdl>
-            <rule_desc>Detects the usage of weak random number generation.</rule_desc>
-            <vuln_desc>This rule matches instances where weak random number generation functions, such as `Math.random()` or `crypto.getRandomValues()`, are used. Weak random number generation can lead to predictable values, compromising the security of cryptographic operations or session tokens.</vuln_desc>
-            <developer>Use strong and cryptographically secure random number generation functions, such as `crypto. getRandomValues()`, for any security-critical operations. Avoid using `Math. random()` for generating random values that require high entropy.</developer>
-            <reviewer>Weak random number generation functions, such as `Math. random()`, are used. Assess whether the code relies on secure random number generation functions for cryptographic operations or generating unpredictable values. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+            <rule_desc>Detects the usage of Math.random() in security-sensitive contexts.</rule_desc>
+            <vuln_desc>Math.random() is not cryptographically secure and produces predictable values. Using it to generate tokens, session identifiers, nonces, or cryptographic keys can lead to predictable output that attackers can guess or reproduce.</vuln_desc>
+            <developer>Use `crypto.getRandomValues()` or the `crypto.randomUUID()` / `crypto.randomBytes()` APIs for any security-critical random number generation. Math.random() is acceptable only for non-security uses such as UI animations or sampling.</developer>
+            <reviewer>Verify that Math.random() is not used where cryptographic randomness is required. Confirm that security-sensitive identifiers use a CSPRNG. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
     <category name="Information Disclosure">
@@ -92,12 +92,12 @@
         </rule>
         <rule>
             <name>Stack Trace or Error Disclosure (Node/Express)</name>
-            <regex><![CDATA[(?i)(res\.(?:send|json|end)\s*\(\s*err(?:or)?\s*\)|console\.(?:log|error)\s*\(\s*err(?:or)?(?:\.stack)?\s*\)|throw\s+new\s+Error\()]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(res\.(?:send|json|end)\s*\(\s*err(?:or)?\s*\)|console\.(?:log|error)\s*\(\s*err(?:or)?(?:\.stack)?\s*\)|throw\s+new\s+Error\()]]]></rdl>
-            <rule_desc>Detects Node/Express error-handling patterns that commonly expose internal exception details.</rule_desc>
-            <vuln_desc>Returning raw errors or stack traces can disclose internal paths, libraries, and execution flow to attackers.</vuln_desc>
-            <developer>Return generic client errors and log detailed exceptions only in protected server logs with redaction controls.</developer>
-            <reviewer>Check that production responses do not include raw error objects, stack traces, or sensitive diagnostic details. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+            <regex><![CDATA[res\.(?:send|json|end)\s*\(\s*err(?:or)?(?:\.stack|\.message)?\s*\)]]></regex>
+            <rdl><![CDATA[[FLAG:res\.(?:send|json|end)\s*\(\s*err(?:or)?(?:\.stack|\.message)?\s*\)][IF(MISSING:statusCode|status\s*\(\s*[45]|genericMessage|sanitize|message\s*:\s*["'])]]]></rdl>
+            <rule_desc>Detects Node/Express response patterns that send raw error objects or stack traces directly to HTTP clients.</rule_desc>
+            <vuln_desc>Sending raw error objects or stack traces in HTTP responses discloses internal file paths, library versions, and execution context to attackers, aiding reconnaissance and exploitation.</vuln_desc>
+            <developer>Return a generic error message to the client and log the detailed error server-side only. Use an error handler middleware that maps exceptions to safe, sanitized HTTP responses.</developer>
+            <reviewer>Confirm that HTTP responses never include raw error objects, stack traces, or internal diagnostic details. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
     <category name="Node Runtime Hardening">
@@ -210,12 +210,12 @@
         </rule>
         <rule>
             <name>Missing Cookie Security Flags</name>
-            <regex><![CDATA[(httpOnly(\s)*:(\s)*true|httpOnly)| (secure(\s)*:(\s)*true|secure)| (SameSite(\s)*=(\s)*(Lax|Strict))| (SameSite(\s)*=(\s)*(None|lax))| (Domain(\s)*=(\s)*.*[;\s])| (Domain(\s)*=(\s)*(localhost|\.local))]]></regex>
-            <rdl><![CDATA[[FLAG:(httpOnly(\s)*:(\s)*true|httpOnly)| (secure(\s)*:(\s)*true|secure)| (SameSite(\s)*=(\s)*(Lax|Strict))| (SameSite(\s)*=(\s)*(None|lax))| (Domain(\s)*=(\s)*.*[;\s])| (Domain(\s)*=(\s)*(localhost|\.local))]]]></rdl>
-            <rule_desc>Detects the absence of important security flags in a cookie, such as 'httpOnly', 'secure', 'SameSite', and 'Domain' attributes.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates that one or more security flags are missing in a cookie. The absence of these flags can lead to security vulnerabilities, including cross-site scripting (XSS) attacks and information leakage.</vuln_desc>
-            <developer>Cookies containing sensitive information have the necessary security flags set. This includes enabling the 'httpOnly' attribute, setting the 'secure' attribute for secure connections, and specifying appropriate values for the 'SameSite' and 'Domain' attributes. These measures help protect against various security risks, such as XSS attacks and cookie tampering.</developer>
-            <reviewer>Verify whether the code correctly applies the necessary security flags to cookies. Check for the presence of 'httpOnly', 'secure', 'SameSite', and 'Domain' attributes and confirm that they are set appropriately. Reviewers should assess the impact of missing security flags on the overall security posture of the application and provide recommendations for remediation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+            <regex><![CDATA[res\.cookie\s*\(|document\.cookie\s*=]]></regex>
+            <rdl><![CDATA[[FLAG:res\.cookie\s*\(|document\.cookie\s*=][IF(MISSING:httpOnly\s*:\s*true|secure\s*:\s*true|sameSite|SameSite)]]]></rdl>
+            <rule_desc>Detects cookie creation without essential security flags such as httpOnly, secure, and SameSite.</rule_desc>
+            <vuln_desc>Cookies set without httpOnly are accessible to JavaScript and vulnerable to XSS-based theft. Cookies without the secure flag are transmitted over HTTP. Cookies without SameSite are vulnerable to cross-site request forgery (CSRF).</vuln_desc>
+            <developer>Always set httpOnly:true, secure:true, and sameSite:'Strict' or 'Lax' on session and authentication cookies. Example: res.cookie('session', value, { httpOnly: true, secure: true, sameSite: 'Strict' }).</developer>
+            <reviewer>Confirm that all cookies setting session or authentication state include httpOnly, secure, and sameSite attributes. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

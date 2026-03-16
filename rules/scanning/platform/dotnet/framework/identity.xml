@@ -1,0 +1,40 @@
+<root>
+    <category name="Framework-Specific Issues - ASP.NET Core Identity">
+        <rule>
+            <name>Weak Password Requirements</name>
+            <regex><![CDATA[RequiredLength\s*=\s*[1-7]\b|RequireDigit\s*=\s*false|RequireUppercase\s*=\s*false|RequireLowercase\s*=\s*false|RequireNonAlphanumeric\s*=\s*false]]></regex>
+            <rdl><![CDATA[[FLAG:RequiredLength\s*=\s*[1-7]\b|RequireDigit\s*=\s*false|RequireUppercase\s*=\s*false]]]></rdl>
+            <rule_desc>Detects ASP.NET Core Identity password policy configured with weak requirements.</rule_desc>
+            <vuln_desc>Weak password requirements reduce the entropy of user passwords, making them more susceptible to brute-force, dictionary, and credential stuffing attacks.</vuln_desc>
+            <developer>Set RequiredLength >= 12, RequireDigit = true, RequireUppercase = true, RequireLowercase = true, RequireNonAlphanumeric = true. Consider implementing a password strength estimator (e.g., zxcvbn).</developer>
+            <reviewer>Confirm password options meet current security standards (NIST SP 800-63B recommends minimum 8 characters; 12+ is preferred). This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Account Lockout Disabled</name>
+            <regex><![CDATA[LockoutOnFailure\s*=\s*false|MaxFailedAccessAttempts\s*=\s*0|LockoutEnabled\s*=\s*false]]></regex>
+            <rdl><![CDATA[[FLAG:LockoutOnFailure\s*=\s*false|LockoutEnabled\s*=\s*false]]]></rdl>
+            <rule_desc>Detects ASP.NET Core Identity configurations with account lockout disabled.</rule_desc>
+            <vuln_desc>Disabling lockout removes the primary defense against brute-force and credential stuffing attacks on the authentication endpoint, allowing unlimited password guessing attempts.</vuln_desc>
+            <developer>Enable lockout: set LockoutOnFailure = true, MaxFailedAccessAttempts = 5 (or fewer), and DefaultLockoutTimeSpan to an appropriate duration (e.g., 15 minutes).</developer>
+            <reviewer>Confirm lockout is enabled with reasonable attempt thresholds. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Short or Hardcoded JWT Signing Key</name>
+            <regex><![CDATA[IssuerSigningKey\s*=\s*new\s+SymmetricSecurityKey\s*\(\s*Encoding\.[^.]+\.GetBytes\s*\(\s*["'][^"']{1,31}["']\s*\)\s*\)]]></regex>
+            <rdl><![CDATA[[FLAG:IssuerSigningKey\s*=\s*new\s+SymmetricSecurityKey\s*\(\s*Encoding\.[^.]+\.GetBytes\s*\(\s*["'][^"']{1,31}["']\s*\)\s*\)][IF(MISSING:Configuration\[|GetEnvironmentVariable|_secretsManager)]]]></rdl>
+            <rule_desc>Detects hardcoded JWT symmetric signing keys shorter than 32 characters.</rule_desc>
+            <vuln_desc>Short or hardcoded JWT signing keys are vulnerable to brute-force attacks and key exposure via version control, enabling token forgery and authentication bypass.</vuln_desc>
+            <developer>Load JWT signing keys from a secrets manager or environment configuration. Use a minimum 256-bit (32-byte) random key. Consider asymmetric keys (RSA/ECDSA) for public key distribution scenarios.</developer>
+            <reviewer>Confirm JWT signing keys are loaded from secure configuration and are of sufficient length. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>JWT Token Validation Parameters Weakened</name>
+            <regex><![CDATA[ValidateIssuer\s*=\s*false|ValidateAudience\s*=\s*false|ValidateLifetime\s*=\s*false|ValidateIssuerSigningKey\s*=\s*false]]></regex>
+            <rdl><![CDATA[[FLAG:ValidateIssuer\s*=\s*false|ValidateAudience\s*=\s*false|ValidateLifetime\s*=\s*false|ValidateIssuerSigningKey\s*=\s*false]]]></rdl>
+            <rule_desc>Detects JWT token validation with one or more critical validation checks disabled.</rule_desc>
+            <vuln_desc>Disabling JWT validation checks (issuer, audience, lifetime, signing key) allows acceptance of tokens from unauthorized issuers, expired tokens, or unsigned tokens, enabling authentication bypass.</vuln_desc>
+            <developer>Enable all validation parameters: ValidateIssuer = true, ValidateAudience = true, ValidateLifetime = true, ValidateIssuerSigningKey = true. Only disable in integration test contexts.</developer>
+            <reviewer>Confirm all JWT validation parameters are enabled in production configurations. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+</root>

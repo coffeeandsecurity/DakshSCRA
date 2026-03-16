@@ -1,0 +1,64 @@
+<root>
+    <category name="Azure Compute Security">
+        <rule>
+            <name>Azure VM with Password Authentication Enabled</name>
+            <regex><![CDATA[resource\s+"azurerm_linux_virtual_machine"[^}]*disable_password_authentication\s*=\s*false|resource\s+"azurerm_virtual_machine"[^}]*password_authentication\s*=\s*true]]></regex>
+            <rdl><![CDATA[[FLAG:disable_password_authentication\s*=\s*false]]]></rdl>
+            <rule_desc>Detects Azure Linux VMs with password authentication enabled instead of SSH keys.</rule_desc>
+            <vuln_desc>Password authentication exposes VMs to brute-force attacks. SSH key-based authentication is significantly more resistant to credential stuffing and brute-force attempts.</vuln_desc>
+            <developer>Set disable_password_authentication = true and use admin_ssh_key blocks with RSA 4096-bit or Ed25519 keys.</developer>
+            <reviewer>Confirm all Linux VMs use SSH key authentication exclusively. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="Azure Storage Security">
+        <rule>
+            <name>Azure Storage Account Allows Public Blob Access</name>
+            <regex><![CDATA[resource\s+"azurerm_storage_account"[^}]*allow_nested_items_to_be_public\s*=\s*true|blob_properties\s*\{[^}]*allow_blob_public_access\s*=\s*true]]></regex>
+            <rdl><![CDATA[[FLAG:allow_nested_items_to_be_public\s*=\s*true|allow_blob_public_access\s*=\s*true]]]></rdl>
+            <rule_desc>Detects Azure Storage Accounts configured to allow public blob access.</rule_desc>
+            <vuln_desc>Public blob access allows unauthenticated read of container contents, leading to data exposure of sensitive files, backups, and configuration data.</vuln_desc>
+            <developer>Set allow_nested_items_to_be_public = false at the storage account level. Use SAS tokens or Azure AD authentication for controlled access.</developer>
+            <reviewer>Confirm no storage accounts allow public blob access unless explicitly serving public-facing content. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Azure Storage Account Without Secure Transfer Required</name>
+            <regex><![CDATA[resource\s+"azurerm_storage_account"[^}]*enable_https_traffic_only\s*=\s*false]]></regex>
+            <rdl><![CDATA[[FLAG:enable_https_traffic_only\s*=\s*false]]]></rdl>
+            <rule_desc>Detects storage accounts that allow unencrypted HTTP access.</rule_desc>
+            <vuln_desc>Allowing HTTP traffic to Azure Storage enables data interception via MITM attacks on storage API calls, including credential exfiltration from SAS token traffic.</vuln_desc>
+            <developer>Set enable_https_traffic_only = true (default) or min_tls_version = "TLS1_2" to enforce encrypted connections.</developer>
+            <reviewer>Confirm all storage accounts enforce HTTPS. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="Azure Network Security">
+        <rule>
+            <name>Azure NSG Rule Allows All Inbound Traffic</name>
+            <regex><![CDATA[resource\s+"azurerm_network_security_rule"[^}]*access\s*=\s*"Allow"[^}]*source_address_prefix\s*=\s*"\*"[^}]*direction\s*=\s*"Inbound"]]></regex>
+            <rdl><![CDATA[[FLAG:source_address_prefix\s*=\s*"\*"[^}]*direction\s*=\s*"Inbound"|direction\s*=\s*"Inbound"[^}]*source_address_prefix\s*=\s*"\*"]]]></rdl>
+            <rule_desc>Detects Azure NSG rules that allow all inbound traffic from any source.</rule_desc>
+            <vuln_desc>Open inbound NSG rules expose Azure resources to internet-wide scanning and exploitation across all ports from any IP address.</vuln_desc>
+            <developer>Restrict source_address_prefix to known IP ranges or service tags. Define explicit port ranges and protocol restrictions.</developer>
+            <reviewer>Confirm open inbound rules are intentional and that resources have application-layer controls. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="Azure Database Security">
+        <rule>
+            <name>Azure SQL Server Allows All Azure Services</name>
+            <regex><![CDATA[resource\s+"azurerm_sql_firewall_rule"[^}]*start_ip_address\s*=\s*"0\.0\.0\.0"[^}]*end_ip_address\s*=\s*"0\.0\.0\.0"]]></regex>
+            <rdl><![CDATA[[FLAG:start_ip_address\s*=\s*"0\.0\.0\.0"[^}]*end_ip_address\s*=\s*"0\.0\.0\.0"]]]></rdl>
+            <rule_desc>Detects Azure SQL firewall rules using the 0.0.0.0/0.0.0.0 pattern that allows all Azure services to connect.</rule_desc>
+            <vuln_desc>The "Allow access to Azure services" firewall rule allows any Azure-hosted service (including from other tenants) to connect to the SQL server, not just services in your own tenant.</vuln_desc>
+            <developer>Use Private Endpoints for SQL connectivity instead of firewall rules. If firewall rules are necessary, restrict to explicit IP ranges.</developer>
+            <reviewer>Confirm the 0.0.0.0/0.0.0.0 firewall rule is not used for production SQL servers. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Azure SQL Transparent Data Encryption Disabled</name>
+            <regex><![CDATA[resource\s+"azurerm_mssql_server_transparent_data_encryption"[^}]*key_vault_key_id\s*=]]></regex>
+            <rdl><![CDATA[[FLAG:resource\s+"azurerm_mssql_database"\b][IF(MISSING:transparent_data_encryption|azurerm_mssql_server_transparent_data_encryption)]]]></rdl>
+            <rule_desc>Detects Azure SQL databases without Transparent Data Encryption configured.</rule_desc>
+            <vuln_desc>Without TDE, Azure SQL database files, backups, and transaction logs are stored unencrypted, exposing data if storage-level access is gained.</vuln_desc>
+            <developer>Enable TDE using azurerm_mssql_server_transparent_data_encryption. Use customer-managed keys in Azure Key Vault for additional control.</developer>
+            <reviewer>Verify all SQL databases have TDE enabled. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+</root>

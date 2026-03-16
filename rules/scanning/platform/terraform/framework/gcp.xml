@@ -1,0 +1,64 @@
+<root>
+    <category name="GCP Compute Security">
+        <rule>
+            <name>GCP VM Instance with Public IP</name>
+            <regex><![CDATA[resource\s+"google_compute_instance"[^}]*access_config\s*\{]]></regex>
+            <rdl><![CDATA[[FLAG:resource\s+"google_compute_instance"[^}]*access_config\s*\{][IF(MISSING:nat_ip\s*=\s*"")]]]></rdl>
+            <rule_desc>Detects GCP Compute Engine instances configured with external IP addresses via access_config blocks.</rule_desc>
+            <vuln_desc>Public IP assignment exposes VM instances directly to internet scanning and exploitation. GCP best practice is to use Cloud NAT for outbound and load balancers for inbound access.</vuln_desc>
+            <developer>Remove access_config blocks from VM network interfaces to use private IPs only. Configure Cloud NAT for outbound internet access.</developer>
+            <reviewer>Confirm public IP assignment is justified and security groups restrict access appropriately. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>GCP VM with OS Login Disabled</name>
+            <regex><![CDATA[enable-oslogin\s*=\s*"FALSE"|enable-oslogin\s*=\s*"false"]]></regex>
+            <rdl><![CDATA[[FLAG:enable-oslogin\s*=\s*"FALSE"|enable-oslogin\s*=\s*"false"]]]></rdl>
+            <rule_desc>Detects GCP instances with OS Login disabled, falling back to SSH key management.</rule_desc>
+            <vuln_desc>Disabling OS Login removes centralized IAM-based SSH access control, requiring manual SSH key distribution and making key revocation complex and error-prone.</vuln_desc>
+            <developer>Enable OS Login via metadata enable-oslogin = "TRUE" for centralized IAM-based SSH access management and audit logging.</developer>
+            <reviewer>Confirm OS Login is enabled for all instances that allow SSH access. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="GCP Storage Security">
+        <rule>
+            <name>GCP Storage Bucket Publicly Accessible</name>
+            <regex><![CDATA[resource\s+"google_storage_bucket_iam_(?:binding|member)"[^}]*allUsers|resource\s+"google_storage_bucket_iam_(?:binding|member)"[^}]*allAuthenticatedUsers]]></regex>
+            <rdl><![CDATA[[FLAG:allUsers|allAuthenticatedUsers]]]></rdl>
+            <rule_desc>Detects GCS bucket IAM bindings that grant access to allUsers or allAuthenticatedUsers.</rule_desc>
+            <vuln_desc>Granting storage access to allUsers makes bucket contents publicly readable or writable without authentication, directly causing data exposure incidents.</vuln_desc>
+            <developer>Remove allUsers and allAuthenticatedUsers bindings. Use service accounts or specific user identities for controlled access.</developer>
+            <reviewer>Confirm public bucket access is intentional and contents are appropriate for public access. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>GCP Storage Bucket Without Uniform Access</name>
+            <regex><![CDATA[resource\s+"google_storage_bucket"[^}]*uniform_bucket_level_access\s*=\s*false]]></regex>
+            <rdl><![CDATA[[FLAG:uniform_bucket_level_access\s*=\s*false]]]></rdl>
+            <rule_desc>Detects GCS buckets with fine-grained ACLs instead of uniform bucket-level access control.</rule_desc>
+            <vuln_desc>Fine-grained ACLs are more complex to manage and audit, and legacy ACL configurations can inadvertently grant unintended access to bucket objects.</vuln_desc>
+            <developer>Enable uniform_bucket_level_access = true to simplify access control and rely solely on IAM policies for authorization.</developer>
+            <reviewer>Confirm uniform bucket-level access is enabled for all non-legacy buckets. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="GCP Database Security">
+        <rule>
+            <name>Cloud SQL Instance Publicly Exposed</name>
+            <regex><![CDATA[resource\s+"google_sql_database_instance"[^}]*ipv4_enabled\s*=\s*true|authorized_networks\s*\{[^}]*value\s*=\s*"0\.0\.0\.0/0"]]></regex>
+            <rdl><![CDATA[[FLAG:authorized_networks\s*\{[^}]*value\s*=\s*"0\.0\.0\.0/0"]]]></rdl>
+            <rule_desc>Detects Cloud SQL instances authorized to accept connections from all IP addresses.</rule_desc>
+            <vuln_desc>Cloud SQL instances with 0.0.0.0/0 authorized networks accept database connections from the entire internet, enabling brute-force attacks and exploitation of database vulnerabilities.</vuln_desc>
+            <developer>Use Private Service Connect or Cloud SQL Auth Proxy for database connectivity. Set ipv4_enabled = false and remove 0.0.0.0/0 from authorized_networks.</developer>
+            <reviewer>Confirm Cloud SQL is not publicly accessible via authorized_networks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="GCP IAM Security">
+        <rule>
+            <name>Primitive IAM Role (Owner/Editor) Assigned</name>
+            <regex><![CDATA[role\s*=\s*"roles/(?:owner|editor)"]]></regex>
+            <rdl><![CDATA[[FLAG:role\s*=\s*"roles/(?:owner|editor)"]]]></rdl>
+            <rule_desc>Detects assignment of primitive IAM roles (Owner or Editor) that grant broad permissions.</rule_desc>
+            <vuln_desc>Primitive roles grant broad permissions across all GCP services, violating least-privilege. Owner role allows IAM policy modification and complete resource control.</vuln_desc>
+            <developer>Replace primitive roles with predefined or custom IAM roles that grant only the specific permissions required for the workload.</developer>
+            <reviewer>Confirm no service accounts or users are granted Owner or Editor primitive roles. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+</root>

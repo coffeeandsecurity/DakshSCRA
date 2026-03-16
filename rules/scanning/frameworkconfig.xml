@@ -1,6 +1,16 @@
 <root>
     <!-- PHP -->
     <framework>
+        <name>yii</name>
+        <platform>php</platform>
+        <rule_file>yii.xml</rule_file>
+        <markers>
+            <dep file="composer.json">yiisoft/yii2</dep>
+            <dep file="composer.json">yiisoft/yii</dep>
+            <regex file="composer.json">yiisoft</regex>
+        </markers>
+    </framework>
+    <framework>
         <name>laravel</name>
         <platform>php</platform>
         <rule_file>laravel.xml</rule_file>
@@ -48,6 +58,16 @@
     </framework>
     <!-- Python -->
     <framework>
+        <name>sqlalchemy</name>
+        <platform>python</platform>
+        <rule_file>sqlalchemy.xml</rule_file>
+        <markers>
+            <regex file="requirements.txt">sqlalchemy</regex>
+            <regex file="pyproject.toml">sqlalchemy</regex>
+            <regex file="*">from\s+sqlalchemy|import\s+sqlalchemy</regex>
+        </markers>
+    </framework>
+    <framework>
         <name>django</name>
         <platform>python</platform>
         <rule_file>django.xml</rule_file>
@@ -76,6 +96,27 @@
         </markers>
     </framework>
     <!-- Java -->
+    <framework>
+        <name>struts</name>
+        <platform>java</platform>
+        <rule_file>struts.xml</rule_file>
+        <markers>
+            <regex file="pom.xml">struts2|struts-core</regex>
+            <regex file="build.gradle">struts2|struts-core</regex>
+            <file>struts.xml</file>
+            <file>struts2.xml</file>
+        </markers>
+    </framework>
+    <framework>
+        <name>mybatis</name>
+        <platform>java</platform>
+        <rule_file>mybatis.xml</rule_file>
+        <markers>
+            <regex file="pom.xml">mybatis</regex>
+            <regex file="build.gradle">mybatis</regex>
+            <regex file="build.gradle.kts">mybatis</regex>
+        </markers>
+    </framework>
     <framework>
         <name>spring</name>
         <platform>java</platform>
@@ -107,6 +148,15 @@
         </markers>
     </framework>
     <!-- JavaScript / TypeScript -->
+    <framework>
+        <name>electron</name>
+        <platform>javascript</platform>
+        <rule_file>electron.xml</rule_file>
+        <markers>
+            <dep file="package.json">electron</dep>
+            <regex file="package.json">electron</regex>
+        </markers>
+    </framework>
     <framework>
         <name>express</name>
         <platform>javascript</platform>
@@ -161,6 +211,24 @@
     </framework>
     <!-- .NET -->
     <framework>
+        <name>blazor</name>
+        <platform>dotnet</platform>
+        <rule_file>blazor.xml</rule_file>
+        <markers>
+            <regex file="*.csproj">Microsoft\.AspNetCore\.Components|Blazor</regex>
+            <regex file="*">@page\s+["']/|@rendermode\s+Interactive|@inject\s+IJSRuntime</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>identity</name>
+        <platform>dotnet</platform>
+        <rule_file>identity.xml</rule_file>
+        <markers>
+            <regex file="*.csproj">Microsoft\.AspNetCore\.Identity</regex>
+            <regex file="*">AddDefaultIdentity|AddIdentity&lt;|UserManager&lt;|SignInManager&lt;</regex>
+        </markers>
+    </framework>
+    <framework>
         <name>aspnetcore</name>
         <platform>dotnet</platform>
         <rule_file>aspnetcore.xml</rule_file>
@@ -179,6 +247,22 @@
         </markers>
     </framework>
     <!-- Go -->
+    <framework>
+        <name>gorm</name>
+        <platform>go</platform>
+        <rule_file>gorm.xml</rule_file>
+        <markers>
+            <regex file="go.mod">gorm\.io/gorm</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>gorilla</name>
+        <platform>go</platform>
+        <rule_file>gorilla.xml</rule_file>
+        <markers>
+            <regex file="go.mod">gorilla/mux|gorilla/sessions|gorilla/csrf</regex>
+        </markers>
+    </framework>
     <framework>
         <name>gin</name>
         <platform>go</platform>
@@ -247,6 +331,15 @@
     </framework>
     <!-- Kotlin -->
     <framework>
+        <name>exposed</name>
+        <platform>kotlin</platform>
+        <rule_file>exposed.xml</rule_file>
+        <markers>
+            <regex file="build.gradle">org\.jetbrains\.exposed</regex>
+            <regex file="build.gradle.kts">org\.jetbrains\.exposed</regex>
+        </markers>
+    </framework>
+    <framework>
         <name>ktor</name>
         <platform>kotlin</platform>
         <rule_file>ktor.xml</rule_file>
@@ -290,6 +383,31 @@
         <markers>
             <regex file="cmakelists.txt">\bboost\b</regex>
             <regex file="*">#include\s+[&lt;\&quot;]boost/</regex>
+        </markers>
+    </framework>
+    <!-- Terraform Provider Frameworks -->
+    <framework>
+        <name>terraform-aws</name>
+        <platform>terraform</platform>
+        <rule_file>aws.xml</rule_file>
+        <markers>
+            <regex file="*.tf">source\s*=\s*["']hashicorp/aws["']|provider\s+["']aws["']</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>terraform-azure</name>
+        <platform>terraform</platform>
+        <rule_file>azure.xml</rule_file>
+        <markers>
+            <regex file="*.tf">source\s*=\s*["']hashicorp/azurerm["']|provider\s+["']azurerm["']</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>terraform-gcp</name>
+        <platform>terraform</platform>
+        <rule_file>gcp.xml</rule_file>
+        <markers>
+            <regex file="*.tf">source\s*=\s*["']hashicorp/google["']|provider\s+["']google["']</regex>
         </markers>
     </framework>
     <!-- Mobile Frameworks (Cross-Platform) -->
@@ -485,6 +603,37 @@
             <regex file="*.csproj">Xamarin|UseMaui|Maui|ios</regex>
         </markers>
     </framework>
+    <!-- Flutter Sub-Frameworks -->
+    <framework>
+        <name>flutter-dio</name>
+        <platform>flutter</platform>
+        <rule_file>dio.xml</rule_file>
+        <scan_ftypes>*.dart, pubspec.yaml</scan_ftypes>
+        <markers>
+            <regex file="pubspec.yaml">^\s*dio\s*:</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>flutter-hive</name>
+        <platform>flutter</platform>
+        <rule_file>hive.xml</rule_file>
+        <scan_ftypes>*.dart, pubspec.yaml</scan_ftypes>
+        <markers>
+            <regex file="pubspec.yaml">^\s*hive\s*:|hive_flutter</regex>
+        </markers>
+    </framework>
+    <!-- React Native Sub-Frameworks -->
+    <framework>
+        <name>expo</name>
+        <platform>reactnative</platform>
+        <rule_file>expo.xml</rule_file>
+        <scan_ftypes>*.js, *.jsx, *.ts, *.tsx, app.json, package.json</scan_ftypes>
+        <markers>
+            <dep file="package.json">expo-updates</dep>
+            <dep file="package.json">expo</dep>
+            <file>app.json</file>
+        </markers>
+    </framework>
     <!-- Android -->
     <framework>
         <name>jetpack</name>
@@ -493,6 +642,29 @@
         <scan_ftypes>AndroidManifest.xml, *.kt, *.java, *.xml, build.gradle, build.gradle.kts, network_security_config.xml</scan_ftypes>
         <markers>
             <regex file="*">androidx\.|compose\.|RoomDatabase</regex>
+        </markers>
+    </framework>
+    <!-- Android Frameworks -->
+    <framework>
+        <name>room</name>
+        <platform>android</platform>
+        <rule_file>room.xml</rule_file>
+        <scan_ftypes>*.kt, *.java, build.gradle, build.gradle.kts</scan_ftypes>
+        <markers>
+            <regex file="build.gradle">androidx\.room</regex>
+            <regex file="build.gradle.kts">androidx\.room</regex>
+            <regex file="*">@Database\s*\(|@Entity\s*\(|@Dao\b|RoomDatabase\b</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>retrofit</name>
+        <platform>android</platform>
+        <rule_file>retrofit.xml</rule_file>
+        <scan_ftypes>*.kt, *.java, build.gradle, build.gradle.kts</scan_ftypes>
+        <markers>
+            <regex file="build.gradle">retrofit2|com\.squareup\.retrofit2</regex>
+            <regex file="build.gradle.kts">retrofit2|com\.squareup\.retrofit2</regex>
+            <regex file="*">import\s+retrofit2\.|@GET\s*\(|@POST\s*\(|OkHttpClient</regex>
         </markers>
     </framework>
     <!-- iOS -->
@@ -512,6 +684,27 @@
         <scan_ftypes>*.swift, *.m, *.mm, Info.plist, *.plist, *.entitlements</scan_ftypes>
         <markers>
             <regex file="*">import\s+UIKit|UIViewController</regex>
+        </markers>
+    </framework>
+    <!-- iOS Frameworks -->
+    <framework>
+        <name>alamofire</name>
+        <platform>ios</platform>
+        <rule_file>alamofire.xml</rule_file>
+        <scan_ftypes>*.swift, Podfile, Package.swift</scan_ftypes>
+        <markers>
+            <regex file="Podfile">Alamofire</regex>
+            <regex file="Package.swift">Alamofire</regex>
+            <regex file="*">import\s+Alamofire</regex>
+        </markers>
+    </framework>
+    <framework>
+        <name>coredata</name>
+        <platform>ios</platform>
+        <rule_file>coredata.xml</rule_file>
+        <scan_ftypes>*.swift, *.m, *.mm, *.xcdatamodeld</scan_ftypes>
+        <markers>
+            <regex file="*">import\s+CoreData|NSPersistentContainer|NSManagedObjectContext|NSFetchRequest</regex>
         </markers>
     </framework>
 </root>
