@@ -4,6 +4,14 @@
             <name>Untrusted Inputs: $_REQUEST, $_GET, $_POST, $_COOKIE</name>
             <regex><![CDATA[\$_(REQUEST|GET|POST|COOKIE)]]></regex>
             <rdl><![CDATA[[FLAG:\$_(REQUEST|GET|POST|COOKIE)][IF(PRESENT:(query|execute|include|require|header|echo|print|system|exec|shell_exec|eval|assert) && MISSING:(filter_input|filter_var|htmlspecialchars|htmlentities|intval|floatval|preg_match))]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>3</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects the use of common PHP superglobals that can introduce untrusted input into the code.</rule_desc>
             <vuln_desc>Using untrusted input from PHP superglobals like $_REQUEST, $_GET, $_POST, or $_COOKIE without proper validation and sanitization can lead to vulnerabilities such as injection attacks (SQL, OS, or LDAP), cross-site scripting (XSS), unauthorized access, or remote code execution.</vuln_desc>
             <developer>Verify whether superglobal input in this path is treated as untrusted. If confirmed, ensure context-appropriate validation, sanitization, and safe sink handling are fully implemented.</developer>
@@ -13,6 +21,14 @@
             <name>Command Injection: shell_exec, exec, passthru, system, popen, backtick</name>
             <regex><![CDATA[(shell_exec|exec|passthru|system|popen|`)\(]]></regex>
             <rdl><![CDATA[[FLAG:(shell_exec|exec|passthru|system|popen|`)\(][IF(PRESENT:\$_(GET|POST|REQUEST|COOKIE)|\$_SERVER|argv|request && MISSING:escapeshellarg|escapeshellcmd)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>4</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects instances of shell-executing functions that can lead to command injection if used with untrusted input.</rule_desc>
             <vuln_desc>Using shell-executing functions with unvalidated input can lead to command injection, enabling attackers to execute arbitrary commands on the server, causing unauthorized access, data loss, or remote code execution.</vuln_desc>
             <developer>Verify whether command execution paths accept untrusted input. If confirmed, ensure strict validation, allowlisted command construction, and safe execution controls are fully implemented before invoking shell APIs.</developer>
@@ -22,6 +38,14 @@
             <name>Arbitrary Code Execution: eval and exec</name>
             <regex><![CDATA[\b(?:eval|exec)\b]]></regex>
             <rdl><![CDATA[[FLAG:\b(?:eval|exec)\b][IF(PRESENT:\$_(GET|POST|REQUEST|COOKIE)|base64_decode|gzinflate|str_rot13|preg_replace && MISSING:allowlist|whitelist)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects usage of eval() and exec(), which can lead to arbitrary code execution vulnerabilities.</rule_desc>
             <vuln_desc>Using eval() or exec() with user input can allow arbitrary code execution, risking unauthorized access, data compromise, or system control by attackers.</vuln_desc>
             <developer>Verify whether dynamic execution sinks receive untrusted input. If confirmed, ensure safe alternatives or strict input constraints are implemented thoroughly for all reachable paths.</developer>
@@ -31,6 +55,14 @@
             <name>Object Injection via Serialization</name>
             <regex><![CDATA[\b(?:unserialize|serialize)\b]]></regex>
             <rdl><![CDATA[[FLAG:\b(?:unserialize|serialize)\b][IF(PRESENT:unserialize\s*\(|\$_(GET|POST|REQUEST|COOKIE) && MISSING:allowed_classes\s*=>\s*false|json_decode\s*\())]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects usage of unserialize() or serialize() functions, potentially leading to object injection vulnerabilities.</rule_desc>
             <vuln_desc>Improper handling of serialized data can lead to object injection, allowing attackers to execute arbitrary code or perform privilege escalation by manipulating serialized objects.</vuln_desc>
             <developer>Verify whether serialized data in this path can originate from untrusted sources. If confirmed, ensure secure deserialization controls are fully implemented, including strict class restrictions and trusted payload handling.</developer>
@@ -40,6 +72,14 @@
             <name>Regular Expression Injection: preg_replace with /e Modifier or Untrusted Input</name>
             <regex><![CDATA[preg_replace\(([^,]+,\s*)?[^/]*e[^/]*|preg_replace\(\$_(GET|POST|REQUEST|COOKIE)]]></regex>
             <rdl><![CDATA[[FLAG:preg_replace\(([^,]+,\s*)?[^/]*e[^/]*|preg_replace\(\$_(GET|POST|REQUEST|COOKIE)][IF(MISSING:preg_replace_callback)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects usage of preg_replace() with the /e modifier or direct use of untrusted inputs, leading to regular expression injection.</rule_desc>
             <vuln_desc>Using preg_replace() with the /e modifier or direct input from superglobals can allow code execution via regular expression injection, risking remote code execution or data exposure.</vuln_desc>
             <developer>Verify whether preg_replace uses insecure execution patterns or untrusted regex input. If confirmed, ensure safer callback-based handling with strict input validation is fully implemented.</developer>
@@ -49,6 +89,14 @@
             <name>Cross-Site Scripting (XSS) via PHP_SELF</name>
             <regex><![CDATA[\$_SERVER\['PHP_SELF']]></regex>
             <rdl><![CDATA[[FLAG:\$_SERVER\['PHP_SELF'][IF(PRESENT:(echo|print|action\s*=|header\s*\() && MISSING:htmlspecialchars|htmlentities|basename)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects usage of the PHP_SELF variable in contexts that may be vulnerable to cross-site scripting (XSS).</rule_desc>
             <vuln_desc>Using PHP_SELF directly in forms or links without sanitization allows attackers to inject malicious scripts, potentially leading to XSS and unauthorized access.</vuln_desc>
             <developer>Verify whether user-influenced values are rendered in HTML contexts. If confirmed, ensure context-appropriate encoding and safe output construction are consistently implemented.</developer>
@@ -60,6 +108,14 @@
             <name>Insecure Method Call: preg_replace() with Code Execution</name>
             <regex><![CDATA[preg_replace\s*\(\s*['"](eval|assert|system|passthru|shell_exec|exec|popen|proc_open|pcntl_exec)['"]\s*,\s*\$([^\s,]*)\s*\)]]></regex>
             <rdl><![CDATA[[FLAG:preg_replace\s*\(\s*['"](eval|assert|system|passthru|shell_exec|exec|popen|proc_open|pcntl_exec)['"]\s*,\s*\$([^\s,]*)\s*\)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects insecure usage of preg_replace() with dangerous replacement parameters that could lead to code injection vulnerabilities.</rule_desc>
             <vuln_desc>Using preg_replace() with functions like eval, assert, system, passthru, shell_exec, exec, popen, proc_open, or pcntl_exec as replacement parameters can allow attackers to execute arbitrary code.</vuln_desc>
             <developer>Verify whether the matched pattern is reachable with untrusted input. If confirmed, ensure effective mitigations are fully implemented and consistently applied across equivalent code paths.</developer>
@@ -69,6 +125,14 @@
             <name>Insecure Redirect: header() with Location</name>
             <regex><![CDATA[header\s*\(\s*['\"]\s*Location\s*:\s*['\"]\s*\.\s*\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)]]></regex>
             <rdl><![CDATA[[FLAG:header\s*\(\s*['\"]\s*Location\s*:\s*['\"]\s*\.\s*\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)][IF(MISSING:parse_url|filter_var\s*\(.*FILTER_VALIDATE_URL|allowlist|whitelist)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects usage of the header() function with the "Location" parameter, which can lead to insecure redirects.</rule_desc>
             <vuln_desc>Using unvalidated input in the "Location" parameter of header() can allow attackers to perform open redirects, leading to phishing or redirection to malicious sites.</vuln_desc>
             <developer>Verify whether redirect targets are influenced by untrusted input. If confirmed, ensure strict destination validation and trusted redirect constraints are fully implemented.</developer>
@@ -78,6 +142,14 @@
             <name>Insecure File Inclusion: include(), require()</name>
             <regex><![CDATA[\b(?:include|require)(_once)?\s*\(\s*(?:(?:\'[^\']*\'|\"[^\"]*\")\s*\.\s*)?\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\.\s*(?:\'[^\']*\'|\"[^\"]*\"))?\s*\)]]></regex>
             <rdl><![CDATA[[FLAG:\b(?:include|require)(_once)?\s*\(\s*(?:(?:\'[^\']*\'|\"[^\"]*\")\s*\.\s*)?\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\.\s*(?:\'[^\']*\'|\"[^\"]*\"))?\s*\)][IF(MISSING:realpath|basename|__DIR__|allowlist|whitelist|in_array)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects insecure usage of include() and require() functions, especially with user input in file paths.</rule_desc>
             <vuln_desc>Using user input in file paths of include() or require() statements can lead to file inclusion vulnerabilities, potentially allowing attackers to load arbitrary files and execute unauthorized code.</vuln_desc>
             <developer>Verify whether include or require paths can be influenced by untrusted input. If confirmed, ensure canonical path validation with strict allowlisting is implemented for all inclusion paths.</developer>
@@ -87,6 +159,14 @@
             <name>Insecure Variable Injection: extract()</name>
             <regex><![CDATA[extract\s*\(\s*(\$_(GET|POST|REQUEST)|\$\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}?)\s*,\s*(?:\s*EXTR_(?:OVERWRITE|SKIP|PREFIX_SAME|PREFIX_ALL|IF_EXISTS|IF_DOESNT_EXIST|PREFIX_INVALID))?]]></regex>
             <rdl><![CDATA[[FLAG:extract\s*\(\s*(\$_(GET|POST|REQUEST)|\$\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}?)\s*,\s*(?:\s*EXTR_(?:OVERWRITE|SKIP|PREFIX_SAME|PREFIX_ALL|IF_EXISTS|IF_DOESNT_EXIST|PREFIX_INVALID))?]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects usage of extract() with user-supplied arrays, which can introduce variable overwrite vulnerabilities.</rule_desc>
             <vuln_desc>Using extract() with user-supplied arrays can overwrite existing variables, introducing injection risks and unexpected behavior.</vuln_desc>
             <developer>Verify whether extract is used on arrays that may carry untrusted keys. If confirmed, ensure explicit key handling with strict key validation is implemented to prevent variable overwrite.</developer>
@@ -96,6 +176,14 @@
             <name>Insecure Code Execution: assert() and eval()</name>
             <regex><![CDATA[(assert|eval)\s*\(\s*(\$_(GET|POST|REQUEST)|\$\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}?)]]></regex>
             <rdl><![CDATA[[FLAG:(assert|eval)\s*\(\s*(\$_(GET|POST|REQUEST)|\$\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}?)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects usage of assert() and eval() with potentially untrusted inputs, leading to code injection vulnerabilities.</rule_desc>
             <vuln_desc>Using assert() or eval() with untrusted user inputs can enable attackers to inject and execute arbitrary code on the server, posing severe security risks.</vuln_desc>
             <developer>Verify whether dynamic execution sinks receive untrusted input. If confirmed, ensure safe alternatives or strict input constraints are implemented thoroughly for all reachable paths.</developer>
@@ -105,6 +193,14 @@
             <name>Insecure File Operations: fopen(), file_get_contents(), file_put_contents()</name>
             <regex><![CDATA[(fopen|file_get_contents|file_put_contents)\s*\(\s*(?:(?:\'[^\']*\'|\"[^\"]*\")\s*\.\s*)?\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\.\s*(?:\'[^\']*\'|\"[^\"]*\"))?\s*\)]]></regex>
             <rdl><![CDATA[[FLAG:(fopen|file_get_contents|file_put_contents)\s*\(\s*(?:(?:\'[^\']*\'|\"[^\"]*\")\s*\.\s*)?\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\.\s*(?:\'[^\']*\'|\"[^\"]*\"))?\s*\)][IF(MISSING:realpath|basename|open_basedir|filter_input|allowlist|whitelist|__DIR__)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects insecure usage of file operations with untrusted input in file paths, potentially leading to file inclusion or manipulation vulnerabilities.</rule_desc>
             <vuln_desc>Using unvalidated input in file operations such as fopen(), file_get_contents(), or file_put_contents() can enable attackers to access or modify unintended files, leading to unauthorized access or data corruption.</vuln_desc>
             <developer>Verify whether file operation paths use untrusted input. If confirmed, ensure path normalization, directory restrictions, and strict validation controls are implemented comprehensively.</developer>
@@ -116,6 +212,14 @@
             <name>Stack Trace or Error Disclosure</name>
             <regex><![CDATA[(?i)(echo .*Exception.*;|print_r\(.*Exception.*\)|trigger_error\(.+\))]]></regex>
             <rdl><![CDATA[[FLAG:(?i)(echo .*Exception.*;|print_r\(.*Exception.*\)|trigger_error\(.+\))]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects unsafe practices in error handling or logging in PHP applications.</rule_desc>
             <vuln_desc>Printing exceptions or using `trigger_error` with sensitive details can expose implementation specifics and file paths to attackers.</vuln_desc>
             <developer>Verify whether internal error details are exposed to users. If confirmed, ensure secure error handling with sanitized responses and protected logging is consistently implemented.</developer>
@@ -127,6 +231,13 @@
             <name>Deprecated and Potentially Insecure SQL Functions</name>
             <regex><![CDATA[(?i)\b(mysql_query|mysqli_query|new\s+PDO\(|pg_connect\(|mysql_connect\(|mysqli_connect\(|sqlite3_open|mysql_fetch_array|mysql_fetch_assoc|mysql_num_rows)\b|(?:mysql_query|pg_query|sqlite_query|mysqli_query|pdo->query)\s*\(\s*['\"]?\b(SELECT|INSERT|UPDATE|DELETE)\b\s+.*\s*['\"]?\s*\.\s*\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\b(mysql_query|mysqli_query|new\s+PDO\(|pg_connect\(|mysql_connect\(|mysqli_connect\(|sqlite3_open|mysql_fetch_array|mysql_fetch_assoc|mysql_num_rows)\b|(?:mysql_query|pg_query|sqlite_query|mysqli_query|pdo->query)\s*\(\s*['\"]?\b(SELECT|INSERT|UPDATE|DELETE)\b\s+.*\s*['\"]?\s*\.\s*\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects usage of deprecated or insecure SQL functions and dynamic SQL queries with user input that may lead to SQL injection vulnerabilities.</rule_desc>
             <vuln_desc>This rule detects deprecated functions or dynamic queries using user input without secure parameterization, which may expose applications to SQL injection or other database security risks.</vuln_desc>
             <developer>Verify whether deprecated query APIs and dynamic query construction remain in use. If confirmed, ensure migration to parameterized database access with validated input handling is fully implemented.</developer>
@@ -136,6 +247,13 @@
             <name>Deprecated Regular Expression Functions</name>
             <regex><![CDATA[\b(ereg|eregi)\b]]></regex>
             <rdl><![CDATA[[FLAG:\b(ereg|eregi)\b]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects usage of deprecated regular expression functions that may lead to security issues.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the use of outdated regex functions that can lead to potential security vulnerabilities and performance issues, as these functions are no longer maintained.</vuln_desc>
             <developer>Verify whether deprecated string or regex APIs are still present. If confirmed, ensure modern supported alternatives are implemented consistently across affected code paths.</developer>
@@ -145,6 +263,13 @@
             <name>Deprecated String Split Function</name>
             <regex><![CDATA[\bsplit\s*\(\s*[^;]*\s*\)]]></regex>
             <rdl><![CDATA[[FLAG:\bsplit\s*\(\s*[^;]*\s*\)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects usage of the deprecated split() function, which can lead to unpredictable behavior and maintenance challenges.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the use of an outdated method for splitting strings that may result in unexpected string handling, potentially exposing logic errors. The deprecated function may also lead to compatibility issues with newer PHP versions, increasing the risk of security vulnerabilities due to insufficient input validation and handling.</vuln_desc>
             <developer>Verify whether deprecated string or regex APIs are still present. If confirmed, ensure modern supported alternatives are implemented consistently across affected code paths.</developer>
@@ -154,6 +279,13 @@
             <name>Deprecated Session Register Function</name>
             <regex><![CDATA[\bsession_register\s*\(\s*['"]?[\w\s]*['"]?\s*\)]]></regex>
             <rdl><![CDATA[[FLAG:\bsession_register\s*\(\s*['"]?[\w\s]*['"]?\s*\)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects usage of the deprecated session_register() function, which is no longer supported in modern PHP versions.</rule_desc>
             <vuln_desc>If this rule matches, it indicates outdated session management practices that may lead to security issues. The use of session_register() has been deprecated due to limitations and security concerns, as it does not support PHP's modern session handling methods.</vuln_desc>
             <developer>Verify whether legacy session or global variable behaviors are still active. If confirmed, ensure modern secure session and input handling patterns are fully applied.</developer>
@@ -163,6 +295,14 @@
             <name>Deprecated register_globals Directive</name>
             <regex><![CDATA[\bregister_globals\b]]></regex>
             <rdl><![CDATA[[FLAG:\bregister_globals\b]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects usage of the deprecated and insecure register_globals directive.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the presence of the insecure register_globals directive. Enabling this directive allows PHP to automatically turn incoming parameters into global variables, which can lead to unauthorized variable overwrites, increased risk of injection attacks, and a higher chance of security vulnerabilities.</vuln_desc>
             <developer>Verify whether legacy session or global variable behaviors are still active. If confirmed, ensure modern secure session and input handling patterns are fully applied.</developer>
@@ -172,6 +312,14 @@
             <name>Deprecated create_function() Usage</name>
             <regex><![CDATA[\bcreate_function\(\s*]]></regex>
             <rdl><![CDATA[[FLAG:\bcreate_function\(\s*]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects usage of the deprecated and potentially insecure create_function() method.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the use of the deprecated create_function(), which can introduce security vulnerabilities by allowing dynamically generated code to be executed. This function may expose the codebase to code injection risks if user input is incorporated without proper sanitization.</vuln_desc>
             <developer>Verify whether create_function is still used in executable paths. If confirmed, ensure migration to safe anonymous functions is fully implemented.</developer>
@@ -183,6 +331,13 @@
             <name>Insecure Mitigation: SQL Injection (mysql_real_escape_string)</name>
             <regex>mysql_real_escape_string</regex>
             <rdl><![CDATA[[FLAG:mysql_real_escape_string]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects the usage of the mysql_real_escape_string function for SQL injection mitigation.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of SQL injection. Attackers can bypass the protection provided by mysql_real_escape_string and still execute SQL injection attacks if not used correctly.</vuln_desc>
             <developer>Verify whether mysql_real_escape_string is used as the primary SQL injection control. If confirmed, ensure prepared statements with bound parameters are implemented across the full query path.</developer>
@@ -194,6 +349,13 @@
             <name>Mitigation Identified: XSS</name>
             <regex>htmlentities</regex>
             <rdl><![CDATA[[FLAG:htmlentities]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>green</highlight_color>
+            </scan_config>
             <rule_desc>Detects the presence of XSS mitigation using htmlentities function.</rule_desc>
             <vuln_desc>This rule checks if the "htmlentities" function is utilized as a recommended mitigation technique against Cross-Site Scripting (XSS) vulnerabilities. XSS vulnerabilities arise when untrusted data is displayed on a web page without proper sanitization, enabling attackers to inject malicious scripts. By employing the "htmlentities" function, special characters are encoded to prevent script execution.</vuln_desc>
             <developer>Verify whether user-influenced values are rendered in HTML contexts. If confirmed, ensure context-appropriate encoding and safe output construction are consistently implemented.</developer>
@@ -205,6 +367,14 @@
             <name>RDL Conditional: SQL Query with Untrusted Input and Missing Parameterization</name>
             <regex><![CDATA[(?i)\b(?:mysql_query|mysqli_query|pg_query|sqlite_query|->query)\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\b(?:mysql_query|mysqli_query|pg_query|sqlite_query|->query)\s*\(][IF(PRESENT:\$_(GET|POST|REQUEST|COOKIE)|\.\s*\$|sprintf\s*\(|format\s*\( && MISSING:prepare\s*\(|bind_param|bindValue|bindParam|PDO::prepare)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Flags SQL query execution in files that also process untrusted PHP input without evidence of parameterized query APIs.</rule_desc>
             <vuln_desc>Direct SQL execution combined with untrusted input and no parameterization patterns may indicate SQL injection risk.</vuln_desc>
             <developer>Verify whether untrusted input reaches SQL statement construction in this path. If confirmed, ensure parameterized queries with strict controls are fully implemented for all query variants.</developer>
@@ -214,6 +384,14 @@
             <name>SQL Query: Non-parameterized SELECT Statements with WHERE or ORDER BY</name>
             <regex><![CDATA[(?i)\bSELECT\s+\*?\s+FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\bSELECT\s+\*?\s+FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*][IF(PRESENT:(\.\s*\$|\$_(GET|POST|REQUEST|COOKIE)|sprintf\s*\(|format\s*\() && MISSING:prepare\s*\(|bind_param|bindValue|bindParam|PDO::prepare)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects non-parameterized SELECT statements with WHERE or ORDER BY clauses in SQL queries, which may be vulnerable to SQL injection if user input is not handled securely.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the use of a SELECT statement with WHERE or ORDER BY clauses where user input is not properly parameterized, allowing attackers to manipulate query behavior and gain unauthorized access to data.</vuln_desc>
             <developer>Verify whether untrusted input reaches SQL statement construction in this path. If confirmed, ensure parameterized queries with strict controls are fully implemented for all query variants.</developer>
@@ -223,6 +401,13 @@
             <name>SQL Query: Unrestricted SELECT *</name>
             <regex><![CDATA[\bSELECT\s+\*\s+FROM\b]]></regex>
             <rdl><![CDATA[[FLAG:\bSELECT\s+\*\s+FROM\b][IF(MISSING:LIMIT\s+[0-9]+)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects the use of "SELECT * FROM" in SQL queries, which may expose unnecessary or sensitive data, increasing the attack surface.</rule_desc>
             <vuln_desc>If this rule matches, it suggests that the query retrieves more data than necessary, potentially exposing sensitive information and increasing the risk of data leakage.</vuln_desc>
             <developer>Verify whether untrusted input reaches SQL statement construction in this path. If confirmed, ensure parameterized queries with strict controls are fully implemented for all query variants.</developer>
@@ -232,6 +417,14 @@
             <name>SQL Query: Non-parameterized INSERT/UPDATE Statements</name>
             <regex><![CDATA[(?i)\b(INSERT INTO|UPDATE)\s+[^\s]+\s+(SET|VALUES)\s+.*=.*\$.*]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\b(INSERT INTO|UPDATE)\s+[^\s]+\s+(SET|VALUES)\s+.*=.*\$.*][IF(MISSING:prepare\s*\(|bind_param|bindValue|bindParam|PDO::prepare)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects non-parameterized INSERT or UPDATE statements that may include user input directly, potentially leading to SQL injection vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a potentially vulnerable INSERT or UPDATE statement that could allow SQL injection if user input is included without proper handling.</vuln_desc>
             <developer>Verify whether untrusted input reaches SQL statement construction in this path. If confirmed, ensure parameterized queries with strict controls are fully implemented for all query variants.</developer>
@@ -241,6 +434,14 @@
             <name>SQL Query: Hardcoded Sensitive Information in WHERE Clauses</name>
             <regex><![CDATA[(?i)\bSELECT\s+[^\s]+\s+FROM\s+[^\s]+\s+WHERE\s+(username|password|apikey|token)=['"][^'"]+['"]]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\bSELECT\s+[^\s]+\s+FROM\s+[^\s]+\s+WHERE\s+(username|password|apikey|token)=['"][^'"]+['"]][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <aggregate>file</aggregate>
+                <report_format>secret_list</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects hardcoded sensitive data in WHERE clauses of SQL queries, which can increase the risk of data exposure or compromise.</rule_desc>
             <vuln_desc>If this rule matches, it suggests the use of hardcoded sensitive data, such as passwords or API keys, directly in SQL queries, increasing the potential for data exposure.</vuln_desc>
             <developer>Verify whether untrusted input reaches SQL statement construction in this path. If confirmed, ensure parameterized queries with strict controls are fully implemented for all query variants.</developer>
@@ -250,6 +451,14 @@
             <name>SQL Query: Non-parameterized DELETE Statements</name>
             <regex><![CDATA[(?i)\bDELETE\s+FROM\s+[^\s]+\s+WHERE\s+.*=.*\$.*]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\bDELETE\s+FROM\s+[^\s]+\s+WHERE\s+.*=.*\$.*][IF(MISSING:prepare\s*\(|bind_param|bindValue|bindParam|PDO::prepare)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects non-parameterized DELETE statements that use user input directly, which can lead to SQL injection vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a potentially vulnerable DELETE statement that could allow SQL injection if user input is used without proper parameterization.</vuln_desc>
             <developer>Verify whether untrusted input reaches SQL statement construction in this path. If confirmed, ensure parameterized queries with strict controls are fully implemented for all query variants.</developer>
@@ -261,6 +470,14 @@
             <name>XXE: DOMDocument loadXML Without Entity Disablement</name>
             <regex><![CDATA[\$dom\s*=\s*new\s+DOMDocument|DOMDocument\s*\(\s*\)|simplexml_load_string\s*\(|simplexml_load_file\s*\(|SimpleXMLElement\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:\$dom\s*=\s*new\s+DOMDocument|simplexml_load_string\s*\(|simplexml_load_file\s*\(][IF(MISSING:LIBXML_NOENT\s*=\s*0|libxml_disable_entity_loader\s*\(\s*true\s*\)|LIBXML_DTDLOAD)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>3</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects PHP XML parsing functions that may be vulnerable to XXE attacks.</rule_desc>
             <vuln_desc>PHP XML parsers that resolve external entities by default can be exploited to read arbitrary files or perform SSRF when parsing attacker-controlled XML input.</vuln_desc>
             <developer>Call libxml_disable_entity_loader(true) before parsing. When using DOMDocument, set validateOnParse=false and do not pass LIBXML_NOENT. Use LIBXML_NONET to prevent network access.</developer>
@@ -270,6 +487,14 @@
             <name>XXE: XMLReader or XMLParser Without External Entity Protection</name>
             <regex><![CDATA[xml_parser_create\s*\(|XMLReader::open\s*\(|new\s+XMLReader\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:xml_parser_create\s*\(|XMLReader::open\s*\(|new\s+XMLReader\s*\(][IF(MISSING:libxml_disable_entity_loader|XML_OPTION_SKIP_WHITE|LIBXML_NOENT\s*=\s*0)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>3</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects XMLReader and xml_parser_create usage without external entity protection.</rule_desc>
             <vuln_desc>Unprotected XML readers can resolve external entities from attacker-supplied input, enabling file disclosure and SSRF.</vuln_desc>
             <developer>Disable external entity loading and set appropriate XMLReader properties before parsing untrusted XML.</developer>
@@ -281,6 +506,14 @@
             <name>SSRF: curl_exec with User-Controlled URL</name>
             <regex><![CDATA[curl_setopt\s*\(\s*\$\w+\s*,\s*CURLOPT_URL|curl_init\s*\(\s*\$_(GET|POST|REQUEST|COOKIE)]]></regex>
             <rdl><![CDATA[[FLAG:curl_setopt\s*\(\s*\$\w+\s*,\s*CURLOPT_URL|curl_init\s*\(\s*\$_(GET|POST|REQUEST|COOKIE)][IF(MISSING:allowlist|whitelist|filter_var\s*\(.*FILTER_VALIDATE_URL|parse_url|CURLOPT_PROTOCOLS)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>3</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects cURL requests configured with potentially user-controlled destination URLs.</rule_desc>
             <vuln_desc>Allowing user input to control the URL in cURL requests enables SSRF, letting attackers reach internal services, metadata endpoints, or enumerate internal network resources.</vuln_desc>
             <developer>Validate the URL against an allowlist of trusted hosts/schemes. Restrict protocols via CURLOPT_PROTOCOLS. Block private IP ranges including 169.254.169.254.</developer>
@@ -290,6 +523,14 @@
             <name>SSRF: file_get_contents with User-Controlled URL</name>
             <regex><![CDATA[file_get_contents\s*\(\s*\$_(GET|POST|REQUEST|COOKIE)|\$\w+\s*=\s*file_get_contents\s*\(\s*\$]]></regex>
             <rdl><![CDATA[[FLAG:file_get_contents\s*\(\s*\$_(GET|POST|REQUEST|COOKIE)|\$\w+\s*=\s*file_get_contents\s*\(\s*\$][IF(MISSING:allowlist|whitelist|parse_url|filter_var|stream_context_create)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>3</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects file_get_contents used with a user-controlled URL parameter.</rule_desc>
             <vuln_desc>file_get_contents can fetch remote URLs; using attacker-controlled values enables SSRF attacks against internal infrastructure.</vuln_desc>
             <developer>Validate URL destination against a strict allowlist of approved hosts and block dangerous protocols (file://, gopher://, dict://).</developer>

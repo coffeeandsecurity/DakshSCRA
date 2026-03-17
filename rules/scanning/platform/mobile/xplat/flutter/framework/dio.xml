@@ -4,6 +4,14 @@
             <name>Bad Certificate Callback Accepting All Certificates</name>
             <regex><![CDATA[badCertificateCallback\s*:\s*\([^)]*\)\s*(?:=>|{)[^}]*(?:=>|return)\s*true|onBadCertificate\s*:\s*\(_\)\s*(?:=>|{)[^}]*true]]></regex>
             <rdl><![CDATA[[FLAG:badCertificateCallback\s*:\s*\([^)]*\)\s*(?:=>|\{)[^}]*(?:=>|return)\s*true]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects Dio HttpClient configurations that accept all TLS certificates via badCertificateCallback returning true.</rule_desc>
             <vuln_desc>A badCertificateCallback that unconditionally returns true disables TLS certificate validation entirely, allowing MITM attackers to intercept all HTTPS traffic from the app.</vuln_desc>
             <developer>Remove the badCertificateCallback or implement proper certificate pinning using SecurityContext with trusted certificates. Never return true unconditionally from the callback.</developer>
@@ -13,6 +21,14 @@
             <name>LogInterceptor with Response Body in Non-Debug Build</name>
             <regex><![CDATA[LogInterceptor\s*\([^)]*responseBody\s*:\s*true|LogInterceptor\s*\([^)]*requestBody\s*:\s*true]]></regex>
             <rdl><![CDATA[[FLAG:LogInterceptor\s*\([^)]*responseBody\s*:\s*true|LogInterceptor\s*\([^)]*requestBody\s*:\s*true][IF(MISSING:kDebugMode|kReleaseMode\s*==\s*false|assert\b)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects Dio LogInterceptor configured to log request/response bodies without debug mode gating.</rule_desc>
             <vuln_desc>Logging full request and response bodies in production captures authentication tokens, session cookies, and sensitive API responses to device logs, accessible on rooted/jailbroken devices.</vuln_desc>
             <developer>Gate LogInterceptor with request/response body logging behind kDebugMode checks. In release builds, use no-op logging or omit LogInterceptor entirely.</developer>
@@ -22,6 +38,14 @@
             <name>Dio BaseOptions Without Connection Timeout</name>
             <regex><![CDATA[BaseOptions\s*\(|Dio\s*\(\s*BaseOptions\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:BaseOptions\s*\(][IF(MISSING:connectTimeout|receiveTimeout|sendTimeout)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>4</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects Dio BaseOptions configured without connection or receive timeouts.</rule_desc>
             <vuln_desc>HTTP clients without timeouts are vulnerable to slow-loris style DoS attacks and can cause app hangs when network connections are degraded or malicious servers delay responses indefinitely.</vuln_desc>
             <developer>Set connectTimeout, sendTimeout, and receiveTimeout in BaseOptions using Duration values appropriate to your API's SLAs.</developer>

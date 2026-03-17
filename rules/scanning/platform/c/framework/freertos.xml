@@ -3,7 +3,15 @@
         <rule>
             <name>Freertos Unsafe String Copy API</name>
             <regex><![CDATA[\b(strcpy|strcat|sprintf|gets)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(strcpy|strcat|sprintf|gets)\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(strcpy|strcat|sprintf|gets)\s*\(][IF(MISSING:strlcpy|snprintf|strncpy|vTaskStacks|configMAX_TASK_NAME_LEN)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects unsafe string APIs common in memory-corruption vulnerabilities.</rule_desc>
             <vuln_desc>Unsafe string handling may lead to buffer overflows and memory corruption.</vuln_desc>
             <developer>Use bounded alternatives (snprintf/strlcpy) and explicit length checks.</developer>
@@ -12,7 +20,15 @@
         <rule>
             <name>Freertos Command Execution Sink</name>
             <regex><![CDATA[\b(system|popen|execv|execl)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(system|popen|execv|execl)\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(system|popen|execv|execl)\s*\(][IF(MISSING:validate|sanitize|allowlist)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects command execution APIs requiring strict input control review.</rule_desc>
             <vuln_desc>User-influenced command execution can lead to OS command injection.</vuln_desc>
             <developer>Avoid shell invocation or enforce strict allow-lists and escaping.</developer>
@@ -21,7 +37,15 @@
         <rule>
             <name>Freertos Insecure Transport/Cert Bypass Marker</name>
             <regex><![CDATA[CURLOPT_SSL_VERIFYPEER\s*,\s*0|CURLOPT_SSL_VERIFYHOST\s*,\s*0]]></regex>
-            <rdl><![CDATA[[FLAG:CURLOPT_SSL_VERIFYPEER\s*,\s*0|CURLOPT_SSL_VERIFYHOST\s*,\s*0]]]></rdl>
+            <rdl><![CDATA[[FLAG:CURLOPT_SSL_VERIFYPEER\s*,\s*0|CURLOPT_SSL_VERIFYHOST\s*,\s*0][IF(MISSING:test|development|staging)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects TLS verification disablement in C HTTP clients.</rule_desc>
             <vuln_desc>Disabling TLS verification allows MITM attacks.</vuln_desc>
             <developer>Enable strict certificate and hostname verification.</developer>
@@ -31,6 +55,14 @@
             <name>Freertos Hardcoded Secret Material</name>
             <regex><![CDATA[(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"]]></regex>
             <rdl><![CDATA[[FLAG:(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects likely hardcoded secret values in C source.</rule_desc>
             <vuln_desc>Hardcoded credentials can be extracted from firmware/binaries.</vuln_desc>
             <developer>Provision secrets securely at runtime.</developer>
@@ -39,7 +71,15 @@
         <rule>
             <name>Freertos FreeRTOS Privileged API Review Marker</name>
             <regex><![CDATA[vTaskPrioritySet\(|xTaskCreate\(|xQueueReceive\(]]></regex>
-            <rdl><![CDATA[[FLAG:vTaskPrioritySet\(|xTaskCreate\(|xQueueReceive\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:vTaskPrioritySet\(|xTaskCreate\(|xQueueReceive\(][IF(MISSING:assert|check|verify|privilege_check|permission)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects privileged task/queue operations that require security review context.</rule_desc>
             <vuln_desc>Improper task privilege and IPC handling can create reliability and security risks.</vuln_desc>
             <developer>Apply least privilege and validate message boundary checks.</developer>

@@ -4,6 +4,17 @@
             <name>Android Cleartext Traffic Enabled</name>
             <regex><![CDATA[android:usesCleartextTraffic\s*=\s*"true"|cleartextTrafficPermitted\s*=\s*true]]></regex>
             <rdl><![CDATA[[FLAG:android:usesCleartextTraffic\s*=\s*"true"|cleartextTrafficPermitted\s*=\s*true][IF(MISSING:networkSecurityConfig\s*=\s*"@xml/.*" && MISSING:cleartextTrafficPermitted\s*=\s*false)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects cleartext transport allowances in Android app manifest/network config.</rule_desc>
             <vuln_desc>Cleartext traffic can expose sensitive data to interception.</vuln_desc>
             <developer>Disable cleartext traffic and enforce TLS for all endpoints.</developer>
@@ -13,6 +24,17 @@
             <name>Android Backup Allowed</name>
             <regex><![CDATA[android:allowBackup\s*=\s*"true"]]></regex>
             <rdl><![CDATA[[FLAG:android:allowBackup\s*=\s*"true"][IF(MISSING:android:fullBackupContent\s*= && MISSING:android:dataExtractionRules\s*=)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects app backup enabled in AndroidManifest.</rule_desc>
             <vuln_desc>Backup-enabled apps may leak sensitive app data via backup channels.</vuln_desc>
             <developer>Set allowBackup to false unless explicitly required and risk-assessed.</developer>
@@ -22,24 +44,37 @@
             <name>Android Debuggable Build Flag</name>
             <regex><![CDATA[android:debuggable\s*=\s*"true"|debuggable\s+true]]></regex>
             <rdl><![CDATA[[FLAG:android:debuggable\s*=\s*"true"|debuggable\s+true][IF(MISSING:buildTypes\s*\{[^\}]*release[^\}]*debuggable\s+false)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects debuggable builds/configuration.</rule_desc>
             <vuln_desc>Debuggable apps are easier to tamper with and introspect in production.</vuln_desc>
             <developer>Ensure release builds are non-debuggable.</developer>
             <reviewer>Verify manifest and Gradle build types for release-safe values. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
-            <name>Android Exported Component</name>
-            <regex><![CDATA[android:exported\s*=\s*"true"]]></regex>
-            <rdl><![CDATA[[FLAG:android:exported\s*=\s*"true"][IF(PRESENT:<activity|<service|<receiver|<provider && PRESENT:<intent-filter && MISSING:android:permission\s*= && MISSING:android:readPermission\s*= && MISSING:android:writePermission\s*=)]]]></rdl>
-            <rule_desc>Detects explicitly exported app components.</rule_desc>
-            <vuln_desc>Exported components may be invoked by other apps if not permission-protected.</vuln_desc>
-            <developer>Restrict exports and require permissions where exposure is necessary.</developer>
-            <reviewer>Review all exported components for authorization and input validation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
-        </rule>
-        <rule>
             <name>Android WebView JavaScript Enabled</name>
             <regex><![CDATA[setJavaScriptEnabled\(\s*true\s*\)]]></regex>
             <rdl><![CDATA[[FLAG:setJavaScriptEnabled\(\s*true\s*\)][IF(MISSING:setSafeBrowsingEnabled\(\s*true\s*\) && MISSING:setAllowFileAccess\(\s*false\s*\))]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects JavaScript enabled in WebView.</rule_desc>
             <vuln_desc>WebView JavaScript with untrusted content can enable script injection paths.</vuln_desc>
             <developer>Disable JavaScript unless required and harden content sources.</developer>
@@ -49,6 +84,17 @@
             <name>Android WebView File URL Universal Access</name>
             <regex><![CDATA[setAllowUniversalAccessFromFileURLs\(\s*true\s*\)|setAllowFileAccessFromFileURLs\(\s*true\s*\)]]></regex>
             <rdl><![CDATA[[FLAG:setAllowUniversalAccessFromFileURLs\(\s*true\s*\)|setAllowFileAccessFromFileURLs\(\s*true\s*\)][IF(MISSING:setAllowUniversalAccessFromFileURLs\(\s*false\s*\) && MISSING:setAllowFileAccessFromFileURLs\(\s*false\s*\))]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects permissive WebView file URL access settings.</rule_desc>
             <vuln_desc>File URL access can enable local file disclosure and script abuse.</vuln_desc>
             <developer>Disable permissive file URL access flags unless strictly needed.</developer>
@@ -58,6 +104,17 @@
             <name>Android JavaScript Interface Exposure</name>
             <regex><![CDATA[addJavascriptInterface\(]]></regex>
             <rdl><![CDATA[[FLAG:addJavascriptInterface\(]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects JavaScript bridge exposure into WebView.</rule_desc>
             <vuln_desc>Improperly exposed JS interfaces can lead to code execution/data leakage.</vuln_desc>
             <developer>Expose minimal interfaces and restrict untrusted content loading.</developer>
@@ -67,6 +124,15 @@
             <name>Android Hardcoded Secret Marker</name>
             <regex><![CDATA[(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"]]></regex>
             <rdl><![CDATA[[FLAG:(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:System\.getenv\s*\(|System\.getProperty\s*\(|BuildConfig\.[A-Z_]+ && MISSING:example|sample|dummy|test|placeholder|TODO|\$\{)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>none</context_type>
+                <aggregate>file</aggregate>
+                <report_format>secret_list</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects likely hardcoded secret material in Android code/config.</rule_desc>
             <vuln_desc>Hardcoded secrets can be extracted from source or app package artifacts.</vuln_desc>
             <developer>Move secrets to server-side issuance/secure runtime retrieval.</developer>

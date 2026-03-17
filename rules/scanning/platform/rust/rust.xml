@@ -4,6 +4,14 @@
             <name>Shell Command Execution with std::process::Command</name>
             <regex><![CDATA[\b(?:std::process::)?Command::new\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:\b(?:std::process::)?Command::new\s*\(]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects command execution entry points in Rust applications.</rule_desc>
             <vuln_desc>Passing untrusted input into command arguments can result in command injection or unintended process execution.</vuln_desc>
             <developer>Use strict allowlists for executable paths and arguments; avoid dynamic command construction from user input.</developer>
@@ -13,6 +21,14 @@
             <name>Potential SQL Query Concatenation</name>
             <regex><![CDATA[\b(?:query|execute|prepare)\s*!?\s*\(\s*["'][^"']*(?:\{\}|\+)]]></regex>
             <rdl><![CDATA[[FLAG:\b(?:query|execute|prepare)\s*!?\s*\(\s*["'][^"']*(?:\{\}|\+)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects likely dynamic SQL string construction in database calls.</rule_desc>
             <vuln_desc>Dynamic SQL string assembly can allow injection attacks when user input is not parameterized.</vuln_desc>
             <developer>Prefer prepared statements and parameter binding APIs from SQL libraries.</developer>
@@ -24,6 +40,14 @@
             <name>Unsafe Block Usage</name>
             <regex><![CDATA[\bunsafe\s*\{]]></regex>
             <rdl><![CDATA[[FLAG:\bunsafe\s*\{]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects unsafe blocks in Rust code.</rule_desc>
             <vuln_desc>Unsafe blocks bypass Rust's safety guarantees and can introduce memory corruption vulnerabilities.</vuln_desc>
             <developer>Minimize unsafe usage and encapsulate it with strict invariants and tests.</developer>
@@ -33,6 +57,14 @@
             <name>FFI Calls with extern "C"</name>
             <regex><![CDATA[\bextern\s+"C"\b]]></regex>
             <rdl><![CDATA[[FLAG:\bextern\s+"C"\b]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects foreign function interface boundaries.</rule_desc>
             <vuln_desc>FFI boundaries can violate memory safety and type guarantees if contracts are not validated.</vuln_desc>
             <developer>Validate buffer sizes, pointer lifetimes, and nullability at all FFI boundaries.</developer>
@@ -42,6 +74,14 @@
             <name>Unsafe Memory Reinterpretation or Uninitialized Data</name>
             <regex><![CDATA[\b(?:std::mem::transmute|core::mem::transmute|mem::transmute|mem::uninitialized|MaybeUninit::assume_init)\s*(?:<[^>]+>)?\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:\b(?:std::mem::transmute|core::mem::transmute|mem::transmute|mem::uninitialized|MaybeUninit::assume_init)\s*(?:<[^>]+>)?\s*\(]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects high-risk memory conversion and uninitialized-memory patterns in Rust.</rule_desc>
             <vuln_desc>Incorrect transmute/uninitialized usage can violate type and initialization invariants, causing memory corruption, logic compromise, or undefined behavior.</vuln_desc>
             <developer>Avoid transmute/uninitialized patterns where possible. Prefer safe conversion APIs and explicit initialization guarantees.</developer>
@@ -53,6 +93,14 @@
             <name>Weak Randomness Source</name>
             <regex><![CDATA[\brand::random\s*\(\)|\bthread_rng\s*\(\)]]></regex>
             <rdl><![CDATA[[FLAG:\brand::random\s*\(\)|\bthread_rng\s*\(\)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects generic randomness usage that may be misused in security-sensitive flows.</rule_desc>
             <vuln_desc>Using non-cryptographic randomness for tokens or keys can make secrets predictable.</vuln_desc>
             <developer>Use cryptographically secure RNG APIs (e.g., OsRng) for keys, tokens, and session identifiers.</developer>
@@ -62,6 +110,14 @@
             <name>Potential TLS Verification Bypass</name>
             <regex><![CDATA[\b(?:danger_accept_invalid_certs|danger_accept_invalid_hostnames)\s*\(\s*true\s*\)]]></regex>
             <rdl><![CDATA[[FLAG:\b(?:danger_accept_invalid_certs|danger_accept_invalid_hostnames)\s*\(\s*true\s*\)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects disabled TLS certificate or hostname validation.</rule_desc>
             <vuln_desc>Disabling TLS verification enables man-in-the-middle attacks and credential interception.</vuln_desc>
             <developer>Keep certificate and hostname validation enabled in all non-test environments.</developer>
@@ -73,6 +129,14 @@
             <name>Debug Output of Sensitive Values</name>
             <regex><![CDATA[\b(?:println!|eprintln!|dbg!)\s*\(.*(?:token|secret|password|key)]]></regex>
             <rdl><![CDATA[[FLAG:\b(?:println!|eprintln!|dbg!)\s*\(.*(?:token|secret|password|key)][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects debug logging likely to include sensitive values.</rule_desc>
             <vuln_desc>Logging secrets can leak credentials in logs and telemetry systems.</vuln_desc>
             <developer>Redact secrets before logging and disable verbose debug output in production.</developer>

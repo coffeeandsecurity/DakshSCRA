@@ -4,6 +4,14 @@
             <name>Authentication Modules</name>
             <regex><![CDATA[(?i)\b(Login|authenticate|authenticating|authenticated|oauth|jwt)\b]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\b(login|authenticate|oauth|jwt)\b][IF(PRESENT:(?i)\b(auth|login|token|session|credential)\b && MISSING:(?i)\b(readme|changelog|example|sample|docs?|license|copyright|third[-_ ]party)\b)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects common terms used in authentication functionalities, such as 'Login', 'authenticate', 'OAuth', and 'JWT', when used in likely function names or module references.</rule_desc>
             <vuln_desc>This rule matches on common function or module names associated with authentication. If not properly secured, these modules may expose vulnerabilities in user authentication, allowing unauthorized access.</vuln_desc>
             <developer>Ensure authentication processes use secure configurations, apply best practices, and avoid using weak or generic names that could be predictable.</developer>
@@ -13,6 +21,14 @@
             <name>Authorization Modules</name>
             <regex><![CDATA[(?i)\b(authoriz(e|ing|ed)|access_control|rbac|abac|acl)\b]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\b(authorize|access_control|rbac|abac|acl)\b][IF(PRESENT:(?i)\b(role|permission|policy|access|authorize)\b && MISSING:(?i)\b(readme|changelog|example|sample|docs?)\b)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects terms used in authorization and access control functionalities, such as 'authorize', 'access_control', 'RBAC', and 'ABAC', in probable function names or modules.</rule_desc>
             <vuln_desc>This rule matches likely references to authorization or access control functionality. Improper implementation can allow unauthorized access to sensitive resources, compromising security.</vuln_desc>
             <developer>Ensure secure implementation of authorization checks, role-based access control, or attribute-based access control, and avoid predictable naming for sensitive modules.</developer>
@@ -24,6 +40,14 @@
             <name>Admin Modules/Section</name>
             <regex><![CDATA[(?i)\b(admin_func|admin_page|admin_login|administrator|admin_portal|admin_module|admin_interface)\b]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\b(admin_login|admin_portal|admin_module|admin_interface|administrator)\b][IF(PRESENT:(?i)\b(auth|role|permission|access)\b && MISSING:(?i)\b(readme|changelog|example|sample|docs?)\b)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects common terms for administrative functions, modules, or login pages, specifically focusing on terms that indicate specific functionality rather than general mentions.</rule_desc>
             <vuln_desc>This rule matches terms commonly associated with administrative functionalities or access points. If inadequately secured, these areas could expose critical functions to unauthorized access.</vuln_desc>
             <developer>Use descriptive, non-generic names for admin-related functions, secure with strong authentication and access controls, and consider avoiding direct exposure of administrative URLs or modules.</developer>
@@ -35,6 +59,14 @@
             <name>File Upload Functionality</name>
             <regex><![CDATA[(?i)(file\s*upload|file\s*input|upload\s*file|upload[_-]handler|upload[_-]service|upload[_-]controller|upload[_-]module)(?!.*\b(secure|protected|restricted)\b)]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\bupload\b][IF(PRESENT:(?i)\b(file|multipart|mime|extension|content-type)\b && MISSING:(?i)\b(secure|protected|restricted|virus|clamav)\b)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects likely implementations of file upload functionality by matching common terms associated with file upload services or modules.</rule_desc>
             <vuln_desc>If this rule matches, it indicates potential file upload functionality, which, if improperly secured, could allow unauthorized or malicious file uploads. This can lead to risks such as arbitrary code execution or data leakage.</vuln_desc>
             <developer>Ensure file upload functionality is implemented securely with validation of file types, size limits, and access controls. Use established libraries or frameworks with built-in security features for file uploads to minimize risks.</developer>
@@ -46,6 +78,14 @@
             <name>Password</name>
             <regex><![CDATA[(?i)\b(password|pwd|passwd)\b\s*[:=]\s*["'][^"']{6,}["']|(?i)\b(password|pwd|passwd)\b\s*[:=]\s*[A-Za-z0-9_\-]{8,}]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\b(password|pwd|passwd)\b\s*[:=]][IF(MISSING:(?i)\b(example|sample|dummy|test|placeholder|mock|changeme|default)\b)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <exclude>\b(?:SELECT|UPDATE|INSERT|FROM)\b</exclude>
             <rule_desc>Detects potential password-related strings in the code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential presence of password-related strings in the code, which can lead to security risks if not handled properly.</vuln_desc>
@@ -56,6 +96,14 @@
             <name>Server-side Secrets Handling</name>
             <regex><![CDATA[(?i)\b(apikey|api[-_]?key|secret|token|access_token|auth_token|client_secret|private_key|encryption_key|db_password|security_key|session_key|service_account_key|passphrase|cert_key|app_secret|api_secret|jwt_secret)\b\s*[:=]\s*["'][^"']{8,}["']]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\b(apikey|api(?:-|_)?key|secret|token|access_token|auth_token|client_secret|private_key|encryption_key|db_password|security_key|session_key|service_account_key|passphrase|cert_key|app_secret|api_secret|jwt_secret)\b\s*[:=]\s*["'][^"']{8,}["']][IF(MISSING:(?i)\b(example|sample|dummy|test|placeholder|mock|getenv|env\(|secretsmanager|vault|kms|buildconfig|gradle\.properties)\b)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects potential server-side secrets handling vulnerabilities in the code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential presence of server-side secrets (e.g., hardcoded secrets, assignments) in the code, which can lead to security risks if not handled properly.</vuln_desc>
             <developer>Avoid storing secrets directly in the code and instead use secure methods such as environment variables or key management systems.</developer>
@@ -65,6 +113,14 @@
             <name>Credit Card</name>
             <regex><![CDATA[((\D(6011|5[1-5]\d{2}|4\d{3}|3\d{3})\d{11,12}\D)|(^(6011|5[1-5]\d{2}|4\d{3}|3\d{3})\d{11,12}\D))]]></regex>
             <rdl><![CDATA[[FLAG:(?:6011|5\d\d\d|4\d\d\d|3\d\d\d)\d{11,12}][IF(PRESENT:(?i)\b(card|credit|payment|pan|cvv)\b)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects potential credit card numbers in the code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential presence of credit card numbers in the code, which can lead to security risks if not handled properly.</vuln_desc>
             <developer>Follow industry best practices for handling credit card information, including encryption, compliance with PCI-DSS standards, and avoiding unnecessary storage of sensitive data.</developer>
@@ -74,6 +130,14 @@
             <name>Detect RSA Private Keys</name>
             <regex>BEGIN RSA PRIVATE KEY</regex>
             <rdl><![CDATA[[FLAG:BEGIN RSA PRIVATE KEY]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects the presence of RSA private keys.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential presence of RSA private keys, which are sensitive cryptographic assets and should be securely managed and protected.</vuln_desc>
             <developer>Ensure the proper storage, protection, and secure handling of RSA private keys, following industry best practices and cryptographic standards.</developer>
@@ -85,6 +149,14 @@
             <name>Insecure HTTP Communication</name>
             <regex><![CDATA[(?i)\b(?:url|uri|endpoint|baseurl|server|host|href|src|fetch|axios|httpclient|xmlhttprequest|request|location|window\.open|redirect)[^\n]{0,220}http://]]></regex>
             <rdl><![CDATA[[FLAG:(?i)http://][IF(PRESENT:(?i)\b(url|uri|endpoint|fetch|axios|request|httpclient|redirect|href|src)\b && MISSING:(?i)\b(https://|apache\.org/licenses|opensource\.org/licenses|w3\.org|xmlns=|localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+)\b)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <exclude>(?i)apache\.org/licenses|opensource\.org/licenses|w3\.org|^\s*(//|/\*|\*|#|&lt;!--|~)|\bxmlns=</exclude>
             <rule_desc>Detects the use of insecure HTTP communication.</rule_desc>
             <vuln_desc>Using HTTP exposes the application to man-in-the-middle attacks, allowing attackers to intercept or manipulate traffic.</vuln_desc>
@@ -95,6 +167,14 @@
             <name>Sensitive Debug Information</name>
             <regex><![CDATA[(?i)\.debug\s*=\s*True|\$debug\s*=\s*true|DEBUG\s*=\s*True|IsDebuggingEnabled\s*=\s*true]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\.debug\s*=\s*True|\$debug\s*=\s*true|DEBUG\s*=\s*True|IsDebuggingEnabled\s*=\s*true][IF(MISSING:(?i)\b(release|production)\b)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects the presence of sensitive debug information in application settings.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a potential security concern related to the presence of sensitive debug information in production settings. Enabling debugging in production can expose sensitive information and pose security risks. Developers should ensure that debugging is disabled in production environments.</vuln_desc>
             <developer>Disable debugging features or set debug flags to false in application settings for production environments to prevent the exposure of sensitive debug information.</developer>
@@ -106,6 +186,14 @@
             <name>Insecure SQL Query: Unsafe String Concatenation</name>
             <regex><![CDATA[(?i)SELECT\s+\*?\s+FROM\s+([^\s;]+)\s+WHERE\s+([^\s;]+)\s*=\s*'\s*\+\s*([^;]+)\s*\+\s*'\s*;]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\bSELECT\b.*\bFROM\b.*\bWHERE\b.*\+.*\+][IF(PRESENT:(?i)\b(input|request|param|query|\$_GET|\$_POST|\$_REQUEST)\b)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects SQL queries with unsafe string concatenation of user input.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of SQL injection. Attackers can manipulate the concatenated string to alter the query's logic or inject malicious SQL code.</vuln_desc>
             <developer>Use parameterized queries or prepared statements to prevent SQL injection attacks. Avoid concatenating user input directly into SQL queries.</developer>
@@ -115,6 +203,14 @@
             <name>SQL Query: SELECT Statement with ORDER BY Clause</name>
             <regex><![CDATA[(SELECT).*(ORDER BY).*]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\bSELECT\b.*\bORDER BY\b][IF(PRESENT:(?i)(\+|\$\{|format\(|sprintf\(|f\"|f'|request|params|query|input) && MISSING:(?i)(prepare|bind|parameterized|replacements|sqlparameter))]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects the usage of SELECT statements with ORDER BY clauses.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential use of SELECT statements with ORDER BY clauses, which can introduce the risk of SQL injection or unintended data exposure if not properly handled.</vuln_desc>
             <developer>Implement proper input validation and parameterization techniques to mitigate the risk of SQL injection when using SELECT statements with ORDER BY clauses.</developer>
@@ -124,6 +220,14 @@
             <name>SQL Query: SELECT Statement with ORDER BY and @InputName</name>
             <regex><![CDATA[(SELECT).*(ORDER BY).*\s(\@[a-zA-Z]+)]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\bSELECT\b.*\bORDER BY\b.*\s@\w+][IF(PRESENT:(?i)\b(exec|sp_executesql|query|command)\b)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects the usage of SELECT statements with ORDER BY clauses and a specified input name.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential use of SELECT statements with ORDER BY clauses and a specified input name, which can introduce the risk of SQL injection or unintended data exposure if not properly handled.</vuln_desc>
             <developer>Implement proper input validation and parameterization techniques to mitigate the risk of SQL injection when using SELECT statements with ORDER BY clauses and user-provided input names.</developer>
@@ -133,6 +237,14 @@
             <name>SQL Query: Using INSERT, UPDATE, DELETE, or DROP</name>
             <regex><![CDATA[(INSERT|UPDATE|DELETE|DROP).*\$\{[a-zA-Z0-9_]+\}.*]]></regex>
             <rdl><![CDATA[[FLAG:(?i)(INSERT|UPDATE|DELETE|DROP).*\$\{\w+\}.*][IF(PRESENT:(?i)\b(query|execute|statement|sql)\b)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>This pattern would match queries containing variables in a format like ${variableName}, indicating the usage of dynamic SQL queries involving INSERT, UPDATE, DELETE, or DROP commands.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential use of dynamic SQL queries with INSERT, UPDATE, DELETE, or DROP commands, which can introduce the risk of SQL injection or unintended modifications to the database if not properly handled.</vuln_desc>
             <developer>Check for the use of dynamic queries with these commands and verify proper input handling. If detected, implement proper input validation, parameterization techniques, and use prepared statements to mitigate the risk of SQL injection or unauthorized database changes.</developer>
@@ -144,6 +256,14 @@
             <name>IPv4 / IPv6 Address</name>
             <regex><![CDATA[\b(?:\b(?:[1-9]|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.(?:\d{1,3}\.){2}\d{1,3}\b|\b(?:(?:(?:[0-9A-Fa-f]{1,4}):){6}(?:[0-9A-Fa-f]{1,4}|(?:(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)(?:\.(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)){3})))\b)]]></regex>
             <rdl><![CDATA[[FLAG:(?:\b\d{1,3}(?:\.\d{1,3}){3}\b|::)][IF(PRESENT:(?i)\b(host|server|endpoint|baseurl|api|connect|socket|dns)\b && MISSING:(?i)\b(127\.0\.0\.1|::1|0\.0\.0\.0|localhost|192\.168\.|10\.)\b)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <exclude>(?i)\b\w*(?:version|release|dotnet|oid|urn|mozilla|useragent)\w*\b</exclude>
             <rule_desc>Detects potential IPv4 or IPv6 addresses in the code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential presence of IP addresses in the code, which can lead to security risks if not handled properly.</vuln_desc>
@@ -154,6 +274,14 @@
             <name>Trusted Or Untrusted URLs</name>
             <regex><![CDATA[(?i)(?:\b(?:redirect|forward|sendRedirect|Response\.Redirect|res\.redirect|window\.location|location\.href|location\.replace|window\.open)\b[^\n]{0,220}https?://|\b(?:fetch|axios|httpclient|xmlhttprequest|request)\b[^\n]{0,220}(https?://|\+|\$\{)|\b(?:url|uri|endpoint|baseurl|api[_-]?url|callback[_-]?url|redirect[_-]?url|host|server)\b\s*[:=]\s*["']?\s*https?://)]]></regex>
             <rdl><![CDATA[[FLAG:(?i)https?://][IF(PRESENT:(?i)\b(redirect|forward|window\.location|location\.href|window\.open|fetch|axios|httpclient|request|url|uri|endpoint)\b && PRESENT:(?i)(\+|\$\{|request|params|query|input|user) && MISSING:(?i)\b(allowlist|whitelist|trusted|isTrusted|validateUrl|same-origin)\b)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <exclude>(?i)^\s*(//|/\*|\*|#|&lt;!--|~)|apache\.org/licenses|opensource\.org/licenses|w3\.org|robots\.stanford\.edu|msdn\.microsoft\.com|\b(?:xml|xmlns|xsd|xsi|schema)\b|DOCTYPE</exclude>
             <rule_desc>Detects the presence of URLs in the application that may pose security risks or indicate potential trust issues with third-party URLs.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the presence of URLs starting with http:// or https://, which could potentially pose security risks if not properly handled or validated. These URLs might involve data exfiltration or raise concerns about trusting third-party resources without thorough validation. Developers and reviewers should investigate these URLs to ensure their purpose, legitimacy, and adherence to security practices.</vuln_desc>
@@ -164,6 +292,14 @@
             <name>Unvalidated Redirects and Forwards</name>
             <regex><![CDATA[(?i)\b(?:redirect|forward|sendRedirect|Response\.Redirect|res\.redirect|window\.location|location\.href)\s*(?:\(|=)]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\b(redirect|forward|sendRedirect|Response\.Redirect|res\.redirect|window\.location|location\.href)\s*(\(|=)][IF(MISSING:(?i)\b(allowlist|whitelist|isLocalUrl|startsWith\(\s*['\"]/|same-origin)\b)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <exclude>(?i)^\s*(//|/\*|\*|#|&lt;!--|~)|\b(?:docs?|readme|changelog)\b</exclude>
             <rule_desc>Detects potential unvalidated redirect and forward vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the presence of code patterns that may indicate vulnerabilities in unvalidated redirects and forwards, which can be exploited by attackers to redirect users to malicious websites or perform phishing attacks.</vuln_desc>
@@ -176,6 +312,14 @@
             <name>API Endpoint Detection</name>
             <regex><![CDATA[(["'])(\/\w+\/{[^{}]+})\1]]></regex>
             <rdl><![CDATA[[FLAG:(?i)/\w+/\{\w+\}][IF(PRESENT:(?i)\b(route|router|controller|handler|get|post|put|delete)\b)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <description>Detects potential API endpoints in source code.</description>
             <rule_desc>Detects the usage of potential API endpoints in source code files, which may require special handling and validation.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential presence of API endpoints in the source code. API endpoints often involve data extraction, processing, and may expose sensitive information if not handled securely. Developers should be aware of the specific requirements for handling API endpoints and implement appropriate validation, authentication, and authorization mechanisms.</vuln_desc>
@@ -188,6 +332,14 @@
             <name>TODO Comments</name>
             <regex><![CDATA[(?i)TODO(\s?)]]></regex>
             <rdl><![CDATA[[FLAG:(?i)TODO(\s?)][IF(PRESENT:(?i)\b(security|auth|password|token|encrypt|sql|xss|csrf)\b && MISSING:(?i)\b(done|fixed|resolved|wontfix|false positive)\b)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects TODO comments in the code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the presence of TODO comments, which might indicate unfinished or pending tasks that could lead to security vulnerabilities or incomplete code functionality.</vuln_desc>
             <developer>Regularly review and address TODO comments to ensure the completion of tasks, proper code functionality, and security of the application.</developer>
@@ -197,6 +349,14 @@
             <name>Monkey Patched Code</name>
             <regex><![CDATA[(?i)(monkey_patch|patched_code|custom_patch)[\s\S]*?\(\s*\*?\w+\s*\*?\)]]></regex>
             <rdl><![CDATA[[FLAG:(?i)(monkey_patch|patched_code|custom_patch)\s*\(][IF(MISSING:(?i)\b(test|spec|fixture|mock)\b)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects the presence of monkey patched code in a project.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the presence of monkey patched code in the project. While monkey patches themselves may not inherently contain security issues, they introduce potential maintenance challenges and risks. Ensure that these patches are well-documented, periodically reviewed for necessity, and that they do not introduce security vulnerabilities or regressions.</vuln_desc>
             <developer>Carefully review and document any monkey patched code in the project. Ensure that the patches are correctly applied and do not introduce compatibility issues or security vulnerabilities. Consider alternatives to monkey patching when possible to maintain code stability and security.</developer>
@@ -208,6 +368,14 @@
             <name>Insecure Cryptographic Algorithm</name>
             <regex><![CDATA[(?i)\b(MD2|MD4|MD5|SHA1|SHA-1|DES|RC2|RC4|RC5|RSA)\b]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\b(MD2|MD4|MD5|SHA1|SHA-1|DES|RC2|RC4|RC5)\b][IF(MISSING:(?i)\b(SHA-256|SHA256|SHA-384|SHA384|SHA-512|SHA512|AES-GCM|AES256)\b)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects the usage of insecure cryptographic algorithms in Java code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using insecure cryptographic algorithms. Insecure algorithms such as MD5, SHA-1, or weak encryption algorithms can be exploited by attackers to bypass security measures or recover sensitive information.</vuln_desc>
             <developer>Use secure cryptographic algorithms, such as SHA-256 or SHA-3 for hashing and AES for encryption. Avoid using deprecated or weak algorithms that have known vulnerabilities.</developer>
@@ -219,6 +387,14 @@
             <name>Backdoor Entry and Bypass Detection</name>
             <regex><![CDATA[(?i)\b(backdoor|bypass|sneaky|exploit|unauthorized_access|unauthorized_entry|hidden_entry|stealthy_entry|secret_entry)\b]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\b(backdoor|bypass|sneaky|exploit|unauthorized_access|unauthorized_entry|hidden_entry|stealthy_entry|secret_entry)\b][IF(MISSING:(?i)\b(example|sample|dummy|test|placeholder|ctf|training)\b)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects the presence of keywords commonly associated with backdoor entries or methods used to bypass security restrictions in code.</rule_desc>
             <vuln_desc>If this rule matches, it suggests potential vulnerabilities associated with backdoor entries or circumvention techniques. Such vulnerabilities can lead to unauthorized access, privilege escalation, and overall security breaches.</vuln_desc>
             <developer>Implement robust access controls, perform regular input validation, and enforce least privilege principles to mitigate risks of backdoor entries or unauthorized access attempts. Conducting frequent security assessments and code reviews is crucial to identify and remediate vulnerabilities.</developer>
@@ -230,6 +406,14 @@
             <name>CAPTCHA Implementation</name>
             <regex><![CDATA[(?i)(captcha|recaptcha)(\s+(?!secure|strong|reliable|safe)\w+)*]]></regex>
             <rdl><![CDATA[[FLAG:(?i)(captcha|recaptcha)][IF(MISSING:(?i)\b(hcaptcha|recaptcha-enterprise|turnstile)\b)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>green</highlight_color>
+            </scan_config>
             <rule_desc>Detects the presence of CAPTCHA implementations that are potentially insecure or weak.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential presence of CAPTCHA implementations that may be insecure or weak, potentially allowing automated or malicious activities to bypass the CAPTCHA protection.</vuln_desc>
             <developer>CAPTCHA implementations are secure, using reliable and robust techniques to effectively prevent automated or malicious activities. It is recommended to use well-established CAPTCHA solutions and regularly update them to stay ahead of evolving threats.</developer>
@@ -239,6 +423,14 @@
             <name>Miscellaneous Webapp Mitigations: CSRF, XSS, SQL Injection</name>
             <regex><![CDATA[\\S*(CSRF|XSS|SQLi)\\S*(\\.|\\-\\>)(ToLower|ToUpper)\\s*\\]]></regex>
             <rdl><![CDATA[[FLAG:(?i)(CSRF|XSS|SQLi)][IF(PRESENT:(?i)(ToLower|ToUpper) && MISSING:(?i)(sanitize|escape|encode|prepared|parameterized))]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>green</highlight_color>
+            </scan_config>
             <rule_desc>Detects standard mitigation techniques for CSRF, XSS, and SQL injection vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential use of standard mitigation techniques for CSRF, XSS, and SQL injection, which may have limitations and can introduce security risks if not properly implemented.</vuln_desc>
             <developer>Consider advanced and comprehensive mitigation strategies for CSRF, XSS, and SQL injection vulnerabilities, such as using specialized security libraries and frameworks.</developer>

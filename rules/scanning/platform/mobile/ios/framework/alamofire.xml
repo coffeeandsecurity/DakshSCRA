@@ -4,6 +4,17 @@
             <name>ServerTrustEvaluating Disabled with DisabledTrustEvaluator</name>
             <regex><![CDATA[DisabledTrustEvaluator\s*\(\s*\)|DisabledEvaluation|trustAllCertificates|serverTrustManager\s*=\s*nil]]></regex>
             <rdl><![CDATA[[FLAG:DisabledTrustEvaluator\s*\(\s*\)|trustAllCertificates|serverTrustManager\s*=\s*nil]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects Alamofire configurations that disable TLS server trust evaluation.</rule_desc>
             <vuln_desc>DisabledTrustEvaluator accepts any certificate presented by the server, completely disabling TLS authentication and enabling MITM attacks against all Alamofire network requests in the app.</vuln_desc>
             <developer>Use PinnedCertificatesTrustEvaluator or PublicKeysTrustEvaluator for certificate pinning. Use DefaultTrustEvaluator for standard validation against system trust anchors. Never use DisabledTrustEvaluator in production.</developer>
@@ -13,6 +24,17 @@
             <name>Alamofire Request Without TLS Pinning</name>
             <regex><![CDATA[AF\.request\s*\(|Session\.default\s*\.|Alamofire\.request\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:AF\.request\s*\(|Session\.default\s*\.][IF(MISSING:ServerTrustManager|PinnedCertificatesTrustEvaluator|PublicKeysTrustEvaluator)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects Alamofire sessions making requests without a configured ServerTrustManager for pinning.</rule_desc>
             <vuln_desc>Using AF.request() or Session.default without a custom ServerTrustManager relies solely on system CA validation, which is vulnerable to rogue CA attacks, corporate proxy interception, and user-installed certificates.</vuln_desc>
             <developer>Create a custom Session instance with a ServerTrustManager that pins certificates or public keys for your API endpoints.</developer>

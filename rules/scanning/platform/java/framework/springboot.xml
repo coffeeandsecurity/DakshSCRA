@@ -3,7 +3,15 @@
         <rule>
             <name>Springboot Actuator/Management Overexposure</name>
             <regex><![CDATA[management\.endpoints\.web\.exposure\.include\s*=\s*\*|/actuator]]></regex>
-            <rdl><![CDATA[[FLAG:management\.endpoints\.web\.exposure\.include\s*=\s*\*|/actuator]]]></rdl>
+            <rdl><![CDATA[[FLAG:management\.endpoints\.web\.exposure\.include\s*=\s*\*|/actuator][IF(MISSING:management\.endpoint\..*\.enabled\s*=\s*false|spring\.security|@PreAuthorize|hasRole|authentication)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects potentially overexposed management endpoints.</rule_desc>
             <vuln_desc>Overexposed management endpoints can leak operational and sensitive data.</vuln_desc>
             <developer>Limit exposed endpoints and enforce auth/network restrictions.</developer>
@@ -12,7 +20,15 @@
         <rule>
             <name>Springboot SQL Query Concatenation Sink</name>
             <regex><![CDATA[createQuery\(\s*"[^"]*"\s*\+|createNativeQuery\(\s*"[^"]*"\s*\+|Statement\s+\w+\s*=\s*.*createStatement\(]]></regex>
-            <rdl><![CDATA[[FLAG:createQuery\(\s*"[^"]*"\s*\+|createNativeQuery\(\s*"[^"]*"\s*\+|Statement\s+\w+\s*=\s*.*createStatement\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:createQuery\(\s*"[^"]*"\s*\+|createNativeQuery\(\s*"[^"]*"\s*\+|Statement\s+\w+\s*=\s*.*createStatement\(][IF(MISSING:queryForObject\s*\(.*\?|NamedParameterJdbcTemplate|query\s*\(.*\?|PreparedStatement)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects dynamic SQL/HQL query concatenation patterns.</rule_desc>
             <vuln_desc>Concatenated queries may be vulnerable to SQL injection.</vuln_desc>
             <developer>Use parameterized queries/prepared statements.</developer>
@@ -21,7 +37,15 @@
         <rule>
             <name>Springboot Permissive CORS</name>
             <regex><![CDATA[@CrossOrigin\(.*\*|allowedOrigins\s*=\s*\{?\s*"\*"]]></regex>
-            <rdl><![CDATA[[FLAG:@CrossOrigin\(.*\*|allowedOrigins\s*=\s*\{?\s*"\*"]]]></rdl>
+            <rdl><![CDATA[[FLAG:@CrossOrigin\(.*\*|allowedOrigins\s*=\s*\{?\s*"\*"][IF(MISSING:allowHost|origin|trustedOrigins|allowSpecificOrigins)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects wildcard CORS in controller/global config.</rule_desc>
             <vuln_desc>Wildcard CORS can expose endpoints to untrusted web origins.</vuln_desc>
             <developer>Use explicit trusted origin allow-lists.</developer>
@@ -31,6 +55,14 @@
             <name>Springboot Insecure Transport Setting</name>
             <regex><![CDATA[http://|server\.ssl\.enabled\s*=\s*false|allowInsecureProtocol\s*=\s*true]]></regex>
             <rdl><![CDATA[[FLAG:http://|server\.ssl\.enabled\s*=\s*false|allowInsecureProtocol\s*=\s*true][IF(MISSING:https://)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects insecure transport usage/settings in code or config.</rule_desc>
             <vuln_desc>Insecure transport can expose credentials and session data.</vuln_desc>
             <developer>Enforce TLS and secure transport defaults.</developer>
@@ -40,6 +72,15 @@
             <name>Springboot Hardcoded Secret Material</name>
             <regex><![CDATA[(secret|apikey|token|password)\s*[=:]\s*"[^\"]{8,}"]]></regex>
             <rdl><![CDATA[[FLAG:(secret|apikey|token|password)\s*[=:]\s*"[^\"]{8,}"][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>secret_list</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects likely hardcoded secret values.</rule_desc>
             <vuln_desc>Hardcoded credentials can be extracted and abused.</vuln_desc>
             <developer>Use secret managers or runtime environment variables.</developer>

@@ -4,6 +4,14 @@
             <name>CSRF Protection Disabled or Not Applied</name>
             <regex><![CDATA[csrf\.Protect\s*\([^)]*Secure\s*:\s*false|csrf\.SameSite\s*\(\s*csrf\.SameSiteNoneMode\s*\)|csrf\.Protect\s*\([^)]*(?:IgnoreHost|TrustedOrigins)]]></regex>
             <rdl><![CDATA[[FLAG:csrf\.Protect\s*\([^)]*Secure\s*:\s*false]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects Gorilla CSRF middleware configured with weakened security options.</rule_desc>
             <vuln_desc>Disabling Secure on CSRF cookies or using SameSiteNone without Secure allows CSRF token cookies to be transmitted over HTTP or cross-site, weakening CSRF protection against state-changing requests.</vuln_desc>
             <developer>Configure csrf.Protect with Secure: true, HttpOnly: true, and SameSite: csrf.SameSiteStrictMode. Ensure the middleware is applied to all state-changing routes.</developer>
@@ -13,6 +21,14 @@
             <name>Insecure Session Cookie Configuration</name>
             <regex><![CDATA[sessions\.NewCookieStore|securecookie\.New[^;)]*\n[^;)]*(?:HttpOnly\s*:\s*false|Secure\s*:\s*false)|Options\s*:\s*&sessions\.Options\s*\{[^}]*(?:HttpOnly\s*:\s*false|Secure\s*:\s*false)]]></regex>
             <rdl><![CDATA[[FLAG:sessions\.NewCookieStore|sessions\.NewFilesystemStore][IF(MISSING:Secure\s*:\s*true|HttpOnly\s*:\s*true)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects Gorilla sessions configured without Secure or HttpOnly flags.</rule_desc>
             <vuln_desc>Session cookies without Secure flag can be transmitted over HTTP, exposing session tokens to interception. Cookies without HttpOnly are accessible to JavaScript, enabling session theft via XSS.</vuln_desc>
             <developer>Set session options: store.Options = &amp;sessions.Options{Secure: true, HttpOnly: true, SameSite: http.SameSiteStrictMode}. Use SecureCookieStore with a random 32-byte authentication key.</developer>
@@ -22,6 +38,14 @@
             <name>Weak or Short Session Store Key</name>
             <regex><![CDATA[sessions\.NewCookieStore\s*\(\s*\[\]byte\s*\(\s*["'][^"']{1,15}["']\s*\)]]></regex>
             <rdl><![CDATA[[FLAG:sessions\.NewCookieStore\s*\(\s*\[\]byte\s*\(\s*["'][^"']{1,15}["']\s*\)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects Gorilla session stores initialized with short or hardcoded authentication keys.</rule_desc>
             <vuln_desc>Short or hardcoded session authentication keys can be brute-forced or guessed, enabling session forgery and authentication bypass.</vuln_desc>
             <developer>Use a cryptographically random 32-byte or 64-byte key generated at startup and loaded from a secure secrets store. Never hardcode session keys.</developer>

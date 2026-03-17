@@ -20,10 +20,6 @@ except ImportError:
     sys.exit("[!] The Jinja2 module is not installed, please install it and try again")
 
 import yaml
-from pygments import highlight
-from pygments.formatters import HtmlFormatter
-from pygments.lexers import PythonLexer
-from pygments_better_html import BetterHtmlFormatter
 from playwright.sync_api import sync_playwright
 
 
@@ -391,27 +387,55 @@ def _build_pdf_report_context(
         evidence_total += evidence_count
 
         files = []
-        evidence_samples = []
+        # Build per-file code viewer rows (handles aggregated + context evidence).
+        file_rows = defaultdict(list)
+        seen_lines = defaultdict(set)
         if isinstance(evidence, list):
-            seen = set()
             for ev in evidence:
                 if not isinstance(ev, dict):
                     continue
                 ev_file = str(ev.get("file", "")).strip()
-                if ev_file and ev_file not in seen:
-                    seen.add(ev_file)
+                if ev_file and ev_file not in files:
                     files.append(ev_file)
-                ev_line = ev.get("line")
-                ev_code = str(ev.get("code", "")).rstrip()
-                if ev_code:
-                    # Keep snippet payload bounded for PDF readability/performance.
-                    if len(ev_code) > 240:
-                        ev_code = ev_code[:240] + "..."
-                    evidence_samples.append({
-                        "file": ev_file or "-",
-                        "line": ev_line if isinstance(ev_line, int) else "-",
-                        "code": ev_code,
-                    })
+                if ev.get("aggregated"):
+                    for m in ev.get("matches", []):
+                        ln = m.get("line")
+                        code = str(m.get("code", "")).rstrip()
+                        if len(code) > 240:
+                            code = code[:240] + "..."
+                        if isinstance(ln, int) and ln not in seen_lines[ev_file]:
+                            seen_lines[ev_file].add(ln)
+                            file_rows[ev_file].append(("match", ln, code))
+                else:
+                    for ctx in ev.get("context_before", []):
+                        ln = ctx.get("line")
+                        code = str(ctx.get("code", "")).rstrip()
+                        if isinstance(ln, int) and ln not in seen_lines[ev_file]:
+                            seen_lines[ev_file].add(ln)
+                            file_rows[ev_file].append(("context", ln, code))
+                    ln = ev.get("line")
+                    code = str(ev.get("code", "")).rstrip()
+                    if len(code) > 240:
+                        code = code[:240] + "..."
+                    if code and isinstance(ln, int) and ln not in seen_lines[ev_file]:
+                        seen_lines[ev_file].add(ln)
+                        file_rows[ev_file].append(("match", ln, code))
+                    for ctx in ev.get("context_after", []):
+                        ln = ctx.get("line")
+                        code = str(ctx.get("code", "")).rstrip()
+                        if isinstance(ln, int) and ln not in seen_lines[ev_file]:
+                            seen_lines[ev_file].add(ln)
+                            file_rows[ev_file].append(("context", ln, code))
+
+        evidence_samples = [
+            {
+                "file": src_file,
+                "code": _render_code_viewer(
+                    sorted(rows, key=lambda r: r[1] if isinstance(r[1], int) else 0)
+                ),
+            }
+            for src_file, rows in list(file_rows.items())[:12]
+        ]
 
         confidence_score = _normalize_confidence_score(
             item.get("confidence_score"),
@@ -730,11 +754,27 @@ def gen_html_report_modern(scan_summary, snippets, filepaths, filepaths_aoi, rep
 
 
 
-def _highlight_code(statements):
-    code = "".join(statements)
-    # Make the style 'default' to show the code snippet in grey background
-    code = highlight(code, PythonLexer(), BetterHtmlFormatter(linenos="table", noclasses=True, style='github-dark'))
-    return code
+def _render_code_viewer(rows):
+    """
+    Render a list of (row_type, line_num, code_str) tuples as an HTML code viewer
+    with a line-number gutter.  row_type is "match" or "context".
+    """
+    if not rows:
+        return ""
+    valid_lns = [r[1] for r in rows if isinstance(r[1], int)]
+    ln_width = len(str(max(valid_lns))) if valid_lns else 1
+    parts = ['<div class="code-viewer">']
+    for row_type, ln, code in rows:
+        css = "cv-row cv-match" if row_type == "match" else "cv-row cv-ctx"
+        ln_str = str(ln).rjust(ln_width) if isinstance(ln, int) else " " * ln_width
+        parts.append(
+            f'<div class="{css}">'
+            f'<span class="cv-ln">{ln_str}</span>'
+            f'<code class="cv-code">{html.escape(code or "")}</code>'
+            f'</div>'
+        )
+    parts.append('</div>')
+    return "\n".join(parts)
 
 
 
@@ -770,15 +810,43 @@ def get_areas_of_interest(input_file):
         }
         snippet["confidence_label"] = _confidence_label(snippet["confidence_score"])
         evidence = item.get("evidence", [])
-        file_groups = defaultdict(list)
+        # file -> list of (row_type, line_num, code_str); use seen set to avoid duplicate lines
+        file_rows = defaultdict(list)
+        seen_lines = defaultdict(set)
         for ev in evidence:
-            file_groups[ev.get("file", "")].append((ev.get("line", 0), ev.get("code", "")))
-        for src_file, entries in file_groups.items():
-            entries = sorted(entries, key=lambda x: x[0] if isinstance(x[0], int) else 0)
-            statements = [f"[{ln}] {code}\n" for ln, code in entries]
+            if not isinstance(ev, dict):
+                continue
+            ev_file = str(ev.get("file", "")).strip()
+            if ev.get("aggregated"):
+                for m in ev.get("matches", []):
+                    ln = m.get("line")
+                    code = str(m.get("code", "")).rstrip()
+                    if isinstance(ln, int) and ln not in seen_lines[ev_file]:
+                        seen_lines[ev_file].add(ln)
+                        file_rows[ev_file].append(("match", ln, code))
+            else:
+                for ctx in ev.get("context_before", []):
+                    ln = ctx.get("line")
+                    code = str(ctx.get("code", "")).rstrip()
+                    if isinstance(ln, int) and ln not in seen_lines[ev_file]:
+                        seen_lines[ev_file].add(ln)
+                        file_rows[ev_file].append(("context", ln, code))
+                ln = ev.get("line")
+                code = str(ev.get("code", "")).rstrip()
+                if code and isinstance(ln, int) and ln not in seen_lines[ev_file]:
+                    seen_lines[ev_file].add(ln)
+                    file_rows[ev_file].append(("match", ln, code))
+                for ctx in ev.get("context_after", []):
+                    ln = ctx.get("line")
+                    code = str(ctx.get("code", "")).rstrip()
+                    if isinstance(ln, int) and ln not in seen_lines[ev_file]:
+                        seen_lines[ev_file].add(ln)
+                        file_rows[ev_file].append(("context", ln, code))
+        for src_file, rows in file_rows.items():
+            rows_sorted = sorted(rows, key=lambda r: r[1] if isinstance(r[1], int) else 0)
             snippet["sources"].append({
                 "source": src_file,
-                "code": _highlight_code(statements)
+                "code": _render_code_viewer(rows_sorted),
             })
         grouped[platform].append(snippet)
     return _ordered_platform_dict(grouped)

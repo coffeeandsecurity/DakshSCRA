@@ -3,7 +3,15 @@
         <rule>
             <name>Unsafe Shell Command Execution</name>
             <regex><![CDATA[\b(?:system|exec|spawn|popen|Open3\.(?:capture2e?|pipeline|popen2e?))\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:system|exec|spawn|popen|Open3\.(?:capture2e?|pipeline|popen2e?))\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(?:system|exec|spawn|popen|Open3\.(?:capture2e?|pipeline|popen2e?))\s*\(][IF(MISSING:Shellwords\.escape|Shellwords\.shellescape|validate|sanitize|allowlist && MISSING:test|spec|example)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects shell command execution APIs in Ruby that can be dangerous when fed untrusted input.</rule_desc>
             <vuln_desc>Command execution with untrusted input can lead to command injection and unauthorized code execution.</vuln_desc>
             <developer>Avoid shelling out with user-supplied data. Prefer native APIs and strict allowlists for command parameters.</developer>
@@ -12,7 +20,15 @@
         <rule>
             <name>Potential SQL Injection via String Interpolation</name>
             <regex><![CDATA[\b(?:where|find_by_sql|execute|order|joins)\s*\(\s*["'][^"']*#\{]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:where|find_by_sql|execute|order|joins)\s*\(\s*["'][^"']*#\{]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(?:where|find_by_sql|execute|order|joins)\s*\(\s*["'][^"']*#\{][IF(MISSING:where\s*\(\s*"[^"]*\?|sanitize_sql_for_conditions|Arel)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects SQL query construction using string interpolation in ActiveRecord or raw SQL calls.</rule_desc>
             <vuln_desc>Interpolating user-controlled values into SQL can enable SQL injection and unauthorized data access.</vuln_desc>
             <developer>Use parameterized query APIs and bind variables instead of interpolation.</developer>
@@ -23,7 +39,15 @@
         <rule>
             <name>Unsafe YAML Deserialization</name>
             <regex><![CDATA[\bYAML\.load\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\bYAML\.load\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\bYAML\.load\s*\(][IF(MISSING:YAML\.safe_load|Psych\.safe_load|permitted_classes|allowed_classes)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects use of YAML.load which can deserialize arbitrary objects.</rule_desc>
             <vuln_desc>Unsafe deserialization may allow object injection, leading to code execution or data tampering.</vuln_desc>
             <developer>Use safe loaders such as YAML. safe_load and enforce permitted classes if needed.</developer>
@@ -32,7 +56,15 @@
         <rule>
             <name>Dynamic Code Evaluation</name>
             <regex><![CDATA[\b(?:eval|instance_eval|class_eval|module_eval)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:eval|instance_eval|class_eval|module_eval)\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(?:eval|instance_eval|class_eval|module_eval)\s*\(][IF(MISSING:trusted|allowlist|static_method && MISSING:test|spec|example|dummy)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects dynamic code evaluation methods.</rule_desc>
             <vuln_desc>Evaluating dynamic strings can allow remote code execution if inputs are attacker-controlled.</vuln_desc>
             <developer>Avoid runtime code evaluation; refactor to explicit logic paths and whitelisted behavior.</developer>
@@ -44,6 +76,14 @@
             <name>Weak Session Secret Configuration</name>
             <regex><![CDATA[(?i)secret_key_base\s*[:=]\s*["'](?:changeme|secret|test|default)["']]]></regex>
             <rdl><![CDATA[[FLAG:(?i)secret_key_base\s*[:=]\s*["'](?:changeme|secret|test|default)["']]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects likely weak or default session secret values.</rule_desc>
             <vuln_desc>Weak secrets may let attackers forge session cookies and impersonate users.</vuln_desc>
             <developer>Use high-entropy secrets from secure secret managers and rotate when exposed.</developer>
@@ -53,6 +93,14 @@
             <name>Cookies Missing Secure or HttpOnly Flags</name>
             <regex><![CDATA[\bcookies\[[^\]]+\]\s*=\s*\{(?![^\}]*\b(?:secure|httponly)\b)]]></regex>
             <rdl><![CDATA[[FLAG:\bcookies\[[^\]]+\]\s*=\s*\{(?![^\}]*\b(?:secure|httponly)\b)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects cookie assignments without explicit secure and HttpOnly attributes.</rule_desc>
             <vuln_desc>Missing secure flags can expose cookies to theft over insecure channels or client-side scripts.</vuln_desc>
             <developer>Set `secure: true`, `httponly: true`, and `same_site` appropriately for sensitive cookies.</developer>
@@ -61,7 +109,15 @@
         <rule>
             <name>CSRF Protection Disabled or Relaxed</name>
             <regex><![CDATA[(?i)\b(?:skip_before_action\s*:verify_authenticity_token|protect_from_forgery\s+with:\s*:null_session|protect_from_forgery\s+except:)]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\b(?:skip_before_action\s*:verify_authenticity_token|protect_from_forgery\s+with:\s*:null_session|protect_from_forgery\s+except:)]]]></rdl>
+            <rdl><![CDATA[[FLAG:(?i)\b(?:skip_before_action\s*:verify_authenticity_token|protect_from_forgery\s+with:\s*:null_session|protect_from_forgery\s+except:)][IF(MISSING:before_action\s*:verify_authenticity_token|api_key|JWT|Bearer)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects Rails patterns that disable or weaken default CSRF protections.</rule_desc>
             <vuln_desc>Disabling CSRF verification can allow forged state-changing requests from attacker-controlled origins.</vuln_desc>
             <developer>Keep CSRF protection enabled for state-changing endpoints and use targeted, justified exceptions only when required.</developer>
@@ -73,6 +129,14 @@
             <name>Stack Trace or Sensitive Exception Disclosure</name>
             <regex><![CDATA[\b(?:puts|print|logger\.(?:debug|info|error)|Rails\.logger\.(?:debug|info|error))\s*\(?.*(?:exception|backtrace)]]></regex>
             <rdl><![CDATA[[FLAG:\b(?:puts|print|logger\.(?:debug|info|error)|Rails\.logger\.(?:debug|info|error))\s*\(?.*(?:exception|backtrace)][IF(MISSING:release|production)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <exclude><![CDATA[(?i)^\s*(#|//|/\*|\*)|apache\.org/licenses|opensource\.org/licenses]]></exclude>
             <rule_desc>Detects logging or printing of exception/backtrace details.</rule_desc>
             <vuln_desc>Exposing stack traces can leak internals such as file paths, secrets, and implementation details.</vuln_desc>

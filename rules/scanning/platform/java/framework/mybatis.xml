@@ -3,7 +3,15 @@
         <rule>
             <name>String Substitution in MyBatis Mapper (${} Syntax)</name>
             <regex><![CDATA[\$\{(?!__frch_|index|item|foreach)[^}]+\}]]></regex>
-            <rdl><![CDATA[[FLAG:\$\{(?!__frch_|index|item|foreach)[^}]+\}]]]></rdl>
+            <rdl><![CDATA[[FLAG:\$\{(?!__frch_|index|item|foreach)[^}]+\}][IF(MISSING:#\{|@Param|parameterType && MISSING:validate|sanitize)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects use of MyBatis ${} string substitution syntax in mapper XML files.</rule_desc>
             <vuln_desc>${} performs direct string substitution without parameterization, equivalent to string concatenation in raw JDBC. Any user-controlled value passed through ${} is directly injected into the SQL statement, enabling SQL injection.</vuln_desc>
             <developer>Use #{} syntax for all user-supplied values. #{} uses prepared statement parameterization. Reserve ${} only for structural SQL elements like column names or table names that cannot be parameterized, and validate them against a strict allowlist.</developer>
@@ -12,7 +20,15 @@
         <rule>
             <name>OrderBy Clause with Dynamic Substitution</name>
             <regex><![CDATA[ORDER\s+BY\s+\$\{|order\s+by\s+\$\{]]></regex>
-            <rdl><![CDATA[[FLAG:ORDER\s+BY\s+\$\{|order\s+by\s+\$\{]]]></rdl>
+            <rdl><![CDATA[[FLAG:ORDER\s+BY\s+\$\{|order\s+by\s+\$\{][IF(MISSING:allowlist|whitelist|validateColumn|allowedColumns|escapeSQL)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects dynamic ORDER BY clauses using MyBatis string substitution.</rule_desc>
             <vuln_desc>ORDER BY clauses cannot use prepared statement parameters (column names cannot be parameterized), so ${} is commonly used. If the column name originates from user input without allowlist validation, this enables SQL injection via ORDER BY manipulation.</vuln_desc>
             <developer>Validate column names and sort directions against an explicit allowlist of permitted values before constructing ORDER BY clauses. Use a mapping table to translate user-friendly names to actual column identifiers.</developer>
@@ -22,6 +38,14 @@
             <name>selectKey or Provider with Dynamic SQL Building</name>
             <regex><![CDATA[@SelectProvider\s*\(|@UpdateProvider\s*\(|@InsertProvider\s*\(|@DeleteProvider\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:@SelectProvider\s*\(|@UpdateProvider\s*\(|@InsertProvider\s*\(|@DeleteProvider\s*\(][IF(MISSING:escapeSQL|sanitize|allowlist|validateColumn)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects MyBatis Provider annotations that dynamically build SQL queries.</rule_desc>
             <vuln_desc>SQL Provider classes that build SQL via string concatenation using method parameters can introduce SQL injection if inputs are not validated before inclusion in the dynamic query.</vuln_desc>
             <developer>Within Provider classes, validate all dynamic SQL fragments (column names, table names) against allowlists. Use MyBatis SQL builder API (new SQL().SELECT().FROM()) rather than raw string concatenation.</developer>

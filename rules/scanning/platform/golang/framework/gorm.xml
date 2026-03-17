@@ -4,6 +4,14 @@
             <name>Raw SQL via Raw() with String Concatenation</name>
             <regex><![CDATA[\.Raw\s*\(\s*["'][^"']*["']\s*\+|\.Raw\s*\(\s*fmt\.Sprintf\s*\(["'][^"']*%[sv]]]></regex>
             <rdl><![CDATA[[FLAG:\.Raw\s*\(\s*["'][^"']*["']\s*\+|\.Raw\s*\(\s*fmt\.Sprintf\s*\(["'][^"']*%[sv]]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects GORM Raw() calls with SQL built via string concatenation or fmt.Sprintf.</rule_desc>
             <vuln_desc>Building raw SQL strings with concatenation or Sprintf in GORM Raw() calls bypasses parameterization and introduces SQL injection, negating GORM's built-in protections.</vuln_desc>
             <developer>Use GORM positional parameter bindings: db.Raw("SELECT * FROM users WHERE id = ?", userID). Never concatenate or format user values into SQL strings.</developer>
@@ -13,6 +21,14 @@
             <name>Unparameterized Where() Clause</name>
             <regex><![CDATA[\.Where\s*\(\s*["'][^"']*["']\s*\+|\.Where\s*\(\s*fmt\.Sprintf\s*\(["'][^"']*%[sv]]]></regex>
             <rdl><![CDATA[[FLAG:\.Where\s*\(\s*["'][^"']*["']\s*\+|\.Where\s*\(\s*fmt\.Sprintf\s*\(["'][^"']*%[sv]]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects GORM Where() calls with conditions built via string concatenation or fmt.Sprintf.</rule_desc>
             <vuln_desc>Concatenating values into GORM Where() conditions bypasses prepared statement parameterization, enabling SQL injection via condition manipulation.</vuln_desc>
             <developer>Use GORM's parameterized where syntax: db.Where("name = ?", name) or struct-based conditions: db.Where(&amp;User{Name: name}).</developer>
@@ -22,6 +38,14 @@
             <name>Exec() with Unparameterized SQL</name>
             <regex><![CDATA[\.Exec\s*\(\s*["'][^"']*["']\s*\+|\.Exec\s*\(\s*fmt\.Sprintf\s*\(["'][^"']*%[sv]]]></regex>
             <rdl><![CDATA[[FLAG:\.Exec\s*\(\s*["'][^"']*["']\s*\+|\.Exec\s*\(\s*fmt\.Sprintf\s*\(["'][^"']*%[sv]]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects GORM Exec() calls executing dynamically built SQL strings.</rule_desc>
             <vuln_desc>Exec() with string-formatted SQL bypasses all ORM parameterization, enabling SQL injection in data manipulation operations.</vuln_desc>
             <developer>Use Exec() with positional parameters: db.Exec("UPDATE users SET name = ? WHERE id = ?", name, id).</developer>

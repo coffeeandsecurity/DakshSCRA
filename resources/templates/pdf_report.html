@@ -356,29 +356,62 @@
       margin: 3px 0;
       word-break: break-word;
     }
-    .snippet-list {
-      margin: 6px 0 0;
-      padding-left: 17px;
-    }
-    .snippet-list li {
-      margin: 6px 0;
-    }
-    .snippet-meta {
-      color: var(--muted);
-      font-size: 10px;
-      margin-bottom: 2px;
-      word-break: break-word;
-    }
-    .snippet-code {
-      border: 1px solid #d4deec;
-      background: #f5f9ff;
+    .source-block {
+      margin-top: 6px;
+      border: 1px solid #1f2a44;
       border-radius: 6px;
-      padding: 5px 7px;
+      overflow: hidden;
+    }
+    .source-head {
+      padding: 4px 8px;
+      background: #111a2b;
       font-family: "Consolas", "Courier New", monospace;
       font-size: 10px;
-      white-space: pre-wrap;
-      word-break: break-word;
-      color: #163b61;
+      color: #7ab3f0;
+      word-break: break-all;
+    }
+    .source-code {
+      background: #0d1117;
+      overflow-x: auto;
+    }
+    /* ── Code viewer ── */
+    .code-viewer { width: 100%; }
+    .cv-row {
+      display: flex;
+      align-items: stretch;
+      line-height: 1.55;
+    }
+    .cv-row.cv-match {
+      background: rgba(255, 200, 80, 0.07);
+      border-left: 3px solid #e3842a;
+    }
+    .cv-row.cv-ctx {
+      border-left: 3px solid transparent;
+      opacity: 0.6;
+    }
+    .cv-ln {
+      flex-shrink: 0;
+      min-width: 2.6em;
+      padding: 1px 8px 1px 4px;
+      text-align: right;
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 10px;
+      color: #4a5568;
+      background: #161b22;
+      border-right: 1px solid #21262d;
+      user-select: none;
+      white-space: pre;
+    }
+    .cv-row.cv-match .cv-ln { color: #e3842a; }
+    .cv-code {
+      flex: 1;
+      padding: 1px 10px;
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 10px;
+      color: #e6edf3;
+      white-space: pre;
+      overflow-x: visible;
+      word-break: normal;
     }
     .paths {
       max-height: 420px;
@@ -682,14 +715,12 @@
             {% endif %}
             {% if finding.evidence_samples %}
             <div style="margin-top:5px;"><b>Sources:</b></div>
-            <ul class="snippet-list">
-              {% for ev in finding.evidence_samples %}
-              <li>
-                <div class="snippet-meta">{{ ev.file }}{% if ev.line != "-" %}:{{ ev.line }}{% endif %}</div>
-                <div class="snippet-code">{{ ev.code|e }}</div>
-              </li>
-              {% endfor %}
-            </ul>
+            {% for ev in finding.evidence_samples %}
+            <div class="source-block">
+              <div class="source-head">{{ ev.file }}</div>
+              <div class="source-code">{{ ev.code | safe }}</div>
+            </div>
+            {% endfor %}
             {% endif %}
           </div>
           {% endfor %}

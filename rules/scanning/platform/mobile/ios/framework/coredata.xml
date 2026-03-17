@@ -4,6 +4,17 @@
             <name>NSFetchRequest Predicate from User Input</name>
             <regex><![CDATA[NSPredicate\s*\(\s*format\s*:\s*["'][^"']*%@|NSPredicate\s*\(\s*format\s*:\s*["'][^"']*\\\(|predicateWithFormat\s*:\s*[@][^,)]*\+]]></regex>
             <rdl><![CDATA[[FLAG:NSPredicate\s*\(\s*format\s*:\s*["'][^"']*%@][IF(MISSING:argumentArray|CVarArg|predicateWithValue)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects NSPredicate format strings that interpolate values without using the argument array pattern.</rule_desc>
             <vuln_desc>NSPredicate format strings using %@ with directly concatenated or interpolated user values are vulnerable to predicate injection, allowing attackers to manipulate fetch logic, bypass filters, or extract unintended data from Core Data stores.</vuln_desc>
             <developer>Use NSPredicate with an argument array: NSPredicate(format: "name == %@", argumentArray: [userInput]). This ensures proper escaping of special predicate characters.</developer>
@@ -13,6 +24,17 @@
             <name>Core Data Store Without Data Protection</name>
             <regex><![CDATA[NSPersistentStoreCoordinator|addPersistentStore|NSPersistentContainer\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:NSPersistentStoreCoordinator|NSPersistentContainer\s*\(][IF(MISSING:NSFileProtectionComplete|NSFileProtectionCompleteUnlessOpen|fileProtection|NSPersistentStoreFileProtectionKey)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects Core Data persistent store creation without file protection attributes.</rule_desc>
             <vuln_desc>Core Data stores without NSFileProtectionComplete are accessible when the device is locked or in certain backup scenarios, exposing sensitive data to physical device attacks and backup extraction.</vuln_desc>
             <developer>Set NSFileProtectionComplete on the persistent store URL: try FileManager.default.setAttributes([.protectionKey: .complete], ofItemAtPath: storeURL.path). Or pass NSPersistentStoreFileProtectionKey in store options.</developer>

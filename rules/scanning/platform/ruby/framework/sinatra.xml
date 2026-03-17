@@ -4,6 +4,14 @@
             <name>Sinatra Development/Debug Mode Enabled</name>
             <regex><![CDATA[RAILS_ENV\s*=\s*[\'\"]development[\'\"]|config\.consider_all_requests_local\s*=\s*true]]></regex>
             <rdl><![CDATA[[FLAG:RAILS_ENV\s*=\s*[\'\"]development[\'\"]|config\.consider_all_requests_local\s*=\s*true][IF(MISSING:release|production)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects development/debug settings in deployable Ruby app configs.</rule_desc>
             <vuln_desc>Development settings can leak detailed error diagnostics.</vuln_desc>
             <developer>Harden production. rb and deployment env settings.</developer>
@@ -12,7 +20,15 @@
         <rule>
             <name>Sinatra Unsafe Deserialization</name>
             <regex><![CDATA[YAML\.load\(|Marshal\.load\(]]></regex>
-            <rdl><![CDATA[[FLAG:YAML\.load\(|Marshal\.load\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:YAML\.load\(|Marshal\.load\(][IF(MISSING:YAML\.safe_load|Marshal\.restore.*trusted|allowlist)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects unsafe deserialization primitives.</rule_desc>
             <vuln_desc>Unsafe deserialization of untrusted payloads can lead to code execution.</vuln_desc>
             <developer>Use safe loaders and trusted serialization boundaries.</developer>
@@ -21,7 +37,15 @@
         <rule>
             <name>Sinatra SQL Injection Sink</name>
             <regex><![CDATA[where\(\s*"[^"]*#\{|find_by_sql\(|connection\.execute\(]]></regex>
-            <rdl><![CDATA[[FLAG:where\(\s*"[^"]*#\{|find_by_sql\(|connection\.execute\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:where\(\s*"[^"]*#\{|find_by_sql\(|connection\.execute\(][IF(MISSING:where\s*\(\s*".*?",|sanitize_sql|Arel::Nodes)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects raw/dynamic SQL construction patterns in Ruby frameworks.</rule_desc>
             <vuln_desc>Dynamic query strings may be vulnerable to injection.</vuln_desc>
             <developer>Prefer parameterized ActiveRecord queries.</developer>
@@ -31,6 +55,14 @@
             <name>Sinatra Permissive CORS</name>
             <regex><![CDATA[origins\s+[\'\"]\*[\'\"]|Access-Control-Allow-Origin\s*=\s*[\'\"]\*[\'\"]]]></regex>
             <rdl><![CDATA[[FLAG:origins\s+[\'\"]\*[\'\"]|Access-Control-Allow-Origin\s*=\s*[\'\"]\*[\'\"]][IF(MISSING:allowlist|whitelist|trusted)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects wildcard CORS/origin permissions.</rule_desc>
             <vuln_desc>Permissive CORS may expose sensitive API endpoints.</vuln_desc>
             <developer>Restrict origins to trusted domains.</developer>
@@ -40,6 +72,14 @@
             <name>Sinatra Hardcoded Secret Material</name>
             <regex><![CDATA[(?i)(secret_key_base|secret|apikey|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]]]></regex>
             <rdl><![CDATA[[FLAG:(?i)(secret_key_base|secret|apikey|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects likely hardcoded secret material.</rule_desc>
             <vuln_desc>Hardcoded credentials can be leaked and abused.</vuln_desc>
             <developer>Store secrets outside source and rotate regularly.</developer>

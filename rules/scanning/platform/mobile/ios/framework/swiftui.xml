@@ -4,6 +4,17 @@
             <name>SwiftUI ATS Relaxation Enabled</name>
             <regex><![CDATA[NSAllowsArbitraryLoads|NSExceptionAllowsInsecureHTTPLoads]]></regex>
             <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads|NSExceptionAllowsInsecureHTTPLoads][IF(MISSING:NSExceptionDomains)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects ATS relaxation indicators relevant to SwiftUI apps.</rule_desc>
             <vuln_desc>ATS relaxation can weaken network transport security guarantees.</vuln_desc>
             <developer>Keep ATS strict and minimize exceptions.</developer>
@@ -13,6 +24,17 @@
             <name>SwiftUI Insecure URL Usage</name>
             <regex>http://</regex>
             <rdl><![CDATA[[FLAG:http://][IF(MISSING:https://)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects cleartext endpoint references in SwiftUI projects.</rule_desc>
             <vuln_desc>Cleartext transport can leak sensitive request/response data.</vuln_desc>
             <developer>Use HTTPS only and enforce secure networking defaults.</developer>
@@ -22,6 +44,17 @@
             <name>SwiftUI Dynamic Web Content Injection Marker</name>
             <regex><![CDATA[WKWebView|evaluateJavaScript\(|JavaScriptEnabled]]></regex>
             <rdl><![CDATA[[FLAG:WKWebView|evaluateJavaScript\(|JavaScriptEnabled][IF(MISSING:limitsNavigationsToAppBoundDomains\s*=\s*true)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects web content execution points in SwiftUI-integrated views.</rule_desc>
             <vuln_desc>Untrusted web/script content can increase XSS-like attack surface.</vuln_desc>
             <developer>Restrict untrusted content and harden web view interactions.</developer>
@@ -31,6 +64,17 @@
             <name>SwiftUI Insecure Certificate Handling Marker</name>
             <regex><![CDATA[didReceive\s+challenge.*useCredential|allowInvalidCertificates]]></regex>
             <rdl><![CDATA[[FLAG:didReceive\s+challenge.*useCredential|allowInvalidCertificates][IF(MISSING:SecTrustEvaluate|SecTrustEvaluateWithError)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects certificate trust bypass indicators in network challenge handlers.</rule_desc>
             <vuln_desc>Weak trust decisions can enable MITM interception.</vuln_desc>
             <developer>Implement strict trust evaluation and remove bypass logic.</developer>
@@ -40,6 +84,17 @@
             <name>SwiftUI Sensitive Data in UserDefaults Marker</name>
             <regex><![CDATA[UserDefaults\.standard\.set\(.*(token|secret|password|apikey)]]></regex>
             <rdl><![CDATA[[FLAG:UserDefaults\.standard\.set\(.*(token|secret|password|apikey)][IF(MISSING:Keychain)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects potential secret storage in UserDefaults.</rule_desc>
             <vuln_desc>Storing secrets in UserDefaults increases extraction risk.</vuln_desc>
             <developer>Use Keychain for sensitive values.</developer>
@@ -49,6 +104,17 @@
             <name>SwiftUI Pasteboard Sensitive Data Marker</name>
             <regex>UIPasteboard</regex>
             <rdl><![CDATA[[FLAG:UIPasteboard][IF(MISSING:expirationDate && MISSING:localOnly)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects pasteboard usage that may expose sensitive data.</rule_desc>
             <vuln_desc>Clipboard data may leak to unintended contexts.</vuln_desc>
             <developer>Avoid clipboard for sensitive data where possible.</developer>
@@ -58,6 +124,15 @@
             <name>SwiftUI Hardcoded Secret Marker</name>
             <regex><![CDATA[(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"]]></regex>
             <rdl><![CDATA[[FLAG:(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:DEBUG && MISSING:example|sample|dummy)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>none</context_type>
+                <aggregate>file</aggregate>
+                <report_format>secret_list</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects likely hardcoded secret literals.</rule_desc>
             <vuln_desc>Hardcoded secrets can be extracted from app artifacts.</vuln_desc>
             <developer>Externalize secrets and rotate compromised values.</developer>

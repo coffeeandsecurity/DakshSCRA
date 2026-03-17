@@ -4,6 +4,14 @@
             <name>Qt Unsafe Memory/String API</name>
             <regex><![CDATA[\b(strcpy|strcat|sprintf|gets|memcpy)\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:\b(strcpy|strcat|sprintf|gets|memcpy)\s*\(]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects unsafe memory/string APIs in C++ code.</rule_desc>
             <vuln_desc>Improper memory operations can cause overflow and memory safety issues.</vuln_desc>
             <developer>Use safer abstractions and explicit bounds checks.</developer>
@@ -13,6 +21,14 @@
             <name>Qt Command Execution Sink</name>
             <regex><![CDATA[\b(system|popen|_popen)\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:\b(system|popen|_popen)\s*\(]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects OS command execution APIs in C++ code paths.</rule_desc>
             <vuln_desc>User-influenced command strings can lead to command injection.</vuln_desc>
             <developer>Avoid shell execution or strictly validate/allow-list inputs.</developer>
@@ -22,6 +38,14 @@
             <name>Qt TLS Validation Bypass Marker</name>
             <regex><![CDATA[ignoreSslErrors\(\)|setPeerVerifyMode\(\s*QSslSocket::VerifyNone]]></regex>
             <rdl><![CDATA[[FLAG:ignoreSslErrors\(\)|setPeerVerifyMode\(\s*QSslSocket::VerifyNone]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects TLS validation bypass markers in C++/Qt networking code.</rule_desc>
             <vuln_desc>TLS bypass permits interception and spoofing attacks.</vuln_desc>
             <developer>Enforce strict certificate validation and remove bypasses.</developer>
@@ -31,6 +55,14 @@
             <name>Qt Hardcoded Secret Material</name>
             <regex><![CDATA[(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"]]></regex>
             <rdl><![CDATA[[FLAG:(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects likely hardcoded secrets in C++ source.</rule_desc>
             <vuln_desc>Hardcoded credentials may leak through source/binary exposure.</vuln_desc>
             <developer>Externalize secrets and rotate keys.</developer>
@@ -40,6 +72,14 @@
             <name>Qt Insecure Serialization/Deserialization Marker</name>
             <regex><![CDATA[boost::archive|QDataStream\s*>>]]></regex>
             <rdl><![CDATA[[FLAG:boost::archive|QDataStream\s*&gt;&gt;]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects serialization/deserialization APIs that need trust-boundary review.</rule_desc>
             <vuln_desc>Deserializing untrusted data can lead to memory and logic vulnerabilities.</vuln_desc>
             <developer>Validate input formats and enforce strict schema checks.</developer>

@@ -38,6 +38,140 @@ _DYNAMIC_CONSTRUCTION_PATTERN = re.compile(
 _VARIABLE_ARG_CALL_PATTERN = re.compile(r"\w+\s*\([^)]*\$[a-z_]\w*[^)]*\)", re.IGNORECASE)
 
 
+def _parse_scan_config(rule_element):
+    """
+    Parse the optional <scan_config> block from a rule element.
+    Returns a dict of all scan_config fields with safe defaults.
+    Missing block or missing individual fields all fall back to defaults.
+    """
+    sc = rule_element.find("scan_config")
+    defaults = {
+        "match_mode": "line",
+        "context_type": "none",
+        "context_lines_before": 0,
+        "context_lines_after": 0,
+        "context_pattern": "",
+        "context_depth": 10,
+        "aggregate": "none",
+        "report_format": "default",
+        "highlight_enabled": True,
+        "highlight_target": "match",
+        "highlight_groups": "",
+        "highlight_pattern": "",
+        "highlight_color": "red",
+        "marks": [],
+    }
+    if sc is None:
+        return defaults
+
+    def _text(tag, default=""):
+        el = sc.find(tag)
+        return el.text.strip() if el is not None and el.text else default
+
+    def _int(tag, default=0):
+        val = _text(tag, str(default))
+        try:
+            return int(val)
+        except (ValueError, TypeError):
+            return default
+
+    def _bool(tag, default=True):
+        val = _text(tag, "true" if default else "false").lower()
+        return val not in ("false", "0", "no")
+
+    marks = []
+    marks_el = sc.find("marks")
+    if marks_el is not None:
+        for mark_el in marks_el.findall("mark"):
+            color = mark_el.get("color", "red")
+            spec = mark_el.text.strip() if mark_el.text else "match"
+            marks.append({"color": color, "spec": spec})
+
+    lines_before = _int("context_lines_before", 0)
+    lines_after = _int("context_lines_after", 0)
+    # Auto-infer context_type: if context line counts are set but context_type
+    # is not explicitly specified, default to "lines" rather than "none".
+    explicit_ctx_type = _text("context_type", "")
+    if explicit_ctx_type:
+        ctx_type = explicit_ctx_type
+    elif lines_before > 0 or lines_after > 0:
+        ctx_type = "lines"
+    else:
+        ctx_type = "none"
+
+    return {
+        "match_mode": _text("match_mode", "line"),
+        "context_type": ctx_type,
+        "context_lines_before": lines_before,
+        "context_lines_after": lines_after,
+        "context_pattern": _text("context_pattern", ""),
+        "context_depth": _int("context_depth", 10),
+        "aggregate": _text("aggregate", "none"),
+        "report_format": _text("report_format", "default"),
+        "highlight_enabled": _bool("highlight_enabled", True),
+        "highlight_target": _text("highlight_target", "match"),
+        "highlight_groups": _text("highlight_groups", ""),
+        "highlight_pattern": _text("highlight_pattern", ""),
+        "highlight_color": _text("highlight_color", "red"),
+        "marks": marks,
+    }
+
+
+def _collect_context_lines(file_lines, linecount, lines_before, lines_after):
+    """
+    Return (before, after) as lists of {"line": int, "code": str} dicts.
+    linecount is 1-based. file_lines is a 0-based list of strings.
+    """
+    idx = linecount - 1  # convert to 0-based
+    total = len(file_lines)
+
+    before = []
+    if lines_before > 0:
+        start = max(0, idx - lines_before)
+        for i in range(start, idx):
+            before.append({"line": i + 1, "code": file_lines[i]})
+
+    after = []
+    if lines_after > 0:
+        end = min(total, idx + 1 + lines_after)
+        for i in range(idx + 1, end):
+            after.append({"line": i + 1, "code": file_lines[i]})
+
+    return before, after
+
+
+def _match_full_file(pattern, content, file_lines, exclude):
+    """
+    Apply pattern to full file content with MULTILINE|DOTALL.
+    Returns list of (linecount, matched_text, groups_dict) tuples.
+    linecount is the 1-based line number of the match start.
+    groups_dict holds named capture groups from the match (may be empty).
+    """
+    try:
+        full_pattern = re.compile(pattern.pattern, re.MULTILINE | re.DOTALL)
+    except re.error:
+        full_pattern = pattern
+
+    results = []
+    for m in full_pattern.finditer(content):
+        # Determine line number of match start
+        linecount = content.count('\n', 0, m.start()) + 1
+        # Get the matched text (first line only for display)
+        matched_text = m.group(0)
+        first_line = matched_text.split('\n', 1)[0]
+
+        if exclude and exclude.search(first_line):
+            continue
+
+        groups = m.groupdict() if m.groupdict() else {}
+        # Remove None values from named groups
+        groups = {k: v for k, v in groups.items() if v is not None}
+
+        results.append((linecount, first_line, groups))
+
+    return results
+
+
 def _derive_issue_scope(category_name, platform_name):
     """
     Infer finding scope for reporting without changing existing output structure.
@@ -215,6 +349,7 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                 dev_note = (rule.findtext("developer") or "").strip()
                 rev_note = (rule.findtext("reviewer") or "").strip()
                 exclude_text = (rule.findtext("exclude") or "").strip()
+                scan_cfg = _parse_scan_config(rule)
 
                 if not rule_title or (not pattern_text and not rdl_text):
                     logger.warning("Skipping malformed rule in %s under category %s", rule_path, category_name)
@@ -280,17 +415,27 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                         continue
 
                     file_lines = content.splitlines()
+                    # candidate_evidence: list of (linecount, line, groups_dict)
                     candidate_evidence = []
 
+                    use_file_mode = (scan_cfg["match_mode"] == "file")
+
                     if pattern is not None:
-                        for linecount, line in enumerate(file_lines, start=1):
-                            if len(line) > 500:
-                                continue
-                            if not pattern.search(line):
-                                continue
-                            if exclude and exclude.search(line):
-                                continue
-                            candidate_evidence.append((linecount, line))
+                        if use_file_mode:
+                            for linecount, line, groups in _match_full_file(pattern, content, file_lines, exclude):
+                                candidate_evidence.append((linecount, line, groups))
+                        else:
+                            for linecount, line in enumerate(file_lines, start=1):
+                                if len(line) > 500:
+                                    continue
+                                if not pattern.search(line):
+                                    continue
+                                if exclude and exclude.search(line):
+                                    continue
+                                m = pattern.search(line)
+                                groups = m.groupdict() if m else {}
+                                groups = {k: v for k, v in groups.items() if v is not None}
+                                candidate_evidence.append((linecount, line, groups))
 
                     if rdl_text and rdl.evaluate_rdl(rdl_text, content):
                         flag_pattern = rdl.extract_flag_pattern(rdl_text)
@@ -305,19 +450,29 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                                         continue
                                     if exclude and exclude.search(line):
                                         continue
-                                    candidate_evidence.append((linecount, line))
+                                    # Only add if not already captured by pattern scan
+                                    if not any(ev[0] == linecount for ev in candidate_evidence):
+                                        candidate_evidence.append((linecount, line, {}))
                                     rdl_evidence_added = True
                             except re.error as exc:
                                 logger.error("Invalid FLAG regex in RDL for rule %s (%s): %s", rule_title, rule_path, exc)
                         if not rdl_evidence_added and not flag_pattern and file_lines:
-                            candidate_evidence.append((1, "[RDL condition matched]"))
+                            candidate_evidence.append((1, "[RDL condition matched]", {}))
 
                     if not candidate_evidence:
                         continue
 
                     rel_path = futils.get_source_file_path(state.sourcedir, filepath)
                     seen_lines = set()
-                    for linecount, line in candidate_evidence:
+                    ctx_type = scan_cfg["context_type"]
+                    lines_before = scan_cfg["context_lines_before"]
+                    lines_after = scan_cfg["context_lines_after"]
+                    do_aggregate = (scan_cfg["aggregate"] == "file")
+
+                    # For aggregate:file, collect all passing evidence first, then emit one entry
+                    file_evidence_items = []
+
+                    for linecount, line, groups in candidate_evidence:
                         if linecount in seen_lines:
                             continue
                         seen_lines.add(linecount)
@@ -335,57 +490,107 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                             state.suppressedFindingsCnt += 1
                             continue
 
-                        if finding_index is None:
-                            if rule_no > 0 and f_scanout:
-                                f_scanout.write("\n\n")
-                            rule_no += 1
-                            state.rulesMatchCnt += 1
-                            matched_rules.append(rule_title)
-                            rule_has_unsuppressed_match = True
+                        ev_item = {
+                            "file": rel_path,
+                            "line": linecount,
+                            "code": short_line.strip(),
+                        }
 
-                            if f_scanout:
-                                f_scanout.write(
-                                    f"\n{platform_name}-{rule_no}. Rule Title: {rule_title}\n"
-                                    f"\n\t Rule Description  : {rule_desc}"
-                                    f"\n\t Issue Description : {vuln_desc}"
-                                    f"\n\t Developer Note    : {dev_note}"
-                                    f"\n\t Reviewer Note     : {rev_note}\n"
-                                )
+                        if ctx_type == "named_groups" and groups:
+                            ev_item["groups"] = groups
+                        elif ctx_type == "lines" and (lines_before > 0 or lines_after > 0):
+                            ctx_before, ctx_after = _collect_context_lines(
+                                file_lines, linecount, lines_before, lines_after
+                            )
+                            if ctx_before:
+                                ev_item["context_before"] = ctx_before
+                            if ctx_after:
+                                ev_item["context_after"] = ctx_after
+                        elif ctx_type == "backward" and scan_cfg["context_pattern"]:
+                            try:
+                                back_regex = re.compile(scan_cfg["context_pattern"])
+                                depth = scan_cfg["context_depth"]
+                                idx = linecount - 1
+                                for i in range(idx - 1, max(-1, idx - depth - 1), -1):
+                                    bm = back_regex.search(file_lines[i])
+                                    if bm:
+                                        groups_back = bm.groups()
+                                        ev_item["context_label"] = groups_back[0] if groups_back else bm.group(0)
+                                        break
+                            except re.error:
+                                pass
 
-                            findings_json.append({
-                                "platform": platform_name,
-                                "rule_id": f"{platform_name}-{rule_no}",
-                                "rule_title": rule_title,
-                                "category": category_name,
-                                "issue_scope": _derive_issue_scope(category_name, platform_name),
-                                "rule_desc": rule_desc,
-                                "issue_desc": vuln_desc,
-                                "developer_note": dev_note,
-                                "reviewer_note": rev_note,
-                                "confidence_score": 0,
-                                "confidence_level": "low",
-                                "evidence": []
-                            })
-                            finding_index = len(findings_json) - 1
+                        file_evidence_items.append(ev_item)
+
+                    if not file_evidence_items:
+                        continue
+
+                    if finding_index is None:
+                        if rule_no > 0 and f_scanout:
+                            f_scanout.write("\n\n")
+                        rule_no += 1
+                        state.rulesMatchCnt += 1
+                        matched_rules.append(rule_title)
+                        rule_has_unsuppressed_match = True
 
                         if f_scanout:
                             f_scanout.write(
-                                f"\n\t -> Source File: {rel_path}\n"
-                                f"\t\t [{linecount}] {short_line}"
+                                f"\n{platform_name}-{rule_no}. Rule Title: {rule_title}\n"
+                                f"\n\t Rule Description  : {rule_desc}"
+                                f"\n\t Issue Description : {vuln_desc}"
+                                f"\n\t Developer Note    : {dev_note}"
+                                f"\n\t Reviewer Note     : {rev_note}\n"
                             )
-                        findings_json[finding_index]["evidence"].append({
-                            "file": rel_path,
-                            "line": linecount,
-                            "code": short_line.strip()
+
+                        findings_json.append({
+                            "platform": platform_name,
+                            "rule_id": f"{platform_name}-{rule_no}",
+                            "rule_title": rule_title,
+                            "category": category_name,
+                            "issue_scope": _derive_issue_scope(category_name, platform_name),
+                            "rule_desc": rule_desc,
+                            "issue_desc": vuln_desc,
+                            "developer_note": dev_note,
+                            "reviewer_note": rev_note,
+                            "confidence_score": 0,
+                            "confidence_level": "low",
+                            "scan_config": scan_cfg,
+                            "evidence": [],
                         })
-                        score = _compute_source_confidence_score(
-                            findings_json[finding_index].get("evidence", []),
-                            has_regex=bool(pattern_text),
-                            has_rdl=bool(rdl_text),
-                            has_descriptions=bool(rule_desc or vuln_desc),
-                        )
-                        findings_json[finding_index]["confidence_score"] = score
-                        findings_json[finding_index]["confidence_level"] = _confidence_level(score)
+                        finding_index = len(findings_json) - 1
+
+                    if do_aggregate:
+                        # All matches in this file collapse into one aggregate evidence entry
+                        agg_entry = {
+                            "file": rel_path,
+                            "aggregated": True,
+                            "matches": [
+                                {"line": ev["line"], "code": ev["code"], **
+                                 ({"groups": ev["groups"]} if "groups" in ev else {})}
+                                for ev in file_evidence_items
+                            ],
+                        }
+                        if f_scanout:
+                            for ev in file_evidence_items:
+                                f_scanout.write(f"\n\t -> Source File: {rel_path}\n\t\t [{ev['line']}] {ev['code']}")
+                        findings_json[finding_index]["evidence"].append(agg_entry)
+                    else:
+                        for ev_item in file_evidence_items:
+                            if f_scanout:
+                                f_scanout.write(
+                                    f"\n\t -> Source File: {rel_path}\n"
+                                    f"\t\t [{ev_item['line']}] {ev_item['code']}"
+                                )
+                            findings_json[finding_index]["evidence"].append(ev_item)
+
+                    score = _compute_source_confidence_score(
+                        findings_json[finding_index].get("evidence", []),
+                        has_regex=bool(pattern_text),
+                        has_rdl=bool(rdl_text),
+                        has_descriptions=bool(rule_desc or vuln_desc),
+                    )
+                    findings_json[finding_index]["confidence_score"] = score
+                    findings_json[finding_index]["confidence_level"] = _confidence_level(score)
 
                     if callable(progress_callback):
                         progress_callback({

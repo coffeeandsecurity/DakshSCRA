@@ -5,6 +5,13 @@
             <regex><![CDATA[(?i)\b(?:fetch\s*\(|Http\.request\s*\(|axios\.(?:get|post|put|delete|request)\s*\(|url\s*[:=]|endpoint\s*[:=]|baseUrl\s*[:=]|api(?:[_-]?(?:url|endpoint))?\s*[:=]|src\s*[:=]|href\s*[:=])[^\n]{0,220}http://]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\b(?:fetch\s*\(|Http\.request\s*\(|axios\.(?:get|post|put|delete|request)\s*\(|url\s*[:=]|endpoint\s*[:=]|baseUrl\s*[:=]|api(?:[_-]?(?:url|endpoint))?\s*[:=]|src\s*[:=]|href\s*[:=])[^\n]{0,220}http://][IF(MISSING:https://)]]]></rdl>
             <exclude><![CDATA[(?i)apache\.org/licenses|opensource\.org/licenses|w3\.org|^\s*(//|/\*|\*|#|<!--|~)]]></exclude>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects network request usage that may involve insecure HTTP transport.</rule_desc>
             <vuln_desc>Cleartext network traffic can be intercepted or modified by attackers.</vuln_desc>
             <developer>Enforce HTTPS endpoints and reject insecure transport for production traffic.</developer>
@@ -14,6 +21,14 @@
             <name>Weak Local Secret Storage</name>
             <regex><![CDATA[\b(?:application-settings|ApplicationSettings\.set|setString\s*\()]]></regex>
             <rdl><![CDATA[[FLAG:\b(?:application-settings|ApplicationSettings\.set|setString\s*\()]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects persistence APIs commonly used for local settings storage.</rule_desc>
             <vuln_desc>Storing secrets in plain settings storage can expose credentials/tokens on compromised devices.</vuln_desc>
             <developer>Store secrets in platform secure storage plugins.</developer>
@@ -23,6 +38,14 @@
             <name>WebView Usage with Dynamic Sources</name>
             <regex><![CDATA[<WebView|webView\.src\s*=]]></regex>
             <rdl><![CDATA[[FLAG:<WebView|webView\.src\s*=]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects embedded WebView usage that requires trusted source enforcement.</rule_desc>
             <vuln_desc>Loading untrusted content in WebViews can enable malicious script execution or phishing flows.</vuln_desc>
             <developer>Restrict sources to trusted origins and sanitize dynamic navigation paths.</developer>
@@ -34,6 +57,13 @@
             <name>NativeScript Debug/Dev Marker</name>
             <regex><![CDATA[NODE_ENV\s*=\s*[\'\"]development[\'\"]|debug\s*[:=]\s*true]]></regex>
             <rdl><![CDATA[[FLAG:NODE_ENV\s*=\s*[\'\"]development[\'\"]|debug\s*[:=]\s*true][IF(MISSING:NODE_ENV\s*=\s*[\'\"]production[\'\"])]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects development mode markers in NativeScript projects.</rule_desc>
             <vuln_desc>Debug settings may expose diagnostics and weaken runtime posture.</vuln_desc>
             <developer>Ensure release builds disable debug mode.</developer>
@@ -43,6 +73,13 @@
             <name>NativeScript Insecure HTTP Usage</name>
             <regex>http://</regex>
             <rdl><![CDATA[[FLAG:http://][IF(MISSING:https://)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects cleartext endpoint usage in NativeScript code/config.</rule_desc>
             <vuln_desc>Cleartext traffic can expose sensitive network data.</vuln_desc>
             <developer>Use HTTPS endpoints and secure transport defaults.</developer>
@@ -52,6 +89,14 @@
             <name>NativeScript WebView Script Execution Marker</name>
             <regex><![CDATA[WebView|evaluateJavaScript\(|javaScriptEnabled]]></regex>
             <rdl><![CDATA[[FLAG:WebView|evaluateJavaScript\(|javaScriptEnabled][IF(MISSING:originWhitelist|onShouldOverrideUrlLoading)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects WebView and dynamic script execution patterns.</rule_desc>
             <vuln_desc>Untrusted WebView/script execution can increase injection risk.</vuln_desc>
             <developer>Restrict content origins and harden JS bridge interactions.</developer>
@@ -61,6 +106,13 @@
             <name>NativeScript Local Storage Secret Marker</name>
             <regex><![CDATA[(application-settings|secure-storage|localStorage)\.(setString|setItem)\(.*(token|secret|password|apikey)]]></regex>
             <rdl><![CDATA[[FLAG:(application-settings|secure-storage|localStorage)\.(setString|setItem)\(.*(token|secret|password|apikey)][IF(MISSING:Keychain|Keystore)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects potentially sensitive values written to local storage APIs.</rule_desc>
             <vuln_desc>Improper local persistence can leak credentials/tokens.</vuln_desc>
             <developer>Use secure storage primitives for secrets.</developer>
@@ -70,6 +122,14 @@
             <name>NativeScript TLS Bypass Marker</name>
             <regex><![CDATA[allowInvalidCertificates|InsecureSkipVerify|trustAll]]></regex>
             <rdl><![CDATA[[FLAG:allowInvalidCertificates|InsecureSkipVerify|trustAll][IF(MISSING:certificatePinning|publicKeyPinning)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects certificate/trust bypass indicators in networking code.</rule_desc>
             <vuln_desc>TLS bypass weakens channel security and enables MITM attacks.</vuln_desc>
             <developer>Enforce strict certificate validation.</developer>
@@ -79,6 +139,14 @@
             <name>NativeScript Hardcoded Secret Marker</name>
             <regex><![CDATA[(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]]]></regex>
             <rdl><![CDATA[[FLAG:(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]][IF(MISSING:development)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <aggregate>file</aggregate>
+                <report_format>secret_list</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects likely hardcoded secrets in NativeScript projects.</rule_desc>
             <vuln_desc>Hardcoded credentials can be extracted from app artifacts.</vuln_desc>
             <developer>Avoid embedding secrets and rotate compromised values.</developer>
@@ -90,6 +158,14 @@
             <name>Android Debuggable Build Enabled</name>
             <regex><![CDATA[debuggable\s*[:=]\s*true]]></regex>
             <rdl><![CDATA[[FLAG:debuggable\s*[:=]\s*true][IF(MISSING:release|production)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects debug-enabled Android build settings in NativeScript projects.</rule_desc>
             <vuln_desc>Debuggable builds can expose runtime internals and facilitate reverse engineering.</vuln_desc>
             <developer>Disable debugging for release builds and verify production build variants.</developer>
@@ -101,6 +177,14 @@
             <name>iOS ATS Relaxed Settings</name>
             <regex><![CDATA[NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]></regex>
             <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects ATS policy relaxation in iOS settings.</rule_desc>
             <vuln_desc>Relaxed ATS settings can expose app communication to interception.</vuln_desc>
             <developer>Keep ATS defaults and scope exceptions tightly to trusted endpoints.</developer>

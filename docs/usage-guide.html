@@ -220,6 +220,11 @@ td code { font-size: 12px; }
   <a class="nav-link nav-sub" href="#rdl-operators">Operators</a>
   <a class="nav-link nav-sub" href="#rdl-examples">Examples</a>
   <a class="nav-link nav-sub" href="#rdl-fp">How FPs Are Reduced</a>
+  <a class="nav-link" href="#scan-config">scan_config &mdash; Rule Engine</a>
+  <a class="nav-link nav-sub" href="#scan-config-schema">Full Schema</a>
+  <a class="nav-link nav-sub" href="#scan-config-profiles">Platform Profiles</a>
+  <a class="nav-link nav-sub" href="#scan-config-highlighting">Highlighting</a>
+  <a class="nav-link nav-sub" href="#scan-config-authoring">Rule Authoring Guide</a>
   <a class="nav-link" href="#platforms">Platforms &amp; Rules</a>
   <a class="nav-link" href="#pdf">PDF Reports</a>
   <a class="nav-link" href="#tips">Tips &amp; Patterns</a>
@@ -654,6 +659,12 @@ runtime/
   &lt;regex&gt;&lt;![CDATA[regex_to_match]]&gt;&lt;/regex&gt;
   &lt;rdl&gt;&lt;![CDATA[[FLAG:anchor_pattern][IF(PRESENT:risky_pattern &amp;&amp; MISSING:mitigation_pattern)]]&gt;&lt;/rdl&gt;
   &lt;exclude&gt;&lt;![CDATA[pattern_to_exclude_lines]]&gt;&lt;/exclude&gt;  <span class="comment">&lt;!-- optional --&gt;</span>
+  &lt;scan_config&gt;                                             <span class="comment">&lt;!-- optional, see scan_config section --&gt;</span>
+    &lt;match_mode&gt;line&lt;/match_mode&gt;
+    &lt;context_lines_before&gt;3&lt;/context_lines_before&gt;
+    &lt;aggregate&gt;none&lt;/aggregate&gt;
+    &lt;highlight_color&gt;red&lt;/highlight_color&gt;
+  &lt;/scan_config&gt;
   &lt;rule_desc&gt;Short description.&lt;/rule_desc&gt;
   &lt;vuln_desc&gt;Vulnerability class explanation.&lt;/vuln_desc&gt;
   &lt;developer&gt;Fix guidance for developers.&lt;/developer&gt;
@@ -675,6 +686,200 @@ runtime/
         </tbody>
       </table></div>
       <div class="warn"><div class="callout-label">File-scope limitation</div>PRESENT and MISSING conditions are evaluated against the <strong>entire file</strong>, not per-line. If a mitigation pattern appears <em>anywhere</em> in the file, all matches in that file are suppressed &mdash; even an unprotected call in the same file. This is a deliberate trade-off: lower noise at the cost of occasionally missing an issue in an otherwise-safe file. The reviewer note on every finding always advises manual confirmation for this reason.</div>
+    </section>
+  </section>
+
+  <!-- ════════════════ SCAN_CONFIG ════════════════ -->
+
+  <section id="scan-config">
+    <h2>scan_config &mdash; Rule Engine &amp; Reporting</h2>
+    <p><code>scan_config</code> is an optional XML block inside any <code>&lt;rule&gt;</code> that controls how the engine scans for that rule and how matches appear in reports. Rules without <code>&lt;scan_config&gt;</code> behave exactly as before &mdash; it is fully additive and backward-compatible.</p>
+    <div class="tip"><div class="callout-label">Why it exists</div>Without <code>scan_config</code> you can only choose <em>what</em> to match. With it you control <em>how</em> to match (line-by-line vs whole-file), <em>how much context</em> to show around a match, <em>whether</em> to collapse all hits in a file into one finding, <em>what format</em> to render (default, component list, secret list), and <em>which parts</em> to highlight in colour.</div>
+
+    <section id="scan-config-schema">
+      <h3>Full Schema</h3>
+      <pre><code>&lt;scan_config&gt;
+  <span class="comment">&lt;!-- ── Matching behaviour ──────────────────────────────────────────── --&gt;</span>
+  <span class="comment">&lt;!-- line  : match regex line-by-line (default)                        --&gt;</span>
+  <span class="comment">&lt;!-- file  : apply regex to full file with MULTILINE|DOTALL flags      --&gt;</span>
+  &lt;match_mode&gt;line&lt;/match_mode&gt;
+
+  <span class="comment">&lt;!-- ── Context lines ──────────────────────────────────────────────── --&gt;</span>
+  <span class="comment">&lt;!-- Raw source lines shown above / below each match in the report.   --&gt;</span>
+  <span class="comment">&lt;!-- Default: 0. Independent settings.                                --&gt;</span>
+  &lt;context_lines_before&gt;0&lt;/context_lines_before&gt;
+  &lt;context_lines_after&gt;0&lt;/context_lines_after&gt;
+
+  <span class="comment">&lt;!-- ── Aggregation ────────────────────────────────────────────────── --&gt;</span>
+  <span class="comment">&lt;!-- none : one finding entry per match line (default)                --&gt;</span>
+  <span class="comment">&lt;!-- file : collapse all matches in a file into one finding entry     --&gt;</span>
+  &lt;aggregate&gt;none&lt;/aggregate&gt;
+
+  <span class="comment">&lt;!-- ── Report format ──────────────────────────────────────────────── --&gt;</span>
+  <span class="comment">&lt;!-- default        : standard finding card (default)                 --&gt;</span>
+  <span class="comment">&lt;!-- component_list : render named capture groups as a component list --&gt;</span>
+  <span class="comment">&lt;!-- secret_list    : render matches as a redacted secrets table      --&gt;</span>
+  &lt;report_format&gt;default&lt;/report_format&gt;
+
+  <span class="comment">&lt;!-- ── Highlighting ───────────────────────────────────────────────── --&gt;</span>
+  &lt;highlight_enabled&gt;true&lt;/highlight_enabled&gt;
+
+  <span class="comment">&lt;!-- highlight_target options:                                        --&gt;</span>
+  <span class="comment">&lt;!--   match   : highlight the full regex match (default)            --&gt;</span>
+  <span class="comment">&lt;!--   groups  : highlight named capture groups listed in highlight_groups --&gt;</span>
+  <span class="comment">&lt;!--   pattern : highlight occurrences of highlight_pattern          --&gt;</span>
+  &lt;highlight_target&gt;match&lt;/highlight_target&gt;
+  &lt;highlight_groups&gt;&lt;/highlight_groups&gt;    <span class="comment">&lt;!-- comma-separated group names --&gt;</span>
+  &lt;highlight_pattern&gt;&lt;/highlight_pattern&gt;  <span class="comment">&lt;!-- regex used in pattern mode  --&gt;</span>
+
+  <span class="comment">&lt;!-- Colour applied to highlighted spans (CLI ANSI + web CSS)         --&gt;</span>
+  <span class="comment">&lt;!-- Palette: red  yellow  cyan  green  magenta  bold                 --&gt;</span>
+  &lt;highlight_color&gt;red&lt;/highlight_color&gt;
+
+  <span class="comment">&lt;!-- ── Multi-pass marks (optional) ───────────────────────────────── --&gt;</span>
+  <span class="comment">&lt;!-- Each &lt;mark&gt; is one independent highlight pass over the snippet.  --&gt;</span>
+  <span class="comment">&lt;!-- Useful when different parts of a line need different colours.    --&gt;</span>
+  &lt;marks&gt;
+    &lt;mark&gt;&lt;pattern&gt;regex_A&lt;/pattern&gt;&lt;color&gt;red&lt;/color&gt;&lt;/mark&gt;
+    &lt;mark&gt;&lt;pattern&gt;regex_B&lt;/pattern&gt;&lt;color&gt;cyan&lt;/color&gt;&lt;/mark&gt;
+  &lt;/marks&gt;
+&lt;/scan_config&gt;</code></pre>
+    </section>
+
+    <section id="scan-config-profiles">
+      <h3>Platform Profiles</h3>
+      <p>Three canonical profiles cover the vast majority of rule types. Pick the closest one and adjust as needed.</p>
+
+      <h4>Profile A &mdash; Structured / Manifest Files</h4>
+      <p>Applies to YAML, XML manifests, HCL, <code>.env</code> files, and other config formats where each key-value is one line and all matches in a file should be collapsed into a single finding.</p>
+      <pre><code><span class="comment">&lt;!-- Example: Android cleartext traffic setting in AndroidManifest.xml --&gt;</span>
+&lt;rule&gt;
+  &lt;name&gt;Android Cleartext Traffic Allowed&lt;/name&gt;
+  &lt;regex&gt;&lt;![CDATA[android:usesCleartextTraffic\s*=\s*"true"]]&gt;&lt;/regex&gt;
+  &lt;rdl&gt;&lt;![CDATA[[FLAG:android:usesCleartextTraffic\s*=\s*"true"]]]&gt;&lt;/rdl&gt;
+  &lt;scan_config&gt;
+    &lt;match_mode&gt;line&lt;/match_mode&gt;
+    &lt;context_lines_before&gt;2&lt;/context_lines_before&gt;
+    &lt;aggregate&gt;file&lt;/aggregate&gt;
+    &lt;highlight_enabled&gt;true&lt;/highlight_enabled&gt;
+    &lt;highlight_color&gt;red&lt;/highlight_color&gt;
+  &lt;/scan_config&gt;
+  &lt;rule_desc&gt;...&lt;/rule_desc&gt;
+&lt;/rule&gt;</code></pre>
+
+      <h4>Profile B &mdash; Source Code (Injection / RCE)</h4>
+      <p>Applies to dangerous sink calls in source files where surrounding lines are critical for understanding data flow. Show 3&ndash;4 lines of context; do not aggregate (each call site is an independent finding).</p>
+      <pre><code><span class="comment">&lt;!-- Example: PHP shell_exec with possible user input --&gt;</span>
+&lt;rule&gt;
+  &lt;name&gt;Command Injection: shell_exec&lt;/name&gt;
+  &lt;regex&gt;&lt;![CDATA[(shell_exec|exec|passthru|system)\(]]&gt;&lt;/regex&gt;
+  &lt;rdl&gt;&lt;![CDATA[[FLAG:(shell_exec|exec|passthru|system)\(][IF(PRESENT:\$_(GET|POST|REQUEST) && MISSING:escapeshellarg)]]]&gt;&lt;/rdl&gt;
+  &lt;scan_config&gt;
+    &lt;match_mode&gt;line&lt;/match_mode&gt;
+    &lt;context_lines_before&gt;4&lt;/context_lines_before&gt;
+    &lt;context_lines_after&gt;2&lt;/context_lines_after&gt;
+    &lt;aggregate&gt;none&lt;/aggregate&gt;
+    &lt;highlight_enabled&gt;true&lt;/highlight_enabled&gt;
+    &lt;highlight_color&gt;red&lt;/highlight_color&gt;
+  &lt;/scan_config&gt;
+  &lt;rule_desc&gt;...&lt;/rule_desc&gt;
+&lt;/rule&gt;</code></pre>
+
+      <h4>Profile C &mdash; Hardcoded Secrets</h4>
+      <p>Applies to credential/key pattern rules. Aggregate per file so the report lists all secrets found in a file together; use <code>secret_list</code> format for a clean redacted table.</p>
+      <pre><code><span class="comment">&lt;!-- Example: hardcoded API key or token --&gt;</span>
+&lt;rule&gt;
+  &lt;name&gt;Hardcoded Secret Material&lt;/name&gt;
+  &lt;regex&gt;&lt;![CDATA[(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*["'][^"']{8,}["']]]&gt;&lt;/regex&gt;
+  &lt;rdl&gt;&lt;![CDATA[[FLAG:(api[_-]?key|secret|token|password)\s*[:=]\s*["'][^"']{8,}["']][IF(MISSING:example|sample|dummy)]]]&gt;&lt;/rdl&gt;
+  &lt;scan_config&gt;
+    &lt;match_mode&gt;line&lt;/match_mode&gt;
+    &lt;context_lines_before&gt;1&lt;/context_lines_before&gt;
+    &lt;aggregate&gt;file&lt;/aggregate&gt;
+    &lt;report_format&gt;secret_list&lt;/report_format&gt;
+    &lt;highlight_enabled&gt;true&lt;/highlight_enabled&gt;
+    &lt;highlight_color&gt;red&lt;/highlight_color&gt;
+  &lt;/scan_config&gt;
+  &lt;rule_desc&gt;...&lt;/rule_desc&gt;
+&lt;/rule&gt;</code></pre>
+    </section>
+
+    <section id="scan-config-highlighting">
+      <h3>Highlighting</h3>
+      <p>Highlighting applies ANSI colour codes in CLI output and CSS <code>&lt;span&gt;</code> classes in HTML/web output. The colour palette maps to both:</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Color value</th><th>Intended use</th><th>Examples</th></tr></thead>
+        <tbody>
+          <tr><td><code>red</code></td><td>Critical / dangerous sinks</td><td>RCE, SQLi, hardcoded secrets, TLS bypass</td></tr>
+          <tr><td><code>yellow</code></td><td>Weak, deprecated, or configuration risk</td><td>Cleartext HTTP, debug flags, deprecated APIs</td></tr>
+          <tr><td><code>cyan</code></td><td>Structural &mdash; component or permission names</td><td>Exported component names, permission strings</td></tr>
+          <tr><td><code>green</code></td><td>Mitigation identified</td><td><code>htmlentities</code>, <code>EncryptedSharedPreferences</code></td></tr>
+          <tr><td><code>magenta</code></td><td>Framework-specific patterns needing review</td><td>WebView JS bridge, InAppBrowser, eval in templates</td></tr>
+          <tr><td><code>bold</code></td><td>Neutral emphasis</td><td>Function names, identifiers to call out</td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>Simple highlight (full match)</h4>
+      <pre><code>&lt;scan_config&gt;
+  &lt;highlight_enabled&gt;true&lt;/highlight_enabled&gt;
+  &lt;highlight_target&gt;match&lt;/highlight_target&gt;   <span class="comment">&lt;!-- default --&gt;</span>
+  &lt;highlight_color&gt;red&lt;/highlight_color&gt;
+&lt;/scan_config&gt;</code></pre>
+
+      <h4>Named capture groups &mdash; component list</h4>
+      <p>Use named groups in the regex and <code>highlight_target:groups</code> to highlight only the captured parts:</p>
+      <pre><code>&lt;regex&gt;&lt;![CDATA[android:name\s*=\s*"(?P&lt;component&gt;[^"]+)".*android:exported\s*=\s*"true"]]&gt;&lt;/regex&gt;
+&lt;scan_config&gt;
+  &lt;report_format&gt;component_list&lt;/report_format&gt;
+  &lt;aggregate&gt;file&lt;/aggregate&gt;
+  &lt;highlight_target&gt;groups&lt;/highlight_target&gt;
+  &lt;highlight_groups&gt;component&lt;/highlight_groups&gt;
+  &lt;highlight_color&gt;cyan&lt;/highlight_color&gt;
+&lt;/scan_config&gt;</code></pre>
+
+      <h4>Multi-pass marks &mdash; two colours on one line</h4>
+      <pre><code>&lt;scan_config&gt;
+  &lt;marks&gt;
+    &lt;mark&gt;&lt;pattern&gt;android:exported\s*=\s*"true"&lt;/pattern&gt;&lt;color&gt;red&lt;/color&gt;&lt;/mark&gt;
+    &lt;mark&gt;&lt;pattern&gt;android:name\s*=\s*"[^"]+"&lt;/pattern&gt;&lt;color&gt;cyan&lt;/color&gt;&lt;/mark&gt;
+  &lt;/marks&gt;
+&lt;/scan_config&gt;</code></pre>
+    </section>
+
+    <section id="scan-config-authoring">
+      <h3>Rule Authoring Guide</h3>
+      <p>Answer these five questions to derive the correct <code>scan_config</code> for any new rule:</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Question</th><th>Answer</th><th>Setting</th></tr></thead>
+        <tbody>
+          <tr><td rowspan="2"><strong>Q1.</strong> Does the pattern span multiple lines?</td><td>Yes &mdash; multi-line block</td><td><code>match_mode: file</code></td></tr>
+          <tr><td>No &mdash; single line</td><td><code>match_mode: line</code></td></tr>
+          <tr><td rowspan="3"><strong>Q2.</strong> How critical is the finding?</td><td>Critical (RCE, SQLi, SSRF, TLS bypass)</td><td><code>context_lines_before: 3&ndash;4</code>, <code>color: red</code></td></tr>
+          <tr><td>Medium (weak config, deprecated API)</td><td><code>context_lines_before: 1&ndash;2</code>, <code>color: yellow</code></td></tr>
+          <tr><td>Mitigation / structural</td><td><code>color: green</code> or <code>cyan</code></td></tr>
+          <tr><td rowspan="2"><strong>Q3.</strong> Does each match represent an independent finding?</td><td>Yes &mdash; each call site matters individually</td><td><code>aggregate: none</code></td></tr>
+          <tr><td>No &mdash; any occurrence in a file is the issue</td><td><code>aggregate: file</code></td></tr>
+          <tr><td rowspan="3"><strong>Q4.</strong> What should the report look like?</td><td>Standard finding card</td><td><code>report_format: default</code></td></tr>
+          <tr><td>List of captured components (permissions, names)</td><td><code>report_format: component_list</code></td></tr>
+          <tr><td>Redacted secrets table</td><td><code>report_format: secret_list</code></td></tr>
+          <tr><td rowspan="2"><strong>Q5.</strong> What should be highlighted?</td><td>Whole regex match</td><td><code>highlight_target: match</code></td></tr>
+          <tr><td>Named capture groups only</td><td><code>highlight_target: groups</code> + <code>highlight_groups</code></td></tr>
+        </tbody>
+      </table></div>
+
+      <h4>Pre-submission checklist</h4>
+      <div class="note">
+        <div class="callout-label">Before committing a new rule</div>
+        <ul style="margin-top:8px;padding-left:20px;line-height:2">
+          <li><code>&lt;scan_config&gt;</code> block is present (even if using all defaults)</li>
+          <li><code>match_mode</code> is correct for the pattern type (single-line vs multi-line)</li>
+          <li>Context lines are set &mdash; at least <code>context_lines_before: 1</code> for all non-trivial rules</li>
+          <li>Critical rules use <code>color: red</code>; weak/deprecated use <code>yellow</code></li>
+          <li>Secret rules use <code>report_format: secret_list</code> and <code>aggregate: file</code></li>
+          <li>Manifest/config rules use <code>aggregate: file</code></li>
+          <li>XML is valid &mdash; run <code>python3 -c "import xml.etree.ElementTree as ET; ET.parse('your_file.xml')"</code></li>
+        </ul>
+      </div>
     </section>
   </section>
 

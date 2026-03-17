@@ -4,6 +4,17 @@
             <name>App Transport Security Allows Arbitrary Loads</name>
             <regex><![CDATA[NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]></regex>
             <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects ATS configuration that allows unrestricted cleartext or weak transport.</rule_desc>
             <vuln_desc>Disabling ATS protections can expose traffic to interception and man-in-the-middle attacks.</vuln_desc>
             <developer>Keep ATS enabled and define minimal domain exceptions only when strictly required.</developer>
@@ -13,6 +24,17 @@
             <name>Insecure URL Scheme Registration</name>
             <regex><![CDATA[CFBundleURLSchemes]]></regex>
             <rdl><![CDATA[[FLAG:CFBundleURLSchemes]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects custom URL scheme declarations that may require deep-link validation checks.</rule_desc>
             <vuln_desc>Improper deep-link validation can allow unauthorized app actions or data exposure.</vuln_desc>
             <developer>Validate all deep-link parameters, enforce allowlists, and avoid sensitive actions without auth checks.</developer>
@@ -22,6 +44,17 @@
             <name>Application Queries Schemes Broad Allowlist</name>
             <regex><![CDATA[LSApplicationQueriesSchemes]]></regex>
             <rdl><![CDATA[[FLAG:LSApplicationQueriesSchemes]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects URL scheme query allowlists in Info.plist.</rule_desc>
             <vuln_desc>Overly broad query scheme allowlists may increase app fingerprinting and data exposure risks.</vuln_desc>
             <developer>Restrict queried URL schemes to only those required for business functionality.</developer>
@@ -33,6 +66,17 @@
             <name>Keychain Accessibility Too Permissive</name>
             <regex><![CDATA[kSecAttrAccessible\s*:\s*kSecAttrAccessibleAlways]]></regex>
             <rdl><![CDATA[[FLAG:kSecAttrAccessible\s*:\s*kSecAttrAccessibleAlways]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects keychain entries with permissive accessibility settings.</rule_desc>
             <vuln_desc>Overly permissive keychain accessibility can expose secrets when device security state is weaker.</vuln_desc>
             <developer>Use stricter keychain accessibility (for example, WhenUnlocked or AfterFirstUnlock variants as required).</developer>
@@ -42,6 +86,17 @@
             <name>UserDefaults Used for Sensitive Data</name>
             <regex><![CDATA[\b(?:UserDefaults\.standard|NSUserDefaults\s+standardUserDefaults)]]></regex>
             <rdl><![CDATA[[FLAG:\b(?:UserDefaults\.standard|NSUserDefaults\s+standardUserDefaults)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects UserDefaults storage usage which may be inappropriate for secrets.</rule_desc>
             <vuln_desc>Storing secrets in UserDefaults can expose credentials or tokens through backups or local extraction.</vuln_desc>
             <developer>Store sensitive values in Keychain and apply encryption for high-risk data.</developer>
@@ -51,6 +106,17 @@
             <name>WebView JavaScript Enabled for Dynamic Content</name>
             <regex><![CDATA[WKPreferences\(\)\.javaScriptEnabled\s*=\s*true|setJavaScriptEnabled\s*:\s*YES]]></regex>
             <rdl><![CDATA[[FLAG:WKPreferences\(\)\.javaScriptEnabled\s*=\s*true|setJavaScriptEnabled\s*:\s*YES]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects explicit JavaScript enablement in embedded web views.</rule_desc>
             <vuln_desc>Unsafe web view configurations can increase XSS-style abuse and local data access risk.</vuln_desc>
             <developer>Disable JavaScript unless required and enforce strict navigation/content policies.</developer>
@@ -60,6 +126,17 @@
             <name>Certificate Validation Override</name>
             <regex><![CDATA[didReceive\s+challenge|NSURLSessionAuthChallengeDisposition\.useCredential]]></regex>
             <rdl><![CDATA[[FLAG:didReceive\s+challenge|NSURLSessionAuthChallengeDisposition\.useCredential]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>3</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects custom TLS challenge handling that may weaken certificate validation.</rule_desc>
             <vuln_desc>Improper challenge handling can bypass TLS trust and enable MITM attacks.</vuln_desc>
             <developer>Use system trust evaluation and pinning patterns where appropriate; avoid unconditional trust.</developer>
@@ -71,6 +148,17 @@
             <name>Debug Logging in Production Code Paths</name>
             <regex><![CDATA[\b(?:NSLog\(|print\(|debugPrint\()]]></regex>
             <rdl><![CDATA[[FLAG:\b(?:NSLog\(|print\(|debugPrint\()][IF(MISSING:release|production)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects debug logging statements that may leak runtime internals or sensitive data.</rule_desc>
             <vuln_desc>Verbose logs can disclose user data, API details, and security-relevant internals.</vuln_desc>
             <developer>Gate debug logging by build configuration and redact sensitive values.</developer>
@@ -80,6 +168,17 @@
             <name>Associated Domains Entitlement Present</name>
             <regex><![CDATA[com\.apple\.developer\.associated-domains]]></regex>
             <rdl><![CDATA[[FLAG:com\.apple\.developer\.associated-domains]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects associated domains entitlement that requires strict domain ownership and validation.</rule_desc>
             <vuln_desc>Misconfigured universal links may enable unintended app routing or phishing workflows.</vuln_desc>
             <developer>Configure only trusted domains and validate universal-link handling logic securely.</developer>
@@ -89,6 +188,17 @@
             <name>Push Notification Entitlement Enabled</name>
             <regex><![CDATA[aps-environment]]></regex>
             <rdl><![CDATA[[FLAG:aps-environment]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects push notification entitlement usage.</rule_desc>
             <vuln_desc>Push workflows can expose sensitive data if payload validation and notification handling are weak.</vuln_desc>
             <developer>Ensure notification payloads avoid secrets and enforce secure action handling on receipt.</developer>
@@ -100,6 +210,17 @@
             <name>Deprecated UIWebView Usage</name>
             <regex><![CDATA[\bUIWebView\b|UIWebViewDelegate]]></regex>
             <rdl><![CDATA[[FLAG:\bUIWebView\b|UIWebViewDelegate][IF(MISSING:WKWebView|WKNavigationDelegate)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects use of the deprecated UIWebView class which has known security vulnerabilities.</rule_desc>
             <vuln_desc>UIWebView is deprecated since iOS 12 and removed in iOS 15+ apps submitted to the App Store. It lacks modern security controls present in WKWebView, including process isolation, improved content security policy support, and no support for modern TLS configurations.</vuln_desc>
             <developer>Replace UIWebView with WKWebView. Migrate delegate methods to WKNavigationDelegate and WKUIDelegate equivalents.</developer>
@@ -109,6 +230,17 @@
             <name>Insecure Random Number Generation</name>
             <regex><![CDATA[\barc4random\s*\(|\barc4random_uniform\s*\(|\brand\s*\(|\bsrand\s*\(|\bdrand48\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:\barc4random\s*\(|\barc4random_uniform\s*\(|\brand\s*\(][IF(PRESENT:token|key|secret|nonce|session|otp|password|salt && MISSING:SecRandomCopyBytes|CryptorRandomByte|CCRandomGenerateBytes)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects use of non-cryptographically secure random functions in security-sensitive contexts.</rule_desc>
             <vuln_desc>arc4random and rand() are not suitable for cryptographic purposes. Using them for tokens, keys, or nonces produces predictable values that attackers can guess or enumerate.</vuln_desc>
             <developer>Use SecRandomCopyBytes() or CryptoKit's SymmetricKey/Nonce APIs for all cryptographically sensitive random generation.</developer>
@@ -118,6 +250,15 @@
             <name>Hardcoded Cryptographic Key or Secret</name>
             <regex><![CDATA[(?i)(apiKey|api_key|secret|privateKey|encryptionKey|password|token)\s*[:=]\s*["'][A-Za-z0-9/+]{16,}["']]]></regex>
             <rdl><![CDATA[[FLAG:(?i)(apiKey|api_key|secret|privateKey|encryptionKey|password|token)\s*[:=]\s*["'][A-Za-z0-9/+]{16,}["']][IF(MISSING:example|sample|dummy|test|placeholder|Keychain)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>none</context_type>
+                <aggregate>file</aggregate>
+                <report_format>secret_list</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects likely hardcoded cryptographic keys or credentials in iOS Swift/Objective-C source.</rule_desc>
             <vuln_desc>Hardcoded keys and secrets embedded in app source can be extracted from the compiled binary by attackers using static analysis tools.</vuln_desc>
             <developer>Store secrets in Keychain or retrieve them at runtime from a secure backend. Never embed cryptographic material in source code.</developer>

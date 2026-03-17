@@ -4,6 +4,17 @@
             <name>OkHttpClient Without Certificate Pinning</name>
             <regex><![CDATA[OkHttpClient\.Builder\s*\(\s*\)|OkHttpClient\s*\(\s*\)]]></regex>
             <rdl><![CDATA[[FLAG:OkHttpClient\.Builder\s*\(\s*\)|OkHttpClient\s*\(\s*\)][IF(MISSING:certificatePinner|CertificatePinner)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>3</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects OkHttpClient instances created without certificate pinning configuration.</rule_desc>
             <vuln_desc>Without certificate pinning, the app trusts any certificate signed by a system-trusted CA. Attackers using corporate proxies, rogue CAs, or user-installed certificates can intercept HTTPS traffic via MITM.</vuln_desc>
             <developer>Add a CertificatePinner to the OkHttpClient builder pinning the server's public key hash. Use certificate transparency logs to detect unauthorized certificate issuance.</developer>
@@ -13,6 +24,17 @@
             <name>OkHttp Body-Level Logging in Production</name>
             <regex><![CDATA[HttpLoggingInterceptor\s*\(\s*\)[^;)]*level\s*=\s*HttpLoggingInterceptor\.Level\.BODY|setLevel\s*\(\s*HttpLoggingInterceptor\.Level\.BODY\s*\)]]></regex>
             <rdl><![CDATA[[FLAG:HttpLoggingInterceptor\.Level\.BODY][IF(MISSING:BuildConfig\.DEBUG|if.*debug|if.*DEBUG|FLAVOR)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects OkHttp logging interceptor configured at BODY level potentially in production builds.</rule_desc>
             <vuln_desc>BODY-level logging captures full request and response bodies including authentication tokens, API keys, and sensitive user data to Logcat, which is accessible to other apps on rooted devices.</vuln_desc>
             <developer>Gate BODY-level logging behind BuildConfig.DEBUG checks. Use NONE or BASIC level for release builds.</developer>
@@ -22,6 +44,17 @@
             <name>TrustManager Accepting All Certificates</name>
             <regex><![CDATA[override\s+fun\s+checkServerTrusted|override\s+fun\s+checkClientTrusted|X509TrustManager[^}]*\{\s*\}|getAcceptedIssuers\s*\(\s*\)\s*=\s*(?:null|arrayOf\s*\(\s*\))]]></regex>
             <rdl><![CDATA[[FLAG:X509TrustManager[^}]*\{\s*\}|override\s+fun\s+checkServerTrusted][IF(MISSING:CertPathValidator|PKIXParameters|validate|checkValidity)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects custom TrustManager implementations that perform no certificate validation.</rule_desc>
             <vuln_desc>Empty or no-op checkServerTrusted() implementations accept any TLS certificate, completely disabling TLS authentication and enabling trivial MITM attacks against all HTTPS connections from the app.</vuln_desc>
             <developer>Remove custom TrustManagers entirely and rely on the Android default trust store. If custom trust is required (e.g., private CA), implement full certificate chain validation using CertPathValidator.</developer>

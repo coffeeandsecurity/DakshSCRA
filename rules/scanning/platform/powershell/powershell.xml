@@ -4,6 +4,14 @@
             <name>Invoke-Expression with Variable Input</name>
             <regex><![CDATA[Invoke-Expression\s+["']?.*\$\w|iex\s+["']?.*\$\w]]></regex>
             <rdl><![CDATA[[FLAG:Invoke-Expression\s+["']?.*\$\w|iex\s+["']?.*\$\w][IF(MISSING:Validate|Sanitize|allowlist|\[ValidateSet\]|\[ValidatePattern\])]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects Invoke-Expression (iex) calls that include variable interpolation.</rule_desc>
             <vuln_desc>Invoke-Expression with unsanitized variables enables arbitrary PowerShell code execution, which can be exploited for privilege escalation or lateral movement.</vuln_desc>
             <developer>Avoid Invoke-Expression entirely. Use structured calls, cmdlets, and parameter validation attributes ([ValidateSet], [ValidatePattern]) instead.</developer>
@@ -13,6 +21,14 @@
             <name>Start-Process or cmd.exe with Variable Arguments</name>
             <regex><![CDATA[(?:Start-Process|&\s+cmd(?:\.exe)?|Invoke-Command)\s+[^`\n]*\$(?:args|input|params|\w+URL|\w+Path|\w+Cmd)]]></regex>
             <rdl><![CDATA[[FLAG:(?:Start-Process|&\s+cmd(?:\.exe)?|Invoke-Command)\s+[^`\n]*\$(?:args|input|params|\w+URL|\w+Path|\w+Cmd)][IF(MISSING:EscapeShellArgument|Sanitize|\[ValidatePattern\])]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects process invocation with variable arguments that may contain unsanitized input.</rule_desc>
             <vuln_desc>Injecting attacker-controlled arguments into process invocations can lead to argument injection, command execution, or path traversal.</vuln_desc>
             <developer>Validate and escape all arguments using structured parameter passing. Avoid building command strings through concatenation.</developer>
@@ -24,6 +40,14 @@
             <name>Hardcoded Credential in PowerShell Script</name>
             <regex><![CDATA[(?i)(?:password|passwd|secret|apikey|api_key|token|accesskey)\s*=\s*["'][A-Za-z0-9@#$%^&*!_\-]{8,}["']]]></regex>
             <rdl><![CDATA[[FLAG:(?i)(?:password|passwd|secret|apikey|api_key|token|accesskey)\s*=\s*["'][A-Za-z0-9@#$%^&*!_\-]{8,}["']][IF(MISSING:SecureString|Get-Secret|Vault|\$env:)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects hardcoded credentials or secrets assigned as plaintext string variables.</rule_desc>
             <vuln_desc>Plaintext secrets in PowerShell scripts are exposed through source control, script block logging, and transcript files.</vuln_desc>
             <developer>Use SecureString, Windows Credential Manager, PSCredential, or secrets management tools (e.g., Get-Secret from SecretManagement module). Never store secrets as plaintext strings.</developer>
@@ -33,6 +57,14 @@
             <name>ConvertTo-SecureString with PlainText</name>
             <regex><![CDATA[ConvertTo-SecureString\s+.*-AsPlainText\s+-Force|ConvertTo-SecureString\s+.*-Force\s+.*-AsPlainText]]></regex>
             <rdl><![CDATA[[FLAG:ConvertTo-SecureString\s+.*-AsPlainText\s+-Force]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects ConvertTo-SecureString usage with -AsPlainText -Force flags indicating a plaintext credential workflow.</rule_desc>
             <vuln_desc>Using -AsPlainText with a hardcoded or logged string defeats the purpose of SecureString, as the plaintext is visible in script block logs and memory.</vuln_desc>
             <developer>Retrieve credentials from secure storage (SecretManagement, Credential Manager) rather than converting plaintext strings.</developer>
@@ -44,6 +76,14 @@
             <name>Download Cradle Pattern</name>
             <regex><![CDATA[(?:IEX|Invoke-Expression)\s*\(\s*(?:New-Object\s+Net\.WebClient|Invoke-WebRequest|iwr|curl|wget)\s*[^)]*\)]]></regex>
             <rdl><![CDATA[[FLAG:(?:IEX|Invoke-Expression)\s*\(\s*(?:New-Object\s+Net\.WebClient|Invoke-WebRequest|iwr|curl|wget)\s*[^)]*\)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects download-and-execute cradle patterns commonly used in living-off-the-land attacks.</rule_desc>
             <vuln_desc>Download cradles fetch and immediately execute remote code, bypassing code signing controls and enabling supply chain attacks or post-exploitation persistence.</vuln_desc>
             <developer>Use signed scripts from trusted repositories. Validate content hashes before execution. Enforce code signing policies.</developer>
@@ -53,6 +93,14 @@
             <name>WebClient DownloadString Execution</name>
             <regex><![CDATA[(?:New-Object\s+(?:System\.)?Net\.WebClient|Net\.WebClient\b)[^|;\n]*\.\s*DownloadString]]></regex>
             <rdl><![CDATA[[FLAG:(?:New-Object\s+(?:System\.)?Net\.WebClient|Net\.WebClient\b)[^|;\n]*\.\s*DownloadString][IF(MISSING:checksum|hash|signature|verify)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects WebClient.DownloadString without content verification, often used to fetch and execute remote scripts.</rule_desc>
             <vuln_desc>Downloading and executing remote scripts without signature or hash verification exposes systems to tampered or malicious code substitution.</vuln_desc>
             <developer>Use Invoke-WebRequest with hash validation. Enforce AllSigned or RemoteSigned execution policies and verify content authenticity before execution.</developer>
@@ -64,6 +112,14 @@
             <name>Bypass Execution Policy</name>
             <regex><![CDATA[(?i)-ExecutionPolicy\s+(?:Bypass|Unrestricted)|Set-ExecutionPolicy\s+(?:Bypass|Unrestricted)]]></regex>
             <rdl><![CDATA[[FLAG:(?i)-ExecutionPolicy\s+(?:Bypass|Unrestricted)|Set-ExecutionPolicy\s+(?:Bypass|Unrestricted)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects PowerShell execution policy bypass or unrestricted policy settings.</rule_desc>
             <vuln_desc>Bypassing or disabling execution policy removes a defense-in-depth control that prevents unsigned scripts from running, enabling attackers to execute arbitrary PowerShell.</vuln_desc>
             <developer>Use AllSigned or RemoteSigned policies in production. If bypass is required for automation, use a scoped policy with signed scripts.</developer>
@@ -73,6 +129,14 @@
             <name>AMSI Bypass Attempt</name>
             <regex><![CDATA[amsiInitFailed|AmsiScanBuffer|amsi\.dll|amsiContext|Disable.*AMSI|AMSI.*bypass]]></regex>
             <rdl><![CDATA[[FLAG:amsiInitFailed|AmsiScanBuffer|amsi\.dll|amsiContext|Disable.*AMSI|AMSI.*bypass]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects known patterns associated with Antimalware Scan Interface (AMSI) bypass techniques.</rule_desc>
             <vuln_desc>AMSI bypass patterns are used to evade PowerShell-based malware detection, allowing execution of malicious payloads without antivirus scanning.</vuln_desc>
             <developer>These patterns have no legitimate use in production code. Remove any code that modifies AMSI behavior.</developer>
@@ -84,6 +148,14 @@
             <name>TLS Validation Disabled via Callback</name>
             <regex><![CDATA[ServerCertificateValidationCallback\s*=\s*\{[^}]*\$true\}|ServerCertificateValidationCallback\s*=\s*\{\s*\$true\s*\}|IgnoreSSL|DisableCertCheck|CertificatePolicy.*Accept]]></regex>
             <rdl><![CDATA[[FLAG:ServerCertificateValidationCallback\s*=\s*\{[^}]*\$true\}|ServerCertificateValidationCallback\s*=\s*\{\s*\$true\s*\}]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects TLS certificate validation disabled via ServerCertificateValidationCallback returning true for all certificates.</rule_desc>
             <vuln_desc>Disabling certificate validation makes HTTPS connections vulnerable to MITM attacks by accepting any certificate including forged or expired ones.</vuln_desc>
             <developer>Remove certificate validation overrides. Use proper certificate management and trusted CA bundles.</developer>

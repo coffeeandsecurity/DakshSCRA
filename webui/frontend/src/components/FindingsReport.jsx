@@ -77,24 +77,60 @@ function DistributionBar({ counts, total }) {
 }
 
 /* ─── Code snippet block ─────────────────────────────────────── */
+function FileIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" style={{ color: 'var(--text-3)', flexShrink: 0 }}>
+      <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm5 5a1 1 0 10-2 0v3a1 1 0 102 0V9z" clipRule="evenodd" />
+    </svg>
+  )
+}
+
+function CodeViewer({ lines, matchLineNums }) {
+  if (!lines.length) return null
+  const maxLen = String(Math.max(...lines.map(l => l.line || 0))).length
+  return (
+    <div className="fr-code-viewer">
+      {lines.map((l, i) => {
+        const isMatch = matchLineNums.has(l.line)
+        return (
+          <div key={i} className={`fr-cv-row${isMatch ? ' fr-cv-match' : ''}`}>
+            <span className="fr-cv-ln">{l.line != null ? String(l.line).padStart(maxLen) : ''}</span>
+            <code className="fr-cv-code">{l.code}</code>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 function CodeEvidence({ evidence }) {
   if (!evidence?.length) return null
   return (
     <div className="fr-evidence-list">
-      {evidence.map((e, i) => (
-        <div key={i} className="fr-evidence-item">
-          <div className="fr-evidence-header">
-            <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" style={{ color: 'var(--text-3)', flexShrink: 0 }}>
-              <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm5 5a1 1 0 10-2 0v3a1 1 0 102 0V9z" clipRule="evenodd" />
-            </svg>
-            <span className="fr-evidence-file">{e.file || '—'}</span>
-            {e.line && <span className="fr-evidence-line">line {e.line}</span>}
+      {evidence.map((e, i) => {
+        let lines, matchLineNums
+        if (e.aggregated) {
+          lines = (e.matches || []).map(m => ({ line: m.line, code: m.code }))
+          matchLineNums = new Set(lines.map(l => l.line))
+        } else {
+          lines = [
+            ...(e.context_before || []),
+            { line: e.line, code: e.code },
+            ...(e.context_after || []),
+          ]
+          matchLineNums = new Set([e.line])
+        }
+        return (
+          <div key={i} className="fr-evidence-item">
+            <div className="fr-evidence-header">
+              <FileIcon />
+              <span className="fr-evidence-file">{e.file || '—'}</span>
+              {!e.aggregated && e.line && <span className="fr-evidence-line">:{e.line}</span>}
+            </div>
+            <CodeViewer lines={lines} matchLineNums={matchLineNums} />
           </div>
-          {e.code && (
-            <pre className="fr-code-block"><code>{e.code}</code></pre>
-          )}
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

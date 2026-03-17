@@ -377,40 +377,47 @@
     }
 
     .source-code {
-      padding: 8px;
       background: var(--code-bg);
-      color: #fff;
       overflow-x: auto;
     }
 
-    .source-code .highlight {
-      margin: 0;
-      background: var(--code-bg) !important;
+    /* ── Code viewer ── */
+    .code-viewer { width: 100%; }
+    .cv-row {
+      display: flex;
+      align-items: stretch;
+      line-height: 1.6;
     }
-
-    .source-code pre {
-      margin: 0;
-      white-space: pre-wrap;
+    .cv-row.cv-match {
+      background: rgba(255, 200, 80, 0.07);
+      border-left: 3px solid #e3842a;
     }
-
-    .source-code .highlighttable,
-    .source-code .highlighttable table,
-    .source-code .highlighttable tbody,
-    .source-code .highlighttable tr,
-    .source-code .highlighttable td {
-      border-spacing: 0;
-      border-collapse: collapse;
+    .cv-row.cv-ctx {
+      border-left: 3px solid transparent;
+      opacity: 0.6;
     }
-
-    /* Hide formatter line-number gutter; line numbers are already embedded in snippet text. */
-    .source-code .highlighttable td.linenos,
-    .source-code .highlighttable td.linenos * {
-      display: none !important;
+    .cv-ln {
+      flex-shrink: 0;
+      min-width: 2.8em;
+      padding: 1px 10px 1px 6px;
+      text-align: right;
+      font-family: "SFMono-Regular", "Consolas", monospace;
+      font-size: 11px;
+      color: #4a5568;
+      background: #161b22;
+      border-right: 1px solid #21262d;
+      user-select: none;
+      white-space: pre;
     }
-
-    .source-code .highlighttable td.code {
-      padding-left: 0 !important;
-      background: var(--code-bg) !important;
+    .cv-row.cv-match .cv-ln { color: #e3842a; }
+    .cv-code {
+      flex: 1;
+      padding: 1px 12px;
+      font-family: "SFMono-Regular", "Consolas", monospace;
+      font-size: 12px;
+      color: #e6edf3;
+      white-space: pre;
+      overflow-x: visible;
     }
 
     .paths {

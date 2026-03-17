@@ -4,6 +4,14 @@
             <name>Fastapi Debug Mode Enabled</name>
             <regex><![CDATA[\bDEBUG\s*=\s*True\b|FLASK_DEBUG\s*=\s*1|reload\s*=\s*True]]></regex>
             <rdl><![CDATA[[FLAG:\bDEBUG\s*=\s*True\b|FLASK_DEBUG\s*=\s*1|reload\s*=\s*True][IF(MISSING:release|production)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects framework debug/development mode enabled.</rule_desc>
             <vuln_desc>Debug mode can expose internals and increase exploitability in production.</vuln_desc>
             <developer>Disable debug mode in production and enforce environment-specific config.</developer>
@@ -12,7 +20,15 @@
         <rule>
             <name>Fastapi Unsafe Deserialization</name>
             <regex><![CDATA[pickle\.loads\(|yaml\.load\(\s*[^,\)]*\)|marshal\.loads\(]]></regex>
-            <rdl><![CDATA[[FLAG:pickle\.loads\(|yaml\.load\(\s*[^,\)]*\)|marshal\.loads\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:pickle\.loads\(|yaml\.load\(\s*[^,\)]*\)|marshal\.loads\(][IF(MISSING:yaml\.safe_load|Loader=SafeLoader|trusted|allowlist|from_trusted_source)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects unsafe deserialization primitives in framework request/worker flows.</rule_desc>
             <vuln_desc>Unsafe deserialization of untrusted data can lead to code execution.</vuln_desc>
             <developer>Use safe loaders (e.g., yaml. safe_load) and trusted serialization boundaries.</developer>
@@ -21,7 +37,15 @@
         <rule>
             <name>Fastapi SQL Injection Sink</name>
             <regex><![CDATA[\.execute\(\s*f[\'\"]|\.execute\(\s*[^\)]*%\s*\(|raw\(\s*f[\'\"]]]></regex>
-            <rdl><![CDATA[[FLAG:\.execute\(\s*f[\'\"]|\.execute\(\s*[^\)]*%\s*\(|raw\(\s*f[\'\"]]]]></rdl>
+            <rdl><![CDATA[[FLAG:\.execute\(\s*f[\'\"]|\.execute\(\s*[^\)]*%\s*\(|raw\(\s*f[\'\"]]][IF(MISSING:paramstyle|cursor\.execute\s*\(.*%s.*,|bindparams|params=)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects likely string-built SQL execution in framework data access paths.</rule_desc>
             <vuln_desc>String-formatted SQL may be vulnerable to SQL injection.</vuln_desc>
             <developer>Use query parameter binding and ORM-safe APIs.</developer>
@@ -30,7 +54,15 @@
         <rule>
             <name>Fastapi Permissive CORS</name>
             <regex><![CDATA[allow_origins\s*=\s*\[\s*[\'\"]\*[\'\"]\s*\]|CORS\(.*origins\s*=\s*[\'\"]\*[\'\"]]]></regex>
-            <rdl><![CDATA[[FLAG:allow_origins\s*=\s*\[\s*[\'\"]\*[\'\"]\s*\]|CORS\(.*origins\s*=\s*[\'\"]\*[\'\"]]]]></rdl>
+            <rdl><![CDATA[[FLAG:allow_origins\s*=\s*\[\s*[\'\"]\*[\'\"]\s*\]|CORS\(.*origins\s*=\s*[\'\"]\*[\'\"]]][IF(MISSING:allowlist|trusted_origins|configuration\.allowed_origins)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects wildcard CORS policy definitions.</rule_desc>
             <vuln_desc>Wildcard CORS allows untrusted browser origins to access APIs.</vuln_desc>
             <developer>Restrict allowed origins explicitly.</developer>
@@ -40,6 +72,15 @@
             <name>Fastapi Hardcoded Secret Material</name>
             <regex><![CDATA[(SECRET_KEY|API[_-]?KEY|TOKEN|PASSWORD)\s*=\s*[\'\"][^\'\"]{8,}[\'\"]]]></regex>
             <rdl><![CDATA[[FLAG:(SECRET_KEY|API[_-]?KEY|TOKEN|PASSWORD)\s*=\s*[\'\"][^\'\"]{8,}[\'\"]][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>secret_list</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects likely hardcoded secret values.</rule_desc>
             <vuln_desc>Hardcoded secrets may leak and be abused if repository/artifacts are exposed.</vuln_desc>
             <developer>Externalize secrets and rotate exposed values.</developer>

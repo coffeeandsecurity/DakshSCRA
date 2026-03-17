@@ -4,6 +4,14 @@
             <name>OGNL Expression Injection via Action Name</name>
             <regex><![CDATA[ActionContext\.getContext\(\)\.getValueStack\(\)|getValue\s*\(\s*[^)]*\+|findValue\s*\(\s*[^)]*(?:request|param|getParameter)]]></regex>
             <rdl><![CDATA[[FLAG:getValue\s*\(\s*[^)]*\+|findValue\s*\(\s*[^)]*(?:request|param|getParameter)][IF(MISSING:ESAPI\.encoder|AntiXss|sanitize|escapeHtml)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects OGNL expression evaluation with user-controlled input via the ValueStack.</rule_desc>
             <vuln_desc>OGNL injection in Struts (as exploited in CVE-2017-5638 and related CVEs) allows remote code execution by injecting OGNL expressions through action names, tag attributes, or error messages that are evaluated against the ValueStack.</vuln_desc>
             <developer>Never evaluate user-supplied input as OGNL expressions. Validate all input strictly and apply ExcludedClasses/ExcludedPackages in struts.xml to restrict OGNL access.</developer>
@@ -12,7 +20,15 @@
         <rule>
             <name>Dynamic Method Invocation Enabled</name>
             <regex><![CDATA[struts\.enable\.DynamicMethodInvocation\s*=\s*true|<constant\s+name="struts\.enable\.DynamicMethodInvocation"\s+value="true"]]></regex>
-            <rdl><![CDATA[[FLAG:struts\.enable\.DynamicMethodInvocation\s*=\s*true|<constant\s+name="struts\.enable\.DynamicMethodInvocation"\s+value="true"]]]></rdl>
+            <rdl><![CDATA[[FLAG:struts\.enable\.DynamicMethodInvocation\s*=\s*true|<constant\s+name="struts\.enable\.DynamicMethodInvocation"\s+value="true"][IF(MISSING:SecurityMemberAccess|OgnlContextState|allowlist|xwork\.security\.excludedClasses)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects Struts configuration with Dynamic Method Invocation (DMI) enabled.</rule_desc>
             <vuln_desc>DMI allows callers to invoke any public method on an Action class via the URL (e.g., Action!methodName), bypassing declarative security configurations and enabling unauthorized action execution.</vuln_desc>
             <developer>Set struts.enable.DynamicMethodInvocation = false and define explicit action methods in struts.xml. Use strict method invocation (SMI) introduced in Struts 2.5.</developer>
@@ -22,6 +38,14 @@
             <name>File Upload Without Type and Size Restrictions</name>
             <regex><![CDATA[<interceptor-ref\s+name="fileUpload"(?![^>]*maximumSize)|FileUploadInterceptor(?![^;]*allowedTypes)]]></regex>
             <rdl><![CDATA[[FLAG:<interceptor-ref\s+name="fileUpload"][IF(MISSING:maximumSize|allowedTypes|allowedExtensions)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects Struts file upload configurations without size or type restrictions.</rule_desc>
             <vuln_desc>Unrestricted file uploads allow attackers to upload malicious files (JSP shells, large archives) that can execute on the server or cause denial of service.</vuln_desc>
             <developer>Configure allowedTypes, allowedExtensions, and maximumSize parameters on the fileUpload interceptor. Validate file content server-side beyond extension checking.</developer>

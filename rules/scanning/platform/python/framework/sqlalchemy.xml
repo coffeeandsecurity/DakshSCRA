@@ -4,6 +4,14 @@
             <name>Raw SQL via text() with String Concatenation</name>
             <regex><![CDATA[text\s*\(\s*["'][^"']*["']\s*\+|text\s*\(\s*f["']|text\s*\(\s*["'][^"']*%\s*(?:\(|\w)]]></regex>
             <rdl><![CDATA[[FLAG:text\s*\(\s*["'][^"']*["']\s*\+|text\s*\(\s*f["']|text\s*\(\s*["'][^"']*%\s*(?:\(|\w)][IF(MISSING:bindparams|bindparam|:(?!:)\w)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects SQLAlchemy text() calls constructed via string concatenation or f-strings.</rule_desc>
             <vuln_desc>Building raw SQL with text() and string formatting bypasses SQLAlchemy's parameterization, reintroducing SQL injection vulnerabilities that the ORM is designed to prevent.</vuln_desc>
             <developer>Use bindparams() or colon-prefixed named parameters in text() strings: text("SELECT * FROM users WHERE id = :id").bindparams(id=user_id).</developer>
@@ -12,7 +20,15 @@
         <rule>
             <name>filter() with Raw String Condition</name>
             <regex><![CDATA[\.filter\s*\(\s*["']|\.filter\s*\(\s*f["']|\.filter\s*\(\s*["'][^"']*["']\s*%]]></regex>
-            <rdl><![CDATA[[FLAG:\.filter\s*\(\s*["']|\.filter\s*\(\s*f["']|\.filter\s*\(\s*["'][^"']*["']\s*%]]]></rdl>
+            <rdl><![CDATA[[FLAG:\.filter\s*\(\s*["']|\.filter\s*\(\s*f["']|\.filter\s*\(\s*["'][^"']*["']\s*%][IF(MISSING:bindparams|bindparam|:(?!:)\w|params)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects SQLAlchemy filter() calls using raw string conditions instead of ORM column expressions.</rule_desc>
             <vuln_desc>Passing raw strings to filter() bypasses ORM parameterization and can introduce SQL injection if the string includes user-controlled data.</vuln_desc>
             <developer>Use ORM column expressions: session.query(User).filter(User.email == email) instead of filter("email = '%s'" % email).</developer>
@@ -22,6 +38,15 @@
             <name>Hardcoded Database Connection String</name>
             <regex><![CDATA[create_engine\s*\(\s*["'](?:postgresql|mysql|sqlite|mssql|oracle)[^"']*://[^"']*:[^"'@]{6,}@]]></regex>
             <rdl><![CDATA[[FLAG:create_engine\s*\(\s*["'](?:postgresql|mysql|sqlite|mssql|oracle)[^"']*://[^"']*:[^"'@]{6,}@][IF(MISSING:os\.environ|getenv|config\.|settings\.)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>secret_list</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects hardcoded database credentials in SQLAlchemy connection strings.</rule_desc>
             <vuln_desc>Hardcoded database credentials in source code are exposed via version control, error messages, and process listings, enabling unauthorized database access.</vuln_desc>
             <developer>Read connection strings from environment variables or a secrets manager: create_engine(os.environ["DATABASE_URL"]).</developer>
@@ -30,7 +55,15 @@
         <rule>
             <name>execute() with String Formatting</name>
             <regex><![CDATA[\.execute\s*\(\s*["'][^"']*["']\s*\+|\.execute\s*\(\s*f["']|\.execute\s*\(\s*["'][^"']*%\s*(?:\(|\w)]]></regex>
-            <rdl><![CDATA[[FLAG:\.execute\s*\(\s*["'][^"']*["']\s*\+|\.execute\s*\(\s*f["']|\.execute\s*\(\s*["'][^"']*%\s*(?:\(|\w)]]]></rdl>
+            <rdl><![CDATA[[FLAG:\.execute\s*\(\s*["'][^"']*["']\s*\+|\.execute\s*\(\s*f["']|\.execute\s*\(\s*["'][^"']*%\s*(?:\(|\w)][IF(MISSING:bindparams|bindparam|:(?!:)\w|params)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects direct execute() calls with dynamically constructed SQL strings.</rule_desc>
             <vuln_desc>Using execute() with concatenated or formatted strings bypasses parameterization, directly reintroducing SQL injection risk even within an ORM context.</vuln_desc>
             <developer>Always pass a text() object with bound parameters to execute(). Never concatenate user input into SQL strings.</developer>

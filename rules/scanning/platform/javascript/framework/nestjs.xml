@@ -4,6 +4,14 @@
             <name>Nestjs Debug/Verbose Mode Enabled</name>
             <regex><![CDATA[NODE_ENV\s*=\s*[\'\"]development[\'\"]|debug\s*:\s*true|logger\(\s*[\'\"]dev[\'\"]]]></regex>
             <rdl><![CDATA[[FLAG:NODE_ENV\s*=\s*[\'\"]development[\'\"]|debug\s*:\s*true|logger\(\s*[\'\"]dev[\'\"]][IF(MISSING:release|production)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects development/debug settings in potentially deployable paths.</rule_desc>
             <vuln_desc>Debug verbosity can leak internals and sensitive information.</vuln_desc>
             <developer>Disable debug/development modes in production.</developer>
@@ -12,7 +20,15 @@
         <rule>
             <name>Nestjs Injection Sink (Eval/Function)</name>
             <regex><![CDATA[\beval\s*\(|new\s+Function\s*\(|vm\.runIn]]></regex>
-            <rdl><![CDATA[[FLAG:\beval\s*\(|new\s+Function\s*\(|vm\.runIn]]]></rdl>
+            <rdl><![CDATA[[FLAG:\beval\s*\(|new\s+Function\s*\(|vm\.runIn][IF(MISSING:trusted|allowlist && MISSING:test|spec|mock|example)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects dynamic code execution sinks in application flows.</rule_desc>
             <vuln_desc>Dynamic execution with untrusted input can lead to code injection/RCE.</vuln_desc>
             <developer>Avoid dynamic execution; enforce strict input handling.</developer>
@@ -21,7 +37,15 @@
         <rule>
             <name>Nestjs SQL/NoSQL Injection Sink</name>
             <regex><![CDATA[\.(query|execute)\(\s*`|\$where\s*:\s*|sequelize\.query\(]]></regex>
-            <rdl><![CDATA[[FLAG:\.(query|execute)\(\s*`|\$where\s*:\s*|sequelize\.query\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\.(query|execute)\(\s*`|\$where\s*:\s*|sequelize\.query\(][IF(MISSING:prepare|parameterize|\?.*params|TypeORM.*QueryBuilder|createQueryBuilder)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects query construction patterns requiring injection review.</rule_desc>
             <vuln_desc>String-based or unsafe query construction may enable injection attacks.</vuln_desc>
             <developer>Use parameterized queries and ORM-safe APIs.</developer>
@@ -31,6 +55,14 @@
             <name>Nestjs Permissive CORS</name>
             <regex><![CDATA[origin\s*:\s*[\'\"]\*[\'\"]|Access-Control-Allow-Origin\s*[:=]\s*[\'\"]\*[\'\"]]]></regex>
             <rdl><![CDATA[[FLAG:origin\s*:\s*[\'\"]\*[\'\"]|Access-Control-Allow-Origin\s*[:=]\s*[\'\"]\*[\'\"]][IF(MISSING:allowlist|whitelist|trusted)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects wildcard CORS policies in framework/server config.</rule_desc>
             <vuln_desc>Wildcard CORS can expose APIs to arbitrary origins.</vuln_desc>
             <developer>Restrict allowed origins and methods explicitly.</developer>
@@ -40,6 +72,15 @@
             <name>Nestjs Hardcoded Secret Material</name>
             <regex><![CDATA[(secret|api[_-]?key|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]]]></regex>
             <rdl><![CDATA[[FLAG:(secret|api[_-]?key|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>secret_list</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects likely hardcoded credentials or tokens.</rule_desc>
             <vuln_desc>Hardcoded secrets are vulnerable to repository and artifact exposure.</vuln_desc>
             <developer>Externalize and rotate secrets using managed secret stores.</developer>

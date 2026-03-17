@@ -20,9 +20,14 @@
    - [Understanding Findings](#understanding-findings)
    - [Reports & Artifacts](#reports--artifacts)
 5. [Platforms & Rules](#platforms--rules)
-6. [Findings Reference](#findings-reference)
-7. [PDF Reports](#pdf-reports)
-8. [Tips & Common Patterns](#tips--common-patterns)
+6. [scan_config — Rule-Driven Scanning & Reporting](#scan_config--rule-driven-scanning--reporting)
+   - [Full Schema](#full-schema)
+   - [Platform Profiles](#platform-profiles)
+   - [Highlighting](#highlighting)
+   - [Rule Authoring Guide](#rule-authoring-guide)
+7. [Findings Reference](#findings-reference)
+8. [PDF Reports](#pdf-reports)
+9. [Tips & Common Patterns](#tips--common-patterns)
 
 ---
 
@@ -564,6 +569,464 @@ Without this RDL, `TOKEN = "${System.getenv("TOKEN")}"` would be flagged as hard
   <reviewer>Guidance for reviewers on how to confirm the issue.</reviewer>
 </rule>
 ```
+
+## scan_config — Rule-Driven Scanning & Reporting
+
+`scan_config` is an optional XML block inside any `<rule>` that controls how the engine scans for that
+rule and how matches appear in reports. Rules without `<scan_config>` behave exactly as before — the
+block is fully opt-in and every field has a safe default.
+
+### Why scan_config exists
+
+The default model — regex applied line-by-line, one finding entry per match — works well for
+self-contained code patterns. It falls short for:
+
+- **Structural / declarative files** (AndroidManifest, Kubernetes YAML, Terraform HCL, Dockerfile)
+  where the useful context is the parent element, not the matching attribute line.
+- **Rules that fire many times in one file** for the same conceptual issue (e.g. five exported Android
+  components → five identical-looking findings with no component identity shown).
+- **Multi-line patterns** that cannot be expressed in a single-line regex.
+- **Reviewer experience** — showing N lines of context around a match is far more useful than a naked
+  matched snippet.
+
+`scan_config` solves all of these without changing any existing rules.
+
+---
+
+### Full Schema
+
+```xml
+<scan_config>
+
+    <!-- ── MATCH MODE ──────────────────────────────────────────────── -->
+    <!-- line : regex applied per line (default — all existing rules)   -->
+    <!-- file : regex applied to full file content with MULTILINE|      -->
+    <!--        DOTALL flags. Use for structured/declarative files.      -->
+    <match_mode>line</match_mode>
+
+    <!-- ── CONTEXT TYPE ───────────────────────────────────────────── -->
+    <!-- none         : show only the matched line (default)            -->
+    <!-- named_groups : extract named (?P<name>...) capture groups from -->
+    <!--               the regex and display them as labelled fields.   -->
+    <!-- lines        : include N raw lines before and/or after the     -->
+    <!--               match. Use context_lines_before / _after.        -->
+    <!-- backward     : scan backward from the match line for a         -->
+    <!--               secondary pattern. The first capture group       -->
+    <!--               becomes the context label.                       -->
+    <context_type>none</context_type>
+
+    <!-- Used when context_type = lines -->
+    <!-- before: useful for variable assignments and function args       -->
+    <!--         that lead into the vulnerable call.                    -->
+    <!-- after : useful for seeing how a block closes, whether error    -->
+    <!--         handling follows, or how a value is used downstream.   -->
+    <!-- Both are independent — set either or both.                     -->
+    <!-- Recommended: context_lines_before + context_lines_after <= 12  -->
+    <context_lines_before>0</context_lines_before>
+    <context_lines_after>0</context_lines_after>
+
+    <!-- Used when context_type = backward -->
+    <!-- Regex applied scanning upward from the match line.             -->
+    <!-- First capture group becomes the displayed context label.       -->
+    <context_pattern></context_pattern>
+    <context_depth>10</context_depth>   <!-- max lines to scan upward  -->
+
+    <!-- ── AGGREGATION ────────────────────────────────────────────── -->
+    <!-- none : each match = one finding entry (default)               -->
+    <!-- file : all matches of this rule in a file collapse into one   -->
+    <!--        finding entry. All match locations listed together.     -->
+    <!--        Eliminates walls of identical repeated entries.         -->
+    <aggregate>none</aggregate>
+
+    <!-- ── REPORT FORMAT ──────────────────────────────────────────── -->
+    <!-- default        : match snippet + context lines (default)       -->
+    <!-- component_list : table of named_group captures + line numbers  -->
+    <!--                  Use with context_type:named_groups             -->
+    <!-- secret_list    : compact list, masks long values after 12 chars -->
+    <!--                  Use for credential/secret detection rules      -->
+    <report_format>default</report_format>
+
+    <!-- ── HIGHLIGHTING ───────────────────────────────────────────── -->
+    <!-- Controls what gets highlighted in CLI (ANSI colour) and web   -->
+    <!-- (CSS span) output. Default: highlight full regex match in red. -->
+    <highlight_enabled>true</highlight_enabled>
+
+    <!-- SIMPLE HIGHLIGHT (single target — covers most rules)          -->
+    <!-- highlight_target options:                                      -->
+    <!--   match   : highlight the full regex match (default)           -->
+    <!--   groups  : highlight named capture groups in highlight_groups  -->
+    <!--   pattern : highlight occurrences of highlight_pattern          -->
+    <highlight_target>match</highlight_target>
+    <highlight_groups></highlight_groups>   <!-- comma-sep group names  -->
+    <highlight_pattern></highlight_pattern> <!-- regex for pattern mode  -->
+
+    <!-- Colour options: red | yellow | cyan | green | magenta | bold   -->
+    <!-- Semantic guide:                                                 -->
+    <!--   red     — dangerous sinks, injections, hardcoded secrets     -->
+    <!--   yellow  — weak patterns, missing flags, deprecated functions  -->
+    <!--   cyan    — structural/informational (exports, routes, config)  -->
+    <!--   green   — mitigations present (Mitigation Identified rules)   -->
+    <!--   magenta — framework-specific patterns                         -->
+    <!--   bold    — emphasis only, no colour (safe for mono terminals)  -->
+    <highlight_color>red</highlight_color>
+
+    <!-- MULTI HIGHLIGHT (advanced — overrides simple fields above)    -->
+    <!-- Each <mark> is one independent highlight pass over the snippet -->
+    <!-- type values: match | group:<name> | pattern:<regex>           -->
+    <!-- Processed in order. Max 3 marks recommended.                  -->
+    <marks>
+        <mark color="red">match</mark>
+        <mark color="yellow">group:component</mark>
+        <mark color="cyan">pattern:android:name="[^"]+"</mark>
+    </marks>
+
+</scan_config>
+```
+
+---
+
+### Platform Profiles
+
+Three profiles cover the vast majority of rule types. Start from the matching profile when authoring
+a new rule, then adjust fields as needed.
+
+#### Profile A — `structured` (declarative / config files)
+
+Use for: AndroidManifest.xml, Kubernetes YAML, Terraform HCL, Dockerfile, plist, web.xml — any file
+where structure is hierarchical and predictable.
+
+```xml
+<scan_config>
+    <match_mode>file</match_mode>
+    <context_type>named_groups</context_type>
+    <aggregate>file</aggregate>
+    <report_format>component_list</report_format>
+    <highlight_enabled>true</highlight_enabled>
+    <marks>
+        <mark color="red">match</mark>
+    </marks>
+</scan_config>
+```
+
+The regex must use named capture groups (`(?P<name>...)`). The engine extracts them and displays them
+as labelled columns alongside the line number.
+
+**Full example — AndroidManifest exported components:**
+
+```xml
+<rule>
+    <name>Exported Components Without Permission</name>
+    <regex><![CDATA[<(?P<component>activity|service|receiver|provider)\s[^>]*android:name="(?P<name>[^"]+)"[^>]*android:exported="true"[^>]*(?:/>|>)]]></regex>
+    <rdl><![CDATA[[FLAG:android:exported\s*=\s*"true"][IF(MISSING:android:permission)]]]></rdl>
+    <scan_config>
+        <match_mode>file</match_mode>
+        <context_type>named_groups</context_type>
+        <aggregate>file</aggregate>
+        <report_format>component_list</report_format>
+        <marks>
+            <mark color="red">pattern:android:exported\s*=\s*"true"</mark>
+            <mark color="cyan">pattern:android:name\s*=\s*"[^"]+"</mark>
+        </marks>
+    </scan_config>
+    <rule_desc>Detects Android components exported without a permission requirement.</rule_desc>
+    <vuln_desc>Exported components accessible without a permission can be invoked by any app on the device.</vuln_desc>
+    <developer>Restrict exported components with android:permission or set android:exported="false" where external access is not required.</developer>
+    <reviewer>Confirm each exported component has a restrictive permission defined or that unrestricted access is intentional.</reviewer>
+</rule>
+```
+
+**Report output (`component_list` format):**
+```
+Exported Components Without Permission        HIGH    AndroidManifest.xml
+
+  Line  82    activity    .MainActivity
+  Line  95    service     .SyncService
+  Line 110    receiver    .BootReceiver
+  Line 125    activity    .DeepLinkActivity
+```
+
+Instead of five separate identical findings, the reviewer sees one clean table identifying exactly
+which components are affected.
+
+---
+
+#### Profile B — `code` (source code files)
+
+Use for: Python, JavaScript, PHP, Java, Go, Kotlin, Ruby, C, C++, .NET, Bash, PowerShell — any file
+where structure is scope-dependent and cannot be parsed by regex alone.
+
+```xml
+<scan_config>
+    <match_mode>line</match_mode>
+    <context_type>lines</context_type>
+    <context_lines_before>3</context_lines_before>
+    <context_lines_after>0</context_lines_after>
+    <aggregate>none</aggregate>
+    <report_format>default</report_format>
+    <highlight_enabled>true</highlight_enabled>
+    <highlight_target>match</highlight_target>
+    <highlight_color>red</highlight_color>
+</scan_config>
+```
+
+Use `context_lines_before` to show what leads into the vulnerable call (variable assignments, function
+arguments). Use `context_lines_after` to show what follows (error handling, return value usage).
+
+**Full example — PHP file inclusion:**
+
+```xml
+<rule>
+    <name>Insecure File Inclusion</name>
+    <regex><![CDATA[\b(?:include|require)(?:_once)?\s*\(\s*\$\w+]]></regex>
+    <rdl><![CDATA[[FLAG:\b(?:include|require)(?:_once)?\s*\(\s*\$\w+][IF(MISSING:realpath|basename|__DIR__|allowlist|in_array)]]]></rdl>
+    <scan_config>
+        <match_mode>line</match_mode>
+        <context_type>lines</context_type>
+        <context_lines_before>4</context_lines_before>
+        <context_lines_after>0</context_lines_after>
+        <highlight_target>match</highlight_target>
+        <highlight_color>red</highlight_color>
+    </scan_config>
+    ...
+</rule>
+```
+
+**Report output:**
+```
+Insecure File Inclusion                       HIGH    controllers/page.php : Line 47
+
+  44 |  $page = $_GET['page'];
+  45 |  $page = str_replace('../', '', $page);
+  46 |
+  47 >  include($page . '.php');
+```
+
+The reviewer immediately sees the inadequate sanitisation on line 45 without opening the source file.
+
+**When to use `context_lines_after`** — use it when the match opens a block and you need to see what's
+inside:
+
+```xml
+<scan_config>
+    <context_type>lines</context_type>
+    <context_lines_before>0</context_lines_before>
+    <context_lines_after>6</context_lines_after>
+    <marks>
+        <mark color="yellow">pattern:transaction\s*\{</mark>
+        <mark color="red">pattern:\b(insert|update|delete)\b</mark>
+    </marks>
+</scan_config>
+```
+
+```
+Exposed Transaction Without Exception Handling    Kotlin/db/UserRepo.kt : Line 34
+
+  34 >  transaction {
+  35       userTable.insert { it[name] = username }
+  36       auditTable.insert { it[event] = "created" }
+  37       emailQueue.add(username)
+  38   }
+```
+
+---
+
+#### Profile C — `config` (flat configuration / secret files)
+
+Use for: `.env`, `.properties`, `appsettings.json`, `*.tfvars`, `*.ini`, any flat key-value config file.
+
+```xml
+<scan_config>
+    <match_mode>line</match_mode>
+    <context_type>none</context_type>
+    <aggregate>file</aggregate>
+    <report_format>secret_list</report_format>
+    <highlight_enabled>true</highlight_enabled>
+    <highlight_target>match</highlight_target>
+    <highlight_color>red</highlight_color>
+</scan_config>
+```
+
+The matched line is self-explanatory (`DB_PASSWORD=prod_secret`). No surrounding context adds value.
+`aggregate:file` collapses multiple secrets in the same file into one finding entry.
+
+**Report output (`secret_list` format):**
+```
+Hardcoded Credentials                         CRITICAL   .env
+
+  Line  3    DB_PASSWORD    = "prod_p@ssw..."
+  Line  7    API_KEY        = "sk-live-xK..."
+  Line 12    JWT_SECRET     = "mySuperSec..."
+```
+
+---
+
+### Highlighting
+
+#### Colour palette
+
+| Value | CLI (ANSI) | Web CSS class | Use for |
+|---|---|---|---|
+| `red` | bright red | `hl-red` | Dangerous sinks, injections, RCE, hardcoded secrets |
+| `yellow` | bright yellow | `hl-yellow` | Weak patterns, deprecated, missing flags |
+| `cyan` | bright cyan | `hl-cyan` | Structural / informational (exports, routes, config) |
+| `green` | bright green | `hl-green` | Mitigations present ("Mitigation Identified" rules) |
+| `magenta` | bright magenta | `hl-magenta` | Framework-specific patterns |
+| `bold` | bold only | `hl-bold` | Emphasis with no colour — safe for monochrome terminals |
+
+#### Simple vs. multi highlight
+
+**Simple** — one thing to highlight:
+```xml
+<highlight_target>match</highlight_target>
+<highlight_color>red</highlight_color>
+```
+
+**Named group** — highlight a specific captured group:
+```xml
+<highlight_target>groups</highlight_target>
+<highlight_groups>name,component</highlight_groups>
+<highlight_color>cyan</highlight_color>
+```
+
+**Pattern** — highlight a sub-pattern within the displayed snippet:
+```xml
+<highlight_target>pattern</highlight_target>
+<highlight_pattern>android:exported\s*=\s*"true"</highlight_pattern>
+<highlight_color>red</highlight_color>
+```
+
+**Multi** — multiple independent highlight passes, different colours:
+```xml
+<marks>
+    <mark color="cyan">pattern:android:name\s*=\s*"[^"]+"</mark>
+    <mark color="red">pattern:android:exported\s*=\s*"true"</mark>
+</marks>
+```
+
+Max 3 marks per rule. Beyond that, the snippet becomes visually noisy. If you need more than 3
+highlights, the rule is probably doing too much — consider splitting it.
+
+Set `<highlight_enabled>false</highlight_enabled>` for file-level structural rules where there is no
+specific substring to highlight (e.g., "no USER directive in Dockerfile").
+
+---
+
+### Rule Authoring Guide
+
+Answer these questions before writing `scan_config` values:
+
+**Q1 — What type of file does this rule target?**
+
+| File type | Profile | `match_mode` |
+|---|---|---|
+| AndroidManifest.xml, plist, web.xml | structured | `file` |
+| Kubernetes YAML, Helm charts | structured | `file` |
+| Terraform HCL, .tfvars | structured | `file` |
+| Dockerfile | structured | `file` |
+| Python, JS, PHP, Java, Go, Kotlin, Ruby, C/C++, .NET | code | `line` |
+| Bash, PowerShell | code | `line` |
+| .env, .properties, appsettings.json, config files | config | `line` |
+
+**Q2 — Does the matched line tell the full story?**
+
+- Yes → `context_type:none`
+- Setup / source is above the match → `context_lines_before: 3–5`, `context_lines_after: 0`
+- Match opens a block, need to see what's inside → `context_lines_before: 0`, `context_lines_after: 5–8`
+- Both sides needed → set both, keep total ≤ 12 lines
+
+**Q3 — Can this rule fire many times in one file for the same conceptual issue?**
+
+- Yes, all instances are the same issue → `aggregate:file`
+- Each instance is distinct → `aggregate:none`
+
+**Q4 — Which `report_format`?**
+
+- `context_type:named_groups` → `component_list`
+- Detecting secrets / credentials → `secret_list`
+- Everything else → `default`
+
+**Q5 — What to highlight?**
+
+| Situation | Config |
+|---|---|
+| One clear dangerous element | `highlight_target:match`, `color:red` |
+| Dangerous pattern within a wider match | `highlight_target:pattern` + tighter regex, `color:red` |
+| Match has identity + dangerous attribute | `<marks>` with `cyan` for identity, `red` for risk |
+| Rule detects absence (missing flag) | Highlight what IS there in `yellow` |
+| Mitigation Identified rule | `color:green` |
+| Deprecated / weak, not directly exploitable | `color:yellow` |
+
+**Pre-submission checklist:**
+```
+[ ] scan_config block is present (even if using all defaults)
+[ ] match_mode is appropriate for the file type
+[ ] If match_mode=file, regex uses named groups for all meaningful captures
+[ ] context_lines_before + context_lines_after <= 12
+[ ] aggregate setting is justified
+[ ] report_format matches context_type
+[ ] highlight colour follows the semantic palette above
+[ ] Rule tested on at least one real sample file
+[ ] Report output reviewed manually for clarity
+```
+
+---
+
+### Complete scan_config Examples
+
+**Kubernetes — privileged container:**
+```xml
+<scan_config>
+    <match_mode>line</match_mode>
+    <context_type>lines</context_type>
+    <context_lines_before>3</context_lines_before>
+    <aggregate>none</aggregate>
+    <marks>
+        <mark color="red">pattern:privileged\s*:\s*true</mark>
+        <mark color="cyan">pattern:- name:\s*\S+</mark>
+    </marks>
+</scan_config>
+```
+
+**Terraform — S3 bucket missing encryption:**
+```xml
+<scan_config>
+    <match_mode>file</match_mode>
+    <context_type>named_groups</context_type>
+    <aggregate>file</aggregate>
+    <report_format>component_list</report_format>
+    <marks>
+        <mark color="red">pattern:resource\s+"aws_s3_bucket"</mark>
+        <mark color="cyan">group:bucket_name</mark>
+    </marks>
+</scan_config>
+```
+
+**JavaScript — hardcoded JWT secret:**
+```xml
+<scan_config>
+    <match_mode>line</match_mode>
+    <context_type>lines</context_type>
+    <context_lines_before>2</context_lines_before>
+    <context_lines_after>2</context_lines_after>
+    <highlight_target>pattern</highlight_target>
+    <highlight_pattern>(?:secret|key)\s*[:=]\s*["'][^"']{8,}["']</highlight_pattern>
+    <highlight_color>red</highlight_color>
+</scan_config>
+```
+
+**C — unsafe buffer write:**
+```xml
+<scan_config>
+    <match_mode>line</match_mode>
+    <context_type>lines</context_type>
+    <context_lines_before>3</context_lines_before>
+    <context_lines_after>1</context_lines_after>
+    <highlight_target>match</highlight_target>
+    <highlight_color>red</highlight_color>
+</scan_config>
+```
+
+---
 
 ## Platforms & Rules
 

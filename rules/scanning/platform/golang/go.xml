@@ -4,7 +4,15 @@
         <rule>
             <name>Untrusted Inputs: HTTP Request Parameters</name>
             <regex><![CDATA[http\.Request|http\.RequestForm|http\.FormValue]]></regex>
-            <rdl><![CDATA[[FLAG:http\.Request|http\.RequestForm|http\.FormValue]]]></rdl>
+            <rdl><![CDATA[[FLAG:http\.Request|http\.RequestForm|http\.FormValue][IF(MISSING:Validate|validate|sanitize|regexp\.MustCompile|strconv\.Atoi|strconv\.ParseInt|json\.Unmarshal)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects the usage of HTTP request parameters without proper validation and sanitization.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using untrusted input from HTTP requests without proper validation and sanitization. Attackers can manipulate request parameters to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks, cross-site scripting (XSS), or unauthorized access to sensitive information.</vuln_desc>
             <developer>Validate and sanitize user input received from HTTP requests before using it in any sensitive operations. Implement strong input validation, ensuring that only expected and sanitized values are accepted from request parameters. Additionally, developers should be cautious about the potential risks associated with using user-supplied data and follow secure coding practices.</developer>
@@ -14,7 +22,15 @@
         <rule>
             <name>Untrusted Inputs: User-Defined Structures</name>
             <regex>struct</regex>
-            <rdl><![CDATA[[FLAG:struct]]]></rdl>
+            <rdl><![CDATA[[FLAG:struct][IF(PRESENT:r\.FormValue|r\.URL\.Query|json\.Unmarshal|c\.Bind|c\.ShouldBind && MISSING:validate|Validate|binding:|required:)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects the usage of user-defined structures without proper validation and sanitization of fields.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using user-defined structures without validating and sanitizing the fields. Attackers can manipulate structure fields to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks or unauthorized access to sensitive information.</vuln_desc>
             <developer>Validate and sanitize fields of user-defined structures before using them in any sensitive operations. Implement strong input validation, ensuring that only expected and sanitized values are accepted. Additionally, developers should be cautious about the potential risks associated with using user-supplied data and follow secure coding practices.</developer>
@@ -26,7 +42,15 @@
         <rule>
             <name>Command Injection: exec, os/exec</name>
             <regex><![CDATA[os/exec\.Command|exec\.(Command|CommandContext)]]></regex>
-            <rdl><![CDATA[[FLAG:os/exec\.Command|exec\.(Command|CommandContext)]]]></rdl>
+            <rdl><![CDATA[[FLAG:os/exec\.Command|exec\.(Command|CommandContext)][IF(MISSING:validate|sanitize|allowlist|filepath\.EvalSymlinks)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects instances of executing shell commands without proper validation and sanitization.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of command injection. Attackers can exploit shell-executing functions with unsanitized user input to execute arbitrary shell commands on the server.</vuln_desc>
             <developer>Avoid executing shell commands with user-supplied input whenever possible. If necessary, it is crucial to employ strict input validation, input sanitization, and command parameterization techniques to prevent command injection attacks.</developer>
@@ -39,7 +63,15 @@
         <rule>
             <name>Arbitrary Code Execution: unsafe, go:generate</name>
             <regex><![CDATA[unsafe\.|go:generate]]></regex>
-            <rdl><![CDATA[[FLAG:unsafe\.|go:generate]]]></rdl>
+            <rdl><![CDATA[[FLAG:unsafe\.|go:generate][IF(MISSING:// #nosec|gosec:disable|SECURITY_REVIEW)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects instances of unsafe code execution without proper validation.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of arbitrary code execution. Attackers can exploit unsafe code execution with unsanitized user input to execute arbitrary code on the server.</vuln_desc>
             <developer>Avoid using unsafe code execution mechanisms with untrusted user input whenever possible. If necessary, it is crucial to employ strict input validation and parameterization techniques to prevent arbitrary code execution vulnerabilities.</developer>
@@ -52,6 +84,14 @@
             <name>Mitigation Identified: XSS</name>
             <regex>html.EscapeString</regex>
             <rdl><![CDATA[[FLAG:html.EscapeString]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>green</highlight_color>
+            </scan_config>
             <rule_desc>Detects the presence of XSS mitigation using html.EscapeString function.</rule_desc>
             <vuln_desc>This rule checks if the "html.EscapeString" function is utilized as a recommended mitigation technique against Cross-Site Scripting (XSS) vulnerabilities. XSS vulnerabilities arise when untrusted data is displayed on a web page without proper sanitization, enabling attackers to inject malicious scripts. By employing the "html.EscapeString" function, special characters are encoded to prevent script execution.</vuln_desc>
             <developer>The implementation of the "html. EscapeString" function is thorough and consistent across the application to effectively mitigate XSS vulnerabilities. Verify that all user-supplied data displayed in HTML context undergoes proper sanitization using this function to encode special characters and thwart script injection attempts.</developer>

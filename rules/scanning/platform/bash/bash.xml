@@ -4,6 +4,14 @@
             <name>Command Injection via eval</name>
             <regex><![CDATA[eval\s+["']?\$\{?\w]]></regex>
             <rdl><![CDATA[[FLAG:eval\s+["']?\$\{?\w][IF(MISSING:printf\s+%q|sanitize|validate|allowlist)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects eval statements that interpolate variables, enabling arbitrary command execution.</rule_desc>
             <vuln_desc>eval with user-controlled or environment-derived input can allow arbitrary OS command injection, escalating to full system compromise.</vuln_desc>
             <developer>Avoid eval entirely. Use arrays for command construction and validate all inputs against an explicit allowlist.</developer>
@@ -13,6 +21,14 @@
             <name>Unquoted Variable in Command Context</name>
             <regex><![CDATA[(?:exec|system|run|sh\s+-c)\s+[^"'][^;|\n]*\$\w]]></regex>
             <rdl><![CDATA[[FLAG:(?:exec|system|run|sh\s+-c)\s+[^"'][^;|\n]*\$\w]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects unquoted variables passed to shell execution contexts.</rule_desc>
             <vuln_desc>Unquoted variables in shell commands are subject to word splitting and glob expansion, allowing injection of unintended command arguments or operators.</vuln_desc>
             <developer>Always double-quote variables ("$var") to prevent word splitting and unintended shell expansion.</developer>
@@ -22,6 +38,14 @@
             <name>Backtick Command Substitution with Variable</name>
             <regex><![CDATA[`[^`]*\$\w[^`]*`]]></regex>
             <rdl><![CDATA[[FLAG:`[^`]*\$\w[^`]*`][IF(MISSING:sanitize|validate|allowlist)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects backtick command substitution containing interpolated variables.</rule_desc>
             <vuln_desc>Backtick substitution with unsanitized variables can allow command injection via environment or parameter manipulation.</vuln_desc>
             <developer>Use $() syntax with properly quoted variables and validate all inputs before substitution.</developer>
@@ -33,6 +57,14 @@
             <name>Hardcoded Credential in Shell Script</name>
             <regex><![CDATA[(?i)(password|passwd|secret|api_key|apikey|token|access_key)\s*=\s*['"]?[A-Za-z0-9@#$%^&*!_\-]{8,}['"]?]]></regex>
             <rdl><![CDATA[[FLAG:(?i)(password|passwd|secret|api_key|apikey|token|access_key)\s*=\s*['"]?[A-Za-z0-9@#$%^&*!_\-]{8,}['"]?][IF(MISSING:vault|secret_manager|\$\{.*\})]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects hardcoded credentials or secrets assigned as shell variables.</rule_desc>
             <vuln_desc>Plaintext secrets in shell scripts are easily exposed through source control, process listings, and shell history files.</vuln_desc>
             <developer>Read secrets from environment variables, vault integrations (HashiCorp Vault, AWS Secrets Manager), or secure credential helpers. Never hardcode secrets.</developer>
@@ -42,6 +74,14 @@
             <name>Credentials Passed via Command Line Arguments</name>
             <regex><![CDATA[(?i)(?:--password|--secret|--token|--key|--api-key)\s*=?\s*\S]]></regex>
             <rdl><![CDATA[[FLAG:(?i)(?:--password|--secret|--token|--key|--api-key)\s*=?\s*\S][IF(MISSING:\$\{|\$\()]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects credentials passed as command line arguments, which are visible in process listings.</rule_desc>
             <vuln_desc>Command line arguments are visible in /proc, ps output, and system audit logs, exposing credentials to any user with process visibility.</vuln_desc>
             <developer>Use environment variables, stdin piping, or credential files with restricted permissions instead of command-line argument secrets.</developer>
@@ -53,6 +93,14 @@
             <name>Overly Permissive chmod</name>
             <regex><![CDATA[chmod\s+(?:0?777|[augo]+\+[rwx]*w[rwx]*|a\+x)]]></regex>
             <rdl><![CDATA[[FLAG:chmod\s+(?:0?777|[augo]+\+[rwx]*w[rwx]*|a\+x)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects chmod commands granting world-writable or globally executable permissions.</rule_desc>
             <vuln_desc>World-writable files and directories allow any local user to modify content, enabling privilege escalation or persistent backdoor placement.</vuln_desc>
             <developer>Apply least-privilege permissions. Use 640 or 750 for most files and scripts; restrict world access unless explicitly required.</developer>
@@ -62,6 +110,14 @@
             <name>Insecure Temporary File Creation</name>
             <regex><![CDATA[(?:/tmp/|/var/tmp/)[^"'\s]*\$\w|>\s*/tmp/\w]]></regex>
             <rdl><![CDATA[[FLAG:(?:/tmp/|/var/tmp/)[^"'\s]*\$\w|>\s*/tmp/\w][IF(MISSING:mktemp)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects insecure creation of temporary files with predictable or hardcoded names.</rule_desc>
             <vuln_desc>Predictable temp file names are vulnerable to TOCTOU race conditions and symlink attacks allowing privilege escalation or data injection.</vuln_desc>
             <developer>Use mktemp or mkstemp for secure temporary file creation with randomized unpredictable names.</developer>
@@ -71,6 +127,14 @@
             <name>World-Readable Sensitive File Write</name>
             <regex><![CDATA[>\s*(?:/etc/|/root/|~/)(?:passwd|shadow|sudoers|ssh|\.ssh|crontab)\b]]></regex>
             <rdl><![CDATA[[FLAG:>\s*(?:/etc/|/root/|~/)(?:passwd|shadow|sudoers|ssh|\.ssh|crontab)\b]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects writes to sensitive system files including shadow, sudoers, and SSH configuration.</rule_desc>
             <vuln_desc>Unauthorized or unintended modification of privileged system files can enable privilege escalation, backdoor persistence, or authentication bypass.</vuln_desc>
             <developer>Avoid direct writes to sensitive system files in automation scripts. Use dedicated tools (visudo, usermod) with proper validation.</developer>
@@ -82,6 +146,14 @@
             <name>curl with TLS Verification Disabled</name>
             <regex><![CDATA[curl\s+(?:[^\n]*\s)?(?:-k|--insecure)]]></regex>
             <rdl><![CDATA[[FLAG:curl\s+(?:[^\n]*\s)?(?:-k|--insecure)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects curl invocations that disable TLS certificate verification.</rule_desc>
             <vuln_desc>Disabling TLS verification makes connections vulnerable to man-in-the-middle attacks by accepting any certificate, including forged ones.</vuln_desc>
             <developer>Remove -k/--insecure flags and ensure the target certificate chain is trusted. Use --cacert to specify a custom CA bundle if needed.</developer>
@@ -91,6 +163,14 @@
             <name>wget with Certificate Check Disabled</name>
             <regex><![CDATA[wget\s+(?:[^\n]*\s)?(?:--no-check-certificate)]]></regex>
             <rdl><![CDATA[[FLAG:wget\s+(?:[^\n]*\s)?(?:--no-check-certificate)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects wget invocations that skip TLS certificate validation.</rule_desc>
             <vuln_desc>Skipping certificate validation exposes downloads to interception and substitution via MITM attacks.</vuln_desc>
             <developer>Remove --no-check-certificate and ensure the server certificate is valid and trusted.</developer>
@@ -102,6 +182,14 @@
             <name>Missing errexit or pipefail Options</name>
             <regex><![CDATA[^#!\s*/(?:bin/|usr/bin/env\s+)(?:bash|sh)\b]]></regex>
             <rdl><![CDATA[[FLAG:^#!\s*/(?:bin/|usr/bin/env\s+)(?:bash|sh)\b][IF(MISSING:set\s+-[euo]*e|set\s+-o\s+errexit)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects shell scripts that do not enable errexit or pipefail safety options.</rule_desc>
             <vuln_desc>Scripts without set -e or set -o pipefail silently continue on command failure, potentially executing subsequent commands in an undefined or insecure state.</vuln_desc>
             <developer>Add "set -euo pipefail" at the top of all scripts to fail fast on errors, unset variables, and pipe failures.</developer>
@@ -111,6 +199,14 @@
             <name>sudo Usage Without Privilege Validation</name>
             <regex><![CDATA[\bsudo\s+(?!visudo|passwd\s+-l|-l\b|-v\b)\S]]></regex>
             <rdl><![CDATA[[FLAG:\bsudo\s+(?!visudo|passwd\s+-l|-l\b|-v\b)\S][IF(MISSING:if\s+\[|check|validate|authorized)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects sudo usage in scripts without surrounding authorization validation logic.</rule_desc>
             <vuln_desc>Unrestricted sudo in automated scripts can silently escalate privileges and perform administrative actions without validation, increasing blast radius of script compromise.</vuln_desc>
             <developer>Limit sudo use to specific commands, define explicit sudoers rules for automation accounts, and add explicit permission checks before privileged operations.</developer>

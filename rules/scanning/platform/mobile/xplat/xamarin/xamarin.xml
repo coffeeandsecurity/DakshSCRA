@@ -4,6 +4,14 @@
             <name>Insecure Local Storage of Secrets</name>
             <regex><![CDATA[\b(?:Preferences\.Set|Application\.Current\.Properties\[|SecureStorage\.SetAsync\s*\()]]></regex>
             <rdl><![CDATA[[FLAG:\b(?:Preferences\.Set|Application\.Current\.Properties\[|SecureStorage\.SetAsync\s*\()]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects local persistence patterns where sensitive value handling should be verified.</rule_desc>
             <vuln_desc>Improper secret storage can expose credentials or tokens to local compromise.</vuln_desc>
             <developer>Use secure storage APIs for secrets and avoid plaintext persistence in app preferences.</developer>
@@ -13,6 +21,14 @@
             <name>TLS Certificate Validation Bypass Callback</name>
             <regex><![CDATA[ServerCertificateCustomValidationCallback\s*=\s*\(.*\)\s*=>\s*true]]></regex>
             <rdl><![CDATA[[FLAG:ServerCertificateCustomValidationCallback\s*=\s*\(.*\)\s*=>\s*true]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects explicit certificate validation bypass in HTTP client configuration.</rule_desc>
             <vuln_desc>Bypassing certificate validation enables man-in-the-middle interception.</vuln_desc>
             <developer>Use default certificate validation or robust pinning with proper fallback handling.</developer>
@@ -22,6 +38,14 @@
             <name>WebView JavaScript Enabled</name>
             <regex><![CDATA[\b(?:WebView|HybridWebView).*?(?:JavaScriptEnabled\s*=\s*true|EnableJavascript\s*=\s*true)]]></regex>
             <rdl><![CDATA[[FLAG:\b(?:WebView|HybridWebView).*?(?:JavaScriptEnabled\s*=\s*true|EnableJavascript\s*=\s*true)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects potentially risky web view JavaScript configuration in Xamarin apps.</rule_desc>
             <vuln_desc>Untrusted content rendered with active scripting can lead to data exposure and injection-like abuse.</vuln_desc>
             <developer>Restrict origins and disable JavaScript unless necessary.</developer>
@@ -33,6 +57,13 @@
             <name>Xamarin Debug Build Marker</name>
             <regex><![CDATA[\bDEBUG\b|debuggable\s*[:=]\s*true]]></regex>
             <rdl><![CDATA[[FLAG:\bDEBUG\b|debuggable\s*[:=]\s*true][IF(MISSING:RELEASE)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects debug build markers in Xamarin/mobile .NET code paths.</rule_desc>
             <vuln_desc>Debug builds can expose additional diagnostics and attack surface.</vuln_desc>
             <developer>Ensure release builds disable debug behavior.</developer>
@@ -42,6 +73,14 @@
             <name>Xamarin Certificate Validation Bypass</name>
             <regex><![CDATA[ServerCertificateCustomValidationCallback\s*=\s*\(.*=>\s*true|ServicePointManager\.ServerCertificateValidationCallback]]></regex>
             <rdl><![CDATA[[FLAG:ServerCertificateCustomValidationCallback\s*=\s*\(.*=>\s*true|ServicePointManager\.ServerCertificateValidationCallback][IF(MISSING:CertificatePinning|PublicKeyPinning)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects TLS certificate validation bypass patterns.</rule_desc>
             <vuln_desc>Bypassing TLS validation allows MITM interception attacks.</vuln_desc>
             <developer>Remove bypass logic and enforce strict cert validation.</developer>
@@ -51,6 +90,13 @@
             <name>Xamarin Insecure HTTP Endpoint Usage</name>
             <regex>http://</regex>
             <rdl><![CDATA[[FLAG:http://][IF(MISSING:https://)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects cleartext endpoint references in Xamarin apps.</rule_desc>
             <vuln_desc>Cleartext transport can leak sensitive information.</vuln_desc>
             <developer>Use HTTPS endpoints only and enforce TLS policy.</developer>
@@ -60,6 +106,14 @@
             <name>Xamarin WebView Script Bridge Marker</name>
             <regex><![CDATA[WebView|EvaluateJavaScriptAsync\(|addJavascriptInterface\(]]></regex>
             <rdl><![CDATA[[FLAG:WebView|EvaluateJavaScriptAsync\(|addJavascriptInterface\(][IF(MISSING:Navigating\s*\+=)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects webview/bridge execution points needing security review.</rule_desc>
             <vuln_desc>Unsafe bridge/content handling may permit script injection or data leakage.</vuln_desc>
             <developer>Restrict untrusted content and minimize bridge capabilities.</developer>
@@ -69,6 +123,13 @@
             <name>Xamarin Secret Storage Marker</name>
             <regex><![CDATA[(Preferences|SecureStorage)\.(Set|SetAsync)\(.*(token|secret|password|apikey)]]></regex>
             <rdl><![CDATA[[FLAG:(Preferences|SecureStorage)\.(Set|SetAsync)\(.*(token|secret|password|apikey)][IF(MISSING:SecureStorage\.GetAsync)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects secret-like keys written through app storage APIs.</rule_desc>
             <vuln_desc>Improper storage choices can leak credentials/tokens.</vuln_desc>
             <developer>Use platform secure storage appropriately for sensitive values.</developer>
@@ -78,6 +139,14 @@
             <name>Xamarin Hardcoded Secret Marker</name>
             <regex><![CDATA[(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"]]></regex>
             <rdl><![CDATA[[FLAG:(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:DEBUG)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <aggregate>file</aggregate>
+                <report_format>secret_list</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects likely hardcoded secret literals in Xamarin code/config.</rule_desc>
             <vuln_desc>Hardcoded credentials can be extracted from binaries/source.</vuln_desc>
             <developer>Externalize secrets and rotate any exposed credentials.</developer>
@@ -89,6 +158,14 @@
             <name>Android Backup Enabled</name>
             <regex><![CDATA[android:allowBackup\s*=\s*"?(?:true|TRUE)"?]]></regex>
             <rdl><![CDATA[[FLAG:android:allowBackup\s*=\s*"?(?:true|TRUE)"?]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects Android backup configuration that can expose local app data.</rule_desc>
             <vuln_desc>Backups may leak sensitive app data if not encrypted or excluded.</vuln_desc>
             <developer>Disable backups for sensitive apps or explicitly exclude sensitive data.</developer>
@@ -100,6 +177,14 @@
             <name>iOS Keychain Accessibility Too Broad</name>
             <regex><![CDATA[kSecAttrAccessibleAlways]]></regex>
             <rdl><![CDATA[[FLAG:kSecAttrAccessibleAlways]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects permissive keychain accessibility constants in iOS-specific Xamarin code.</rule_desc>
             <vuln_desc>Weak keychain accessibility can increase exposure of stored secrets.</vuln_desc>
             <developer>Use stricter keychain accessibility constants aligned with runtime requirements.</developer>

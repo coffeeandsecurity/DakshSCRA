@@ -4,6 +4,17 @@
             <name>Hive Box Opened Without Encryption</name>
             <regex><![CDATA[Hive\.openBox\s*\(|Hive\.openLazyBox\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:Hive\.openBox\s*\(|Hive\.openLazyBox\s*\(][IF(MISSING:encryptionCipher|HiveAesCipher|encryptionKey)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects Hive boxes opened without an encryption cipher for sensitive data storage.</rule_desc>
             <vuln_desc>Hive boxes opened without an encryptionCipher store all data as plaintext in the app's data directory. On rooted Android or jailbroken iOS devices, or via adb backup, this data is fully accessible without authentication.</vuln_desc>
             <developer>Use HiveAesCipher with a key derived from flutter_secure_storage: final encryptedKey = await secureStorage.read(key: 'hiveKey'); await Hive.openBox('box', encryptionCipher: HiveAesCipher(key)).</developer>
@@ -13,6 +24,17 @@
             <name>Hive Encryption Key Stored Insecurely</name>
             <regex><![CDATA[Hive\.generateSecureKey\s*\(\s*\)|HiveAesCipher\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:HiveAesCipher\s*\(|Hive\.generateSecureKey\s*\(\s*\)][IF(MISSING:flutter_secure_storage|FlutterSecureStorage|SecureStoragePlugin)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects Hive AES cipher key usage without secure storage for the key material.</rule_desc>
             <vuln_desc>Storing the Hive encryption key in SharedPreferences, a file, or hardcoded in source defeats the encryption, as the key is accessible through the same attack vectors as the unencrypted data.</vuln_desc>
             <developer>Store the Hive encryption key exclusively in flutter_secure_storage (which uses Android Keystore / iOS Keychain). Generate the key once on first run and persist it securely.</developer>

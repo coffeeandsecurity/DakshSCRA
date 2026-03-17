@@ -4,6 +4,14 @@
             <name>Wildcard IAM Policy Action</name>
             <regex><![CDATA[actions\s*=\s*\[\s*"\*"\s*\]|effect\s*=\s*"Allow"[^}]*actions\s*=\s*\["\*"\]]]></regex>
             <rdl><![CDATA[[FLAG:actions\s*=\s*\[\s*"\*"\s*\]]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects IAM policies granting all actions via a wildcard (*) permission.</rule_desc>
             <vuln_desc>Wildcard IAM actions violate least privilege and may grant unintended access to sensitive operations including data deletion, privilege escalation, and account takeover.</vuln_desc>
             <developer>Enumerate only the specific actions required. Use permission boundaries and SCPs to enforce least-privilege guardrails.</developer>
@@ -13,6 +21,14 @@
             <name>Wildcard IAM Resource</name>
             <regex><![CDATA[resources\s*=\s*\[\s*"\*"\s*\]]]></regex>
             <rdl><![CDATA[[FLAG:resources\s*=\s*\[\s*"\*"\s*\]][IF(MISSING:condition|Condition)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects IAM policies applying to all resources (*) without restricting conditions.</rule_desc>
             <vuln_desc>Wildcard resources combined with broad actions grant permissions to every resource in an account, maximizing blast radius of a compromised principal.</vuln_desc>
             <developer>Scope resource ARNs to the minimum required set. Where wildcard resources are unavoidable, apply condition keys to constrain the effective scope.</developer>
@@ -24,6 +40,14 @@
             <name>Security Group Open to All Traffic (0.0.0.0/0)</name>
             <regex><![CDATA[cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\]|cidr_ipv6\s*=\s*\["::/0"\]]]></regex>
             <rdl><![CDATA[[FLAG:cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\]|cidr_ipv6\s*=\s*\["::/0"\]][IF(MISSING:from_port\s*=\s*(?:443|80)\b)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects security group rules or firewall rules allowing ingress from all IP addresses.</rule_desc>
             <vuln_desc>Open ingress from 0.0.0.0/0 exposes services to the entire internet, enabling reconnaissance, brute-force, and exploitation without network-level controls.</vuln_desc>
             <developer>Restrict CIDR ranges to known IP ranges (office NATs, VPN egress, load balancer subnets). For public endpoints, use a WAF layer.</developer>
@@ -33,6 +57,14 @@
             <name>SSH Port Open to All Internet</name>
             <regex><![CDATA[from_port\s*=\s*22[^\d][^}]*cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\]|cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\][^}]*from_port\s*=\s*22[^\d]]]></regex>
             <rdl><![CDATA[[FLAG:from_port\s*=\s*22[^\d][^}]*cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\]]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects security group rules allowing SSH (port 22) ingress from all IP addresses.</rule_desc>
             <vuln_desc>Exposing SSH to the public internet invites brute-force attacks and exploitation of SSH vulnerabilities, commonly the first step in unauthorized access chains.</vuln_desc>
             <developer>Restrict SSH access to known bastion/jump host IPs or use SSM Session Manager for serverless SSH access without open ports.</developer>
@@ -42,6 +74,14 @@
             <name>RDP Port Open to All Internet</name>
             <regex><![CDATA[from_port\s*=\s*3389[^\d][^}]*cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\]|cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\][^}]*from_port\s*=\s*3389[^\d]]]></regex>
             <rdl><![CDATA[[FLAG:from_port\s*=\s*3389[^\d][^}]*cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\]]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects security group rules allowing RDP (port 3389) ingress from all IP addresses.</rule_desc>
             <vuln_desc>Public RDP exposure is a leading cause of ransomware incidents and is actively exploited by threat actors for initial access.</vuln_desc>
             <developer>Block public RDP access. Use VPN, bastion hosts, or Azure Bastion/SSM for Windows remote management.</developer>
@@ -53,6 +93,14 @@
             <name>S3 Bucket Publicly Accessible</name>
             <regex><![CDATA[acl\s*=\s*"public-read(?:-write)?"|block_public_acls\s*=\s*false|block_public_policy\s*=\s*false|ignore_public_acls\s*=\s*false|restrict_public_buckets\s*=\s*false]]></regex>
             <rdl><![CDATA[[FLAG:acl\s*=\s*"public-read(?:-write)?"|block_public_acls\s*=\s*false|block_public_policy\s*=\s*false]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects S3 bucket configurations that allow public access or disable public access block settings.</rule_desc>
             <vuln_desc>Publicly accessible S3 buckets are a leading cause of sensitive data breaches. Disabling block public access settings can expose data to unauthorized reading or overwriting.</vuln_desc>
             <developer>Enable all four S3 Block Public Access settings at the bucket and account level. Use pre-signed URLs for controlled public content delivery.</developer>
@@ -62,6 +110,14 @@
             <name>Storage Encryption Disabled or Not Configured</name>
             <regex><![CDATA[resource\s+"aws_s3_bucket"\s*"[^"]+"\s*\{]]></regex>
             <rdl><![CDATA[[FLAG:resource\s+"aws_s3_bucket"\s*"[^"]+"\s*\{][IF(MISSING:server_side_encryption_configuration|aws_s3_bucket_server_side_encryption_configuration)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects S3 buckets or storage resources without server-side encryption configured.</rule_desc>
             <vuln_desc>Unencrypted storage leaves data at risk from unauthorized access, storage-layer breaches, and regulatory non-compliance.</vuln_desc>
             <developer>Enable SSE-KMS or SSE-S3 for all buckets using aws_s3_bucket_server_side_encryption_configuration. Prefer customer-managed KMS keys (SSE-KMS) for audit trail and key rotation control.</developer>
@@ -73,6 +129,14 @@
             <name>CloudTrail Logging Disabled</name>
             <regex><![CDATA[resource\s+"aws_cloudtrail"[^}]*enable_logging\s*=\s*false]]></regex>
             <rdl><![CDATA[[FLAG:resource\s+"aws_cloudtrail"[^}]*enable_logging\s*=\s*false]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects CloudTrail configurations with logging explicitly disabled.</rule_desc>
             <vuln_desc>Disabling CloudTrail eliminates the audit trail for API calls, making it impossible to detect unauthorized access, privilege escalation, or data exfiltration.</vuln_desc>
             <developer>Enable CloudTrail with multi-region coverage, S3 log delivery, and CloudWatch Logs integration. Enable log file validation to detect tampering.</developer>
@@ -82,6 +146,14 @@
             <name>VPC Flow Logs Disabled</name>
             <regex><![CDATA[resource\s+"aws_vpc"[^}]*\}(?![^}]*aws_flow_log)]]></regex>
             <rdl><![CDATA[[FLAG:resource\s+"aws_vpc"\b][IF(MISSING:aws_flow_log|enable_flow_logs|flow_log)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects VPC resources without associated VPC Flow Logs configuration.</rule_desc>
             <vuln_desc>Without VPC Flow Logs, network traffic to and from resources is unmonitored, limiting incident detection and forensic investigation capabilities.</vuln_desc>
             <developer>Associate aws_flow_log resources with all VPCs, targeting CloudWatch Logs or S3 for aggregation and analysis.</developer>
@@ -93,6 +165,14 @@
             <name>Hardcoded Secret or Password in Terraform Variables</name>
             <regex><![CDATA[(?i)(?:password|secret|api_key|apikey|token|private_key)\s*=\s*"[A-Za-z0-9@#$%^&*!_\-]{8,}"]]></regex>
             <rdl><![CDATA[[FLAG:(?i)(?:password|secret|api_key|apikey|token|private_key)\s*=\s*"[A-Za-z0-9@#$%^&*!_\-]{8,}"][IF(MISSING:var\.|data\.|local\.|sensitive)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects hardcoded credentials or secrets directly assigned as Terraform resource attribute values.</rule_desc>
             <vuln_desc>Hardcoded secrets in Terraform configurations are committed to version control, visible in state files, and exposed in plan outputs, creating multiple vectors for credential leakage.</vuln_desc>
             <developer>Use var references with sensitive = true, data sources (aws_secretsmanager_secret_version), or Vault provider lookups. Mark secret variables sensitive to suppress plan output.</developer>

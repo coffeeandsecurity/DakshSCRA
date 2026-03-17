@@ -5,6 +5,13 @@
             <regex><![CDATA[(?i)\b(?:fetch|XMLHttpRequest|HttpClient|axios\.(?:get|post|put|delete|request)|\$.ajax|url\s*[:=]|baseUrl\s*[:=]|serverUrl\s*[:=]|endpoint\s*[:=]|api(?:[_-]?(?:url|endpoint))?\s*[:=]|src\s*[:=]|href\s*[:=]|window\.open|Browser\.open|InAppBrowser|allow-navigation|access\s+origin)[^\n]{0,220}http://]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\b(?:fetch|XMLHttpRequest|HttpClient|axios\.(?:get|post|put|delete|request)|\$.ajax|url\s*[:=]|baseUrl\s*[:=]|serverUrl\s*[:=]|endpoint\s*[:=]|api(?:[_-]?(?:url|endpoint))?\s*[:=]|src\s*[:=]|href\s*[:=]|window\.open|Browser\.open|InAppBrowser|allow-navigation|access\s+origin)[^\n]{0,220}http://][IF(MISSING:https://)]]]></rdl>
             <exclude><![CDATA[(?i)apache\.org/licenses|opensource\.org/licenses|w3\.org|^\s*(//|/\*|\*|#|<!--|~)]]></exclude>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects cleartext endpoint references in hybrid mobile application code/configuration.</rule_desc>
             <vuln_desc>Using HTTP can expose traffic to interception and tampering.</vuln_desc>
             <developer>Use HTTPS for all production APIs and enforce certificate validation.</developer>
@@ -14,6 +21,14 @@
             <name>Insecure Browser Plugin Usage</name>
             <regex><![CDATA[\b(?:InAppBrowser|cordova\.InAppBrowser|Browser\.open)\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:\b(?:InAppBrowser|cordova\.InAppBrowser|Browser\.open)\s*\(]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects embedded browser opening flows that need URL allowlist validation.</rule_desc>
             <vuln_desc>Opening attacker-controlled URLs can lead to phishing and token leakage.</vuln_desc>
             <developer>Allowlist destinations and validate any dynamic URL input.</developer>
@@ -23,6 +38,14 @@
             <name>Sensitive Data in Local Storage</name>
             <regex><![CDATA[\b(?:localStorage\.setItem|sessionStorage\.setItem|Storage\.set)\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:\b(?:localStorage\.setItem|sessionStorage\.setItem|Storage\.set)\s*\(]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects local storage write paths that may include sensitive data.</rule_desc>
             <vuln_desc>Persisting secrets in web storage can expose tokens/credentials on device compromise.</vuln_desc>
             <developer>Store secrets in secure native storage plugins, not plain web storage.</developer>
@@ -34,15 +57,30 @@
             <name>Ionic/Cordova Allow Navigation Wildcard</name>
             <regex><![CDATA[<allow-navigation\s+href=\"\*\"|<access\s+origin=\"\*\"]]></regex>
             <rdl><![CDATA[[FLAG:<allow-navigation\s+href=\"\*\"|<access\s+origin=\"\*\"][IF(MISSING:Content-Security-Policy)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects wildcard navigation/origin allowlist settings.</rule_desc>
             <vuln_desc>Wildcard allowlists can expose app web context to untrusted content.</vuln_desc>
             <developer>Restrict navigation/access allowlists to trusted origins.</developer>
-            <reviewer>Review config. xml allowlist entries and CSP alignment. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+            <reviewer>Review config.xml allowlist entries and CSP alignment. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Ionic Insecure HTTP Endpoint Usage</name>
             <regex>http://</regex>
             <rdl><![CDATA[[FLAG:http://][IF(MISSING:https://)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects cleartext endpoint references in Ionic/Capacitor apps.</rule_desc>
             <vuln_desc>Cleartext transport can leak sensitive traffic.</vuln_desc>
             <developer>Use HTTPS and secure transport configuration.</developer>
@@ -52,15 +90,31 @@
             <name>Ionic/CSP Unsafe Directives</name>
             <regex><![CDATA[unsafe-inline|unsafe-eval]]></regex>
             <rdl><![CDATA[[FLAG:unsafe-inline|unsafe-eval][IF(MISSING:nonce-|sha256-)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects weak CSP directives often used in webview apps.</rule_desc>
             <vuln_desc>Unsafe CSP directives increase XSS/script injection exploitability.</vuln_desc>
             <developer>Harden CSP and avoid unsafe directives whenever possible.</developer>
-            <reviewer>Review index. html/meta headers/CSP configuration files. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+            <reviewer>Review index.html/meta headers/CSP configuration files. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Ionic Capacitor Cleartext Permitted</name>
             <regex><![CDATA[cleartextTrafficPermitted\s*[:=]\s*true|NSAllowsArbitraryLoads]]></regex>
             <rdl><![CDATA[[FLAG:cleartextTrafficPermitted\s*[:=]\s*true|NSAllowsArbitraryLoads][IF(MISSING:network_security_config|NSExceptionDomains)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects platform transport relaxations in hybrid config.</rule_desc>
             <vuln_desc>Transport relaxations can permit insecure network communication.</vuln_desc>
             <developer>Disable cleartext/ATS relaxations for production.</developer>
@@ -70,6 +124,13 @@
             <name>Ionic Storage Secret Marker</name>
             <regex><![CDATA[(localStorage|sessionStorage)\.(setItem|set)\(.*(token|secret|password|apikey)]]></regex>
             <rdl><![CDATA[[FLAG:(localStorage|sessionStorage)\.(setItem|set)\(.*(token|secret|password|apikey)][IF(MISSING:secure-storage|Keychain|Keystore)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects potentially sensitive values stored in web storage.</rule_desc>
             <vuln_desc>Web storage is not suitable for long-lived secrets.</vuln_desc>
             <developer>Use secure storage plugins and minimize client secret persistence.</developer>
@@ -79,6 +140,14 @@
             <name>Ionic Hardcoded Secret Marker</name>
             <regex><![CDATA[(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]]]></regex>
             <rdl><![CDATA[[FLAG:(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]][IF(MISSING:environment\.ts\.example)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <aggregate>file</aggregate>
+                <report_format>secret_list</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects likely hardcoded secrets in Ionic/Capacitor code.</rule_desc>
             <vuln_desc>Embedded secrets can be extracted from bundles/artifacts.</vuln_desc>
             <developer>Move secrets server-side and rotate exposed credentials.</developer>
@@ -90,6 +159,14 @@
             <name>Android Cleartext Traffic Allowed</name>
             <regex><![CDATA[usesCleartextTraffic\s*=\s*"?(?:true|TRUE)"?]]></regex>
             <rdl><![CDATA[[FLAG:usesCleartextTraffic\s*=\s*"?(?:true|TRUE)"?]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects Android cleartext traffic configuration in hybrid builds.</rule_desc>
             <vuln_desc>Cleartext transport weakens confidentiality and integrity guarantees.</vuln_desc>
             <developer>Disable cleartext traffic and use secure network security config exceptions only when needed.</developer>
@@ -101,10 +178,18 @@
             <name>iOS ATS Disabled</name>
             <regex><![CDATA[NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]></regex>
             <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects ATS disablement in hybrid iOS builds.</rule_desc>
             <vuln_desc>Disabling ATS can permit insecure transport and increase MITM risk.</vuln_desc>
             <developer>Keep ATS enabled with narrow exceptions for approved domains only.</developer>
-            <reviewer>Review ATS keys in Info. plist and verify minimal exception scope. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+            <reviewer>Review ATS keys in Info.plist and verify minimal exception scope. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

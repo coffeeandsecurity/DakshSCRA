@@ -4,15 +4,31 @@
             <name>Overly Permissive Cordova Whitelist</name>
             <regex><![CDATA[<allow-navigation\s+href="\*"\s*/>|<access\s+origin="\*"\s*/>]]></regex>
             <rdl><![CDATA[[FLAG:<allow-navigation\s+href="\*"\s*/>|<access\s+origin="\*"\s*/>][IF(MISSING:allowlist|whitelist|trusted)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects wildcard navigation/network whitelist entries in Cordova config.</rule_desc>
             <vuln_desc>Wildcard allowlists can expose the app to untrusted content, data leakage, and code abuse.</vuln_desc>
-            <developer>Use strict origin allowlists and remove wildcard entries from production config. xml.</developer>
+            <developer>Use strict origin allowlists and remove wildcard entries from production config.xml.</developer>
             <reviewer>Verify whitelist rules are limited to approved domains and protocols. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure External URL Handling</name>
             <regex><![CDATA[\b(?:window\.open|cordova\.InAppBrowser\.open)\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:\b(?:window\.open|cordova\.InAppBrowser\.open)\s*\(]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects browser launch calls that require URL validation and allowlist checks.</rule_desc>
             <vuln_desc>Unvalidated URL launches can enable phishing and malicious redirection.</vuln_desc>
             <developer>Validate target URLs against approved schemes/domains before opening.</developer>
@@ -22,6 +38,14 @@
             <name>Sensitive Data Stored in Web Storage</name>
             <regex><![CDATA[\b(?:localStorage\.setItem|sessionStorage\.setItem)\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:\b(?:localStorage\.setItem|sessionStorage\.setItem)\s*\(]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects web storage writes that may include sensitive values.</rule_desc>
             <vuln_desc>Web storage is not suitable for high-value secrets and may leak data on compromised devices.</vuln_desc>
             <developer>Use secure native storage plugins for credentials and tokens.</developer>
@@ -33,15 +57,31 @@
             <name>Cordova Wildcard Access Origin</name>
             <regex><![CDATA[<access\s+origin=\"\*\"]]></regex>
             <rdl><![CDATA[[FLAG:<access\s+origin=\"\*\"][IF(MISSING:Content-Security-Policy)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects wildcard access origin in Cordova config.</rule_desc>
             <vuln_desc>Wildcard origin allows broad network access and expands attack surface.</vuln_desc>
             <developer>Restrict access origins to explicit trusted domains.</developer>
-            <reviewer>Review config. xml access policy entries. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+            <reviewer>Review config.xml access policy entries. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Cordova Wildcard Allow Navigation</name>
             <regex><![CDATA[<allow-navigation\s+href=\"\*\"]]></regex>
             <rdl><![CDATA[[FLAG:<allow-navigation\s+href=\"\*\"][IF(MISSING:allow-navigation\s+href=\"https://)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects wildcard navigation policy in Cordova config.</rule_desc>
             <vuln_desc>Wildcard navigation permits untrusted content navigation.</vuln_desc>
             <developer>Restrict navigation destinations and enforce CSP.</developer>
@@ -51,6 +91,14 @@
             <name>Cordova Unsafe CSP Directives</name>
             <regex><![CDATA[unsafe-inline|unsafe-eval]]></regex>
             <rdl><![CDATA[[FLAG:unsafe-inline|unsafe-eval][IF(MISSING:nonce-|sha256-)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects weak CSP directives in Cordova web assets/config.</rule_desc>
             <vuln_desc>Unsafe directives increase XSS/script injection risk.</vuln_desc>
             <developer>Harden CSP and avoid unsafe directives where feasible.</developer>
@@ -60,6 +108,13 @@
             <name>Cordova Insecure HTTP Endpoint Usage</name>
             <regex>http://</regex>
             <rdl><![CDATA[[FLAG:http://][IF(MISSING:https://)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects cleartext endpoint references in Cordova code/config.</rule_desc>
             <vuln_desc>Cleartext traffic can expose user and session data.</vuln_desc>
             <developer>Use HTTPS endpoints and strict transport controls.</developer>
@@ -69,6 +124,14 @@
             <name>Cordova WebView JavaScript Bridge Marker</name>
             <regex><![CDATA[addJavascriptInterface\(|cordova\.exec\(]]></regex>
             <rdl><![CDATA[[FLAG:addJavascriptInterface\(|cordova\.exec\(][IF(MISSING:allow-navigation\s+href=\"https://)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects JavaScript-native bridge usage requiring trust-boundary review.</rule_desc>
             <vuln_desc>Unsafe bridge handling can expose native capabilities to untrusted content.</vuln_desc>
             <developer>Constrain bridge usage and validate inbound arguments.</developer>
@@ -78,6 +141,14 @@
             <name>Cordova Hardcoded Secret Marker</name>
             <regex><![CDATA[(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]]]></regex>
             <rdl><![CDATA[[FLAG:(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]][IF(MISSING:example|sample|dummy)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <aggregate>file</aggregate>
+                <report_format>secret_list</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects likely hardcoded secrets in Cordova projects.</rule_desc>
             <vuln_desc>Embedded secrets can be recovered from packaged app assets.</vuln_desc>
             <developer>Use backend-managed secrets and rotate exposed values.</developer>
@@ -89,6 +160,14 @@
             <name>Android Cleartext Traffic Allowed</name>
             <regex><![CDATA[usesCleartextTraffic\s*=\s*"?(?:true|TRUE)"?]]></regex>
             <rdl><![CDATA[[FLAG:usesCleartextTraffic\s*=\s*"?(?:true|TRUE)"?]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects insecure cleartext traffic settings in Android-specific Cordova builds.</rule_desc>
             <vuln_desc>Allowing cleartext transport weakens confidentiality and integrity.</vuln_desc>
             <developer>Disable cleartext traffic and use HTTPS for all endpoints.</developer>
@@ -100,10 +179,18 @@
             <name>iOS ATS Disabled</name>
             <regex><![CDATA[NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]></regex>
             <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects App Transport Security disablement in iOS Cordova builds.</rule_desc>
             <vuln_desc>Disabling ATS increases risk of network interception and tampering.</vuln_desc>
             <developer>Retain ATS defaults and define narrow exceptions only when strictly required.</developer>
-            <reviewer>Check Info. plist transport policy and exception domain scope. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+            <reviewer>Check Info.plist transport policy and exception domain scope. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

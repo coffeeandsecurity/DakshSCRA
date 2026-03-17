@@ -3,7 +3,15 @@
         <rule>
             <name>Echo Debug Mode Enabled</name>
             <regex><![CDATA[GIN_MODE\s*=\s*debug|SetMode\(\s*gin\.DebugMode\s*\)|\.Debug\s*=\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:GIN_MODE\s*=\s*debug|SetMode\(\s*gin\.DebugMode\s*\)|\.Debug\s*=\s*true][IF(MISSING:release|production)]]]></rdl>
+            <rdl><![CDATA[[FLAG:GIN_MODE\s*=\s*debug|SetMode\(\s*gin\.DebugMode\s*\)|\.Debug\s*=\s*true][IF(MISSING:production|release|ReleaseMode|GIN_MODE.*release && MISSING:test|development)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects debug mode settings in Go web frameworks.</rule_desc>
             <vuln_desc>Debug mode can expose internals and verbose diagnostics.</vuln_desc>
             <developer>Use release/production mode in deployment.</developer>
@@ -12,7 +20,15 @@
         <rule>
             <name>Echo TLS Validation Bypass</name>
             <regex><![CDATA[InsecureSkipVerify\s*:\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:InsecureSkipVerify\s*:\s*true]]]></rdl>
+            <rdl><![CDATA[[FLAG:InsecureSkipVerify\s*:\s*true][IF(MISSING:test|development|localhost|staging)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects TLS certificate verification bypass in HTTP/TLS clients.</rule_desc>
             <vuln_desc>Skipping cert validation enables MITM attacks.</vuln_desc>
             <developer>Keep certificate validation enabled and implement proper trust chains.</developer>
@@ -21,7 +37,15 @@
         <rule>
             <name>Echo SQL Query Concatenation Sink</name>
             <regex><![CDATA[Query\(\s*fmt\.Sprintf|Exec\(\s*fmt\.Sprintf|Raw\(\s*fmt\.Sprintf]]></regex>
-            <rdl><![CDATA[[FLAG:Query\(\s*fmt\.Sprintf|Exec\(\s*fmt\.Sprintf|Raw\(\s*fmt\.Sprintf]]]></rdl>
+            <rdl><![CDATA[[FLAG:Query\(\s*fmt\.Sprintf|Exec\(\s*fmt\.Sprintf|Raw\(\s*fmt\.Sprintf][IF(MISSING:prepare|parameterize|\?.*args|sqlx\.NamedExec|squirrel)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects dynamic SQL construction via string formatting.</rule_desc>
             <vuln_desc>Formatted SQL may introduce SQL injection vulnerabilities.</vuln_desc>
             <developer>Use parameterized query APIs and strict input validation.</developer>
@@ -30,7 +54,15 @@
         <rule>
             <name>Echo Permissive CORS</name>
             <regex><![CDATA[AllowOrigins\s*:\s*\[\]\s*string\{\s*"\*"\s*\}|AllowOrigins\s*:\s*"\*"]]></regex>
-            <rdl><![CDATA[[FLAG:AllowOrigins\s*:\s*\[\]\s*string\{\s*"\*"\s*\}|AllowOrigins\s*:\s*"\*"]]]></rdl>
+            <rdl><![CDATA[[FLAG:AllowOrigins\s*:\s*\[\]\s*string\{\s*"\*"\s*\}|AllowOrigins\s*:\s*"\*"][IF(MISSING:AllowOriginFunc|allowedOrigins && PRESENT:AllowOrigins.*"\*"|AllowAnyOrigin)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects wildcard CORS policies in Go services.</rule_desc>
             <vuln_desc>Wildcard origins can expose APIs to arbitrary websites.</vuln_desc>
             <developer>Limit CORS to explicit trusted origins.</developer>
@@ -39,7 +71,15 @@
         <rule>
             <name>Echo Hardcoded Secret Material</name>
             <regex><![CDATA[(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <rdl><![CDATA[[FLAG:(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:os\.Getenv|os\.LookupEnv|viper\.|config\.|vault\. && MISSING:example|test|placeholder|TODO)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects likely hardcoded secrets in Go source/config.</rule_desc>
             <vuln_desc>Hardcoded secrets can be extracted from code or binaries.</vuln_desc>
             <developer>Use environment/config secret providers and rotate keys.</developer>

@@ -4,6 +4,14 @@
             <name>Untrusted Input: Request.Form</name>
             <regex><![CDATA[Request\.Form]]></regex>
             <rdl><![CDATA[[FLAG:Request\.Form][IF(PRESENT:(SqlCommand|Execute|Response\.Write|Redirect|File|Path|Process|Xml) && MISSING:(ValidateInput|HtmlEncode|UrlEncode|Sanitize|TryParse|Regex\.IsMatch))]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects the usage of Request.Form, which can introduce untrusted inputs into the code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using user input from the Request.Form collection without proper validation and sanitization. Attackers can manipulate form data to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks (SQL, OS, or LDAP), cross-site scripting (XSS), or remote code execution.</vuln_desc>
             <developer>Validate and sanitize user input received from the Request. Form collection before using it in any sensitive operations. Implement strong input validation, ensuring that only expected and sanitized values are accepted from form submissions. Additionally, developers should be cautious about the potential risks associated with using user-supplied data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
@@ -13,6 +21,14 @@
             <name>Untrusted Input: Request.QueryString</name>
             <regex><![CDATA[Request\.QueryString]]></regex>
             <rdl><![CDATA[[FLAG:Request\.QueryString][IF(PRESENT:(SqlCommand|Execute|Response\.Write|Redirect|File|Path|Process|Xml) && MISSING:(ValidateInput|HtmlEncode|UrlEncode|Sanitize|TryParse|Regex\.IsMatch))]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Identifies the usage of Request.QueryString, which may lead to untrusted inputs being used in the code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using user input from the Request.QueryString collection without proper validation and sanitization. Attackers can manipulate URL query parameters to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks (SQL, OS, or LDAP), cross-site scripting (XSS), or unauthorized access to sensitive information.</vuln_desc>
             <developer>Carefully validate and sanitize user input received from the Request. QueryString collection before using it in any sensitive operations. Implement strong input validation, ensuring that only expected and sanitized values are accepted from URL query parameters. Additionally, developers should be aware of the risks associated with using user-supplied data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
@@ -22,6 +38,14 @@
             <name>Untrusted Input Handling in HTLM Output: Response.Write</name>
             <regex><![CDATA[Response\.Write\(.*\)]]></regex>
             <rdl><![CDATA[[FLAG:Response\.Write\(.*\)][IF(PRESENT:(Request\.|HttpContext\.Current\.Request) && MISSING:(HtmlEncode|HttpUtility\.HtmlEncode|AntiXssEncoder|TagBuilder))]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects the usage of Response.Write without output encoding, which can lead to cross-site scripting vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using Response.Write without proper output encoding. Attackers can inject malicious scripts or HTML code, which may be executed by the victim's browser, leading to cross-site scripting attacks and potential theft of sensitive information.</vuln_desc>
             <developer>Use output encoding techniques, such as HTML encoding, when displaying user-generated or dynamic content in the web application. Avoid directly outputting untrusted data without proper sanitization to prevent cross-site scripting vulnerabilities. Additionally, developers should implement content security policies and follow secure coding practices to ensure the proper handling of user input and protection against XSS attacks.</developer>
@@ -31,6 +55,14 @@
             <name>Untrusted Input Handling in SQL Query: SqlCommand</name>
             <regex><![CDATA[new SqlCommand\(.*\)]]></regex>
             <rdl><![CDATA[[FLAG:new SqlCommand\(.*\)][IF(PRESENT:(\+|String\.Format|Request\.|QueryString|Form) && MISSING:(SqlParameter|AddWithValue|Parameters\.Add|Parameters\.AddWithValue))]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects the usage of SqlCommand without parameterized queries, which can lead to SQL injection vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using SqlCommand with string concatenation instead of parameterized queries. Attackers can exploit SQL injection vulnerabilities by manipulating input values, potentially executing arbitrary SQL queries and gaining unauthorized access to the database.</vuln_desc>
             <developer>Use parameterized queries or stored procedures with bound parameters when constructing SQL queries. Avoid string concatenation of user-supplied values in SQL statements to prevent SQL injection attacks. Additionally, developers should enforce strict input validation and implement appropriate security measures, such as input sanitization and output encoding, to ensure the integrity and security of database operations.</developer>
@@ -40,6 +72,14 @@
             <name>Untrusted Input Handling in XML Query</name>
             <regex><![CDATA[(?i)(XmlDocument\.Load|XmlDocument\.LoadXml|XmlTextReader\.Create|XmlReader\.Create|XmlSerializer\.Deserialize|XDocument\.Load|XDocument\.Parse|XElement\.Load|XElement\.Parse|XPathDocument\.Create|XPathDocument\.Load|XPathDocument\.LoadXml|XPathNavigator\.Create|XPathNavigator\.Load|XPathNavigator\.LoadXml|XslCompiledTransform\.Load|XslCompiledTransform\.LoadXml|XslTransform\.Load|XslTransform\.LoadXml|XmlSchema\.Read|XmlSchemaSet\.Add|XmlSchemaSet\.Read)]]></regex>
             <rdl><![CDATA[[FLAG:(?i)(XmlDocument\.Load|XmlDocument\.LoadXml|XmlTextReader\.Create|XmlReader\.Create|XmlSerializer\.Deserialize|XDocument\.Load|XDocument\.Parse|XElement\.Load|XElement\.Parse|XPathDocument\.Create|XPathDocument\.Load|XPathDocument\.LoadXml|XPathNavigator\.Create|XPathNavigator\.Load|XPathNavigator\.LoadXml|XslCompiledTransform\.Load|XslCompiledTransform\.LoadXml|XslTransform\.Load|XslTransform\.LoadXml|XmlSchema\.Read|XmlSchemaSet\.Add|XmlSchemaSet\.Read)][IF(MISSING:(DtdProcessing\s*=\s*Prohibit|XmlResolver\s*=\s*null|MaxCharactersFromEntities|ProhibitDtd\s*=\s*true))]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects the usage of XML processing methods in .NET that can introduce XML External Entity (XXE) vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using XML processing methods without proper input validation and sanitization. Attackers can exploit XML External Entity (XXE) vulnerabilities to read arbitrary files, perform server-side request forgery (SSRF), or launch denial-of-service attacks.</vuln_desc>
             <developer>Validate and sanitize any user-provided XML data before processing it with the mentioned methods in. NET. consider disabling external entity resolution or implementing secure XML parsers with strict settings to prevent XXE vulnerabilities. Additionally, developers should follow secure coding practices and avoid dynamically constructing XML documents using untrusted data.</developer>
@@ -49,6 +89,14 @@
             <name>Untrusted URL Concatenation: Append Method</name>
             <regex><![CDATA[\.Append\(.*HttpContext\.Current\.Request\.Url]]></regex>
             <rdl><![CDATA[[FLAG:\.Append\(.*HttpContext\.Current\.Request\.Url][IF(MISSING:(Uri\.EscapeDataString|UrlEncode|IsLocalUrl|allowlist|whitelist))]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects the usage of untrusted URL concatenation using the Append method, which may lead to security vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using untrusted URL concatenation with the Append method. Attackers can manipulate the URL concatenation process to inject malicious or unexpected content, leading to security vulnerabilities such as open redirect, cross-site scripting (XSS), or other injection attacks.</vuln_desc>
             <developer>Avoid directly concatenating untrusted user input or URL components using the Append method. Instead, Use appropriate URL encoding and validation techniques, such as the Uri. EscapeDataString method, to ensure that the resulting URL is properly formed and secure. Also implement input validation and output encoding to prevent injection attacks and other security vulnerabilities.</developer>
@@ -58,6 +106,14 @@
             <name>Untrusted Data Output: HttpContext.Current.Request</name>
             <regex><![CDATA[\.(Append|WriteLine)\([^\)]*?HttpContext\.Current\.Request\.(Url|Form|QueryString)]]></regex>
             <rdl><![CDATA[[FLAG:\.(Append|WriteLine)\([^\)]*?HttpContext\.Current\.Request\.(Url|Form|QueryString)][IF(MISSING:(HtmlEncode|UrlEncode|Sanitize|AntiXssEncoder))]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects the usage of untrusted data output with HttpContext.Current.Request, which may lead to security vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using untrusted data output with HttpContext.Current.Request. Attackers can manipulate the data output to inject malicious or unexpected content, leading to security vulnerabilities such as cross-site scripting (XSS), injection attacks, or sensitive information exposure.</vuln_desc>
             <developer>Any data output involving HttpContext. Current. Request is properly validated, sanitized, and encoded. Avoid directly outputting untrusted data without appropriate measures in place to mitigate security risks. Developers should implement input validation, output encoding, and secure data handling practices to prevent vulnerabilities.</developer>
@@ -78,6 +134,14 @@
             <name>Untrusted Data Output: HttpContext.Current.Request.Form</name>
             <regex><![CDATA[\.Append\(.*HttpContext\.Current\.Request\.Form]]></regex>
             <rdl><![CDATA[[FLAG:\.Append\(.*HttpContext\.Current\.Request\.Form][IF(MISSING:(HtmlEncode|UrlEncode|Sanitize|AntiXssEncoder))]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects the usage of untrusted data output with HttpContext.Current.Request.Form, which may lead to security vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using untrusted data output with HttpContext.Current.Request.Form. Attackers can manipulate the data output to inject malicious or unexpected content, leading to security vulnerabilities such as cross-site scripting (XSS), injection attacks, or sensitive information exposure.</vuln_desc>
             <developer>Any data output involving HttpContext. Current. Request. Form is properly validated, sanitized, and encoded. Avoid directly outputting untrusted data without appropriate measures in place to mitigate security risks. Developers should implement input validation, output encoding, and secure data handling practices to prevent vulnerabilities.</developer>
@@ -87,6 +151,14 @@
             <name>Untrusted Data Output: HttpContext.Current.Request.QueryString</name>
             <regex><![CDATA[\.Append\(.*HttpContext\.Current\.Request\.QueryString]]></regex>
             <rdl><![CDATA[[FLAG:\.Append\(.*HttpContext\.Current\.Request\.QueryString][IF(MISSING:(HtmlEncode|UrlEncode|Sanitize|AntiXssEncoder))]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects the usage of untrusted data output with HttpContext.Current.Request.QueryString, which may lead to security vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using untrusted data output with HttpContext.Current.Request.QueryString. Attackers can manipulate the data output to inject malicious or unexpected content, leading to security vulnerabilities such as cross-site scripting (XSS), injection attacks, or sensitive information exposure.</vuln_desc>
             <developer>Any data output involving HttpContext. Current. Request. QueryString is properly validated, sanitized, and encoded. Avoid directly outputting untrusted data without appropriate measures in place to mitigate security risks. Developers should implement input validation, output encoding, and secure data handling practices to prevent vulnerabilities.</developer>
@@ -98,6 +170,14 @@
             <name>Path Traversal: Directory.GetFiles</name>
             <regex><![CDATA[Directory\.GetFiles\(.*\)]]></regex>
             <rdl><![CDATA[[FLAG:Directory\.GetFiles\(.*\)][IF(PRESENT:(Request\.|QueryString|Form|userInput|path) && MISSING:(Path\.GetFullPath|Path\.Combine|StartsWith|allowlist|whitelist))]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects the usage of Directory.GetFiles without proper input validation, which can lead to path traversal vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using Directory.GetFiles without validating user-supplied input. Attackers can manipulate file path inputs to traverse directories and access unauthorized files on the system, potentially exposing sensitive information or executing arbitrary code.</vuln_desc>
             <developer>Carefully validate and sanitize user input used in file path operations. Implement input validation techniques to restrict file access to authorized directories and prevent path traversal attacks. Additionally, developers should enforce proper authorization and access control mechanisms to ensure the security and integrity of file system operations.</developer>
@@ -109,6 +189,14 @@
             <name>Unsafe Method: Command Execution</name>
             <regex><![CDATA[(?i)execute\s(\@|\()]]></regex>
             <rdl><![CDATA[[FLAG:(?i)execute\s(\@|\()][IF(PRESENT:(Request\.|QueryString|Form|userInput|args) && MISSING:(allowlist|whitelist|argument escaping|ProcessStartInfo))]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects the usage of command execution methods that can introduce security vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using command execution methods without proper input validation and sanitization. Attackers can exploit command execution vulnerabilities to execute arbitrary commands on the underlying system, leading to unauthorized access, data leakage, or system compromise.</vuln_desc>
             <developer>Carefully validate and sanitize any user-supplied input before using it in command execution methods. consider using safer alternatives, such as parameterized queries or prepared statements, to prevent command injection vulnerabilities. Additionally, developers should follow secure coding practices and avoid executing commands with user-controlled input directly.</developer>
@@ -120,6 +208,14 @@
             <name>Unvalidated Redirects and Forwards</name>
             <regex><![CDATA[(?i)Response\.Redirect]]></regex>
             <rdl><![CDATA[[FLAG:(?i)Response\.Redirect][IF(MISSING:(IsLocalUrl|allowlist|whitelist|Uri\.TryCreate))]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects the usage of open redirect methods that can introduce security vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using open redirect methods without proper validation and sanitization. Attackers can abuse open redirect vulnerabilities to trick users into visiting malicious websites or perform phishing attacks.</vuln_desc>
             <developer>Validate and sanitize any redirect URLs before using them in open redirect methods. Ensure that the target URLs are trusted and belong to the same domain or a whitelist of allowed domains. Additionally, developers should follow secure coding practices and avoid constructing redirect URLs using untrusted or user-controlled input.</developer>
@@ -131,6 +227,14 @@
             <name>SQL Query: SELECT Statements with WHERE or ORDER BY</name>
             <regex><![CDATA[(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*][IF(PRESENT:(\+|String\.Format|Request\.|QueryString|Form) && MISSING:(SqlParameter|AddWithValue|Parameters\.Add|Parameters\.AddWithValue))]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects instances of SELECT statements with WHERE or ORDER BY clauses in SQL queries, which may be vulnerable to SQL injection if user input is not handled securely.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the use of potentially vulnerable SELECT statements with WHERE or ORDER BY clauses. Improper handling of user input in these clauses can lead to SQL injection, allowing attackers to manipulate query behavior and gain unauthorized access to data.</vuln_desc>
             <developer>Validate and implement secure alternatives, such as using parameterized queries with `SqlParameter` objects to prevent SQL injection vulnerabilities.</developer>
@@ -140,6 +244,14 @@
             <name>SQL Query: Unrestricted SELECT *</name>
             <regex><![CDATA[\bSELECT\s+\*\s+FROM\b]]></regex>
             <rdl><![CDATA[[FLAG:\bSELECT\s+\*\s+FROM\b][IF(MISSING:TOP\s+\d+|LIMIT\s+\d+)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects "SELECT * FROM" in SQL queries, which can expose unnecessary or sensitive data.</rule_desc>
             <vuln_desc>If this rule matches, it suggests that the query retrieves more data than necessary, potentially exposing sensitive information and increasing the attack surface.</vuln_desc>
             <developer>Validate and specify only necessary columns in SQL queries rather than using "SELECT *" to reduce data exposure risks.</developer>
@@ -149,6 +261,14 @@
             <name>SQL Query: Non-parameterized INSERT Statements</name>
             <regex><![CDATA[(?i)\bINSERT INTO\s+[^\s]+\s+\(.*=.*\$.*]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\bINSERT INTO\s+[^\s]+\s+\(.*=.*\$.*][IF(MISSING:(SqlParameter|AddWithValue|Parameters\.Add|Parameters\.AddWithValue))]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects INSERT statements with direct use of user input, which can lead to SQL injection.</rule_desc>
             <vuln_desc>If this rule matches, it suggests an unparameterized INSERT query that may allow SQL injection attacks.</vuln_desc>
             <developer>Always use parameterized queries or prepared statements in INSERT queries to prevent SQL injection.</developer>
@@ -158,6 +278,14 @@
             <name>SQL Query: UNION Queries with User Input</name>
             <regex><![CDATA[(?i)\bUNION\s+SELECT\s+.*\$.*]]></regex>
             <rdl><![CDATA[[FLAG:(?i)\bUNION\s+SELECT\s+.*\$.*][IF(MISSING:(SqlParameter|AddWithValue|Parameters\.Add|Parameters\.AddWithValue))]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects UNION queries that incorporate user input, which could allow SQL injection if not parameterized securely.</rule_desc>
             <vuln_desc>If this rule matches, it indicates a UNION query that may allow SQL injection if user input is included without proper handling.</vuln_desc>
             <developer>Use parameterized queries for UNION statements to prevent SQL injection vulnerabilities.</developer>
@@ -169,6 +297,14 @@
             <name>Stack Trace or Error Disclosure</name>
             <regex><![CDATA[(?i)(Response\.Write\s*\([^)]{0,200}StackTrace|ex\.ToString\(\)|Console\.WriteLine\([^)]{0,200}Exception[^)]*\)|throw new \w*Exception\([^)]{0,200}\))]]></regex>
             <rdl><![CDATA[[FLAG:(?i)(Response\.Write\s*\([^)]{0,200}StackTrace|ex\.ToString\(\)|Console\.WriteLine\([^)]{0,200}Exception[^)]*\)|throw new \w*Exception\([^)]{0,200}\))]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects unsafe error handling and stack trace exposure in .NET applications.</rule_desc>
             <vuln_desc>Using `Response.Write`, `ex.ToString()`, or similar methods to output exception details can expose sensitive stack trace information, aiding attackers in identifying vulnerabilities.</vuln_desc>
             <developer>Avoid exposing stack traces or detailed exceptions directly to users. Use secure logging frameworks (e.g., Serilog, NLog) and custom error pages in web applications.</developer>
@@ -180,6 +316,14 @@
             <name>API Route Prefix: Improper Usage</name>
             <regex><![CDATA[\[RoutePrefix\("]]></regex>
             <rdl><![CDATA[[FLAG:\[RoutePrefix\("]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects the usage of [RoutePrefix] attribute in an API controller, potentially indicating improper route prefix configuration.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using [RoutePrefix] attribute in an API controller without proper configuration. Improper usage of route prefixes can lead to incorrect or insecure routing, potentially exposing sensitive APIs or introducing functional errors.</vuln_desc>
             <developer>Carefully configure [RoutePrefix] attribute in API controllers to ensure proper route prefixing. Follow established routing conventions and ensure that route prefixes are correctly applied, avoiding conflicts and potential security risks. Additionally, developers should thoroughly test the routing configuration to ensure expected behavior and avoid functional errors.</developer>
@@ -191,6 +335,14 @@
             <name>Request Validation: Disabled Configuration</name>
             <regex><![CDATA[%@\s?Page\s?.*\s?ValidateRequest\s?=\s?(\'|\")false(\'|\")]]></regex>
             <rdl><![CDATA[[FLAG:%@\s?Page\s?.*\s?ValidateRequest\s?=\s?(\'|\")false(\'|\")]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects the disabled configuration of request validation in ASP.NET Web Forms, which may lead to security vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of having request validation disabled in ASP.NET Web Forms. Disabling request validation can allow attackers to inject malicious content, such as HTML, JavaScript, or SQL, leading to cross-site scripting (XSS) or other security vulnerabilities.</vuln_desc>
             <developer>Request validation is enabled in ASP. NET Web Forms to protect against common web application vulnerabilities. Avoid disabling request validation unless there is a specific requirement, in which case, proper input validation and output encoding must be implemented to mitigate the associated risks.</developer>
@@ -200,6 +352,14 @@
             <name>Server Certificate Validation: Insecure Configuration</name>
             <regex><![CDATA[ServerCertificateValidationCallback\s*?\(.*?(\=|false|true)]]></regex>
             <rdl><![CDATA[[FLAG:ServerCertificateValidationCallback\s*?\(.*?(\=|false|true)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects insecure configuration of the ServerCertificateValidationCallback, which may lead to improper validation of server certificates.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of insecurely configuring the ServerCertificateValidationCallback, which can result in improper validation of server certificates. Attackers can exploit this to perform man-in-the-middle attacks or bypass security measures that rely on proper certificate validation.</vuln_desc>
             <developer>The ServerCertificateValidationCallback is securely configured to properly validate server certificates. Follow best practices for certificate validation, including verifying the certificate's chain of trust, checking for revocation status, and validating the server's hostname. Additionally, developers should consider using well-established libraries and frameworks that provide robust certificate validation mechanisms.</developer>
@@ -211,6 +371,14 @@
             <name>XSS Mitigation: HTML Encoding using Razor</name>
             <regex><![CDATA[\@Html\.Raw\(.*\)]]></regex>
             <rdl><![CDATA[[FLAG:\@Html\.Raw\(.*\)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>green</highlight_color>
+            </scan_config>
             <rule_desc>Detects the usage of HTML encoding using Razor to mitigate XSS vulnerabilities.</rule_desc>
             <vuln_desc>If this rule matches, it indicates that HTML encoding using Razor's `Html.Raw` method is being used to mitigate XSS vulnerabilities. This is a recommended best practice to prevent the execution of untrusted user input as HTML or script code.</vuln_desc>
             <developer>HTML encoding using Razor's `Html. Raw` method is implemented to mitigate XSS vulnerabilities. By properly encoding user-generated or dynamic content before rendering it in HTML templates, the risk of injecting malicious code can be significantly reduced.</developer>
@@ -220,6 +388,14 @@
             <name>CORS Mitigation: Allow Specific Origins</name>
             <regex><![CDATA[\[EnableCors\s*\(\s*\"AllowSpecificOrigins\"\s*\)\]]]></regex>
             <rdl><![CDATA[[FLAG:\[EnableCors\s*\(\s*\"AllowSpecificOrigins\"\s*\)\]]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>green</highlight_color>
+            </scan_config>
             <rule_desc>Detects the usage of specific origin-based CORS configuration.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential vulnerability of using a specific origin-based CORS configuration. Allowing specific origins without careful consideration can lead to insecure Cross-Origin Resource Sharing (CORS) settings and potential security vulnerabilities.</vuln_desc>
             <developer>Review and validate the specific origins allowed in CORS configurations. Ensure that only trusted origins are explicitly permitted to access resources, and consider using other CORS-related security measures such as handling preflight requests, setting appropriate response headers, and implementing access controls based on authentication and authorization.</developer>
@@ -231,6 +407,14 @@
             <name>Insecure Deserialization: BinaryFormatter</name>
             <regex><![CDATA[BinaryFormatter\s*\(\s*\)|new\s+BinaryFormatter|BinaryFormatter\.Deserialize\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:BinaryFormatter\s*\(\s*\)|new\s+BinaryFormatter|BinaryFormatter\.Deserialize\s*\(]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects use of BinaryFormatter, which is insecure and produces deserialization gadget chains.</rule_desc>
             <vuln_desc>BinaryFormatter is insecure by design — it cannot be made safe when deserializing data from untrusted sources. Attackers can craft payloads that trigger remote code execution through deserialization gadget chains. Microsoft has marked it obsolete and recommends removal.</vuln_desc>
             <developer>Replace BinaryFormatter with secure alternatives: System.Text.Json, XmlSerializer, DataContractSerializer with known types, or MessagePack with strict type resolution.</developer>
@@ -240,6 +424,14 @@
             <name>Insecure Deserialization: ObjectStateFormatter and LosFormatter</name>
             <regex><![CDATA[ObjectStateFormatter\.Deserialize\s*\(|LosFormatter\.Deserialize\s*\(|NetDataContractSerializer\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:ObjectStateFormatter\.Deserialize\s*\(|LosFormatter\.Deserialize\s*\(|NetDataContractSerializer\s*\(]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects additional insecure .NET serialization formatters susceptible to gadget-chain attacks.</rule_desc>
             <vuln_desc>ObjectStateFormatter, LosFormatter, and NetDataContractSerializer all allow arbitrary type deserialization and have known gadget chains enabling RCE.</vuln_desc>
             <developer>Migrate to safe serializers (System.Text.Json, XmlSerializer with known types). Never deserialize data from untrusted sources using these formatters.</developer>
@@ -251,6 +443,14 @@
             <name>SSRF: HttpClient with User-Controlled URL</name>
             <regex><![CDATA[httpClient\.(GetAsync|PostAsync|PutAsync|DeleteAsync|SendAsync|GetStringAsync|GetByteArrayAsync)\s*\(|new\s+HttpClient\s*\(\s*\)]]></regex>
             <rdl><![CDATA[[FLAG:httpClient\.(GetAsync|PostAsync|PutAsync|DeleteAsync|SendAsync|GetStringAsync|GetByteArrayAsync)\s*\(][IF(PRESENT:Request\.|QueryString|Form|userInput|\+ && MISSING:allowlist|whitelist|Uri\.IsWellFormedUriString|IsLocalUrl)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects HttpClient requests that may use user-controlled URLs, enabling SSRF.</rule_desc>
             <vuln_desc>Allowing user input to control HttpClient request URLs can enable SSRF attacks targeting internal services, cloud metadata APIs (169.254.169.254), or internal DNS.</vuln_desc>
             <developer>Validate request URLs against an allowlist of approved hosts and schemes. Block private IP ranges. Use Uri.Host comparison against approved destinations.</developer>
@@ -260,6 +460,14 @@
             <name>SSRF: WebRequest/WebClient with User-Controlled URL</name>
             <regex><![CDATA[WebRequest\.Create\s*\(|new\s+WebClient\s*\(\s*\)|new\s+HttpWebRequest\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:WebRequest\.Create\s*\(|new\s+WebClient\s*\(\s*\)|new\s+HttpWebRequest\s*\(][IF(PRESENT:Request\.|QueryString|Form|userInput|\+ && MISSING:allowlist|whitelist|Uri\.IsWellFormedUriString)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects legacy outbound HTTP requests potentially driven by user-supplied URLs.</rule_desc>
             <vuln_desc>WebRequest/WebClient usage with user-controlled URLs can enable SSRF in .NET applications.</vuln_desc>
             <developer>Validate URL destination before creating the request. Prefer HttpClient with a handler that validates DNS resolution results.</developer>
@@ -271,6 +479,14 @@
             <name>LDAP Injection: DirectorySearcher Filter with User Input</name>
             <regex><![CDATA[new\s+DirectorySearcher\s*\(|DirectorySearcher\.Filter\s*=|new\s+DirectoryEntry\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:new\s+DirectorySearcher\s*\(|DirectorySearcher\.Filter\s*=][IF(PRESENT:Request\.|QueryString|Form|userInput|\+ && MISSING:EscapeLdapFilter|ldapEscape|Encoder\.LdapFilterEncode|AntiXss\.LdapFilterEncode)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects DirectorySearcher usage with filter strings that may incorporate unescaped user input.</rule_desc>
             <vuln_desc>Injecting unsanitized user values into LDAP filter strings allows attackers to bypass authentication or enumerate directory objects.</vuln_desc>
             <developer>Escape all user input using AntiXssEncoder.LdapFilterEncode() or equivalent before inserting into LDAP filter strings.</developer>
@@ -280,6 +496,14 @@
             <name>LDAP Injection: LdapConnection Bind or Search</name>
             <regex><![CDATA[LdapConnection\s*\(|new\s+LdapConnection|LdapConnection\.Bind\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:LdapConnection\s*\(|new\s+LdapConnection][IF(PRESENT:Request\.|QueryString|Form|userInput|\+ && MISSING:EscapeLdapFilter|AntiXss\.LdapFilterEncode)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects LdapConnection usage in .NET where search queries may use unvalidated user input.</rule_desc>
             <vuln_desc>Unescaped input in LDAP searches over LdapConnection can enable injection attacks against directory services.</vuln_desc>
             <developer>Use parameterized LDAP query construction and escape all user-controlled values before embedding in queries.</developer>

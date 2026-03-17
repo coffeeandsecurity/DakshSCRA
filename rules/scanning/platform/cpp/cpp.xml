@@ -4,7 +4,15 @@
             <!-- Applicable for C++ -->
             <name>Untrusted Inputs: cin / getline</name>
             <regex><![CDATA[\b(?:std::cin|getline)\b]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:std::cin|getline)\b]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(?:std::cin|getline)\b][IF(MISSING:validate|sanitize|check|regex|isdigit|isalpha|stoi|stol|stof && MISSING:cin\.ignore|cin\.clear)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects usage of standard input functions that can introduce untrusted input into the program.</rule_desc>
             <vuln_desc>If matched, this indicates potential vulnerabilities from untrusted input without validation. Malicious inputs can lead to buffer overflows, injection attacks, or unexpected behavior.</vuln_desc>
             <developer>Validate and sanitize input received through `cin` and `getline` to prevent injection attacks. Consider setting length limits and using regex patterns to filter input where applicable.</developer>
@@ -14,7 +22,15 @@
             <!-- Applicable for C and C++ -->
             <name>Unsafe Use of Command Execution Functions</name>
             <regex><![CDATA[\b(?:system|popen|exec|execp|CreateProcess)\b\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:system|popen|exec|execp|CreateProcess)\b\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(?:system|popen|exec|execp|CreateProcess)\b\s*\(][IF(MISSING:validate|sanitize|allowlist|whitelist|escapeShellArg)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects the usage of command execution functions that may introduce command injection risks and unauthorized access to system resources.</rule_desc>
             <vuln_desc>Improper use of commands like `system()`, `popen()`, `exec()`, and `CreateProcess()` can expose applications to command injection vulnerabilities and allow unauthorized access to critical system functionalities.</vuln_desc>
             <developer>Minimize the use of command execution functions. When necessary, validate and sanitize any user input passed to these commands. Prefer safer alternatives such as `std::filesystem` operations or libraries like `boost::process`.</developer>
@@ -24,7 +40,15 @@
             <!-- Applicable for C and C++ -->
             <name>Unsafe Loop Handling Over Arrays or Vectors</name>
             <regex><![CDATA[\b(?:for|while)\s*\([^)]*(?:<|<=|>|>=)[^)]*(?:size|length|count|index|idx|i|j|k)[^)]*\)]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:for|while)\s*\([^)]*(?:<|<=|>|>=)[^)]*(?:size|length|count|index|idx|i|j|k)[^)]*\)]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(?:for|while)\s*\([^)]*(?:<|<=|>|>=)[^)]*(?:size|length|count|index|idx|i|j|k)[^)]*\)][IF(MISSING:size\(\)|length\(\)|\.end\(\)|bounds|assert|sizeof\s*\(.*\)/sizeof)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects loops iterating over arrays, vectors, or strings.</rule_desc>
             <vuln_desc>Improperly bounded loops can cause buffer or integer overflows, compromising program stability.</vuln_desc>
             <developer>Use bounds-checked loops, such as range-based `for` loops, to prevent overflows.</developer>
@@ -36,7 +60,15 @@
             <!-- Applicable for C and C++ -->
             <name>Unsafe String Manipulation: strcpy(), strcat(), sprintf()</name>
             <regex><![CDATA[\b(strcpy|strcat|sprintf)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(strcpy|strcat|sprintf)\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(strcpy|strcat|sprintf)\s*\(][IF(MISSING:strlcpy|strlcat|snprintf|strncpy|strncat|_s\b|StringCchCopy|StringCchCat)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects usage of unsafe string manipulation functions that can lead to buffer overflows.</rule_desc>
             <vuln_desc>These functions are not safe for use with untrusted input and can cause buffer overflows or memory corruption.</vuln_desc>
             <developer>Use `std::string` or `std::snprintf()` to handle strings safely in C++.</developer>
@@ -46,7 +78,15 @@
             <!-- Applicable for C++ -->
             <name>Unsafe Use of std::vector::at()</name>
             <regex><![CDATA[\bstd::vector<.*>::at\(\s*\d+\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:\bstd::vector<.*>::at\(\s*\d+\s*\)]]]></rdl>
+            <rdl><![CDATA[[FLAG:\bstd::vector<.*>::at\(\s*\d+\s*\)][IF(MISSING:try\s*\{|catch\s*\(|std::out_of_range)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects unsafe access to `std::vector` elements without boundary checks.</rule_desc>
             <vuln_desc>Out-of-range access can cause exceptions or undefined behavior.</vuln_desc>
             <developer>Ensure vector access is within bounds.</developer>
@@ -56,7 +96,15 @@
             <!-- Applicable for C++ -->
             <name>Dangling Pointer: delete without nullptr</name>
             <regex><![CDATA[\bdelete\s+\b(?:[^\s]+)\b]]></regex>
-            <rdl><![CDATA[[FLAG:\bdelete\s+\b(?:[^\s]+)\b]]]></rdl>
+            <rdl><![CDATA[[FLAG:\bdelete\s+\b(?:[^\s]+)\b][IF(MISSING:=\s*nullptr|=\s*NULL|std::unique_ptr|std::shared_ptr|std::weak_ptr)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>4</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects use of `delete` without setting the pointer to `nullptr`, which can result in dangling pointers.</rule_desc>
             <vuln_desc>Using `delete` without setting the pointer to `nullptr` can cause dangling pointers, leading to undefined behavior or security vulnerabilities.</vuln_desc>
             <developer>Set pointers to `nullptr` after deletion to prevent dangling references. Using smart pointers (like `std::unique_ptr`) is recommended for automatic memory management.</developer>
@@ -65,7 +113,15 @@
         <rule>
             <name>Access to Freed Memory</name>
             <regex><![CDATA[\bfree\s*\(|delete\s*\[?\]?]]></regex>
-            <rdl><![CDATA[[FLAG:\bfree\s*\(|delete\s*\[?\]?]]]></rdl>
+            <rdl><![CDATA[[FLAG:\bfree\s*\(|delete\s*\[?\]?][IF(MISSING:=\s*nullptr|=\s*NULL|unique_ptr|shared_ptr)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects access to memory that has already been freed.</rule_desc>
             <vuln_desc>Using memory after it has been freed can lead to undefined behavior, crashes, or security vulnerabilities.</vuln_desc>
             <developer>Set pointers to `nullptr` after freeing or deleting memory to avoid reuse.</developer>
@@ -77,7 +133,15 @@
             <!-- Applicable for C and C++ -->
             <name>Manual Memory Allocation: Use with Caution</name>
             <regex><![CDATA[\b(new|malloc)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(new|malloc)\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(new|malloc)\s*\(][IF(MISSING:free\s*\(|delete\s+|unique_ptr|shared_ptr|RAII)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects usage of `new` or `malloc()` for manual memory allocation.</rule_desc>
             <vuln_desc>Manual memory allocation requires careful handling. Failing to check for successful allocation can lead to null pointer dereferencing. It is also prone to memory leaks if deallocation is not handled correctly.</vuln_desc>
             <developer>Avoid manual memory management where possible. Use smart pointers (like `std::unique_ptr`) or standard containers (like `std::vector`) to manage memory safely. Always check for null pointers if using `new` or `malloc()`.</developer>
@@ -87,7 +151,15 @@
             <!-- Applicable for C++ -->
             <name>Potential Memory Leak: Use of `new` Without `delete`</name>
             <regex><![CDATA[\bnew\s+\w+(?![^<>]*\s*>)]]></regex>
-            <rdl><![CDATA[[FLAG:\bnew\s+\w+(?![^<>]*\s*>)]]]></rdl>
+            <rdl><![CDATA[[FLAG:\bnew\s+\w+(?![^<>]*\s*>)][IF(MISSING:free\s*\(|delete\s+|unique_ptr|shared_ptr|RAII)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects dynamic memory allocation using `new` but no matching `delete`, potentially leading to memory leaks.</rule_desc>
             <vuln_desc>Using `new` for manual memory management requires an explicit `delete` call. Failure to release allocated memory can result in memory leaks, degrading performance and stability.</vuln_desc>
             <developer>Avoid raw pointers where possible. Use smart pointers (e.g., `std::unique_ptr`, `std::shared_ptr`) to manage memory safely and prevent leaks.</developer>
@@ -97,7 +169,15 @@
             <!-- Applicable for C++ -->
             <name>Null Pointer Dereference with Smart Pointers</name>
             <regex><![CDATA[\b(std::unique_ptr|std::shared_ptr)<.*>\s*=\s*nullptr]]></regex>
-            <rdl><![CDATA[[FLAG:\b(std::unique_ptr|std::shared_ptr)<.*>\s*=\s*nullptr]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(std::unique_ptr|std::shared_ptr)<.*>\s*=\s*nullptr][IF(MISSING:if\s*\(.*!=\s*nullptr\)|if\s*\(.*!=\s*NULL\)|assert\s*\(|nullptr\s*!=)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects potential misuse of smart pointers, leading to null pointer dereference.</rule_desc>
             <vuln_desc>Smart pointers should be properly checked before use to avoid dereferencing null values.</vuln_desc>
             <developer>Perform null checks on smart pointers before dereferencing them.</developer>
@@ -107,7 +187,15 @@
             <!-- Applicable for C and C++ -->
             <name>Access to Freed Memory</name>
             <regex><![CDATA[\bfree\s*\(|delete\s*\[?\]?]]></regex>
-            <rdl><![CDATA[[FLAG:\bfree\s*\(|delete\s*\[?\]?]]]></rdl>
+            <rdl><![CDATA[[FLAG:\bfree\s*\(|delete\s*\[?\]?][IF(MISSING:=\s*nullptr|=\s*NULL|unique_ptr|shared_ptr)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects potential access to memory that has already been freed.</rule_desc>
             <vuln_desc>Using memory after it has been freed can lead to undefined behavior, crashes, or security vulnerabilities.</vuln_desc>
             <developer>Set pointers to `nullptr` after freeing or deleting memory to avoid reuse.</developer>
@@ -117,7 +205,15 @@
             <!-- Applicable for C and C++ -->
             <name>Unsafe Use of realloc()</name>
             <regex><![CDATA[\brealloc\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\brealloc\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\brealloc\s*\(][IF(MISSING:if\s*\(|NULL\s*!=|!=\s*NULL|check|validate|assert)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects usage of `realloc()` which may modify object alignment.</rule_desc>
             <vuln_desc>Changing the alignment of objects through `realloc()` can lead to undefined behavior.</vuln_desc>
             <developer>Consider alternatives to `realloc()` for resizing memory, ensuring alignment remains correct.</developer>
@@ -127,7 +223,15 @@
             <!-- Applicable for C++ -->
             <name>Memory Deallocation: delete vs. delete[]</name>
             <regex><![CDATA[\bdelete\s+\[?\]?]]></regex>
-            <rdl><![CDATA[[FLAG:\bdelete\s+\[?\]?]]]></rdl>
+            <rdl><![CDATA[[FLAG:\bdelete\s+\[?\]?][IF(MISSING:=\s*nullptr|=\s*NULL|unique_ptr|shared_ptr)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects improper usage of `delete` vs. `delete[]` for memory deallocation.</rule_desc>
             <vuln_desc>Using `delete` on an array allocated with `new[]` can lead to undefined behavior.</vuln_desc>
             <developer>Use `delete[]` for arrays allocated with `new[]` to ensure proper deallocation of memory.</developer>
@@ -139,7 +243,15 @@
             <!-- Applicable for C and C++ -->
             <name>Integer Overflow or Wraparound</name>
             <regex><![CDATA[\b(int|short|unsigned)\s+\w+\s*=\s*\w+\s*\+\s*(\d{5,}|INT_MAX|UINT_MAX);]]></regex>
-            <rdl><![CDATA[[FLAG:\b(int|short|unsigned)\s+\w+\s*=\s*\w+\s*\+\s*(\d{5,}|INT_MAX|UINT_MAX);]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(int|short|unsigned)\s+\w+\s*=\s*\w+\s*\+\s*(\d{5,}|INT_MAX|UINT_MAX);][IF(MISSING:INT_MAX|UINT_MAX|__builtin_add_overflow|SafeAdd|checked_add|overflow|bounds)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects arithmetic operations prone to overflow or wraparound.</rule_desc>
             <vuln_desc>Operations involving large constants or values near boundaries may cause integer overflows or wraparound, leading to undefined behavior or security vulnerabilities.</vuln_desc>
             <developer>Use safe arithmetic libraries or perform boundary checks to prevent overflow.</developer>
@@ -151,7 +263,15 @@
             <!-- Applicable for C++ -->
             <name>Unsafe Type Conversion: reinterpret_cast</name>
             <regex><![CDATA[\breinterpret_cast<[^>]+>\(]]></regex>
-            <rdl><![CDATA[[FLAG:\breinterpret_cast<[^>]+>\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\breinterpret_cast<[^>]+>\(][IF(MISSING:static_assert|static_cast|bit_cast|is_trivially_copyable)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects the usage of `reinterpret_cast`, which can lead to unsafe type conversions.</rule_desc>
             <vuln_desc>If matched, this indicates a potential vulnerability due to incorrect or dangerous type casting, possibly resulting in undefined behavior or security issues.</vuln_desc>
             <developer>Use `reinterpret_cast` cautiously, ensuring the cast is necessary and safe. Where possible, safer alternatives like `static_cast` should be preferred.</developer>
@@ -163,7 +283,15 @@
             <!-- Applicable for C++ -->
             <name>Resource Leak on Exception</name>
             <regex><![CDATA[\btry\s*{[^}]*new\s+\w+]]></regex>
-            <rdl><![CDATA[[FLAG:\btry\s*{[^}]*new\s+\w+]]]></rdl>
+            <rdl><![CDATA[[FLAG:\btry\s*{[^}]*new\s+\w+][IF(MISSING:unique_ptr|shared_ptr|RAII|catch\s*\(std::bad_alloc)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects dynamic memory allocations inside `try` blocks that may lead to memory leaks if an exception is thrown.</rule_desc>
             <vuln_desc>If an exception occurs before resources are released, it can result in memory leaks or resource exhaustion.</vuln_desc>
             <developer>Use RAII (Resource Acquisition Is Initialization) patterns or smart pointers to ensure proper resource cleanup, even if exceptions are thrown.</developer>
@@ -175,7 +303,15 @@
             <!-- Applicable for C++ -->
             <name>Unsafe File Creation with Incorrect Permissions</name>
             <regex><![CDATA[\bstd::ofstream\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\bstd::ofstream\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\bstd::ofstream\s*\(][IF(MISSING:umask|S_IRUSR|S_IWUSR|0600|0640|0644)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects the use of `std::ofstream` for file creation without specifying secure permissions.</rule_desc>
             <vuln_desc>Files created with `std::ofstream` may have insecure default permissions, potentially exposing sensitive data to unauthorized access.</vuln_desc>
             <developer>Use `umask()` or platform-specific APIs to enforce appropriate file permissions during creation.</developer>
@@ -185,7 +321,15 @@
             <!-- Applicable for C++ -->
             <name>Unsafe File Handling: Insecure File Path Usage</name>
             <regex><![CDATA[\b(?:ifstream|ofstream|fstream)\b.*\.open\s*\(.*\)]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:ifstream|ofstream|fstream)\b.*\.open\s*\(.*\)]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(?:ifstream|ofstream|fstream)\b.*\.open\s*\(.*\)][IF(MISSING:validate|sanitize|canonical|realpath|filesystem::path)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects file handling operations (`ifstream`, `ofstream`, `fstream`) to ensure they are secure and protected against path traversal vulnerabilities.</rule_desc>
             <vuln_desc>Improper use of file streams (e.g., `ifstream`, `ofstream`, `fstream`) without validating file paths can lead to path traversal vulnerabilities. Attackers may exploit this to access sensitive files outside the intended directory.</vuln_desc>
             <developer>Ensure that file paths are properly validated to prevent path traversal. Avoid using user-supplied input directly for file paths. Use safe libraries or mechanisms (e.g., `std::filesystem`) to handle paths securely. Always close file streams after use to avoid resource leaks.</developer>
@@ -197,7 +341,15 @@
             <!-- Applicable for C++ -->
             <name>Format String Misuse in C++ Streams</name>
             <regex><![CDATA[\b(std::printf|std::fprintf)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(std::printf|std::fprintf)\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(std::printf|std::fprintf)\s*\(][IF(MISSING:"%s"|"%d"|"%f"|"%i"|"%u"|"%x" && MISSING:const\s+char\s*\*\s*format)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects unsafe use of format strings with `printf`-like functions.</rule_desc>
             <vuln_desc>Using untrusted input as a format string may introduce vulnerabilities similar to those in C.</vuln_desc>
             <developer>Always use fixed format strings when printing user input to avoid format string vulnerabilities.</developer>
@@ -207,7 +359,15 @@
             <!-- Applicable for C and C++ -->
             <name>Potential Format String Attack</name>
             <regex><![CDATA[\b(printf|fprintf|sprintf|vsprintf)\s*\(\s*[^"]+\s*,]]></regex>
-            <rdl><![CDATA[[FLAG:\b(printf|fprintf|sprintf|vsprintf)\s*\(\s*[^"]+\s*,]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(printf|fprintf|sprintf|vsprintf)\s*\(\s*[^"]+\s*,][IF(MISSING:"%s"|"%d"|"%f"|"%i"|"%u"|"%x" && MISSING:const\s+char\s*\*\s*format)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects usage of format functions with potentially unsafe input.</rule_desc>
             <vuln_desc>Format string attacks can expose memory content or execute arbitrary code.</vuln_desc>
             <developer>Use format specifiers and avoid direct user input.</developer>
@@ -219,7 +379,15 @@
             <!-- Applicable for C and C++ -->
             <name>Insecure Handling of Privileged Operations</name>
             <regex><![CDATA[\b(setuid|setgid|initgroups)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(setuid|setgid|initgroups)\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(setuid|setgid|initgroups)\s*\(][IF(MISSING:if\s*\(|==\s*-1|!=\s*0|perror|strerror|errno)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects the use of privilege-changing functions and ensures proper handling practices.</rule_desc>
             <vuln_desc>Failure to drop privileges correctly or improper use of privilege-dropping functions may lead to privilege escalation vulnerabilities.</vuln_desc>
             <developer>Follow the correct sequence: `initgroups()` → `setgid()` → `setuid()`. Ensure error codes are checked and privileges are dropped early in the program.</developer>
@@ -231,7 +399,15 @@
             <!-- Applicable for C and C++ -->
             <name>Unsafe Use of Environment Variables</name>
             <regex><![CDATA[\b(std::getenv)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(std::getenv)\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(std::getenv)\s*\(][IF(MISSING:validate|sanitize|allowlist|whitelist|check\s*\(|strlen|strnlen)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects use of `std::getenv()` for accessing environment variables.</rule_desc>
             <vuln_desc>Accessing environment variables for sensitive data exposes information to risks, as environment values can be manipulated or accessed by other processes.</vuln_desc>
             <developer>Use more secure mechanisms (e.g., IPC or sockets) for sensitive data transmission. Avoid using `std::getenv()` for passwords or secrets.</developer>
@@ -244,6 +420,14 @@
             <name>Insecure Handling of Sensitive Data</name>
             <regex><![CDATA[\b(memset|mlock|setrlimit|unlink|remove|std::string)\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:\b(memset|mlock|setrlimit|unlink|remove|std::string)\s*\(]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects the improper handling of sensitive data.</rule_desc>
             <vuln_desc>Using immutable strings (like `std::string`) for passwords can result in sensitive data being retained in memory longer than necessary. Improper deletion may lead to information leakage.</vuln_desc>
             <developer>Use arrays or custom data structures instead of `std::string` for sensitive information. Overwrite buffers using `memset()` before releasing memory, and apply `mlock()` to prevent swapping.</developer>
@@ -256,6 +440,14 @@
             <name>Race Condition: std::thread without mutex</name>
             <regex><![CDATA[\bstd::thread\b\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:\bstd::thread\b\s*\(]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects the usage of threads without mutex protection, which can lead to race conditions.</rule_desc>
             <vuln_desc>If matched, this indicates that shared data might not be protected properly, leading to race conditions and undefined behavior.</vuln_desc>
             <developer>Use mutexes (`std::mutex`) or other synchronization mechanisms to protect shared data accessed by multiple threads.</developer>
@@ -266,6 +458,14 @@
             <name>Race Condition with Shared Resource</name>
             <regex><![CDATA[\bpthread_create\s*\(.*\);\s*.*\s*=.*shared_var]]></regex>
             <rdl><![CDATA[[FLAG:\bpthread_create\s*\(.*\);\s*.*\s*=.*shared_var]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects potential race conditions in multi-threaded applications.</rule_desc>
             <vuln_desc>Race conditions occur when multiple threads access shared resources simultaneously.</vuln_desc>
             <developer>Use mutexes or semaphores to synchronize access.</developer>
@@ -278,6 +478,14 @@
             <name>C-style Variadic Functions: Potential for Type Safety Issues</name>
             <regex><![CDATA[\b(__attribute__\s*\(\s*format\s*\(\s*__variadic\s*,)]]></regex>
             <rdl><![CDATA[[FLAG:\b(__attribute__\s*\(\s*format\s*\(\s*__variadic\s*,)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects the definition of C-style variadic functions, which can lead to type safety issues.</rule_desc>
             <vuln_desc>Using variadic functions can introduce risks due to the lack of type checking, potentially leading to undefined behavior.</vuln_desc>
             <developer>Consider alternatives that provide type safety, as variadic functions can lead to serious security vulnerabilities.</developer>
@@ -288,6 +496,14 @@
             <name>Information Leakage Across Trust Boundaries: Security Risk</name>
             <regex><![CDATA[\bclass\s+\w+\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:\bclass\s+\w+\s*\(]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects passing class objects that may leak sensitive information across trust boundaries.</rule_desc>
             <vuln_desc>Improper handling of class objects can expose internal state or sensitive data, posing security threats.</vuln_desc>
             <developer>Encapsulate sensitive data within objects to avoid leakage during transitions across trust boundaries.</developer>
@@ -298,6 +514,14 @@
             <name>Static Object Initialization Cycles: Undefined Behavior Risk</name>
             <regex><![CDATA[\bstatic\s+\w+\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:\bstatic\s+\w+\s*\(]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects potential cycles during the initialization of static objects, which can lead to undefined behavior.</rule_desc>
             <vuln_desc>Initialization cycles can cause static initialization order issues, leading to crashes or undefined states.</vuln_desc>
             <developer>Use function-local static variables or ensure initialization order is well-defined to avoid issues.</developer>
@@ -308,6 +532,14 @@
             <name>Exceptions in Destructors: Risk of Unhandled Behavior</name>
             <regex><![CDATA[\bthrow\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:\bthrow\s*\(]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects exceptions thrown from destructors or deallocation functions.</rule_desc>
             <vuln_desc>Throwing exceptions from destructors can cause program termination and resource leaks, posing security risks.</vuln_desc>
             <developer>Catch and handle exceptions within destructors or deallocation functions to prevent unexpected behavior.</developer>
@@ -318,6 +550,14 @@
             <name>Information Leakage with Structures: Security Concern</name>
             <regex><![CDATA[\bstruct\s+\w+\s*\{]]></regex>
             <rdl><![CDATA[[FLAG:\bstruct\s+\w+\s*\{]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects passing structures across trust boundaries, potentially leaking sensitive information.</rule_desc>
             <vuln_desc>Improper handling of structures can expose sensitive data across boundaries, leading to security vulnerabilities.</vuln_desc>
             <developer>Encapsulate sensitive data within structures and provide secure access methods for crossing trust boundaries.</developer>
@@ -330,6 +570,14 @@
             <name>Missing OS Runtime Security Mitigation Flags in Binaries</name>
             <regex><![CDATA[/NXCOMPAT|/DYNAMICBASE|/GS|/guard:cf]]></regex>
             <rdl><![CDATA[[FLAG:/NXCOMPAT|/DYNAMICBASE|/GS|/guard:cf]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects missing compiler flags that enforce runtime security mitigations.</rule_desc>
             <vuln_desc>Without these flags, binaries are vulnerable to attacks like buffer overflows or ROP.</vuln_desc>
             <developer>Use `/NXCOMPAT`, `/GS`, and `/guard:cf` to enable runtime protections.</developer>
@@ -340,6 +588,14 @@
             <name>Insufficient Code Provenance Guarantees in Build Configuration</name>
             <regex><![CDATA[/ZH:SHA_SHA256|/Zi|/SOURCELINK]]></regex>
             <rdl><![CDATA[[FLAG:/ZH:SHA_SHA256|/Zi|/SOURCELINK]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects missing compiler flags that ensure strong code provenance.</rule_desc>
             <vuln_desc>Lack of these guarantees can hinder incident response and code tracing.</vuln_desc>
             <developer>Enable `/ZH:SHA_SHA256` and `/SOURCELINK` for secure builds.</developer>

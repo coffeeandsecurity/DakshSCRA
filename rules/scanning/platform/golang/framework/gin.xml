@@ -4,6 +4,14 @@
             <name>Gin Debug Mode Enabled</name>
             <regex><![CDATA[GIN_MODE\s*=\s*debug|SetMode\(\s*gin\.DebugMode\s*\)|\.Debug\s*=\s*true]]></regex>
             <rdl><![CDATA[[FLAG:GIN_MODE\s*=\s*debug|SetMode\(\s*gin\.DebugMode\s*\)|\.Debug\s*=\s*true][IF(MISSING:release|production)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects debug mode settings in Go web frameworks.</rule_desc>
             <vuln_desc>Debug mode can expose internals and verbose diagnostics.</vuln_desc>
             <developer>Use release/production mode in deployment.</developer>
@@ -13,6 +21,14 @@
             <name>Gin TLS Validation Bypass</name>
             <regex><![CDATA[InsecureSkipVerify\s*:\s*true]]></regex>
             <rdl><![CDATA[[FLAG:InsecureSkipVerify\s*:\s*true]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects TLS certificate verification bypass in HTTP/TLS clients.</rule_desc>
             <vuln_desc>Skipping cert validation enables MITM attacks.</vuln_desc>
             <developer>Keep certificate validation enabled and implement proper trust chains.</developer>
@@ -22,6 +38,14 @@
             <name>Gin SQL Query Concatenation Sink</name>
             <regex><![CDATA[Query\(\s*fmt\.Sprintf|Exec\(\s*fmt\.Sprintf|Raw\(\s*fmt\.Sprintf]]></regex>
             <rdl><![CDATA[[FLAG:Query\(\s*fmt\.Sprintf|Exec\(\s*fmt\.Sprintf|Raw\(\s*fmt\.Sprintf]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects dynamic SQL construction via string formatting.</rule_desc>
             <vuln_desc>Formatted SQL may introduce SQL injection vulnerabilities.</vuln_desc>
             <developer>Use parameterized query APIs and strict input validation.</developer>
@@ -31,6 +55,14 @@
             <name>Gin Permissive CORS</name>
             <regex><![CDATA[AllowOrigins\s*:\s*\[\]\s*string\{\s*"\*"\s*\}|AllowOrigins\s*:\s*"\*"]]></regex>
             <rdl><![CDATA[[FLAG:AllowOrigins\s*:\s*\[\]\s*string\{\s*"\*"\s*\}|AllowOrigins\s*:\s*"\*"]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects wildcard CORS policies in Go services.</rule_desc>
             <vuln_desc>Wildcard origins can expose APIs to arbitrary websites.</vuln_desc>
             <developer>Limit CORS to explicit trusted origins.</developer>
@@ -40,6 +72,14 @@
             <name>Gin Hardcoded Secret Material</name>
             <regex><![CDATA[(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"]]></regex>
             <rdl><![CDATA[[FLAG:(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects likely hardcoded secrets in Go source/config.</rule_desc>
             <vuln_desc>Hardcoded secrets can be extracted from code or binaries.</vuln_desc>
             <developer>Use environment/config secret providers and rotate keys.</developer>

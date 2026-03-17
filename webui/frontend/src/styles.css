@@ -2577,22 +2577,51 @@ tr:hover .dash-del-btn {
   font-family: var(--font-mono);
   color: var(--text-3);
   flex-shrink: 0;
-  background: var(--surface);
-  border: 1px solid var(--border-2);
-  padding: 0 5px;
-  border-radius: var(--r-xs);
 }
 
-.fr-code-block {
-  margin: 0;
-  padding: 10px;
+/* ── Code viewer (gutter + code rows) ── */
+.fr-code-viewer {
+  background: #0d1117;
+  overflow-x: auto;
+}
+
+.fr-cv-row {
+  display: flex;
+  align-items: stretch;
+  line-height: 1.6;
+}
+
+.fr-cv-row.fr-cv-match {
+  background: rgba(255, 215, 0, 0.06);
+  border-left: 2px solid #e3842a;
+}
+
+.fr-cv-ln {
+  flex-shrink: 0;
+  min-width: 3em;
+  padding: 1px 10px 1px 8px;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #484f58;
+  background: #161b22;
+  border-right: 1px solid #21262d;
+  user-select: none;
+  white-space: pre;
+}
+
+.fr-cv-row.fr-cv-match .fr-cv-ln {
+  color: #e3842a;
+}
+
+.fr-cv-code {
+  flex: 1;
+  padding: 1px 12px;
   font-family: var(--font-mono);
   font-size: 12px;
-  line-height: 1.55;
-  background: #0d1117;
   color: #e6edf3;
-  overflow-x: auto;
   white-space: pre;
+  overflow-x: visible;
 }
 
 /* ── Notes ── */

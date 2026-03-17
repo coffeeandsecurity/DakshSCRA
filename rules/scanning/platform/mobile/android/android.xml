@@ -5,6 +5,17 @@
             <name>Insecure Permissions</name>
             <regex><![CDATA[android\.permission\.(WRITE_EXTERNAL_STORAGE|READ_EXTERNAL_STORAGE|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION)]]></regex>
             <rdl><![CDATA[[FLAG:android\.permission\.(WRITE_EXTERNAL_STORAGE|READ_EXTERNAL_STORAGE|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION)][IF(MISSING:maxSdkVersion|usesPermissionFlags="neverForLocation")]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects insecure permissions that can pose security risks.</rule_desc>
             <vuln_desc>Granting unnecessary permissions or overly broad permissions, such as WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE, INTERNET, ACCESS_FINE_LOCATION, or ACCESS_COARSE_LOCATION, can lead to security vulnerabilities. Malicious apps or attackers can exploit these permissions to access sensitive user data, track user location, or perform unauthorized actions.</vuln_desc>
             <developer>Carefully review and minimize the permissions requested by the application. Only request permissions that are necessary for the app's functionality and follow the principle of least privilege.</developer>
@@ -14,6 +25,17 @@
             <name>Content Providers with No Permissions</name>
             <regex><![CDATA[<provider\b|android:authorities\s*=]]></regex>
             <rdl><![CDATA[[FLAG:<provider\b|android:authorities\s*=][IF(PRESENT:<provider\b && MISSING:android:exported\s*=\s*"false" && MISSING:android:permission\s*= && MISSING:android:readPermission\s*= && MISSING:android:writePermission\s*= && MISSING:androidx-startup)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects content providers without specific permissions.</rule_desc>
             <vuln_desc>Content providers without specific permissions may expose sensitive data to unauthorized applications or components. Without proper permission checks, other applications can potentially access or modify the data managed by the content provider, leading to security vulnerabilities.</vuln_desc>
             <developer>Specify appropriate permissions for content providers to restrict access to authorized applications or components. Review the android:permission attribute and ensure that sensitive data is protected from unauthorized access.</developer>
@@ -23,6 +45,17 @@
             <name>Exported Components</name>
             <regex><![CDATA[android:exported\s*=\s*"(true|TRUE)"]]></regex>
             <rdl><![CDATA[[FLAG:android:exported\s*=\s*"(true|TRUE)"][IF(PRESENT:<activity|<service|<receiver|<provider && MISSING:android:permission\s*= && MISSING:android:readPermission\s*= && MISSING:android:writePermission\s*=)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects exported components that can pose security risks.</rule_desc>
             <vuln_desc>Exported components, such as activities, services, or broadcast receivers, that are marked as exported="true" can be accessed by other applications or components. This can lead to security vulnerabilities if sensitive functionality or data is exposed to unauthorized entities.</vuln_desc>
             <developer>Review the exported components in the AndroidManifest.xml file and ensure that only necessary components are exported. Components that do not need to be accessed by other applications should not be exported.</developer>
@@ -32,6 +65,17 @@
             <name>Allow Backup</name>
             <regex><![CDATA[android:allowBackup\s*=\s*"(true|TRUE)"]]></regex>
             <rdl><![CDATA[[FLAG:android:allowBackup\s*=\s*"(true|TRUE)"]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects the use of allowBackup="true" in the application's manifest.</rule_desc>
             <vuln_desc>The allowBackup attribute, when set to "true", allows the application's data to be backed up to external storage. This can lead to security risks if sensitive data is stored insecurely or if the backup is accessible to unauthorized entities.</vuln_desc>
             <developer>Carefully consider whether allowing backup of application data is necessary. If sensitive data is stored, it should be encrypted or excluded from backup using the android:allowBackup attribute set to "false".</developer>
@@ -41,6 +85,17 @@
             <name>Unprotected Components: Empty Permission Attribute</name>
             <regex><![CDATA[android:permission\s*=\s*(?:""|'')]]></regex>
             <rdl><![CDATA[[FLAG:android:permission\s*=\s*(?:""|'')]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects components with an explicitly empty android:permission attribute, which removes all access control.</rule_desc>
             <vuln_desc>Setting android:permission="" explicitly grants any application access to the component, equivalent to having no protection at all. This is more dangerous than omitting the attribute because it overrides any parent-level permission and signals an intentional but misconfigured access policy.</vuln_desc>
             <developer>Remove the empty permission attribute and replace it with a meaningful custom permission (e.g. com.example.permission.MY_FEATURE) or use android:exported="false" to restrict access to the current app only.</developer>
@@ -50,6 +105,17 @@
             <name>Debuggable Application</name>
             <regex><![CDATA[android:debuggable\s*=\s*"(true|TRUE)"]]></regex>
             <rdl><![CDATA[[FLAG:android:debuggable\s*=\s*"(true|TRUE)"][IF(MISSING:release|production)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects debuggable applications.</rule_desc>
             <vuln_desc>Setting android:debuggable="true" in the application's manifest allows debugging of the application, potentially exposing sensitive information or vulnerabilities to attackers. Debuggable applications may leak information or have security weaknesses that could be exploited.</vuln_desc>
             <developer>The android:debuggable attribute is set to "false" in release builds to prevent exposing sensitive information or vulnerabilities. Debugging features should be disabled in production builds.</developer>
@@ -59,6 +125,17 @@
             <name>Unsafe Intent Filters</name>
             <regex>android.intent.action.VIEW</regex>
             <rdl><![CDATA[[FLAG:android.intent.action.VIEW][IF(MISSING:autoVerify="true" && MISSING:android:scheme="https" && MISSING:android:host=)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects unsafe intent filters.</rule_desc>
             <vuln_desc>Intent filters with actions like "android.intent.action.VIEW" can potentially expose the application to security risks if not properly configured. Malicious applications or links can exploit these intent filters to launch activities in the application or manipulate data.</vuln_desc>
             <developer>Carefully configure intent filters to only allow expected data and actions. Validate input and sanitize data to prevent unintended behavior or exploitation.</developer>
@@ -68,6 +145,17 @@
             <name>Unsafe Broadcast Receivers</name>
             <regex>android.intent.action.BOOT_COMPLETED</regex>
             <rdl><![CDATA[[FLAG:android.intent.action.BOOT_COMPLETED][IF(MISSING:android:permission\s*=\s*"android\.permission\.RECEIVE_BOOT_COMPLETED" && MISSING:android:exported\s*=\s*"false")]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects unsafe broadcast receivers.</rule_desc>
             <vuln_desc>Broadcast receivers listening for sensitive actions like "android.intent.action.BOOT_COMPLETED" can be exploited by malicious applications to execute arbitrary code or perform unauthorized actions when certain system events occur. This can lead to security risks such as privilege escalation or denial of service.</vuln_desc>
             <developer>Carefully review broadcast receivers and ensure that they handle sensitive actions securely. Implement appropriate permission checks and validation to prevent unauthorized access or execution of malicious code.</developer>
@@ -77,6 +165,17 @@
             <name>Insecure Network Traffic</name>
             <regex><![CDATA[android:usesCleartextTraffic\s*=\s*"(true|TRUE)"]]></regex>
             <rdl><![CDATA[[FLAG:android:usesCleartextTraffic\s*=\s*"(true|TRUE)"]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects the use of cleartext traffic in the application's manifest.</rule_desc>
             <vuln_desc>Allowing cleartext traffic (`usesCleartextTraffic="true"`) makes the application vulnerable to network eavesdropping and man-in-the-middle attacks.</vuln_desc>
             <developer>Set android:usesCleartextTraffic to "false" to enforce secure communication using HTTPS. Configure a Network Security Config for exceptions.</developer>
@@ -90,6 +189,17 @@
             <regex><![CDATA[(?i)-keepclassmembers\s+class\s+[^\n{]*(?:password|secret|token|apikey)[^\n{]*]]></regex>
             <rdl><![CDATA[[FLAG:(?i)-keepclassmembers\s+class\s+[^\n{]*(?:password|secret|token|apikey)[^\n{]*][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
             <exclude><![CDATA[(?i)^\s*(#|//|/\*|\*)]]></exclude>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects missing obfuscation for sensitive classes or methods.</rule_desc>
             <vuln_desc>Lack of obfuscation for sensitive classes makes it easier for attackers to reverse engineer the application and extract sensitive information.</vuln_desc>
             <developer>Sensitive classes and methods are obfuscated in the Proguard/R8 configuration to prevent reverse engineering.</developer>
@@ -102,6 +212,17 @@
             <name>Debuggable Build Enabled</name>
             <regex><![CDATA[debuggable\s*=\s*true]]></regex>
             <rdl><![CDATA[[FLAG:debuggable\s*=\s*true][IF(MISSING:release|production)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects if a build configuration enables debugging for release builds.</rule_desc>
             <vuln_desc>Enabling debuggable builds for release may expose sensitive data and debugging information to attackers.</vuln_desc>
             <developer>Debugging is disabled for production builds by setting debuggable=false in the release build configuration.</developer>
@@ -111,6 +232,17 @@
             <name>Outdated Dependencies</name>
             <regex><![CDATA[implementation\s+['"][\w\.-]+:\w+:\d+\.\d+\.\d+['"]]]></regex>
             <rdl><![CDATA[[FLAG:implementation\s+['"][\w\.-]+:\w+:\d+\.\d+\.\d+['"]][IF(PRESENT:com\.android\.tools|androidx|google|okhttp|retrofit|firebase)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects dependency declarations with version numbers in the Gradle file.</rule_desc>
             <vuln_desc>Using outdated dependencies can introduce known vulnerabilities into the application.</vuln_desc>
             <developer>Regularly update dependencies to the latest stable versions to mitigate security risks. Review changelogs and security advisories before updating.</developer>
@@ -124,6 +256,17 @@
             <name>Missing Content Descriptions</name>
             <regex><![CDATA[android:contentDescription\s*=\s*["']["']]]></regex>
             <rdl><![CDATA[[FLAG:android:contentDescription\s*=\s*["']["']]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects UI elements with missing or empty content descriptions.</rule_desc>
             <vuln_desc>Missing content descriptions make the app inaccessible to users relying on assistive technologies like screen readers.</vuln_desc>
             <developer>Provide meaningful content descriptions for all UI elements, especially images and buttons, to improve accessibility.</developer>
@@ -133,6 +276,17 @@
             <name>Insecure WebView Configuration</name>
             <regex><![CDATA[WebView.*setJavaScriptEnabled\(true\)]]></regex>
             <rdl><![CDATA[[FLAG:WebView.*setJavaScriptEnabled\(true\)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects insecure WebView configurations that enable JavaScript.</rule_desc>
             <vuln_desc>Enabling JavaScript in WebView without additional security measures can expose the application to XSS attacks.</vuln_desc>
             <developer>Restrict JavaScript usage in WebView and enable additional safeguards, such as strict URL validation.</developer>
@@ -144,6 +298,17 @@
             <name>SQLite Raw Query with Potential Injection</name>
             <regex><![CDATA[\.rawQuery\s*\(|\.execSQL\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:\.rawQuery\s*\(|\.execSQL\s*\(][IF(MISSING:selectionArgs\s*=|bindString\s*\(|bindLong\s*\(|\?,\s*new\s+String)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects direct SQLite rawQuery or execSQL calls that may construct queries without parameterisation.</rule_desc>
             <vuln_desc>rawQuery() and execSQL() calls that concatenate user-controlled strings into SQL are directly injectable. Unlike Room @Query with :params, these methods offer no automatic parameterisation. An attacker who controls any string component of the query can read, modify, or delete data.</vuln_desc>
             <developer>Always pass user input as the selectionArgs array rather than embedding it in the SQL string. Use ? placeholders in the query and supply values via the args parameter.</developer>
@@ -151,8 +316,19 @@
         </rule>
         <rule>
             <name>Deep Link Without App Link Verification</name>
-            <regex><![CDATA[android:scheme\s*=\s*"(?!https)[^"]+"|<data\s[^>]*android:host\s*=]]></regex>
-            <rdl><![CDATA[[FLAG:android:scheme\s*=\s*"(?!https)[^"]+"|<data\s[^>]*android:host\s*=][IF(MISSING:android:autoVerify\s*=\s*"true" && MISSING:android:exported\s*=\s*"false")]]]></rdl>
+            <regex><![CDATA[android:scheme\s*=\s*"(?!https?)[^"]+"|<data\s[^>]*android:host\s*=]]></regex>
+            <rdl><![CDATA[[FLAG:android:scheme\s*=\s*"(?!https?)[^"]+"|<data\s[^>]*android:host\s*=][IF(MISSING:android:autoVerify\s*=\s*"true" && MISSING:android:exported\s*=\s*"false")]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects custom URI scheme deep links without Android App Links autoVerify, which allows any app to intercept them.</rule_desc>
             <vuln_desc>Custom URI scheme deep links (myapp://) without autoVerify="true" can be hijacked by any installed app that registers the same scheme. An attacker app can intercept sensitive deep link data (OAuth tokens, reset codes, invite links) delivered via these URIs. HTTPS App Links with autoVerify are the safe alternative.</vuln_desc>
             <developer>Migrate custom URI schemes to HTTPS App Links with android:autoVerify="true" and a hosted assetlinks.json file. If custom schemes are necessary, validate all incoming data from Intent.getData() before use.</developer>
@@ -164,6 +340,17 @@
             <name>WebView Universal File Access Enabled</name>
             <regex><![CDATA[setAllowUniversalAccessFromFileURLs\s*\(\s*true\s*\)|setAllowFileAccessFromFileURLs\s*\(\s*true\s*\)]]></regex>
             <rdl><![CDATA[[FLAG:setAllowUniversalAccessFromFileURLs\s*\(\s*true\s*\)|setAllowFileAccessFromFileURLs\s*\(\s*true\s*\)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects WebView settings that enable cross-origin file access, breaking the same-origin policy.</rule_desc>
             <vuln_desc>Enabling universal file access in WebView allows JavaScript in file:// pages to read any file accessible to the app, including sensitive data and private storage. This can be leveraged for data theft if attacker-controlled HTML is rendered in the WebView.</vuln_desc>
             <developer>Set setAllowUniversalAccessFromFileURLs(false) and setAllowFileAccessFromFileURLs(false). Use content providers or HTTPS to serve local content instead of file:// URLs.</developer>
@@ -173,6 +360,17 @@
             <name>Insecure PendingIntent: Missing Immutability Flag</name>
             <regex><![CDATA[PendingIntent\.(getBroadcast|getActivity|getService|getForegroundService)\s*\(]]></regex>
             <rdl><![CDATA[[FLAG:PendingIntent\.(getBroadcast|getActivity|getService|getForegroundService)\s*\(][IF(MISSING:FLAG_IMMUTABLE|FLAG_UPDATE_CURRENT\s*\|\s*FLAG_IMMUTABLE|PendingIntentCompat)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects PendingIntent creation without the FLAG_IMMUTABLE flag, enabling intent injection on Android 12+.</rule_desc>
             <vuln_desc>Mutable PendingIntents can be intercepted and modified by other applications. An attacker could replace the base Intent with arbitrary content, leading to privilege escalation or unauthorized access to app components.</vuln_desc>
             <developer>Use FLAG_IMMUTABLE for PendingIntents that do not need modification. If modification is required, use FLAG_MUTABLE only with explicit Intent fields set.</developer>
@@ -182,6 +380,17 @@
             <name>Insecure Random Number Generation</name>
             <regex><![CDATA[\bnew\s+Random\s*\(\s*\)|\bMath\.random\s*\(\s*\)]]></regex>
             <rdl><![CDATA[[FLAG:\bnew\s+Random\s*\(\s*\)|\bMath\.random\s*\(\s*\)][IF(PRESENT:token|key|secret|nonce|session|otp|password|salt && MISSING:SecureRandom)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects use of non-cryptographic random number generators in security-sensitive contexts.</rule_desc>
             <vuln_desc>java.util.Random and Math.random() are not cryptographically secure and produce predictable values. Using them for tokens, session IDs, or cryptographic keys weakens security.</vuln_desc>
             <developer>Use java.security.SecureRandom for all security-sensitive random values (tokens, nonces, keys, session IDs).</developer>

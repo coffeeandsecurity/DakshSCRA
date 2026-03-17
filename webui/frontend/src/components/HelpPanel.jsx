@@ -24,6 +24,11 @@ const TOC = [
   { id: 'rdl-operators', label: '↳ Operators', indent: true },
   { id: 'rdl-examples', label: '↳ Examples', indent: true },
   { id: 'rdl-fp-reduction', label: '↳ How FPs Are Reduced', indent: true },
+  { id: 'scan-config', label: 'scan_config — Rule Engine' },
+  { id: 'scan-config-schema', label: '↳ Full Schema', indent: true },
+  { id: 'scan-config-profiles', label: '↳ Platform Profiles', indent: true },
+  { id: 'scan-config-highlighting', label: '↳ Highlighting', indent: true },
+  { id: 'scan-config-authoring', label: '↳ Rule Authoring Guide', indent: true },
   { id: 'findings-reference', label: 'Findings Reference' },
   { id: 'pdf-reports', label: 'PDF Reports' },
   { id: 'tips', label: 'Tips & Patterns' },
@@ -635,6 +640,289 @@ function RDLSection() {
   )
 }
 
+function ScanConfigSection() {
+  return (
+    <section className="help-section">
+      <SectionHeading id="scan-config">scan_config — Rule-Driven Scanning &amp; Reporting</SectionHeading>
+      <P>
+        <Code>scan_config</Code> is an optional XML block inside any <Code>&lt;rule&gt;</Code> that
+        controls how the engine scans for that rule and how matches appear in reports. Rules without
+        a <Code>scan_config</Code> block behave exactly as before — the block is fully opt-in and
+        every field has a safe default.
+      </P>
+      <P>
+        The default model — regex applied line-by-line, one finding entry per match — works well for
+        self-contained code patterns. It falls short for structured / declarative files like
+        AndroidManifest.xml and Kubernetes YAML, rules that fire many times in one file for the same
+        conceptual issue, multi-line patterns, and cases where the reviewer needs surrounding context
+        to triage quickly.
+      </P>
+
+      <SubHeading id="scan-config-schema">Full Schema</SubHeading>
+      <CodeBlock>{`<scan_config>
+
+    <!-- MATCH MODE -->
+    <!-- line : regex applied per line (default — all existing rules) -->
+    <!-- file : regex applied to full file content with MULTILINE|    -->
+    <!--        DOTALL. Use for structured/declarative files.          -->
+    <match_mode>line</match_mode>
+
+    <!-- CONTEXT TYPE -->
+    <!-- none         : show only the matched line (default)           -->
+    <!-- named_groups : extract named (?P<name>...) capture groups     -->
+    <!--               and display them as labelled fields.            -->
+    <!-- lines        : include N raw lines before/after the match.    -->
+    <!-- backward     : scan backward from match for a secondary       -->
+    <!--               pattern — first capture group becomes label.    -->
+    <context_type>none</context_type>
+
+    <!-- Used when context_type = lines                                -->
+    <!-- Recommended: before + after <= 12 lines                      -->
+    <context_lines_before>0</context_lines_before>
+    <context_lines_after>0</context_lines_after>
+
+    <!-- Used when context_type = backward                             -->
+    <context_pattern></context_pattern>
+    <context_depth>10</context_depth>
+
+    <!-- AGGREGATION -->
+    <!-- none : each match = one finding entry (default)               -->
+    <!-- file : all matches in a file collapse into one entry          -->
+    <aggregate>none</aggregate>
+
+    <!-- REPORT FORMAT -->
+    <!-- default        : match snippet + context lines (default)      -->
+    <!-- component_list : table of named_group captures + line numbers -->
+    <!-- secret_list    : compact list, masks long values              -->
+    <report_format>default</report_format>
+
+    <!-- HIGHLIGHTING (CLI: ANSI colour, Web: CSS span)               -->
+    <highlight_enabled>true</highlight_enabled>
+
+    <!-- Simple highlight (single target)                             -->
+    <!-- highlight_target: match | groups | pattern                   -->
+    <highlight_target>match</highlight_target>
+    <highlight_groups></highlight_groups>    <!-- comma-sep group names -->
+    <highlight_pattern></highlight_pattern>  <!-- regex for pattern mode -->
+
+    <!-- Colours: red | yellow | cyan | green | magenta | bold         -->
+    <highlight_color>red</highlight_color>
+
+    <!-- Multi highlight (advanced — overrides simple fields above)   -->
+    <!-- type values: match | group:<name> | pattern:<regex>          -->
+    <marks>
+        <mark color="red">match</mark>
+        <mark color="cyan">group:component</mark>
+        <mark color="yellow">pattern:android:exported="true"</mark>
+    </marks>
+
+</scan_config>`}</CodeBlock>
+
+      <SubHeading id="scan-config-profiles">Platform Profiles</SubHeading>
+      <P>
+        Three profiles cover the vast majority of rule types. Pick the profile that matches your
+        file type and adjust fields from there.
+      </P>
+
+      <P><strong>Profile A — <Code>structured</Code> (declarative / config files)</strong></P>
+      <P>
+        Use for: AndroidManifest.xml, Kubernetes YAML, Terraform HCL, Dockerfile, plist, web.xml.
+        The regex must use named capture groups — the engine extracts them and displays them as
+        labelled columns alongside the line number.
+      </P>
+      <CodeBlock>{`<scan_config>
+    <match_mode>file</match_mode>
+    <context_type>named_groups</context_type>
+    <aggregate>file</aggregate>
+    <report_format>component_list</report_format>
+    <highlight_enabled>true</highlight_enabled>
+    <marks>
+        <mark color="red">match</mark>
+    </marks>
+</scan_config>`}</CodeBlock>
+
+      <P>Full example — Android exported components rule:</P>
+      <CodeBlock>{`<rule>
+    <name>Exported Components Without Permission</name>
+    <regex><![CDATA[<(?P<component>activity|service|receiver|provider)\\s[^>]*
+android:name="(?P<name>[^"]+)"[^>]*android:exported="true"[^>]*(?:/>|>)]]></regex>
+    <rdl><![CDATA[[FLAG:android:exported\\s*=\\s*"true"][IF(MISSING:android:permission)]]]></rdl>
+    <scan_config>
+        <match_mode>file</match_mode>
+        <context_type>named_groups</context_type>
+        <aggregate>file</aggregate>
+        <report_format>component_list</report_format>
+        <marks>
+            <mark color="red">pattern:android:exported\\s*=\\s*"true"</mark>
+            <mark color="cyan">pattern:android:name\\s*=\\s*"[^"]+"</mark>
+        </marks>
+    </scan_config>
+    ...
+</rule>`}</CodeBlock>
+
+      <P>Report output — one clean table instead of five identical finding entries:</P>
+      <CodeBlock>{`Exported Components Without Permission        HIGH    AndroidManifest.xml
+
+  Line  82    activity    .MainActivity
+  Line  95    service     .SyncService
+  Line 110    receiver    .BootReceiver
+  Line 125    activity    .DeepLinkActivity`}</CodeBlock>
+
+      <P><strong>Profile B — <Code>code</Code> (source code files)</strong></P>
+      <P>
+        Use for: Python, JavaScript, PHP, Java, Go, Kotlin, Ruby, C, C++, .NET, Bash, PowerShell.
+        Use <Code>context_lines_before</Code> to show what leads into the vulnerable call.
+        Use <Code>context_lines_after</Code> to show what follows (error handling, block contents).
+      </P>
+      <CodeBlock>{`<scan_config>
+    <match_mode>line</match_mode>
+    <context_type>lines</context_type>
+    <context_lines_before>3</context_lines_before>
+    <context_lines_after>0</context_lines_after>
+    <aggregate>none</aggregate>
+    <report_format>default</report_format>
+    <highlight_enabled>true</highlight_enabled>
+    <highlight_target>match</highlight_target>
+    <highlight_color>red</highlight_color>
+</scan_config>`}</CodeBlock>
+
+      <P>Report output — reviewer sees the inadequate sanitisation on line 45 without opening the file:</P>
+      <CodeBlock>{`Insecure File Inclusion                       HIGH    controllers/page.php : Line 47
+
+  44 |  $page = $_GET['page'];
+  45 |  $page = str_replace('../', '', $page);
+  46 |
+  47 >  include($page . '.php');`}</CodeBlock>
+
+      <P><strong>Profile C — <Code>config</Code> (flat configuration / secret files)</strong></P>
+      <P>
+        Use for: <Code>.env</Code>, <Code>.properties</Code>, <Code>appsettings.json</Code>,{' '}
+        <Code>*.tfvars</Code>, <Code>*.ini</Code>. The matched line is self-explanatory — no
+        surrounding context adds value. <Code>aggregate:file</Code> collapses multiple secrets in
+        the same file into one finding entry.
+      </P>
+      <CodeBlock>{`<scan_config>
+    <match_mode>line</match_mode>
+    <context_type>none</context_type>
+    <aggregate>file</aggregate>
+    <report_format>secret_list</report_format>
+    <highlight_enabled>true</highlight_enabled>
+    <highlight_target>match</highlight_target>
+    <highlight_color>red</highlight_color>
+</scan_config>`}</CodeBlock>
+
+      <P>Report output:</P>
+      <CodeBlock>{`Hardcoded Credentials                         CRITICAL   .env
+
+  Line  3    DB_PASSWORD    = "prod_p@ssw..."
+  Line  7    API_KEY        = "sk-live-xK..."
+  Line 12    JWT_SECRET     = "mySuperSec..."`}</CodeBlock>
+
+      <SubHeading id="scan-config-highlighting">Highlighting</SubHeading>
+      <Table
+        headers={['Value', 'CLI (ANSI)', 'Web CSS class', 'Use for']}
+        rows={[
+          ['red', 'bright red', 'hl-red', 'Dangerous sinks, injections, RCE, hardcoded secrets'],
+          ['yellow', 'bright yellow', 'hl-yellow', 'Weak patterns, deprecated, missing flags'],
+          ['cyan', 'bright cyan', 'hl-cyan', 'Structural / informational (exports, routes, config)'],
+          ['green', 'bright green', 'hl-green', 'Mitigations present ("Mitigation Identified" rules)'],
+          ['magenta', 'bright magenta', 'hl-magenta', 'Framework-specific patterns'],
+          ['bold', 'bold only', 'hl-bold', 'Emphasis with no colour — safe for monochrome terminals'],
+        ]}
+      />
+      <P><strong>Simple</strong> — one thing to highlight:</P>
+      <CodeBlock>{`<highlight_target>match</highlight_target>
+<highlight_color>red</highlight_color>`}</CodeBlock>
+
+      <P><strong>Named group</strong> — highlight a specific captured group:</P>
+      <CodeBlock>{`<highlight_target>groups</highlight_target>
+<highlight_groups>name,component</highlight_groups>
+<highlight_color>cyan</highlight_color>`}</CodeBlock>
+
+      <P><strong>Multi</strong> — multiple highlight passes with different colours:</P>
+      <CodeBlock>{`<marks>
+    <mark color="cyan">pattern:android:name\\s*=\\s*"[^"]+"</mark>
+    <mark color="red">pattern:android:exported\\s*=\\s*"true"</mark>
+</marks>`}</CodeBlock>
+      <Note type="info">
+        Max 3 marks per rule. Beyond that, the snippet becomes visually noisy. If you need more than
+        3 highlights, the rule is probably doing too much — consider splitting it.
+      </Note>
+
+      <SubHeading id="scan-config-authoring">Rule Authoring Guide</SubHeading>
+      <P>Answer these questions before writing <Code>scan_config</Code> values:</P>
+
+      <P><strong>Q1 — What type of file does this rule target?</strong></P>
+      <Table
+        headers={['File type', 'Profile', 'match_mode']}
+        rows={[
+          ['AndroidManifest.xml, plist, web.xml', 'structured', 'file'],
+          ['Kubernetes YAML, Helm charts', 'structured', 'file'],
+          ['Terraform HCL, .tfvars', 'structured', 'file'],
+          ['Dockerfile', 'structured', 'file'],
+          ['Python, JS, PHP, Java, Go, Kotlin, Ruby, C/C++, .NET', 'code', 'line'],
+          ['Bash, PowerShell', 'code', 'line'],
+          ['.env, .properties, appsettings.json, config files', 'config', 'line'],
+        ]}
+      />
+
+      <P><strong>Q2 — Does the matched line tell the full story?</strong></P>
+      <Table
+        headers={['Situation', 'Setting']}
+        rows={[
+          ['Match is self-explanatory', 'context_type: none'],
+          ['Setup / source is above the match', 'context_lines_before: 3–5, context_lines_after: 0'],
+          ['Match opens a block, need to see inside', 'context_lines_before: 0, context_lines_after: 5–8'],
+          ['Both sides needed', 'Set both — keep before + after ≤ 12'],
+        ]}
+      />
+
+      <P><strong>Q3 — Can this rule fire many times in one file for the same issue?</strong></P>
+      <Table
+        headers={['Situation', 'Setting']}
+        rows={[
+          ['Yes — all instances are the same issue', 'aggregate: file'],
+          ['No — each instance is distinct', 'aggregate: none'],
+        ]}
+      />
+
+      <P><strong>Q4 — Which report_format?</strong></P>
+      <Table
+        headers={['Situation', 'Format']}
+        rows={[
+          ['context_type: named_groups', 'component_list'],
+          ['Detecting secrets / credentials', 'secret_list'],
+          ['Everything else', 'default'],
+        ]}
+      />
+
+      <P><strong>Q5 — What to highlight?</strong></P>
+      <Table
+        headers={['Situation', 'Config']}
+        rows={[
+          ['One clear dangerous element', 'highlight_target: match, color: red'],
+          ['Dangerous pattern within a wider match', 'highlight_target: pattern + tighter regex, color: red'],
+          ['Match has identity + dangerous attribute', '<marks> with cyan for identity, red for risk'],
+          ['Rule detects absence (missing flag)', 'Highlight what IS there in yellow'],
+          ['Mitigation Identified rule', 'color: green'],
+          ['Deprecated / weak, not directly exploitable', 'color: yellow'],
+        ]}
+      />
+
+      <P><strong>Pre-submission checklist:</strong></P>
+      <CodeBlock>{`[ ] scan_config block present (even if using all defaults)
+[ ] match_mode appropriate for the file type
+[ ] If match_mode=file, regex uses named groups for all meaningful captures
+[ ] context_lines_before + context_lines_after <= 12
+[ ] aggregate setting is justified
+[ ] report_format matches context_type
+[ ] highlight colour follows the semantic palette above
+[ ] Rule tested on at least one real sample file
+[ ] Report output reviewed manually for clarity`}</CodeBlock>
+    </section>
+  )
+}
+
 function PlatformsSection() {
   return (
     <section className="help-section">
@@ -872,6 +1160,7 @@ export default function HelpPanel() {
           <CliUsageSection />
           <WebUISection />
           <RDLSection />
+          <ScanConfigSection />
           <PlatformsSection />
           <FindingsReferenceSection />
           <PdfReportsSection />

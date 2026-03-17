@@ -4,6 +4,17 @@
             <name>iOS ATS Arbitrary Loads Enabled</name>
             <regex><![CDATA[NSAllowsArbitraryLoads\s*</key>\s*<true/>|NSAllowsArbitraryLoads]]></regex>
             <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads][IF(MISSING:NSExceptionDomains)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects ATS global relaxation settings.</rule_desc>
             <vuln_desc>Relaxed ATS permits insecure HTTP traffic and weakens transport security.</vuln_desc>
             <developer>Keep ATS strict and scope exceptions minimally.</developer>
@@ -13,6 +24,17 @@
             <name>iOS Insecure HTTP Exception Enabled</name>
             <regex>NSExceptionAllowsInsecureHTTPLoads</regex>
             <rdl><![CDATA[[FLAG:NSExceptionAllowsInsecureHTTPLoads][IF(MISSING:NSIncludesSubdomains\s*</key>\s*<false/>)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>file</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects ATS domain exception allowing insecure HTTP loads.</rule_desc>
             <vuln_desc>Insecure HTTP exceptions may expose sensitive network traffic.</vuln_desc>
             <developer>Remove insecure exceptions unless explicitly required and constrained.</developer>
@@ -22,6 +44,17 @@
             <name>iOS URLSession Trust Bypass Pattern</name>
             <regex><![CDATA[didReceive\s+challenge.*completionHandler\(\.useCredential|allowInvalidCertificates]]></regex>
             <rdl><![CDATA[[FLAG:didReceive\s+challenge.*completionHandler\(\.useCredential|allowInvalidCertificates][IF(MISSING:SecTrustEvaluate|SecTrustEvaluateWithError)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>3</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects URLSession trust challenge handling patterns indicating bypass risk.</rule_desc>
             <vuln_desc>Improper trust handling can disable effective certificate validation.</vuln_desc>
             <developer>Implement strict trust evaluation and pinning where appropriate.</developer>
@@ -31,6 +64,17 @@
             <name>iOS WKWebView JavaScript Execution Sink</name>
             <regex><![CDATA[evaluateJavaScript\(|WKWebView]]></regex>
             <rdl><![CDATA[[FLAG:WKWebView|evaluateJavaScript\(][IF(MISSING:limitsNavigationsToAppBoundDomains\s*=\s*true)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
             <rule_desc>Detects dynamic JavaScript execution and WebView usage requiring trust review.</rule_desc>
             <vuln_desc>Untrusted script execution can enable XSS/data exposure in app context.</vuln_desc>
             <developer>Restrict script injection and content origins in WebView contexts.</developer>
@@ -40,6 +84,17 @@
             <name>iOS Pasteboard Usage</name>
             <regex><![CDATA[UIPasteboard\.general|setValue\(.*forPasteboardType]]></regex>
             <rdl><![CDATA[[FLAG:UIPasteboard\.general|setValue\(.*forPasteboardType][IF(MISSING:expirationDate && MISSING:localOnly)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects shared pasteboard operations.</rule_desc>
             <vuln_desc>Sensitive data in pasteboard may be accessible outside intended context.</vuln_desc>
             <developer>Avoid placing secrets/PII in shared pasteboard.</developer>
@@ -49,6 +104,17 @@
             <name>iOS UserDefaults Secret Storage Marker</name>
             <regex><![CDATA[UserDefaults\.standard\.set\(.*(token|secret|password|apikey)]]></regex>
             <rdl><![CDATA[[FLAG:UserDefaults\.standard\.set\(.*(token|secret|password|apikey)][IF(MISSING:Keychain)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects likely sensitive key material stored in UserDefaults.</rule_desc>
             <vuln_desc>UserDefaults is not appropriate for storing sensitive secrets.</vuln_desc>
             <developer>Use Keychain for sensitive tokens and credentials.</developer>
@@ -58,6 +124,17 @@
             <name>iOS Insecure URL Usage</name>
             <regex>http://</regex>
             <rdl><![CDATA[[FLAG:http://][IF(MISSING:https://)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
             <rule_desc>Detects plain HTTP endpoint usage in iOS code/config.</rule_desc>
             <vuln_desc>Cleartext endpoints may expose session and credential data.</vuln_desc>
             <developer>Use HTTPS endpoints with strong TLS validation.</developer>
@@ -67,6 +144,15 @@
             <name>iOS Hardcoded Secret Marker</name>
             <regex><![CDATA[(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"]]></regex>
             <rdl><![CDATA[[FLAG:(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:DEBUG && MISSING:example|sample|dummy)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>none</context_type>
+                <aggregate>file</aggregate>
+                <report_format>secret_list</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
             <rule_desc>Detects likely hardcoded secret values in iOS-related code.</rule_desc>
             <vuln_desc>Embedded secrets can be extracted from source and binaries.</vuln_desc>
             <developer>Use server-side secret handling and secure runtime token exchange.</developer>
