@@ -75,7 +75,7 @@
         <rule>
             <name>Weak Session Secret Configuration</name>
             <regex><![CDATA[(?i)secret_key_base\s*[:=]\s*["'](?:changeme|secret|test|default)["']]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)secret_key_base\s*[:=]\s*["'](?:changeme|secret|test|default)["']]]]></rdl>
+            <rdl><![CDATA[[FLAG:(?i)secret_key_base\s*[:=]\s*["'](?:changeme|secret|test|default)["']][IF(PRESENT:secret_key_base\s*[:=]\s*["'](changeme|secret|test|default|password|123)["']|SECRET_KEY_BASE.*=.*["']\w{4,20}["'] && MISSING:Rails\.application\.credentials|ENV\[|ENV\.fetch)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -92,7 +92,7 @@
         <rule>
             <name>Cookies Missing Secure or HttpOnly Flags</name>
             <regex><![CDATA[\bcookies\[[^\]]+\]\s*=\s*\{(?![^\}]*\b(?:secure|httponly)\b)]]></regex>
-            <rdl><![CDATA[[FLAG:\bcookies\[[^\]]+\]\s*=\s*\{(?![^\}]*\b(?:secure|httponly)\b)]]]></rdl>
+            <rdl><![CDATA[[FLAG:\bcookies\[[^\]]+\]\s*=\s*\{(?![^\}]*\b(?:secure|httponly)\b)][IF(MISSING:secure:\s*true|httponly:\s*true|SameSite|HttpOnly && PRESENT:cookies\[.*\]\s*=\s*\{)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>

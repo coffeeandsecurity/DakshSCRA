@@ -3,7 +3,7 @@
         <rule>
             <name>ServerTrustEvaluating Disabled with DisabledTrustEvaluator</name>
             <regex><![CDATA[DisabledTrustEvaluator\s*\(\s*\)|DisabledEvaluation|trustAllCertificates|serverTrustManager\s*=\s*nil]]></regex>
-            <rdl><![CDATA[[FLAG:DisabledTrustEvaluator\s*\(\s*\)|trustAllCertificates|serverTrustManager\s*=\s*nil]]]></rdl>
+            <rdl><![CDATA[[FLAG:DisabledTrustEvaluator\s*\(\s*\)|trustAllCertificates|serverTrustManager\s*=\s*nil][IF(MISSING:test|development|localhost|staging|PinnedCertificatesTrustEvaluator|RevocationTrustEvaluator)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>

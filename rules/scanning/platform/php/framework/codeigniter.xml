@@ -20,7 +20,7 @@
         <rule>
             <name>Codeigniter Dangerous Dynamic Eval/Template Execution</name>
             <regex><![CDATA[\beval\s*\(|assert\s*\(\s*\$|create_function\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\beval\s*\(|assert\s*\(\s*\$|create_function\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\beval\s*\(|assert\s*\(\s*\$|create_function\s*\(][IF(MISSING:validate|allowlist|trusted|test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -37,7 +37,7 @@
         <rule>
             <name>Codeigniter Raw SQL Query Construction</name>
             <regex><![CDATA[DB::raw\(|selectRaw\(|whereRaw\(|->query\(\s*\$|mysqli_query\(|PDO::query\(]]></regex>
-            <rdl><![CDATA[[FLAG:DB::raw\(|selectRaw\(|whereRaw\(|->query\(\s*\$|mysqli_query\(|PDO::query\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:DB::raw\(|selectRaw\(|whereRaw\(|->query\(\s*\$|mysqli_query\(|PDO::query\(][IF(MISSING:where\s*\(.*\?|$this->db->escape|bindParam|prepared && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>

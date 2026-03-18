@@ -20,7 +20,7 @@
         <rule>
             <name>Actix Insecure TLS Handling</name>
             <regex><![CDATA[danger_accept_invalid_certs\(\s*true\s*\)|danger_accept_invalid_hostnames\(\s*true\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:danger_accept_invalid_certs\(\s*true\s*\)|danger_accept_invalid_hostnames\(\s*true\s*\)]]]></rdl>
+            <rdl><![CDATA[[FLAG:danger_accept_invalid_certs\(\s*true\s*\)|danger_accept_invalid_hostnames\(\s*true\s*\)][IF(MISSING:test|development|localhost|staging)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -37,7 +37,7 @@
         <rule>
             <name>Actix SQL Injection Sink</name>
             <regex><![CDATA[format!\(\s*"\s*SELECT|format!\(\s*"\s*INSERT|sql_query\(\s*format!]]></regex>
-            <rdl><![CDATA[[FLAG:format!\(\s*"\s*SELECT|format!\(\s*"\s*INSERT|sql_query\(\s*format!]]]></rdl>
+            <rdl><![CDATA[[FLAG:format!\(\s*"\s*SELECT|format!\(\s*"\s*INSERT|sql_query\(\s*format!][IF(MISSING:query!\s*\(|sqlx::query!|prepare\s*\(|bind\s*\(|QueryBuilder|params && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -54,7 +54,7 @@
         <rule>
             <name>Actix Permissive CORS</name>
             <regex><![CDATA[allow_any_origin\(\)|Any\s*,\s*allow_origin|allow_origin\(Any\)]]></regex>
-            <rdl><![CDATA[[FLAG:allow_any_origin\(\)|Any\s*,\s*allow_origin|allow_origin\(Any\)]]]></rdl>
+            <rdl><![CDATA[[FLAG:allow_any_origin\(\)|Any\s*,\s*allow_origin|allow_origin\(Any\)][IF(PRESENT:allow_any_origin\(\)|AllowOrigin::any\(\)|allow_origin.*Any && MISSING:AllowOrigin::exact|AllowOrigin::predicate|allow_origin.*https?://[^*] && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>

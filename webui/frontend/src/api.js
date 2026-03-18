@@ -110,6 +110,33 @@ export function getVersion() {
   return request('/api/v1/version')
 }
 
+export function getSuppressedFindings(runUuid) {
+  return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/suppressed`)
+}
+
+export function updateSuppressedItem(runUuid, itemId, payload) {
+  return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/suppressed/${encodeURIComponent(itemId)}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function promoteSuppressedItem(runUuid, itemId, payload) {
+  return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/suppressed/${encodeURIComponent(itemId)}/promote`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function getSuppressedReportUrl(runUuid, format = 'json') {
+  const API_BASE = import.meta.env.VITE_API_BASE || ''
+  return `${API_BASE}/api/v1/scans/${encodeURIComponent(runUuid)}/suppressed-report?format=${format}`
+}
+
+export function regenerateReports(runUuid) {
+  return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/regenerate-reports`, { method: 'POST' })
+}
+
 /** Check GitHub for the latest release tag. Cached in sessionStorage for the session. */
 export async function getLatestGithubRelease(repo) {
   const cacheKey = `gh_latest_${repo}`

@@ -310,6 +310,73 @@ function GroupPanel({ group, flows, search }) {
   )
 }
 
+/* ─── Platform coverage notice ───────────────────────────────── */
+function formatPlatformName(raw) {
+  const map = {
+    android: 'Android', ios: 'iOS', kotlin: 'Kotlin', swift: 'Swift',
+    reactnative: 'React Native', flutter: 'Flutter', xamarin: 'Xamarin',
+    cordova: 'Cordova', ionic: 'Ionic', nativescript: 'NativeScript',
+    java: 'Java', python: 'Python', javascript: 'JavaScript', php: 'PHP',
+    golang: 'Go', go: 'Go', dotnet: '.NET', csharp: 'C#', js: 'JavaScript',
+    nodejs: 'Node.js', node: 'Node.js', py: 'Python', rust: 'Rust',
+    ruby: 'Ruby', c: 'C', cpp: 'C++', powershell: 'PowerShell',
+    bash: 'Bash', terraform: 'Terraform', kubernetes: 'Kubernetes',
+    dockerfile: 'Dockerfile',
+  }
+  const key = String(raw || '').toLowerCase().replace(/[\s_-]/g, '')
+  return map[key] || String(raw || '').replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+function PlatformCoverageNotice({ taintEngineTargets, heuristicOnlyTargets }) {
+  if (!heuristicOnlyTargets.length) return null
+  const hasBothKinds = taintEngineTargets.length > 0
+  return (
+    <div style={{
+      background: 'rgba(251,191,36,0.07)',
+      border: '1px solid rgba(251,191,36,0.28)',
+      borderRadius: 8,
+      padding: '12px 16px',
+      marginBottom: 16,
+      display: 'flex',
+      gap: 12,
+      alignItems: 'flex-start',
+    }}>
+      {/* Warning icon */}
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"
+        style={{ color: '#fbbf24', flexShrink: 0, marginTop: 1 }}>
+        <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+      </svg>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: '#fbbf24', marginBottom: 5 }}>
+          {hasBothKinds
+            ? 'Taint analysis not available for all scanned platforms'
+            : 'Taint analysis not supported for the scanned platform' + (heuristicOnlyTargets.length > 1 ? 's' : '')}
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--text-2)', lineHeight: 1.6 }}>
+          {hasBothKinds && (
+            <div style={{ marginBottom: 6 }}>
+              <span style={{ color: '#4ade80', fontWeight: 500 }}>Analyzed</span>
+              {' — '}
+              {taintEngineTargets.map(formatPlatformName).join(', ')}
+            </div>
+          )}
+          <div>
+            <span style={{ color: '#fbbf24', fontWeight: 500 }}>Not supported</span>
+            {' — '}
+            {heuristicOnlyTargets.map(formatPlatformName).join(', ')}
+            {'. '}
+            Rule-based findings for {heuristicOnlyTargets.length > 1 ? 'these platforms' : 'this platform'} are available in the{' '}
+            <strong style={{ color: 'var(--text-1)' }}>Findings</strong> tab.
+          </div>
+        </div>
+        <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-3)' }}>
+          Taint engine supported for: Java · Python · JavaScript / Node.js · PHP · Go · .NET
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /* ─── Group selector tab ─────────────────────────────────────── */
 function GroupTab({ group, count, active, onClick }) {
   return (
@@ -334,12 +401,37 @@ export default function TaintAnalysis({ analysis }) {
   const [activeGroup, setActiveGroup] = useState(null)
   const [search, setSearch] = useState('')
 
-  // Flatten all flows from all targets
+  // Platforms that have a real taint engine (vs heuristic-only fallback)
+  const taintEngineTargets = useMemo(() => {
+    if (!analysis?.results?.length) return []
+    return analysis.results
+      .filter((r) => r.engine === 'dataflow_controlflow')
+      .map((r) => r.target || r.platform)
+      .filter(Boolean)
+  }, [analysis])
+
+  // Platforms present in analysis but without a taint engine
+  const heuristicOnlyTargets = useMemo(() => {
+    if (!analysis?.results?.length) return []
+    return analysis.results
+      .filter((r) => r.engine !== 'dataflow_controlflow')
+      .map((r) => r.target || r.platform)
+      .filter(Boolean)
+  }, [analysis])
+
+  // Only include findings that are actual taint flows (source-to-sink engine output).
+  // Heuristic fallback findings (analysis_kind === "heuristic") are regular scan
+  // findings re-packaged for platforms without a taint engine — they already appear
+  // in the Findings tab and must not be duplicated here.
   const allFlows = useMemo(() => {
     if (!analysis?.results?.length) return []
-    return analysis.results.flatMap((r) =>
-      (r.findings || []).map((f) => ({ ...f, _target: r.target }))
-    )
+    return analysis.results
+      .filter((r) => r.engine === 'dataflow_controlflow')
+      .flatMap((r) =>
+        (r.findings || [])
+          .filter((f) => f.analysis_kind === 'taint_flow')
+          .map((f) => ({ ...f, _target: r.target }))
+      )
   }, [analysis])
 
   // Classify flows into groups
@@ -369,15 +461,38 @@ export default function TaintAnalysis({ analysis }) {
   const currentGroup = activeGroup || firstNonEmpty
 
   if (!allFlows.length) {
+    const noAnalysisAtAll = !analysis?.results?.length
+    const engineRanButEmpty = taintEngineTargets.length > 0 && !allFlows.length
     return (
-      <div className="empty-state" style={{ padding: '40px 20px' }}>
-        <svg className="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 16.875h3.375m0 0h3.375m-3.375 0V13.5m0 3.375v3.375M6 10.5h2.25a2.25 2.25 0 002.25-2.25V6a2.25 2.25 0 00-2.25-2.25H6A2.25 2.25 0 003.75 6v2.25A2.25 2.25 0 006 10.5zm0 9.75h2.25A2.25 2.25 0 0010.5 18v-2.25a2.25 2.25 0 00-2.25-2.25H6a2.25 2.25 0 00-2.25 2.25V18A2.25 2.25 0 006 20.25zm9.75-9.75H18a2.25 2.25 0 002.25-2.25V6A2.25 2.25 0 0018 3.75h-2.25A2.25 2.25 0 0013.5 6v2.25a2.25 2.25 0 002.25 2.25z" />
-        </svg>
-        <div className="empty-title">No taint flows found</div>
-        <div className="empty-msg">
-          Inter-file analysis was not run, or no cross-file taint flows were detected.
-          Enable <strong>Inter-file Analysis</strong> in the scan options to trace data flows across file boundaries.
+      <div style={{ padding: '24px 0' }}>
+        {/* Coverage notice sits above the empty message when platforms are present */}
+        {!noAnalysisAtAll && (
+          <PlatformCoverageNotice
+            taintEngineTargets={taintEngineTargets}
+            heuristicOnlyTargets={heuristicOnlyTargets}
+          />
+        )}
+        <div className="empty-state" style={{ padding: '32px 20px' }}>
+          <svg className="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 16.875h3.375m0 0h3.375m-3.375 0V13.5m0 3.375v3.375M6 10.5h2.25a2.25 2.25 0 002.25-2.25V6a2.25 2.25 0 00-2.25-2.25H6A2.25 2.25 0 003.75 6v2.25A2.25 2.25 0 006 10.5zm0 9.75h2.25A2.25 2.25 0 0010.5 18v-2.25a2.25 2.25 0 00-2.25-2.25H6a2.25 2.25 0 00-2.25 2.25V18A2.25 2.25 0 006 20.25zm9.75-9.75H18a2.25 2.25 0 002.25-2.25V6A2.25 2.25 0 0018 3.75h-2.25A2.25 2.25 0 0013.5 6v2.25a2.25 2.25 0 002.25 2.25z" />
+          </svg>
+          <div className="empty-title">No taint flows detected</div>
+          {noAnalysisAtAll ? (
+            <div className="empty-msg">
+              Inter-file analysis was not run for this scan.
+              Enable <strong>Inter-file Analysis</strong> in scan options to trace data flows across file boundaries.
+            </div>
+          ) : engineRanButEmpty ? (
+            <div className="empty-msg">
+              The taint engine ran for <strong>{taintEngineTargets.map(formatPlatformName).join(', ')}</strong> but
+              found no cross-file source-to-sink flows. All rule-based findings are in the <strong>Findings</strong> tab.
+            </div>
+          ) : (
+            <div className="empty-msg">
+              All rule-based findings for the scanned platform{heuristicOnlyTargets.length > 1 ? 's' : ''} are
+              available in the <strong>Findings</strong> tab.
+            </div>
+          )}
         </div>
       </div>
     )
@@ -391,6 +506,12 @@ export default function TaintAnalysis({ analysis }) {
 
   return (
     <div className="ta-root">
+      {/* ── Coverage notice for unsupported platforms in mixed scans ── */}
+      <PlatformCoverageNotice
+        taintEngineTargets={taintEngineTargets}
+        heuristicOnlyTargets={heuristicOnlyTargets}
+      />
+
       {/* ── Header strip ── */}
       <div className="ta-header">
         <div className="ta-header-left">

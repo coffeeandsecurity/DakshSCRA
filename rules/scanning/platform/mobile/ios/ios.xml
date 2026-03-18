@@ -3,7 +3,7 @@
         <rule>
             <name>App Transport Security Allows Arbitrary Loads</name>
             <regex><![CDATA[NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]></regex>
-            <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]]></rdl>
+            <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>][IF(PRESENT:NSAllowsArbitraryLoads.*true|NSAllowsArbitraryLoads\s*=\s*<true && MISSING:NSExceptionDomains|NSAllowsArbitraryLoadsForMedia|NSAllowsLocalNetworking)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -23,7 +23,7 @@
         <rule>
             <name>Insecure URL Scheme Registration</name>
             <regex><![CDATA[CFBundleURLSchemes]]></regex>
-            <rdl><![CDATA[[FLAG:CFBundleURLSchemes]]]></rdl>
+            <rdl><![CDATA[[FLAG:CFBundleURLSchemes][IF(PRESENT:CFBundleURLSchemes && MISSING:assetlinks|apple-app-site-association|autoVerify|applinks)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -43,7 +43,7 @@
         <rule>
             <name>Application Queries Schemes Broad Allowlist</name>
             <regex><![CDATA[LSApplicationQueriesSchemes]]></regex>
-            <rdl><![CDATA[[FLAG:LSApplicationQueriesSchemes]]]></rdl>
+            <rdl><![CDATA[[FLAG:LSApplicationQueriesSchemes][IF(PRESENT:LSApplicationQueriesSchemes && MISSING:# intentional|# required)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -65,7 +65,7 @@
         <rule>
             <name>Keychain Accessibility Too Permissive</name>
             <regex><![CDATA[kSecAttrAccessible\s*:\s*kSecAttrAccessibleAlways]]></regex>
-            <rdl><![CDATA[[FLAG:kSecAttrAccessible\s*:\s*kSecAttrAccessibleAlways]]]></rdl>
+            <rdl><![CDATA[[FLAG:kSecAttrAccessible\s*:\s*kSecAttrAccessibleAlways][IF(PRESENT:kSecAttrAccessibleAlways|kSecAttrAccessibleAlwaysThisDeviceOnly && MISSING:kSecAttrAccessibleWhenUnlocked|kSecAttrAccessibleAfterFirstUnlock|test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -85,7 +85,7 @@
         <rule>
             <name>UserDefaults Used for Sensitive Data</name>
             <regex><![CDATA[\b(?:UserDefaults\.standard|NSUserDefaults\s+standardUserDefaults)]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:UserDefaults\.standard|NSUserDefaults\s+standardUserDefaults)]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(?:UserDefaults\.standard|NSUserDefaults\s+standardUserDefaults)][IF(PRESENT:UserDefaults.*(?:password|token|secret|key|credential|auth)|set\s*\(\s*\w+\s*,\s*forKey:\s*"(?:password|token|secret|key|auth) && MISSING:Keychain|CryptoKit|encrypt|SecItem)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -105,7 +105,7 @@
         <rule>
             <name>WebView JavaScript Enabled for Dynamic Content</name>
             <regex><![CDATA[WKPreferences\(\)\.javaScriptEnabled\s*=\s*true|setJavaScriptEnabled\s*:\s*YES]]></regex>
-            <rdl><![CDATA[[FLAG:WKPreferences\(\)\.javaScriptEnabled\s*=\s*true|setJavaScriptEnabled\s*:\s*YES]]]></rdl>
+            <rdl><![CDATA[[FLAG:WKPreferences\(\)\.javaScriptEnabled\s*=\s*true|setJavaScriptEnabled\s*:\s*YES][IF(MISSING:shouldStartLoadWithRequest|decidePolicyForNavigationAction|navigationDelegate|allowList|trustedOrigins)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -125,7 +125,7 @@
         <rule>
             <name>Certificate Validation Override</name>
             <regex><![CDATA[didReceive\s+challenge|NSURLSessionAuthChallengeDisposition\.useCredential]]></regex>
-            <rdl><![CDATA[[FLAG:didReceive\s+challenge|NSURLSessionAuthChallengeDisposition\.useCredential]]]></rdl>
+            <rdl><![CDATA[[FLAG:didReceive\s+challenge|NSURLSessionAuthChallengeDisposition\.useCredential][IF(MISSING:SecTrustEvaluate|SecPolicyCreateSSL|pinnedCertificates|ServerTrustManager && MISSING:test|development|localhost)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -141,6 +141,86 @@
             <vuln_desc>Improper challenge handling can bypass TLS trust and enable MITM attacks.</vuln_desc>
             <developer>Use system trust evaluation and pinning patterns where appropriate; avoid unconditional trust.</developer>
             <reviewer>Inspect challenge handlers to confirm strict certificate and host validation logic. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>UIPasteboard Write with Sensitive Data</name>
+            <regex><![CDATA[UIPasteboard\.general\.(string|setValue|setData|setObjects)\s*[=\(]]]></regex>
+            <rdl><![CDATA[[FLAG:UIPasteboard\.general\.(string|setValue|setData|setObjects)\s*[=\(]][IF(PRESENT:password|token|secret|key|credential|auth && MISSING:localOnly|expirationDate|UIPasteboardOption)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
+            <rule_desc>Detects writes of sensitive data to the system pasteboard without expiration or local-only restrictions.</rule_desc>
+            <vuln_desc>Writing credentials or tokens to UIPasteboard.general without expiration or localOnly makes them accessible to any app on the device and synced across devices via Handoff.</vuln_desc>
+            <developer>Set UIPasteboardOptionLocalOnly and UIPasteboardOptionExpirationDate when writing sensitive values, or avoid writing secrets to the pasteboard entirely.</developer>
+            <reviewer>Confirm that any pasteboard writes containing sensitive data set localOnly and a short expiration. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>evaluateJavaScript with Potentially User-Controlled Input</name>
+            <regex><![CDATA[\.evaluateJavaScript\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:\.evaluateJavaScript\s*\(][IF(MISSING:sanitize|escape|encode|htmlEncode|jsEncode|allowList|trustedScript|#\ safe)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
+            <rule_desc>Detects evaluateJavaScript calls that may execute user-controlled or unsanitized script strings.</rule_desc>
+            <vuln_desc>Injecting user-controlled values into evaluateJavaScript strings can lead to DOM-based XSS, data exfiltration via the JavaScript bridge, or local file access within the web view context.</vuln_desc>
+            <developer>Build script strings from static templates only. Never interpolate user input directly into JavaScript strings passed to evaluateJavaScript.</developer>
+            <reviewer>Inspect the script string construction to determine if user-controlled data flows in without sanitization or encoding. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Keychain Item Missing Access Control Object</name>
+            <regex><![CDATA[\bSecItemAdd\s*\(|\bSecItemUpdate\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:\bSecItemAdd\s*\(|\bSecItemUpdate\s*\(][IF(MISSING:kSecAttrAccessControl|SecAccessControlCreateWithFlags)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>5</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
+            <rule_desc>Detects Keychain item storage without an explicit access control object.</rule_desc>
+            <vuln_desc>Storing Keychain items without kSecAttrAccessControl means no biometric or passcode gate is applied, allowing access whenever the device is unlocked. High-sensitivity items should require user presence.</vuln_desc>
+            <developer>Use SecAccessControlCreateWithFlags to create an access control object with kSecAccessControlUserPresence or biometricAny, and pass it as kSecAttrAccessControl in the query dictionary.</developer>
+            <reviewer>Confirm high-sensitivity Keychain writes include a SecAccessControlRef requiring user authentication. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>openURL with Unvalidated Input Scheme</name>
+            <regex><![CDATA[\bUIApplication\.shared\.open\s*\(|\bUIApplication\.sharedApplication\(\)\.openURL\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:\bUIApplication\.shared\.open\s*\(|\bUIApplication\.sharedApplication\(\)\.openURL\s*\(][IF(MISSING:scheme|canOpenURL|allowedSchemes|guard|whitelist|allowlist)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
+            <rule_desc>Detects openURL calls that may open user-controlled or unvalidated URL schemes.</rule_desc>
+            <vuln_desc>Opening unvalidated URLs can invoke arbitrary third-party app schemes, navigate to phishing pages, or trigger app actions via javascript: or data: schemes if not restricted.</vuln_desc>
+            <developer>Validate the URL scheme against a strict allowlist before calling open(). Reject schemes outside of https and known safe custom schemes.</developer>
+            <reviewer>Trace the URL origin and check that scheme, host, and path are validated before calling open. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
     <category name="Platform-Specific Issues - iOS Build and Entitlements">
@@ -167,7 +247,7 @@
         <rule>
             <name>Associated Domains Entitlement Present</name>
             <regex><![CDATA[com\.apple\.developer\.associated-domains]]></regex>
-            <rdl><![CDATA[[FLAG:com\.apple\.developer\.associated-domains]]]></rdl>
+            <rdl><![CDATA[[FLAG:com\.apple\.developer\.associated-domains][IF(PRESENT:com\.apple\.developer\.associated-domains && MISSING:# intentional|# required)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -187,7 +267,7 @@
         <rule>
             <name>Push Notification Entitlement Enabled</name>
             <regex><![CDATA[aps-environment]]></regex>
-            <rdl><![CDATA[[FLAG:aps-environment]]]></rdl>
+            <rdl><![CDATA[[FLAG:aps-environment][IF(PRESENT:aps-environment|com\.apple\.developer\.aps-environment && MISSING:# intentional|# required)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -263,6 +343,26 @@
             <vuln_desc>Hardcoded keys and secrets embedded in app source can be extracted from the compiled binary by attackers using static analysis tools.</vuln_desc>
             <developer>Store secrets in Keychain or retrieve them at runtime from a secure backend. Never embed cryptographic material in source code.</developer>
             <reviewer>Verify no long-lived secrets or keys are embedded as string literals. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Certificate Pinning Using Leaf Certificate Hash Only</name>
+            <regex><![CDATA[\bSecCertificateCopyData\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:\bSecCertificateCopyData\s*\(][IF(MISSING:SecCertificateCopyPublicKey|SecCertificateCopyKey|SecKeyRef|publicKeyHash|spki|SubjectPublicKeyInfo)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>3</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
+            <rule_desc>Detects certificate pinning implementations that copy leaf certificate data without extracting and pinning the public key.</rule_desc>
+            <vuln_desc>Pinning the full leaf certificate DER hash breaks on every certificate renewal. Public key (SPKI) pinning is resilient to renewals and is the recommended approach. Leaf-only implementations also fail to cover intermediate rotation scenarios.</vuln_desc>
+            <developer>Pin the Subject Public Key Info (SPKI) hash rather than the full certificate. Use SecCertificateCopyKey or SecCertificateCopyPublicKey to extract the key and compare its SHA-256 hash against a pinned set.</developer>
+            <reviewer>Confirm the pinning implementation compares public key hashes (SPKI), not raw certificate data. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

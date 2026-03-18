@@ -20,7 +20,7 @@
         <rule>
             <name>Weak Local Secret Storage</name>
             <regex><![CDATA[\b(?:application-settings|ApplicationSettings\.set|setString\s*\()]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:application-settings|ApplicationSettings\.set|setString\s*\()]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(?:application-settings|ApplicationSettings\.set|setString\s*\()][IF(PRESENT:ApplicationSettings\.setString.*(?:password|token|secret|key|credential)|getString.*(?:password|token|secret|key|credential) && MISSING:nativescript-secure-storage|encrypt|AES)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -37,7 +37,7 @@
         <rule>
             <name>WebView Usage with Dynamic Sources</name>
             <regex><![CDATA[<WebView|webView\.src\s*=]]></regex>
-            <rdl><![CDATA[[FLAG:<WebView|webView\.src\s*=]]]></rdl>
+            <rdl><![CDATA[[FLAG:<WebView|webView\.src\s*=][IF(MISSING:shouldOverrideUrl|allowList|trustedOrigins|validate && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -176,7 +176,7 @@
         <rule>
             <name>iOS ATS Relaxed Settings</name>
             <regex><![CDATA[NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]></regex>
-            <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]]></rdl>
+            <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>][IF(PRESENT:NSAllowsArbitraryLoads.*true && MISSING:NSExceptionDomains|localhost|development|# intentional)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>

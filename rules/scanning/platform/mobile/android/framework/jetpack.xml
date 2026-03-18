@@ -103,7 +103,7 @@
         <rule>
             <name>Android JavaScript Interface Exposure</name>
             <regex><![CDATA[addJavascriptInterface\(]]></regex>
-            <rdl><![CDATA[[FLAG:addJavascriptInterface\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:addJavascriptInterface\(][IF(MISSING:@JavascriptInterface|validate|allowlist|trusted && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>

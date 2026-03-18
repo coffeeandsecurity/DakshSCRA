@@ -3,7 +3,7 @@
         <rule>
             <name>Shell Command Execution with std::process::Command</name>
             <regex><![CDATA[\b(?:std::process::)?Command::new\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:std::process::)?Command::new\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(?:std::process::)?Command::new\s*\(][IF(MISSING:validate|sanitize|allowlist|whitelist|args\s*\(\s*&\s*\[|arg\s*\(\s*"[^"]*" && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -20,7 +20,7 @@
         <rule>
             <name>Potential SQL Query Concatenation</name>
             <regex><![CDATA[\b(?:query|execute|prepare)\s*!?\s*\(\s*["'][^"']*(?:\{\}|\+)]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:query|execute|prepare)\s*!?\s*\(\s*["'][^"']*(?:\{\}|\+)]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(?:query|execute|prepare)\s*!?\s*\(\s*["'][^"']*(?:\{\}|\+)][IF(MISSING:query!\s*\(|sqlx::query!|prepare\s*\(|bind\s*\(|QueryBuilder|params|bindParams && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -39,7 +39,7 @@
         <rule>
             <name>Unsafe Block Usage</name>
             <regex><![CDATA[\bunsafe\s*\{]]></regex>
-            <rdl><![CDATA[[FLAG:\bunsafe\s*\{]]]></rdl>
+            <rdl><![CDATA[[FLAG:\bunsafe\s*\{][IF(MISSING:// SAFETY:|// Safety:|// UNSAFE:)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -56,7 +56,7 @@
         <rule>
             <name>FFI Calls with extern "C"</name>
             <regex><![CDATA[\bextern\s+"C"\b]]></regex>
-            <rdl><![CDATA[[FLAG:\bextern\s+"C"\b]]]></rdl>
+            <rdl><![CDATA[[FLAG:\bextern\s+"C"\b][IF(MISSING:// SAFETY:|// Safety:|#\[no_mangle\]|unsafe fn && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -73,7 +73,7 @@
         <rule>
             <name>Unsafe Memory Reinterpretation or Uninitialized Data</name>
             <regex><![CDATA[\b(?:std::mem::transmute|core::mem::transmute|mem::transmute|mem::uninitialized|MaybeUninit::assume_init)\s*(?:<[^>]+>)?\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:std::mem::transmute|core::mem::transmute|mem::transmute|mem::uninitialized|MaybeUninit::assume_init)\s*(?:<[^>]+>)?\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(?:std::mem::transmute|core::mem::transmute|mem::transmute|mem::uninitialized|MaybeUninit::assume_init)\s*(?:<[^>]+>)?\s*\(][IF(MISSING:// SAFETY:|// Safety:|bytemuck|pod_read_unaligned|std::mem::zeroed)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -92,7 +92,7 @@
         <rule>
             <name>Weak Randomness Source</name>
             <regex><![CDATA[\brand::random\s*\(\)|\bthread_rng\s*\(\)]]></regex>
-            <rdl><![CDATA[[FLAG:\brand::random\s*\(\)|\bthread_rng\s*\(\)]]]></rdl>
+            <rdl><![CDATA[[FLAG:\brand::random\s*\(\)|\bthread_rng\s*\(\)][IF(MISSING:OsRng|rand_core::OsRng|getrandom|os_rng && MISSING:simulation|game|test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -109,7 +109,7 @@
         <rule>
             <name>Potential TLS Verification Bypass</name>
             <regex><![CDATA[\b(?:danger_accept_invalid_certs|danger_accept_invalid_hostnames)\s*\(\s*true\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:danger_accept_invalid_certs|danger_accept_invalid_hostnames)\s*\(\s*true\s*\)]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(?:danger_accept_invalid_certs|danger_accept_invalid_hostnames)\s*\(\s*true\s*\)][IF(MISSING:test|development|localhost|staging)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>

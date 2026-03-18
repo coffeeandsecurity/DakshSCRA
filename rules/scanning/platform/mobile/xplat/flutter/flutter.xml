@@ -3,7 +3,7 @@
         <rule>
             <name>Insecure SharedPreferences for Sensitive Data</name>
             <regex><![CDATA[\bSharedPreferences\.getInstance\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\bSharedPreferences\.getInstance\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\bSharedPreferences\.getInstance\s*\(][IF(PRESENT:SharedPreferences.*(?:password|token|secret|key|credential|auth)|prefs\.setString.*(?:password|token|secret|key|auth) && MISSING:flutter_secure_storage|FlutterSecureStorage|encrypt|AES)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -23,7 +23,7 @@
         <rule>
             <name>WebView Unrestricted JavaScript Mode</name>
             <regex><![CDATA[JavaScriptMode\.unrestricted]]></regex>
-            <rdl><![CDATA[[FLAG:JavaScriptMode\.unrestricted]]]></rdl>
+            <rdl><![CDATA[[FLAG:JavaScriptMode\.unrestricted][IF(MISSING:navigationDelegate|onNavigationRequest|allowList|trustedOrigins|shouldOverrideUrlLoading)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -43,7 +43,7 @@
         <rule>
             <name>Ignoring TLS Certificate Errors</name>
             <regex><![CDATA[badCertificateCallback\s*=|onBadCertificate\s*=]]></regex>
-            <rdl><![CDATA[[FLAG:badCertificateCallback\s*=|onBadCertificate\s*=]]]></rdl>
+            <rdl><![CDATA[[FLAG:badCertificateCallback\s*=|onBadCertificate\s*=][IF(MISSING:test|development|localhost|staging|// intentional|badCertificateCallback.*throw)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -59,6 +59,106 @@
             <vuln_desc>Accepting invalid certificates allows man-in-the-middle attacks.</vuln_desc>
             <developer>Never bypass certificate validation in production; enforce strict TLS checks.</developer>
             <reviewer>Ensure certificate error callbacks do not return permissive decisions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>FlutterSecureStorage Without iCloud Sync Disabled</name>
+            <regex><![CDATA[\bFlutterSecureStorage\s*\(|\bconst\s+FlutterSecureStorage\b]]></regex>
+            <rdl><![CDATA[[FLAG:\bFlutterSecureStorage\s*\(|\bconst\s+FlutterSecureStorage\b][IF(MISSING:iCloudSync.*false|iCloudSync:\s*false|IOSOptions.*iCloudSync)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
+            <rule_desc>Detects FlutterSecureStorage instantiation that may sync data to iCloud by default on iOS.</rule_desc>
+            <vuln_desc>By default, FlutterSecureStorage on iOS uses kSecAttrSynchronizable, which syncs keychain items to iCloud. Sensitive credentials or tokens stored this way can be accessed from other devices linked to the same Apple ID.</vuln_desc>
+            <developer>Pass IOSOptions(synchronizable: false) or set iCloudSync: false when constructing FlutterSecureStorage to prevent cross-device sync of secrets.</developer>
+            <reviewer>Confirm FlutterSecureStorage instances include explicit iCloud sync opt-out for sensitive data. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Flutter MethodChannel Handler Without Input Validation</name>
+            <regex><![CDATA[\bsetMethodCallHandler\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:\bsetMethodCallHandler\s*\(][IF(MISSING:call\.method|methodName|switch.*call|if.*call\.method|assert)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>5</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
+            <rule_desc>Detects MethodChannel handlers that may not validate the incoming method name or arguments.</rule_desc>
+            <vuln_desc>MethodChannel handlers receiving calls from potentially untrusted JavaScript or plugin code should validate call.method and call.arguments before executing sensitive native operations. Missing validation can allow unintended handler invocation.</vuln_desc>
+            <developer>Always switch on call.method and validate argument types and ranges before processing. Return a MissingPluginException for unknown method names.</developer>
+            <reviewer>Inspect the handler body to confirm method name and argument validation are present before any action. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>External Storage Used for Sensitive File Operations</name>
+            <regex><![CDATA[\bgetExternalStorageDirectory\s*\(|\bgetExternalFilesDir\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:\bgetExternalStorageDirectory\s*\(|\bgetExternalFilesDir\s*\(][IF(PRESENT:password|token|secret|key|credential|auth|private && MISSING:encrypt|AES|cipher|// non-sensitive|// public)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
+            <rule_desc>Detects sensitive file operations targeting external storage on Android.</rule_desc>
+            <vuln_desc>External storage is world-readable on older Android versions and accessible to other apps with READ_EXTERNAL_STORAGE permission. Writing sensitive data such as credentials or keys there exposes them to extraction without rooting the device.</vuln_desc>
+            <developer>Use internal app storage (getApplicationDocumentsDirectory or getApplicationSupportDirectory) for all sensitive files. If external storage is required, encrypt the data before writing.</developer>
+            <reviewer>Verify the file path resolves to internal storage, or that content is encrypted before writing to external paths. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Isolate.spawnUri with Remote URI</name>
+            <regex><![CDATA[\bIsolate\.spawnUri\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:\bIsolate\.spawnUri\s*\(][IF(PRESENT:http://|https://|Uri\.parse.*http && MISSING:// trusted|// internal)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
+            <rule_desc>Detects Isolate.spawnUri calls pointing to remote HTTP/HTTPS URIs.</rule_desc>
+            <vuln_desc>Spawning an isolate from a remote URI loads and executes arbitrary remote Dart code at runtime. If the URI is user-controlled or the endpoint is compromised, this enables remote code execution within the application's process context.</vuln_desc>
+            <developer>Only spawn isolates from bundled asset URIs. Never construct Isolate.spawnUri arguments from user input or remote URLs.</developer>
+            <reviewer>Confirm the URI passed to Isolate.spawnUri is a bundled asset path and not derived from any external source. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>WebView Loading User-Controlled URL Without Scheme Validation</name>
+            <regex><![CDATA[\bWebViewController\b|\bWebViewWidget\b]]></regex>
+            <rdl><![CDATA[[FLAG:\bWebViewController\b|\bWebViewWidget\b][IF(MISSING:scheme|canLaunchUrl|allowedSchemes|guard.*scheme|Uri\.parse.*scheme|navigationDelegate|onNavigationRequest)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>5</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
+            <rule_desc>Detects Flutter WebView usage that may load user-controlled URLs without scheme or origin validation.</rule_desc>
+            <vuln_desc>Loading unvalidated user-supplied URLs in a WebView can expose the application to phishing content, javascript: URI execution, or file:// access to local application data.</vuln_desc>
+            <developer>Validate URL scheme and host against an allowlist using a NavigationDelegate with onNavigationRequest. Block navigation to non-https schemes except for explicitly trusted custom protocols.</developer>
+            <reviewer>Trace all URL sources into WebViewController.loadRequest and confirm scheme/host validation guards are present. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
     <category name="Framework-Specific Security">
@@ -185,7 +285,7 @@
         <rule>
             <name>Android Exported Components in Manifest</name>
             <regex><![CDATA[android:exported\s*=\s*"?(?:true|TRUE)"?]]></regex>
-            <rdl><![CDATA[[FLAG:android:exported\s*=\s*"?(?:true|TRUE)"?]]]></rdl>
+            <rdl><![CDATA[[FLAG:android:exported\s*=\s*"?(?:true|TRUE)"?][IF(PRESENT:android:exported\s*=\s*"true" && MISSING:android:permission\s*=|android:exported\s*=\s*"false"|android:readPermission|android:writePermission)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -209,7 +309,7 @@
         <rule>
             <name>iOS ATS Disabled</name>
             <regex><![CDATA[NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]></regex>
-            <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]]></rdl>
+            <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>][IF(PRESENT:NSAllowsArbitraryLoads.*true && MISSING:NSExceptionDomains|localhost|development|# intentional)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>

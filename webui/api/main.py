@@ -860,6 +860,286 @@ def save_settings(payload: SettingsData):
         raise HTTPException(status_code=500, detail=f"settings_write_error: {exc}")
 
 
+@app.get("/api/v1/scans/{run_uuid}/suppressed")
+def get_suppressed_findings(run_uuid: str, db: Session = Depends(db_session)):
+    """Return suppressed findings (RDL-filtered FPs) for a scan."""
+    row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="run_not_found")
+
+    sup_path = run_dir(run_uuid) / "reports" / "data" / "suppressed_findings.json"
+    suppressed = _load_json_safe(sup_path) or []
+
+    # Build summary metrics
+    total_suppressed = len(suppressed)
+    rdl_conditions_hit = len({s["rdl_condition"] for s in suppressed if s.get("rdl_condition")})
+    promoted = sum(1 for s in suppressed if s.get("status") == "confirmed_finding")
+
+    return {
+        "run_uuid": run_uuid,
+        "summary": {
+            "total_suppressed": total_suppressed,
+            "rdl_conditions_triggered": rdl_conditions_hit,
+            "promoted_to_findings": promoted,
+        },
+        "suppressed": suppressed,
+    }
+
+
+@app.put("/api/v1/scans/{run_uuid}/suppressed/{item_id}")
+def update_suppressed_item(
+    run_uuid: str,
+    item_id: str,
+    payload: dict,
+    db: Session = Depends(db_session),
+):
+    """Update metadata on a suppressed finding (notes, status, etc.)."""
+    row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="run_not_found")
+
+    sup_path = run_dir(run_uuid) / "reports" / "data" / "suppressed_findings.json"
+    suppressed = _load_json_safe(sup_path) or []
+
+    item = next((s for s in suppressed if s.get("id") == item_id), None)
+    if not item:
+        raise HTTPException(status_code=404, detail="item_not_found")
+
+    allowed_fields = {"notes", "status", "confidence", "confidence_level", "severity", "rating"}
+    for k, v in payload.items():
+        if k in allowed_fields:
+            item[k] = v
+
+    try:
+        sup_path.write_text(json.dumps(suppressed, indent=2), encoding="utf-8")
+    except OSError as exc:
+        raise HTTPException(status_code=500, detail=f"write_error: {exc}")
+
+    return item
+
+
+@app.post("/api/v1/scans/{run_uuid}/suppressed/{item_id}/promote")
+def promote_suppressed_to_finding(
+    run_uuid: str,
+    item_id: str,
+    payload: dict,
+    db: Session = Depends(db_session),
+):
+    """
+    Promote a suppressed FP back to active findings.
+    Payload: { confidence, confidence_level, severity, rating, notes }
+    """
+    row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="run_not_found")
+
+    rdir = run_dir(run_uuid)
+    data_dir = rdir / "reports" / "data"
+    sup_path = data_dir / "suppressed_findings.json"
+    findings_path = data_dir / "areas_of_interest.json"
+
+    suppressed = _load_json_safe(sup_path) or []
+    findings = _load_json_safe(findings_path) or []
+
+    item = next((s for s in suppressed if s.get("id") == item_id), None)
+    if not item:
+        raise HTTPException(status_code=404, detail="item_not_found")
+
+    # Update suppressed item status
+    item["status"] = "confirmed_finding"
+    item["promoted_at"] = datetime.now(timezone.utc).isoformat()
+    for k in ("confidence", "confidence_level", "severity", "rating", "notes"):
+        if k in payload:
+            item[k] = payload[k]
+
+    # Merge into findings: look for existing finding with same platform + rule_title
+    platform = item.get("platform", "")
+    rule_title = item.get("rule_title", "")
+    existing = next(
+        (f for f in findings if f.get("platform") == platform and f.get("rule_title") == rule_title),
+        None,
+    )
+
+    ev_entry = {
+        "file": item.get("file", ""),
+        "line": item.get("line", 0),
+        "code": item.get("code", ""),
+        "promoted_from_suppressed": True,
+    }
+    if item.get("context_before"):
+        ev_entry["context_before"] = item["context_before"]
+    if item.get("context_after"):
+        ev_entry["context_after"] = item["context_after"]
+
+    if existing is None:
+        new_finding = {
+            "platform": platform,
+            "rule_id": f"{platform}-promoted",
+            "rule_title": rule_title,
+            "category": item.get("category", ""),
+            "issue_scope": "",
+            "rule_desc": "",
+            "issue_desc": "",
+            "developer_note": "",
+            "reviewer_note": item.get("notes", ""),
+            "confidence_score": payload.get("confidence", 50),
+            "confidence_level": payload.get("confidence_level", "medium"),
+            "scan_config": {},
+            "evidence": [ev_entry],
+        }
+        for k in ("severity", "rating"):
+            if k in payload:
+                new_finding[k] = payload[k]
+        findings.append(new_finding)
+    else:
+        if not any(e.get("file") == ev_entry["file"] and e.get("line") == ev_entry["line"]
+                   for e in existing.get("evidence", [])):
+            existing.setdefault("evidence", []).append(ev_entry)
+        for k in ("confidence_score", "confidence_level", "severity", "rating"):
+            if k in payload:
+                existing[k] = payload[k]
+        if payload.get("notes"):
+            existing["reviewer_note"] = payload["notes"]
+
+    try:
+        sup_path.write_text(json.dumps(suppressed, indent=2), encoding="utf-8")
+        findings_path.write_text(json.dumps(findings, indent=2), encoding="utf-8")
+    except OSError as exc:
+        raise HTTPException(status_code=500, detail=f"write_error: {exc}")
+
+    return {"status": "promoted", "item_id": item_id}
+
+
+@app.get("/api/v1/scans/{run_uuid}/suppressed-report")
+def get_suppressed_report(
+    run_uuid: str,
+    format: str = Query(default="json"),
+    db: Session = Depends(db_session),
+):
+    """Download suppressed findings report in json or html format."""
+    row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="run_not_found")
+
+    sup_path = run_dir(run_uuid) / "reports" / "data" / "suppressed_findings.json"
+    suppressed = _load_json_safe(sup_path) or []
+
+    if format == "json":
+        total_suppressed = len(suppressed)
+        rdl_conditions_hit = len({s["rdl_condition"] for s in suppressed if s.get("rdl_condition")})
+        report = {
+            "run_uuid": run_uuid,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "summary": {
+                "total_suppressed": total_suppressed,
+                "rdl_conditions_triggered": rdl_conditions_hit,
+            },
+            "suppressed_findings": suppressed,
+        }
+        from fastapi.responses import JSONResponse
+        return JSONResponse(
+            content=report,
+            headers={"Content-Disposition": f"attachment; filename=suppressed_findings_{run_uuid[:8]}.json"},
+        )
+
+    if format == "html":
+        html = _build_suppressed_html_report(run_uuid, suppressed)
+        from fastapi.responses import HTMLResponse
+        return HTMLResponse(
+            content=html,
+            headers={"Content-Disposition": f"attachment; filename=suppressed_findings_{run_uuid[:8]}.html"},
+        )
+
+    raise HTTPException(status_code=400, detail="invalid_format")
+
+
+@app.post("/api/v1/scans/{run_uuid}/regenerate-reports")
+def regenerate_reports(run_uuid: str, db: Session = Depends(db_session)):
+    """Regenerate HTML/JSON reports for a scan (e.g. after promoting suppressed findings)."""
+    row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="run_not_found")
+
+    rdir = run_dir(run_uuid)
+    data_dir = rdir / "reports" / "data"
+    findings_path = data_dir / "areas_of_interest.json"
+    findings = _load_json_safe(findings_path) or []
+
+    import sys
+    sys.path.insert(0, str(ROOT_DIR))
+    try:
+        import core.reports as rpts
+        html_path = rdir / "reports" / "areas_of_interest.html"
+        rpts.build_findings_report_html(findings, str(html_path))
+        return {"status": "regenerated", "run_uuid": run_uuid}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"regenerate_error: {exc}")
+
+
+def _build_suppressed_html_report(run_uuid: str, suppressed: list) -> str:
+    """Build an HTML report for suppressed (RDL-filtered) findings."""
+    total = len(suppressed)
+    rdl_hit = len({s.get("rdl_condition", "") for s in suppressed if s.get("rdl_condition")})
+    promoted = sum(1 for s in suppressed if s.get("status") == "confirmed_finding")
+    generated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+
+    rows = ""
+    for s in suppressed:
+        status_badge = (
+            '<span style="background:#22c55e;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px">Promoted</span>'
+            if s.get("status") == "confirmed_finding"
+            else '<span style="background:#f59e0b;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px">Suppressed</span>'
+        )
+        rows += f"""
+        <tr>
+          <td style="padding:8px;border-bottom:1px solid #333">{s.get("platform","")}</td>
+          <td style="padding:8px;border-bottom:1px solid #333">{s.get("rule_title","")}</td>
+          <td style="padding:8px;border-bottom:1px solid #333">{s.get("file","")}</td>
+          <td style="padding:8px;border-bottom:1px solid #333;font-family:monospace;font-size:12px">{s.get("line","")}: {s.get("code","")}</td>
+          <td style="padding:8px;border-bottom:1px solid #333;font-family:monospace;font-size:11px">{s.get("rdl_condition","")}</td>
+          <td style="padding:8px;border-bottom:1px solid #333;font-size:12px">{s.get("suppression_reason","")}</td>
+          <td style="padding:8px;border-bottom:1px solid #333">{status_badge}</td>
+        </tr>"""
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Suppressed Findings Report — {run_uuid[:8]}</title>
+  <style>
+    body {{ background:#0f172a; color:#e2e8f0; font-family:sans-serif; margin:0; padding:24px; }}
+    h1 {{ color:#f8fafc; font-size:22px; }}
+    .meta {{ color:#94a3b8; font-size:13px; margin-bottom:24px; }}
+    .cards {{ display:flex; gap:16px; margin-bottom:32px; flex-wrap:wrap; }}
+    .card {{ background:#1e293b; border-radius:8px; padding:16px 24px; min-width:160px; }}
+    .card-val {{ font-size:28px; font-weight:700; color:#f8fafc; }}
+    .card-lbl {{ font-size:12px; color:#94a3b8; margin-top:4px; }}
+    table {{ width:100%; border-collapse:collapse; background:#1e293b; border-radius:8px; overflow:hidden; }}
+    th {{ background:#334155; color:#94a3b8; font-size:12px; text-transform:uppercase; padding:10px 8px; text-align:left; }}
+    tr:hover {{ background:#263347; }}
+  </style>
+</head>
+<body>
+  <h1>Suppressed Findings Report</h1>
+  <div class="meta">Scan: {run_uuid} &mdash; Generated: {generated}</div>
+  <div class="cards">
+    <div class="card"><div class="card-val">{total}</div><div class="card-lbl">Total Suppressed</div></div>
+    <div class="card"><div class="card-val">{rdl_hit}</div><div class="card-lbl">RDL Conditions Triggered</div></div>
+    <div class="card"><div class="card-val">{promoted}</div><div class="card-lbl">Promoted to Findings</div></div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Platform</th><th>Rule</th><th>File</th><th>Code</th>
+        <th>RDL Condition</th><th>Suppression Reason</th><th>Status</th>
+      </tr>
+    </thead>
+    <tbody>{rows}</tbody>
+  </table>
+</body>
+</html>"""
+
+
 @app.get("/api/v1/artifacts")
 def get_artifact(path: str = Query(...)):
     p = Path(path)

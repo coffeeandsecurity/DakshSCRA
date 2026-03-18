@@ -3,7 +3,7 @@
         <rule>
             <name>Azure VM with Password Authentication Enabled</name>
             <regex><![CDATA[resource\s+"azurerm_linux_virtual_machine"[^}]*disable_password_authentication\s*=\s*false|resource\s+"azurerm_virtual_machine"[^}]*password_authentication\s*=\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:disable_password_authentication\s*=\s*false]]]></rdl>
+            <rdl><![CDATA[[FLAG:disable_password_authentication\s*=\s*false][IF(PRESENT:disable_password_authentication\s*=\s*false && MISSING:# intentional|# development|admin_ssh_key)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -22,7 +22,7 @@
         <rule>
             <name>Azure Storage Account Allows Public Blob Access</name>
             <regex><![CDATA[resource\s+"azurerm_storage_account"[^}]*allow_nested_items_to_be_public\s*=\s*true|blob_properties\s*\{[^}]*allow_blob_public_access\s*=\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:allow_nested_items_to_be_public\s*=\s*true|allow_blob_public_access\s*=\s*true]]]></rdl>
+            <rdl><![CDATA[[FLAG:allow_nested_items_to_be_public\s*=\s*true|allow_blob_public_access\s*=\s*true][IF(PRESENT:allow_blob_public_access\s*=\s*true|allow_nested_items_to_be_public\s*=\s*true && MISSING:# intentional|# static-website|static_website)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -39,7 +39,7 @@
         <rule>
             <name>Azure Storage Account Without Secure Transfer Required</name>
             <regex><![CDATA[resource\s+"azurerm_storage_account"[^}]*enable_https_traffic_only\s*=\s*false]]></regex>
-            <rdl><![CDATA[[FLAG:enable_https_traffic_only\s*=\s*false]]]></rdl>
+            <rdl><![CDATA[[FLAG:enable_https_traffic_only\s*=\s*false][IF(PRESENT:enable_https_traffic_only\s*=\s*false|min_tls_version\s*=\s*"TLS1_0" && MISSING:# intentional|# legacy)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -58,7 +58,7 @@
         <rule>
             <name>Azure NSG Rule Allows All Inbound Traffic</name>
             <regex><![CDATA[resource\s+"azurerm_network_security_rule"[^}]*access\s*=\s*"Allow"[^}]*source_address_prefix\s*=\s*"\*"[^}]*direction\s*=\s*"Inbound"]]></regex>
-            <rdl><![CDATA[[FLAG:source_address_prefix\s*=\s*"\*"[^}]*direction\s*=\s*"Inbound"|direction\s*=\s*"Inbound"[^}]*source_address_prefix\s*=\s*"\*"]]]></rdl>
+            <rdl><![CDATA[[FLAG:source_address_prefix\s*=\s*"\*"[^}]*direction\s*=\s*"Inbound"|direction\s*=\s*"Inbound"[^}]*source_address_prefix\s*=\s*"\*"][IF(PRESENT:source_address_prefix\s*=\s*"\*"|source_address_prefix\s*=\s*"Internet" && PRESENT:access\s*=\s*"Allow" && MISSING:# intentional|# required|egress)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -77,7 +77,7 @@
         <rule>
             <name>Azure SQL Server Allows All Azure Services</name>
             <regex><![CDATA[resource\s+"azurerm_sql_firewall_rule"[^}]*start_ip_address\s*=\s*"0\.0\.0\.0"[^}]*end_ip_address\s*=\s*"0\.0\.0\.0"]]></regex>
-            <rdl><![CDATA[[FLAG:start_ip_address\s*=\s*"0\.0\.0\.0"[^}]*end_ip_address\s*=\s*"0\.0\.0\.0"]]]></rdl>
+            <rdl><![CDATA[[FLAG:start_ip_address\s*=\s*"0\.0\.0\.0"[^}]*end_ip_address\s*=\s*"0\.0\.0\.0"][IF(PRESENT:start_ip_address\s*=\s*"0\.0\.0\.0".*end_ip_address\s*=\s*"0\.0\.0\.0" && MISSING:# intentional|# development|firewall_rule)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

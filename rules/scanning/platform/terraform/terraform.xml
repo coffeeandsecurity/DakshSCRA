@@ -3,7 +3,7 @@
         <rule>
             <name>Wildcard IAM Policy Action</name>
             <regex><![CDATA[actions\s*=\s*\[\s*"\*"\s*\]|effect\s*=\s*"Allow"[^}]*actions\s*=\s*\["\*"\]]]></regex>
-            <rdl><![CDATA[[FLAG:actions\s*=\s*\[\s*"\*"\s*\]]]]></rdl>
+            <rdl><![CDATA[[FLAG:actions\s*=\s*\[\s*"\*"\s*\]][IF(PRESENT:"Action":\s*"\*"|actions\s*=\s*\["\*"\]|action\s*=\s*"\*" && MISSING:effect\s*=\s*"Deny"|NotAction|# intentional|# required)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -56,7 +56,7 @@
         <rule>
             <name>SSH Port Open to All Internet</name>
             <regex><![CDATA[from_port\s*=\s*22[^\d][^}]*cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\]|cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\][^}]*from_port\s*=\s*22[^\d]]]></regex>
-            <rdl><![CDATA[[FLAG:from_port\s*=\s*22[^\d][^}]*cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\]]]]></rdl>
+            <rdl><![CDATA[[FLAG:from_port\s*=\s*22[^\d][^}]*cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\]][IF(PRESENT:from_port\s*=\s*22|to_port\s*=\s*22 && PRESENT:cidr_blocks.*0\.0\.0\.0/0|cidr_ipv6.*::/0 && MISSING:# intentional|# bastion|# jump-host)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -73,7 +73,7 @@
         <rule>
             <name>RDP Port Open to All Internet</name>
             <regex><![CDATA[from_port\s*=\s*3389[^\d][^}]*cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\]|cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\][^}]*from_port\s*=\s*3389[^\d]]]></regex>
-            <rdl><![CDATA[[FLAG:from_port\s*=\s*3389[^\d][^}]*cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\]]]]></rdl>
+            <rdl><![CDATA[[FLAG:from_port\s*=\s*3389[^\d][^}]*cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\]][IF(PRESENT:from_port\s*=\s*3389|to_port\s*=\s*3389 && PRESENT:cidr_blocks.*0\.0\.0\.0/0|cidr_ipv6.*::/0 && MISSING:# intentional|# bastion)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -92,7 +92,7 @@
         <rule>
             <name>S3 Bucket Publicly Accessible</name>
             <regex><![CDATA[acl\s*=\s*"public-read(?:-write)?"|block_public_acls\s*=\s*false|block_public_policy\s*=\s*false|ignore_public_acls\s*=\s*false|restrict_public_buckets\s*=\s*false]]></regex>
-            <rdl><![CDATA[[FLAG:acl\s*=\s*"public-read(?:-write)?"|block_public_acls\s*=\s*false|block_public_policy\s*=\s*false]]]></rdl>
+            <rdl><![CDATA[[FLAG:acl\s*=\s*"public-read(?:-write)?"|block_public_acls\s*=\s*false|block_public_policy\s*=\s*false][IF(PRESENT:acl\s*=\s*"public-read|block_public_acls\s*=\s*false|ignore_public_acls\s*=\s*false && MISSING:# intentional|# static-website|website\s*\{)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -128,7 +128,7 @@
         <rule>
             <name>CloudTrail Logging Disabled</name>
             <regex><![CDATA[resource\s+"aws_cloudtrail"[^}]*enable_logging\s*=\s*false]]></regex>
-            <rdl><![CDATA[[FLAG:resource\s+"aws_cloudtrail"[^}]*enable_logging\s*=\s*false]]]></rdl>
+            <rdl><![CDATA[[FLAG:resource\s+"aws_cloudtrail"[^}]*enable_logging\s*=\s*false][IF(PRESENT:enable_logging\s*=\s*false|is_logging\s*=\s*false|enabled\s*=\s*false && MISSING:# intentional|# cost|# development)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

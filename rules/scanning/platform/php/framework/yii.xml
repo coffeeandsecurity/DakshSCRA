@@ -3,7 +3,7 @@
         <rule>
             <name>ActiveRecord Query with Raw Condition String</name>
             <regex><![CDATA[->where\s*\(\s*["'][^"']*["']\s*\.\s*\$|->where\s*\(\s*["'][^"']*\$\{?|->andWhere\s*\(\s*["'][^"']*["']\s*\.\s*\$|->orWhere\s*\(\s*["'][^"']*["']\s*\.\s*\$]]></regex>
-            <rdl><![CDATA[[FLAG:->where\s*\(\s*["'][^"']*["']\s*\.\s*\$|->andWhere\s*\(\s*["'][^"']*["']\s*\.\s*\$|->orWhere\s*\(\s*["'][^"']*["']\s*\.\s*\$|->where\s*\(\s*["'][^"']*\$\{?|->andWhere\s*\(\s*["'][^"']*\$\{?]]]></rdl>
+            <rdl><![CDATA[[FLAG:->where\s*\(\s*["'][^"']*["']\s*\.\s*\$|->andWhere\s*\(\s*["'][^"']*["']\s*\.\s*\$|->orWhere\s*\(\s*["'][^"']*["']\s*\.\s*\$|->where\s*\(\s*["'][^"']*\$\{?|->andWhere\s*\(\s*["'][^"']*\$\{?][IF(MISSING:where\s*\(.*\?|where\s*\(.*:|\$this->db->query.*\?|prepared|PDO:: && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -37,7 +37,7 @@
         <rule>
             <name>createCommand with Raw SQL String</name>
             <regex><![CDATA[->createCommand\s*\(\s*["'][^"']*["']\s*\.\s*\$|->createCommand\s*\(\s*["'][^"']*\$\{?]]></regex>
-            <rdl><![CDATA[[FLAG:->createCommand\s*\(\s*["'][^"']*["']\s*\.\s*\$|->createCommand\s*\(\s*["'][^"']*\$\{?]]]></rdl>
+            <rdl><![CDATA[[FLAG:->createCommand\s*\(\s*["'][^"']*["']\s*\.\s*\$|->createCommand\s*\(\s*["'][^"']*\$\{?][IF(MISSING:bindParam|bindValue|->params\s*\(\s*\[|prepared|:param && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>

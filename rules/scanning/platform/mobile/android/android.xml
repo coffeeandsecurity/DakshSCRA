@@ -64,7 +64,7 @@
         <rule>
             <name>Allow Backup</name>
             <regex><![CDATA[android:allowBackup\s*=\s*"(true|TRUE)"]]></regex>
-            <rdl><![CDATA[[FLAG:android:allowBackup\s*=\s*"(true|TRUE)"]]]></rdl>
+            <rdl><![CDATA[[FLAG:android:allowBackup\s*=\s*"(true|TRUE)"][IF(PRESENT:android:allowBackup\s*=\s*"true" && MISSING:android:fullBackupContent|android:dataExtractionRules|backupRules)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -84,7 +84,7 @@
         <rule>
             <name>Unprotected Components: Empty Permission Attribute</name>
             <regex><![CDATA[android:permission\s*=\s*(?:""|'')]]></regex>
-            <rdl><![CDATA[[FLAG:android:permission\s*=\s*(?:""|'')]]]></rdl>
+            <rdl><![CDATA[[FLAG:android:permission\s*=\s*(?:""|'')][IF(MISSING:android:exported\s*=\s*"false"|android:readPermission|android:writePermission|android:protectionLevel)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -164,7 +164,7 @@
         <rule>
             <name>Insecure Network Traffic</name>
             <regex><![CDATA[android:usesCleartextTraffic\s*=\s*"(true|TRUE)"]]></regex>
-            <rdl><![CDATA[[FLAG:android:usesCleartextTraffic\s*=\s*"(true|TRUE)"]]]></rdl>
+            <rdl><![CDATA[[FLAG:android:usesCleartextTraffic\s*=\s*"(true|TRUE)"][IF(PRESENT:android:usesCleartextTraffic\s*=\s*"true" && MISSING:android:networkSecurityConfig|cleartextTrafficPermitted\s*=\s*"false")]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -255,7 +255,7 @@
         <rule>
             <name>Missing Content Descriptions</name>
             <regex><![CDATA[android:contentDescription\s*=\s*["']["']]]></regex>
-            <rdl><![CDATA[[FLAG:android:contentDescription\s*=\s*["']["']]]]></rdl>
+            <rdl><![CDATA[[FLAG:android:contentDescription\s*=\s*["']["']][IF(PRESENT:android:contentDescription\s*=\s*""|android:contentDescription\s*=\s*"@null" && MISSING:android:importantForAccessibility\s*=\s*"no")]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -275,7 +275,7 @@
         <rule>
             <name>Insecure WebView Configuration</name>
             <regex><![CDATA[WebView.*setJavaScriptEnabled\(true\)]]></regex>
-            <rdl><![CDATA[[FLAG:WebView.*setJavaScriptEnabled\(true\)]]]></rdl>
+            <rdl><![CDATA[[FLAG:WebView.*setJavaScriptEnabled\(true\)][IF(PRESENT:setJavaScriptEnabled\s*\(\s*true && MISSING:setAllowFileAccess\s*\(\s*false|setSafeBrowsingEnabled\s*\(\s*true|setWebViewClient|shouldOverrideUrlLoading)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -339,7 +339,7 @@
         <rule>
             <name>WebView Universal File Access Enabled</name>
             <regex><![CDATA[setAllowUniversalAccessFromFileURLs\s*\(\s*true\s*\)|setAllowFileAccessFromFileURLs\s*\(\s*true\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:setAllowUniversalAccessFromFileURLs\s*\(\s*true\s*\)|setAllowFileAccessFromFileURLs\s*\(\s*true\s*\)]]]></rdl>
+            <rdl><![CDATA[[FLAG:setAllowUniversalAccessFromFileURLs\s*\(\s*true\s*\)|setAllowFileAccessFromFileURLs\s*\(\s*true\s*\)][IF(PRESENT:setAllowUniversalAccessFromFileURLs\s*\(\s*true|setAllowFileAccessFromFileURLs\s*\(\s*true && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -395,6 +395,316 @@
             <vuln_desc>java.util.Random and Math.random() are not cryptographically secure and produce predictable values. Using them for tokens, session IDs, or cryptographic keys weakens security.</vuln_desc>
             <developer>Use java.security.SecureRandom for all security-sensitive random values (tokens, nonces, keys, session IDs).</developer>
             <reviewer>Verify that Random and Math.random() are not used in security-critical code paths. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="JavaScript Bridge Security">
+        <rule>
+            <name>JavascriptInterface Exposed Without URL Allowlist</name>
+            <regex><![CDATA[@JavascriptInterface]]></regex>
+            <rdl><![CDATA[[FLAG:@JavascriptInterface][IF(MISSING:shouldOverrideUrlLoading|onPageStarted|allowedOrigins|getAllowedHosts|checkUrl|getUrl\(\)\.startsWith)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>3</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
+            <rule_desc>Detects @JavascriptInterface methods exposed to WebView without corresponding URL origin validation.</rule_desc>
+            <vuln_desc>Methods annotated with @JavascriptInterface are callable by any page loaded in the WebView. Without origin validation in shouldOverrideUrlLoading or a WebViewClient that enforces an allowed-host list, attacker-controlled content can invoke these native methods, leading to data exfiltration, local file access, or arbitrary command execution on the device.</vuln_desc>
+            <developer>Pair every @JavascriptInterface exposure with a WebViewClient that restricts navigation to trusted origins. Validate the current WebView URL before executing any bridge method logic that accesses sensitive functionality.</developer>
+            <reviewer>Confirm that all @JavascriptInterface methods are reachable only by trusted content. Check the associated WebViewClient for URL allowlist enforcement. Verify that no user-controllable URL can reach the bridge. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>addJavascriptInterface with File Access Enabled</name>
+            <regex><![CDATA[addJavascriptInterface\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:addJavascriptInterface\s*\(][IF(PRESENT:addJavascriptInterface && PRESENT:setAllowFileAccessFromFileURLs\s*\(\s*true|setAllowUniversalAccessFromFileURLs\s*\(\s*true)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>3</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
+            <rule_desc>Detects the dangerous combination of addJavascriptInterface and file URL access enabled in the same WebView configuration.</rule_desc>
+            <vuln_desc>Combining addJavascriptInterface with setAllowFileAccessFromFileURLs(true) or setAllowUniversalAccessFromFileURLs(true) creates a critical local file theft vector. An attacker who can load a malicious HTML file (via a path traversal, zip slip, or download) can call the registered native interface to read any file accessible to the app via file:// URLs and exfiltrate the content.</vuln_desc>
+            <developer>Disable both setAllowFileAccessFromFileURLs and setAllowUniversalAccessFromFileURLs (set both to false). Serve local content via a content provider or HTTPS rather than file:// URLs. If the JS bridge is required, remove the file URL access flags entirely.</developer>
+            <reviewer>Check WebView configuration for the concurrent use of addJavascriptInterface and either file URL access flag. This combination should be treated as high severity and confirmed by tracing how local HTML is loaded. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>WebView shouldOverrideUrlLoading Without URL Validation</name>
+            <regex><![CDATA[shouldOverrideUrlLoading\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:shouldOverrideUrlLoading\s*\(][IF(MISSING:getHost\s*\(\)|getScheme\s*\(\)|startsWith.*https|allowedHosts|trustedDomains|allowList|Uri\.parse)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>6</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
+            <rule_desc>Detects shouldOverrideUrlLoading implementations that do not validate the incoming URL host or scheme.</rule_desc>
+            <vuln_desc>shouldOverrideUrlLoading intercepts all navigation events in the WebView. Without validating the URL host and scheme, an attacker-loaded page can redirect to attacker-controlled URLs, trigger deep-link scheme handlers, or access internal app functionality without authentication. This enables URL scheme hijacking and open redirect chains originating from WebView.</vuln_desc>
+            <developer>Inside shouldOverrideUrlLoading, parse the URL and compare the host against an explicit allowlist. Block unknown schemes and redirect to custom scheme handlers only after validating that the URL origin is trusted.</developer>
+            <reviewer>Inspect shouldOverrideUrlLoading for explicit host and scheme validation logic. Confirm that unrecognised hosts or schemes cause navigation to be blocked and do not fall through to default handling. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="IPC Attack Surface">
+        <rule>
+            <name>Implicit Intent Carrying Sensitive Data</name>
+            <regex><![CDATA[new\s+Intent\s*\(\s*"[a-z][a-z._]+"\s*\)]]></regex>
+            <rdl><![CDATA[[FLAG:new\s+Intent\s*\(\s*"[a-z][a-z._]+"\s*\)][IF(PRESENT:putExtra.*(?:password|token|secret|key|credential|auth|ssn|card) && MISSING:setPackage\s*\(|setComponent\s*\(|setClassName\s*\(|createChooser)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>4</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
+            <rule_desc>Detects implicit intents that place sensitive data in extras without restricting the target package.</rule_desc>
+            <vuln_desc>Implicit intents are resolved by the Android system and delivered to any application that registers a matching intent filter. Placing tokens, passwords, or credential data in putExtra() on an implicit intent allows a malicious app to register the same action and silently receive the sensitive extras. This is a common vector for credential theft on shared devices.</vuln_desc>
+            <developer>Use explicit intents (setPackage or setComponent) when transmitting sensitive data between components. Never rely on implicit broadcast for delivery of secrets; use bound services or content providers with enforced permissions instead.</developer>
+            <reviewer>Confirm that sensitive Intent extras are only sent via explicit intents with a defined target package or component. Implicit intents carrying authentication data should be treated as high severity. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>ContentProvider Raw Selection Parameter Injection</name>
+            <regex><![CDATA[(?i)public\s+(?:Cursor|int|String)\s+\w+\s*\(\s*Uri\b]]></regex>
+            <rdl><![CDATA[[FLAG:(?i)public\s+(?:Cursor|int|String)\s+\w+\s*\(\s*Uri\b][IF(MISSING:selectionArgs|DatabaseUtils\.sqlEscapeString|rawQuery.*\?,|whitelist|allowedColumns|throw.*IllegalArgumentException)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>10</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
+            <rule_desc>Detects ContentProvider query/update/delete method signatures that may forward raw caller-supplied selection strings to the database.</rule_desc>
+            <vuln_desc>ContentProvider methods receive caller-controlled selection and selectionArgs parameters over IPC. If the selection string is forwarded directly to SQLiteDatabase without validation or parameterisation, any app with read permission on the provider can inject SQL to extract, modify, or delete data beyond their authorised scope. This is a frequently overlooked cross-app SQL injection surface.</vuln_desc>
+            <developer>Validate selection strings against an allowlist of permitted column names before using them in database calls. Use selectionArgs for all dynamic values and never concatenate caller-controlled strings into query text.</developer>
+            <reviewer>Trace the selection parameter from the provider method signature through to the underlying database call. Confirm parameterised queries and column allowlist filtering are applied consistently. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Sticky Broadcast Carrying Sensitive Data</name>
+            <regex><![CDATA[sendStickyBroadcast\s*\(|sendStickyOrderedBroadcast\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:sendStickyBroadcast\s*\(|sendStickyOrderedBroadcast\s*\(][IF(PRESENT:putExtra.*(?:token|password|secret|key|data|user|account|credential))]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
+            <rule_desc>Detects sticky broadcasts that carry sensitive data in Intent extras.</rule_desc>
+            <vuln_desc>Sticky broadcasts persist in the Android system after being sent and are delivered to any future receiver that registers for the matching action. Any installed app with the appropriate receive permission can retrieve the last sticky broadcast, including sensitive extras such as session tokens or account data. Sticky broadcasts have been deprecated since API 21 for this reason.</vuln_desc>
+            <developer>Avoid sticky broadcasts for any sensitive state. Use a bound service, in-process event bus, or LiveData for state that must persist across component lifecycles. Migrate legacy sticky broadcast usage to LocalBroadcastManager or equivalent.</developer>
+            <reviewer>Confirm that sensitive extras are never placed in sticky broadcast intents. Any use of sendStickyBroadcast with credential-related keys should be treated as high severity. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>AIDL Stub Without Caller Identity Validation</name>
+            <regex><![CDATA[extends\s+\w+\.Stub\b]]></regex>
+            <rdl><![CDATA[[FLAG:extends\s+\w+\.Stub\b][IF(MISSING:Binder\.getCallingUid\s*\(\)|getCallingPid\s*\(\)|checkCallingPermission|enforceCallingPermission|enforceCallingOrSelfPermission)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>12</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
+            <rule_desc>Detects AIDL Stub implementations that do not validate the calling process identity before handling requests.</rule_desc>
+            <vuln_desc>AIDL service interfaces are accessible to any process that can bind to the service. Without checking the caller UID or enforcing a permission, any application on the device (including malicious ones) can invoke privileged AIDL methods and access sensitive functionality or data exposed by the service.</vuln_desc>
+            <developer>Call Binder.getCallingUid() or Context.enforceCallingPermission() at the start of each AIDL method to verify the caller is authorised before performing any sensitive operation.</developer>
+            <reviewer>Inspect all AIDL Stub implementations for caller identity validation. Confirm that either UID-based whitelisting or permission enforcement is applied on every exposed method. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="Cryptographic Failures">
+        <rule>
+            <name>Hardcoded Static Initialization Vector</name>
+            <regex><![CDATA[new\s+IvParameterSpec\s*\(|new\s+byte\s*\[\s*(?:8|12|16|24|32)\s*\]\s*\{]]></regex>
+            <rdl><![CDATA[[FLAG:new\s+IvParameterSpec\s*\(][IF(PRESENT:static.*byte\s*\[\]|final.*byte\s*\[\].*\{|new\s+byte\s*\[.*\]\s*\{.*0x && MISSING:SecureRandom|generateIV|randomIV|randomBytes)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>4</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
+            <rule_desc>Detects use of a hardcoded or static byte array as an AES/cipher initialization vector.</rule_desc>
+            <vuln_desc>A static or hardcoded IV destroys the semantic security of CBC and other IV-dependent cipher modes. Two messages encrypted with the same key and IV will produce identical ciphertext for matching leading blocks, enabling block-level pattern analysis and, in some modes, full plaintext recovery without knowledge of the key.</vuln_desc>
+            <developer>Generate a fresh cryptographically random IV for every encryption operation using SecureRandom. Prepend the IV to the ciphertext so it can be recovered during decryption. Never store or reuse an IV across encryption operations.</developer>
+            <reviewer>Confirm that IvParameterSpec is always constructed from a SecureRandom-generated byte array, not from a static, final, or hardcoded value. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>SecureRandom Seeded with Predictable Timestamp</name>
+            <regex><![CDATA[\.setSeed\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:\.setSeed\s*\(][IF(PRESENT:setSeed.*currentTimeMillis|setSeed.*nanoTime|setSeed.*System\.current|setSeed.*hashCode)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
+            <rule_desc>Detects SecureRandom seeded with a timestamp or other predictable value, destroying cryptographic randomness.</rule_desc>
+            <vuln_desc>Seeding SecureRandom with System.currentTimeMillis() or System.nanoTime() makes its output predictable to any attacker who can estimate the seed window. All tokens, IVs, or keys derived from such an instance can be brute-forced within a manageable search space. On Android, calling setSeed() with user-provided values weakens rather than strengthens entropy because the default SecureRandom already uses OS-level entropy automatically.</vuln_desc>
+            <developer>Do not call setSeed() with timestamp-derived or user-controlled values. Construct SecureRandom() without arguments and rely on the platform entropy pool. For seeding requirements, use SecureRandom.getInstanceStrong().</developer>
+            <reviewer>Verify that setSeed() is not called with predictable values on any SecureRandom instance used in security-sensitive generation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Android KeyStore Key Without User Authentication Binding</name>
+            <regex><![CDATA[KeyGenParameterSpec\.Builder\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:KeyGenParameterSpec\.Builder\s*\(][IF(MISSING:setUserAuthenticationRequired\s*\(\s*true|setUserAuthenticationParameters|setUnlockedDeviceRequired\s*\(\s*true)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>10</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
+            <rule_desc>Detects Android KeyStore key generation that does not require user authentication before the key is usable.</rule_desc>
+            <vuln_desc>Without setUserAuthenticationRequired(true), a KeyStore-backed key is accessible immediately after first unlock, with no requirement for biometric or screen-lock confirmation. An attacker with code execution on a temporarily unlocked device (via malware, ADB, or physical access) can use the key to decrypt data or forge signatures without any user interaction.</vuln_desc>
+            <developer>Call setUserAuthenticationRequired(true) on the KeyGenParameterSpec.Builder. On API 30+, also call setUserAuthenticationParameters() to specify the validity window and allowed authenticator types (biometric or device credential).</developer>
+            <reviewer>Confirm that KeyGenParameterSpec.Builder chains include setUserAuthenticationRequired(true) for keys that protect sensitive data. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="Runtime Protection Bypass">
+        <rule>
+            <name>Root Detection via Build Tags Only</name>
+            <regex><![CDATA[Build\.TAGS\.contains\s*\(\s*"test-keys"\s*\)|"test-keys"\.equals\s*\(\s*Build\.TAGS\s*\)]]></regex>
+            <rdl><![CDATA[[FLAG:Build\.TAGS\.contains\s*\(\s*"test-keys"\s*\)|"test-keys"\.equals\s*\(\s*Build\.TAGS\s*\)][IF(MISSING:new\s+File.*bin/su|new\s+File.*xbin/su|Runtime\.getRuntime\(\)\.exec|RootBeer|RootTools|whichSu)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>3</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
+            <rule_desc>Detects root detection logic that relies solely on Build.TAGS containing "test-keys", which is trivially bypassable.</rule_desc>
+            <vuln_desc>Checking Build.TAGS for "test-keys" as the sole root indicator is bypassed with a single Frida hook or Xposed module that returns a clean value. A robust root check must combine multiple independent signals: su binary presence in known paths, detection of dangerous installed packages (SuperSU, Magisk), writable /system partition, and system property inspection. A single-source check provides no meaningful protection against a motivated attacker.</vuln_desc>
+            <developer>Implement multi-layered root detection using at least three independent signals from different layers. Consider a maintained library such as RootBeer as a baseline and supplement with at least one check implemented in native code, which is more resistant to Java-level hook-based bypass.</developer>
+            <reviewer>Assess root detection coverage by cataloguing all detection signals. Single-signal checks should be flagged. Verify that detection runs at runtime beyond the initial launch check. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Emulator Detection via Build Properties Only</name>
+            <regex><![CDATA[Build\.FINGERPRINT\.contains\s*\(|Build\.MODEL\.contains\s*\(\s*"(?:google_sdk|Emulator|Android SDK)"]]></regex>
+            <rdl><![CDATA[[FLAG:Build\.FINGERPRINT\.contains\s*\(|Build\.MODEL\.contains\s*\(][IF(PRESENT:isEmulator|emulatorCheck|checkEmulator && MISSING:PackageManager|SystemProperties|IMEI|TelephonyManager|Build\.HARDWARE|getSensorList)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>4</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
+            <rule_desc>Detects emulator detection logic that relies only on Build string property comparisons, which are trivially spoofable.</rule_desc>
+            <vuln_desc>Emulator detection based only on Build.FINGERPRINT, Build.MODEL, or Build.MANUFACTURER string matching can be bypassed by modifying emulator properties (build.prop) or by hooking the getters with Frida at runtime. A more robust check combines hardware-level signals (sensor list, camera hardware, IMEI, telephony state) with system property queries that are harder to spoof simultaneously.</vuln_desc>
+            <developer>Supplement Build string checks with hardware-level signals such as accelerometer availability, IMEI/IMSI presence, and telephony hardware checks. Combine at least three independent signals and consider moving critical checks to the native layer where Java-level hooking is ineffective.</developer>
+            <reviewer>Review the completeness of all emulator detection signals used. Single-source Build string comparisons should be considered insufficient. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+    <category name="Data Residue and Lifecycle">
+        <rule>
+            <name>Sensitive Data Written to Android Logs</name>
+            <regex><![CDATA[Log\.[dviweVIWDE]\s*\(.*(?i)(?:password|token|secret|apiKey|credential|authToken|accessToken|bearer|ssn|card)]]></regex>
+            <rdl><![CDATA[[FLAG:Log\.[dviweVIWDE]\s*\(.*(?:password|token|secret|apiKey|credential|authToken|accessToken)][IF(MISSING:BuildConfig\.DEBUG|if\s*\(\s*BuildConfig\.DEBUG|if\s*\(\s*DEBUG)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>0</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
+            <rule_desc>Detects Android log statements that reference sensitive data outside a debug build guard.</rule_desc>
+            <vuln_desc>Log.d(), Log.e(), and similar calls are readable by any application holding the READ_LOGS permission on older API levels and by ADB-connected computers. Logging tokens, passwords, or authentication data exposes them to adb logcat, crash reporting SDKs, and analytics libraries that aggregate device logs. This data often persists in log buffers well after the sensitive operation completes.</vuln_desc>
+            <developer>Gate all log statements that reference sensitive context behind BuildConfig.DEBUG. Remove sensitive field values from production log messages or replace them with type indicators (e.g., "token=[redacted]").</developer>
+            <reviewer>Search for Log.* calls referencing sensitive field names and verify that each call is guarded by a BuildConfig.DEBUG conditional. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Sensitive Data Persisted in onSaveInstanceState</name>
+            <regex><![CDATA[outState\.put(?:String|Serializable|Parcelable|Bundle)\s*\(]]></regex>
+            <rdl><![CDATA[[FLAG:outState\.put\w+\s*\(][IF(PRESENT:outState\.put.*(?:password|token|secret|key|credential|auth|card|pin) && MISSING:encrypted|cipher|// intentional)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
+            <rule_desc>Detects sensitive data being saved to the Activity instance state bundle in onSaveInstanceState.</rule_desc>
+            <vuln_desc>Data saved in onSaveInstanceState is persisted to disk by the Android framework and survives process death. On pre-API 29 devices, this data may be accessible through backup mechanisms or residual storage. Sensitive values such as passwords, tokens, and PINs should never be persisted this way as they will outlive the user session.</vuln_desc>
+            <developer>Do not persist sensitive data in onSaveInstanceState. Re-acquire tokens from secure storage or re-prompt for credentials when the activity is recreated after process death.</developer>
+            <reviewer>Review onSaveInstanceState implementations for sensitive key names in bundle put calls. Confirm that no credential or token data is written to the saved state bundle. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Autofill Not Disabled on Sensitive Input Fields</name>
+            <regex><![CDATA[android:inputType\s*=\s*["'][^"']*(?:textPassword|textVisiblePassword|numberPassword)]]></regex>
+            <rdl><![CDATA[[FLAG:android:inputType.*(?:textPassword|textVisiblePassword|numberPassword)][IF(MISSING:android:importantForAutofill\s*=\s*"(?:no|noExcludeDescendants)")]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>3</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
+            <rule_desc>Detects password input fields that do not disable the Android autofill framework.</rule_desc>
+            <vuln_desc>The Android autofill framework can cache values entered into password fields and expose them to third-party autofill providers installed by the user. Without android:importantForAutofill="no", sensitive input such as PINs, passwords, and OTPs may be harvested by a malicious autofill service that has been granted accessibility permissions on the device.</vuln_desc>
+            <developer>Add android:importantForAutofill="no" to all password-type EditText views unless the app explicitly integrates a controlled first-party autofill service for credential management.</developer>
+            <reviewer>Check all password and PIN input field declarations for the importantForAutofill="no" attribute. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

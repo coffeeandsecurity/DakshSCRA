@@ -3,7 +3,7 @@
         <rule>
             <name>Boost Unsafe Memory/String API</name>
             <regex><![CDATA[\b(strcpy|strcat|sprintf|gets|memcpy)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(strcpy|strcat|sprintf|gets|memcpy)\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(strcpy|strcat|sprintf|gets|memcpy)\s*\(][IF(MISSING:boost::algorithm::trim|boost::range|size\s*\(|bounds|length && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -20,7 +20,7 @@
         <rule>
             <name>Boost Command Execution Sink</name>
             <regex><![CDATA[\b(system|popen|_popen)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(system|popen|_popen)\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(system|popen|_popen)\s*\(][IF(MISSING:validate|sanitize|allowlist|whitelist && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -37,7 +37,7 @@
         <rule>
             <name>Boost TLS Validation Bypass Marker</name>
             <regex><![CDATA[ignoreSslErrors\(\)|setPeerVerifyMode\(\s*QSslSocket::VerifyNone]]></regex>
-            <rdl><![CDATA[[FLAG:ignoreSslErrors\(\)|setPeerVerifyMode\(\s*QSslSocket::VerifyNone]]]></rdl>
+            <rdl><![CDATA[[FLAG:ignoreSslErrors\(\)|setPeerVerifyMode\(\s*QSslSocket::VerifyNone][IF(MISSING:test|development|localhost|staging)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -71,7 +71,7 @@
         <rule>
             <name>Boost Insecure Serialization/Deserialization Marker</name>
             <regex><![CDATA[boost::archive|QDataStream\s*>>]]></regex>
-            <rdl><![CDATA[[FLAG:boost::archive|QDataStream\s*&gt;&gt;]]]></rdl>
+            <rdl><![CDATA[[FLAG:boost::archive|QDataStream\s*&gt;&gt;][IF(MISSING:trusted|validate|verify|schema|allowlist && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>

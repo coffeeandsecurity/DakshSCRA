@@ -375,7 +375,7 @@
         <rule>
             <name>Deprecated Python Functions</name>
             <regex><![CDATA[(?i)\b(urllib2|commands)\b]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\b(urllib2|commands)\b]]]></rdl>
+            <rdl><![CDATA[[FLAG:(?i)\b(urllib2|commands)\b][IF(PRESENT:urllib2|commands\.getoutput|commands\.getstatusoutput|urllib\.urlopen && MISSING:test|example|migration|legacy)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -440,7 +440,7 @@
         <rule>
             <name>Library Version Check</name>
             <regex><![CDATA[@\w+_version]]></regex>
-            <rdl><![CDATA[[FLAG:@\w+_version]]]></rdl>
+            <rdl><![CDATA[[FLAG:@\w+_version][IF(PRESENT:__version__|pkg_resources\.require|version_info && MISSING:test|example|migration)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>

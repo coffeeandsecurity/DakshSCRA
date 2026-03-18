@@ -76,7 +76,7 @@
         <rule>
             <name>Insecure Method Call: child_process.exec()</name>
             <regex><![CDATA[(^|\s|=\s?)require\(\s*('|")child_process('|")\s*\)(\s*\.(\s*\w+\s*)*\()?\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:(^|\s|=\s?)require\(\s*('|")child_process('|")\s*\)(\s*\.(\s*\w+\s*)*\()?\s*\)]]]></rdl>
+            <rdl><![CDATA[[FLAG:(^|\s|=\s?)require\(\s*('|")child_process('|")\s*\)(\s*\.(\s*\w+\s*)*\()?\s*\)][IF(MISSING:execFile|spawn\s*\(|validate|sanitize|allowlist|escapeShellArg && MISSING:test|example|spec)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -112,7 +112,7 @@
         <rule>
             <name>Weak Cryptography</name>
             <regex><![CDATA[(CryptoJS\.DES\.encrypt|MD5|SHA-1|RC4)\(.+\)]]></regex>
-            <rdl><![CDATA[[FLAG:(CryptoJS\.DES\.encrypt|MD5|SHA-1|RC4)\(.+\)]]]></rdl>
+            <rdl><![CDATA[[FLAG:(CryptoJS\.DES\.encrypt|MD5|SHA-1|RC4)\(.+\)][IF(MISSING:crypto\.subtle|node:crypto|webcrypto|bcrypt|argon2|scrypt && MISSING:test|example|spec|checksum|integrity)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -148,7 +148,7 @@
         <rule>
             <name>Routes</name>
             <regex><![CDATA[(?i)route:\s+'.*(\s?)]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)route:\s+'.*(\s?)]]]></rdl>
+            <rdl><![CDATA[[FLAG:(?i)route:\s+'.*(\s?)][IF(PRESENT:app\.(get|post|put|delete|patch)\s*\(\s*["']/|router\.(get|post|put|delete|patch)\s*\(\s*["']/[^"']*:\w && MISSING:authenticate|authorize|auth|middleware|passport|jwt|session)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -184,7 +184,7 @@
         <rule>
             <name>Node Inspector Exposed via --inspect</name>
             <regex><![CDATA[\B--inspect(?:-brk)?(?:=\S+)?\b]]></regex>
-            <rdl><![CDATA[[FLAG:\B--inspect(?:-brk)?(?:=\S+)?\b]]]></rdl>
+            <rdl><![CDATA[[FLAG:\B--inspect(?:-brk)?(?:=\S+)?\b][IF(PRESENT:--inspect|--inspect-brk && MISSING:development|localhost|127\.0\.0\.1|test)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -201,7 +201,7 @@
         <rule>
             <name>Insecure HTTP Parser Enabled</name>
             <regex><![CDATA[\binsecureHTTPParser\s*:\s*true\b]]></regex>
-            <rdl><![CDATA[[FLAG:\binsecureHTTPParser\s*:\s*true\b]]]></rdl>
+            <rdl><![CDATA[[FLAG:\binsecureHTTPParser\s*:\s*true\b][IF(PRESENT:insecureHTTPParser:\s*true|legacyHeaders:\s*true && MISSING:test|development|legacy)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -256,7 +256,7 @@
         <rule>
             <name>SQL Query: Unrestricted SELECT *</name>
             <regex><![CDATA[\bSELECT\s+\*\s+FROM\b]]></regex>
-            <rdl><![CDATA[[FLAG:\bSELECT\s+\*\s+FROM\b]]]></rdl>
+            <rdl><![CDATA[[FLAG:\bSELECT\s+\*\s+FROM\b][IF(MISSING:LIMIT\s+\d+|pagination|rownum|TOP\s+\d+|fetchSize && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>

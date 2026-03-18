@@ -3,7 +3,7 @@
         <rule>
             <name>Insecure Local Storage of Secrets</name>
             <regex><![CDATA[\b(?:Preferences\.Set|Application\.Current\.Properties\[|SecureStorage\.SetAsync\s*\()]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:Preferences\.Set|Application\.Current\.Properties\[|SecureStorage\.SetAsync\s*\()]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(?:Preferences\.Set|Application\.Current\.Properties\[|SecureStorage\.SetAsync\s*\()][IF(PRESENT:Preferences\.Set.*(?:password|token|secret|key|auth|credential)|SecureStorage && MISSING:SecureStorage\.SetAsync|AES|encrypt|Xamarin\.Essentials\.SecureStorage)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -20,7 +20,7 @@
         <rule>
             <name>TLS Certificate Validation Bypass Callback</name>
             <regex><![CDATA[ServerCertificateCustomValidationCallback\s*=\s*\(.*\)\s*=>\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:ServerCertificateCustomValidationCallback\s*=\s*\(.*\)\s*=>\s*true]]]></rdl>
+            <rdl><![CDATA[[FLAG:ServerCertificateCustomValidationCallback\s*=\s*\(.*\)\s*=>\s*true][IF(MISSING:test|development|localhost|staging|// intentional)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -37,7 +37,7 @@
         <rule>
             <name>WebView JavaScript Enabled</name>
             <regex><![CDATA[\b(?:WebView|HybridWebView).*?(?:JavaScriptEnabled\s*=\s*true|EnableJavascript\s*=\s*true)]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:WebView|HybridWebView).*?(?:JavaScriptEnabled\s*=\s*true|EnableJavascript\s*=\s*true)]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(?:WebView|HybridWebView).*?(?:JavaScriptEnabled\s*=\s*true|EnableJavascript\s*=\s*true)][IF(MISSING:ShouldOverrideUrlLoading|NavigationDelegate|allowList|trustedOrigins && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -157,7 +157,7 @@
         <rule>
             <name>Android Backup Enabled</name>
             <regex><![CDATA[android:allowBackup\s*=\s*"?(?:true|TRUE)"?]]></regex>
-            <rdl><![CDATA[[FLAG:android:allowBackup\s*=\s*"?(?:true|TRUE)"?]]]></rdl>
+            <rdl><![CDATA[[FLAG:android:allowBackup\s*=\s*"?(?:true|TRUE)"?][IF(PRESENT:android:allowBackup\s*=\s*"true" && MISSING:android:fullBackupContent|android:dataExtractionRules|backupRules)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -176,7 +176,7 @@
         <rule>
             <name>iOS Keychain Accessibility Too Broad</name>
             <regex><![CDATA[kSecAttrAccessibleAlways]]></regex>
-            <rdl><![CDATA[[FLAG:kSecAttrAccessibleAlways]]]></rdl>
+            <rdl><![CDATA[[FLAG:kSecAttrAccessibleAlways][IF(PRESENT:kSecAttrAccessibleAlways|kSecAttrAccessibleAlwaysThisDeviceOnly && MISSING:kSecAttrAccessibleWhenUnlocked|kSecAttrAccessibleAfterFirstUnlock)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>

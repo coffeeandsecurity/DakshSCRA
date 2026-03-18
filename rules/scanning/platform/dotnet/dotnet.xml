@@ -296,7 +296,7 @@
         <rule>
             <name>Stack Trace or Error Disclosure</name>
             <regex><![CDATA[(?i)(Response\.Write\s*\([^)]{0,200}StackTrace|ex\.ToString\(\)|Console\.WriteLine\([^)]{0,200}Exception[^)]*\)|throw new \w*Exception\([^)]{0,200}\))]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(Response\.Write\s*\([^)]{0,200}StackTrace|ex\.ToString\(\)|Console\.WriteLine\([^)]{0,200}Exception[^)]*\)|throw new \w*Exception\([^)]{0,200}\))]]]></rdl>
+            <rdl><![CDATA[[FLAG:(?i)(Response\.Write\s*\([^)]{0,200}StackTrace|ex\.ToString\(\)|Console\.WriteLine\([^)]{0,200}Exception[^)]*\)|throw new \w*Exception\([^)]{0,200}\))][IF(MISSING:ini_set.*display_errors.*0|error_reporting\s*\(\s*0\s*\)|log_errors|try.*catch && MISSING:development|localhost)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -315,7 +315,7 @@
         <rule>
             <name>API Route Prefix: Improper Usage</name>
             <regex><![CDATA[\[RoutePrefix\("]]></regex>
-            <rdl><![CDATA[[FLAG:\[RoutePrefix\("]]]></rdl>
+            <rdl><![CDATA[[FLAG:\[RoutePrefix\("][IF(MISSING:Authorize|RequireAuthorization|ApiKeyRequired|[ApiController] && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -334,7 +334,7 @@
         <rule>
             <name>Request Validation: Disabled Configuration</name>
             <regex><![CDATA[%@\s?Page\s?.*\s?ValidateRequest\s?=\s?(\'|\")false(\'|\")]]></regex>
-            <rdl><![CDATA[[FLAG:%@\s?Page\s?.*\s?ValidateRequest\s?=\s?(\'|\")false(\'|\")]]]></rdl>
+            <rdl><![CDATA[[FLAG:%@\s?Page\s?.*\s?ValidateRequest\s?=\s?(\'|\")false(\'|\")][IF(PRESENT:validateRequest\s*=\s*"false"|ValidateInput\s*\(\s*false|RequestValidationMode && MISSING:test|example|AntiXssEncoder|HtmlEncode)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -351,7 +351,7 @@
         <rule>
             <name>Server Certificate Validation: Insecure Configuration</name>
             <regex><![CDATA[ServerCertificateValidationCallback\s*?\(.*?(\=|false|true)]]></regex>
-            <rdl><![CDATA[[FLAG:ServerCertificateValidationCallback\s*?\(.*?(\=|false|true)]]]></rdl>
+            <rdl><![CDATA[[FLAG:ServerCertificateValidationCallback\s*?\(.*?(\=|false|true)][IF(MISSING:test|development|localhost|staging|// intentional)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -370,7 +370,7 @@
         <rule>
             <name>XSS Mitigation: HTML Encoding using Razor</name>
             <regex><![CDATA[\@Html\.Raw\(.*\)]]></regex>
-            <rdl><![CDATA[[FLAG:\@Html\.Raw\(.*\)]]]></rdl>
+            <rdl><![CDATA[[FLAG:\@Html\.Raw\(.*\)][IF(PRESENT:@Html\.Raw\s*\(|Html\.Raw\s*\(|HtmlString && MISSING:AntiXssEncoder|HtmlEncode|sanitize)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -387,7 +387,7 @@
         <rule>
             <name>CORS Mitigation: Allow Specific Origins</name>
             <regex><![CDATA[\[EnableCors\s*\(\s*\"AllowSpecificOrigins\"\s*\)\]]]></regex>
-            <rdl><![CDATA[[FLAG:\[EnableCors\s*\(\s*\"AllowSpecificOrigins\"\s*\)\]]]]></rdl>
+            <rdl><![CDATA[[FLAG:\[EnableCors\s*\(\s*\"AllowSpecificOrigins\"\s*\)\]][IF(PRESENT:AllowAnyOrigin\s*\(\s*\)|WithOrigins\s*\(\s*"\*"|Access-Control-Allow-Origin.*\* && MISSING:WithOrigins\s*\(\s*"https?://[^*]|AllowCredentials|SetIsOriginAllowed)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -406,7 +406,7 @@
         <rule>
             <name>Insecure Deserialization: BinaryFormatter</name>
             <regex><![CDATA[BinaryFormatter\s*\(\s*\)|new\s+BinaryFormatter|BinaryFormatter\.Deserialize\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:BinaryFormatter\s*\(\s*\)|new\s+BinaryFormatter|BinaryFormatter\.Deserialize\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:BinaryFormatter\s*\(\s*\)|new\s+BinaryFormatter|BinaryFormatter\.Deserialize\s*\(][IF(MISSING:SerializationBinder|AllowType|TypeNameHandling\.None|Activator\.CreateInstance && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -423,7 +423,7 @@
         <rule>
             <name>Insecure Deserialization: ObjectStateFormatter and LosFormatter</name>
             <regex><![CDATA[ObjectStateFormatter\.Deserialize\s*\(|LosFormatter\.Deserialize\s*\(|NetDataContractSerializer\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:ObjectStateFormatter\.Deserialize\s*\(|LosFormatter\.Deserialize\s*\(|NetDataContractSerializer\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:ObjectStateFormatter\.Deserialize\s*\(|LosFormatter\.Deserialize\s*\(|NetDataContractSerializer\s*\(][IF(MISSING:trusted|allowlist|validate|SerializationBinder && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>

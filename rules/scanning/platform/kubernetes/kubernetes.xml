@@ -3,7 +3,7 @@
         <rule>
             <name>Privileged Container Enabled</name>
             <regex><![CDATA[privileged\s*:\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:privileged\s*:\s*true]]]></rdl>
+            <rdl><![CDATA[[FLAG:privileged\s*:\s*true][IF(PRESENT:privileged:\s*true && MISSING:# intentional|# required|# system)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -20,7 +20,7 @@
         <rule>
             <name>allowPrivilegeEscalation Not Disabled</name>
             <regex><![CDATA[allowPrivilegeEscalation\s*:\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:allowPrivilegeEscalation\s*:\s*true]]]></rdl>
+            <rdl><![CDATA[[FLAG:allowPrivilegeEscalation\s*:\s*true][IF(PRESENT:allowPrivilegeEscalation:\s*true && MISSING:# intentional|# required|capabilities\.drop)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -37,7 +37,7 @@
         <rule>
             <name>Container Running as Root User</name>
             <regex><![CDATA[runAsUser\s*:\s*0\b|runAsNonRoot\s*:\s*false]]></regex>
-            <rdl><![CDATA[[FLAG:runAsUser\s*:\s*0\b|runAsNonRoot\s*:\s*false]]]></rdl>
+            <rdl><![CDATA[[FLAG:runAsUser\s*:\s*0\b|runAsNonRoot\s*:\s*false][IF(PRESENT:runAsUser:\s*0|runAsNonRoot:\s*false && MISSING:# intentional|# required)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -54,7 +54,7 @@
         <rule>
             <name>Read-Only Root Filesystem Not Enforced</name>
             <regex><![CDATA[readOnlyRootFilesystem\s*:\s*false]]></regex>
-            <rdl><![CDATA[[FLAG:readOnlyRootFilesystem\s*:\s*false]]]></rdl>
+            <rdl><![CDATA[[FLAG:readOnlyRootFilesystem\s*:\s*false][IF(MISSING:readOnlyRootFilesystem:\s*true|emptyDir|tmpfs:|volumeMounts && PRESENT:kind:\s*Deployment|kind:\s*StatefulSet|kind:\s*DaemonSet|kind:\s*Pod)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -73,7 +73,7 @@
         <rule>
             <name>Host PID Namespace Shared</name>
             <regex><![CDATA[hostPID\s*:\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:hostPID\s*:\s*true]]]></rdl>
+            <rdl><![CDATA[[FLAG:hostPID\s*:\s*true][IF(PRESENT:hostPID:\s*true && MISSING:# intentional|# required)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -90,7 +90,7 @@
         <rule>
             <name>Host Network Namespace Shared</name>
             <regex><![CDATA[hostNetwork\s*:\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:hostNetwork\s*:\s*true]]]></rdl>
+            <rdl><![CDATA[[FLAG:hostNetwork\s*:\s*true][IF(PRESENT:hostNetwork:\s*true && MISSING:# intentional|# required)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -107,7 +107,7 @@
         <rule>
             <name>Host IPC Namespace Shared</name>
             <regex><![CDATA[hostIPC\s*:\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:hostIPC\s*:\s*true]]]></rdl>
+            <rdl><![CDATA[[FLAG:hostIPC\s*:\s*true][IF(PRESENT:hostIPC:\s*true && MISSING:# intentional|# required)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -126,7 +126,8 @@
         <rule>
             <name>Wildcard RBAC Verb Permission</name>
             <regex><![CDATA[verbs\s*:\s*\[?\s*["']?\*["']?\s*\]?]]></regex>
-            <rdl><![CDATA[[FLAG:verbs\s*:\s*\[?\s*["']?\*["']?\s*\]?]]]></rdl>
+            <rdl><![CDATA[[FLAG:verbs\s*:\s*\[?\s*["']?\*["']?\s*\]?][IF(PRESENT:verbs:.*\*|verbs:\s*
+\s*-\s*['"]\*['"] && MISSING:# intentional|# required|system:|kube-system)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -143,7 +144,8 @@
         <rule>
             <name>Wildcard RBAC Resource</name>
             <regex><![CDATA[resources\s*:\s*\[?\s*["']?\*["']?\s*\]?]]></regex>
-            <rdl><![CDATA[[FLAG:resources\s*:\s*\[?\s*["']?\*["']?\s*\]?]]]></rdl>
+            <rdl><![CDATA[[FLAG:resources\s*:\s*\[?\s*["']?\*["']?\s*\]?][IF(PRESENT:resources:.*\*|resources:\s*
+\s*-\s*['"]\*['"] && MISSING:# intentional|# required|system:|kube-system)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -160,7 +162,7 @@
         <rule>
             <name>ClusterRoleBinding to cluster-admin</name>
             <regex><![CDATA[roleRef\s*:[^}]*name\s*:\s*cluster-admin]]></regex>
-            <rdl><![CDATA[[FLAG:roleRef\s*:[^}]*name\s*:\s*cluster-admin]]]></rdl>
+            <rdl><![CDATA[[FLAG:roleRef\s*:[^}]*name\s*:\s*cluster-admin][IF(PRESENT:cluster-admin && MISSING:# intentional|# required|system:|kube-system|namespace:\s*kube)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -215,7 +217,7 @@
         <rule>
             <name>Default Service Account Token Auto-Mounted</name>
             <regex><![CDATA[automountServiceAccountToken\s*:\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:automountServiceAccountToken\s*:\s*true]]]></rdl>
+            <rdl><![CDATA[[FLAG:automountServiceAccountToken\s*:\s*true][IF(MISSING:automountServiceAccountToken:\s*false && PRESENT:kind:\s*Deployment|kind:\s*StatefulSet|kind:\s*Pod|kind:\s*DaemonSet)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

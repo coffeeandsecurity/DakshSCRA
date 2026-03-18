@@ -20,7 +20,7 @@
         <rule>
             <name>IJSRuntime InvokeVoidAsync with User Input</name>
             <regex><![CDATA[InvokeVoidAsync\s*\(\s*["'][^"']*["']\s*,.*(?:request\.|Request\.|HttpContext\.|model\.|Model\.|Input\.|input\.)|\bInvokeAsync\s*<[^>]+>\s*\(\s*["'][^"']*["']\s*,.*(?:request\.|Request\.))]]></regex>
-            <rdl><![CDATA[[FLAG:InvokeVoidAsync\s*\(\s*["']\s*eval\s*["']|InvokeVoidAsync\s*\(\s*["']\s*Function\s*["']]]]></rdl>
+            <rdl><![CDATA[[FLAG:InvokeVoidAsync\s*\(\s*["']\s*eval\s*["']|InvokeVoidAsync\s*\(\s*["']\s*Function\s*["']][IF(MISSING:validate|sanitize|allowlist|trusted|HtmlEncoder|WebUtility\.HtmlEncode && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>

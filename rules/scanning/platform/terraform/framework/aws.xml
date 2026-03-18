@@ -20,7 +20,7 @@
         <rule>
             <name>EC2 Instance with Public IP</name>
             <regex><![CDATA[associate_public_ip_address\s*=\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:associate_public_ip_address\s*=\s*true]]]></rdl>
+            <rdl><![CDATA[[FLAG:associate_public_ip_address\s*=\s*true][IF(PRESENT:associate_public_ip_address\s*=\s*true && MISSING:# intentional|# bastion|# jump|# nat)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -39,7 +39,7 @@
         <rule>
             <name>RDS Instance Publicly Accessible</name>
             <regex><![CDATA[resource\s+"aws_db_instance"[^}]*publicly_accessible\s*=\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:resource\s+"aws_db_instance"[^}]*publicly_accessible\s*=\s*true]]]></rdl>
+            <rdl><![CDATA[[FLAG:resource\s+"aws_db_instance"[^}]*publicly_accessible\s*=\s*true][IF(PRESENT:publicly_accessible\s*=\s*true && MISSING:# intentional|# development|# staging)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -73,7 +73,7 @@
         <rule>
             <name>RDS Multi-AZ Disabled</name>
             <regex><![CDATA[resource\s+"aws_db_instance"[^}]*multi_az\s*=\s*false]]></regex>
-            <rdl><![CDATA[[FLAG:resource\s+"aws_db_instance"[^}]*multi_az\s*=\s*false]]]></rdl>
+            <rdl><![CDATA[[FLAG:resource\s+"aws_db_instance"[^}]*multi_az\s*=\s*false][IF(PRESENT:multi_az\s*=\s*false && MISSING:# intentional|# development|# staging|# cost)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -92,7 +92,7 @@
         <rule>
             <name>Lambda Function with Broad IAM Role</name>
             <regex><![CDATA[resource\s+"aws_iam_role_policy"[^}]*lambda[^}]*Action\s*":\s*"\*"]]></regex>
-            <rdl><![CDATA[[FLAG:resource\s+"aws_iam_role_policy"[^}]*Action\s*":\s*"\*"]]]></rdl>
+            <rdl><![CDATA[[FLAG:resource\s+"aws_iam_role_policy"[^}]*Action\s*":\s*"\*"][IF(PRESENT:AdministratorAccess|arn:aws:iam::aws:policy/AdministratorAccess|"\*".*"Allow" && MISSING:# intentional|# required|boundary|permission_boundary)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

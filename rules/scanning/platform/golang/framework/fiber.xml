@@ -37,7 +37,7 @@
         <rule>
             <name>Fiber SQL Query Concatenation Sink</name>
             <regex><![CDATA[Query\(\s*fmt\.Sprintf|Exec\(\s*fmt\.Sprintf|Raw\(\s*fmt\.Sprintf]]></regex>
-            <rdl><![CDATA[[FLAG:Query\(\s*fmt\.Sprintf|Exec\(\s*fmt\.Sprintf|Raw\(\s*fmt\.Sprintf]]]></rdl>
+            <rdl><![CDATA[[FLAG:Query\(\s*fmt\.Sprintf|Exec\(\s*fmt\.Sprintf|Raw\(\s*fmt\.Sprintf][IF(MISSING:Prepare\s*\(|QueryContext\s*\(.*\?|db\.Raw\s*\(.*\?|squirrel|sqlx\.NamedExec|bindParams)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -54,7 +54,7 @@
         <rule>
             <name>Fiber Permissive CORS</name>
             <regex><![CDATA[AllowOrigins\s*:\s*\[\]\s*string\{\s*"\*"\s*\}|AllowOrigins\s*:\s*"\*"]]></regex>
-            <rdl><![CDATA[[FLAG:AllowOrigins\s*:\s*\[\]\s*string\{\s*"\*"\s*\}|AllowOrigins\s*:\s*"\*"]]]></rdl>
+            <rdl><![CDATA[[FLAG:AllowOrigins\s*:\s*\[\]\s*string\{\s*"\*"\s*\}|AllowOrigins\s*:\s*"\*"][IF(PRESENT:AllowOrigins.*"\*"|AllowOrigins.*\* && MISSING:AllowOrigins.*"https?://[^*]|AllowOriginFunc|AllowCredentials.*false)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>

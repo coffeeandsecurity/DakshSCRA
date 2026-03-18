@@ -3,7 +3,7 @@
         <rule>
             <name>Weak Password Requirements</name>
             <regex><![CDATA[RequiredLength\s*=\s*[1-7]\b|RequireDigit\s*=\s*false|RequireUppercase\s*=\s*false|RequireLowercase\s*=\s*false|RequireNonAlphanumeric\s*=\s*false]]></regex>
-            <rdl><![CDATA[[FLAG:RequiredLength\s*=\s*[1-7]\b|RequireDigit\s*=\s*false|RequireUppercase\s*=\s*false]]]></rdl>
+            <rdl><![CDATA[[FLAG:RequiredLength\s*=\s*[1-7]\b|RequireDigit\s*=\s*false|RequireUppercase\s*=\s*false][IF(PRESENT:RequiredLength\s*=\s*[1-7]\b|RequireDigit\s*=\s*false|RequireUppercase\s*=\s*false|RequireLowercase\s*=\s*false && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -20,7 +20,7 @@
         <rule>
             <name>Account Lockout Disabled</name>
             <regex><![CDATA[LockoutOnFailure\s*=\s*false|MaxFailedAccessAttempts\s*=\s*0|LockoutEnabled\s*=\s*false]]></regex>
-            <rdl><![CDATA[[FLAG:LockoutOnFailure\s*=\s*false|LockoutEnabled\s*=\s*false]]]></rdl>
+            <rdl><![CDATA[[FLAG:LockoutOnFailure\s*=\s*false|LockoutEnabled\s*=\s*false][IF(PRESENT:AllowedForNewUsers\s*=\s*false|MaxFailedAccessAttempts\s*=\s*0|LockoutEnabled\s*=\s*false && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -54,7 +54,7 @@
         <rule>
             <name>JWT Token Validation Parameters Weakened</name>
             <regex><![CDATA[ValidateIssuer\s*=\s*false|ValidateAudience\s*=\s*false|ValidateLifetime\s*=\s*false|ValidateIssuerSigningKey\s*=\s*false]]></regex>
-            <rdl><![CDATA[[FLAG:ValidateIssuer\s*=\s*false|ValidateAudience\s*=\s*false|ValidateLifetime\s*=\s*false|ValidateIssuerSigningKey\s*=\s*false]]]></rdl>
+            <rdl><![CDATA[[FLAG:ValidateIssuer\s*=\s*false|ValidateAudience\s*=\s*false|ValidateLifetime\s*=\s*false|ValidateIssuerSigningKey\s*=\s*false][IF(PRESENT:ValidateIssuer\s*=\s*false|ValidateAudience\s*=\s*false|ValidateLifetime\s*=\s*false|ValidateIssuerSigningKey\s*=\s*false && MISSING:test|example|development)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>

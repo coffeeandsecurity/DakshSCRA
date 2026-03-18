@@ -83,7 +83,7 @@
         <rule>
             <name>Mitigation Identified: XSS</name>
             <regex>html.EscapeString</regex>
-            <rdl><![CDATA[[FLAG:html.EscapeString]]]></rdl>
+            <rdl><![CDATA[[FLAG:html.EscapeString][IF(PRESENT:htmlspecialchars|htmlentities|strip_tags|esc_html|h\s*\( && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

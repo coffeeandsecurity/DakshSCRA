@@ -178,7 +178,7 @@
         <rule>
             <name>Deprecated MODE_WORLD_WRITEABLE Usage</name>
             <regex><![CDATA[M(?:ODE_)?WORLD_WRITEABLE]]></regex>
-            <rdl><![CDATA[[FLAG:M(?:ODE_)?WORLD_WRITEABLE]]]></rdl>
+            <rdl><![CDATA[[FLAG:M(?:ODE_)?WORLD_WRITEABLE][IF(MISSING:EncryptedSharedPreferences|EncryptedFile|KeyStore|test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -195,7 +195,7 @@
         <rule>
             <name>Deprecated MODE_WORLD_READABLE Usage</name>
             <regex><![CDATA[M(?:ODE_)?WORLD_READABLE]]></regex>
-            <rdl><![CDATA[[FLAG:M(?:ODE_)?WORLD_READABLE]]]></rdl>
+            <rdl><![CDATA[[FLAG:M(?:ODE_)?WORLD_READABLE][IF(MISSING:EncryptedSharedPreferences|EncryptedFile|KeyStore|test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -212,7 +212,7 @@
         <rule>
             <name>Insecure File Operations</name>
             <regex><![CDATA[openFile(?:Output|Input)\s*\([^,]*,\s*M(?:ODE_)?WORLD_(?:WRITEABLE|READABLE)]]></regex>
-            <rdl><![CDATA[[FLAG:openFile(?:Output|Input)\s*\([^,]*,\s*M(?:ODE_)?WORLD_(?:WRITEABLE|READABLE)]]]></rdl>
+            <rdl><![CDATA[[FLAG:openFile(?:Output|Input)\s*\([^,]*,\s*M(?:ODE_)?WORLD_(?:WRITEABLE|READABLE)][IF(MISSING:EncryptedFile|openFileOutput.*MODE_PRIVATE|test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -338,7 +338,7 @@
         <rule>
             <name>Mitigation Identified: SQL Injection (Room Database)</name>
             <regex><![CDATA[Room\.createQuery\(".*"\)]]></regex>
-            <rdl><![CDATA[[FLAG:Room\.createQuery\(".*"\)]]]></rdl>
+            <rdl><![CDATA[[FLAG:Room\.createQuery\(".*"\)][IF(PRESENT:@Query\s*\(.*:\w+|@Query\s*\(.*\?|SupportSQLiteDatabase.*compileStatement && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>

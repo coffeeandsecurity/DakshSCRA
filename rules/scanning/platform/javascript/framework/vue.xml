@@ -37,7 +37,7 @@
         <rule>
             <name>Vue SQL/NoSQL Injection Sink</name>
             <regex><![CDATA[\.(query|execute)\(\s*`|\$where\s*:\s*|sequelize\.query\(]]></regex>
-            <rdl><![CDATA[[FLAG:\.(query|execute)\(\s*`|\$where\s*:\s*|sequelize\.query\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\.(query|execute)\(\s*`|\$where\s*:\s*|sequelize\.query\(][IF(MISSING:parameterize|prepare|sanitize|validate|escape && MISSING:test|spec|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>

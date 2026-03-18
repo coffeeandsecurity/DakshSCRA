@@ -3,7 +3,7 @@
         <rule>
             <name>Entityframework Developer Exception Page Enabled</name>
             <regex><![CDATA[UseDeveloperExceptionPage\(\)]]></regex>
-            <rdl><![CDATA[[FLAG:UseDeveloperExceptionPage\(\)]]]></rdl>
+            <rdl><![CDATA[[FLAG:UseDeveloperExceptionPage\(\)][IF(MISSING:app\.Environment\.IsProduction\(\)|ASPNETCORE_ENVIRONMENT.*Production|IsDevelopment\(\).*false && PRESENT:UseDeveloperExceptionPage\s*\(\s*\))]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -20,7 +20,7 @@
         <rule>
             <name>Entityframework Insecure Certificate Validation Callback</name>
             <regex><![CDATA[ServerCertificateCustomValidationCallback\s*=\s*\(.*=>\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:ServerCertificateCustomValidationCallback\s*=\s*\(.*=>\s*true]]]></rdl>
+            <rdl><![CDATA[[FLAG:ServerCertificateCustomValidationCallback\s*=\s*\(.*=>\s*true][IF(MISSING:test|development|localhost|staging)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -37,7 +37,7 @@
         <rule>
             <name>Entityframework Raw SQL Execution Sink</name>
             <regex><![CDATA[FromSqlRaw\(|ExecuteSqlRaw\(|SqlQueryRaw\(]]></regex>
-            <rdl><![CDATA[[FLAG:FromSqlRaw\(|ExecuteSqlRaw\(|SqlQueryRaw\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:FromSqlRaw\(|ExecuteSqlRaw\(|SqlQueryRaw\(][IF(MISSING:FromSqlInterpolated|SqlParameter|parameterized|\?\s*,|\{[0-9]\}.*params)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -54,7 +54,7 @@
         <rule>
             <name>Entityframework Permissive CORS</name>
             <regex><![CDATA[AllowAnyOrigin\(\)|WithOrigins\(\s*[\'\"]\*[\'\"]]]></regex>
-            <rdl><![CDATA[[FLAG:AllowAnyOrigin\(\)|WithOrigins\(\s*[\'\"]\*[\'\"]]]]></rdl>
+            <rdl><![CDATA[[FLAG:AllowAnyOrigin\(\)|WithOrigins\(\s*[\'\"]\*[\'\"]][IF(PRESENT:AllowAnyOrigin\s*\(\s*\)|origins.*"\*" && MISSING:AllowCredentials\s*\(\s*\)|WithOrigins\s*\(\s*"https?://[^*]|SetIsOriginAllowed)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>

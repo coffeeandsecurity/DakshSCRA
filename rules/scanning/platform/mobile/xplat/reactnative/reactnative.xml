@@ -3,7 +3,7 @@
         <rule>
             <name>Insecure AsyncStorage for Sensitive Data</name>
             <regex><![CDATA[\bAsyncStorage\.(?:setItem|multiSet)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\bAsyncStorage\.(?:setItem|multiSet)\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\bAsyncStorage\.(?:setItem|multiSet)\s*\(][IF(PRESENT:AsyncStorage\.setItem.*(?:password|token|secret|key|auth|credential) && MISSING:react-native-keychain|expo-secure-store|encrypt|RNCryptor)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -23,7 +23,7 @@
         <rule>
             <name>WebView JavaScript Enabled</name>
             <regex><![CDATA[<WebView[^>]*javaScriptEnabled\s*=\s*\{?true\}?]]></regex>
-            <rdl><![CDATA[[FLAG:<WebView[^>]*javaScriptEnabled\s*=\s*\{?true\}?]]]></rdl>
+            <rdl><![CDATA[[FLAG:<WebView[^>]*javaScriptEnabled\s*=\s*\{?true\}?][IF(MISSING:ShouldOverrideUrlLoading|NavigationDelegate|allowList|trustedOrigins && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -43,7 +43,7 @@
         <rule>
             <name>Arbitrary External URL Opening</name>
             <regex><![CDATA[\bLinking\.openURL\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\bLinking\.openURL\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\bLinking\.openURL\s*\(][IF(MISSING:allowlist|Linking\.canOpenURL|validateUrl|startsWith.*https|trustedDomains && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -59,6 +59,86 @@
             <vuln_desc>Opening attacker-controlled URLs can trigger phishing, malicious apps, or sensitive action abuse.</vuln_desc>
             <developer>Validate URI schemes and host allowlists before opening external URLs.</developer>
             <reviewer>Review URL construction paths and enforce allowlists. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>PostMessage Handler Without Event Origin Validation</name>
+            <regex><![CDATA[addEventListener\s*\(\s*['"]message['"]]]></regex>
+            <rdl><![CDATA[[FLAG:addEventListener\s*\(\s*['"]message['"]][IF(MISSING:event\.origin|e\.origin|message\.origin|trustedOrigin|allowedOrigins)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>5</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>red</highlight_color>
+            </scan_config>
+            <rule_desc>Detects postMessage event handlers that may not validate the event origin.</rule_desc>
+            <vuln_desc>React Native WebView injects a postMessage bridge accessible from loaded web content. Handlers that process messages without checking event.origin allow any cross-origin frame or web content to invoke native actions, enabling cross-site scripting into native APIs.</vuln_desc>
+            <developer>Always check event.origin against an allowlist of trusted origins before processing postMessage data. Reject all messages from unexpected origins.</developer>
+            <reviewer>Inspect the message event handler to confirm event.origin is validated before any action is taken. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>ReactMethod Exposed Without Permission Check</name>
+            <regex><![CDATA[@ReactMethod]]></regex>
+            <rdl><![CDATA[[FLAG:@ReactMethod][IF(MISSING:checkSelfPermission|enforcePermission|hasPermission|isAuthenticated|verifyCallerIdentity|requiresPermission|// auth)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>1</context_lines_before>
+                <context_lines_after>8</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
+            <rule_desc>Detects @ReactMethod annotated native module methods that may lack permission or authentication checks.</rule_desc>
+            <vuln_desc>Native modules exposed via @ReactMethod are callable from any JavaScript context loaded in the app, including malicious third-party scripts in WebViews. Without permission or auth checks, sensitive native operations can be invoked by untrusted JS code.</vuln_desc>
+            <developer>Add permission checks (checkSelfPermission) or authentication guards inside each @ReactMethod that performs a sensitive operation. Reject unauthenticated or unauthorized callers.</developer>
+            <reviewer>Review each @ReactMethod body for authorization checks before sensitive operations. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>WebView Source with Potentially User-Controlled URI</name>
+            <regex><![CDATA[<WebView[^>]*source\s*=\s*\{\{?\s*uri\s*:]]></regex>
+            <rdl><![CDATA[[FLAG:<WebView[^>]*source\s*=\s*\{\{?\s*uri\s*:][IF(MISSING:https://|trustedUrl|validatedUri|allowedOrigin|sanitize|startsWith.*https|onShouldStartLoadWithRequest)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>3</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
+            <rule_desc>Detects WebView source URI props that may be derived from user-controlled input without validation.</rule_desc>
+            <vuln_desc>Passing user-controlled URIs to the WebView source prop can lead to loading attacker-supplied content, enabling phishing, javascript: URI execution, or local resource access via file:// URIs.</vuln_desc>
+            <developer>Validate the URI scheme and host against an allowlist before passing it to the source prop. Use onShouldStartLoadWithRequest for additional navigation-time checks. Block non-https schemes.</developer>
+            <reviewer>Trace the URI value in source={{ uri }} to its origin and verify scheme and host validation are applied. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>Metro Bundler DevSettings Accessed Outside Debug Guard</name>
+            <regex><![CDATA[\bNativeModules\.DevSettings\b|\bDevSettings\b]]></regex>
+            <rdl><![CDATA[[FLAG:\bNativeModules\.DevSettings\b|\bDevSettings\b][IF(MISSING:__DEV__|if.*__DEV__|kDebugMode|// development only)]]]></rdl>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_type>lines</context_type>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <report_format>default</report_format>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_target>match</highlight_target>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
+            <rule_desc>Detects Metro bundler DevSettings module access that may not be guarded by a debug-only check.</rule_desc>
+            <vuln_desc>NativeModules.DevSettings exposes React Native Metro bundler controls including remote debugging enablement and hot reload configuration. Accessing this module in production code can allow an attacker to enable remote JS debugging, effectively creating a code injection path via the Metro dev server.</vuln_desc>
+            <developer>Guard all DevSettings access with if (__DEV__) to ensure the module is only usable in debug builds. Never expose DevSettings configuration in production.</developer>
+            <reviewer>Confirm DevSettings usage is within a __DEV__ guard or equivalent compile-time exclusion for release builds. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
     <category name="Framework-Specific Security">
@@ -185,7 +265,7 @@
         <rule>
             <name>Android Cleartext Traffic Enabled</name>
             <regex><![CDATA[usesCleartextTraffic\s*=\s*"?(?:true|TRUE)"?]]></regex>
-            <rdl><![CDATA[[FLAG:usesCleartextTraffic\s*=\s*"?(?:true|TRUE)"?]]]></rdl>
+            <rdl><![CDATA[[FLAG:usesCleartextTraffic\s*=\s*"?(?:true|TRUE)"?][IF(PRESENT:android:usesCleartextTraffic\s*=\s*"true" && MISSING:networkSecurityConfig|# intentional|localhost|development)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -207,7 +287,7 @@
         <rule>
             <name>ATS Arbitrary Loads Enabled</name>
             <regex><![CDATA[NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]></regex>
-            <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]]></rdl>
+            <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>][IF(PRESENT:NSAllowsArbitraryLoads.*true && MISSING:NSExceptionDomains|localhost|development|# intentional)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>

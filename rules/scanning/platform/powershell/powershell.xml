@@ -56,7 +56,7 @@
         <rule>
             <name>ConvertTo-SecureString with PlainText</name>
             <regex><![CDATA[ConvertTo-SecureString\s+.*-AsPlainText\s+-Force|ConvertTo-SecureString\s+.*-Force\s+.*-AsPlainText]]></regex>
-            <rdl><![CDATA[[FLAG:ConvertTo-SecureString\s+.*-AsPlainText\s+-Force]]]></rdl>
+            <rdl><![CDATA[[FLAG:ConvertTo-SecureString\s+.*-AsPlainText\s+-Force][IF(MISSING:Get-Secret|[System\.Environment]::GetEnvironmentVariable|$env:|placeholder|example|test)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -75,7 +75,7 @@
         <rule>
             <name>Download Cradle Pattern</name>
             <regex><![CDATA[(?:IEX|Invoke-Expression)\s*\(\s*(?:New-Object\s+Net\.WebClient|Invoke-WebRequest|iwr|curl|wget)\s*[^)]*\)]]></regex>
-            <rdl><![CDATA[[FLAG:(?:IEX|Invoke-Expression)\s*\(\s*(?:New-Object\s+Net\.WebClient|Invoke-WebRequest|iwr|curl|wget)\s*[^)]*\)]]]></rdl>
+            <rdl><![CDATA[[FLAG:(?:IEX|Invoke-Expression)\s*\(\s*(?:New-Object\s+Net\.WebClient|Invoke-WebRequest|iwr|curl|wget)\s*[^)]*\)][IF(MISSING:test|CI|pipeline|AllowList|InternalSource|development|example|-WhatIf)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -111,7 +111,7 @@
         <rule>
             <name>Bypass Execution Policy</name>
             <regex><![CDATA[(?i)-ExecutionPolicy\s+(?:Bypass|Unrestricted)|Set-ExecutionPolicy\s+(?:Bypass|Unrestricted)]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)-ExecutionPolicy\s+(?:Bypass|Unrestricted)|Set-ExecutionPolicy\s+(?:Bypass|Unrestricted)]]]></rdl>
+            <rdl><![CDATA[[FLAG:(?i)-ExecutionPolicy\s+(?:Bypass|Unrestricted)|Set-ExecutionPolicy\s+(?:Bypass|Unrestricted)][IF(PRESENT:-ExecutionPolicy\s+Bypass|Set-ExecutionPolicy\s+Bypass|executionpolicy.*bypass && MISSING:test|CI|pipeline|development|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -128,7 +128,7 @@
         <rule>
             <name>AMSI Bypass Attempt</name>
             <regex><![CDATA[amsiInitFailed|AmsiScanBuffer|amsi\.dll|amsiContext|Disable.*AMSI|AMSI.*bypass]]></regex>
-            <rdl><![CDATA[[FLAG:amsiInitFailed|AmsiScanBuffer|amsi\.dll|amsiContext|Disable.*AMSI|AMSI.*bypass]]]></rdl>
+            <rdl><![CDATA[[FLAG:amsiInitFailed|AmsiScanBuffer|amsi\.dll|amsiContext|Disable.*AMSI|AMSI.*bypass][IF(PRESENT:amsi|AmsiScanBuffer|amsiContext|amsiInitFailed && MISSING:test|development|example|research)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -147,7 +147,7 @@
         <rule>
             <name>TLS Validation Disabled via Callback</name>
             <regex><![CDATA[ServerCertificateValidationCallback\s*=\s*\{[^}]*\$true\}|ServerCertificateValidationCallback\s*=\s*\{\s*\$true\s*\}|IgnoreSSL|DisableCertCheck|CertificatePolicy.*Accept]]></regex>
-            <rdl><![CDATA[[FLAG:ServerCertificateValidationCallback\s*=\s*\{[^}]*\$true\}|ServerCertificateValidationCallback\s*=\s*\{\s*\$true\s*\}]]]></rdl>
+            <rdl><![CDATA[[FLAG:ServerCertificateValidationCallback\s*=\s*\{[^}]*\$true\}|ServerCertificateValidationCallback\s*=\s*\{\s*\$true\s*\}][IF(MISSING:test|development|localhost|staging)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>

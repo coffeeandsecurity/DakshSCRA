@@ -161,6 +161,73 @@ def _evaluate_expression(expr, text):
     return _evaluate_predicate(expression, text)
 
 
+def has_if_condition(rdl_text):
+    """Return True if the RDL text contains an IF() condition block."""
+    if not rdl_text:
+        return False
+    return bool(re.search(r"\[\s*IF\s*\(", rdl_text, flags=re.IGNORECASE) or
+                re.search(r"IF\s*\(", rdl_text, flags=re.IGNORECASE))
+
+
+def _build_suppression_reason(if_expr, text):
+    """
+    Build a human-readable explanation of why the IF condition suppressed a match.
+    Walks through the top-level AND/OR parts and identifies the condition that failed.
+    """
+    or_parts = _split_top_level(if_expr, "||")
+    and_parts = _split_top_level(if_expr, "&&")
+
+    reasons = []
+    parts = and_parts if len(and_parts) > 1 else or_parts
+    for part in parts:
+        token = _strip_wrapping_parentheses(part)
+        m = re.match(r"^(MISSING|PRESENT|EXISTS)\s*:(.+)$", token, flags=re.IGNORECASE | re.DOTALL)
+        if not m:
+            continue
+        mode = m.group(1).upper()
+        pattern = m.group(2).strip()
+        if mode == "MISSING":
+            reasons.append(f"Safe pattern '{pattern}' was found in the file, indicating mitigated risk")
+        elif mode in ("PRESENT", "EXISTS"):
+            reasons.append(f"Required pattern '{pattern}' was not found in the file")
+
+    if reasons:
+        return "; ".join(reasons)
+    return f"RDL condition IF({if_expr}) was not satisfied"
+
+
+def evaluate_rdl_with_reason(rdl_text, file_text):
+    """
+    Evaluate RDL rule against complete file content.
+    Returns (passes: bool, suppression_reason: str).
+    When passes=True the finding should be reported; reason is empty.
+    When passes=False the finding is suppressed; reason explains why.
+    """
+    if not rdl_text:
+        return False, ""
+
+    text = file_text or ""
+    flag_pattern = extract_flag_pattern(rdl_text)
+
+    if flag_pattern:
+        try:
+            if not re.search(flag_pattern, text, flags=re.IGNORECASE | re.MULTILINE):
+                return False, "FLAG pattern not found in file"
+        except re.error:
+            return False, "Invalid FLAG pattern in RDL"
+
+    if_expr = _extract_if_expression(rdl_text)
+    if not if_expr:
+        return bool(flag_pattern), ""
+
+    passes = _evaluate_expression(if_expr, text)
+    if passes:
+        return True, ""
+
+    reason = _build_suppression_reason(if_expr, text)
+    return False, reason
+
+
 def evaluate_rdl(rdl_text, file_text):
     """
     Evaluate RDL rule against complete file content.
@@ -170,21 +237,5 @@ def evaluate_rdl(rdl_text, file_text):
       - IF(<predicate && predicate || predicate>)
       - Predicates: MISSING:<regex>, PRESENT:<regex>, EXISTS:<regex>
     """
-    if not rdl_text:
-        return False
-
-    text = file_text or ""
-    flag_pattern = extract_flag_pattern(rdl_text)
-
-    if flag_pattern:
-        try:
-            if not re.search(flag_pattern, text, flags=re.IGNORECASE | re.MULTILINE):
-                return False
-        except re.error:
-            return False
-
-    if_expr = _extract_if_expression(rdl_text)
-    if not if_expr:
-        return bool(flag_pattern)
-
-    return _evaluate_expression(if_expr, text)
+    passes, _ = evaluate_rdl_with_reason(rdl_text, file_text)
+    return passes

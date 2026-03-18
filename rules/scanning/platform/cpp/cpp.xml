@@ -419,7 +419,7 @@
             <!-- Applicable for C++, but concepts are relevant in C -->
             <name>Insecure Handling of Sensitive Data</name>
             <regex><![CDATA[\b(memset|mlock|setrlimit|unlink|remove|std::string)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(memset|mlock|setrlimit|unlink|remove|std::string)\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(memset|mlock|setrlimit|unlink|remove|std::string)\s*\(][IF(MISSING:memset\s*\(|SecureZeroMemory|explicit_bzero|sodium_memzero|encrypt|cipher|redact && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -439,7 +439,7 @@
             <!-- Applicable for C++ code using std::thread -->
             <name>Race Condition: std::thread without mutex</name>
             <regex><![CDATA[\bstd::thread\b\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\bstd::thread\b\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\bstd::thread\b\s*\(][IF(MISSING:std::mutex|std::atomic|std::lock_guard|std::unique_lock|std::shared_mutex|std::condition_variable)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -457,7 +457,7 @@
             <!-- Applicable for C and C++ code using pthreads -->
             <name>Race Condition with Shared Resource</name>
             <regex><![CDATA[\bpthread_create\s*\(.*\);\s*.*\s*=.*shared_var]]></regex>
-            <rdl><![CDATA[[FLAG:\bpthread_create\s*\(.*\);\s*.*\s*=.*shared_var]]]></rdl>
+            <rdl><![CDATA[[FLAG:\bpthread_create\s*\(.*\);\s*.*\s*=.*shared_var][IF(MISSING:mutex|lock|atomic|pthread_mutex|synchronized|volatile\s+std::atomic|std::mutex|__sync_|std::lock_guard)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -477,7 +477,7 @@
             <!-- Applicable for C++ -->
             <name>C-style Variadic Functions: Potential for Type Safety Issues</name>
             <regex><![CDATA[\b(__attribute__\s*\(\s*format\s*\(\s*__variadic\s*,)]]></regex>
-            <rdl><![CDATA[[FLAG:\b(__attribute__\s*\(\s*format\s*\(\s*__variadic\s*,)]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(__attribute__\s*\(\s*format\s*\(\s*__variadic\s*,)][IF(PRESENT:va_list|va_start|va_arg|va_end && MISSING:vsnprintf|type_safe|fmt::|std::format && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -495,7 +495,7 @@
             <!-- Applicable for C++ -->
             <name>Information Leakage Across Trust Boundaries: Security Risk</name>
             <regex><![CDATA[\bclass\s+\w+\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\bclass\s+\w+\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\bclass\s+\w+\s*\(][IF(MISSING:memset\s*\(|sanitize|redact|encrypt|mask && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -513,7 +513,7 @@
             <!-- Applicable for C++ -->
             <name>Static Object Initialization Cycles: Undefined Behavior Risk</name>
             <regex><![CDATA[\bstatic\s+\w+\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\bstatic\s+\w+\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\bstatic\s+\w+\s*\(][IF(PRESENT:static\s+\w+.*=\s*\w+::|static\s+\w+.*getInstance\(\)|Singleton && MISSING:constexpr|constinit|test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -531,7 +531,7 @@
             <!-- Applicable for C++ -->
             <name>Exceptions in Destructors: Risk of Unhandled Behavior</name>
             <regex><![CDATA[\bthrow\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\bthrow\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\bthrow\s*\(][IF(PRESENT:~\w+\s*\(\s*\)\s*\{|~\w+\s*\(\s*\)\s*noexcept && MISSING:noexcept|try\s*\{|catch\s*\(|std::terminate)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -549,7 +549,7 @@
             <!-- Applicable for C and C++ -->
             <name>Information Leakage with Structures: Security Concern</name>
             <regex><![CDATA[\bstruct\s+\w+\s*\{]]></regex>
-            <rdl><![CDATA[[FLAG:\bstruct\s+\w+\s*\{]]]></rdl>
+            <rdl><![CDATA[[FLAG:\bstruct\s+\w+\s*\{][IF(PRESENT:struct\s+\w+.*\{.*\}|memcpy\s*\(|send\s*\( && MISSING:memset\s*\(|SecureZeroMemory|redact|sanitize && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -569,7 +569,7 @@
             <!-- Applicable for C++ -->
             <name>Missing OS Runtime Security Mitigation Flags in Binaries</name>
             <regex><![CDATA[/NXCOMPAT|/DYNAMICBASE|/GS|/guard:cf]]></regex>
-            <rdl><![CDATA[[FLAG:/NXCOMPAT|/DYNAMICBASE|/GS|/guard:cf]]]></rdl>
+            <rdl><![CDATA[[FLAG:/NXCOMPAT|/DYNAMICBASE|/GS|/guard:cf][IF(PRESENT:CFLAGS|LDFLAGS|cmake_minimum_required|add_compile_options|target_compile_options && MISSING:-fstack-protector|-D_FORTIFY_SOURCE|-pie|-fPIE|-Wl.*now|-Wl.*relro)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -587,7 +587,7 @@
             <!-- Applicable for C++ -->
             <name>Insufficient Code Provenance Guarantees in Build Configuration</name>
             <regex><![CDATA[/ZH:SHA_SHA256|/Zi|/SOURCELINK]]></regex>
-            <rdl><![CDATA[[FLAG:/ZH:SHA_SHA256|/Zi|/SOURCELINK]]]></rdl>
+            <rdl><![CDATA[[FLAG:/ZH:SHA_SHA256|/Zi|/SOURCELINK][IF(PRESENT:FetchContent_Declare|ExternalProject_Add|find_package|add_subdirectory|pkg_check_modules && MISSING:DOWNLOAD_EXTRACT_TIMESTAMP|GIT_TAG.*[a-f0-9]{40}|URL_HASH|SHA256|verify)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

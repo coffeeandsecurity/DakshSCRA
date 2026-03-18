@@ -285,7 +285,7 @@ def _compute_paths_confidence_score(path_count):
     return _clamp_score(score, low=35, high=96)
 
 
-def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=None, progress_callback=None):
+def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=None, suppressed_json_path=None, progress_callback=None):
     """
     Parses rules from XML files and applies them to target files.
     Supports both individual Path and dictionary of Paths as input.
@@ -314,6 +314,17 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
             findings_json = json.loads(Path(findings_json_path).read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError, TypeError, ValueError):
             findings_json = []
+
+    # Derive suppressed_json_path from findings_json_path if not explicitly provided
+    if suppressed_json_path is None and findings_json_path:
+        suppressed_json_path = str(Path(findings_json_path).parent / "suppressed_findings.json")
+
+    suppressed_json = []
+    if suppressed_json_path and Path(suppressed_json_path).exists():
+        try:
+            suppressed_json = json.loads(Path(suppressed_json_path).read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError, TypeError, ValueError):
+            suppressed_json = []
 
     iCnt = 0
     rule_no = state.rCnt
@@ -437,27 +448,94 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                                 groups = {k: v for k, v in groups.items() if v is not None}
                                 candidate_evidence.append((linecount, line, groups))
 
-                    if rdl_text and rdl.evaluate_rdl(rdl_text, content):
-                        flag_pattern = rdl.extract_flag_pattern(rdl_text)
-                        rdl_evidence_added = False
-                        if flag_pattern:
-                            try:
-                                flag_regex = re.compile(flag_pattern, re.IGNORECASE)
-                                for linecount, line in enumerate(file_lines, start=1):
-                                    if len(line) > 500:
-                                        continue
-                                    if not flag_regex.search(line):
-                                        continue
-                                    if exclude and exclude.search(line):
-                                        continue
-                                    # Only add if not already captured by pattern scan
-                                    if not any(ev[0] == linecount for ev in candidate_evidence):
-                                        candidate_evidence.append((linecount, line, {}))
-                                    rdl_evidence_added = True
-                            except re.error as exc:
-                                logger.error("Invalid FLAG regex in RDL for rule %s (%s): %s", rule_title, rule_path, exc)
-                        if not rdl_evidence_added and not flag_pattern and file_lines:
-                            candidate_evidence.append((1, "[RDL condition matched]", {}))
+                    if rdl_text:
+                        rdl_has_if = rdl.has_if_condition(rdl_text)
+                        rdl_passes, rdl_reason = rdl.evaluate_rdl_with_reason(rdl_text, content)
+
+                        if rdl_passes:
+                            # RDL passed — add FLAG evidence not already in candidate_evidence
+                            flag_pattern_rdl = rdl.extract_flag_pattern(rdl_text)
+                            rdl_evidence_added = False
+                            if flag_pattern_rdl:
+                                try:
+                                    flag_regex = re.compile(flag_pattern_rdl, re.IGNORECASE)
+                                    for linecount, line in enumerate(file_lines, start=1):
+                                        if len(line) > 500:
+                                            continue
+                                        if not flag_regex.search(line):
+                                            continue
+                                        if exclude and exclude.search(line):
+                                            continue
+                                        if not any(ev[0] == linecount for ev in candidate_evidence):
+                                            candidate_evidence.append((linecount, line, {}))
+                                        rdl_evidence_added = True
+                                except re.error as exc:
+                                    logger.error("Invalid FLAG regex in RDL for rule %s (%s): %s", rule_title, rule_path, exc)
+                            if not rdl_evidence_added and not flag_pattern_rdl and file_lines:
+                                candidate_evidence.append((1, "[RDL condition matched]", {}))
+
+                        elif rdl_has_if and suppressed_json_path and rdl_reason not in (
+                            "FLAG pattern not found in file", "Invalid FLAG pattern in RDL"
+                        ):
+                            # RDL IF() condition rejected candidates — record them as suppressed FPs.
+                            # Build evidence from regex matches plus any FLAG line-level matches
+                            # (so RDL-only rules with no <regex> also produce suppressed entries).
+                            rdl_suppressed_evidence = list(candidate_evidence)
+                            flag_pattern_rdl = rdl.extract_flag_pattern(rdl_text)
+                            if flag_pattern_rdl:
+                                try:
+                                    flag_regex = re.compile(flag_pattern_rdl, re.IGNORECASE)
+                                    for linecount, line in enumerate(file_lines, start=1):
+                                        if len(line) > 500:
+                                            continue
+                                        if not flag_regex.search(line):
+                                            continue
+                                        if exclude and exclude.search(line):
+                                            continue
+                                        if not any(ev[0] == linecount for ev in rdl_suppressed_evidence):
+                                            rdl_suppressed_evidence.append((linecount, line, {}))
+                                except re.error:
+                                    pass
+
+                            if rdl_suppressed_evidence:
+                                if_match = re.search(r"\[\s*IF\s*\((.*)\)\s*\]\s*$", rdl_text, flags=re.IGNORECASE | re.DOTALL)
+                                if not if_match:
+                                    if_match = re.search(r"IF\s*\((.*)\)\s*$", rdl_text, flags=re.IGNORECASE | re.DOTALL)
+                                rdl_condition = f"IF({if_match.group(1).strip()})" if if_match else rdl_text
+
+                                rel_path = futils.get_source_file_path(state.sourcedir, filepath)
+                                ctx_type = scan_cfg["context_type"]
+                                lines_before = scan_cfg["context_lines_before"]
+                                lines_after = scan_cfg["context_lines_after"]
+
+                                for linecount, line, groups in rdl_suppressed_evidence:
+                                    short_line = (line[:75] + '..') if len(line) > 300 else line
+                                    sup_entry = {
+                                        "id": f"sup_{len(suppressed_json) + 1}",
+                                        "platform": platform_name,
+                                        "rule_title": rule_title,
+                                        "category": category_name,
+                                        "file": rel_path,
+                                        "line": linecount,
+                                        "code": short_line.strip(),
+                                        "rdl_text": rdl_text,
+                                        "rdl_condition": rdl_condition,
+                                        "suppression_reason": rdl_reason,
+                                        "suppressed_at": None,
+                                        "status": "suppressed",
+                                    }
+                                    if ctx_type == "lines" and (lines_before > 0 or lines_after > 0):
+                                        ctx_before, ctx_after = _collect_context_lines(
+                                            file_lines, linecount, lines_before, lines_after
+                                        )
+                                        if ctx_before:
+                                            sup_entry["context_before"] = ctx_before
+                                        if ctx_after:
+                                            sup_entry["context_after"] = ctx_after
+                                    suppressed_json.append(sup_entry)
+                                    state.suppressedFindingsCnt += 1
+                                # Clear candidates so they don't appear in active findings
+                                candidate_evidence = []
 
                     if not candidate_evidence:
                         continue
@@ -623,6 +701,14 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
             out_path.write_text(json.dumps(findings_json, indent=2), encoding="utf-8")
         except OSError as exc:
             logger.error("Failed to write findings JSON %s: %s", findings_json_path, exc)
+
+    if suppressed_json_path and suppressed_json:
+        try:
+            sup_path = Path(suppressed_json_path)
+            sup_path.parent.mkdir(parents=True, exist_ok=True)
+            sup_path.write_text(json.dumps(suppressed_json, indent=2), encoding="utf-8")
+        except OSError as exc:
+            logger.error("Failed to write suppressed findings JSON %s: %s", suppressed_json_path, exc)
 
     return matched_rules, unmatched_rules
 

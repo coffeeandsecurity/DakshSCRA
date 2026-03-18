@@ -20,7 +20,7 @@
         <rule>
             <name>GCP VM with OS Login Disabled</name>
             <regex><![CDATA[enable-oslogin\s*=\s*"FALSE"|enable-oslogin\s*=\s*"false"]]></regex>
-            <rdl><![CDATA[[FLAG:enable-oslogin\s*=\s*"FALSE"|enable-oslogin\s*=\s*"false"]]]></rdl>
+            <rdl><![CDATA[[FLAG:enable-oslogin\s*=\s*"FALSE"|enable-oslogin\s*=\s*"false"][IF(PRESENT:enable-oslogin\s*=\s*"false"|enable-oslogin\s*=\s*false && MISSING:# intentional|# legacy|# migration)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -39,7 +39,7 @@
         <rule>
             <name>GCP Storage Bucket Publicly Accessible</name>
             <regex><![CDATA[resource\s+"google_storage_bucket_iam_(?:binding|member)"[^}]*allUsers|resource\s+"google_storage_bucket_iam_(?:binding|member)"[^}]*allAuthenticatedUsers]]></regex>
-            <rdl><![CDATA[[FLAG:allUsers|allAuthenticatedUsers]]]></rdl>
+            <rdl><![CDATA[[FLAG:allUsers|allAuthenticatedUsers][IF(PRESENT:role\s*=\s*"roles/storage\.objectViewer".*allUsers|allAuthenticatedUsers && MISSING:# intentional|# static-website|website\s*\{)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -56,7 +56,7 @@
         <rule>
             <name>GCP Storage Bucket Without Uniform Access</name>
             <regex><![CDATA[resource\s+"google_storage_bucket"[^}]*uniform_bucket_level_access\s*=\s*false]]></regex>
-            <rdl><![CDATA[[FLAG:uniform_bucket_level_access\s*=\s*false]]]></rdl>
+            <rdl><![CDATA[[FLAG:uniform_bucket_level_access\s*=\s*false][IF(PRESENT:uniform_bucket_level_access\s*=\s*false && MISSING:# intentional|# legacy|# migration)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -75,7 +75,7 @@
         <rule>
             <name>Cloud SQL Instance Publicly Exposed</name>
             <regex><![CDATA[resource\s+"google_sql_database_instance"[^}]*ipv4_enabled\s*=\s*true|authorized_networks\s*\{[^}]*value\s*=\s*"0\.0\.0\.0/0"]]></regex>
-            <rdl><![CDATA[[FLAG:authorized_networks\s*\{[^}]*value\s*=\s*"0\.0\.0\.0/0"]]]></rdl>
+            <rdl><![CDATA[[FLAG:authorized_networks\s*\{[^}]*value\s*=\s*"0\.0\.0\.0/0"][IF(PRESENT:ipv4_enabled\s*=\s*true|authorized_networks && MISSING:require_ssl\s*=\s*true|ssl_mode\s*=\s*"ENCRYPTED_ONLY"|private_network)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -94,7 +94,7 @@
         <rule>
             <name>Primitive IAM Role (Owner/Editor) Assigned</name>
             <regex><![CDATA[role\s*=\s*"roles/(?:owner|editor)"]]></regex>
-            <rdl><![CDATA[[FLAG:role\s*=\s*"roles/(?:owner|editor)"]]]></rdl>
+            <rdl><![CDATA[[FLAG:role\s*=\s*"roles/(?:owner|editor)"][IF(PRESENT:roles/owner|roles/editor && MISSING:# intentional|# required|# break-glass|condition\s*\{)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

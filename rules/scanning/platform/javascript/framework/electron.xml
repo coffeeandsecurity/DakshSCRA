@@ -20,7 +20,7 @@
         <rule>
             <name>contextIsolation Disabled</name>
             <regex><![CDATA[contextIsolation\s*:\s*false]]></regex>
-            <rdl><![CDATA[[FLAG:contextIsolation\s*:\s*false]]]></rdl>
+            <rdl><![CDATA[[FLAG:contextIsolation\s*:\s*false][IF(PRESENT:contextIsolation:\s*false && MISSING:test|development)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -54,7 +54,7 @@
         <rule>
             <name>allowRunningInsecureContent Enabled</name>
             <regex><![CDATA[allowRunningInsecureContent\s*:\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:allowRunningInsecureContent\s*:\s*true]]]></rdl>
+            <rdl><![CDATA[[FLAG:allowRunningInsecureContent\s*:\s*true][IF(PRESENT:allowRunningInsecureContent:\s*true && MISSING:test|development|localhost)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

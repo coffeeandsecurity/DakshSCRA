@@ -20,7 +20,7 @@
         <rule>
             <name>Ktor Insecure Trust Manager / TLS Bypass</name>
             <regex><![CDATA[HostnameVerifier\s*\{\s*.*true\s*\}|TrustAllCerts|setHostnameVerifier\(]]></regex>
-            <rdl><![CDATA[[FLAG:HostnameVerifier\s*\{\s*.*true\s*\}|TrustAllCerts|setHostnameVerifier\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:HostnameVerifier\s*\{\s*.*true\s*\}|TrustAllCerts|setHostnameVerifier\(][IF(MISSING:test|development|localhost|staging)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -37,7 +37,7 @@
         <rule>
             <name>Ktor SQL Injection Sink</name>
             <regex><![CDATA[rawQuery\(\s*"[^"]*"\s*\+|execSQL\(\s*"[^"]*"\s*\+]]></regex>
-            <rdl><![CDATA[[FLAG:rawQuery\(\s*"[^"]*"\s*\+|execSQL\(\s*"[^"]*"\s*\+]]]></rdl>
+            <rdl><![CDATA[[FLAG:rawQuery\(\s*"[^"]*"\s*\+|execSQL\(\s*"[^"]*"\s*\+][IF(MISSING:prepareStatement|setString\s*\(|setInt\s*\(|NamedParameterJdbcTemplate|?|bindParam)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -54,7 +54,7 @@
         <rule>
             <name>Ktor Permissive CORS/Origin</name>
             <regex><![CDATA[allowedOrigins\s*=\s*arrayOf\(\s*"\*"\s*\)|origin\s*=\s*"\*"]]></regex>
-            <rdl><![CDATA[[FLAG:allowedOrigins\s*=\s*arrayOf\(\s*"\*"\s*\)|origin\s*=\s*"\*"]]]></rdl>
+            <rdl><![CDATA[[FLAG:allowedOrigins\s*=\s*arrayOf\(\s*"\*"\s*\)|origin\s*=\s*"\*"][IF(PRESENT:anyHost\s*\(\s*\)|allowHost\s*\(\s*"\*"|allowCredentials.*anyHost && MISSING:allowHost\s*\(\s*"[^*]|anyHost\s*\(\s*\).*false)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

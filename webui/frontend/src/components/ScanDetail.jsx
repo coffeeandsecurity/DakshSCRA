@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { artifactUrl, getScanFindings, stopScan, streamScanLog } from '../api'
+import { artifactUrl, getScanFindings, getSuppressedFindings, stopScan, streamScanLog } from '../api'
 import FindingsReport from './FindingsReport'
 import TaintAnalysis from './TaintAnalysis'
 import InsightsPanel from './InsightsPanel'
+import SuppressedPanel from './SuppressedPanel'
 
 function StatusBadge({ status }) {
   return (
@@ -63,6 +64,7 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
   const [stopping, setStopping] = useState(false)
   const [findingsData, setFindingsData] = useState(null)
   const [findingsLoading, setFindingsLoading] = useState(false)
+  const [suppressedCount, setSuppressedCount] = useState(null)
   const cancelSseRef = useRef(null)
   const logPaneRef = useRef(null)
 
@@ -104,6 +106,7 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
     setTab('findings')
     setStopping(false)
     setFindingsData(null)
+    setSuppressedCount(null)
   }, [run?.run_uuid])
 
   // Load findings when scan is done and findings tab is active
@@ -124,6 +127,14 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
       .then((d) => setFindingsData(d))
       .catch(() => {})
   }, [isActive])
+
+  // Pre-fetch suppressed count so tab title shows it without requiring the tab to be opened
+  useEffect(() => {
+    if (!run?.run_uuid || isActive || suppressedCount !== null) return
+    getSuppressedFindings(run.run_uuid)
+      .then((d) => setSuppressedCount(d?.summary?.total_suppressed ?? 0))
+      .catch(() => {})
+  }, [run?.run_uuid, isActive])
 
   async function handleStop() {
     if (!run?.run_uuid) return
@@ -211,7 +222,10 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
           onClick={() => setTab('taint')}
         >
           {(() => {
-            const taintCount = findingsData?.analysis?.results?.flatMap((r) => r.findings || []).length ?? 0
+            const taintCount = findingsData?.analysis?.results
+              ?.filter((r) => r.engine === 'dataflow_controlflow')
+              ?.flatMap((r) => (r.findings || []).filter((f) => f.analysis_kind === 'taint_flow'))
+              ?.length ?? 0
             return `Taint Flows${!isActive && taintCount > 0 ? ` (${taintCount})` : ''}`
           })()}
         </button>
@@ -244,6 +258,12 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
           onClick={() => setTab('log')}
         >
           Log
+        </button>
+        <button
+          className={`detail-tab${tab === 'suppressed' ? ' active' : ''}`}
+          onClick={() => setTab('suppressed')}
+        >
+          {`Suppressed FPs${!isActive && suppressedCount != null && suppressedCount > 0 ? ` (${suppressedCount})` : ''}`}
         </button>
       </div>
 
@@ -448,6 +468,20 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
           <pre className="log-pane" ref={logPaneRef}>
             {displayLog ? displayLog : <span className="log-empty">No log output yet.</span>}
           </pre>
+        </div>
+      )}
+
+      {/* Tab: Suppressed FPs */}
+      {tab === 'suppressed' && (
+        <div className="detail-tab-content findings-tab-content">
+          {isActive ? (
+            <div className="empty-state" style={{ padding: '40px 20px' }}>
+              <div className="empty-title">Scan in progress…</div>
+              <div className="empty-msg">Suppressed findings will appear once the scan completes.</div>
+            </div>
+          ) : (
+            <SuppressedPanel runUuid={run.run_uuid} onLoaded={setSuppressedCount} />
+          )}
         </div>
       )}
     </div>

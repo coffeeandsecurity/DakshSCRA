@@ -108,7 +108,7 @@
         <rule>
             <name>Deprecated MODE_WORLD_WRITEABLE Usage</name>
             <regex><![CDATA[M(?:ODE_)?WORLD_WRITEABLE]]></regex>
-            <rdl><![CDATA[[FLAG:M(?:ODE_)?WORLD_WRITEABLE]]]></rdl>
+            <rdl><![CDATA[[FLAG:M(?:ODE_)?WORLD_WRITEABLE][IF(MISSING:EncryptedSharedPreferences|EncryptedFile|KeyStore|test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -125,7 +125,7 @@
         <rule>
             <name>Deprecated MODE_WORLD_READABLE Usage</name>
             <regex><![CDATA[M(?:ODE_)?WORLD_READABLE]]></regex>
-            <rdl><![CDATA[[FLAG:M(?:ODE_)?WORLD_READABLE]]]></rdl>
+            <rdl><![CDATA[[FLAG:M(?:ODE_)?WORLD_READABLE][IF(MISSING:EncryptedSharedPreferences|EncryptedFile|KeyStore|test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -142,7 +142,7 @@
         <rule>
             <name>Insecure File Operations</name>
             <regex><![CDATA[openFile(?:Output|Input)\s*\([^,]*,\s*M(?:ODE_)?WORLD_(?:WRITEABLE|READABLE)]]></regex>
-            <rdl><![CDATA[[FLAG:openFile(?:Output|Input)\s*\([^,]*,\s*M(?:ODE_)?WORLD_(?:WRITEABLE|READABLE)]]]></rdl>
+            <rdl><![CDATA[[FLAG:openFile(?:Output|Input)\s*\([^,]*,\s*M(?:ODE_)?WORLD_(?:WRITEABLE|READABLE)][IF(MISSING:EncryptedFile|openFileOutput.*MODE_PRIVATE|test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -196,7 +196,7 @@
         <rule>
             <name>Dynamic Loading from External Storage</name>
             <regex><![CDATA[(DexClassLoader|PathClassLoader)\s*\([^,]*Environment\.getExternalStorageDirectory]]></regex>
-            <rdl><![CDATA[[FLAG:(DexClassLoader|PathClassLoader)\s*\([^,]*Environment\.getExternalStorageDirectory]]]></rdl>
+            <rdl><![CDATA[[FLAG:(DexClassLoader|PathClassLoader)\s*\([^,]*Environment\.getExternalStorageDirectory][IF(MISSING:verif|checksum|signature|PackageManager|test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -230,7 +230,7 @@
         <rule>
             <name>Executable File Storage on External Storage</name>
             <regex><![CDATA[(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*.*\.(dex|so|jar|apk)]]></regex>
-            <rdl><![CDATA[[FLAG:(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*.*\.(dex|so|jar|apk)]]]></rdl>
+            <rdl><![CDATA[[FLAG:(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*.*\.(dex|so|jar|apk)][IF(MISSING:getInternalFilesDir|getFilesDir|getNoBackupFilesDir|test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -319,7 +319,7 @@
         <rule>
             <name>Insecure Package: org.apache.commons.collections</name>
             <regex><![CDATA[org\.apache\.commons\.collections]]></regex>
-            <rdl><![CDATA[[FLAG:org\.apache\.commons\.collections]]]></rdl>
+            <rdl><![CDATA[[FLAG:org\.apache\.commons\.collections][IF(MISSING:SerializationBinder|AllowType|ValidatingObjectInputStream|trusted && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -353,7 +353,7 @@
         <rule>
             <name>Insecure Package: org.springframework.web.multipart.MultipartFile</name>
             <regex><![CDATA[org\.springframework\.web\.multipart\.MultipartFile]]></regex>
-            <rdl><![CDATA[[FLAG:org\.springframework\.web\.multipart\.MultipartFile]]]></rdl>
+            <rdl><![CDATA[[FLAG:org\.springframework\.web\.multipart\.MultipartFile][IF(MISSING:validate|allowlist|getOriginalFilename.*replace|ContentType|getSize\s*\(\s*\) && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -370,7 +370,7 @@
         <rule>
             <name>Insecure Package: org.apache.poi.hssf.usermodel.HSSFWorkbook</name>
             <regex><![CDATA[org\.apache\.poi\.hssf\.usermodel\.HSSFWorkbook]]></regex>
-            <rdl><![CDATA[[FLAG:org\.apache\.poi\.hssf\.usermodel\.HSSFWorkbook]]]></rdl>
+            <rdl><![CDATA[[FLAG:org\.apache\.poi\.hssf\.usermodel\.HSSFWorkbook][IF(MISSING:XSSFWorkbook|validate|allowlist && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -423,7 +423,7 @@
         <rule>
             <name>Disabled Input Validation</name>
             <regex><![CDATA[(\bvalidateInput\s*=\s*['"]false['"])]]></regex>
-            <rdl><![CDATA[[FLAG:(\bvalidateInput\s*=\s*['"]false['"])]]]></rdl>
+            <rdl><![CDATA[[FLAG:(\bvalidateInput\s*=\s*['"]false['"])][IF(PRESENT:validateRequest\s*=\s*"false"|@SuppressWarnings.*"unchecked"|@Valid\s*=\s*false|disableValidation && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

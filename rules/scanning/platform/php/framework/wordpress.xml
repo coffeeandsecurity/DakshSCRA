@@ -20,7 +20,7 @@
         <rule>
             <name>Wordpress Dangerous Dynamic Eval/Template Execution</name>
             <regex><![CDATA[\beval\s*\(|assert\s*\(\s*\$|create_function\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\beval\s*\(|assert\s*\(\s*\$|create_function\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\beval\s*\(|assert\s*\(\s*\$|create_function\s*\(][IF(MISSING:validate|allowlist|trusted|esc_attr|wp_kses|test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -37,7 +37,7 @@
         <rule>
             <name>Wordpress Raw SQL Query Construction</name>
             <regex><![CDATA[DB::raw\(|selectRaw\(|whereRaw\(|->query\(\s*\$|mysqli_query\(|PDO::query\(]]></regex>
-            <rdl><![CDATA[[FLAG:DB::raw\(|selectRaw\(|whereRaw\(|->query\(\s*\$|mysqli_query\(|PDO::query\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:DB::raw\(|selectRaw\(|whereRaw\(|->query\(\s*\$|mysqli_query\(|PDO::query\(][IF(MISSING:$wpdb->prepare|esc_sql|bindParam && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>

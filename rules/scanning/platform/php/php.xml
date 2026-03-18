@@ -107,7 +107,7 @@
         <rule>
             <name>Insecure Method Call: preg_replace() with Code Execution</name>
             <regex><![CDATA[preg_replace\s*\(\s*['"](eval|assert|system|passthru|shell_exec|exec|popen|proc_open|pcntl_exec)['"]\s*,\s*\$([^\s,]*)\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:preg_replace\s*\(\s*['"](eval|assert|system|passthru|shell_exec|exec|popen|proc_open|pcntl_exec)['"]\s*,\s*\$([^\s,]*)\s*\)]]]></rdl>
+            <rdl><![CDATA[[FLAG:preg_replace\s*\(\s*['"](eval|assert|system|passthru|shell_exec|exec|popen|proc_open|pcntl_exec)['"]\s*,\s*\$([^\s,]*)\s*\)][IF(MISSING:preg_replace_callback|str_replace|validate|test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -158,7 +158,7 @@
         <rule>
             <name>Insecure Variable Injection: extract()</name>
             <regex><![CDATA[extract\s*\(\s*(\$_(GET|POST|REQUEST)|\$\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}?)\s*,\s*(?:\s*EXTR_(?:OVERWRITE|SKIP|PREFIX_SAME|PREFIX_ALL|IF_EXISTS|IF_DOESNT_EXIST|PREFIX_INVALID))?]]></regex>
-            <rdl><![CDATA[[FLAG:extract\s*\(\s*(\$_(GET|POST|REQUEST)|\$\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}?)\s*,\s*(?:\s*EXTR_(?:OVERWRITE|SKIP|PREFIX_SAME|PREFIX_ALL|IF_EXISTS|IF_DOESNT_EXIST|PREFIX_INVALID))?]]]></rdl>
+            <rdl><![CDATA[[FLAG:extract\s*\(\s*(\$_(GET|POST|REQUEST)|\$\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}?)\s*,\s*(?:\s*EXTR_(?:OVERWRITE|SKIP|PREFIX_SAME|PREFIX_ALL|IF_EXISTS|IF_DOESNT_EXIST|PREFIX_INVALID))?][IF(MISSING:EXTR_SKIP|EXTR_PREFIX_ALL|allowlist|filter_var|validate && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -175,7 +175,7 @@
         <rule>
             <name>Insecure Code Execution: assert() and eval()</name>
             <regex><![CDATA[(assert|eval)\s*\(\s*(\$_(GET|POST|REQUEST)|\$\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}?)]]></regex>
-            <rdl><![CDATA[[FLAG:(assert|eval)\s*\(\s*(\$_(GET|POST|REQUEST)|\$\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}?)]]]></rdl>
+            <rdl><![CDATA[[FLAG:(assert|eval)\s*\(\s*(\$_(GET|POST|REQUEST)|\$\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}?)][IF(MISSING:validate|allowlist|trusted|intval|is_int|is_numeric && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -211,7 +211,7 @@
         <rule>
             <name>Stack Trace or Error Disclosure</name>
             <regex><![CDATA[(?i)(echo .*Exception.*;|print_r\(.*Exception.*\)|trigger_error\(.+\))]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(echo .*Exception.*;|print_r\(.*Exception.*\)|trigger_error\(.+\))]]]></rdl>
+            <rdl><![CDATA[[FLAG:(?i)(echo .*Exception.*;|print_r\(.*Exception.*\)|trigger_error\(.+\))][IF(MISSING:ini_set.*display_errors.*0|error_reporting\s*\(\s*0\s*\)|log_errors|try.*catch && MISSING:development|localhost)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -230,7 +230,7 @@
         <rule>
             <name>Deprecated and Potentially Insecure SQL Functions</name>
             <regex><![CDATA[(?i)\b(mysql_query|mysqli_query|new\s+PDO\(|pg_connect\(|mysql_connect\(|mysqli_connect\(|sqlite3_open|mysql_fetch_array|mysql_fetch_assoc|mysql_num_rows)\b|(?:mysql_query|pg_query|sqlite_query|mysqli_query|pdo->query)\s*\(\s*['\"]?\b(SELECT|INSERT|UPDATE|DELETE)\b\s+.*\s*['\"]?\s*\.\s*\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\b(mysql_query|mysqli_query|new\s+PDO\(|pg_connect\(|mysql_connect\(|mysqli_connect\(|sqlite3_open|mysql_fetch_array|mysql_fetch_assoc|mysql_num_rows)\b|(?:mysql_query|pg_query|sqlite_query|mysqli_query|pdo->query)\s*\(\s*['\"]?\b(SELECT|INSERT|UPDATE|DELETE)\b\s+.*\s*['\"]?\s*\.\s*\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)]]]></rdl>
+            <rdl><![CDATA[[FLAG:(?i)\b(mysql_query|mysqli_query|new\s+PDO\(|pg_connect\(|mysql_connect\(|mysqli_connect\(|sqlite3_open|mysql_fetch_array|mysql_fetch_assoc|mysql_num_rows)\b|(?:mysql_query|pg_query|sqlite_query|mysqli_query|pdo->query)\s*\(\s*['\"]?\b(SELECT|INSERT|UPDATE|DELETE)\b\s+.*\s*['\"]?\s*\.\s*\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)][IF(MISSING:PDO::|mysqli_|prepare\s*\(|bindParam|bindValue && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -246,7 +246,7 @@
         <rule>
             <name>Deprecated Regular Expression Functions</name>
             <regex><![CDATA[\b(ereg|eregi)\b]]></regex>
-            <rdl><![CDATA[[FLAG:\b(ereg|eregi)\b]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(ereg|eregi)\b][IF(MISSING:preg_match|preg_replace|preg_split && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -262,7 +262,7 @@
         <rule>
             <name>Deprecated String Split Function</name>
             <regex><![CDATA[\bsplit\s*\(\s*[^;]*\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:\bsplit\s*\(\s*[^;]*\s*\)]]]></rdl>
+            <rdl><![CDATA[[FLAG:\bsplit\s*\(\s*[^;]*\s*\)][IF(MISSING:explode|str_split|preg_split && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -278,7 +278,7 @@
         <rule>
             <name>Deprecated Session Register Function</name>
             <regex><![CDATA[\bsession_register\s*\(\s*['"]?[\w\s]*['"]?\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:\bsession_register\s*\(\s*['"]?[\w\s]*['"]?\s*\)]]]></rdl>
+            <rdl><![CDATA[[FLAG:\bsession_register\s*\(\s*['"]?[\w\s]*['"]?\s*\)][IF(MISSING:$_SESSION|session_start|session_regenerate_id && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -294,7 +294,7 @@
         <rule>
             <name>Deprecated register_globals Directive</name>
             <regex><![CDATA[\bregister_globals\b]]></regex>
-            <rdl><![CDATA[[FLAG:\bregister_globals\b]]]></rdl>
+            <rdl><![CDATA[[FLAG:\bregister_globals\b][IF(PRESENT:register_globals\s*=\s*On|register_globals\s*=\s*1 && MISSING:# intentional)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -311,7 +311,7 @@
         <rule>
             <name>Deprecated create_function() Usage</name>
             <regex><![CDATA[\bcreate_function\(\s*]]></regex>
-            <rdl><![CDATA[[FLAG:\bcreate_function\(\s*]]]></rdl>
+            <rdl><![CDATA[[FLAG:\bcreate_function\(\s*][IF(MISSING:anonymous\s+function|fn\s*\(|Closure && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -330,7 +330,7 @@
         <rule>
             <name>Insecure Mitigation: SQL Injection (mysql_real_escape_string)</name>
             <regex>mysql_real_escape_string</regex>
-            <rdl><![CDATA[[FLAG:mysql_real_escape_string]]]></rdl>
+            <rdl><![CDATA[[FLAG:mysql_real_escape_string][IF(PRESENT:mysql_real_escape_string|addslashes && MISSING:PDO::|prepare\s*\(|bindParam|bindValue|parameterized)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -348,7 +348,7 @@
         <rule>
             <name>Mitigation Identified: XSS</name>
             <regex>htmlentities</regex>
-            <rdl><![CDATA[[FLAG:htmlentities]]]></rdl>
+            <rdl><![CDATA[[FLAG:htmlentities][IF(PRESENT:htmlspecialchars|htmlentities|strip_tags|esc_html|h\s*\( && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

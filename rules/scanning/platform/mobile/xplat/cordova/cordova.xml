@@ -20,7 +20,7 @@
         <rule>
             <name>Insecure External URL Handling</name>
             <regex><![CDATA[\b(?:window\.open|cordova\.InAppBrowser\.open)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:window\.open|cordova\.InAppBrowser\.open)\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(?:window\.open|cordova\.InAppBrowser\.open)\s*\(][IF(MISSING:allowlist|trustedUrls|validateUrl|startsWith.*https && MISSING:test|example)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -37,7 +37,7 @@
         <rule>
             <name>Sensitive Data Stored in Web Storage</name>
             <regex><![CDATA[\b(?:localStorage\.setItem|sessionStorage\.setItem)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:localStorage\.setItem|sessionStorage\.setItem)\s*\(]]]></rdl>
+            <rdl><![CDATA[[FLAG:\b(?:localStorage\.setItem|sessionStorage\.setItem)\s*\(][IF(PRESENT:localStorage\.setItem.*(?:password|token|secret|key|auth|credential)|sessionStorage\.setItem.*(?:password|token|secret|key|auth) && MISSING:encrypt|CryptoJS|subtle\.encrypt)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -159,7 +159,7 @@
         <rule>
             <name>Android Cleartext Traffic Allowed</name>
             <regex><![CDATA[usesCleartextTraffic\s*=\s*"?(?:true|TRUE)"?]]></regex>
-            <rdl><![CDATA[[FLAG:usesCleartextTraffic\s*=\s*"?(?:true|TRUE)"?]]]></rdl>
+            <rdl><![CDATA[[FLAG:usesCleartextTraffic\s*=\s*"?(?:true|TRUE)"?][IF(PRESENT:android:usesCleartextTraffic\s*=\s*"true"|cleartextTrafficPermitted\s*=\s*"true" && MISSING:networkSecurityConfig|# intentional|localhost|development)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -178,7 +178,7 @@
         <rule>
             <name>iOS ATS Disabled</name>
             <regex><![CDATA[NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]></regex>
-            <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]]></rdl>
+            <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>][IF(PRESENT:NSAllowsArbitraryLoads.*true && MISSING:NSExceptionDomains|localhost|development|# intentional)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>

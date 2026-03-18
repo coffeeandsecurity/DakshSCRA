@@ -3,7 +3,7 @@
         <rule>
             <name>Bad Certificate Callback Accepting All Certificates</name>
             <regex><![CDATA[badCertificateCallback\s*:\s*\([^)]*\)\s*(?:=>|{)[^}]*(?:=>|return)\s*true|onBadCertificate\s*:\s*\(_\)\s*(?:=>|{)[^}]*true]]></regex>
-            <rdl><![CDATA[[FLAG:badCertificateCallback\s*:\s*\([^)]*\)\s*(?:=>|\{)[^}]*(?:=>|return)\s*true]]]></rdl>
+            <rdl><![CDATA[[FLAG:badCertificateCallback\s*:\s*\([^)]*\)\s*(?:=>|\{)[^}]*(?:=>|return)\s*true][IF(MISSING:test|development|localhost|staging|certificate pinning)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>

@@ -3,7 +3,7 @@
         <rule>
             <name>CSRF Protection Disabled or Not Applied</name>
             <regex><![CDATA[csrf\.Protect\s*\([^)]*Secure\s*:\s*false|csrf\.SameSite\s*\(\s*csrf\.SameSiteNoneMode\s*\)|csrf\.Protect\s*\([^)]*(?:IgnoreHost|TrustedOrigins)]]></regex>
-            <rdl><![CDATA[[FLAG:csrf\.Protect\s*\([^)]*Secure\s*:\s*false]]]></rdl>
+            <rdl><![CDATA[[FLAG:csrf\.Protect\s*\([^)]*Secure\s*:\s*false][IF(MISSING:csrf\.Protect\s*\(.*Secure:\s*true|SameSite:\s*csrf\.SameSiteStrictMode|csrf\.Protect\s*\(.*HttpOnly:\s*true)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -37,7 +37,7 @@
         <rule>
             <name>Weak or Short Session Store Key</name>
             <regex><![CDATA[sessions\.NewCookieStore\s*\(\s*\[\]byte\s*\(\s*["'][^"']{1,15}["']\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:sessions\.NewCookieStore\s*\(\s*\[\]byte\s*\(\s*["'][^"']{1,15}["']\s*\)]]]></rdl>
+            <rdl><![CDATA[[FLAG:sessions\.NewCookieStore\s*\(\s*\[\]byte\s*\(\s*["'][^"']{1,15}["']\s*\)][IF(MISSING:rand\.Read|crypto/rand|os\.Getenv|SecretKeyBase|config\. && MISSING:test|example|placeholder)]]]></rdl>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
