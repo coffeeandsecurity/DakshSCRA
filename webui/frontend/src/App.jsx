@@ -14,6 +14,7 @@ import {
 } from './api'
 import Dashboard from './components/Dashboard'
 import DirectoryBrowserModal from './components/DirectoryBrowserModal'
+import AboutPanel from './components/AboutPanel'
 import HelpPanel from './components/HelpPanel'
 import SettingsPanel from './components/SettingsPanel'
 import ProjectsPanel from './components/ProjectsPanel'
@@ -283,6 +284,7 @@ export default function App() {
     scans: 'Scans',
     settings: 'Settings',
     help: 'Help & Documentation',
+    about: 'About DakshSCRA',
   }
 
   const showingScanWorkspace = section === 'scans' && !!selectedDetail?.run_uuid
@@ -444,6 +446,9 @@ export default function App() {
 
           {/* ── Help ── */}
           {section === 'help' && <HelpPanel />}
+
+          {/* ── About ── */}
+          {section === 'about' && <AboutPanel />}
         </div>
       </div>
 

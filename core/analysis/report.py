@@ -312,7 +312,7 @@ def rank_and_dedupe_flows(flows: List[Dict], platform: str = None) -> List[Dict]
     return ranked
 
 
-def render_html(flows: List[Dict], output_path: Path, title: str = "Dataflow Analysis"):
+def render_html(flows: List[Dict], output_path: Path, title: str = "Advanced Analysis"):
     output_path.parent.mkdir(parents=True, exist_ok=True)
     attack_summary = _attack_surface_summary(flows)
     complete_count = sum(1 for flow in flows if _trace_status(flow) == "complete")
@@ -353,11 +353,19 @@ def render_html(flows: List[Dict], output_path: Path, title: str = "Dataflow Ana
         ".conf-medium{background:#1e3a5f;color:#bae6fd;border:1px solid #0ea5e9;}",
         ".conf-low{background:#374151;color:#d1d5db;border:1px solid #6b7280;}",
         ".xref-link{display:inline-block;margin-top:8px;padding:6px 10px;border-radius:8px;background:#0f172a;border:1px solid #334155;color:#93c5fd;text-decoration:none;font-size:12px;}",
+        ".notice{margin:14px 0 18px;padding:14px 16px;border-radius:12px;border:1px solid #7c5a0b;background:linear-gradient(135deg,rgba(245,158,11,0.16),rgba(245,158,11,0.08));color:#f8e7bf;}",
+        ".notice-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#fbbf24;}",
+        ".notice-copy{margin-top:6px;font-size:13px;line-height:1.6;color:#e8edf5;}",
         "</style>",
         "</head><body>",
-        f"<h2>{title} (experimental)</h2>",
+        f"<h2>{title}</h2>",
         "<p class='muted'>This report lists complete source-to-sink traces and partial trace terminations."
         " XREF details are moved to a separate report for readability.</p>",
+        "<div class='notice'>"
+        "<div class='notice-title'>Legacy Taint Flows HTML View</div>"
+        "<div class='notice-copy'>This standalone HTML report is a legacy representation and will be retired soon. "
+        "Use the Web UI <strong>Advanced Analysis</strong> tab as the primary replacement for reviewing flow analysis.</div>"
+        "</div>",
         "<div class='summary-grid'>",
         f"<div class='summary-card'><div class='summary-k'>Analyzer Flows</div><div class='summary-v'>{len(flows)}</div></div>",
         f"<div class='summary-card'><div class='summary-k'>Complete Traces</div><div class='summary-v'>{complete_count}</div></div>",
@@ -538,7 +546,7 @@ def _inject_modern_style(html_text: str, variant: str = "main", theme: str = "ha
     return html_text.replace("</head>", injected + "\n</head>", 1)
 
 
-def render_html_modern(flows: List[Dict], output_path: Path, title: str = "Dataflow Analysis", theme: str = "hacker_mode"):
+def render_html_modern(flows: List[Dict], output_path: Path, title: str = "Advanced Analysis", theme: str = "hacker_mode"):
     temp_path = output_path.parent / f"{output_path.stem}.legacy.tmp"
     render_html(flows, temp_path, title=title)
     html_text = temp_path.read_text(encoding="utf-8")
@@ -2053,7 +2061,7 @@ def build_security_inventory(flows: List[Dict], scan_root: Path = None, platform
     }
 
 
-def render_xref_html(flows: List[Dict], output_path: Path, title: str = "Dataflow XREF"):
+def render_xref_html(flows: List[Dict], output_path: Path, title: str = "Advanced Analysis XREF"):
     output_path.parent.mkdir(parents=True, exist_ok=True)
     total_xref = sum(len(f.get("xref", []) or []) for f in flows)
     cross_file_count = sum(1 for f in flows if f.get("cross_file"))
@@ -2189,8 +2197,8 @@ def render_xref_html(flows: List[Dict], output_path: Path, title: str = "Dataflo
         "<div class='layout'>",
         "<aside class='side'>",
         f"<div class='h1'>{_escape_html(title)}</div>",
-        "<div class='muted'>Cross-file call/value tracing with security-oriented xref metrics.</div>",
-        "<a class='back' href='analysis.html'>Back To Main Findings</a>",
+        "<div class='muted'>Cross-file call/value tracing with security-oriented xref metrics. This XREF view remains available, but the Web UI <strong>Advanced Analysis</strong> tab is the primary replacement for legacy taint-flow reporting.</div>",
+        "<a class='back' href='analysis.html'>Back To Advanced Analysis</a>",
         "<input id='q' class='search' placeholder='Filter by sink, symbol, file, function, value...'>",
         "<div class='sec'><h4>Overview</h4><div class='chips'>",
         f"<span class='chip'>Flows: {len(flows)}</span>",
@@ -2427,7 +2435,7 @@ def render_xref_html(flows: List[Dict], output_path: Path, title: str = "Dataflo
     return output_path
 
 
-def render_xref_html_modern(flows: List[Dict], output_path: Path, title: str = "Dataflow XREF", theme: str = "hacker_mode"):
+def render_xref_html_modern(flows: List[Dict], output_path: Path, title: str = "Advanced Analysis XREF", theme: str = "hacker_mode"):
     temp_path = output_path.parent / f"{output_path.stem}.legacy.tmp"
     render_xref_html(flows, temp_path, title=title)
     html_text = temp_path.read_text(encoding="utf-8")
@@ -2453,7 +2461,7 @@ def write_reports(flows: List[Dict], output_dir: Path, title: str, platform: str
     for flow in ranked_flows:
         flow["input_surface"] = flow.get("input_surface") or _infer_input_surface(flow)
         flow["attack_vectors"] = flow.get("attack_vectors") or _derive_attack_vectors(flow)
-    print(f"     [-] Writing JSON       : {len(ranked_flows)} ranked flow(s)", flush=True)
+    print(f"     [-] Writing JSON       : {len(ranked_flows)} ranked flow(s) for Advanced Analysis", flush=True)
     json_path.write_text(json.dumps(ranked_flows, indent=2), encoding="utf-8")
 
     # Write themed HTML output directly into output_dir.
@@ -2469,10 +2477,10 @@ def write_reports(flows: List[Dict], output_dir: Path, title: str, platform: str
         else:
             themed_html_path = html_path
             themed_xref_path = xref_html_path
-        print(f"     [-] Rendering report   : {title_suffix} analysis HTML", flush=True)
-        render_html_modern(ranked_flows, themed_html_path, title=f"{title} - {title_suffix}", theme=theme)
-        print(f"     [-] Rendering xref     : {title_suffix} xref HTML", flush=True)
-        render_xref_html_modern(ranked_flows, themed_xref_path, title=f"{title} - XREF {title_suffix}", theme=theme)
+        print(f"     [-] Rendering report   : {title_suffix} legacy Taint Flows HTML", flush=True)
+        render_html_modern(ranked_flows, themed_html_path, title=f"{title} - Advanced Analysis {title_suffix}", theme=theme)
+        print(f"     [-] Rendering xref     : {title_suffix} Advanced Analysis XREF HTML", flush=True)
+        render_xref_html_modern(ranked_flows, themed_xref_path, title=f"{title} - Advanced Analysis XREF {title_suffix}", theme=theme)
 
     print(f"     [-] Reports written    : {output_dir}", flush=True)
     return json_path, html_path

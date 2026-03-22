@@ -1287,10 +1287,10 @@ def gen_report(formats="html,pdf", include_multifile_pdf=True):
     if os.path.isfile(state.output_Fpaths_JSON):
         print("     [-] All Discovered Files (JSON):", re.sub(str(state.root_dir), "", str(state.output_Fpaths_JSON)))
     if os.path.isfile(state.outputAnalysis_JSON):
-        print("     [-] Analyzer Results (JSON):", re.sub(str(state.root_dir), "", str(state.outputAnalysis_JSON)))
+        print("     [-] Advanced Analysis Data (JSON):", re.sub(str(state.root_dir), "", str(state.outputAnalysis_JSON)))
 
     print("\nNote: The tool generates reports in HTML and PDF formats, with JSON available for structured data. "
-          "Reports continue to be refined with each iteration.")
+          "Legacy Taint Flows HTML artifacts will be retired; use Advanced Analysis as the primary flow-analysis view.")
 
 
 def _load_json_file(path, default=None, label="json"):

@@ -27,7 +27,7 @@ Daksh SCRA was initially introduced during a source code review training session
 - **Automated Scientific Effort Estimation for Code Review (World's First):** Providing a measurable approach for estimating efforts required for a code review process.
 - **Framework-Aware Scanning:** Automatically applies framework-specific rules when the project's framework is detected.
 - **Taint Analysis Reports:** Per-platform HTML taint flow reports with hacker-mode and professional-mode themes.
-- **RDL (Rule Description Language):** External rule logic referenced with `rdl_ref` - supports `WHEN PRESENT`, `WHEN MISSING`, `WHEN EXPR`, `UNLESS`, `OBSERVE`, project-aware checks, and explicit report/suppression reasons.
+- **RDL (Rule Description Language):** External rule logic referenced with `rdl_ref` and executed by the current `core/rdl_engine.py` pipeline - supports file-aware gates, boolean expressions, project observations, and exported logic metadata in reports.
 - **Scan State / Resume:** Checkpoint long scans and resume after interruption.
 - **Suppression Baseline:** Generate and apply a baseline of known false positives to suppress them from future reports.
 - **Web UI:** Browser-based scan launcher with real-time console feed and job artifact browser.
@@ -283,9 +283,31 @@ analysis:
 
 ### RDL Rule Authoring
 
-RDL (Rule Description Language) is DakshSCRA's file-aware rule logic layer. The current engine uses
-external `.rdl` files referenced from XML with `<rdl_ref>.../rule_name.rdl</rdl_ref>`. The older
-inline `<rdl>` form is retired.
+RDL (Rule Description Language) is DakshSCRA's externalized rule-logic layer. In the current
+architecture:
+
+- XML rules remain the rule inventory and carry metadata such as `name`, `regex`, descriptions, and optional `scan_config`.
+- RDL logic is executed by [`core/rdl_engine.py`](/mnt/c/_Source/Developement/DakshSCRA/core/rdl_engine.py).
+- Rule logic files live under `rules/scanning/logic/...` and are referenced from XML using `<rdl_ref>`.
+- `rdl_ref` values are resolved relative to `rules/scanning/`, for example:
+  `logic/php/core/some_rule.rdl` -> `rules/scanning/logic/php/core/some_rule.rdl`
+- Logic outcomes are exported into report JSON as metadata such as `logic_engine`, `logic_source`,
+  `logic_reason`, `logic_trace`, `logic_consulted_files`, and `logic_outcome`.
+
+The older inline `<rdl>` form is no longer the active architecture and should not be used for new rules.
+
+#### RDL architecture at a glance
+
+```text
+XML rule
+  -> regex / exclude / scan_config / descriptions
+  -> rdl_ref
+       -> rules/scanning/logic/<platform>/<scope>/<rule>.rdl
+           -> core/rdl_engine.py
+               -> pass / fail
+               -> reason / fail_reason
+               -> trace / consulted_files / outcome
+```
 
 #### Scan sequence
 
@@ -293,13 +315,15 @@ For a source rule, DakshSCRA evaluates logic in this order:
 
 1. Recon selects matching platforms and frameworks.
 2. The XML rule is loaded from `rules/scanning/platform/...`.
-3. `regex` finds candidate lines or file-level matches.
+3. `regex` finds candidate lines or whole-file matches when present.
 4. `exclude` removes obvious noise for that rule, if present.
-5. The external `.rdl` file from `rdl_ref` is evaluated against the current file and, when needed, the project root.
-6. If the RDL script passes, the finding is reported. If it fails, the match is suppressed with the RDL fail reason and trace metadata.
+5. The external `.rdl` file from `rdl_ref` is evaluated against the current file text, current file path, and project root.
+6. If the RDL script passes, DakshSCRA keeps the finding and merges exported logic metadata into the report output.
+7. If the RDL script fails, the match is suppressed with the RDL fail reason and decision trace metadata.
 
 For file-path rules in `filepaths.xml`, the same `rdl_ref` model applies, but the matching subject is
-the normalized relative path instead of source code text.
+the normalized relative path instead of source code text. In that mode, RDL receives the relative path
+string as the current-file text and path context.
 
 #### Current rule structure
 
@@ -329,6 +353,33 @@ FAIL_REASON Matching query API was found, but the file also contains prepared-st
 TRACE SQLi gate: input source present and mitigation missing.
 ```
 
+#### Current layout
+
+```text
+rules/
+└── scanning/
+    ├── platform/
+    │   ├── php/php.xml
+    │   ├── java/java.xml
+    │   └── ...
+    └── logic/
+        ├── common/core/
+        ├── php/core/
+        ├── php/framework/laravel/
+        ├── mobile/android/core/
+        ├── filepaths/core/
+        └── ...
+```
+
+#### Execution semantics
+
+- `WHEN PRESENT`, `WHEN MISSING`, and `WHEN CURRENT_FILE_MATCHES` evaluate against the current file text.
+- `WHEN FILE_NAME_IS` and `WHEN FILE_PATH_MATCHES` evaluate against the current file path context.
+- `WHEN EXPR` supports boolean logic over `PRESENT:`, `MISSING:`, and `EXISTS:` predicates.
+- `OBSERVE PROJECT_HAS_GLOB ... AS ...` does not gate the finding; it records related project files in trace metadata.
+- `REPORT AS`, `REASON`, `FAIL_REASON`, and `TRACE` control the exported reporting metadata.
+- Regex tokens can be written either as raw patterns or as `/pattern/flags`, with `i`, `m`, and `s` supported.
+
 #### Supported RDL commands
 
 | Command | Behaviour | Typical use |
@@ -339,7 +390,6 @@ TRACE SQLi gate: input source present and mitigation missing.
 | `WHEN CURRENT_FILE_MATCHES <regex>` | Match against the full current file text | Re-check complex whole-file conditions |
 | `WHEN FILE_NAME_IS <name>` | Require the current filename to match exactly | Limit plist / manifest / config rules |
 | `WHEN FILE_PATH_MATCHES <glob>` | Require the current relative path to match a glob | Narrow framework/config path rules |
-| `UNLESS PRESENT <regex>` | Fail when a safe pattern is present | Early mitigation exclusion |
 | `UNLESS CURRENT_FILE_MATCHES <regex>` | Fail when the whole file matches an exclusion pattern | Block known-safe structural cases |
 | `OBSERVE PROJECT_HAS_GLOB <glob> AS <label>` | Record related project files in trace metadata | Surface supporting config or companion files |
 | `REPORT AS <outcome>` | Set the rule outcome, usually `area_of_interest` | Future-proof explicit outcomes |
@@ -427,10 +477,13 @@ FAIL_REASON Path matched an excluded documentation or sample location.
 #### Authoring guidance
 
 - Keep `regex` broad enough to catch candidates, then use RDL to filter context.
-- Prefer `rdl_ref` for all rule logic; do not add new inline `<rdl>` blocks.
+- Prefer `rdl_ref` for all rule logic and keep the `.rdl` file beside the appropriate platform/framework logic tree.
+- Do not add new inline `<rdl>` blocks.
 - Use `WHEN PRESENT` / `WHEN MISSING` for simple gates and `WHEN EXPR` only when the logic is genuinely boolean.
 - Put reviewer-facing reasoning in `REASON` and suppression explanations in `FAIL_REASON`.
 - Treat `PRESENT` and `MISSING` as whole-file checks. A mitigation anywhere in the file can suppress every match from that file.
+- Use `OBSERVE PROJECT_HAS_GLOB` to enrich findings with project context, not as a pass/fail gate.
+- Keep `logic/...` paths stable and platform-scoped so XML rules remain thin and the logic layer stays reusable.
 
 ---
 
@@ -563,5 +616,7 @@ Copy `.env.example` to `.env` and set the paths for your machine before running 
 | Twitter / X | [@coffeensecurity](https://x.com/coffeensecurity) |
 | Source | [github.com/coffeeandsecurity/DakshSCRA](https://github.com/coffeeandsecurity/DakshSCRA) |
 | License | GNU General Public License v3.0 (GPL-3.0) |
+
+If DakshSCRA has helped your team save significant time, effort, or cost, reduced dependence on expensive commercial tools, improved review coverage, or made code review more structured and effective, feel free to reach out and share your experience. I am always open to thoughtful feedback and interesting conversations.
 
 Found a bug or want to contribute? Open an issue or pull request on GitHub.

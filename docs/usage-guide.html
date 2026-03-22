@@ -228,6 +228,7 @@ td code { font-size: 12px; }
   <a class="nav-link" href="#platforms">Platforms &amp; Rules</a>
   <a class="nav-link" href="#pdf">PDF Reports</a>
   <a class="nav-link" href="#tips">Tips &amp; Patterns</a>
+  <a class="nav-link" href="#about">About</a>
 </nav>
 
 <!-- ════════════════════════════════════════
@@ -1033,6 +1034,44 @@ REASON Cleartext traffic is enabled; related network security config files were 
       <li>On subsequent scans the baseline is loaded automatically, suppressing known-benign findings from reports.</li>
       <li>Use <code>--no-baseline</code> to temporarily ignore the baseline if needed.</li>
     </ol>
+  </section>
+
+  <!-- ════════════════ ABOUT ════════════════ -->
+  <section id="about">
+    <h2>About</h2>
+    <p>DakshSCRA was built as a structured source code review assistant for complex manual security reviews. It is designed to help reviewers move beyond ad hoc pattern searching and toward a more systematic, coverage-oriented review process across large codebases, multiple platforms, and diverse frameworks.</p>
+    <p>The project was started by <strong>Debasis Mohanty</strong> after many years of using a mix of manual review methods and custom scripting during real-world source code review engagements. The goal was not simply to build another pattern-matching scanner, but to create a flexible code review tool that could guide both reviewers and developers through a structured and holistic analysis workflow.</p>
+
+    <h3>Why It Was Built</h3>
+    <p>Debasis has been performing code reviews for more than two decades across a wide range of platforms, frameworks, and architectures. That experience made one point clear: source code review is tedious, mentally demanding, and often difficult to scale when an application becomes large, distributed, or highly customized.</p>
+    <p>Over time, experienced reviewers learn that the only reliable way to maintain depth and coverage is to structure the review and follow a systematic approach. DakshSCRA was created from that idea. The tool is intended to support disciplined review methodology by surfacing areas of interest, organizing evidence, and performing advanced analysis that helps reviewers focus on what matters most.</p>
+    <p>Another motivation was the gap in the tooling market. Commercial products that perform strong taint analysis with real control-flow and data-flow tracing are often expensive niche offerings. Many open-source alternatives either stop at pattern checks or require heavy customization while still leaving major coverage gaps. DakshSCRA was written to set a much higher standard for open-source code review tooling, while keeping the architecture flexible enough to support deeper and broader review use cases.</p>
+
+    <h3>History</h3>
+    <ul>
+      <li><strong>Black Hat USA 2022:</strong> DakshSCRA was first introduced privately during the secure code review training <strong>Source Code Review (Raise Your Bar Beyond Grep)</strong>. It was shown to trainees as part of the review methodology and supporting workflow, after having been kept private for years.</li>
+      <li><strong>Black Hat USA 2023 Arsenal:</strong> DakshSCRA made its official public debut as an open-source tool demonstration. This was the point at which the project moved from a private capability into a public release.</li>
+      <li><strong>Public Release:</strong> After the Black Hat USA 2023 Arsenal debut, the project was made publicly available on GitHub so the wider community could use it, study it, and contribute to its continued evolution.</li>
+    </ul>
+
+    <h3>Project Direction</h3>
+    <p>The long-term direction of DakshSCRA is to remain a structured and systematic code review companion rather than a shallow alert generator. It aims to guide both developers and reviewers with areas of interest, advanced analysis, extensible rule logic, wide platform and framework coverage, and reporting that helps explain why something matters.</p>
+    <p>A central design goal has always been flexibility. The architecture is meant to be extensible so the tool can be adapted to different review styles, technologies, and depth requirements without forcing users into a narrow scanner-only model.</p>
+    <p>The broader objective is straightforward: provide a serious open-source code review tool without the ridiculous licensing costs typically associated with advanced commercial offerings, while continuing to push distinctive capabilities that raise the bar for what open-source review tooling can do.</p>
+
+    <h3>Author Details</h3>
+    <table>
+      <tr><th></th><th></th></tr>
+      <tr><td>Author</td><td>Debasis Mohanty</td></tr>
+      <tr><td>Website</td><td><a href="https://www.coffeeandsecurity.com" target="_blank" rel="noreferrer">coffeeandsecurity.com</a></td></tr>
+      <tr><td>Email</td><td><a href="mailto:d3basis.m0hanty@gmail.com">d3basis.m0hanty@gmail.com</a></td></tr>
+      <tr><td>Twitter / X</td><td><a href="https://x.com/coffeensecurity" target="_blank" rel="noreferrer">@coffeensecurity</a></td></tr>
+      <tr><td>Source</td><td><a href="https://github.com/coffeeandsecurity/DakshSCRA" target="_blank" rel="noreferrer">github.com/coffeeandsecurity/DakshSCRA</a></td></tr>
+      <tr><td>License</td><td>GNU General Public License v3.0 (GPL-3.0)</td></tr>
+    </table>
+
+    <div class="tip"><div class="callout-label">Feedback</div>If DakshSCRA has helped your team save significant time, effort, or cost, reduced dependence on expensive commercial tools, improved review coverage, or made code review more structured and effective, feel free to reach out and share your experience. I am always open to thoughtful feedback and interesting conversations.</div>
+    <p>Found a bug or want to contribute? Open an issue or pull request on GitHub.</p>
   </section>
 
 </main>

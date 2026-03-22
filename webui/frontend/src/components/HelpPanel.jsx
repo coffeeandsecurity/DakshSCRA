@@ -32,7 +32,6 @@ const TOC = [
   { id: 'findings-reference', label: 'Findings Reference' },
   { id: 'pdf-reports', label: 'PDF Reports' },
   { id: 'tips', label: 'Tips & Patterns' },
-  { id: 'about', label: 'About' },
 ]
 
 /* ─── Reusable primitives ───────────────────────────────────── */
@@ -1147,52 +1146,6 @@ python dakshscra.py -l RF`}</CodeBlock>
   )
 }
 
-function AboutSection() {
-  return (
-    <section className="help-section">
-      <SectionHeading id="about">About</SectionHeading>
-      <P>
-        DakshSCRA was created by <strong>Debasis Mohanty</strong>, a security researcher and code review
-        specialist. The tool was first introduced at Black Hat USA 2022 and expanded at Black Hat USA 2023.
-      </P>
-      <div className="help-about-card">
-        <div className="help-about-row">
-          <span className="help-about-label">Website</span>
-          <a className="help-about-link" href="https://www.coffeeandsecurity.com" target="_blank" rel="noreferrer">
-            coffeeandsecurity.com
-          </a>
-        </div>
-        <div className="help-about-row">
-          <span className="help-about-label">Email</span>
-          <a className="help-about-link" href="mailto:d3basis.m0hanty@gmail.com">
-            d3basis.m0hanty@gmail.com
-          </a>
-        </div>
-        <div className="help-about-row">
-          <span className="help-about-label">Twitter / X</span>
-          <a className="help-about-link" href="https://x.com/coffeensecurity" target="_blank" rel="noreferrer">
-            @coffeensecurity
-          </a>
-        </div>
-        <div className="help-about-row">
-          <span className="help-about-label">Source</span>
-          <a className="help-about-link" href="https://github.com/coffeeandsecurity/DakshSCRA" target="_blank" rel="noreferrer">
-            github.com/coffeeandsecurity/DakshSCRA
-          </a>
-        </div>
-        <div className="help-about-row">
-          <span className="help-about-label">License</span>
-          <span style={{ fontSize: 13.5, color: 'var(--text-2)' }}>GNU General Public License v3.0 (GPL-3.0)</span>
-        </div>
-      </div>
-      <Note type="info">
-        Found a bug or want to contribute? Open an issue or pull request on GitHub.
-        Feature ideas and rule contributions are welcome.
-      </Note>
-    </section>
-  )
-}
-
 /* ─── Main HelpPanel component ──────────────────────────────── */
 export default function HelpPanel() {
   const [activeId, setActiveId] = useState('what-is')
@@ -1269,7 +1222,6 @@ export default function HelpPanel() {
           <FindingsReferenceSection />
           <PdfReportsSection />
           <TipsSection />
-          <AboutSection />
         </div>
       </div>
     </div>

@@ -3972,6 +3972,72 @@ tr:hover .dash-del-btn {
   text-decoration: underline;
 }
 
+.about-page {
+  margin: -24px;
+  padding: 32px 40px 64px;
+}
+
+.about-section-card {
+  margin-bottom: 32px;
+}
+
+.about-content-inner {
+  max-width: 860px;
+  padding: 0;
+}
+
+.about-inline-value {
+  font-size: 13.5px;
+  color: var(--text-2);
+  line-height: 1.6;
+}
+
+.about-inline-text {
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+
+.about-timeline {
+  display: grid;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.about-timeline-item {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 16px;
+}
+
+.about-timeline-date {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin-bottom: 6px;
+}
+
+.about-timeline-body {
+  font-size: 13.5px;
+  color: var(--text-2);
+  line-height: 1.65;
+}
+
+.about-highlight-note {
+  margin-top: 16px;
+  border-left-width: 4px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  display: block;
+}
+
+.about-highlight-copy {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--text-2);
+}
+
 /* TOC sidebar */
 .help-toc {
   background: var(--surface);

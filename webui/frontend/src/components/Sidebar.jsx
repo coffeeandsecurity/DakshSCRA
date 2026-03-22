@@ -45,6 +45,15 @@ const NAV_ITEMS = [
       </svg>
     ),
   },
+  {
+    id: 'about',
+    label: 'About',
+    icon: (
+      <svg className="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-11a1 1 0 100-2 1 1 0 000 2zM8.75 9a.75.75 0 000 1.5h.5v3h-.5a.75.75 0 000 1.5h2.5a.75.75 0 000-1.5h-.5V9.75A.75.75 0 0010 9H8.75z" clipRule="evenodd" />
+      </svg>
+    ),
+  },
 ]
 
 export default function Sidebar({ active, onChange, health, runningCount = 0, version }) {

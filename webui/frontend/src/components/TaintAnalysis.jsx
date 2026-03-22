@@ -377,6 +377,40 @@ function PlatformCoverageNotice({ taintEngineTargets, heuristicOnlyTargets }) {
   )
 }
 
+function LegacyNotice() {
+  return (
+    <div style={{
+      background: 'rgba(245,158,11,0.08)',
+      border: '1px solid rgba(245,158,11,0.28)',
+      borderRadius: 8,
+      padding: '12px 16px',
+      marginBottom: 16,
+      display: 'flex',
+      gap: 12,
+      alignItems: 'flex-start',
+    }}>
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+        style={{ color: '#f59e0b', flexShrink: 0, marginTop: 1 }}
+      >
+        <path fillRule="evenodd" d="M18 10A8 8 0 112 10a8 8 0 0116 0zm-7-4a1 1 0 10-2 0 1 1 0 002 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h.01a1 1 0 100-2H10v-2a1 1 0 00-1-1z" clipRule="evenodd" />
+      </svg>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: '#f59e0b', marginBottom: 5 }}>
+          Legacy view scheduled for retirement
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--text-2)', lineHeight: 1.6 }}>
+          The <strong style={{ color: 'var(--text-1)' }}>Taint Flows</strong> tab is now a legacy view and will be retired soon.
+          Refer to <strong style={{ color: 'var(--text-1)' }}>Advanced Analysis</strong>, which is replacing this tab and provides the current flow analysis experience.
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /* ─── Group selector tab ─────────────────────────────────────── */
 function GroupTab({ group, count, active, onClick }) {
   return (
@@ -465,6 +499,7 @@ export default function TaintAnalysis({ analysis }) {
     const engineRanButEmpty = taintEngineTargets.length > 0 && !allFlows.length
     return (
       <div style={{ padding: '24px 0' }}>
+        <LegacyNotice />
         {/* Coverage notice sits above the empty message when platforms are present */}
         {!noAnalysisAtAll && (
           <PlatformCoverageNotice
@@ -506,6 +541,8 @@ export default function TaintAnalysis({ analysis }) {
 
   return (
     <div className="ta-root">
+      <LegacyNotice />
+
       {/* ── Coverage notice for unsupported platforms in mixed scans ── */}
       <PlatformCoverageNotice
         taintEngineTargets={taintEngineTargets}

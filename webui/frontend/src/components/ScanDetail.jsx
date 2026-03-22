@@ -228,7 +228,7 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
               ?.filter((r) => r.engine === 'dataflow_controlflow')
               ?.flatMap((r) => (r.findings || []).filter((f) => f.analysis_kind === 'taint_flow'))
               ?.length ?? 0
-            return `Taint Flows${!isActive && taintCount > 0 ? ` (${taintCount})` : ''}`
+            return `Taint Flows (Legacy)${!isActive && taintCount > 0 ? ` (${taintCount})` : ''}`
           })()}
         </button>
         <button
