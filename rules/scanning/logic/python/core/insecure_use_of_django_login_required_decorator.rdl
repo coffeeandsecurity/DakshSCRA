@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)@login_required
+WHEN EXPR MISSING:@permission_required|has_perm|user\.is_authenticated|user\.is_staff
+REPORT AS area_of_interest
+REASON Detects potentially insecure usage of Django's @login_required decorator.
+TRACE Externalized rule logic for Insecure Use of Django @login_required Decorator.

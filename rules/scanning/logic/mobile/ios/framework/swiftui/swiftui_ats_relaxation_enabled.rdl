@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT NSAllowsArbitraryLoads|NSExceptionAllowsInsecureHTTPLoads
+REPORT AS area_of_interest
+REASON Detects ATS relaxation indicators relevant to SwiftUI apps.
+TRACE Externalized mobile rule logic for SwiftUI ATS Relaxation Enabled.

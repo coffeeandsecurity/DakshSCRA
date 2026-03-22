@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT WebRequest\.Create\s*\(|new\s+WebClient\s*\(\s*\)|new\s+HttpWebRequest\s*\(
+WHEN EXPR PRESENT:Request\.|QueryString|Form|userInput|\+ && MISSING:allowlist|whitelist|Uri\.IsWellFormedUriString
+REPORT AS area_of_interest
+REASON Detects legacy outbound HTTP requests potentially driven by user-supplied URLs.
+TRACE Externalized rule logic for SSRF: WebRequest/WebClient with User-Controlled URL.

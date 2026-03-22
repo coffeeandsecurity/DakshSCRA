@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?:New-Object\s+(?:System\.)?Net\.WebClient|Net\.WebClient\b)[^|;\n]*\.\s*DownloadString
+WHEN EXPR MISSING:checksum|hash|signature|verify
+REPORT AS area_of_interest
+REASON Detects WebClient.DownloadString without content verification, often used to fetch and execute remote scripts.
+TRACE Externalized rule logic for WebClient DownloadString Execution.

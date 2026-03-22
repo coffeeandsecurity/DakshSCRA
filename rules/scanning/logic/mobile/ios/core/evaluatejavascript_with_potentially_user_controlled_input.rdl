@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \.evaluateJavaScript\s*\(
+WHEN EXPR MISSING:sanitize|escape|encode|htmlEncode|jsEncode|allowList|trustedScript|#\ safe
+REPORT AS area_of_interest
+REASON Detects evaluateJavaScript calls that may execute user-controlled or unsanitized script strings.
+TRACE Externalized mobile rule logic for evaluateJavaScript with Potentially User-Controlled Input.

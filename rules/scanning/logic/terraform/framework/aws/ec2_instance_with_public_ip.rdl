@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT associate_public_ip_address\s*=\s*true
+WHEN EXPR PRESENT:associate_public_ip_address\s*=\s*true && MISSING:# intentional|# bastion|# jump|# nat
+REPORT AS area_of_interest
+REASON Detects EC2 instances configured to receive a public IP address.
+TRACE Externalized rule logic for EC2 Instance with Public IP.

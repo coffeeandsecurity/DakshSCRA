@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT authorized_networks\s*\{[^}]*value\s*=\s*"0\.0\.0\.0/0"
+WHEN EXPR PRESENT:ipv4_enabled\s*=\s*true|authorized_networks && MISSING:require_ssl\s*=\s*true|ssl_mode\s*=\s*"ENCRYPTED_ONLY"|private_network
+REPORT AS area_of_interest
+REASON Detects Cloud SQL instances authorized to accept connections from all IP addresses.
+TRACE Externalized rule logic for Cloud SQL Instance Publicly Exposed.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT Html\.Encode\s*\(|HttpUtility\.HtmlEncode\s*\(|AntiXssEncoder\.HtmlEncode\s*\(|HtmlEncoder\.Default\.Encode\s*\(
+WHEN EXPR PRESENT:Html\.Encode\s*\(|HttpUtility\.HtmlEncode\s*\(|AntiXssEncoder\.HtmlEncode\s*\(|HtmlEncoder\.Default\.Encode\s*\( && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects .NET HTML encoding helpers that act as XSS mitigations in Razor and related rendering paths.
+TRACE Externalized rule logic for XSS Mitigation: HTML Encoding using Razor.

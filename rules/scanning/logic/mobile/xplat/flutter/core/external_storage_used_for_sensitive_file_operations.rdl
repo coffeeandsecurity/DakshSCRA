@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bgetExternalStorageDirectory\s*\(|\bgetExternalFilesDir\s*\(
+WHEN EXPR PRESENT:password|token|secret|key|credential|auth|private
+REPORT AS area_of_interest
+REASON Detects sensitive file operations targeting external storage on Android.
+TRACE Externalized mobile rule logic for External Storage Used for Sensitive File Operations.

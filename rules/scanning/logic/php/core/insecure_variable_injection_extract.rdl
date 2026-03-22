@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT extract\s*\(\s*(\$_(GET|POST|REQUEST)|\$\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}?)\s*,\s*(?:\s*EXTR_(?:OVERWRITE|SKIP|PREFIX_SAME|PREFIX_ALL|IF_EXISTS|IF_DOESNT_EXIST|PREFIX_INVALID))?
+WHEN EXPR MISSING:EXTR_SKIP|EXTR_PREFIX_ALL|allowlist|filter_var|validate && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects usage of extract() with user-supplied arrays, which can introduce variable overwrite vulnerabilities.
+TRACE Externalized rule logic for Insecure Variable Injection: extract().

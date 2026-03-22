@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT xml\.etree\.ElementTree\.parse\s*\(|ElementTree\.parse\s*\(|xml\.dom\.minidom\.parse\s*\(|xml\.sax\.parse\s*\(
+WHEN EXPR MISSING:defusedxml|no_network|resolve_entities\s*=\s*False
+REPORT AS area_of_interest
+REASON Detects standard library XML parsers known to be vulnerable to XXE when parsing untrusted input.
+TRACE Externalized rule logic for XXE: stdlib xml.etree.ElementTree Vulnerable Parser.

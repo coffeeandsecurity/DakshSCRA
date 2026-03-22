@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT YAML\.load\(|Marshal\.load\(
+WHEN EXPR MISSING:YAML\.safe_load|Marshal\.restore.*trusted|allowlist
+REPORT AS area_of_interest
+REASON Detects unsafe deserialization primitives.
+TRACE Externalized rule logic for Rails Unsafe Deserialization.

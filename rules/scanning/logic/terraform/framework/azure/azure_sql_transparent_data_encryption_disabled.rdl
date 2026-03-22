@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT resource\s+"azurerm_mssql_database"\b
+WHEN EXPR MISSING:transparent_data_encryption|azurerm_mssql_server_transparent_data_encryption
+REPORT AS area_of_interest
+REASON Detects Azure SQL databases without Transparent Data Encryption configured.
+TRACE Externalized rule logic for Azure SQL Transparent Data Encryption Disabled.

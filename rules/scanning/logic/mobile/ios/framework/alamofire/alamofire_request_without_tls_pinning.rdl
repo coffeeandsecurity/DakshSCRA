@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT AF\.request\s*\(|Session\.default\s*\.
+WHEN EXPR MISSING:ServerTrustManager|PinnedCertificatesTrustEvaluator|PublicKeysTrustEvaluator
+REPORT AS area_of_interest
+REASON Detects Alamofire sessions making requests without a configured ServerTrustManager for pinning.
+TRACE Externalized mobile rule logic for Alamofire Request Without TLS Pinning.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT javax\.xml\.parsers\.DocumentBuilderFactory
+WHEN EXPR MISSING:setFeature.*XMLConstants\.FEATURE_SECURE_PROCESSING|setFeature.*disallow-doctype-decl|setExpandEntityReferences\s*\(\s*false|XMLInputFactory.*IS_SUPPORTING_EXTERNAL_ENTITIES.*false
+REPORT AS area_of_interest
+REASON Detects the use of javax.xml.parsers.DocumentBuilderFactory, which may lead to XML external entity (XXE) attacks.
+TRACE Externalized rule logic for Insecure Package: javax.xml.parsers.DocumentBuilderFactory.

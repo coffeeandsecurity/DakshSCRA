@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT unsafe-inline|unsafe-eval
+WHEN EXPR MISSING:nonce-|sha256-
+REPORT AS area_of_interest
+REASON Detects weak CSP directives in Cordova web assets/config.
+TRACE Externalized mobile rule logic for Cordova Unsafe CSP Directives.

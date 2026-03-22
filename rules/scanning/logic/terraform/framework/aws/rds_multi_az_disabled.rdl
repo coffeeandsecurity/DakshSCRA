@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT resource\s+"aws_db_instance"[^}]*multi_az\s*=\s*false
+WHEN EXPR PRESENT:multi_az\s*=\s*false && MISSING:# intentional|# development|# staging|# cost
+REPORT AS area_of_interest
+REASON Detects production RDS instances with Multi-AZ failover disabled.
+TRACE Externalized rule logic for RDS Multi-AZ Disabled.

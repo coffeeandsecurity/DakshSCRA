@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\bINSERT INTO\s+[^\s]+\s+\(.*=.*\$.*
+WHEN EXPR MISSING:(SqlParameter|AddWithValue|Parameters\.Add|Parameters\.AddWithValue)
+REPORT AS area_of_interest
+REASON Detects INSERT statements with direct use of user input, which can lead to SQL injection.
+TRACE Externalized rule logic for SQL Query: Non-parameterized INSERT Statements.

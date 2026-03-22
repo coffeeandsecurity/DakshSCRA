@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT NODE_ENV\s*=\s*[\'\"]development[\'\"]|debug\s*:\s*true|logger\(\s*[\'\"]dev[\'\"]
+WHEN EXPR MISSING:release|production
+REPORT AS area_of_interest
+REASON Detects development/debug settings in potentially deployable paths.
+TRACE Externalized rule logic for Vue Debug/Verbose Mode Enabled.

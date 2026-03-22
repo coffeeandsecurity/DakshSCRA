@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT resource\s+"aws_s3_bucket"\b
+WHEN EXPR MISSING:logging\s*\{|aws_s3_bucket_logging
+REPORT AS area_of_interest
+REASON Detects S3 buckets without access logging configured.
+TRACE Externalized rule logic for S3 Access Logging Disabled.

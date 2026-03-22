@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT LogInterceptor\s*\([^)]*responseBody\s*:\s*true|LogInterceptor\s*\([^)]*requestBody\s*:\s*true
+WHEN EXPR MISSING:kDebugMode|kReleaseMode\s*==\s*false|assert\b
+REPORT AS area_of_interest
+REASON Detects Dio LogInterceptor configured to log request/response bodies without debug mode gating.
+TRACE Externalized mobile rule logic for LogInterceptor with Response Body in Non-Debug Build.

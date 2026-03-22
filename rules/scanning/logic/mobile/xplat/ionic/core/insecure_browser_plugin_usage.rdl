@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(?:InAppBrowser|cordova\.InAppBrowser|Browser\.open)\s*\(
+WHEN EXPR MISSING:validate|allowlist|trusted|Capacitor\.Platform|test|example
+REPORT AS area_of_interest
+REASON Detects embedded browser opening flows that need URL allowlist validation.
+TRACE Externalized mobile rule logic for Insecure Browser Plugin Usage.

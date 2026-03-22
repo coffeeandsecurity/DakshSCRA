@@ -65,6 +65,11 @@ suppressedFindingsCnt = 0
 
 # Runtime suppression entries loaded from baseline file
 suppressions = []
+ruleEngine = os.environ.get("DAKSH_RULE_ENGINE", "rdl").strip().lower() or "rdl"
+if ruleEngine in {"legacy", "hybrid"}:
+    ruleEngine = "rdl"
+elif ruleEngine != "rdl":
+    ruleEngine = "rdl"
 
 
 ## ------------- <Temp Files> ------------- ##

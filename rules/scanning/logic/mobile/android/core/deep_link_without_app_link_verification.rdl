@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT android:scheme\s*=\s*"(?!https?)[^"]+"|<data\s[^>]*android:host\s*=
+WHEN EXPR MISSING:android:autoVerify\s*=\s*"true" && MISSING:android:exported\s*=\s*"false"
+REPORT AS area_of_interest
+REASON Detects custom URI scheme deep links without Android App Links autoVerify, which allows any app to intercept them.
+TRACE Externalized mobile rule logic for Deep Link Without App Link Verification.

@@ -1,10 +1,9 @@
 <root>
     <category name="AndroidManifest.xml - Insecure Misconfiguration">
-        <!-- Applicable to AndroidManifest.xml files -->
         <rule>
             <name>Insecure Permissions</name>
-            <regex><![CDATA[android\.permission\.(WRITE_EXTERNAL_STORAGE|READ_EXTERNAL_STORAGE|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION)]]></regex>
-            <rdl><![CDATA[[FLAG:android\.permission\.(WRITE_EXTERNAL_STORAGE|READ_EXTERNAL_STORAGE|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION)][IF(MISSING:maxSdkVersion|usesPermissionFlags="neverForLocation")]]]></rdl>
+            <regex>android\.permission\.(WRITE_EXTERNAL_STORAGE|READ_EXTERNAL_STORAGE|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION)</regex>
+            <rdl_ref>logic/mobile/android/core/insecure_permissions.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -23,8 +22,8 @@
         </rule>
         <rule>
             <name>Content Providers with No Permissions</name>
-            <regex><![CDATA[<provider\b|android:authorities\s*=]]></regex>
-            <rdl><![CDATA[[FLAG:<provider\b|android:authorities\s*=][IF(PRESENT:<provider\b && MISSING:android:exported\s*=\s*"false" && MISSING:android:permission\s*= && MISSING:android:readPermission\s*= && MISSING:android:writePermission\s*= && MISSING:androidx-startup)]]]></rdl>
+            <regex>&lt;provider\b|android:authorities\s*=</regex>
+            <rdl_ref>logic/mobile/android/core/content_providers_with_no_permissions.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -43,8 +42,8 @@
         </rule>
         <rule>
             <name>Exported Components</name>
-            <regex><![CDATA[android:exported\s*=\s*"(true|TRUE)"]]></regex>
-            <rdl><![CDATA[[FLAG:android:exported\s*=\s*"(true|TRUE)"][IF(PRESENT:<activity|<service|<receiver|<provider && MISSING:android:permission\s*= && MISSING:android:readPermission\s*= && MISSING:android:writePermission\s*=)]]]></rdl>
+            <regex>android:exported\s*=\s*"(true|TRUE)"</regex>
+            <rdl_ref>logic/mobile/android/core/exported_components.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -63,8 +62,8 @@
         </rule>
         <rule>
             <name>Allow Backup</name>
-            <regex><![CDATA[android:allowBackup\s*=\s*"(true|TRUE)"]]></regex>
-            <rdl><![CDATA[[FLAG:android:allowBackup\s*=\s*"(true|TRUE)"][IF(PRESENT:android:allowBackup\s*=\s*"true" && MISSING:android:fullBackupContent|android:dataExtractionRules|backupRules)]]]></rdl>
+            <regex>android:allowBackup\s*=\s*"(true|TRUE)"</regex>
+            <rdl_ref>logic/mobile/android/core/allow_backup.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -83,8 +82,8 @@
         </rule>
         <rule>
             <name>Unprotected Components: Empty Permission Attribute</name>
-            <regex><![CDATA[android:permission\s*=\s*(?:""|'')]]></regex>
-            <rdl><![CDATA[[FLAG:android:permission\s*=\s*(?:""|'')][IF(MISSING:android:exported\s*=\s*"false"|android:readPermission|android:writePermission|android:protectionLevel)]]]></rdl>
+            <regex>android:permission\s*=\s*(?:""|'')</regex>
+            <rdl_ref>logic/mobile/android/core/unprotected_components_empty_permission_attribute.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -103,8 +102,8 @@
         </rule>
         <rule>
             <name>Debuggable Application</name>
-            <regex><![CDATA[android:debuggable\s*=\s*"(true|TRUE)"]]></regex>
-            <rdl><![CDATA[[FLAG:android:debuggable\s*=\s*"(true|TRUE)"][IF(MISSING:release|production)]]]></rdl>
+            <regex>android:debuggable\s*=\s*"(true|TRUE)"</regex>
+            <rdl_ref>logic/mobile/android/core/debuggable_application.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -124,7 +123,7 @@
         <rule>
             <name>Unsafe Intent Filters</name>
             <regex>android.intent.action.VIEW</regex>
-            <rdl><![CDATA[[FLAG:android.intent.action.VIEW][IF(MISSING:autoVerify="true" && MISSING:android:scheme="https" && MISSING:android:host=)]]]></rdl>
+            <rdl_ref>logic/mobile/android/core/unsafe_intent_filters.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -144,7 +143,7 @@
         <rule>
             <name>Unsafe Broadcast Receivers</name>
             <regex>android.intent.action.BOOT_COMPLETED</regex>
-            <rdl><![CDATA[[FLAG:android.intent.action.BOOT_COMPLETED][IF(MISSING:android:permission\s*=\s*"android\.permission\.RECEIVE_BOOT_COMPLETED" && MISSING:android:exported\s*=\s*"false")]]]></rdl>
+            <rdl_ref>logic/mobile/android/core/unsafe_broadcast_receivers.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -163,8 +162,8 @@
         </rule>
         <rule>
             <name>Insecure Network Traffic</name>
-            <regex><![CDATA[android:usesCleartextTraffic\s*=\s*"(true|TRUE)"]]></regex>
-            <rdl><![CDATA[[FLAG:android:usesCleartextTraffic\s*=\s*"(true|TRUE)"][IF(PRESENT:android:usesCleartextTraffic\s*=\s*"true" && MISSING:android:networkSecurityConfig|cleartextTrafficPermitted\s*=\s*"false")]]]></rdl>
+            <regex>android:usesCleartextTraffic\s*=\s*"(true|TRUE)"</regex>
+            <rdl_ref>logic/mobile/android/core/cleartext_traffic.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -183,12 +182,11 @@
         </rule>
     </category>
     <category name="Proguard/R8 - Code Obfuscation">
-        <!-- Applicable to proguard-rules.pro or R8 configuration files -->
         <rule>
             <name>Missing Obfuscation for Sensitive Classes</name>
-            <regex><![CDATA[(?i)-keepclassmembers\s+class\s+[^\n{]*(?:password|secret|token|apikey)[^\n{]*]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)-keepclassmembers\s+class\s+[^\n{]*(?:password|secret|token|apikey)[^\n{]*][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
-            <exclude><![CDATA[(?i)^\s*(#|//|/\*|\*)]]></exclude>
+            <regex>(?i)-keepclassmembers\s+class\s+[^\n{]*(?:password|secret|token|apikey)[^\n{]*</regex>
+            <rdl_ref>logic/mobile/android/core/missing_obfuscation_for_sensitive_classes.rdl</rdl_ref>
+            <exclude>(?i)^\s*(#|//|/\*|\*)</exclude>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -207,11 +205,10 @@
         </rule>
     </category>
     <category name="Gradle Configuration - Build Security">
-        <!-- Applicable to build.gradle files -->
         <rule>
             <name>Debuggable Build Enabled</name>
-            <regex><![CDATA[debuggable\s*=\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:debuggable\s*=\s*true][IF(MISSING:release|production)]]]></rdl>
+            <regex>debuggable\s*=\s*true</regex>
+            <rdl_ref>logic/mobile/android/core/debuggable_build_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -230,8 +227,8 @@
         </rule>
         <rule>
             <name>Outdated Dependencies</name>
-            <regex><![CDATA[implementation\s+['"][\w\.-]+:\w+:\d+\.\d+\.\d+['"]]]></regex>
-            <rdl><![CDATA[[FLAG:implementation\s+['"][\w\.-]+:\w+:\d+\.\d+\.\d+['"]][IF(PRESENT:com\.android\.tools|androidx|google|okhttp|retrofit|firebase)]]]></rdl>
+            <regex>implementation\s+['"][\w\.-]+:\w+:\d+\.\d+\.\d+['"]</regex>
+            <rdl_ref>logic/mobile/android/core/outdated_dependencies.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -250,12 +247,10 @@
         </rule>
     </category>
     <category name="Layout XML - UI and Accessibility Issues">
-        <!-- Applicable to all files with the .xml extension, typically found in the res/layout directory
-        (e.g., activity_main.xml, fragment_example.xml) -->
         <rule>
             <name>Missing Content Descriptions</name>
-            <regex><![CDATA[android:contentDescription\s*=\s*["']["']]]></regex>
-            <rdl><![CDATA[[FLAG:android:contentDescription\s*=\s*["']["']][IF(PRESENT:android:contentDescription\s*=\s*""|android:contentDescription\s*=\s*"@null" && MISSING:android:importantForAccessibility\s*=\s*"no")]]]></rdl>
+            <regex>android:contentDescription\s*=\s*["']["']</regex>
+            <rdl_ref>logic/mobile/android/core/missing_content_descriptions.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -274,8 +269,8 @@
         </rule>
         <rule>
             <name>Insecure WebView Configuration</name>
-            <regex><![CDATA[WebView.*setJavaScriptEnabled\(true\)]]></regex>
-            <rdl><![CDATA[[FLAG:WebView.*setJavaScriptEnabled\(true\)][IF(PRESENT:setJavaScriptEnabled\s*\(\s*true && MISSING:setAllowFileAccess\s*\(\s*false|setSafeBrowsingEnabled\s*\(\s*true|setWebViewClient|shouldOverrideUrlLoading)]]]></rdl>
+            <regex>WebView.*setJavaScriptEnabled\(true\)</regex>
+            <rdl_ref>logic/mobile/android/core/insecure_webview_configuration.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -296,8 +291,8 @@
     <category name="Insecure Code Patterns">
         <rule>
             <name>SQLite Raw Query with Potential Injection</name>
-            <regex><![CDATA[\.rawQuery\s*\(|\.execSQL\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\.rawQuery\s*\(|\.execSQL\s*\(][IF(MISSING:selectionArgs\s*=|bindString\s*\(|bindLong\s*\(|\?,\s*new\s+String)]]]></rdl>
+            <regex>\.rawQuery\s*\(|\.execSQL\s*\(</regex>
+            <rdl_ref>logic/mobile/android/core/sqlite_raw_query_with_potential_injection.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -316,8 +311,8 @@
         </rule>
         <rule>
             <name>Deep Link Without App Link Verification</name>
-            <regex><![CDATA[android:scheme\s*=\s*"(?!https?)[^"]+"|<data\s[^>]*android:host\s*=]]></regex>
-            <rdl><![CDATA[[FLAG:android:scheme\s*=\s*"(?!https?)[^"]+"|<data\s[^>]*android:host\s*=][IF(MISSING:android:autoVerify\s*=\s*"true" && MISSING:android:exported\s*=\s*"false")]]]></rdl>
+            <regex>android:scheme\s*=\s*"(?!https?)[^"]+"|&lt;data\s[^&gt;]*android:host\s*=</regex>
+            <rdl_ref>logic/mobile/android/core/deep_link_without_app_link_verification.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -338,8 +333,8 @@
     <category name="Framework-Specific Security">
         <rule>
             <name>WebView Universal File Access Enabled</name>
-            <regex><![CDATA[setAllowUniversalAccessFromFileURLs\s*\(\s*true\s*\)|setAllowFileAccessFromFileURLs\s*\(\s*true\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:setAllowUniversalAccessFromFileURLs\s*\(\s*true\s*\)|setAllowFileAccessFromFileURLs\s*\(\s*true\s*\)][IF(PRESENT:setAllowUniversalAccessFromFileURLs\s*\(\s*true|setAllowFileAccessFromFileURLs\s*\(\s*true && MISSING:test|example)]]]></rdl>
+            <regex>setAllowUniversalAccessFromFileURLs\s*\(\s*true\s*\)|setAllowFileAccessFromFileURLs\s*\(\s*true\s*\)</regex>
+            <rdl_ref>logic/mobile/android/core/webview_universal_file_access_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -358,8 +353,8 @@
         </rule>
         <rule>
             <name>Insecure PendingIntent: Missing Immutability Flag</name>
-            <regex><![CDATA[PendingIntent\.(getBroadcast|getActivity|getService|getForegroundService)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:PendingIntent\.(getBroadcast|getActivity|getService|getForegroundService)\s*\(][IF(MISSING:FLAG_IMMUTABLE|FLAG_UPDATE_CURRENT\s*\|\s*FLAG_IMMUTABLE|PendingIntentCompat)]]]></rdl>
+            <regex>PendingIntent\.(getBroadcast|getActivity|getService|getForegroundService)\s*\(</regex>
+            <rdl_ref>logic/mobile/android/core/insecure_pendingintent_missing_immutability_flag.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -378,8 +373,8 @@
         </rule>
         <rule>
             <name>Insecure Random Number Generation</name>
-            <regex><![CDATA[\bnew\s+Random\s*\(\s*\)|\bMath\.random\s*\(\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:\bnew\s+Random\s*\(\s*\)|\bMath\.random\s*\(\s*\)][IF(PRESENT:token|key|secret|nonce|session|otp|password|salt && MISSING:SecureRandom)]]]></rdl>
+            <regex>\bnew\s+Random\s*\(\s*\)|\bMath\.random\s*\(\s*\)</regex>
+            <rdl_ref>logic/mobile/android/core/insecure_random_number_generation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -400,8 +395,8 @@
     <category name="JavaScript Bridge Security">
         <rule>
             <name>JavascriptInterface Exposed Without URL Allowlist</name>
-            <regex><![CDATA[@JavascriptInterface]]></regex>
-            <rdl><![CDATA[[FLAG:@JavascriptInterface][IF(MISSING:shouldOverrideUrlLoading|onPageStarted|allowedOrigins|getAllowedHosts|checkUrl|getUrl\(\)\.startsWith)]]]></rdl>
+            <regex>@JavascriptInterface</regex>
+            <rdl_ref>logic/mobile/android/core/javascriptinterface_exposed_without_url_allowlist.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -420,8 +415,8 @@
         </rule>
         <rule>
             <name>addJavascriptInterface with File Access Enabled</name>
-            <regex><![CDATA[addJavascriptInterface\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:addJavascriptInterface\s*\(][IF(PRESENT:addJavascriptInterface && PRESENT:setAllowFileAccessFromFileURLs\s*\(\s*true|setAllowUniversalAccessFromFileURLs\s*\(\s*true)]]]></rdl>
+            <regex>addJavascriptInterface\s*\(</regex>
+            <rdl_ref>logic/mobile/android/core/addjavascriptinterface_with_file_access_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -440,8 +435,8 @@
         </rule>
         <rule>
             <name>WebView shouldOverrideUrlLoading Without URL Validation</name>
-            <regex><![CDATA[shouldOverrideUrlLoading\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:shouldOverrideUrlLoading\s*\(][IF(MISSING:getHost\s*\(\)|getScheme\s*\(\)|startsWith.*https|allowedHosts|trustedDomains|allowList|Uri\.parse)]]]></rdl>
+            <regex>shouldOverrideUrlLoading\s*\(</regex>
+            <rdl_ref>logic/mobile/android/core/webview_shouldoverrideurlloading_without_url_validation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -462,8 +457,8 @@
     <category name="IPC Attack Surface">
         <rule>
             <name>Implicit Intent Carrying Sensitive Data</name>
-            <regex><![CDATA[new\s+Intent\s*\(\s*"[a-z][a-z._]+"\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:new\s+Intent\s*\(\s*"[a-z][a-z._]+"\s*\)][IF(PRESENT:putExtra.*(?:password|token|secret|key|credential|auth|ssn|card) && MISSING:setPackage\s*\(|setComponent\s*\(|setClassName\s*\(|createChooser)]]]></rdl>
+            <regex>new\s+Intent\s*\(\s*"[a-z][a-z._]+"\s*\)</regex>
+            <rdl_ref>logic/mobile/android/core/implicit_intent_carrying_sensitive_data.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -482,8 +477,8 @@
         </rule>
         <rule>
             <name>ContentProvider Raw Selection Parameter Injection</name>
-            <regex><![CDATA[(?i)public\s+(?:Cursor|int|String)\s+\w+\s*\(\s*Uri\b]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)public\s+(?:Cursor|int|String)\s+\w+\s*\(\s*Uri\b][IF(MISSING:selectionArgs|DatabaseUtils\.sqlEscapeString|rawQuery.*\?,|whitelist|allowedColumns|throw.*IllegalArgumentException)]]]></rdl>
+            <regex>(?i)public\s+(?:Cursor|int|String)\s+\w+\s*\(\s*Uri\b</regex>
+            <rdl_ref>logic/mobile/android/core/contentprovider_raw_selection_parameter_injection.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -502,8 +497,8 @@
         </rule>
         <rule>
             <name>Sticky Broadcast Carrying Sensitive Data</name>
-            <regex><![CDATA[sendStickyBroadcast\s*\(|sendStickyOrderedBroadcast\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:sendStickyBroadcast\s*\(|sendStickyOrderedBroadcast\s*\(][IF(PRESENT:putExtra.*(?:token|password|secret|key|data|user|account|credential))]]]></rdl>
+            <regex>sendStickyBroadcast\s*\(|sendStickyOrderedBroadcast\s*\(</regex>
+            <rdl_ref>logic/mobile/android/core/sticky_broadcast_carrying_sensitive_data.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -522,8 +517,8 @@
         </rule>
         <rule>
             <name>AIDL Stub Without Caller Identity Validation</name>
-            <regex><![CDATA[extends\s+\w+\.Stub\b]]></regex>
-            <rdl><![CDATA[[FLAG:extends\s+\w+\.Stub\b][IF(MISSING:Binder\.getCallingUid\s*\(\)|getCallingPid\s*\(\)|checkCallingPermission|enforceCallingPermission|enforceCallingOrSelfPermission)]]]></rdl>
+            <regex>extends\s+\w+\.Stub\b</regex>
+            <rdl_ref>logic/mobile/android/core/aidl_stub_without_caller_identity_validation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -544,8 +539,8 @@
     <category name="Cryptographic Failures">
         <rule>
             <name>Hardcoded Static Initialization Vector</name>
-            <regex><![CDATA[new\s+IvParameterSpec\s*\(|new\s+byte\s*\[\s*(?:8|12|16|24|32)\s*\]\s*\{]]></regex>
-            <rdl><![CDATA[[FLAG:new\s+IvParameterSpec\s*\(][IF(PRESENT:static.*byte\s*\[\]|final.*byte\s*\[\].*\{|new\s+byte\s*\[.*\]\s*\{.*0x && MISSING:SecureRandom|generateIV|randomIV|randomBytes)]]]></rdl>
+            <regex>new\s+IvParameterSpec\s*\(|new\s+byte\s*\[\s*(?:8|12|16|24|32)\s*\]\s*\{</regex>
+            <rdl_ref>logic/mobile/android/core/hardcoded_static_initialization_vector.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -564,8 +559,8 @@
         </rule>
         <rule>
             <name>SecureRandom Seeded with Predictable Timestamp</name>
-            <regex><![CDATA[\.setSeed\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\.setSeed\s*\(][IF(PRESENT:setSeed.*currentTimeMillis|setSeed.*nanoTime|setSeed.*System\.current|setSeed.*hashCode)]]]></rdl>
+            <regex>\.setSeed\s*\(</regex>
+            <rdl_ref>logic/mobile/android/core/securerandom_seeded_with_predictable_timestamp.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -584,8 +579,8 @@
         </rule>
         <rule>
             <name>Android KeyStore Key Without User Authentication Binding</name>
-            <regex><![CDATA[KeyGenParameterSpec\.Builder\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:KeyGenParameterSpec\.Builder\s*\(][IF(MISSING:setUserAuthenticationRequired\s*\(\s*true|setUserAuthenticationParameters|setUnlockedDeviceRequired\s*\(\s*true)]]]></rdl>
+            <regex>KeyGenParameterSpec\.Builder\s*\(</regex>
+            <rdl_ref>logic/mobile/android/core/android_keystore_key_without_user_authentication_binding.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -606,8 +601,8 @@
     <category name="Runtime Protection Bypass">
         <rule>
             <name>Root Detection via Build Tags Only</name>
-            <regex><![CDATA[Build\.TAGS\.contains\s*\(\s*"test-keys"\s*\)|"test-keys"\.equals\s*\(\s*Build\.TAGS\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:Build\.TAGS\.contains\s*\(\s*"test-keys"\s*\)|"test-keys"\.equals\s*\(\s*Build\.TAGS\s*\)][IF(MISSING:new\s+File.*bin/su|new\s+File.*xbin/su|Runtime\.getRuntime\(\)\.exec|RootBeer|RootTools|whichSu)]]]></rdl>
+            <regex>Build\.TAGS\.contains\s*\(\s*"test-keys"\s*\)|"test-keys"\.equals\s*\(\s*Build\.TAGS\s*\)</regex>
+            <rdl_ref>logic/mobile/android/core/root_detection_via_build_tags_only.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -626,8 +621,8 @@
         </rule>
         <rule>
             <name>Emulator Detection via Build Properties Only</name>
-            <regex><![CDATA[Build\.FINGERPRINT\.contains\s*\(|Build\.MODEL\.contains\s*\(\s*"(?:google_sdk|Emulator|Android SDK)"]]></regex>
-            <rdl><![CDATA[[FLAG:Build\.FINGERPRINT\.contains\s*\(|Build\.MODEL\.contains\s*\(][IF(PRESENT:isEmulator|emulatorCheck|checkEmulator && MISSING:PackageManager|SystemProperties|IMEI|TelephonyManager|Build\.HARDWARE|getSensorList)]]]></rdl>
+            <regex>Build\.FINGERPRINT\.contains\s*\(|Build\.MODEL\.contains\s*\(\s*"(?:google_sdk|Emulator|Android SDK)"</regex>
+            <rdl_ref>logic/mobile/android/core/emulator_detection_via_build_properties_only.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -648,8 +643,8 @@
     <category name="Data Residue and Lifecycle">
         <rule>
             <name>Sensitive Data Written to Android Logs</name>
-            <regex><![CDATA[Log\.[dviweVIWDE]\s*\(.*(?i)(?:password|token|secret|apiKey|credential|authToken|accessToken|bearer|ssn|card)]]></regex>
-            <rdl><![CDATA[[FLAG:Log\.[dviweVIWDE]\s*\(.*(?:password|token|secret|apiKey|credential|authToken|accessToken)][IF(MISSING:BuildConfig\.DEBUG|if\s*\(\s*BuildConfig\.DEBUG|if\s*\(\s*DEBUG)]]]></rdl>
+            <regex>Log\.[dviweVIWDE]\s*\(.*(?i)(?:password|token|secret|apiKey|credential|authToken|accessToken|bearer|ssn|card)</regex>
+            <rdl_ref>logic/mobile/android/core/sensitive_data_written_to_android_logs.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -668,8 +663,8 @@
         </rule>
         <rule>
             <name>Sensitive Data Persisted in onSaveInstanceState</name>
-            <regex><![CDATA[outState\.put(?:String|Serializable|Parcelable|Bundle)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:outState\.put\w+\s*\(][IF(PRESENT:outState\.put.*(?:password|token|secret|key|credential|auth|card|pin) && MISSING:encrypted|cipher|// intentional)]]]></rdl>
+            <regex>outState\.put(?:String|Serializable|Parcelable|Bundle)\s*\(</regex>
+            <rdl_ref>logic/mobile/android/core/sensitive_data_persisted_in_onsaveinstancestate.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -688,8 +683,8 @@
         </rule>
         <rule>
             <name>Autofill Not Disabled on Sensitive Input Fields</name>
-            <regex><![CDATA[android:inputType\s*=\s*["'][^"']*(?:textPassword|textVisiblePassword|numberPassword)]]></regex>
-            <rdl><![CDATA[[FLAG:android:inputType.*(?:textPassword|textVisiblePassword|numberPassword)][IF(MISSING:android:importantForAutofill\s*=\s*"(?:no|noExcludeDescendants)")]]]></rdl>
+            <regex>android:inputType\s*=\s*["'][^"']*(?:textPassword|textVisiblePassword|numberPassword)</regex>
+            <rdl_ref>logic/mobile/android/core/autofill_not_disabled_on_sensitive_input_fields.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>

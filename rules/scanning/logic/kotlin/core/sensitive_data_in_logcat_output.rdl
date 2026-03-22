@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT Log\.[deiwtv]\s*\(
+WHEN EXPR PRESENT:password|token|secret|credential|auth|session|key|pin|ssn|dob|credit|cvv|privateKey|accessToken|refreshToken && MISSING:BuildConfig\.DEBUG\s*&&\s*Log\.|if\s*\(\s*BuildConfig\.DEBUG
+REPORT AS area_of_interest
+REASON Detects Logcat calls that may write security-sensitive variable data to the Android log.
+TRACE Externalized rule logic for Sensitive Data in Logcat Output.

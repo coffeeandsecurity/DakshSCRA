@@ -2,8 +2,8 @@
     <category name="Framework-Specific Issues - Yii Framework">
         <rule>
             <name>ActiveRecord Query with Raw Condition String</name>
-            <regex><![CDATA[->where\s*\(\s*["'][^"']*["']\s*\.\s*\$|->where\s*\(\s*["'][^"']*\$\{?|->andWhere\s*\(\s*["'][^"']*["']\s*\.\s*\$|->orWhere\s*\(\s*["'][^"']*["']\s*\.\s*\$]]></regex>
-            <rdl><![CDATA[[FLAG:->where\s*\(\s*["'][^"']*["']\s*\.\s*\$|->andWhere\s*\(\s*["'][^"']*["']\s*\.\s*\$|->orWhere\s*\(\s*["'][^"']*["']\s*\.\s*\$|->where\s*\(\s*["'][^"']*\$\{?|->andWhere\s*\(\s*["'][^"']*\$\{?][IF(MISSING:where\s*\(.*\?|where\s*\(.*:|\$this->db->query.*\?|prepared|PDO:: && MISSING:test|example)]]]></rdl>
+            <regex>-&gt;where\s*\(\s*["'][^"']*["']\s*\.\s*\$|-&gt;where\s*\(\s*["'][^"']*\$\{?|-&gt;andWhere\s*\(\s*["'][^"']*["']\s*\.\s*\$|-&gt;orWhere\s*\(\s*["'][^"']*["']\s*\.\s*\$</regex>
+            <rdl_ref>logic/php/framework/yii/activerecord_query_with_raw_condition_string.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -14,13 +14,13 @@
             </scan_config>
             <rule_desc>Detects Yii ActiveQuery where() conditions built with string concatenation of variables.</rule_desc>
             <vuln_desc>Concatenating variables into where() conditions bypasses Yii's query parameterization, introducing SQL injection vulnerabilities equivalent to raw PDO string concatenation.</vuln_desc>
-            <developer>Use Yii's array condition format: ->where(['column' => $value]) or parameterized strings: ->where('column = :val', [':val' => $value]).</developer>
+            <developer>Use Yii's array condition format: -&gt;where(['column' =&gt; $value]) or parameterized strings: -&gt;where('column = :val', [':val' =&gt; $value]).</developer>
             <reviewer>Confirm all where() conditions use array syntax or named parameter bindings without string concatenation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Unsafe Mass Assignment via load() or setAttributes()</name>
-            <regex><![CDATA[->load\s*\(\s*\$_(?:POST|GET|REQUEST)|->setAttributes\s*\(\s*\$_(?:POST|GET|REQUEST)]]></regex>
-            <rdl><![CDATA[[FLAG:->load\s*\(\s*\$_(?:POST|GET|REQUEST)|->setAttributes\s*\(\s*\$_(?:POST|GET|REQUEST))[IF(MISSING:safeAttributes|rules|scenarios|safe\s*=>)]]]></rdl>
+            <regex>-&gt;load\s*\(\s*\$_(?:POST|GET|REQUEST)|-&gt;setAttributes\s*\(\s*\$_(?:POST|GET|REQUEST)</regex>
+            <rdl_ref>logic/php/framework/yii/unsafe_mass_assignment_via_load_or_setattributes.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>createCommand with Raw SQL String</name>
-            <regex><![CDATA[->createCommand\s*\(\s*["'][^"']*["']\s*\.\s*\$|->createCommand\s*\(\s*["'][^"']*\$\{?]]></regex>
-            <rdl><![CDATA[[FLAG:->createCommand\s*\(\s*["'][^"']*["']\s*\.\s*\$|->createCommand\s*\(\s*["'][^"']*\$\{?][IF(MISSING:bindParam|bindValue|->params\s*\(\s*\[|prepared|:param && MISSING:test|example)]]]></rdl>
+            <regex>-&gt;createCommand\s*\(\s*["'][^"']*["']\s*\.\s*\$|-&gt;createCommand\s*\(\s*["'][^"']*\$\{?</regex>
+            <rdl_ref>logic/php/framework/yii/createcommand_with_raw_sql_string.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -48,7 +48,7 @@
             </scan_config>
             <rule_desc>Detects Yii createCommand() calls with SQL built via string concatenation.</rule_desc>
             <vuln_desc>Constructing raw SQL with string concatenation in createCommand() bypasses parameter binding and enables SQL injection.</vuln_desc>
-            <developer>Use createCommand() with parameter bindings: $db->createCommand('SELECT * FROM t WHERE id = :id', [':id' => $id])->queryAll().</developer>
+            <developer>Use createCommand() with parameter bindings: $db-&gt;createCommand('SELECT * FROM t WHERE id = :id', [':id' =&gt; $id])-&gt;queryAll().</developer>
             <reviewer>Confirm all createCommand() calls use parameterized queries. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

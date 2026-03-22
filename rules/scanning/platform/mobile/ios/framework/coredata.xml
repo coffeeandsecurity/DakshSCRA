@@ -2,8 +2,8 @@
     <category name="Framework-Specific Issues - Core Data (iOS)">
         <rule>
             <name>NSFetchRequest Predicate from User Input</name>
-            <regex><![CDATA[NSPredicate\s*\(\s*format\s*:\s*["'][^"']*%@|NSPredicate\s*\(\s*format\s*:\s*["'][^"']*\\\(|predicateWithFormat\s*:\s*[@][^,)]*\+]]></regex>
-            <rdl><![CDATA[[FLAG:NSPredicate\s*\(\s*format\s*:\s*["'][^"']*%@][IF(MISSING:argumentArray|CVarArg|predicateWithValue)]]]></rdl>
+            <regex>NSPredicate\s*\(\s*format\s*:\s*["'][^"']*%@|NSPredicate\s*\(\s*format\s*:\s*["'][^"']*\\\(|predicateWithFormat\s*:\s*[@][^,)]*\+</regex>
+            <rdl_ref>logic/mobile/ios/framework/coredata/nsfetchrequest_predicate_from_user_input.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -22,8 +22,8 @@
         </rule>
         <rule>
             <name>Core Data Store Without Data Protection</name>
-            <regex><![CDATA[NSPersistentStoreCoordinator|addPersistentStore|NSPersistentContainer\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:NSPersistentStoreCoordinator|NSPersistentContainer\s*\(][IF(MISSING:NSFileProtectionComplete|NSFileProtectionCompleteUnlessOpen|fileProtection|NSPersistentStoreFileProtectionKey)]]]></rdl>
+            <regex>NSPersistentStoreCoordinator|addPersistentStore|NSPersistentContainer\s*\(</regex>
+            <rdl_ref>logic/mobile/ios/framework/coredata/core_data_store_without_data_protection.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>

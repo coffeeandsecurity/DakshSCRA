@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT @Query\s*\(\s*"[^"]*(?::\w+|\?)[^"]*"\s*\)|SupportSQLiteDatabase.*compileStatement
+WHEN EXPR PRESENT:@Query\s*\(\s*"[^"]*(?::\w+|\?)[^"]*"\s*\)|SupportSQLiteDatabase.*compileStatement && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects Room or SQLite query patterns that use bound parameters instead of dynamic SQL interpolation.
+TRACE Externalized rule logic for Mitigation Identified: SQL Injection (Room Database).

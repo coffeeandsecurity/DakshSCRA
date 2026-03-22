@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT kSecAttrAccessible\s*:\s*kSecAttrAccessibleAlways
+REPORT AS area_of_interest
+REASON Detects keychain entries with permissive accessibility settings.
+TRACE Externalized mobile rule logic for Keychain Accessibility Too Permissive.

@@ -1,0 +1,7 @@
+VERSION 1
+WHEN CURRENT_FILE_MATCHES /\bSharedPreferences\.getInstance\s*\(/i
+WHEN EXPR PRESENT:SharedPreferences.*(?:password|token|secret|key|credential|auth)|prefs\.setString.*(?:password|token|secret|key|auth)
+OBSERVE PROJECT_HAS_GLOB **/pubspec.yaml AS flutter_pubspecs
+REPORT AS area_of_interest
+REASON Detects SharedPreferences persistence for sensitive values that should move to a secure storage plugin.
+TRACE Mobile RDL pilot evaluated the Flutter storage sink and recorded project manifests for storage-library context.

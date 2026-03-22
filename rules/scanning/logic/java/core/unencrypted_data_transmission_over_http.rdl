@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT new\s*HttpGet|new\s*HttpPost|new\s*HttpPut|new\s*HttpDelete|new\s*HttpURLConnection
+WHEN EXPR PRESENT:http:// && MISSING:https://
+REPORT AS area_of_interest
+REASON Detects the usage of HTTP client classes (HttpGet, HttpPost, HttpPut, HttpDelete, HttpURLConnection) without encryption, potentially resulting in information leaks.
+TRACE Externalized rule logic for Unencrypted Data Transmission over HTTP.

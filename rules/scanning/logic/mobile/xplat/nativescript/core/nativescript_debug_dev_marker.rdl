@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT NODE_ENV\s*=\s*[\'\"]development[\'\"]|debug\s*[:=]\s*true
+WHEN EXPR MISSING:NODE_ENV\s*=\s*[\'\"]production[\'\"]
+REPORT AS area_of_interest
+REASON Detects development mode markers in NativeScript projects.
+TRACE Externalized mobile rule logic for NativeScript Debug/Dev Marker.

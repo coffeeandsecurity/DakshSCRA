@@ -6,6 +6,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
+from core.analysis.common import load_analysis_config
+
 
 @dataclass
 class FunctionDef:
@@ -26,6 +28,10 @@ class FunctionSummary:
     param_to_return: Set[int] = field(default_factory=set)
     source_to_sink: List[Dict] = field(default_factory=list)
     source_to_return: bool = False
+    param_to_session: Dict[int, Set[str]] = field(default_factory=dict)
+    source_to_session: Set[str] = field(default_factory=set)
+    session_to_sink: Dict[str, List[Dict]] = field(default_factory=dict)
+    session_to_return: Set[str] = field(default_factory=set)
 
 
 CALL_RE = re.compile(r"([A-Za-z_$][A-Za-z0-9_$]*(?:(?:->|::|\.)[A-Za-z_$][A-Za-z0-9_$]*)*)\s*\(")
@@ -69,6 +75,20 @@ JAVA_SPRING_PARAM_ANN_RE = re.compile(r"@(RequestParam|PathVariable|RequestBody|
 DOTNET_BINDING_ATTR_RE = re.compile(r"\[(FromBody|FromQuery|FromRoute|FromHeader|FromForm)\b[^\]]*\]", re.IGNORECASE)
 NEST_BINDING_DECORATOR_RE = re.compile(r"@(Body|Param|Query|Headers|Req|Request|Session|Cookies)\b", re.IGNORECASE)
 PHP_REQUEST_PARAM_HINT_RE = re.compile(r"\b(Request|ServerRequestInterface|FormRequest)\s+\$([A-Za-z_][A-Za-z0-9_]*)", re.IGNORECASE)
+PHP_SUPERGLOBAL_KEY_RE = re.compile(r"\$_(GET|POST|REQUEST|COOKIE|FILES|SERVER|ENV)\s*\[\s*['\"]([^'\"]+)['\"]\s*\]", re.IGNORECASE)
+PHP_DYNAMIC_SUPERGLOBAL_KEY_RE = re.compile(r"\$_(GET|POST|REQUEST|COOKIE|FILES|SERVER|ENV)\s*\[\s*\$([A-Za-z_][A-Za-z0-9_]*)\s*\]", re.IGNORECASE)
+PHP_INPUT_CALL_RE = re.compile(r"\$this\s*->\s*input\s*->\s*(get|post|cookie|get_post|post_get)\s*\(\s*['\"]([^'\"]+)['\"]", re.IGNORECASE)
+PHP_REQUEST_CALL_RE = re.compile(r"(?:request\s*\(\s*\)|Request)\s*(?:::\s*|->\s*)(input|get|post|query|cookie|header|route)\s*\(\s*['\"]([^'\"]+)['\"]", re.IGNORECASE)
+PHP_REQUEST_OBJECT_CALL_RE = re.compile(r"\$request\s*->\s*(get|query|request|cookies|headers|server|files)\s*(?:->\s*get\s*\(\s*['\"]([^'\"]+)['\"]|\[\s*['\"]([^'\"]+)['\"]\s*\])", re.IGNORECASE)
+PHP_FOREACH_SUPERGLOBAL_RE = re.compile(r"foreach\s*\(\s*\$_(POST|GET|REQUEST|COOKIE|FILES|SESSION)\s*(?:\[\s*['\"]([^'\"]+)['\"]\s*\])?\s+as\s+\$([A-Za-z_][A-Za-z0-9_]*)(?:\s*=>\s*\$([A-Za-z_][A-Za-z0-9_]*))?\s*\)", re.IGNORECASE)
+PHP_SESSION_WRITE_RE = re.compile(r"\$_SESSION\s*\[\s*['\"]([^'\"]+)['\"]\s*\](?:\s*\[\s*(\$?[A-Za-z_][A-Za-z0-9_]*|['\"][^'\"]+['\"])\s*\])?\s*=\s*(.+)", re.IGNORECASE)
+PHP_SESSION_READ_RE = re.compile(r"\$_SESSION\s*\[\s*['\"]([^'\"]+)['\"]\s*\]", re.IGNORECASE)
+PHP_FORM_OPEN_RE = re.compile(r"<form\b([^>]*)>", re.IGNORECASE)
+PHP_FORM_CLOSE_RE = re.compile(r"</form>", re.IGNORECASE)
+PHP_FORM_ATTR_RE = re.compile(r"\b(action|method|enctype)\s*=\s*['\"]([^'\"]+)['\"]", re.IGNORECASE)
+PHP_FORM_FIELD_RE = re.compile(r"<(input|textarea|select)\b([^>]*)>", re.IGNORECASE)
+PHP_FIELD_NAME_RE = re.compile(r"\bname\s*=\s*['\"]([^'\"]+)['\"]", re.IGNORECASE)
+PHP_FIELD_TYPE_RE = re.compile(r"\btype\s*=\s*['\"]([^'\"]+)['\"]", re.IGNORECASE)
 JAVA_HTTP_REQUEST_HINT_RE = re.compile(r"\b(HttpServletRequest|ServletRequest)\s+([A-Za-z_][A-Za-z0-9_]*)")
 DOTNET_HTTP_REQUEST_HINT_RE = re.compile(r"\bHttpRequest\s+([A-Za-z_][A-Za-z0-9_]*)")
 GENERIC_CLASS_RE = re.compile(r"\bclass\s+([A-Z][A-Za-z0-9_]*)\b")
@@ -76,6 +96,9 @@ JAVA_INTERFACE_RE = re.compile(r"\binterface\s+([A-Z][A-Za-z0-9_]*)\b")
 JS_OBJECT_START_RE = re.compile(r"^\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*\{\s*$")
 JS_EXPORT_OBJ_RE = re.compile(r"^\s*export\s+default\s+\{\s*$")
 SERVICE_NAME_SUFFIX_RE = re.compile(r"(service|repository|repo|controller|handler|manager|provider)$", re.IGNORECASE)
+BUILTIN_SINK_CALLS = {
+    "move_uploaded_file": "File upload move operation",
+}
 
 
 PLATFORM_SPECS = {
@@ -597,21 +620,45 @@ def _parse_javascript_functions(file_path: Path, lines: List[str]) -> List[Funct
 
 def _extract_calls(line: str) -> List[Tuple[str, List[str], str]]:
     calls = []
-    for match in CALL_RE.finditer(line):
+    scrubbed = []
+    in_quote = ""
+    escaped = False
+    for ch in str(line or ""):
+        if in_quote:
+            if escaped:
+                escaped = False
+                scrubbed.append(" ")
+                continue
+            if ch == "\\":
+                escaped = True
+                scrubbed.append(" ")
+                continue
+            if ch == in_quote:
+                in_quote = ""
+            scrubbed.append(" ")
+            continue
+        if ch in {"'", '"'}:
+            in_quote = ch
+            scrubbed.append(" ")
+            continue
+        scrubbed.append(ch)
+    scrubbed_line = "".join(scrubbed)
+
+    for match in CALL_RE.finditer(scrubbed_line):
         raw_name = match.group(1)
         name = re.split(r"(?:->|::|\.)", raw_name)[-1].lstrip("$")
         if name in {"if", "for", "while", "switch", "catch", "return", "new", "def", "class"}:
             continue
 
-        open_idx = line.find("(", match.start())
+        open_idx = scrubbed_line.find("(", match.start())
         if open_idx < 0:
             continue
         idx = open_idx + 1
         depth = 1
         arg_start = idx
         args_raw = []
-        while idx < len(line):
-            ch = line[idx]
+        while idx < len(scrubbed_line):
+            ch = scrubbed_line[idx]
             if ch == "(":
                 depth += 1
             elif ch == ")":
@@ -642,7 +689,17 @@ def _is_function_definition_line(line: str, platform: str) -> bool:
         )
     if platform == "python":
         return PLATFORM_SPECS[platform]["function_def_re"].search(line) is not None or PYTHON_ASYNC_DEF_RE.search(line) is not None
-    fn_re = PLATFORM_SPECS[platform]["function_def_re"]
+    if platform in PLATFORM_SPECS:
+        fn_re = PLATFORM_SPECS[platform]["function_def_re"]
+    else:
+        cfg = load_analysis_config() or {}
+        plat_cfg = cfg.get(str(platform).lower(), {}) if isinstance(cfg, dict) else {}
+        analyzer_block = plat_cfg.get("analyzer", {}) if isinstance(plat_cfg, dict) else {}
+        fn_re_pat = str(analyzer_block.get("function_def_re", "")).strip()
+        try:
+            fn_re = re.compile(fn_re_pat, re.MULTILINE) if fn_re_pat else re.compile(r"(?!)")
+        except re.error:
+            fn_re = re.compile(r"(?!)")
     return fn_re.search(line) is not None
 
 
@@ -693,6 +750,227 @@ def _line_source(lines: List[str], idx: int) -> str:
     if 0 <= idx < len(lines):
         return lines[idx].strip()
     return ""
+
+
+def _resolve_php_form_target(current_file: Path, action: str) -> str:
+    action_text = str(action or "").strip()
+    if not action_text:
+        return current_file.name
+    if re.match(r"^[a-z]+://", action_text, re.IGNORECASE):
+        return action_text
+    path_part = action_text.split("?", 1)[0].split("#", 1)[0].strip()
+    if not path_part:
+        return current_file.name
+    return str((current_file.parent / path_part).resolve())
+
+
+def _extract_php_form_declarations(file_path: Path, lines: List[str]) -> List[Dict]:
+    declarations: List[Dict] = []
+    active: Optional[Dict] = None
+
+    for idx, raw_line in enumerate(lines, start=1):
+        line = str(raw_line or "")
+        open_match = PHP_FORM_OPEN_RE.search(line)
+        if open_match:
+            attrs = {key.lower(): value.strip() for key, value in PHP_FORM_ATTR_RE.findall(open_match.group(1) or "")}
+            action = attrs.get("action", "").strip() or file_path.name
+            active = {
+                "decl_file": str(file_path),
+                "decl_line": idx,
+                "action": action,
+                "resolved_target": _resolve_php_form_target(file_path, action),
+                "method": attrs.get("method", "get").strip().upper() or "GET",
+                "enctype": attrs.get("enctype", "").strip(),
+                "fields": [],
+            }
+
+        if active:
+            for field_match in PHP_FORM_FIELD_RE.finditer(line):
+                tag = (field_match.group(1) or "").lower()
+                attrs = field_match.group(2) or ""
+                name_match = PHP_FIELD_NAME_RE.search(attrs)
+                if not name_match:
+                    continue
+                field_type_match = PHP_FIELD_TYPE_RE.search(attrs)
+                field_type = (field_type_match.group(1).strip().lower() if field_type_match else "")
+                if tag == "textarea":
+                    field_type = field_type or "textarea"
+                elif tag == "select":
+                    field_type = field_type or "select"
+                elif not field_type:
+                    field_type = "text"
+                active["fields"].append({"name": name_match.group(1).strip(), "type": field_type, "line": idx})
+
+        if active and PHP_FORM_CLOSE_RE.search(line):
+            if active["fields"]:
+                declarations.append(active)
+            active = None
+
+    if active and active["fields"]:
+        declarations.append(active)
+    return declarations
+
+
+def _find_php_form_field_declaration(
+    current_file: Path,
+    scope: str,
+    field_name: str,
+    form_declarations_by_target: Dict[str, List[Dict]],
+) -> Optional[Dict]:
+    target_keys = {str(current_file), current_file.name}
+    try:
+        target_keys.add(str(current_file.resolve()))
+    except OSError:
+        pass
+
+    for target_key in target_keys:
+        for declaration in form_declarations_by_target.get(target_key, []):
+            method = str(declaration.get("method", "")).upper()
+            enctype = str(declaration.get("enctype", "")).lower()
+            scope_name = str(scope or "").upper()
+            if scope_name == "POST" and method != "POST":
+                continue
+            if scope_name == "GET" and method != "GET":
+                continue
+            if scope_name == "FILES" and "multipart/form-data" not in enctype:
+                continue
+            for field in declaration.get("fields", []):
+                if str(field.get("name", "")).strip() == str(field_name or "").strip():
+                    return {
+                        "decl_file": declaration.get("decl_file", ""),
+                        "decl_line": field.get("line") or declaration.get("decl_line", ""),
+                        "action": declaration.get("action", ""),
+                        "method": method,
+                        "field_type": field.get("type", ""),
+                    }
+    return None
+
+
+def _describe_source_expression(
+    rhs: str,
+    lhs: str,
+    platform: str,
+    *,
+    current_file: Optional[Path] = None,
+    form_declarations_by_target: Optional[Dict[str, List[Dict]]] = None,
+) -> Tuple[str, str, List[str]]:
+    expr = str(rhs or "").strip()
+    target = str(lhs or "").strip().lstrip("$@")
+    default_code = expr
+    default_symbol = target or "source"
+    default_vars = [value for value in [target] if value]
+
+    if platform == "php":
+        m = PHP_SUPERGLOBAL_KEY_RE.search(expr)
+        if m:
+            scope = m.group(1).upper()
+            key = m.group(2)
+            code = f"[source] PHP {scope} parameter `{key}` is assigned to `${target or key}`."
+            if current_file and form_declarations_by_target:
+                form_decl = _find_php_form_field_declaration(current_file, scope, key, form_declarations_by_target)
+                if form_decl:
+                    code += (
+                        f" Declared by form field `{key}` in `{Path(str(form_decl['decl_file'])).name}:{form_decl['decl_line']}` "
+                        f"and submitted via {form_decl['method']} to `{form_decl['action']}`."
+                    )
+            symbol = key or default_symbol
+            vars_out = [value for value in [key, target] if value]
+            return code, symbol, vars_out
+
+        m = PHP_DYNAMIC_SUPERGLOBAL_KEY_RE.search(expr)
+        if m:
+            scope = m.group(1).upper()
+            key_var = m.group(2)
+            code = f"[source] PHP {scope} parameter selected by `${key_var}` is assigned to `${target or key_var}`."
+            symbol = key_var or default_symbol
+            vars_out = [value for value in [key_var, target] if value]
+            return code, symbol, vars_out
+
+        m = PHP_INPUT_CALL_RE.search(expr)
+        if m:
+            method = m.group(1).lower()
+            key = m.group(2)
+            code = f"[source] Request {method.upper()} input `{key}` is assigned to `${target or key}`."
+            if current_file and form_declarations_by_target:
+                form_decl = _find_php_form_field_declaration(current_file, method, key, form_declarations_by_target)
+                if form_decl:
+                    code += (
+                        f" Declared by form field `{key}` in `{Path(str(form_decl['decl_file'])).name}:{form_decl['decl_line']}` "
+                        f"and submitted via {form_decl['method']} to `{form_decl['action']}`."
+                    )
+            symbol = key or default_symbol
+            vars_out = [value for value in [key, target] if value]
+            return code, symbol, vars_out
+
+        m = PHP_REQUEST_CALL_RE.search(expr)
+        if m:
+            method = m.group(1).lower()
+            key = m.group(2)
+            code = f"[source] Request {method.upper()} value `{key}` is assigned to `${target or key}`."
+            if current_file and form_declarations_by_target:
+                mapped_scope = "POST" if method in {"post", "input"} else "GET" if method in {"get", "query"} else method
+                form_decl = _find_php_form_field_declaration(current_file, mapped_scope, key, form_declarations_by_target)
+                if form_decl:
+                    code += (
+                        f" Declared by form field `{key}` in `{Path(str(form_decl['decl_file'])).name}:{form_decl['decl_line']}` "
+                        f"and submitted via {form_decl['method']} to `{form_decl['action']}`."
+                    )
+            symbol = key or default_symbol
+            vars_out = [value for value in [key, target] if value]
+            return code, symbol, vars_out
+
+        m = PHP_REQUEST_OBJECT_CALL_RE.search(expr)
+        if m:
+            method = m.group(1).lower()
+            key = m.group(2) or m.group(3) or ""
+            code = f"[source] Request {method.upper()} value `{key or target or 'input'}` is assigned to `${target or key or 'input'}`."
+            if key and current_file and form_declarations_by_target:
+                mapped_scope = "POST" if method in {"request", "files"} else "GET" if method in {"get", "query"} else method
+                form_decl = _find_php_form_field_declaration(current_file, mapped_scope, key, form_declarations_by_target)
+                if form_decl:
+                    code += (
+                        f" Declared by form field `{key}` in `{Path(str(form_decl['decl_file'])).name}:{form_decl['decl_line']}` "
+                        f"and submitted via {form_decl['method']} to `{form_decl['action']}`."
+                    )
+            symbol = key or default_symbol
+            vars_out = [value for value in [key, target] if value]
+            return code, symbol, vars_out
+
+    return default_code, default_symbol, default_vars
+
+
+def _extract_php_foreach_source(line: str) -> Optional[Dict]:
+    match = PHP_FOREACH_SUPERGLOBAL_RE.search(str(line or ""))
+    if not match:
+        return None
+    return {
+        "scope": match.group(1).upper(),
+        "bucket": match.group(2) or "",
+        "key_var": match.group(3) or "",
+        "value_var": match.group(4) or "",
+    }
+
+
+def _extract_php_session_write(line: str) -> Optional[Dict]:
+    match = PHP_SESSION_WRITE_RE.search(str(line or ""))
+    if not match:
+        return None
+    return {
+        "bucket": match.group(1) or "",
+        "index": match.group(2) or "",
+        "rhs": (match.group(3) or "").strip(),
+    }
+
+
+def _extract_php_session_reads(text: str) -> List[str]:
+    seen: Set[str] = set()
+    buckets: List[str] = []
+    for match in PHP_SESSION_READ_RE.finditer(str(text or "")):
+        bucket = str(match.group(1) or "").strip()
+        if bucket and bucket not in seen:
+            seen.add(bucket)
+            buckets.append(bucket)
+    return buckets
 
 
 def _make_path_step(
@@ -783,6 +1061,35 @@ def _append_partial_flow(
             "confidence": "low",
             "cross_file": False,
         }
+    )
+
+
+def _make_interfile_handoff_step(
+    caller_fn: FunctionDef,
+    sink_item: Dict,
+    *,
+    call_name: str,
+    raw_symbol: str,
+    source_symbol: str,
+) -> Optional[Dict]:
+    sink_file = str(sink_item.get("file", "") or "")
+    if not sink_file or sink_file == str(caller_fn.file):
+        return None
+    sink_line = sink_item.get("line", "")
+    sink_fn = str(sink_item.get("function", "") or call_name or raw_symbol or "callee").strip()
+    handoff_code = (
+        f"[inter-file] Tainted value crosses from `{caller_fn.name}` into `{sink_fn}` and remains "
+        "tainted in the callee scope before reaching the sink."
+    )
+    return _make_path_step(
+        sink_file,
+        sink_line,
+        "handoff",
+        handoff_code,
+        symbol=raw_symbol or call_name,
+        source_symbol=source_symbol,
+        target_symbol=sink_fn,
+        variables=[value for value in [source_symbol, sink_fn] if value],
     )
 
 
@@ -922,6 +1229,9 @@ def _scan_scope_for_summary(
     summary = FunctionSummary()
     tainted: Dict[str, Set[int]] = {p: {i} for i, p in enumerate(fn.params)}
     source_tainted: Set[str] = set(_infer_initial_source_params(fn, lines, platform))
+    session_tainted: Dict[str, Set[int]] = {}
+    session_source_tainted: Set[str] = set()
+    session_var_buckets: Dict[str, Set[str]] = {}
 
     for idx in range(fn.start, min(fn.end, len(lines))):
         line = lines[idx]
@@ -931,9 +1241,43 @@ def _scan_scope_for_summary(
         if _is_function_definition_line(stripped, platform):
             continue
 
+        if platform == "php":
+            foreach_source = _extract_php_foreach_source(stripped)
+            if foreach_source and foreach_source["scope"] == "SESSION":
+                bucket = foreach_source["bucket"]
+                key_var = foreach_source["key_var"]
+                value_var = foreach_source["value_var"]
+                if bucket in session_tainted:
+                    if key_var:
+                        tainted[key_var] = set(session_tainted[bucket])
+                    if value_var:
+                        tainted[value_var] = set(session_tainted[bucket])
+                if bucket in session_source_tainted:
+                    if key_var:
+                        source_tainted.add(key_var)
+                    if value_var:
+                        source_tainted.add(value_var)
+                for derived_var in [key_var, value_var]:
+                    if derived_var:
+                        session_var_buckets.setdefault(derived_var, set()).add(bucket)
+
         assign = _extract_assignment(stripped, platform)
         if assign:
             lhs, rhs = assign
+            if platform == "php":
+                read_buckets = _extract_php_session_reads(rhs)
+                inherited_session: Set[int] = set()
+                inherited_session_source = False
+                for bucket in read_buckets:
+                    inherited_session.update(session_tainted.get(bucket, set()))
+                    if bucket in session_source_tainted:
+                        inherited_session_source = True
+                if inherited_session:
+                    tainted[lhs] = inherited_session
+                if inherited_session_source:
+                    source_tainted.add(lhs)
+                for bucket in read_buckets:
+                    session_var_buckets.setdefault(lhs, set()).add(bucket)
             if any(r.search(rhs) for r in cfg.get("sources", [])):
                 source_tainted.add(lhs)
             else:
@@ -946,37 +1290,130 @@ def _scan_scope_for_summary(
                     if _line_has_var(rhs, svar, platform):
                         inherited_source = True
                         break
+                inherited_session_buckets: Set[str] = set()
+                if platform == "php":
+                    for var, buckets in session_var_buckets.items():
+                        if _line_has_var(rhs, var, platform):
+                            inherited_session_buckets.update(buckets)
 
                 for call_name, call_args, raw_symbol in _extract_calls(rhs):
                     callee = _lookup_summary(summary_by_name, call_name, raw_symbol)
                     if not callee:
+                        builtin_desc = BUILTIN_SINK_CALLS.get(str(call_name or "").strip().lower())
+                        if builtin_desc:
+                            sink_obj = {
+                                "sink": call_name,
+                                "description": builtin_desc,
+                                "file": str(fn.file),
+                                "line": idx + 1,
+                                "code": _line_source(lines, idx),
+                                "function": fn.name,
+                            }
+                            for arg_idx, arg_expr in enumerate(call_args):
+                                for var, origins in tainted.items():
+                                    if _line_has_var(arg_expr, var, platform):
+                                        for origin_idx in origins:
+                                            summary.param_to_sink.setdefault(origin_idx, []).append(sink_obj)
+                                for var in source_tainted:
+                                    if _line_has_var(arg_expr, var, platform):
+                                        summary.source_to_sink.append(sink_obj)
                         continue
+                    for bucket in callee.session_to_return:
+                        if bucket in session_tainted:
+                            inherited.update(session_tainted[bucket])
+                        if bucket in session_source_tainted:
+                            inherited_source = True
                     for arg_idx, arg_expr in enumerate(call_args):
                         for var, origins in tainted.items():
                             if _line_has_var(arg_expr, var, platform):
                                 if arg_idx in callee.param_to_return:
                                     inherited.update(origins)
+                                for bucket in callee.param_to_session.get(arg_idx, set()):
+                                    session_tainted.setdefault(bucket, set()).update(origins)
                                 if callee.param_to_sink.get(arg_idx):
                                     for sink_item in callee.param_to_sink[arg_idx]:
                                         for origin_idx in origins:
                                             summary.param_to_sink.setdefault(origin_idx, []).append(sink_item)
+                                if platform == "php" and callee.session_to_sink:
+                                    for bucket in session_var_buckets.get(var, set()):
+                                        if bucket in callee.session_to_return:
+                                            inherited_session_buckets.add(bucket)
                         for svar in source_tainted:
                             if _line_has_var(arg_expr, svar, platform):
                                 if callee.source_to_return:
                                     inherited_source = True
                                 if arg_idx in callee.param_to_return:
                                     inherited_source = True
+                                if callee.param_to_session.get(arg_idx):
+                                    summary.source_to_session.update(callee.param_to_session[arg_idx])
+                                    session_source_tainted.update(callee.param_to_session[arg_idx])
                                 if callee.source_to_sink:
                                     for sink_item in callee.source_to_sink:
                                         summary.source_to_sink.append(sink_item)
                                 if callee.param_to_sink.get(arg_idx):
                                     for sink_item in callee.param_to_sink[arg_idx]:
                                         summary.source_to_sink.append(sink_item)
+                    for bucket, sink_items in callee.session_to_sink.items():
+                        if bucket in session_tainted:
+                            for origin_idx in session_tainted[bucket]:
+                                summary.param_to_sink.setdefault(origin_idx, []).extend(sink_items)
+                        if bucket in session_source_tainted:
+                            summary.source_to_sink.extend(sink_items)
+                    if callee.source_to_session:
+                        summary.source_to_session.update(callee.source_to_session)
+                        session_source_tainted.update(callee.source_to_session)
+                    if platform == "php" and callee.session_to_return:
+                        inherited_session_buckets.update(callee.session_to_return)
 
                 if inherited:
                     tainted[lhs] = inherited
                 if inherited_source:
                     source_tainted.add(lhs)
+                if platform == "php" and inherited_session_buckets:
+                    session_var_buckets.setdefault(lhs, set()).update(inherited_session_buckets)
+
+        for call_name, call_args, raw_symbol in _extract_calls(stripped):
+            callee = _lookup_summary(summary_by_name, call_name, raw_symbol)
+            if callee:
+                continue
+            builtin_desc = BUILTIN_SINK_CALLS.get(str(call_name or "").strip().lower())
+            if not builtin_desc:
+                continue
+            sink_obj = {
+                "sink": call_name,
+                "description": builtin_desc,
+                "file": str(fn.file),
+                "line": idx + 1,
+                "code": _line_source(lines, idx),
+                "function": fn.name,
+            }
+            for arg_idx, arg_expr in enumerate(call_args):
+                for var, origins in tainted.items():
+                    if _line_has_var(arg_expr, var, platform):
+                        for origin_idx in origins:
+                            summary.param_to_sink.setdefault(origin_idx, []).append(sink_obj)
+                for var in source_tainted:
+                    if _line_has_var(arg_expr, var, platform):
+                        summary.source_to_sink.append(sink_obj)
+
+        if platform == "php":
+            session_write = _extract_php_session_write(stripped)
+            if session_write:
+                bucket = session_write["bucket"]
+                rhs = session_write["rhs"]
+                if any(r.search(rhs) for r in cfg.get("sources", [])):
+                    summary.source_to_session.add(bucket)
+                    session_source_tainted.add(bucket)
+                else:
+                    for var, origins in tainted.items():
+                        if _line_has_var(rhs, var, platform):
+                            for origin_idx in origins:
+                                summary.param_to_session.setdefault(origin_idx, set()).add(bucket)
+                            session_tainted.setdefault(bucket, set()).update(origins)
+                    for var in source_tainted:
+                        if _line_has_var(rhs, var, platform):
+                            summary.source_to_session.add(bucket)
+                            session_source_tainted.add(bucket)
 
         for san_re in cfg.get("sanitizers", []):
             if san_re.search(stripped):
@@ -986,6 +1423,10 @@ def _scan_scope_for_summary(
                 for var in list(source_tainted):
                     if _line_has_var(stripped, var, platform):
                         source_tainted.discard(var)
+                if platform == "php":
+                    for var in list(session_var_buckets.keys()):
+                        if _line_has_var(stripped, var, platform):
+                            session_var_buckets.pop(var, None)
 
         for sink_name, (sink_re, sink_desc) in cfg.get("sinks", {}).items():
             if not sink_re.search(stripped):
@@ -1005,6 +1446,17 @@ def _scan_scope_for_summary(
             for var in source_tainted:
                 if _line_has_var(stripped, var, platform):
                     summary.source_to_sink.append(sink_obj)
+            if platform == "php":
+                for var, buckets in session_var_buckets.items():
+                    if _line_has_var(stripped, var, platform):
+                        for bucket in buckets:
+                            summary.session_to_sink.setdefault(bucket, []).append(sink_obj)
+                for bucket in _extract_php_session_reads(stripped):
+                    summary.session_to_sink.setdefault(bucket, []).append(sink_obj)
+                    for origin_idx in session_tainted.get(bucket, set()):
+                        summary.param_to_sink.setdefault(origin_idx, []).append(sink_obj)
+                    if bucket in session_source_tainted:
+                        summary.source_to_sink.append(sink_obj)
 
         if RETURN_RE.search(stripped):
             for var, origins in tainted.items():
@@ -1013,6 +1465,12 @@ def _scan_scope_for_summary(
             for var in source_tainted:
                 if _line_has_var(stripped, var, platform):
                     summary.source_to_return = True
+            if platform == "php":
+                for var, buckets in session_var_buckets.items():
+                    if _line_has_var(stripped, var, platform):
+                        summary.session_to_return.update(buckets)
+                for bucket in _extract_php_session_reads(stripped):
+                    summary.session_to_return.add(bucket)
 
     return summary
 
@@ -1023,6 +1481,10 @@ def _summaries_equal(a: FunctionSummary, b: FunctionSummary) -> bool:
         and a.source_to_return == b.source_to_return
         and _canon_sink_map(a.param_to_sink) == _canon_sink_map(b.param_to_sink)
         and _canon_sinks(a.source_to_sink) == _canon_sinks(b.source_to_sink)
+        and _canon_bucket_map(a.param_to_session) == _canon_bucket_map(b.param_to_session)
+        and set(a.source_to_session) == set(b.source_to_session)
+        and _canon_session_sink_map(a.session_to_sink) == _canon_session_sink_map(b.session_to_sink)
+        and set(a.session_to_return) == set(b.session_to_return)
     )
 
 
@@ -1037,16 +1499,28 @@ def _canon_sink_map(items: Dict[int, List[Dict]]) -> Dict[int, Set[Tuple]]:
     return {idx: _canon_sinks(sinks) for idx, sinks in items.items()}
 
 
+def _canon_bucket_map(items: Dict[int, Set[str]]) -> Dict[int, Set[str]]:
+    return {idx: set(values) for idx, values in items.items()}
+
+
+def _canon_session_sink_map(items: Dict[str, List[Dict]]) -> Dict[str, Set[Tuple]]:
+    return {bucket: _canon_sinks(sinks) for bucket, sinks in items.items()}
+
+
 def _build_xref(path_steps: List[Dict], call_index: Dict[str, List[Dict]], def_index: Dict[str, List[FunctionDef]]) -> List[Dict]:
     xrefs: List[Dict] = []
     seen = set()
-    max_xref_entries = 120
+    max_xref_entries = 40
     for step in path_steps:
         code = step.get("code", "")
         for call_name, _, full_symbol in _extract_calls(code):
-            for alias in _call_aliases(full_symbol, call_name):
-                for defn in def_index.get(alias, []):
-                    key = ("def", alias, str(defn.file), defn.line)
+            aliases = _call_aliases(full_symbol, call_name)
+            def_alias = next((alias for alias in aliases if def_index.get(alias)), "")
+            call_alias = next((alias for alias in aliases if call_index.get(alias)), "")
+
+            if def_alias:
+                for defn in def_index.get(def_alias, [])[:2]:
+                    key = ("def", def_alias, str(defn.file), defn.line)
                     if key in seen:
                         continue
                     seen.add(key)
@@ -1054,31 +1528,39 @@ def _build_xref(path_steps: List[Dict], call_index: Dict[str, List[Dict]], def_i
                         {
                             "type": "definition",
                             "symbol": full_symbol,
-                            "resolved_name": alias,
+                            "resolved_name": def_alias,
                             "file": str(defn.file),
                             "line": defn.line,
-                            "context": f"Definition of {alias}",
+                            "context": f"Definition of {def_alias}",
                         }
                     )
                     if len(xrefs) >= max_xref_entries:
                         return xrefs
-                for caller in call_index.get(alias, []):
-                    key = ("call", alias, caller["file"], caller["line"], caller.get("symbol", alias))
+
+            if call_alias:
+                related = 0
+                for caller in call_index.get(call_alias, []):
+                    if str(caller.get("file", "")) == str(step.get("file", "")) and int(caller.get("line", 0) or 0) == int(step.get("line", 0) or 0):
+                        continue
+                    key = ("call", call_alias, caller["file"], caller["line"], caller.get("symbol", call_alias))
                     if key in seen:
                         continue
                     seen.add(key)
                     xrefs.append(
                         {
                             "type": "callsite",
-                            "symbol": caller.get("symbol", alias),
-                            "resolved_name": alias,
+                            "symbol": caller.get("symbol", call_alias),
+                            "resolved_name": call_alias,
                             "file": caller["file"],
                             "line": caller["line"],
                             "context": "Related callsite",
                         }
                     )
-                    if len(xrefs) >= max_xref_entries:
-                        return xrefs
+                    related += 1
+                    if len(xrefs) >= max_xref_entries or related >= 4:
+                        break
+                if len(xrefs) >= max_xref_entries:
+                    return xrefs
     return xrefs
 
 
@@ -1128,6 +1610,7 @@ def analyze_multifile_flows(
     functions: List[FunctionDef] = []
     def_index: Dict[str, List[FunctionDef]] = {}
     call_index: Dict[str, List[Dict]] = {}
+    form_declarations_by_target: Dict[str, List[Dict]] = {}
 
     _PARSE_REPORT_EVERY = max(1, total_files // 10)
     for _fi, file_path in enumerate(files, start=1):
@@ -1139,6 +1622,14 @@ def analyze_multifile_flows(
         except OSError:
             continue
         file_lines[file_path] = lines
+        if platform == "php":
+            for declaration in _extract_php_form_declarations(file_path, lines):
+                for target_key in {
+                    declaration.get("resolved_target", ""),
+                    Path(str(declaration.get("resolved_target", "") or "")).name if declaration.get("resolved_target") else "",
+                }:
+                    if target_key:
+                        form_declarations_by_target.setdefault(target_key, []).append(declaration)
 
         fns = _parse_functions(platform, cfg, file_path, lines)
         if not fns:
@@ -1206,9 +1697,15 @@ def analyze_multifile_flows(
                 agg = merged.setdefault(alias, FunctionSummary())
                 agg.param_to_return.update(cur.param_to_return)
                 agg.source_to_return = agg.source_to_return or cur.source_to_return
+                for idx, buckets in cur.param_to_session.items():
+                    agg.param_to_session.setdefault(idx, set()).update(buckets)
+                agg.source_to_session.update(cur.source_to_session)
                 for idx, sinks in cur.param_to_sink.items():
                     agg.param_to_sink.setdefault(idx, []).extend(sinks)
                 agg.source_to_sink.extend(cur.source_to_sink)
+                for bucket, sinks in cur.session_to_sink.items():
+                    agg.session_to_sink.setdefault(bucket, []).extend(sinks)
+                agg.session_to_return.update(cur.session_to_return)
 
         for name, new_summary in merged.items():
             old = summary_by_name.get(name, FunctionSummary())
@@ -1224,6 +1721,7 @@ def analyze_multifile_flows(
 
     for fn in functions:
         lines = file_lines.get(fn.file, [])
+        session_tainted_paths: Dict[str, List[Dict]] = {}
         tainted_paths: Dict[str, List[Dict]] = {
             p: [_make_path_step(fn.file, fn.line, "param", p, symbol=p, source_symbol=p, variables=[p])]
             for p in fn.params
@@ -1249,6 +1747,65 @@ def analyze_multifile_flows(
             if _is_function_definition_line(stripped, platform):
                 continue
 
+            if platform == "php":
+                foreach_source = _extract_php_foreach_source(stripped)
+                if foreach_source:
+                    scope = foreach_source["scope"]
+                    bucket = foreach_source["bucket"]
+                    key_var = foreach_source["key_var"]
+                    value_var = foreach_source["value_var"]
+                    if scope == "SESSION" and bucket and bucket in session_tainted_paths:
+                        base_path = session_tainted_paths[bucket]
+                        if key_var:
+                            tainted_paths[key_var] = base_path + [_make_path_step(
+                                fn.file,
+                                idx + 1,
+                                "assign",
+                                f"[session] Tainted session bucket `{bucket}` key is assigned to `${key_var}` via foreach.",
+                                symbol=key_var,
+                                source_symbol=bucket,
+                                target_symbol=key_var,
+                                variables=[bucket, key_var],
+                            )]
+                        if value_var:
+                            tainted_paths[value_var] = base_path + [_make_path_step(
+                                fn.file,
+                                idx + 1,
+                                "assign",
+                                f"[session] Tainted session bucket `{bucket}` value is assigned to `${value_var}` via foreach.",
+                                symbol=value_var,
+                                source_symbol=bucket,
+                                target_symbol=value_var,
+                                variables=[bucket, value_var],
+                            )]
+                    elif scope in {"POST", "GET", "REQUEST", "COOKIE", "FILES"}:
+                        if key_var:
+                            source_tainted_paths[key_var] = [
+                                _make_path_step(
+                                    fn.file,
+                                    idx + 1,
+                                    "source",
+                                    f"[source] PHP {scope} parameter name is assigned to `${key_var}` via foreach.",
+                                    symbol=key_var,
+                                    source_symbol=key_var,
+                                    target_symbol=key_var,
+                                    variables=[key_var],
+                                )
+                            ]
+                        if value_var:
+                            source_tainted_paths[value_var] = [
+                                _make_path_step(
+                                    fn.file,
+                                    idx + 1,
+                                    "source",
+                                    f"[source] PHP {scope} parameter value is assigned to `${value_var}` via foreach.",
+                                    symbol=value_var,
+                                    source_symbol=value_var,
+                                    target_symbol=value_var,
+                                    variables=[value_var],
+                                )
+                            ]
+
             assign = _extract_assignment(stripped, platform)
             assign_lhs = assign[0] if assign else None
             assign_rhs = assign[1] if assign else stripped
@@ -1256,16 +1813,34 @@ def analyze_multifile_flows(
             if assign:
                 lhs, rhs = assign
                 if any(r.search(rhs) for r in cfg.get("sources", [])):
-                    source_tainted_paths[lhs] = [_make_path_step(
+                    source_code, source_symbol, source_vars = _describe_source_expression(
+                        rhs,
+                        lhs,
+                        platform,
+                        current_file=fn.file,
+                        form_declarations_by_target=form_declarations_by_target,
+                    )
+                    source_step = _make_path_step(
                         fn.file,
                         idx + 1,
                         "source",
+                        source_code,
+                        symbol=source_symbol or lhs,
+                        source_symbol=source_symbol or lhs,
+                        target_symbol=lhs,
+                        variables=source_vars or [lhs],
+                    )
+                    assign_step = _make_path_step(
+                        fn.file,
+                        idx + 1,
+                        "assign",
                         stripped,
                         symbol=lhs,
-                        source_symbol=lhs,
+                        source_symbol=source_symbol or lhs,
                         target_symbol=lhs,
-                        variables=[lhs],
-                    )]
+                        variables=(source_vars or []) + ([lhs] if lhs else []),
+                    )
+                    source_tainted_paths[lhs] = [source_step, assign_step]
                 else:
                     for var, path_steps in tainted_paths.items():
                         if _line_has_var(rhs, var, platform):
@@ -1293,6 +1868,56 @@ def analyze_multifile_flows(
                                 variables=[var, lhs],
                             )]
                             break
+
+            if platform == "php":
+                session_write = _extract_php_session_write(stripped)
+                if session_write:
+                    bucket = session_write["bucket"]
+                    rhs = session_write["rhs"]
+                    if any(r.search(rhs) for r in cfg.get("sources", [])):
+                        source_code, source_symbol, source_vars = _describe_source_expression(
+                            rhs,
+                            bucket,
+                            platform,
+                            current_file=fn.file,
+                            form_declarations_by_target=form_declarations_by_target,
+                        )
+                        session_tainted_paths[bucket] = [
+                            _make_path_step(
+                                fn.file,
+                                idx + 1,
+                                "source",
+                                source_code,
+                                symbol=source_symbol or bucket,
+                                source_symbol=source_symbol or bucket,
+                                target_symbol=bucket,
+                                variables=source_vars or [bucket],
+                            ),
+                            _make_path_step(
+                                fn.file,
+                                idx + 1,
+                                "assign",
+                                f"[session] Source-tainted value is stored in session bucket `{bucket}`.",
+                                symbol=bucket,
+                                source_symbol=source_symbol or bucket,
+                                target_symbol=bucket,
+                                variables=[value for value in [source_symbol, bucket] if value],
+                            ),
+                        ]
+                    else:
+                        for var, path_steps in {**tainted_paths, **source_tainted_paths}.items():
+                            if _line_has_var(rhs, var, platform):
+                                session_tainted_paths[bucket] = path_steps + [_make_path_step(
+                                    fn.file,
+                                    idx + 1,
+                                    "assign",
+                                    f"[session] Tainted value `{var}` is stored in session bucket `{bucket}`.",
+                                    symbol=bucket,
+                                    source_symbol=var,
+                                    target_symbol=bucket,
+                                    variables=[var, bucket],
+                                )]
+                                break
 
             for san_re in cfg.get("sanitizers", []):
                 if san_re.search(stripped):
@@ -1400,15 +2025,22 @@ def analyze_multifile_flows(
                                 termination_node=termination_node,
                             )
                         if any(r.search(arg_expr) for r in cfg.get("sources", [])):
+                            source_code, source_symbol, source_vars = _describe_source_expression(
+                                arg_expr,
+                                arg_expr,
+                                platform,
+                                current_file=fn.file,
+                                form_declarations_by_target=form_declarations_by_target,
+                            )
                             source_arg_step = _make_path_step(
                                 fn.file,
                                 idx + 1,
                                 "source",
-                                stripped,
+                                source_code,
                                 symbol=raw_symbol or call_name,
-                                source_symbol=arg_expr,
+                                source_symbol=source_symbol or arg_expr,
                                 target_symbol=call_name,
-                                variables=[arg_expr],
+                                variables=source_vars or [arg_expr],
                             )
                             call_step = _make_path_step(
                                 fn.file,
@@ -1451,17 +2083,76 @@ def analyze_multifile_flows(
                                 termination_node=termination_node,
                             )
                     continue
+                session_call_step = _make_path_step(
+                    fn.file,
+                    idx + 1,
+                    "call",
+                    stripped,
+                    symbol=raw_symbol or call_name,
+                    source_symbol="session",
+                    target_symbol=call_name,
+                    variables=[call_name],
+                )
+                if assign_lhs:
+                    for bucket in callee.session_to_return:
+                        if bucket in session_tainted_paths:
+                            tainted_paths[assign_lhs] = session_tainted_paths[bucket] + [session_call_step]
+                if not assign_lhs and callee.session_to_return:
+                    for bucket in callee.session_to_return:
+                        if bucket not in session_tainted_paths:
+                            continue
+                        for sink_name, (sink_re, sink_desc) in cfg.get("sinks", {}).items():
+                            if not sink_re.search(stripped):
+                                continue
+                            path_steps = session_tainted_paths[bucket] + [session_call_step] + [_make_path_step(
+                                fn.file,
+                                idx + 1,
+                                "sink",
+                                stripped,
+                                symbol=sink_name,
+                                source_symbol=bucket,
+                                target_symbol=sink_name,
+                                variables=[bucket, sink_name],
+                            )]
+                            xref = _build_xref(path_steps, call_index, def_index)
+                            flows.append(
+                                {
+                                    "file": str(fn.file),
+                                    "function": fn.name,
+                                    "line": idx + 1,
+                                    "sink": sink_name,
+                                    "description": (
+                                        f"Session bucket `{bucket}` remains tainted after `{call_name}` returns "
+                                        f"and reaches sink `{sink_name}`."
+                                    ),
+                                    "explanation": (
+                                        "A tainted value was previously stored in session state, returned by the callee, "
+                                        "and then used immediately in a sensitive sink."
+                                    ),
+                                    "path": path_steps,
+                                    "xref": xref,
+                                    "confidence": _compute_confidence(fn, path_steps, False),
+                                    "cross_file": False,
+                                }
+                            )
                 for arg_idx, arg_expr in enumerate(call_args):
                     arg_is_source = any(r.search(arg_expr) for r in cfg.get("sources", []))
+                    source_code, source_symbol, source_vars = _describe_source_expression(
+                        arg_expr,
+                        arg_expr,
+                        platform,
+                        current_file=fn.file,
+                        form_declarations_by_target=form_declarations_by_target,
+                    ) if arg_is_source else ("", "", [])
                     source_arg_step = _make_path_step(
                         fn.file,
                         idx + 1,
                         "source",
-                        stripped,
+                        source_code if arg_is_source else stripped,
                         symbol=raw_symbol or call_name,
-                        source_symbol=arg_expr,
+                        source_symbol=source_symbol or arg_expr,
                         target_symbol=call_name,
-                        variables=[arg_expr],
+                        variables=source_vars or [arg_expr],
                     )
                     for var, steps in tainted_paths.items():
                         if not _line_has_var(arg_expr, var, platform):
@@ -1478,8 +2169,26 @@ def analyze_multifile_flows(
                         )
                         if arg_idx in callee.param_to_return and assign_lhs:
                             tainted_paths[assign_lhs] = steps + [call_step]
+                        for bucket in callee.param_to_session.get(arg_idx, set()):
+                            session_tainted_paths[bucket] = steps + [call_step] + [_make_path_step(
+                                fn.file,
+                                idx + 1,
+                                "assign",
+                                f"[session] Tainted value `{var}` is stored via `{call_name}` into session bucket `{bucket}`.",
+                                symbol=bucket,
+                                source_symbol=var,
+                                target_symbol=bucket,
+                                variables=[var, bucket],
+                            )]
                         for sink_item in callee.param_to_sink.get(arg_idx, []):
-                            path_steps = steps + [call_step, _make_path_step(
+                            handoff_step = _make_interfile_handoff_step(
+                                fn,
+                                sink_item,
+                                call_name=call_name,
+                                raw_symbol=raw_symbol,
+                                source_symbol=var,
+                            )
+                            path_steps = steps + [call_step] + ([handoff_step] if handoff_step else []) + [_make_path_step(
                                 sink_item.get("file", fn.file),
                                 sink_item.get("line", idx + 1),
                                 "sink",
@@ -1528,8 +2237,26 @@ def analyze_multifile_flows(
                             source_tainted_paths[assign_lhs] = steps + [call_step]
                         if arg_idx in callee.param_to_return and assign_lhs:
                             source_tainted_paths[assign_lhs] = steps + [call_step]
+                        for bucket in callee.param_to_session.get(arg_idx, set()):
+                            session_tainted_paths[bucket] = steps + [call_step] + [_make_path_step(
+                                fn.file,
+                                idx + 1,
+                                "assign",
+                                f"[session] Source-tainted value `{var}` is stored via `{call_name}` into session bucket `{bucket}`.",
+                                symbol=bucket,
+                                source_symbol=var,
+                                target_symbol=bucket,
+                                variables=[var, bucket],
+                            )]
                         for sink_item in callee.param_to_sink.get(arg_idx, []):
-                            path_steps = steps + [call_step, _make_path_step(
+                            handoff_step = _make_interfile_handoff_step(
+                                fn,
+                                sink_item,
+                                call_name=call_name,
+                                raw_symbol=raw_symbol,
+                                source_symbol=var,
+                            )
+                            path_steps = steps + [call_step] + ([handoff_step] if handoff_step else []) + [_make_path_step(
                                 sink_item.get("file", fn.file),
                                 sink_item.get("line", idx + 1),
                                 "sink",
@@ -1562,7 +2289,14 @@ def analyze_multifile_flows(
                                 }
                             )
                         for sink_item in callee.source_to_sink:
-                            path_steps = steps + [call_step, _make_path_step(
+                            handoff_step = _make_interfile_handoff_step(
+                                fn,
+                                sink_item,
+                                call_name=call_name,
+                                raw_symbol=raw_symbol,
+                                source_symbol=var,
+                            )
+                            path_steps = steps + [call_step] + ([handoff_step] if handoff_step else []) + [_make_path_step(
                                 sink_item.get("file", fn.file),
                                 sink_item.get("line", idx + 1),
                                 "sink",
@@ -1607,8 +2341,26 @@ def analyze_multifile_flows(
                         )
                         if callee.source_to_return and assign_lhs:
                             source_tainted_paths[assign_lhs] = [source_arg_step, call_step]
+                        for bucket in callee.source_to_session:
+                            session_tainted_paths[bucket] = [source_arg_step, call_step] + [_make_path_step(
+                                fn.file,
+                                idx + 1,
+                                "assign",
+                                f"[session] Source expression is stored via `{call_name}` into session bucket `{bucket}`.",
+                                symbol=bucket,
+                                source_symbol=source_symbol or arg_expr,
+                                target_symbol=bucket,
+                                variables=[source_symbol or arg_expr, bucket],
+                            )]
                         for sink_item in callee.source_to_sink:
-                            path_steps = [source_arg_step, call_step, _make_path_step(
+                            handoff_step = _make_interfile_handoff_step(
+                                fn,
+                                sink_item,
+                                call_name=call_name,
+                                raw_symbol=raw_symbol,
+                                source_symbol=arg_expr,
+                            )
+                            path_steps = [source_arg_step, call_step] + ([handoff_step] if handoff_step else []) + [_make_path_step(
                                 sink_item.get("file", fn.file),
                                 sink_item.get("line", idx + 1),
                                 "sink",
@@ -1640,6 +2392,49 @@ def analyze_multifile_flows(
                                     "cross_file": _is_cross,
                                 }
                             )
+                for bucket, sink_items in callee.session_to_sink.items():
+                    if bucket not in session_tainted_paths:
+                        continue
+                    for sink_item in sink_items:
+                        handoff_step = _make_interfile_handoff_step(
+                            fn,
+                            sink_item,
+                            call_name=call_name,
+                            raw_symbol=raw_symbol,
+                            source_symbol=bucket,
+                        )
+                        path_steps = session_tainted_paths[bucket] + [session_call_step] + ([handoff_step] if handoff_step else []) + [_make_path_step(
+                            sink_item.get("file", fn.file),
+                            sink_item.get("line", idx + 1),
+                            "sink",
+                            sink_item.get("code", ""),
+                            symbol=sink_item.get("sink", call_name),
+                            source_symbol=bucket,
+                            target_symbol=sink_item.get("sink", call_name),
+                            variables=[bucket, sink_item.get("sink", call_name)],
+                        )]
+                        xref = _build_xref(path_steps, call_index, def_index)
+                        _is_cross = str(sink_item.get("file", fn.file)) != str(fn.file)
+                        flows.append(
+                            {
+                                "file": str(fn.file),
+                                "function": fn.name,
+                                "line": idx + 1,
+                                "sink": sink_item.get("sink", call_name),
+                                "description": (
+                                    f"Session bucket `{bucket}` remains tainted and flows through `{call_name}` "
+                                    f"into sink `{sink_item.get('sink', call_name)}`."
+                                ),
+                                "explanation": (
+                                    "A tainted value was previously stored in session state and later consumed "
+                                    "by another function where it reaches a sensitive sink."
+                                ),
+                                "path": path_steps,
+                                "xref": xref,
+                                "confidence": _compute_confidence(fn, path_steps, _is_cross),
+                                "cross_file": _is_cross,
+                            }
+                        )
 
             for sink_name, (sink_re, sink_desc) in cfg.get("sinks", {}).items():
                 if not sink_re.search(stripped):
@@ -1704,8 +2499,23 @@ def analyze_multifile_flows(
                 # not just anywhere on the same line (avoids FPs from co-occurring
                 # source/sink keywords that have no data connection).
                 if line_has_source and _source_in_sink_args(stripped, sink_name, cfg.get("sources", [])):
+                    source_code, source_symbol, source_vars = _describe_source_expression(
+                        stripped,
+                        "source",
+                        platform,
+                        current_file=fn.file,
+                        form_declarations_by_target=form_declarations_by_target,
+                    )
                     full_path = [
-                        _make_path_step(fn.file, idx + 1, "source", stripped, symbol="source", source_symbol="source", variables=["source"]),
+                        _make_path_step(
+                            fn.file,
+                            idx + 1,
+                            "source",
+                            source_code,
+                            symbol="source",
+                            source_symbol=source_symbol or "source",
+                            variables=source_vars or ["source"],
+                        ),
                         _make_path_step(fn.file, idx + 1, "sink", stripped, symbol=sink_name, target_symbol=sink_name, variables=[sink_name]),
                     ]
                     xref = _build_xref(full_path, call_index, def_index)

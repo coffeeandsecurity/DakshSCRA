@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \.(query|execute)\(\s*`|\$where\s*:\s*|sequelize\.query\(
+WHEN EXPR MISSING:prepare|parameterize|\?.*params|TypeORM.*QueryBuilder|createQueryBuilder
+REPORT AS area_of_interest
+REASON Detects query construction patterns requiring injection review.
+TRACE Externalized rule logic for Nextjs SQL/NoSQL Injection Sink.

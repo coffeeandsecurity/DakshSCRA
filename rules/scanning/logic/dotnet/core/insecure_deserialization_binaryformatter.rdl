@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT BinaryFormatter\s*\(\s*\)|new\s+BinaryFormatter|BinaryFormatter\.Deserialize\s*\(
+WHEN EXPR MISSING:SerializationBinder|AllowType|TypeNameHandling\.None|Activator\.CreateInstance && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects use of BinaryFormatter, which is insecure and produces deserialization gadget chains.
+TRACE Externalized rule logic for Insecure Deserialization: BinaryFormatter.

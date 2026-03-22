@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT ->createCommand\s*\(\s*["'][^"']*["']\s*\.\s*\$|->createCommand\s*\(\s*["'][^"']*\$\{?
+WHEN EXPR MISSING:bindParam|bindValue|->params\s*\(\s*\[|prepared|:param && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects Yii createCommand() calls with SQL built via string concatenation.
+TRACE Externalized rule logic for createCommand with Raw SQL String.

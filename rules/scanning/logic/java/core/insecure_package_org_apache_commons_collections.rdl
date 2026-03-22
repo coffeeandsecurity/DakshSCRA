@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT org\.apache\.commons\.collections
+WHEN EXPR MISSING:SerializationBinder|AllowType|ValidatingObjectInputStream|trusted && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects the usage of the Apache Commons Collections library, which has known vulnerabilities related to deserialization.
+TRACE Externalized rule logic for Insecure Package: org.apache.commons.collections.

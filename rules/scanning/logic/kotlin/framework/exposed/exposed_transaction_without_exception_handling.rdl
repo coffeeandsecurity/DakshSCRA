@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT transaction\s*\{
+WHEN EXPR MISSING:try|catch|runCatching|rollback
+REPORT AS area_of_interest
+REASON Detects Exposed transaction blocks that perform mutations without exception handling for rollback.
+TRACE Externalized rule logic for Exposed Transaction Without Exception Handling.

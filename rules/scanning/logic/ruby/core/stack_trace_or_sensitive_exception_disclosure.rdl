@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(?:puts|print|logger\.(?:debug|info|error)|Rails\.logger\.(?:debug|info|error))\s*\(?.*(?:exception|backtrace)
+WHEN EXPR MISSING:release|production
+REPORT AS area_of_interest
+REASON Detects logging or printing of exception/backtrace details.
+TRACE Externalized rule logic for Stack Trace or Sensitive Exception Disclosure.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT where\(\s*"[^"]*#\{|find_by_sql\(|connection\.execute\(
+WHEN EXPR MISSING:where\s*\(\s*".*?",|sanitize_sql|Arel::Nodes
+REPORT AS area_of_interest
+REASON Detects raw/dynamic SQL construction patterns in Ruby frameworks.
+TRACE Externalized rule logic for Sinatra SQL Injection Sink.

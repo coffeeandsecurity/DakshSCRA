@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)(os\.remove|os\.unlink|shutil\.rmtree)
+WHEN EXPR PRESENT:(request|input\(|argv|user_input|params|query) && MISSING:(abspath|realpath|normpath|startswith\(|allowlist|whitelist)
+REPORT AS area_of_interest
+REASON Detects the use of file removal functions in Python that may operate on untrusted file paths, potentially leading to security risks.
+TRACE Externalized rule logic for Insecure File Operations.

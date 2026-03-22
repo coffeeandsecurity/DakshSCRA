@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT EditText\.getText\(\)
+WHEN EXPR PRESENT:(execute|query|rawQuery|execSQL|Runtime|ProcessBuilder|File\s*\(|URL\s*\(|WebView|loadUrl|loadData) && MISSING:(validate|sanitize|escape|encode|allowlist|whitelist)
+REPORT AS area_of_interest
+REASON Detects the usage of user input fields, such as EditTexts, which may contain untrusted inputs.
+TRACE Externalized rule logic for Untrusted Inputs: User Input Fields.

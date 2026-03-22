@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT resources\s*=\s*\[\s*"\*"\s*\]
+WHEN EXPR MISSING:condition|Condition
+REPORT AS area_of_interest
+REASON Detects IAM policies applying to all resources (*) without restricting conditions.
+TRACE Externalized rule logic for Wildcard IAM Resource.

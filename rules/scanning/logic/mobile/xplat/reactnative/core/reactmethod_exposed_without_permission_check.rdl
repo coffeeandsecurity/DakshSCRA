@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT @ReactMethod
+WHEN EXPR MISSING:checkSelfPermission|enforcePermission|hasPermission|isAuthenticated|verifyCallerIdentity|requiresPermission|// auth
+REPORT AS area_of_interest
+REASON Detects @ReactMethod annotated native module methods that may lack permission or authentication checks.
+TRACE Externalized mobile rule logic for ReactMethod Exposed Without Permission Check.

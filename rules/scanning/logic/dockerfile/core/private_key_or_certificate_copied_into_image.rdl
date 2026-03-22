@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT ^(?:COPY|ADD)\s+[^\n]*(?:\.pem|\.key|\.p12|\.pfx|\.jks|id_rsa|id_dsa|id_ecdsa|\.ppk)\b
+WHEN EXPR MISSING:\.pub\b|public|example|test|dummy|placeholder
+REPORT AS area_of_interest
+REASON Detects COPY or ADD instructions that embed private keys or certificate files into the image.
+TRACE Externalized rule logic for Private Key or Certificate Copied into Image.

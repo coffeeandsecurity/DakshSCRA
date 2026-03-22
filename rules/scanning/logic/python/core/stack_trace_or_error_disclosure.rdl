@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)(traceback\.format_exc\(\)|traceback\.print_exc\(\)|print\(.*Exception.*\))
+WHEN EXPR MISSING:(DEBUG=False|logger\.exception|logging\.exception|production)
+REPORT AS area_of_interest
+REASON Detects code that exposes stack traces or sensitive error information in Python applications.
+TRACE Externalized rule logic for Stack Trace or Error Disclosure.

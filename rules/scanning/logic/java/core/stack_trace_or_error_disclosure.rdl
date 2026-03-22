@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)(e\.printStackTrace\(\)|e\.getCause\(\)\.printStackTrace\(\)|System\.out\.print\(.*Exception.*\)|throw new \w+Exception\(.+\))
+WHEN EXPR MISSING:log\.error|logger\.error|LogManager|SLF4J && MISSING:production|release
+REPORT AS area_of_interest
+REASON Detects unsafe stack trace logging or error handling in Java code.
+TRACE Externalized rule logic for Stack Trace or Error Disclosure.

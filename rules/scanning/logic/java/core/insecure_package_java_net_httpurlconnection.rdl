@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT java\.net\.HttpURLConnection
+WHEN EXPR MISSING:https://|HttpsURLConnection|SSLContext|TrustManager|HSTS && MISSING:localhost|127\.0\.0\.1|test|example
+REPORT AS area_of_interest
+REASON Detects the usage of the java.net.HttpURLConnection package, which may expose applications to insecure HTTP connections.
+TRACE Externalized rule logic for Insecure Package: java.net.HttpURLConnection.

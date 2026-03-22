@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT CURLOPT_SSL_VERIFYPEER\s*,\s*0|CURLOPT_SSL_VERIFYHOST\s*,\s*0
+WHEN EXPR MISSING:test|development|staging
+REPORT AS area_of_interest
+REASON Detects TLS verification disablement in C HTTP clients.
+TRACE Externalized rule logic for Freertos Insecure Transport/Cert Bypass Marker.

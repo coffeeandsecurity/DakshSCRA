@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT /NXCOMPAT|/DYNAMICBASE|/GS|/guard:cf
+WHEN EXPR PRESENT:CFLAGS|LDFLAGS|cmake_minimum_required|add_compile_options|target_compile_options && MISSING:-fstack-protector|-D_FORTIFY_SOURCE|-pie|-fPIE|-Wl.*now|-Wl.*relro
+REPORT AS area_of_interest
+REASON Detects missing compiler flags that enforce runtime security mitigations.
+TRACE Externalized rule logic for Missing OS Runtime Security Mitigation Flags in Binaries.

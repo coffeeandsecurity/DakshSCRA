@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(?:unserialize|serialize)\b
+WHEN EXPR PRESENT:unserialize\s*\(|\$_(GET|POST|REQUEST|COOKIE) && MISSING:allowed_classes\s*=>\s*false|json_decode\s*\()
+REPORT AS area_of_interest
+REASON Detects usage of unserialize() or serialize() functions, potentially leading to object injection vulnerabilities.
+TRACE Externalized rule logic for Object Injection via Serialization.

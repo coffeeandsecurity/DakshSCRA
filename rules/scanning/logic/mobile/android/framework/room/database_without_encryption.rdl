@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT Room\.databaseBuilder\s*\(
+WHEN EXPR MISSING:SQLCipher|net\.zetetic\.database|openHelperFactory|SupportFactory
+REPORT AS area_of_interest
+REASON Detects Room database creation without an encrypted database factory.
+TRACE Externalized mobile rule logic for Database Without Encryption.

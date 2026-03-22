@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT OkHttpClient\.Builder\s*\(\s*\)|OkHttpClient\s*\(\s*\)
+WHEN EXPR MISSING:certificatePinner|CertificatePinner
+REPORT AS area_of_interest
+REASON Detects OkHttpClient instances created without certificate pinning configuration.
+TRACE Externalized mobile rule logic for OkHttpClient Without Certificate Pinning.

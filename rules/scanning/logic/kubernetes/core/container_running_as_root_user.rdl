@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT runAsUser\s*:\s*0\b|runAsNonRoot\s*:\s*false
+WHEN EXPR PRESENT:runAsUser:\s*0|runAsNonRoot:\s*false && MISSING:# intentional|# required
+REPORT AS area_of_interest
+REASON Detects containers explicitly configured to run as root (UID 0) or with runAsNonRoot disabled.
+TRACE Externalized rule logic for Container Running as Root User.

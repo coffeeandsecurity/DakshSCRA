@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT didReceive\s+challenge.*useCredential|allowInvalidCertificates
+WHEN EXPR MISSING:SecTrustEvaluate|SecTrustEvaluateWithError
+REPORT AS area_of_interest
+REASON Detects certificate trust bypass indicators in network challenge handlers.
+TRACE Externalized mobile rule logic for SwiftUI Insecure Certificate Handling Marker.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?:/tmp/|/var/tmp/)[^"'\s]*\$\w|>\s*/tmp/\w
+WHEN EXPR MISSING:mktemp
+REPORT AS area_of_interest
+REASON Detects insecure creation of temporary files with predictable or hardcoded names.
+TRACE Externalized rule logic for Insecure Temporary File Creation.

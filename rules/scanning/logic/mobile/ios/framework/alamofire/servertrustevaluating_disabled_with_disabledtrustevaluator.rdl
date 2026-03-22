@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT DisabledTrustEvaluator\s*\(\s*\)|trustAllCertificates|serverTrustManager\s*=\s*nil
+WHEN EXPR MISSING:test|development|localhost|staging|PinnedCertificatesTrustEvaluator|RevocationTrustEvaluator
+REPORT AS area_of_interest
+REASON Detects Alamofire configurations that disable TLS server trust evaluation.
+TRACE Externalized mobile rule logic for ServerTrustEvaluating Disabled with DisabledTrustEvaluator.

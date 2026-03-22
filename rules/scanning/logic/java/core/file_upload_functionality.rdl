@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)(FileUpload|MultipartFile|CommonsMultipartFile)\s*\(.*\)|\bPart\s*\(.*\)
+WHEN EXPR MISSING:getContentType|getOriginalFilename|getSize|allowedTypes|allowedExtensions|maximumSize|validate|sanitize
+REPORT AS area_of_interest
+REASON Detects potential unvalidated file uploads in Java applications, which can lead to security vulnerabilities such as remote code execution or denial of service.
+TRACE Externalized rule logic for File Upload Functionality.

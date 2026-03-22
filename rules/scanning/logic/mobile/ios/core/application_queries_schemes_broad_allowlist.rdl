@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT LSApplicationQueriesSchemes
+WHEN EXPR PRESENT:LSApplicationQueriesSchemes && MISSING:# intentional|# required
+REPORT AS area_of_interest
+REASON Detects URL scheme query allowlists in Info.plist.
+TRACE Externalized mobile rule logic for Application Queries Schemes Broad Allowlist.

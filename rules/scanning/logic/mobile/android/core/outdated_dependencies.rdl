@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT implementation\s+['"][\w\.-]+:\w+:\d+\.\d+\.\d+['"]
+WHEN EXPR PRESENT:com\.android\.tools|androidx|google|okhttp|retrofit|firebase
+REPORT AS area_of_interest
+REASON Detects dependency declarations with version numbers in the Gradle file.
+TRACE Externalized mobile rule logic for Outdated Dependencies.

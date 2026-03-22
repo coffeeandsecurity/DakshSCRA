@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \.(Append|WriteLine)\([^\)]*?HttpContext\.Current\.Request\.(Url|Form|QueryString)
+WHEN EXPR MISSING:(HtmlEncode|UrlEncode|Sanitize|AntiXssEncoder)
+REPORT AS area_of_interest
+REASON Detects the usage of untrusted data output with HttpContext.Current.Request, which may lead to security vulnerabilities.
+TRACE Externalized rule logic for Untrusted Data Output: HttpContext.Current.Request.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT Directory\.GetFiles\(.*\)
+WHEN EXPR PRESENT:(Request\.|QueryString|Form|userInput|path) && MISSING:(Path\.GetFullPath|Path\.Combine|StartsWith|allowlist|whitelist)
+REPORT AS area_of_interest
+REASON Detects the usage of Directory.GetFiles without proper input validation, which can lead to path traversal vulnerabilities.
+TRACE Externalized rule logic for Path Traversal: Directory.GetFiles.

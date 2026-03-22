@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT ^ADD\s+https?://
+WHEN EXPR MISSING:checksum|sha256|sha512|verify
+REPORT AS area_of_interest
+REASON Detects ADD instructions fetching content from remote URLs without integrity verification.
+TRACE Externalized rule logic for ADD Used to Fetch Remote Content.

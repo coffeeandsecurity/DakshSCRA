@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (req\.params|req\.query|req\.body)[\s\S]*?(\[|\.)[\s\S]*?
+WHEN EXPR PRESENT:(findByPk|findOne|findAll|where|delete|update|patch|put|remove|destroy) && MISSING:(authorize|isAuthorized|canAccess|hasRole|ownership|tenantId)
+REPORT AS area_of_interest
+REASON Detects potential Insecure Direct Object References (IDOR).
+TRACE Externalized rule logic for Insecure Direct Object References (IDOR).

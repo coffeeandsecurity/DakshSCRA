@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT addJavascriptInterface\s*\(
+WHEN EXPR PRESENT:addJavascriptInterface && PRESENT:setAllowFileAccessFromFileURLs\s*\(\s*true|setAllowUniversalAccessFromFileURLs\s*\(\s*true
+REPORT AS area_of_interest
+REASON Detects the dangerous combination of addJavascriptInterface and file URL access enabled in the same WebView configuration.
+TRACE Externalized mobile rule logic for addJavascriptInterface with File Access Enabled.

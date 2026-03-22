@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT exec\s*\(\s*["'][^"']*["']\s*\+|exec\s*\(\s*"[^"]*\$\{
+WHEN EXPR MISSING:prepareStatement|setString\s*\(|setInt\s*\(|PreparedStatement|selectAll|insert\s*\{|update\s*\{
+REPORT AS area_of_interest
+REASON Detects Kotlin Exposed exec() calls with SQL built via string templates or concatenation.
+TRACE Externalized rule logic for exec() with String Template SQL.

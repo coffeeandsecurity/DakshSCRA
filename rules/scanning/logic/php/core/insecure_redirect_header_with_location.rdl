@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT header\s*\(\s*['\"]\s*Location\s*:\s*['\"]\s*\.\s*\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)
+WHEN EXPR MISSING:parse_url|filter_var\s*\(.*FILTER_VALIDATE_URL|allowlist|whitelist
+REPORT AS area_of_interest
+REASON Detects usage of the header() function with the "Location" parameter, which can lead to insecure redirects.
+TRACE Externalized rule logic for Insecure Redirect: header() with Location.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(?:for|while)\s*\([^)]*(?:<|<=|>|>=)[^)]*(?:len|size|count|index|idx|i|j|k)[^)]*\)
+WHEN EXPR PRESENT:user_input|argv|getenv|scanf|fgets|recv\s*\(|read\s*\(|atoi|atol|strtol|strlen\s*\(.*argv|input|buf\[|buffer\[
+REPORT AS area_of_interest
+REASON Detects loops iterating over arrays, strings, or lists with potentially unsafe bounds.
+TRACE Externalized rule logic for Unsafe Loop Handling Over Arrays or Strings.

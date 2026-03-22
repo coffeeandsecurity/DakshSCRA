@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT java\.util\.Random
+WHEN EXPR MISSING:SecureRandom|new\s+Random\s*\(\s*seed|ThreadLocalRandom && MISSING:test|mock|dummy|example
+REPORT AS area_of_interest
+REASON Detects the usage of the java.util.Random package, which can lead to predictable and easily reproducible values if the seed is known.
+TRACE Externalized rule logic for Insecure Package: java.util.Random.

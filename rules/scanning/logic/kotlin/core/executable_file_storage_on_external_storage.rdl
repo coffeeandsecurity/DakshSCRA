@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*.*\.(dex|so|jar|apk)
+WHEN EXPR MISSING:verify|signature|checksum|MessageDigest && MISSING:test|example|sample
+REPORT AS area_of_interest
+REASON Detects storage of executable files on external storage.
+TRACE Externalized rule logic for Executable File Storage on External Storage.

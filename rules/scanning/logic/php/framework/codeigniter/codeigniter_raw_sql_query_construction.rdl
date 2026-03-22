@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT DB::raw\(|selectRaw\(|whereRaw\(|->query\(\s*\$|mysqli_query\(|PDO::query\(
+WHEN EXPR MISSING:where\s*\(.*\?|$this->db->escape|bindParam|prepared && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects raw/dynamic SQL construction in framework and DB access calls.
+TRACE Externalized rule logic for Codeigniter Raw SQL Query Construction.

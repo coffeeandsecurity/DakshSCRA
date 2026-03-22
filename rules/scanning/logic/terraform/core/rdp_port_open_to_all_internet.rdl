@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT from_port\s*=\s*3389[^\d][^}]*cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\]
+WHEN EXPR PRESENT:from_port\s*=\s*3389|to_port\s*=\s*3389 && PRESENT:cidr_blocks.*0\.0\.0\.0/0|cidr_ipv6.*::/0 && MISSING:# intentional|# bastion
+REPORT AS area_of_interest
+REASON Detects security group rules allowing RDP (port 3389) ingress from all IP addresses.
+TRACE Externalized rule logic for RDP Port Open to All Internet.

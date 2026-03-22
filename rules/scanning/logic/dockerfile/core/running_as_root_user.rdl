@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT ^USER\s+(?:root|0)\s*$
+WHEN EXPR MISSING:USER\s+(?!0|root)[a-zA-Z]|useradd|adduser|gosu|su-exec
+REPORT AS area_of_interest
+REASON Detects Dockerfiles that explicitly set or retain root as the container runtime user.
+TRACE Externalized rule logic for Running as Root User.

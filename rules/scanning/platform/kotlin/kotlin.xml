@@ -2,8 +2,8 @@
     <category name="Untrusted Input Handling or Injection Flaws">
         <rule>
             <name>Untrusted Inputs: Intent Extras</name>
-            <regex><![CDATA[Intent\.get.*Extra\(".*"]]></regex>
-            <rdl><![CDATA[[FLAG:Intent\.get.*Extra\(".*"][IF(PRESENT:(execute|query|rawQuery|execSQL|Runtime|ProcessBuilder|File\s*\(|URL\s*\(|startActivity|intent\.) && MISSING:(validate|sanitize|escape|encode|allowlist|whitelist))]]]></rdl>
+            <regex>Intent\.get.*Extra\(".*"</regex>
+            <rdl_ref>logic/kotlin/core/untrusted_inputs_intent_extras.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>Untrusted Inputs: Shared Preferences</name>
-            <regex><![CDATA[SharedPreferences\.get.*\(".*"]]></regex>
-            <rdl><![CDATA[[FLAG:SharedPreferences\.get.*\(".*"][IF(PRESENT:(execute|query|rawQuery|execSQL|Runtime|ProcessBuilder|File\s*\(|URL\s*\() && MISSING:(validate|sanitize|escape|encode))]]]></rdl>
+            <regex>SharedPreferences\.get.*\(".*"</regex>
+            <rdl_ref>logic/kotlin/core/untrusted_inputs_shared_preferences.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>Untrusted Inputs: User Input Fields</name>
-            <regex><![CDATA[EditText\.getText\(\)]]></regex>
-            <rdl><![CDATA[[FLAG:EditText\.getText\(\)][IF(PRESENT:(execute|query|rawQuery|execSQL|Runtime|ProcessBuilder|File\s*\(|URL\s*\(|WebView|loadUrl|loadData) && MISSING:(validate|sanitize|escape|encode|allowlist|whitelist))]]]></rdl>
+            <regex>EditText\.getText\(\)</regex>
+            <rdl_ref>logic/kotlin/core/untrusted_inputs_user_input_fields.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -53,8 +53,8 @@
         </rule>
         <rule>
             <name>SQL Injection: Room @Query / Raw SQL with Dynamic Input</name>
-            <regex><![CDATA[@Query\s*\(\s*"[^"]*\$[^"]*"|\brawQuery\s*\(|\.execSQL\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:@Query\s*\(\s*"[^"]*\$[^"]*"|\brawQuery\s*\(|\.execSQL\s*\(][IF(MISSING:prepare\s*\(|bindString\s*\(|bindParam\s*\(|\?,\s*arrayOf)]]]></rdl>
+            <regex>@Query\s*\(\s*"[^"]*\$[^"]*"|\brawQuery\s*\(|\.execSQL\s*\(</regex>
+            <rdl_ref>logic/kotlin/core/sql_injection_room_query_raw_sql_with_dynamic_input.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -72,8 +72,8 @@
     <category name="Insecure Method/Function Call">
         <rule>
             <name>Insecure Method Call: Runtime.exec()</name>
-            <regex><![CDATA[Runtime\.exec\(".*"\)]]></regex>
-            <rdl><![CDATA[[FLAG:Runtime\.exec\(".*"\)][IF(MISSING:validate|sanitize|allowlist|ProcessBuilder\s*\(listOf)]]]></rdl>
+            <regex>Runtime\.exec\(".*"\)</regex>
+            <rdl_ref>logic/kotlin/core/insecure_method_call_runtime_exec.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -89,8 +89,8 @@
         </rule>
         <rule>
             <name>Insecure Method Call: WebView.loadUrl() with Dynamic Content</name>
-            <regex><![CDATA[\.loadUrl\s*\(\s*(?:"[^"]*\$[^"]*"|`[^`]*\$[^`]*`|[^\s"'(][^)]*\))]]></regex>
-            <rdl><![CDATA[[FLAG:\.loadUrl\s*\(][IF(MISSING:loadUrl\s*\(\s*"(?:about:|javascript:window\.|file:///android_asset) && MISSING:loadUrl\s*\(\s*"https://[a-zA-Z0-9])]]]></rdl>
+            <regex>\.loadUrl\s*\(\s*(?:"[^"]*\$[^"]*"|`[^`]*\$[^`]*`|[^\s"'(][^)]*\))</regex>
+            <rdl_ref>logic/kotlin/core/insecure_method_call_webview_loadurl_with_dynamic_content.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -106,8 +106,8 @@
         </rule>
         <rule>
             <name>Insecure Method Call: ContentResolver.query()</name>
-            <regex><![CDATA[ContentResolver\.query\(".*"\)]]></regex>
-            <rdl><![CDATA[[FLAG:ContentResolver\.query\(".*"\)][IF(MISSING:selectionArgs|bindArgs|\?,\s*arrayOf|validate|sanitize)]]]></rdl>
+            <regex>ContentResolver\.query\(".*"\)</regex>
+            <rdl_ref>logic/kotlin/core/insecure_method_call_contentresolver_query.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -123,8 +123,8 @@
         </rule>
         <rule>
             <name>Insecure Method Call: SharedPreferences</name>
-            <regex><![CDATA[getSharedPreferences\(\s*[^,]+,\s*Context\.MODE_PRIVATE\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:getSharedPreferences\(\s*[^,]+,\s*Context\.MODE_PRIVATE\s*\)][IF(PRESENT:(putString|putInt|putLong|putBoolean|getString|getInt|getLong|getBoolean) && PRESENT:(token|secret|password|auth|session|apikey|key) && MISSING:(EncryptedSharedPreferences|MasterKey|KeyStore|Keystore|Cipher|encrypt|decrypt))]]]></rdl>
+            <regex>getSharedPreferences\(\s*[^,]+,\s*Context\.MODE_PRIVATE\s*\)</regex>
+            <rdl_ref>logic/kotlin/core/insecure_method_call_sharedpreferences.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -140,8 +140,8 @@
         </rule>
         <rule>
             <name>Insecure Method Call: viewModelScope.launch (No Error Handling)</name>
-            <regex><![CDATA[viewModelScope\.launch\s*\{[^}]*(?:query|rawQuery|execSQL|getPassword|getToken|decrypt|encrypt|hash|credential|authToken|network|http|https)[^}]*\}]]></regex>
-            <rdl><![CDATA[[FLAG:viewModelScope\.launch\s*\{[^}]*(?:query|rawQuery|execSQL|getPassword|getToken|decrypt|encrypt|credential|authToken)[^}]*\}][IF(MISSING:try\s*\{|catch\s*\(|runCatching|CoroutineExceptionHandler)]]]></rdl>
+            <regex>viewModelScope\.launch\s*\{[^}]*(?:query|rawQuery|execSQL|getPassword|getToken|decrypt|encrypt|hash|credential|authToken|network|http|https)[^}]*\}</regex>
+            <rdl_ref>logic/kotlin/core/insecure_method_call_viewmodelscope_launch_no_error_handling.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -157,8 +157,8 @@
         </rule>
         <rule>
             <name>Insecure Method Call: setHtmlText</name>
-            <regex><![CDATA[setHtmlText\s*\(.*\)]]></regex>
-            <rdl><![CDATA[[FLAG:setHtmlText\s*\(.*\)][IF(MISSING:HtmlUtils\.htmlEscape|StringEscapeUtils\.escapeHtml|ESAPI\.encoder|Jsoup\.clean|sanitize)]]]></rdl>
+            <regex>setHtmlText\s*\(.*\)</regex>
+            <rdl_ref>logic/kotlin/core/insecure_method_call_sethtmltext.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -174,11 +174,10 @@
         </rule>
     </category>
     <category name="Internal Storage - Insecure File Permissions">
-        <!-- Applicable to Java/Kotlin source files (e.g., .java, .kt) -->
         <rule>
             <name>Deprecated MODE_WORLD_WRITEABLE Usage</name>
-            <regex><![CDATA[M(?:ODE_)?WORLD_WRITEABLE]]></regex>
-            <rdl><![CDATA[[FLAG:M(?:ODE_)?WORLD_WRITEABLE][IF(MISSING:EncryptedSharedPreferences|EncryptedFile|KeyStore|test|example)]]]></rdl>
+            <regex>M(?:ODE_)?WORLD_WRITEABLE</regex>
+            <rdl_ref>logic/kotlin/core/deprecated_mode_world_writeable_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -194,8 +193,8 @@
         </rule>
         <rule>
             <name>Deprecated MODE_WORLD_READABLE Usage</name>
-            <regex><![CDATA[M(?:ODE_)?WORLD_READABLE]]></regex>
-            <rdl><![CDATA[[FLAG:M(?:ODE_)?WORLD_READABLE][IF(MISSING:EncryptedSharedPreferences|EncryptedFile|KeyStore|test|example)]]]></rdl>
+            <regex>M(?:ODE_)?WORLD_READABLE</regex>
+            <rdl_ref>logic/kotlin/core/deprecated_mode_world_readable_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -211,8 +210,8 @@
         </rule>
         <rule>
             <name>Insecure File Operations</name>
-            <regex><![CDATA[openFile(?:Output|Input)\s*\([^,]*,\s*M(?:ODE_)?WORLD_(?:WRITEABLE|READABLE)]]></regex>
-            <rdl><![CDATA[[FLAG:openFile(?:Output|Input)\s*\([^,]*,\s*M(?:ODE_)?WORLD_(?:WRITEABLE|READABLE)][IF(MISSING:EncryptedFile|openFileOutput.*MODE_PRIVATE|test|example)]]]></rdl>
+            <regex>openFile(?:Output|Input)\s*\([^,]*,\s*M(?:ODE_)?WORLD_(?:WRITEABLE|READABLE)</regex>
+            <rdl_ref>logic/kotlin/core/insecure_file_operations.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -228,8 +227,8 @@
         </rule>
         <rule>
             <name>File Sharing Without Content Provider</name>
-            <regex><![CDATA[Intent\s*\(\s*(?:[^,]*,\s*)?Uri\.parse\s*\(\s*"(?!(?:https?|smsto|sms|tel|mailto|about|geo|market):)]]></regex>
-            <rdl><![CDATA[[FLAG:Intent\s*\(\s*(?:[^,]*,\s*)?Uri\.parse][IF(MISSING:Uri\.parse\s*\(\s*"(?:https?:|smsto:|sms:|tel:|mailto:|about:|geo:|market:|content:))]]]></rdl>
+            <regex>Intent\s*\(\s*(?:[^,]*,\s*)?Uri\.parse\s*\(\s*"(?!(?:https?|smsto|sms|tel|mailto|about|geo|market):)</regex>
+            <rdl_ref>logic/kotlin/core/file_sharing_without_content_provider.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -245,11 +244,10 @@
         </rule>
     </category>
     <category name="External Storage - Insecure Practices">
-        <!-- Applicable to Java/Kotlin source files (e.g., .java, .kt) -->
         <rule>
             <name>Insecure External Storage Write</name>
-            <regex><![CDATA[(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*\.write]]></regex>
-            <rdl><![CDATA[[FLAG:(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*\.write][IF(MISSING:EncryptedFile|AES|encrypt|cipher|KeyStore && MISSING:test|example|sample)]]]></rdl>
+            <regex>(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*\.write</regex>
+            <rdl_ref>logic/kotlin/core/insecure_external_storage_write.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -265,8 +263,8 @@
         </rule>
         <rule>
             <name>Dynamic Loading from External Storage</name>
-            <regex><![CDATA[(DexClassLoader|PathClassLoader)\s*\([^,]*Environment\.getExternalStorageDirectory]]></regex>
-            <rdl><![CDATA[[FLAG:(DexClassLoader|PathClassLoader)\s*\([^,]*Environment\.getExternalStorageDirectory][IF(MISSING:verify|signature|checksum|MessageDigest|trusted)]]]></rdl>
+            <regex>(DexClassLoader|PathClassLoader)\s*\([^,]*Environment\.getExternalStorageDirectory</regex>
+            <rdl_ref>logic/kotlin/core/dynamic_loading_from_external_storage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -282,8 +280,8 @@
         </rule>
         <rule>
             <name>Insecure External Storage Read</name>
-            <regex><![CDATA[(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*\.read]]></regex>
-            <rdl><![CDATA[[FLAG:(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*\.read][IF(MISSING:validate|sanitize|allowlist && MISSING:test|example|sample)]]]></rdl>
+            <regex>(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*\.read</regex>
+            <rdl_ref>logic/kotlin/core/insecure_external_storage_read.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -299,8 +297,8 @@
         </rule>
         <rule>
             <name>Executable File Storage on External Storage</name>
-            <regex><![CDATA[(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*.*\.(dex|so|jar|apk)]]></regex>
-            <rdl><![CDATA[[FLAG:(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*.*\.(dex|so|jar|apk)][IF(MISSING:verify|signature|checksum|MessageDigest && MISSING:test|example|sample)]]]></rdl>
+            <regex>(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*.*\.(dex|so|jar|apk)</regex>
+            <rdl_ref>logic/kotlin/core/executable_file_storage_on_external_storage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -318,8 +316,8 @@
     <category name="Insecure Mitigations">
         <rule>
             <name>JavaScript Bridge Exposure: WebView.addJavascriptInterface()</name>
-            <regex><![CDATA[\.addJavascriptInterface\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\.addJavascriptInterface\s*\(][IF(MISSING:@JavascriptInterface|setAllowFileAccess\s*\(\s*false|setAllowUniversalAccessFromFileURLs\s*\(\s*false|trustedOrigin|allowlist)]]]></rdl>
+            <regex>\.addJavascriptInterface\s*\(</regex>
+            <rdl_ref>logic/kotlin/core/javascript_bridge_exposure_webview_addjavascriptinterface.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -337,8 +335,8 @@
     <category name="Effective/Standard Mitigations Implemented">
         <rule>
             <name>Mitigation Identified: SQL Injection (Room Database)</name>
-            <regex><![CDATA[Room\.createQuery\(".*"\)]]></regex>
-            <rdl><![CDATA[[FLAG:Room\.createQuery\(".*"\)][IF(PRESENT:@Query\s*\(.*:\w+|@Query\s*\(.*\?|SupportSQLiteDatabase.*compileStatement && MISSING:test|example)]]]></rdl>
+            <regex>@Query\s*\(\s*"[^"]*(?::\w+|\?)[^"]*"\s*\)|SupportSQLiteDatabase.*compileStatement</regex>
+            <rdl_ref>logic/kotlin/core/mitigation_identified_sql_injection_room_database.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -347,17 +345,17 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects the presence of Room database queries with properly parameterized or sanitized inputs to mitigate SQL injection vulnerabilities.</rule_desc>
-            <vuln_desc>This rule checks if Room database queries are constructed using Room's query builder methods, which inherently parameterize or sanitize inputs, effectively mitigating SQL injection vulnerabilities. By using Room's built-in mechanisms for query construction, developers avoid the risk of SQL injection vulnerabilities that arise from improper input handling.</vuln_desc>
-            <developer>Room database queries are constructed using Room's query builder methods, such as createQuery(), which automatically handle input parameterization or sanitization. By leveraging these mechanisms, developers can effectively mitigate SQL injection vulnerabilities in Room database queries.</developer>
-            <reviewer>Room database queries are constructed using Room's query builder methods, such as createQuery(), to ensure proper input parameterization or sanitization, thereby mitigating SQL injection vulnerabilities. Additionally, confirm that developers consistently apply these secure coding practices throughout the application's database interactions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+            <rule_desc>Detects Room or SQLite query patterns that use bound parameters instead of dynamic SQL interpolation.</rule_desc>
+            <vuln_desc>This rule checks whether Kotlin database access uses parameter binding rather than string-built SQL. Room `@Query` annotations with named or positional placeholders and SQLite compiled statements are defensive signals because user input is bound as data instead of concatenated into executable SQL.</vuln_desc>
+            <developer>Prefer Room `@Query` placeholders such as `:arg` or `?` and compiled statements with bound values instead of Kotlin string interpolation in SQL strings.</developer>
+            <reviewer>Confirm that Room queries rely on placeholders or compiled statements with bound values, and that raw SQL construction with string interpolation is not being mistaken for parameterized execution. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
     <category name="Data Leakage">
         <rule>
             <name>Sensitive Data in Logcat Output</name>
-            <regex><![CDATA[Log\.[deiwtv]\s*\(\s*\w+\s*,\s*[^")][^)]*\)|Log\.[deiwtv]\s*\(\s*\w+\s*,\s*"[^"]*\$[^"]*"\)]]></regex>
-            <rdl><![CDATA[[FLAG:Log\.[deiwtv]\s*\(][IF(PRESENT:password|token|secret|credential|auth|session|key|pin|ssn|dob|credit|cvv|privateKey|accessToken|refreshToken && MISSING:BuildConfig\.DEBUG\s*&&\s*Log\.|if\s*\(\s*BuildConfig\.DEBUG)]]]></rdl>
+            <regex>Log\.[deiwtv]\s*\(\s*\w+\s*,\s*[^")][^)]*\)|Log\.[deiwtv]\s*\(\s*\w+\s*,\s*"[^"]*\$[^"]*"\)</regex>
+            <rdl_ref>logic/kotlin/core/sensitive_data_in_logcat_output.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -373,8 +371,8 @@
         </rule>
         <rule>
             <name>Dynamic Code Loading</name>
-            <regex><![CDATA[DexClassLoader\s*\(|PathClassLoader\s*\(|URLClassLoader\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:DexClassLoader\s*\(|PathClassLoader\s*\(|URLClassLoader\s*\(][IF(MISSING:android_asset|getFilesDir\(\)|getCodeCacheDir\(\)|getCacheDir\(\)|Context\.getDir\()]]]></rdl>
+            <regex>DexClassLoader\s*\(|PathClassLoader\s*\(|URLClassLoader\s*\(</regex>
+            <rdl_ref>logic/kotlin/core/dynamic_code_loading.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>

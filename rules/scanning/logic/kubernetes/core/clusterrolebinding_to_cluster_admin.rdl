@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT roleRef\s*:[^}]*name\s*:\s*cluster-admin
+WHEN EXPR PRESENT:cluster-admin && MISSING:# intentional|# required|system:|kube-system|namespace:\s*kube
+REPORT AS area_of_interest
+REASON Detects ClusterRoleBindings that grant the cluster-admin role to subjects.
+TRACE Externalized rule logic for ClusterRoleBinding to cluster-admin.

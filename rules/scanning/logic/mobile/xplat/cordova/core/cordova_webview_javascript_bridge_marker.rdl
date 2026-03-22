@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT addJavascriptInterface\(|cordova\.exec\(
+WHEN EXPR MISSING:allow-navigation\s+href=\"https://
+REPORT AS area_of_interest
+REASON Detects JavaScript-native bridge usage requiring trust-boundary review.
+TRACE Externalized mobile rule logic for Cordova WebView JavaScript Bridge Marker.

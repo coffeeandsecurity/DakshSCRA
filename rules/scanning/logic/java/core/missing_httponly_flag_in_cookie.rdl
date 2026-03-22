@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (\bSet-Cookie:\s*)(?!(.*;\s*)*HttpOnly\b).*
+WHEN EXPR MISSING:setHttpOnly\s*\(\s*true|setSecure\s*\(\s*true|SameSite
+REPORT AS area_of_interest
+REASON Detects cookies that are missing the 'httpOnly' flag, which can expose them to client-side attacks.
+TRACE Externalized rule logic for Missing 'httpOnly' Flag in Cookie.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \.addJavascriptInterface\s*\(
+WHEN EXPR MISSING:@JavascriptInterface|setAllowFileAccess\s*\(\s*false|setAllowUniversalAccessFromFileURLs\s*\(\s*false|trustedOrigin|allowlist
+REPORT AS area_of_interest
+REASON Detects any call to addJavascriptInterface(), which exposes a native object to JavaScript running in a WebView.
+TRACE Externalized rule logic for JavaScript Bridge Exposure: WebView.addJavascriptInterface().

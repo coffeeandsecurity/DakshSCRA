@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bYAML\.load\s*\(
+WHEN EXPR MISSING:YAML\.safe_load|Psych\.safe_load|permitted_classes|allowed_classes
+REPORT AS area_of_interest
+REASON Detects use of YAML.load which can deserialize arbitrary objects.
+TRACE Externalized rule logic for Unsafe YAML Deserialization.

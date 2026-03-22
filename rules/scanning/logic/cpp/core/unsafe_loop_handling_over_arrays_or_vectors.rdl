@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(?:for|while)\s*\([^)]*(?:<|<=|>|>=)[^)]*(?:size|length|count|index|idx|i|j|k)[^)]*\)
+WHEN EXPR MISSING:size\(\)|length\(\)|\.end\(\)|bounds|assert|sizeof\s*\(.*\)/sizeof
+REPORT AS area_of_interest
+REASON Detects loops iterating over arrays, vectors, or strings.
+TRACE Externalized rule logic for Unsafe Loop Handling Over Arrays or Vectors.

@@ -1,7 +1,7 @@
 const ITEMS = [
   { id: 'overview', label: 'Overview' },
   { id: 'projects', label: 'Projects' },
-  { id: 'scans', label: 'Scans & Findings' }
+  { id: 'scans', label: 'Scans & Areas of Interest' }
 ]
 
 export default function LeftNav({ active, onChange, health }) {

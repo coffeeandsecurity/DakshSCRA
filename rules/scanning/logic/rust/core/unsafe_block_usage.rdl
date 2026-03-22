@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bunsafe\s*\{
+WHEN EXPR MISSING:// SAFETY:|// Safety:|// UNSAFE:
+REPORT AS area_of_interest
+REASON Detects unsafe blocks in Rust code.
+TRACE Externalized rule logic for Unsafe Block Usage.

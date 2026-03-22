@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\.safestring
+WHEN EXPR MISSING:escape|bleach\.clean|html\.escape|strip_tags|validate && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects the potentially insecure usage of the Django Safe Filter (django.utils.safestring), which may indicate an insufficient security mitigation approach.
+TRACE Externalized rule logic for Insecure Mitigation: Django Safe Filter django.utils.safestring.

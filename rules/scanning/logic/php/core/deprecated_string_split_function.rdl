@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bsplit\s*\(\s*[^;]*\s*\)
+WHEN EXPR MISSING:explode|str_split|preg_split && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects usage of the deprecated split() function, which can lead to unpredictable behavior and maintenance challenges.
+TRACE Externalized rule logic for Deprecated String Split Function.

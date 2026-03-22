@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT resource\s+"google_compute_instance"[^}]*access_config\s*\{
+WHEN EXPR MISSING:nat_ip\s*=\s*""
+REPORT AS area_of_interest
+REASON Detects GCP Compute Engine instances configured with external IP addresses via access_config blocks.
+TRACE Externalized rule logic for GCP VM Instance with Public IP.

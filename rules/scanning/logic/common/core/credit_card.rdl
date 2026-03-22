@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?:6011|5\d\d\d|4\d\d\d|3\d\d\d)\d{11,12}
+WHEN EXPR PRESENT:(?i)\b(card|credit|payment|pan|cvv)\b
+REPORT AS area_of_interest
+REASON Detects potential credit card numbers in the code.
+TRACE Externalized rule logic for Credit Card.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT privileged\s*:\s*true
+WHEN EXPR PRESENT:privileged:\s*true && MISSING:# intentional|# required|# system
+REPORT AS area_of_interest
+REASON Detects containers configured to run in privileged mode.
+TRACE Externalized rule logic for Privileged Container Enabled.

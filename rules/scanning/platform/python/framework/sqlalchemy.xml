@@ -2,8 +2,8 @@
     <category name="Framework-Specific Issues - SQLAlchemy">
         <rule>
             <name>Raw SQL via text() with String Concatenation</name>
-            <regex><![CDATA[text\s*\(\s*["'][^"']*["']\s*\+|text\s*\(\s*f["']|text\s*\(\s*["'][^"']*%\s*(?:\(|\w)]]></regex>
-            <rdl><![CDATA[[FLAG:text\s*\(\s*["'][^"']*["']\s*\+|text\s*\(\s*f["']|text\s*\(\s*["'][^"']*%\s*(?:\(|\w)][IF(MISSING:bindparams|bindparam|:(?!:)\w)]]]></rdl>
+            <regex>text\s*\(\s*["'][^"']*["']\s*\+|text\s*\(\s*f["']|text\s*\(\s*["'][^"']*%\s*(?:\(|\w)</regex>
+            <rdl_ref>logic/python/framework/sqlalchemy/raw_sql_via_text_with_string_concatenation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>filter() with Raw String Condition</name>
-            <regex><![CDATA[\.filter\s*\(\s*["']|\.filter\s*\(\s*f["']|\.filter\s*\(\s*["'][^"']*["']\s*%]]></regex>
-            <rdl><![CDATA[[FLAG:\.filter\s*\(\s*["']|\.filter\s*\(\s*f["']|\.filter\s*\(\s*["'][^"']*["']\s*%][IF(MISSING:bindparams|bindparam|:(?!:)\w|params)]]]></rdl>
+            <regex>\.filter\s*\(\s*["']|\.filter\s*\(\s*f["']|\.filter\s*\(\s*["'][^"']*["']\s*%</regex>
+            <rdl_ref>logic/python/framework/sqlalchemy/filter_with_raw_string_condition.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>Hardcoded Database Connection String</name>
-            <regex><![CDATA[create_engine\s*\(\s*["'](?:postgresql|mysql|sqlite|mssql|oracle)[^"']*://[^"']*:[^"'@]{6,}@]]></regex>
-            <rdl><![CDATA[[FLAG:create_engine\s*\(\s*["'](?:postgresql|mysql|sqlite|mssql|oracle)[^"']*://[^"']*:[^"'@]{6,}@][IF(MISSING:os\.environ|getenv|config\.|settings\.)]]]></rdl>
+            <regex>create_engine\s*\(\s*["'](?:postgresql|mysql|sqlite|mssql|oracle)[^"']*://[^"']*:[^"'@]{6,}@</regex>
+            <rdl_ref>logic/python/framework/sqlalchemy/hardcoded_database_connection_string.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -54,8 +54,8 @@
         </rule>
         <rule>
             <name>execute() with String Formatting</name>
-            <regex><![CDATA[\.execute\s*\(\s*["'][^"']*["']\s*\+|\.execute\s*\(\s*f["']|\.execute\s*\(\s*["'][^"']*%\s*(?:\(|\w)]]></regex>
-            <rdl><![CDATA[[FLAG:\.execute\s*\(\s*["'][^"']*["']\s*\+|\.execute\s*\(\s*f["']|\.execute\s*\(\s*["'][^"']*%\s*(?:\(|\w)][IF(MISSING:bindparams|bindparam|:(?!:)\w|params)]]]></rdl>
+            <regex>\.execute\s*\(\s*["'][^"']*["']\s*\+|\.execute\s*\(\s*f["']|\.execute\s*\(\s*["'][^"']*%\s*(?:\(|\w)</regex>
+            <rdl_ref>logic/python/framework/sqlalchemy/execute_with_string_formatting.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>

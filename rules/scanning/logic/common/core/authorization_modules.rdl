@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\b(authorize|access_control|rbac|abac|acl)\b
+WHEN EXPR PRESENT:(?i)\b(role|permission|policy|access|authorize)\b && MISSING:(?i)\b(readme|changelog|example|sample|docs?)\b
+REPORT AS area_of_interest
+REASON Detects terms used in authorization and access control functionalities, such as 'authorize', 'access_control', 'RBAC', and 'ABAC', in probable function names or modules.
+TRACE Externalized rule logic for Authorization Modules.

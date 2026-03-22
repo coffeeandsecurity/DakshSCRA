@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\b(INSERT INTO|UPDATE)\s+[^\s]+\s+(SET|VALUES)\s+.*=.*\$.*
+WHEN EXPR MISSING:prepare\s*\(|bind_param|bindValue|bindParam|PDO::prepare
+REPORT AS area_of_interest
+REASON Detects non-parameterized INSERT or UPDATE statements that may include user input directly, potentially leading to SQL injection vulnerabilities.
+TRACE Externalized rule logic for SQL Query: Non-parameterized INSERT/UPDATE Statements.

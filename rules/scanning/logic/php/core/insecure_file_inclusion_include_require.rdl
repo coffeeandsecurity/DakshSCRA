@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(?:include|require)(_once)?\s*\(\s*(?:(?:\'[^\']*\'|\"[^\"]*\")\s*\.\s*)?\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\.\s*(?:\'[^\']*\'|\"[^\"]*\"))?\s*\)
+WHEN EXPR MISSING:realpath|basename|__DIR__|allowlist|whitelist|in_array
+REPORT AS area_of_interest
+REASON Detects insecure usage of include() and require() functions, especially with user input in file paths.
+TRACE Externalized rule logic for Insecure File Inclusion: include(), require().

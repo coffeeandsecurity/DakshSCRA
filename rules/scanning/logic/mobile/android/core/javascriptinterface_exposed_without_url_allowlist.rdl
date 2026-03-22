@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT @JavascriptInterface
+WHEN EXPR MISSING:shouldOverrideUrlLoading|onPageStarted|allowedOrigins|getAllowedHosts|checkUrl|getUrl\(\)\.startsWith
+REPORT AS area_of_interest
+REASON Detects @JavascriptInterface methods exposed to WebView without corresponding URL origin validation.
+TRACE Externalized mobile rule logic for JavascriptInterface Exposed Without URL Allowlist.

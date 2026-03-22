@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT htmlentities
+WHEN EXPR PRESENT:htmlspecialchars|htmlentities|strip_tags|esc_html|h\s*\( && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects the presence of XSS mitigation using htmlentities function.
+TRACE Externalized rule logic for Mitigation Identified: XSS.

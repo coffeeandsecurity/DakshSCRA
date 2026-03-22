@@ -72,6 +72,24 @@
                     <span class="note-title">Reviewer note:</span> {{ entry.rev_note }}
                 </div>
                 {% endif %}
+                {% if entry.logic_engine or entry.logic_reason or entry.logic_trace %}
+                <div class="note-block">
+                    <span class="note-title">Rule logic{% if entry.logic_engine %} ({{ entry.logic_engine|upper }}){% endif %}:</span>
+                    {% if entry.logic_reason %} {{ entry.logic_reason }}{% endif %}
+                    {% if entry.logic_trace %}
+                    <div style="margin-top:6px;">
+                        {% for trace in entry.logic_trace %}
+                        <div>{{ trace }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if entry.logic_consulted_files %}
+                    <div style="margin-top:6px;">
+                        <span class="note-title">Consulted files:</span> {{ entry.logic_consulted_files|join(', ') }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
 
                 {% for source in entry.sources %}
                 <div class="code-block">

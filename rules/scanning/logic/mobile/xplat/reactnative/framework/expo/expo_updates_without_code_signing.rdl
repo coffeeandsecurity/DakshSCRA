@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT "expo-updates"|expoConfig.*updates
+WHEN EXPR MISSING:codeSigningCertificate|codeSigningMetadata|code-signing
+REPORT AS area_of_interest
+REASON Detects Expo OTA updates configuration without code signing enabled.
+TRACE Externalized mobile rule logic for Expo Updates Without Code Signing.

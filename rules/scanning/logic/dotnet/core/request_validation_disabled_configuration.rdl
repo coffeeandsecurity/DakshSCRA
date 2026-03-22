@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT %@\s?Page\s?.*\s?ValidateRequest\s?=\s?(\'|\")false(\'|\")
+WHEN EXPR PRESENT:validateRequest\s*=\s*"false"|ValidateInput\s*\(\s*false|RequestValidationMode && MISSING:test|example|AntiXssEncoder|HtmlEncode
+REPORT AS area_of_interest
+REASON Detects the disabled configuration of request validation in ASP.NET Web Forms, which may lead to security vulnerabilities.
+TRACE Externalized rule logic for Request Validation: Disabled Configuration.

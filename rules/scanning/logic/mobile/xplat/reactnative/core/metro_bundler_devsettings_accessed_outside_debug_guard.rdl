@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bNativeModules\.DevSettings\b|\bDevSettings\b
+WHEN EXPR MISSING:__DEV__|if.*__DEV__|kDebugMode|// development only
+REPORT AS area_of_interest
+REASON Detects Metro bundler DevSettings module access that may not be guarded by a debug-only check.
+TRACE Externalized mobile rule logic for Metro Bundler DevSettings Accessed Outside Debug Guard.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT badCertificateCallback\s*:\s*\([^)]*\)\s*(?:=>|\{)[^}]*(?:=>|return)\s*true
+WHEN EXPR MISSING:test|development|localhost|staging|certificate pinning
+REPORT AS area_of_interest
+REASON Detects Dio HttpClient configurations that accept all TLS certificates via badCertificateCallback returning true.
+TRACE Externalized mobile rule logic for Bad Certificate Callback Accepting All Certificates.

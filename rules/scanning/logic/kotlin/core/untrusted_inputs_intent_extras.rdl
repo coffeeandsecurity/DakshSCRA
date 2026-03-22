@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT Intent\.get.*Extra\(".*"
+WHEN EXPR PRESENT:(execute|query|rawQuery|execSQL|Runtime|ProcessBuilder|File\s*\(|URL\s*\(|startActivity|intent\.) && MISSING:(validate|sanitize|escape|encode|allowlist|whitelist)
+REPORT AS area_of_interest
+REASON Detects the usage of Intent extras, which may contain untrusted inputs.
+TRACE Externalized rule logic for Untrusted Inputs: Intent Extras.

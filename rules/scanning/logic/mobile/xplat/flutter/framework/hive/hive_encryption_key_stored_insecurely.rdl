@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT HiveAesCipher\s*\(|Hive\.generateSecureKey\s*\(\s*\)
+WHEN EXPR MISSING:flutter_secure_storage|FlutterSecureStorage|SecureStoragePlugin
+REPORT AS area_of_interest
+REASON Detects Hive AES cipher key usage without secure storage for the key material.
+TRACE Externalized mobile rule logic for Hive Encryption Key Stored Insecurely.

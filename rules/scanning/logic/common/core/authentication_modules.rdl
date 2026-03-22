@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\b(login|authenticate|oauth|jwt)\b
+WHEN EXPR PRESENT:(?i)\b(auth|login|token|session|credential)\b && MISSING:(?i)\b(readme|changelog|example|sample|docs?|license|copyright|third[-_ ]party)\b
+REPORT AS area_of_interest
+REASON Detects common terms used in authentication functionalities, such as 'Login', 'authenticate', 'OAuth', and 'JWT', when used in likely function names or module references.
+TRACE Externalized rule logic for Authentication Modules.

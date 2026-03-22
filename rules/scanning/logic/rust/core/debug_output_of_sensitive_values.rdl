@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(?:println!|eprintln!|dbg!)\s*\(.*(?:token|secret|password|key)
+WHEN EXPR MISSING:example|sample|dummy|test|placeholder
+REPORT AS area_of_interest
+REASON Detects debug logging likely to include sensitive values.
+TRACE Externalized rule logic for Debug Output of Sensitive Values.

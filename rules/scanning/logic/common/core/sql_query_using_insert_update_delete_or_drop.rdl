@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)(INSERT|UPDATE|DELETE|DROP).*\$\{\w+\}.*
+WHEN EXPR PRESENT:(?i)\b(query|execute|statement|sql)\b
+REPORT AS area_of_interest
+REASON This pattern would match queries containing variables in a format like ${variableName}, indicating the usage of dynamic SQL queries involving INSERT, UPDATE, DELETE, or DROP commands.
+TRACE Externalized rule logic for SQL Query: Using INSERT, UPDATE, DELETE, or DROP.

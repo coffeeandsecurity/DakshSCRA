@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT Hive\.openBox\s*\(|Hive\.openLazyBox\s*\(
+WHEN EXPR MISSING:encryptionCipher|HiveAesCipher|encryptionKey
+REPORT AS area_of_interest
+REASON Detects Hive boxes opened without an encryption cipher for sensitive data storage.
+TRACE Externalized mobile rule logic for Hive Box Opened Without Encryption.

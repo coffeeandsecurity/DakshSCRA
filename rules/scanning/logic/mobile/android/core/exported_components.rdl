@@ -1,0 +1,7 @@
+VERSION 1
+WHEN FILE_NAME_IS AndroidManifest.xml
+WHEN CURRENT_FILE_MATCHES /android:exported\s*=\s*"(true|TRUE)"/i
+OBSERVE PROJECT_HAS_GLOB **/AndroidManifest.xml AS manifest_files
+REPORT AS area_of_interest
+REASON Exported Android components should be reviewed at component scope for missing permission or access-control boundaries.
+TRACE Mobile RDL pilot evaluated this finding against Android manifest context instead of relying on inline RDL only.

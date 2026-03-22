@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT WebView.*setJavaScriptEnabled\(true\)
+WHEN EXPR PRESENT:setJavaScriptEnabled\s*\(\s*true && MISSING:setAllowFileAccess\s*\(\s*false|setSafeBrowsingEnabled\s*\(\s*true|setWebViewClient|shouldOverrideUrlLoading
+REPORT AS area_of_interest
+REASON Detects insecure WebView configurations that enable JavaScript.
+TRACE Externalized mobile rule logic for Insecure WebView Configuration.

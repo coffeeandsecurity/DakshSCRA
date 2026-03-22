@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT CFBundleURLSchemes
+REPORT AS area_of_interest
+REASON Detects custom URL scheme declarations that may require deep-link validation checks.
+TRACE Externalized mobile rule logic for Insecure URL Scheme Registration.

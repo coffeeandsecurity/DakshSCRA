@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT lxml\.etree\.parse\s*\(|etree\.fromstring\s*\(|etree\.XMLParser\s*\(
+WHEN EXPR MISSING:resolve_entities\s*=\s*False|no_network\s*=\s*True|XMLParser\s*\(.*resolve_entities\s*=\s*False
+REPORT AS area_of_interest
+REASON Detects lxml XML parsing without external entity resolution disabled.
+TRACE Externalized rule logic for XXE: lxml etree Parser Without Resolve Entities Disabled.

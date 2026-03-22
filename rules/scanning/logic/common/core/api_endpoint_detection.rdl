@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)/\w+/\{\w+\}
+WHEN EXPR PRESENT:(?i)\b(route|router|controller|handler|get|post|put|delete)\b
+REPORT AS area_of_interest
+REASON Detects the usage of potential API endpoints in source code files, which may require special handling and validation.
+TRACE Externalized rule logic for API Endpoint Detection.

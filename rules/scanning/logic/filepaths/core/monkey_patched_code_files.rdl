@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT (?i)(?:monkey_patch|patched_code|custom_patch)
+WHEN EXPR MISSING:(?i)(/tests?/|/fixtures?/|/mocks?/)
+REPORT AS area_of_interest
+REASON Detects the presence of monkey patched code in a project.

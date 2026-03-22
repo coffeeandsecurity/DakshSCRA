@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (System\.out\.print|System\.err\.print|System\.out\.println|System\.err\.println|log\.(debug|trace))
+WHEN EXPR MISSING:release|production
+REPORT AS area_of_interest
+REASON Detects the usage of debugging and logging statements (System.out.print, System.err.print, System.out.println, System.err.println, log.debug, log.trace), which may expose sensitive backend information if used in the production environment.
+TRACE Externalized rule logic for Debugging and Logging Statements.

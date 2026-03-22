@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(setuid|setgid|initgroups)\s*\(
+WHEN EXPR MISSING:if\s*\(|==\s*-1|!=\s*0|perror|strerror|errno
+REPORT AS area_of_interest
+REASON Detects the use of privilege-changing functions and ensures proper handling practices.
+TRACE Externalized rule logic for Insecure Handling of Privileged Operations.

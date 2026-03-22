@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (CryptoJS\.DES\.encrypt|MD5|SHA-1|RC4)\(.+\)
+WHEN EXPR MISSING:crypto\.subtle|node:crypto|webcrypto|bcrypt|argon2|scrypt && MISSING:test|example|spec|checksum|integrity
+REPORT AS area_of_interest
+REASON Detects the usage of weak cryptographic functions.
+TRACE Externalized rule logic for Weak Cryptography.

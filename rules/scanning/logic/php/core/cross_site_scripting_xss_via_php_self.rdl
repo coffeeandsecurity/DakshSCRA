@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \$_SERVER\['PHP_SELF'
+WHEN EXPR PRESENT:(echo|print|action\s*=|header\s*\() && MISSING:htmlspecialchars|htmlentities|basename
+REPORT AS area_of_interest
+REASON Detects usage of the PHP_SELF variable in contexts that may be vulnerable to cross-site scripting (XSS).
+TRACE Externalized rule logic for Cross-Site Scripting (XSS) via PHP_SELF.

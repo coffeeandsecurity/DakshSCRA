@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT ServerCertificateValidationCallback\s*=\s*\{[^}]*\$true\}|ServerCertificateValidationCallback\s*=\s*\{\s*\$true\s*\}
+WHEN EXPR MISSING:test|development|localhost|staging
+REPORT AS area_of_interest
+REASON Detects TLS certificate validation disabled via ServerCertificateValidationCallback returning true for all certificates.
+TRACE Externalized rule logic for TLS Validation Disabled via Callback.

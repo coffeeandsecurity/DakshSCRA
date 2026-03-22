@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bsudo\s+(?!visudo|passwd\s+-l|-l\b|-v\b)\S
+WHEN EXPR MISSING:if\s+\[|check|validate|authorized
+REPORT AS area_of_interest
+REASON Detects sudo usage in scripts without surrounding authorization validation logic.
+TRACE Externalized rule logic for sudo Usage Without Privilege Validation.

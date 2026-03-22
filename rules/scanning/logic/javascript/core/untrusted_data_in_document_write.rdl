@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT document\.write\(|innerHTML\s?=\s?.+
+WHEN EXPR MISSING:DOMPurify\.sanitize|sanitizeHtml|textContent|innerText|escapeHtml|encodeHTML && MISSING:test|example|spec
+REPORT AS area_of_interest
+REASON Detects potential DOM-based cross-site scripting (XSS) vulnerabilities.
+TRACE Externalized rule logic for Untrusted Data in 'document.write'.

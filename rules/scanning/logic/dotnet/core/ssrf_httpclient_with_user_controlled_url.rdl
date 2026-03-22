@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT httpClient\.(GetAsync|PostAsync|PutAsync|DeleteAsync|SendAsync|GetStringAsync|GetByteArrayAsync)\s*\(
+WHEN EXPR PRESENT:Request\.|QueryString|Form|userInput|\+ && MISSING:allowlist|whitelist|Uri\.IsWellFormedUriString|IsLocalUrl
+REPORT AS area_of_interest
+REASON Detects HttpClient requests that may use user-controlled URLs, enabling SSRF.
+TRACE Externalized rule logic for SSRF: HttpClient with User-Controlled URL.

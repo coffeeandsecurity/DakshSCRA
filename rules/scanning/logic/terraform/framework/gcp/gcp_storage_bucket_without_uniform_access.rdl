@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT uniform_bucket_level_access\s*=\s*false
+WHEN EXPR PRESENT:uniform_bucket_level_access\s*=\s*false && MISSING:# intentional|# legacy|# migration
+REPORT AS area_of_interest
+REASON Detects GCS buckets with fine-grained ACLs instead of uniform bucket-level access control.
+TRACE Externalized rule logic for GCP Storage Bucket Without Uniform Access.

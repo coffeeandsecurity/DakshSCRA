@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (shell_exec|exec|passthru|system|popen|`)\(
+WHEN EXPR PRESENT:\$_(GET|POST|REQUEST|COOKIE)|\$_SERVER|argv|request && MISSING:escapeshellarg|escapeshellcmd
+REPORT AS area_of_interest
+REASON Detects instances of shell-executing functions that can lead to command injection if used with untrusted input.
+TRACE Externalized rule logic for Command Injection: shell_exec, exec, passthru, system, popen, backtick.

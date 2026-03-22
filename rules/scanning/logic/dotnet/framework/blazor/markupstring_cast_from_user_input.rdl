@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT @\(\s*\(MarkupString\)\s*|new\s+MarkupString\s*\(
+WHEN EXPR MISSING:HtmlEncoder|Sanitize|AntiXss|allowlist
+REPORT AS area_of_interest
+REASON Detects MarkupString usage that renders raw HTML without sanitization.
+TRACE Externalized rule logic for MarkupString Cast from User Input.

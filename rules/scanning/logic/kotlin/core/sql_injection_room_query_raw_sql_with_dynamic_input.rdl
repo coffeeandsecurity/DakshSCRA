@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT @Query\s*\(\s*"[^"]*\$[^"]*"|\brawQuery\s*\(|\.execSQL\s*\(
+WHEN EXPR MISSING:prepare\s*\(|bindString\s*\(|bindParam\s*\(|\?,\s*arrayOf
+REPORT AS area_of_interest
+REASON Detects Room @Query annotations with Kotlin string interpolation, and direct SQLite rawQuery/execSQL calls, which may allow SQL injection.
+TRACE Externalized rule logic for SQL Injection: Room @Query / Raw SQL with Dynamic Input.

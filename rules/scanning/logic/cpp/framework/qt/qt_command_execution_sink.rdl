@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(system|popen|_popen)\s*\(
+WHEN EXPR MISSING:validate|sanitize|allowlist|QStringList\s*\(\s*\{|QProcess::startDetached && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects OS command execution APIs in C++ code paths.
+TRACE Externalized rule logic for Qt Command Execution Sink.

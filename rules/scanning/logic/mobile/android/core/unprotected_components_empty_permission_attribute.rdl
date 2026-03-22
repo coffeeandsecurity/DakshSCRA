@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT android:permission\s*=\s*(?:""|'')
+REPORT AS area_of_interest
+REASON Detects components with an explicitly empty android:permission attribute, which removes all access control.
+TRACE Externalized mobile rule logic for Unprotected Components: Empty Permission Attribute.

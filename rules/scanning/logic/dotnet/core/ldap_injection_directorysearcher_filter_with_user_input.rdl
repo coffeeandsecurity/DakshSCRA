@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT new\s+DirectorySearcher\s*\(|DirectorySearcher\.Filter\s*=
+WHEN EXPR PRESENT:Request\.|QueryString|Form|userInput|\+ && MISSING:EscapeLdapFilter|ldapEscape|Encoder\.LdapFilterEncode|AntiXss\.LdapFilterEncode
+REPORT AS area_of_interest
+REASON Detects DirectorySearcher usage with filter strings that may incorporate unescaped user input.
+TRACE Externalized rule logic for LDAP Injection: DirectorySearcher Filter with User Input.

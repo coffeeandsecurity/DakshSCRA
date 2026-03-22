@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT hostNetwork\s*:\s*true
+WHEN EXPR PRESENT:hostNetwork:\s*true && MISSING:# intentional|# required
+REPORT AS area_of_interest
+REASON Detects pods configured to share the host's network namespace.
+TRACE Externalized rule logic for Host Network Namespace Shared.

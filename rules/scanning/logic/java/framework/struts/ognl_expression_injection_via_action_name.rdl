@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT getValue\s*\(\s*[^)]*\+|findValue\s*\(\s*[^)]*(?:request|param|getParameter)
+WHEN EXPR MISSING:ESAPI\.encoder|AntiXss|sanitize|escapeHtml
+REPORT AS area_of_interest
+REASON Detects OGNL expression evaluation with user-controlled input via the ValueStack.
+TRACE Externalized rule logic for OGNL Expression Injection via Action Name.

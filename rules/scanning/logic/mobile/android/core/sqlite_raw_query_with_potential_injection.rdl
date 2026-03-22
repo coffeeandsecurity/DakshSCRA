@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \.rawQuery\s*\(|\.execSQL\s*\(
+WHEN EXPR MISSING:selectionArgs\s*=|bindString\s*\(|bindLong\s*\(|\?,\s*new\s+String
+REPORT AS area_of_interest
+REASON Detects direct SQLite rawQuery or execSQL calls that may construct queries without parameterisation.
+TRACE Externalized mobile rule logic for SQLite Raw Query with Potential Injection.

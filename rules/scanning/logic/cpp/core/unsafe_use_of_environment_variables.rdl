@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(std::getenv)\s*\(
+WHEN EXPR MISSING:validate|sanitize|allowlist|whitelist|check\s*\(|strlen|strnlen
+REPORT AS area_of_interest
+REASON Detects use of `std::getenv()` for accessing environment variables.
+TRACE Externalized rule logic for Unsafe Use of Environment Variables.

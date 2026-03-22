@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT allow_nested_items_to_be_public\s*=\s*true|allow_blob_public_access\s*=\s*true
+WHEN EXPR PRESENT:allow_blob_public_access\s*=\s*true|allow_nested_items_to_be_public\s*=\s*true && MISSING:# intentional|# static-website|static_website
+REPORT AS area_of_interest
+REASON Detects Azure Storage Accounts configured to allow public blob access.
+TRACE Externalized rule logic for Azure Storage Account Allows Public Blob Access.

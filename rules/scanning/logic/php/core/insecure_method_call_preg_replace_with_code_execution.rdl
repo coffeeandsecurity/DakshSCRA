@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT preg_replace\s*\(\s*['"](eval|assert|system|passthru|shell_exec|exec|popen|proc_open|pcntl_exec)['"]\s*,\s*\$([^\s,]*)\s*\)
+WHEN EXPR MISSING:preg_replace_callback|str_replace|validate|test|example
+REPORT AS area_of_interest
+REASON Detects insecure usage of preg_replace() with dangerous replacement parameters that could lead to code injection vulnerabilities.
+TRACE Externalized rule logic for Insecure Method Call: preg_replace() with Code Execution.

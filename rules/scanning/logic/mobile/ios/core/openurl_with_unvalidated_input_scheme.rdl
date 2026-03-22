@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bUIApplication\.shared\.open\s*\(|\bUIApplication\.sharedApplication\(\)\.openURL\s*\(
+WHEN EXPR MISSING:scheme|canOpenURL|allowedSchemes|guard|whitelist|allowlist
+REPORT AS area_of_interest
+REASON Detects openURL calls that may open user-controlled or unvalidated URL schemes.
+TRACE Externalized mobile rule logic for openURL with Unvalidated Input Scheme.

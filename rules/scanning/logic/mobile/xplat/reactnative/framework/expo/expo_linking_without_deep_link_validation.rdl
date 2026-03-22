@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT Linking\.addEventListener\s*\(\s*['"]url['"]|Linking\.getInitialURL\s*\(\s*\)
+WHEN EXPR MISSING:validate|allowlist|startsWith|parse|sanitize
+REPORT AS area_of_interest
+REASON Detects Expo Linking deep link handlers without URL validation logic.
+TRACE Externalized mobile rule logic for Expo Linking Without Deep Link Validation.

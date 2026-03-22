@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(int|short|unsigned)\s+\w+\s*=\s*\w+\s*\+\s*(\d{5,}|INT_MAX|UINT_MAX);
+WHEN EXPR MISSING:INT_MAX|UINT_MAX|__builtin_add_overflow|SafeAdd|checked_add|overflow|bounds
+REPORT AS area_of_interest
+REASON Detects arithmetic operations prone to overflow or wraparound.
+TRACE Externalized rule logic for Integer Overflow or Wraparound.

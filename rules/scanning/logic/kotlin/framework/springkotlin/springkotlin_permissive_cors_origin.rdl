@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT allowedOrigins\s*=\s*arrayOf\(\s*"\*"\s*\)|origin\s*=\s*"\*"
+WHEN EXPR PRESENT:allowedOrigins.*"\*"|corsConfiguration.*allowedOrigins\s*=\s*"\*" && MISSING:allowedOrigins\s*=\s*"\s*https?://[^*]|allowCredentials.*false
+REPORT AS area_of_interest
+REASON Detects wildcard origin policy settings.
+TRACE Externalized rule logic for Springkotlin Permissive CORS/Origin.

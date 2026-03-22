@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT sendStickyBroadcast\s*\(|sendStickyOrderedBroadcast\s*\(
+WHEN EXPR PRESENT:putExtra.*(?:token|password|secret|key|data|user|account|credential)
+REPORT AS area_of_interest
+REASON Detects sticky broadcasts that carry sensitive data in Intent extras.
+TRACE Externalized mobile rule logic for Sticky Broadcast Carrying Sensitive Data.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bregister_globals\b
+WHEN EXPR PRESENT:register_globals\s*=\s*On|register_globals\s*=\s*1 && MISSING:# intentional
+REPORT AS area_of_interest
+REASON Detects usage of the deprecated and insecure register_globals directive.
+TRACE Externalized rule logic for Deprecated register_globals Directive.

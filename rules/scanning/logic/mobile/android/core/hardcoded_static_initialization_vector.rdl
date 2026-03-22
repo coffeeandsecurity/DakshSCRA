@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT new\s+IvParameterSpec\s*\(
+WHEN EXPR PRESENT:static.*byte\s*\[\]|final.*byte\s*\[\].*\{|new\s+byte\s*\[.*\]\s*\{.*0x && MISSING:SecureRandom|generateIV|randomIV|randomBytes
+REPORT AS area_of_interest
+REASON Detects use of a hardcoded or static byte array as an AES/cipher initialization vector.
+TRACE Externalized mobile rule logic for Hardcoded Static Initialization Vector.

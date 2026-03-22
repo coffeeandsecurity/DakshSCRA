@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\.debug\s*=\s*True|\$debug\s*=\s*true|DEBUG\s*=\s*True|IsDebuggingEnabled\s*=\s*true
+WHEN EXPR MISSING:(?i)\b(release|production)\b
+REPORT AS area_of_interest
+REASON Detects the presence of sensitive debug information in application settings.
+TRACE Externalized rule logic for Sensitive Debug Information.

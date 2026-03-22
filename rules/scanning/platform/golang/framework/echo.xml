@@ -2,8 +2,8 @@
     <category name="Framework-Specific Security">
         <rule>
             <name>Echo Debug Mode Enabled</name>
-            <regex><![CDATA[GIN_MODE\s*=\s*debug|SetMode\(\s*gin\.DebugMode\s*\)|\.Debug\s*=\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:GIN_MODE\s*=\s*debug|SetMode\(\s*gin\.DebugMode\s*\)|\.Debug\s*=\s*true][IF(MISSING:production|release|ReleaseMode|GIN_MODE.*release && MISSING:test|development)]]]></rdl>
+            <regex>GIN_MODE\s*=\s*debug|SetMode\(\s*gin\.DebugMode\s*\)|\.Debug\s*=\s*true</regex>
+            <rdl_ref>logic/golang/framework/echo/echo_debug_mode_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>Echo TLS Validation Bypass</name>
-            <regex><![CDATA[InsecureSkipVerify\s*:\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:InsecureSkipVerify\s*:\s*true][IF(MISSING:test|development|localhost|staging)]]]></rdl>
+            <regex>InsecureSkipVerify\s*:\s*true</regex>
+            <rdl_ref>logic/golang/framework/echo/echo_tls_validation_bypass.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>Echo SQL Query Concatenation Sink</name>
-            <regex><![CDATA[Query\(\s*fmt\.Sprintf|Exec\(\s*fmt\.Sprintf|Raw\(\s*fmt\.Sprintf]]></regex>
-            <rdl><![CDATA[[FLAG:Query\(\s*fmt\.Sprintf|Exec\(\s*fmt\.Sprintf|Raw\(\s*fmt\.Sprintf][IF(MISSING:prepare|parameterize|\?.*args|sqlx\.NamedExec|squirrel)]]]></rdl>
+            <regex>Query\(\s*fmt\.Sprintf|Exec\(\s*fmt\.Sprintf|Raw\(\s*fmt\.Sprintf</regex>
+            <rdl_ref>logic/golang/framework/echo/echo_sql_query_concatenation_sink.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -53,8 +53,8 @@
         </rule>
         <rule>
             <name>Echo Permissive CORS</name>
-            <regex><![CDATA[AllowOrigins\s*:\s*\[\]\s*string\{\s*"\*"\s*\}|AllowOrigins\s*:\s*"\*"]]></regex>
-            <rdl><![CDATA[[FLAG:AllowOrigins\s*:\s*\[\]\s*string\{\s*"\*"\s*\}|AllowOrigins\s*:\s*"\*"][IF(MISSING:AllowOriginFunc|allowedOrigins && PRESENT:AllowOrigins.*"\*"|AllowAnyOrigin)]]]></rdl>
+            <regex>AllowOrigins\s*:\s*\[\]\s*string\{\s*"\*"\s*\}|AllowOrigins\s*:\s*"\*"</regex>
+            <rdl_ref>logic/golang/framework/echo/echo_permissive_cors.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -70,8 +70,8 @@
         </rule>
         <rule>
             <name>Echo Hardcoded Secret Material</name>
-            <regex><![CDATA[(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:os\.Getenv|os\.LookupEnv|viper\.|config\.|vault\. && MISSING:example|test|placeholder|TODO)]]]></rdl>
+            <regex>(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"</regex>
+            <rdl_ref>logic/golang/framework/echo/echo_hardcoded_secret_material.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

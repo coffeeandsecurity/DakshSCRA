@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT resource\s+"aws_iam_role_policy"[^}]*Action\s*":\s*"\*"
+WHEN EXPR PRESENT:AdministratorAccess|arn:aws:iam::aws:policy/AdministratorAccess|"\*".*"Allow" && MISSING:# intentional|# required|boundary|permission_boundary
+REPORT AS area_of_interest
+REASON Detects Lambda execution roles with wildcard Action policies.
+TRACE Externalized rule logic for Lambda Function with Broad IAM Role.

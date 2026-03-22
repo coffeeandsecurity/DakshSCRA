@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT UIPasteboard
+WHEN EXPR MISSING:expirationDate && MISSING:localOnly
+REPORT AS area_of_interest
+REASON Detects pasteboard usage that may expose sensitive data.
+TRACE Externalized mobile rule logic for SwiftUI Pasteboard Sensitive Data Marker.

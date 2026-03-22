@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT Intent\s*\(\s*(?:[^,]*,\s*)?Uri\.parse
+WHEN EXPR MISSING:Uri\.parse\s*\(\s*"(?:https?:|smsto:|sms:|tel:|mailto:|about:|geo:|market:|content:)
+REPORT AS area_of_interest
+REASON Detects file sharing via raw file-path URIs without going through a ContentProvider/FileProvider.
+TRACE Externalized rule logic for File Sharing Without Content Provider.

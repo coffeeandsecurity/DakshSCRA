@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT android:exported\s*=\s*"?(?:true|TRUE)"?
+REPORT AS area_of_interest
+REASON Detects exported Android components in Flutter's Android configuration.
+TRACE Externalized mobile rule logic for Android Exported Components in Manifest.

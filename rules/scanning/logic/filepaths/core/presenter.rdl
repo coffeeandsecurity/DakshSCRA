@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT (?i)/(Presenter)/
+WHEN EXPR PRESENT:(?i)(/|\\\\).*(presenter|presentation)
+REPORT AS area_of_interest
+REASON Detects file paths related to presenters.

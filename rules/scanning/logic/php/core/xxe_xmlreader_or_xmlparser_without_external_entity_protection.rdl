@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT xml_parser_create\s*\(|XMLReader::open\s*\(|new\s+XMLReader\s*\(
+WHEN EXPR MISSING:libxml_disable_entity_loader|XML_OPTION_SKIP_WHITE|LIBXML_NOENT\s*=\s*0
+REPORT AS area_of_interest
+REASON Detects XMLReader and xml_parser_create usage without external entity protection.
+TRACE Externalized rule logic for XXE: XMLReader or XMLParser Without External Entity Protection.

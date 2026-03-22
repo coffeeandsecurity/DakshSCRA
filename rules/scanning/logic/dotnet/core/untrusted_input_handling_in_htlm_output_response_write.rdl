@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT Response\.Write\(.*\)
+WHEN EXPR PRESENT:(Request\.|HttpContext\.Current\.Request) && MISSING:(HtmlEncode|HttpUtility\.HtmlEncode|AntiXssEncoder|TagBuilder)
+REPORT AS area_of_interest
+REASON Detects the usage of Response.Write without output encoding, which can lead to cross-site scripting vulnerabilities.
+TRACE Externalized rule logic for Untrusted Input Handling in HTLM Output: Response.Write.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT ConvertTo-SecureString\s+.*-AsPlainText\s+-Force
+WHEN EXPR MISSING:Get-Secret|[System\.Environment]::GetEnvironmentVariable|$env:|placeholder|example|test
+REPORT AS area_of_interest
+REASON Detects ConvertTo-SecureString usage with -AsPlainText -Force flags indicating a plaintext credential workflow.
+TRACE Externalized rule logic for ConvertTo-SecureString with PlainText.

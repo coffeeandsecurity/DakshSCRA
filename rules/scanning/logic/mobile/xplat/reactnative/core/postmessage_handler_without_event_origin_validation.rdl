@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT addEventListener\s*\(\s*['"]message['"]
+WHEN EXPR MISSING:event\.origin|e\.origin|message\.origin|trustedOrigin|allowedOrigins
+REPORT AS area_of_interest
+REASON Detects postMessage event handlers that may not validate the event origin.
+TRACE Externalized mobile rule logic for PostMessage Handler Without Event Origin Validation.

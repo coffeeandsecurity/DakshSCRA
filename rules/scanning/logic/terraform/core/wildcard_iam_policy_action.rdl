@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT actions\s*=\s*\[\s*"\*"\s*\]
+WHEN EXPR PRESENT:"Action":\s*"\*"|actions\s*=\s*\["\*"\]|action\s*=\s*"\*" && MISSING:effect\s*=\s*"Deny"|NotAction|# intentional|# required
+REPORT AS area_of_interest
+REASON Detects IAM policies granting all actions via a wildcard (*) permission.
+TRACE Externalized rule logic for Wildcard IAM Policy Action.

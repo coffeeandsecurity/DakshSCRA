@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT context\.lookup\s*\(|jndiContext\.lookup\s*\(
+WHEN EXPR PRESENT:request|getParameter|getHeader|input|\+ && MISSING:allowlist|whitelist|validateJndiName
+REPORT AS area_of_interest
+REASON Detects JNDI lookup calls that may resolve attacker-controlled names (Log4Shell-class pattern).
+TRACE Externalized rule logic for JNDI Injection: InitialContext Lookup with User Input.

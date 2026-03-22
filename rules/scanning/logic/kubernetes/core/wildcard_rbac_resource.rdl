@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT resources\s*:\s*\[?\s*["']?\*["']?\s*\]?
+REPORT AS area_of_interest
+REASON Detects RBAC policies granting permissions over all resource types.
+TRACE Externalized rule logic for Wildcard RBAC Resource.

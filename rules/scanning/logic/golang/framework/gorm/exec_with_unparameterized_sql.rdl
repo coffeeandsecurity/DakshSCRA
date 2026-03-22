@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \.Exec\s*\(\s*["'][^"']*["']\s*\+|\.Exec\s*\(\s*fmt\.Sprintf\s*\(["'][^"']*%[sv]
+WHEN EXPR MISSING:\.Exec\s*\(\s*"[^"]*\?|\.Exec\s*\(\s*"[^"]*@|PreparedStatement|parameterized
+REPORT AS area_of_interest
+REASON Detects GORM Exec() calls executing dynamically built SQL strings.
+TRACE Externalized rule logic for Exec() with Unparameterized SQL.

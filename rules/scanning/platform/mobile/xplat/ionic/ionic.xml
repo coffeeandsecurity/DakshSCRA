@@ -2,9 +2,9 @@
     <category name="Framework-Specific Issues - Ionic/Capacitor">
         <rule>
             <name>Capacitor/Cordova Insecure HTTP Endpoint Usage</name>
-            <regex><![CDATA[(?i)\b(?:fetch|XMLHttpRequest|HttpClient|axios\.(?:get|post|put|delete|request)|\$.ajax|url\s*[:=]|baseUrl\s*[:=]|serverUrl\s*[:=]|endpoint\s*[:=]|api(?:[_-]?(?:url|endpoint))?\s*[:=]|src\s*[:=]|href\s*[:=]|window\.open|Browser\.open|InAppBrowser|allow-navigation|access\s+origin)[^\n]{0,220}http://]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\b(?:fetch|XMLHttpRequest|HttpClient|axios\.(?:get|post|put|delete|request)|\$.ajax|url\s*[:=]|baseUrl\s*[:=]|serverUrl\s*[:=]|endpoint\s*[:=]|api(?:[_-]?(?:url|endpoint))?\s*[:=]|src\s*[:=]|href\s*[:=]|window\.open|Browser\.open|InAppBrowser|allow-navigation|access\s+origin)[^\n]{0,220}http://][IF(MISSING:https://)]]]></rdl>
-            <exclude><![CDATA[(?i)apache\.org/licenses|opensource\.org/licenses|w3\.org|^\s*(//|/\*|\*|#|<!--|~)]]></exclude>
+            <regex>(?i)\b(?:fetch|XMLHttpRequest|HttpClient|axios\.(?:get|post|put|delete|request)|\$.ajax|url\s*[:=]|baseUrl\s*[:=]|serverUrl\s*[:=]|endpoint\s*[:=]|api(?:[_-]?(?:url|endpoint))?\s*[:=]|src\s*[:=]|href\s*[:=]|window\.open|Browser\.open|InAppBrowser|allow-navigation|access\s+origin)[^\n]{0,220}http://</regex>
+            <rdl_ref>logic/mobile/xplat/ionic/core/capacitor_cordova_insecure_http_endpoint_usage.rdl</rdl_ref>
+            <exclude>(?i)apache\.org/licenses|opensource\.org/licenses|w3\.org|^\s*(//|/\*|\*|#|&lt;!--|~)</exclude>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>Insecure Browser Plugin Usage</name>
-            <regex><![CDATA[\b(?:InAppBrowser|cordova\.InAppBrowser|Browser\.open)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:InAppBrowser|cordova\.InAppBrowser|Browser\.open)\s*\(][IF(MISSING:validate|allowlist|trusted|Capacitor\.Platform|test|example)]]]></rdl>
+            <regex>\b(?:InAppBrowser|cordova\.InAppBrowser|Browser\.open)\s*\(</regex>
+            <rdl_ref>logic/mobile/xplat/ionic/core/insecure_browser_plugin_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>Sensitive Data in Local Storage</name>
-            <regex><![CDATA[\b(?:localStorage\.setItem|sessionStorage\.setItem|Storage\.set)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:localStorage\.setItem|sessionStorage\.setItem|Storage\.set)\s*\(][IF(PRESENT:localStorage\.setItem.*(?:password|token|secret|key|auth|credential) && MISSING:encrypt|CryptoJS|Capacitor\.Preferences|ionic-storage.*encrypt)]]]></rdl>
+            <regex>\b(?:localStorage\.setItem|sessionStorage\.setItem|Storage\.set)\s*\(</regex>
+            <rdl_ref>logic/mobile/xplat/ionic/core/sensitive_data_in_local_storage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -55,8 +55,8 @@
     <category name="Framework-Specific Security">
         <rule>
             <name>Ionic/Cordova Allow Navigation Wildcard</name>
-            <regex><![CDATA[<allow-navigation\s+href=\"\*\"|<access\s+origin=\"\*\"]]></regex>
-            <rdl><![CDATA[[FLAG:<allow-navigation\s+href=\"\*\"|<access\s+origin=\"\*\"][IF(MISSING:Content-Security-Policy)]]]></rdl>
+            <regex>&lt;allow-navigation\s+href=\"\*\"|&lt;access\s+origin=\"\*\"</regex>
+            <rdl_ref>logic/mobile/xplat/ionic/core/ionic_cordova_allow_navigation_wildcard.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -73,7 +73,7 @@
         <rule>
             <name>Ionic Insecure HTTP Endpoint Usage</name>
             <regex>http://</regex>
-            <rdl><![CDATA[[FLAG:http://][IF(MISSING:https://)]]]></rdl>
+            <rdl_ref>logic/mobile/xplat/ionic/core/ionic_insecure_http_endpoint_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -88,8 +88,8 @@
         </rule>
         <rule>
             <name>Ionic/CSP Unsafe Directives</name>
-            <regex><![CDATA[unsafe-inline|unsafe-eval]]></regex>
-            <rdl><![CDATA[[FLAG:unsafe-inline|unsafe-eval][IF(MISSING:nonce-|sha256-)]]]></rdl>
+            <regex>unsafe-inline|unsafe-eval</regex>
+            <rdl_ref>logic/mobile/xplat/ionic/core/ionic_csp_unsafe_directives.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -105,8 +105,8 @@
         </rule>
         <rule>
             <name>Ionic Capacitor Cleartext Permitted</name>
-            <regex><![CDATA[cleartextTrafficPermitted\s*[:=]\s*true|NSAllowsArbitraryLoads]]></regex>
-            <rdl><![CDATA[[FLAG:cleartextTrafficPermitted\s*[:=]\s*true|NSAllowsArbitraryLoads][IF(MISSING:network_security_config|NSExceptionDomains)]]]></rdl>
+            <regex>cleartextTrafficPermitted\s*[:=]\s*true|NSAllowsArbitraryLoads</regex>
+            <rdl_ref>logic/mobile/xplat/ionic/core/ionic_capacitor_cleartext_permitted.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -122,8 +122,8 @@
         </rule>
         <rule>
             <name>Ionic Storage Secret Marker</name>
-            <regex><![CDATA[(localStorage|sessionStorage)\.(setItem|set)\(.*(token|secret|password|apikey)]]></regex>
-            <rdl><![CDATA[[FLAG:(localStorage|sessionStorage)\.(setItem|set)\(.*(token|secret|password|apikey)][IF(MISSING:secure-storage|Keychain|Keystore)]]]></rdl>
+            <regex>(localStorage|sessionStorage)\.(setItem|set)\(.*(token|secret|password|apikey)</regex>
+            <rdl_ref>logic/mobile/xplat/ionic/core/ionic_storage_secret_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -138,8 +138,8 @@
         </rule>
         <rule>
             <name>Ionic Hardcoded Secret Marker</name>
-            <regex><![CDATA[(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]]]></regex>
-            <rdl><![CDATA[[FLAG:(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]][IF(MISSING:environment\.ts\.example)]]]></rdl>
+            <regex>(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]</regex>
+            <rdl_ref>logic/mobile/xplat/ionic/core/ionic_hardcoded_secret_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -157,8 +157,8 @@
     <category name="Platform-Specific Issues - Android">
         <rule>
             <name>Android Cleartext Traffic Allowed</name>
-            <regex><![CDATA[usesCleartextTraffic\s*=\s*"?(?:true|TRUE)"?]]></regex>
-            <rdl><![CDATA[[FLAG:usesCleartextTraffic\s*=\s*"?(?:true|TRUE)"?][IF(PRESENT:android:usesCleartextTraffic\s*=\s*"true"|cleartextTrafficPermitted\s*=\s*"true" && MISSING:networkSecurityConfig|# intentional|localhost|development)]]]></rdl>
+            <regex>usesCleartextTraffic\s*=\s*"?(?:true|TRUE)"?</regex>
+            <rdl_ref>logic/mobile/xplat/ionic/core/android_cleartext_traffic_allowed.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -176,8 +176,8 @@
     <category name="Platform-Specific Issues - iOS">
         <rule>
             <name>iOS ATS Disabled</name>
-            <regex><![CDATA[NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]></regex>
-            <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>][IF(PRESENT:NSAllowsArbitraryLoads.*true && MISSING:NSExceptionDomains|localhost|development|# intentional)]]]></rdl>
+            <regex>NSAllowsArbitraryLoads\s*&lt;/key&gt;\s*&lt;true\s*/&gt;</regex>
+            <rdl_ref>logic/mobile/xplat/ionic/core/ios_ats_disabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>

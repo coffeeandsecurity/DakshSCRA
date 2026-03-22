@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(new|malloc)\s*\(
+WHEN EXPR MISSING:free\s*\(|delete\s+|unique_ptr|shared_ptr|RAII
+REPORT AS area_of_interest
+REASON Detects usage of `new` or `malloc()` for manual memory allocation.
+TRACE Externalized rule logic for Manual Memory Allocation: Use with Caution.

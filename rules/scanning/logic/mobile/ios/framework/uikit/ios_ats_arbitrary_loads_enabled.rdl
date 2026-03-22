@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT NSAllowsArbitraryLoads
+REPORT AS area_of_interest
+REASON Detects ATS global relaxation settings.
+TRACE Externalized mobile rule logic for iOS ATS Arbitrary Loads Enabled.

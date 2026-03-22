@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT android:allowBackup\s*=\s*"?(?:true|TRUE)"?
+REPORT AS area_of_interest
+REASON Detects Android backup configuration that can expose local app data.
+TRACE Externalized mobile rule logic for Android Backup Enabled.

@@ -29,8 +29,20 @@ import utils.cli_utils as cli
 import utils.config_utils as cutils
 from utils.cli_utils import spinner
 from utils.log_utils import get_logger
+from core.parser import FILEPATH_RULE_GUIDANCE
 
 logger = get_logger(__name__)
+
+
+def _path_guidance(item):
+    title = str(item.get("rule_title", "") or item.get("keyword", "")).strip()
+    guidance = FILEPATH_RULE_GUIDANCE.get(title, {})
+    return {
+        "brief_desc": str(item.get("brief_desc", "")).strip() or guidance.get("brief_desc", "") or str(item.get("rule_desc", "")).strip(),
+        "attack_desc": str(item.get("attack_desc", "")).strip() or guidance.get("attack_desc", "") or str(item.get("vuln_desc", "")).strip(),
+        "developer_note": str(item.get("developer_note", "")).strip() or guidance.get("developer_note", ""),
+        "reviewer_note": str(item.get("reviewer_note", "")).strip() or guidance.get("reviewer_note", ""),
+    }
 
 
 def _is_common_platform(platform_name):
@@ -119,6 +131,63 @@ def _normalize_confidence_score(value, default=50):
     except (TypeError, ValueError):
         score = default
     return max(0, min(100, score))
+
+
+def _read_text_lines_cached(file_cache, source_path):
+    file_key = str(source_path or "").strip()
+    if not file_key:
+        return []
+    if file_key in file_cache:
+        return file_cache[file_key]
+    try:
+        lines = Path(file_key).read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        lines = []
+    file_cache[file_key] = lines
+    return lines
+
+
+def _line_context_rows(lines, line_no, window=2):
+    try:
+        line_index = int(line_no) - 1
+    except (TypeError, ValueError):
+        return [], None, []
+    if line_index < 0 or line_index >= len(lines):
+        return [], None, []
+    before = []
+    after = []
+    for idx in range(max(0, line_index - window), line_index):
+        before.append({"line": idx + 1, "code": lines[idx]})
+    for idx in range(line_index + 1, min(len(lines), line_index + 1 + window)):
+        after.append({"line": idx + 1, "code": lines[idx]})
+    return before, lines[line_index], after
+
+
+def _enrich_path_step_context(step, file_cache, window=2):
+    if not isinstance(step, dict):
+        return step
+    enriched = dict(step)
+    step_file = str(step.get("file", "")).strip()
+    step_line = step.get("line")
+    lines = _read_text_lines_cached(file_cache, step_file)
+    before, resolved_code, after = _line_context_rows(lines, step_line, window=window)
+    if before:
+        enriched["context_before"] = before
+    if after:
+        enriched["context_after"] = after
+    if resolved_code is not None:
+        enriched["resolved_code"] = resolved_code
+    return enriched
+
+
+def _enrich_path_context(path_rows, file_cache, window=2):
+    if not isinstance(path_rows, list):
+        return []
+    return [
+        _enrich_path_step_context(step, file_cache, window=window)
+        for step in path_rows
+        if isinstance(step, dict)
+    ]
 
 
 def _confidence_label(score):
@@ -456,6 +525,11 @@ def _build_pdf_report_context(
             "evidence_samples": evidence_samples[:12],
             "evidence_label": _infer_pdf_evidence_label(issue_scope, category, files),
             "confidence_score": confidence_score,
+            "logic_engine": str(item.get("logic_engine", "")).strip(),
+            "logic_source": str(item.get("logic_source", "")).strip(),
+            "logic_reason": str(item.get("logic_reason", "")).strip(),
+            "logic_trace": [str(x).strip() for x in (item.get("logic_trace", []) or []) if str(x).strip()],
+            "logic_consulted_files": [str(x).strip() for x in (item.get("logic_consulted_files", []) or []) if str(x).strip()],
         }
         finding["confidence_label"] = _confidence_label(finding["confidence_score"])
         findings.append(finding)
@@ -491,6 +565,7 @@ def _build_pdf_report_context(
         for item in filepaths_aoi:
             if not isinstance(item, dict):
                 continue
+            guidance = _path_guidance(item)
             paths = item.get("filepath", [])
             if not isinstance(paths, list):
                 paths = []
@@ -512,6 +587,7 @@ def _build_pdf_report_context(
                         item.get("confidence_score"),
                         default=_fallback_paths_confidence(item),
                     )),
+                    **guidance,
                 })
     file_index.sort(key=lambda x: (-x["count"], x["rule_title"].lower()))
 
@@ -806,6 +882,11 @@ def get_areas_of_interest(input_file):
             "rev_note": html.escape(item.get("reviewer_note", "")),
             "confidence_score": confidence_score,
             "confidence_label": "",
+            "logic_engine": html.escape(item.get("logic_engine", "")),
+            "logic_source": html.escape(item.get("logic_source", "")),
+            "logic_reason": html.escape(item.get("logic_reason", "")),
+            "logic_trace": [html.escape(str(x)) for x in (item.get("logic_trace", []) or []) if str(x).strip()],
+            "logic_consulted_files": [html.escape(str(x)) for x in (item.get("logic_consulted_files", []) or []) if str(x).strip()],
             "sources": [],
         }
         snippet["confidence_label"] = _confidence_label(snippet["confidence_score"])
@@ -862,6 +943,7 @@ def get_filepaths_of_aoi(input_file):
         if isinstance(data, list):
             mapped = []
             for item in data:
+                guidance = _path_guidance(item if isinstance(item, dict) else {})
                 mapped.append({
                     "keyword": item.get("rule_title", ""),
                     "paths": item.get("filepath", []),
@@ -873,6 +955,7 @@ def get_filepaths_of_aoi(input_file):
                         item.get("confidence_score"),
                         default=_fallback_paths_confidence(item),
                     )),
+                    **guidance,
                 })
             return mapped
     except (OSError, json.JSONDecodeError, TypeError, ValueError) as exc:
@@ -912,6 +995,7 @@ def get_analysis_results(input_file):
         summary_raw = {}
     if not isinstance(results_raw, list):
         results_raw = []
+    file_cache = {}
 
     normalized_results = []
     for entry in results_raw:
@@ -932,6 +1016,12 @@ def get_analysis_results(input_file):
             if not isinstance(finding, dict):
                 continue
             f_score = _normalize_confidence_score(finding.get("confidence_score"), default=score)
+            normalized_path = _enrich_path_context(finding.get("path", []) if isinstance(finding.get("path"), list) else [], file_cache)
+            termination_nodes = [
+                _enrich_path_step_context(node, file_cache)
+                for node in (finding.get("termination_nodes", []) if isinstance(finding.get("termination_nodes"), list) else [])
+                if isinstance(node, dict)
+            ]
             normalized_findings.append({
                 "id": str(finding.get("id", "")).strip(),
                 "title": str(finding.get("title", "")).strip() or "Analyzer finding",
@@ -940,6 +1030,21 @@ def get_analysis_results(input_file):
                 "source": str(finding.get("source", "")).strip(),
                 "sink": str(finding.get("sink", "")).strip(),
                 "trace_chain": finding.get("trace_chain", []) if isinstance(finding.get("trace_chain"), list) else [],
+                "path": normalized_path,
+                "xref": finding.get("xref", []) if isinstance(finding.get("xref"), list) else [],
+                "input_surface": finding.get("input_surface", {}) if isinstance(finding.get("input_surface"), dict) else {},
+                "attack_vectors": finding.get("attack_vectors", []) if isinstance(finding.get("attack_vectors"), list) else [],
+                "file": str(finding.get("file", "")).strip(),
+                "function": str(finding.get("function", "")).strip(),
+                "line": finding.get("line"),
+                "source_file": str(finding.get("source_file", "")).strip(),
+                "source_line": finding.get("source_line"),
+                "sink_file": str(finding.get("sink_file", "")).strip(),
+                "sink_line": finding.get("sink_line"),
+                "termination_nodes": termination_nodes,
+                "cross_file": bool(finding.get("cross_file", False)),
+                "risk_score": finding.get("risk_score"),
+                "severity": str(finding.get("severity", "")).strip(),
                 "source_count": finding.get("source_count", 0),
                 "confidence_score": f_score,
                 "confidence_label": _confidence_label(f_score),
@@ -959,6 +1064,7 @@ def get_analysis_results(input_file):
             "confidence_score": score,
             "confidence_label": _confidence_label(score),
             "artifacts": entry.get("artifacts", {}) if isinstance(entry.get("artifacts"), dict) else {},
+            "security_inventory": entry.get("security_inventory", {}) if isinstance(entry.get("security_inventory"), dict) else {"summary": {}, "vulnerabilities": [], "mitigations": [], "finding_reviews": [], "false_positives": [], "manual_reviews": []},
             "findings": normalized_findings,
         })
 
@@ -971,6 +1077,11 @@ def get_analysis_results(input_file):
         "targets_analyzed": int(summary_raw.get("targets_analyzed", len(normalized_results)) or 0),
         "taint_targets": int(summary_raw.get("taint_targets", len(taint_results)) or 0),
         "findings_identified": int(summary_raw.get("findings_identified", sum(len(x.get("findings", [])) for x in normalized_results)) or 0),
+        "validated_findings": int(summary_raw.get("validated_findings", sum(int(((x.get("security_inventory", {}) or {}).get("summary", {}) or {}).get("validated_findings", 0) or 0) for x in normalized_results)) or 0),
+        "confirmed_vulnerabilities": int(summary_raw.get("confirmed_vulnerabilities", sum(len((x.get("security_inventory", {}) or {}).get("vulnerabilities", [])) for x in normalized_results)) or 0),
+        "mitigated_implementations": int(summary_raw.get("mitigated_implementations", sum(len((x.get("security_inventory", {}) or {}).get("mitigations", [])) for x in normalized_results)) or 0),
+        "suppressed_false_positives": int(summary_raw.get("suppressed_false_positives", sum(len((x.get("security_inventory", {}) or {}).get("false_positives", [])) for x in normalized_results)) or 0),
+        "manual_review_recommended": int(summary_raw.get("manual_review_recommended", sum(int(((x.get("security_inventory", {}) or {}).get("summary", {}) or {}).get("manual_review_recommended", 0) or 0) for x in normalized_results)) or 0),
         "generated_at": str(summary_raw.get("generated_at", "")).strip(),
     }
     return {

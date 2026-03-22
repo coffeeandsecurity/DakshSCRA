@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT android:usesCleartextTraffic\s*=\s*"true"|cleartextTrafficPermitted\s*=\s*true
+REPORT AS area_of_interest
+REASON Detects cleartext transport allowances in Android app manifest/network config.
+TRACE Externalized mobile rule logic for Android Cleartext Traffic Enabled.

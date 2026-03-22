@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT Invoke-Expression\s+["']?.*\$\w|iex\s+["']?.*\$\w
+WHEN EXPR MISSING:Validate|Sanitize|allowlist|\[ValidateSet\]|\[ValidatePattern\]
+REPORT AS area_of_interest
+REASON Detects Invoke-Expression (iex) calls that include variable interpolation.
+TRACE Externalized rule logic for Invoke-Expression with Variable Input.

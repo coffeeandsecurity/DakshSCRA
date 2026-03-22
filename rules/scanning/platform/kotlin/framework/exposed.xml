@@ -2,8 +2,8 @@
     <category name="Framework-Specific Issues - Kotlin Exposed">
         <rule>
             <name>exec() with String Template SQL</name>
-            <regex><![CDATA[exec\s*\(\s*["'][^"']*["']\s*\+|exec\s*\(\s*"""[^"]*"""\s*\+|exec\s*\(\s*"[^"]*\$\{]]></regex>
-            <rdl><![CDATA[[FLAG:exec\s*\(\s*["'][^"']*["']\s*\+|exec\s*\(\s*"[^"]*\$\{][IF(MISSING:prepareStatement|setString\s*\(|setInt\s*\(|PreparedStatement|selectAll|insert\s*\{|update\s*\{)]]]></rdl>
+            <regex>exec\s*\(\s*["'][^"']*["']\s*\+|exec\s*\(\s*"""[^"]*"""\s*\+|exec\s*\(\s*"[^"]*\$\{</regex>
+            <rdl_ref>logic/kotlin/framework/exposed/exec_with_string_template_sql.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>addLogger in Production Code Path</name>
-            <regex><![CDATA[addLogger\s*\(\s*StdOutSqlLogger\s*\)|addLogger\s*\(\s*Slf4jSqlDebugLogger\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:addLogger\s*\(\s*StdOutSqlLogger\s*\)|addLogger\s*\(\s*Slf4jSqlDebugLogger\s*\)][IF(MISSING:if.*debug|DEBUG|isDevelopment|isTest|\.debug)]]]></rdl>
+            <regex>addLogger\s*\(\s*StdOutSqlLogger\s*\)|addLogger\s*\(\s*Slf4jSqlDebugLogger\s*\)</regex>
+            <rdl_ref>logic/kotlin/framework/exposed/addlogger_in_production_code_path.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>Exposed Transaction Without Exception Handling</name>
-            <regex><![CDATA[transaction\s*\{]]></regex>
-            <rdl><![CDATA[[FLAG:transaction\s*\{][IF(MISSING:try|catch|runCatching|rollback)]]]></rdl>
+            <regex>transaction\s*\{</regex>
+            <rdl_ref>logic/kotlin/framework/exposed/exposed_transaction_without_exception_handling.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>

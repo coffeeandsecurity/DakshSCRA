@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT allowPrivilegeEscalation\s*:\s*true
+WHEN EXPR PRESENT:allowPrivilegeEscalation:\s*true && MISSING:# intentional|# required|capabilities\.drop
+REPORT AS area_of_interest
+REASON Detects containers with privilege escalation explicitly enabled.
+TRACE Externalized rule logic for allowPrivilegeEscalation Not Disabled.

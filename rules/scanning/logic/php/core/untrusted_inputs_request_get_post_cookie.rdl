@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \$_(REQUEST|GET|POST|COOKIE)
+WHEN EXPR PRESENT:(query|execute|include|require|header|echo|print|system|exec|shell_exec|eval|assert) && MISSING:(filter_input|filter_var|htmlspecialchars|htmlentities|intval|floatval|preg_match)
+REPORT AS area_of_interest
+REASON Detects the use of common PHP superglobals that can introduce untrusted input into the code.
+TRACE Externalized rule logic for Untrusted Inputs: $_REQUEST, $_GET, $_POST, $_COOKIE.

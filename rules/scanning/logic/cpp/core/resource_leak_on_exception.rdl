@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \btry\s*{[^}]*new\s+\w+
+WHEN EXPR MISSING:unique_ptr|shared_ptr|RAII|catch\s*\(std::bad_alloc
+REPORT AS area_of_interest
+REASON Detects dynamic memory allocations inside `try` blocks that may lead to memory leaks if an exception is thrown.
+TRACE Externalized rule logic for Resource Leak on Exception.

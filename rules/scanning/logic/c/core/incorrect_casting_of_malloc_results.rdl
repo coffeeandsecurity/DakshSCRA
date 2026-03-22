@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \(\s*\w+\s*\*\)\s*malloc\s*
+WHEN EXPR MISSING:// intentional|// cast required|static_cast|reinterpret_cast && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects unnecessary casting of `malloc()` results.
+TRACE Externalized rule logic for Incorrect Casting of malloc() Results.

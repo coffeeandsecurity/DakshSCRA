@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT struts\.enable\.DynamicMethodInvocation\s*=\s*true|<constant\s+name="struts\.enable\.DynamicMethodInvocation"\s+value="true"
+WHEN EXPR MISSING:SecurityMemberAccess|OgnlContextState|allowlist|xwork\.security\.excludedClasses
+REPORT AS area_of_interest
+REASON Detects Struts configuration with Dynamic Method Invocation (DMI) enabled.
+TRACE Externalized rule logic for Dynamic Method Invocation Enabled.

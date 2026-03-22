@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT android:inputType.*(?:textPassword|textVisiblePassword|numberPassword)
+WHEN EXPR MISSING:android:importantForAutofill\s*=\s*"(?:no|noExcludeDescendants)"
+REPORT AS area_of_interest
+REASON Detects password input fields that do not disable the Android autofill framework.
+TRACE Externalized mobile rule logic for Autofill Not Disabled on Sensitive Input Fields.

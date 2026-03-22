@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)(os\.system|os\.spawn|os\.popen|popen2\.|os\.kill|commands\.)
+WHEN EXPR PRESENT:(input\(|request|params|query|argv) && MISSING:(shlex\.quote|allowlist|whitelist)
+REPORT AS area_of_interest
+REASON Detects the usage of subprocess-related modules and functions in Python code.
+TRACE Externalized rule logic for Subprocess Modules: os.system, os.spawn, os.popen, popen2., os.kill, commands..

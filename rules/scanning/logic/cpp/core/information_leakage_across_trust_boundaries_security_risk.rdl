@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bclass\s+\w+\s*\(
+WHEN EXPR MISSING:memset\s*\(|sanitize|redact|encrypt|mask && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects passing class objects that may leak sensitive information across trust boundaries.
+TRACE Externalized rule logic for Information Leakage Across Trust Boundaries: Security Risk.

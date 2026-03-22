@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\b(admin_login|admin_portal|admin_module|admin_interface|administrator)\b
+WHEN EXPR PRESENT:(?i)\b(auth|role|permission|access)\b && MISSING:(?i)\b(readme|changelog|example|sample|docs?)\b
+REPORT AS area_of_interest
+REASON Detects common terms for administrative functions, modules, or login pages, specifically focusing on terms that indicate specific functionality rather than general mentions.
+TRACE Externalized rule logic for Admin Modules/Section.

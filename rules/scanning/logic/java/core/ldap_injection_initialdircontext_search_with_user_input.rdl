@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT InitialDirContext|InitialLdapContext|DirContext\.search\s*\(
+WHEN EXPR PRESENT:request|getParameter|getHeader|query|input && MISSING:escapeLDAPSearchFilter|ESAPI\.encoder\(\)\.encodeForLDAP|ldapEscape
+REPORT AS area_of_interest
+REASON Detects LDAP context or search operations that may incorporate unescaped user input.
+TRACE Externalized rule logic for LDAP Injection: InitialDirContext Search with User Input.

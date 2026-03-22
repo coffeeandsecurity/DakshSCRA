@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT BaseOptions\s*\(
+WHEN EXPR MISSING:connectTimeout|receiveTimeout|sendTimeout
+REPORT AS area_of_interest
+REASON Detects Dio BaseOptions configured without connection or receive timeouts.
+TRACE Externalized mobile rule logic for Dio BaseOptions Without Connection Timeout.

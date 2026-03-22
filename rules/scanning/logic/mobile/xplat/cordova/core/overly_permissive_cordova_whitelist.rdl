@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT <allow-navigation\s+href="\*"\s*/>|<access\s+origin="\*"\s*/>
+WHEN EXPR MISSING:allowlist|whitelist|trusted
+REPORT AS area_of_interest
+REASON Detects wildcard navigation/network whitelist entries in Cordova config.
+TRACE Externalized mobile rule logic for Overly Permissive Cordova Whitelist.

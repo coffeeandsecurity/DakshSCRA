@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)(urllib2|socket)
+WHEN EXPR PRESENT:(connect|send|recv|urlopen|request) && MISSING:(timeout=|ssl|TLS|verify=True|cert_reqs)
+REPORT AS area_of_interest
+REASON Detects the usage of network-related modules urllib2 and socket in Python code.
+TRACE Externalized rule logic for Network Calls: urllib2 and socket.

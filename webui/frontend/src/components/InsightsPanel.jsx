@@ -75,6 +75,38 @@ function FilePaths({ filepaths }) {
               </button>
               {isOpen && paths.length > 0 && (
                 <div className="ip-fp-paths">
+                  {(item.brief_desc || item.attack_desc) && (
+                    <div className="ip-fp-summary">
+                      {item.brief_desc ? (
+                        <div className="ip-fp-note">
+                          <div className="ip-fp-note-label">About this match</div>
+                          <div className="ip-fp-note-text">{item.brief_desc}</div>
+                        </div>
+                      ) : null}
+                      {item.attack_desc ? (
+                        <div className="ip-fp-note">
+                          <div className="ip-fp-note-label">Potential / Typical Attacks</div>
+                          <div className="ip-fp-note-text">{item.attack_desc}</div>
+                        </div>
+                      ) : null}
+                    </div>
+                  )}
+                  {(item.reviewer_note || item.developer_note) && (
+                    <div className="ip-fp-summary">
+                      {item.reviewer_note ? (
+                        <div className="ip-fp-note reviewer">
+                          <div className="ip-fp-note-label">Reviewer Focus</div>
+                          <div className="ip-fp-note-text">{item.reviewer_note}</div>
+                        </div>
+                      ) : null}
+                      {item.developer_note ? (
+                        <div className="ip-fp-note developer">
+                          <div className="ip-fp-note-label">Developer Focus</div>
+                          <div className="ip-fp-note-text">{item.developer_note}</div>
+                        </div>
+                      ) : null}
+                    </div>
+                  )}
                   {paths.map((p, pi) => (
                     <div key={pi} className="ip-fp-path">
                       <svg width="11" height="11" viewBox="0 0 20 20" fill="currentColor" style={{ color: 'var(--text-3)', flexShrink: 0 }}>

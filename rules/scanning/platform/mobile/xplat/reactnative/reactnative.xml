@@ -2,8 +2,8 @@
     <category name="Framework-Specific Issues - React Native">
         <rule>
             <name>Insecure AsyncStorage for Sensitive Data</name>
-            <regex><![CDATA[\bAsyncStorage\.(?:setItem|multiSet)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\bAsyncStorage\.(?:setItem|multiSet)\s*\(][IF(PRESENT:AsyncStorage\.setItem.*(?:password|token|secret|key|auth|credential) && MISSING:react-native-keychain|expo-secure-store|encrypt|RNCryptor)]]]></rdl>
+            <regex>\bAsyncStorage\.(?:setItem|multiSet)\s*\(</regex>
+            <rdl_ref>logic/mobile/xplat/reactnative/core/asyncstorage_sensitive_data.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -22,8 +22,8 @@
         </rule>
         <rule>
             <name>WebView JavaScript Enabled</name>
-            <regex><![CDATA[<WebView[^>]*javaScriptEnabled\s*=\s*\{?true\}?]]></regex>
-            <rdl><![CDATA[[FLAG:<WebView[^>]*javaScriptEnabled\s*=\s*\{?true\}?][IF(MISSING:ShouldOverrideUrlLoading|NavigationDelegate|allowList|trustedOrigins && MISSING:test|example)]]]></rdl>
+            <regex>&lt;WebView[^&gt;]*javaScriptEnabled\s*=\s*\{?true\}?</regex>
+            <rdl_ref>logic/mobile/xplat/reactnative/core/webview_javascript_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -42,8 +42,8 @@
         </rule>
         <rule>
             <name>Arbitrary External URL Opening</name>
-            <regex><![CDATA[\bLinking\.openURL\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\bLinking\.openURL\s*\(][IF(MISSING:allowlist|Linking\.canOpenURL|validateUrl|startsWith.*https|trustedDomains && MISSING:test|example)]]]></rdl>
+            <regex>\bLinking\.openURL\s*\(</regex>
+            <rdl_ref>logic/mobile/xplat/reactnative/core/arbitrary_external_url_opening.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -62,8 +62,8 @@
         </rule>
         <rule>
             <name>PostMessage Handler Without Event Origin Validation</name>
-            <regex><![CDATA[addEventListener\s*\(\s*['"]message['"]]]></regex>
-            <rdl><![CDATA[[FLAG:addEventListener\s*\(\s*['"]message['"]][IF(MISSING:event\.origin|e\.origin|message\.origin|trustedOrigin|allowedOrigins)]]]></rdl>
+            <regex>addEventListener\s*\(\s*['"]message['"]</regex>
+            <rdl_ref>logic/mobile/xplat/reactnative/core/postmessage_handler_without_event_origin_validation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -82,8 +82,8 @@
         </rule>
         <rule>
             <name>ReactMethod Exposed Without Permission Check</name>
-            <regex><![CDATA[@ReactMethod]]></regex>
-            <rdl><![CDATA[[FLAG:@ReactMethod][IF(MISSING:checkSelfPermission|enforcePermission|hasPermission|isAuthenticated|verifyCallerIdentity|requiresPermission|// auth)]]]></rdl>
+            <regex>@ReactMethod</regex>
+            <rdl_ref>logic/mobile/xplat/reactnative/core/reactmethod_exposed_without_permission_check.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -102,8 +102,8 @@
         </rule>
         <rule>
             <name>WebView Source with Potentially User-Controlled URI</name>
-            <regex><![CDATA[<WebView[^>]*source\s*=\s*\{\{?\s*uri\s*:]]></regex>
-            <rdl><![CDATA[[FLAG:<WebView[^>]*source\s*=\s*\{\{?\s*uri\s*:][IF(MISSING:https://|trustedUrl|validatedUri|allowedOrigin|sanitize|startsWith.*https|onShouldStartLoadWithRequest)]]]></rdl>
+            <regex>&lt;WebView[^&gt;]*source\s*=\s*\{\{?\s*uri\s*:</regex>
+            <rdl_ref>logic/mobile/xplat/reactnative/core/webview_source_with_potentially_user_controlled_uri.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -122,8 +122,8 @@
         </rule>
         <rule>
             <name>Metro Bundler DevSettings Accessed Outside Debug Guard</name>
-            <regex><![CDATA[\bNativeModules\.DevSettings\b|\bDevSettings\b]]></regex>
-            <rdl><![CDATA[[FLAG:\bNativeModules\.DevSettings\b|\bDevSettings\b][IF(MISSING:__DEV__|if.*__DEV__|kDebugMode|// development only)]]]></rdl>
+            <regex>\bNativeModules\.DevSettings\b|\bDevSettings\b</regex>
+            <rdl_ref>logic/mobile/xplat/reactnative/core/metro_bundler_devsettings_accessed_outside_debug_guard.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -144,8 +144,8 @@
     <category name="Framework-Specific Security">
         <rule>
             <name>React Native Debug Mode Marker</name>
-            <regex><![CDATA[__DEV__|NODE_ENV\s*=\s*[\'\"]development[\'\"]]]></regex>
-            <rdl><![CDATA[[FLAG:__DEV__|NODE_ENV\s*=\s*[\'\"]development[\'\"]][IF(MISSING:NODE_ENV\s*=\s*[\'\"]production[\'\"])]]]></rdl>
+            <regex>__DEV__|NODE_ENV\s*=\s*[\'\"]development[\'\"]</regex>
+            <rdl_ref>logic/mobile/xplat/reactnative/core/react_native_debug_mode_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -164,8 +164,8 @@
         </rule>
         <rule>
             <name>React Native Insecure HTTP Usage</name>
-            <regex><![CDATA[fetch\(\s*[\'\"]http://|axios\.(get|post|request)\(\s*[\'\"]http://|http://]]></regex>
-            <rdl><![CDATA[[FLAG:http://][IF(MISSING:https://)]]]></rdl>
+            <regex>fetch\(\s*[\'\"]http://|axios\.(get|post|request)\(\s*[\'\"]http://|http://</regex>
+            <rdl_ref>logic/mobile/xplat/reactnative/core/react_native_insecure_http_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -184,8 +184,8 @@
         </rule>
         <rule>
             <name>React Native AsyncStorage Secret Marker</name>
-            <regex><![CDATA[AsyncStorage\.(setItem|multiSet)\(.*(token|secret|password|apikey)]]></regex>
-            <rdl><![CDATA[[FLAG:AsyncStorage\.(setItem|multiSet)\(.*(token|secret|password|apikey)][IF(MISSING:react-native-keychain|expo-secure-store|EncryptedStorage)]]]></rdl>
+            <regex>AsyncStorage\.(setItem|multiSet)\(.*(token|secret|password|apikey)</regex>
+            <rdl_ref>logic/mobile/xplat/reactnative/core/react_native_asyncstorage_secret_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -204,8 +204,8 @@
         </rule>
         <rule>
             <name>React Native WebView Origin Wildcard</name>
-            <regex><![CDATA[originWhitelist\s*=\s*\{?\s*\[\s*[\'\"]\*[\'\"]]]></regex>
-            <rdl><![CDATA[[FLAG:originWhitelist\s*=\s*\{?\s*\[\s*[\'\"]\*[\'\"]][IF(MISSING:onShouldStartLoadWithRequest)]]]></rdl>
+            <regex>originWhitelist\s*=\s*\{?\s*\[\s*[\'\"]\*[\'\"]</regex>
+            <rdl_ref>logic/mobile/xplat/reactnative/core/react_native_webview_origin_wildcard.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -224,8 +224,8 @@
         </rule>
         <rule>
             <name>React Native WebView JavaScript Bridge</name>
-            <regex><![CDATA[onMessage\s*=|injectedJavaScript\s*=|javaScriptEnabled\s*=\s*\{?true\}?]]></regex>
-            <rdl><![CDATA[[FLAG:onMessage\s*=|injectedJavaScript\s*=|javaScriptEnabled\s*=\s*\{?true\}?][IF(PRESENT:WebView && MISSING:originWhitelist\s*=\s*\[\s*[\'\"]https://)]]]></rdl>
+            <regex>onMessage\s*=|injectedJavaScript\s*=|javaScriptEnabled\s*=\s*\{?true\}?</regex>
+            <rdl_ref>logic/mobile/xplat/reactnative/core/react_native_webview_javascript_bridge.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -244,8 +244,8 @@
         </rule>
         <rule>
             <name>React Native Hardcoded Secret Marker</name>
-            <regex><![CDATA[(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]]]></regex>
-            <rdl><![CDATA[[FLAG:(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]][IF(MISSING:__DEV__)]]]></rdl>
+            <regex>(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]</regex>
+            <rdl_ref>logic/mobile/xplat/reactnative/core/react_native_hardcoded_secret_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>none</context_type>
@@ -264,8 +264,8 @@
     <category name="Platform-Specific Issues - Android">
         <rule>
             <name>Android Cleartext Traffic Enabled</name>
-            <regex><![CDATA[usesCleartextTraffic\s*=\s*"?(?:true|TRUE)"?]]></regex>
-            <rdl><![CDATA[[FLAG:usesCleartextTraffic\s*=\s*"?(?:true|TRUE)"?][IF(PRESENT:android:usesCleartextTraffic\s*=\s*"true" && MISSING:networkSecurityConfig|# intentional|localhost|development)]]]></rdl>
+            <regex>usesCleartextTraffic\s*=\s*"?(?:true|TRUE)"?</regex>
+            <rdl_ref>logic/mobile/xplat/reactnative/core/android_cleartext_traffic_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -286,8 +286,8 @@
     <category name="Platform-Specific Issues - iOS">
         <rule>
             <name>ATS Arbitrary Loads Enabled</name>
-            <regex><![CDATA[NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]></regex>
-            <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>][IF(PRESENT:NSAllowsArbitraryLoads.*true && MISSING:NSExceptionDomains|localhost|development|# intentional)]]]></rdl>
+            <regex>NSAllowsArbitraryLoads\s*&lt;/key&gt;\s*&lt;true\s*/&gt;</regex>
+            <rdl_ref>logic/mobile/xplat/reactnative/core/ats_arbitrary_loads_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>

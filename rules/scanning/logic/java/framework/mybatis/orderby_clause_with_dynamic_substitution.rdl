@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT ORDER\s+BY\s+\$\{|order\s+by\s+\$\{
+WHEN EXPR MISSING:allowlist|whitelist|validateColumn|allowedColumns|escapeSQL
+REPORT AS area_of_interest
+REASON Detects dynamic ORDER BY clauses using MyBatis string substitution.
+TRACE Externalized rule logic for OrderBy Clause with Dynamic Substitution.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bthrow\s*\(
+WHEN EXPR PRESENT:~\w+\s*\(\s*\)\s*\{|~\w+\s*\(\s*\)\s*noexcept && MISSING:noexcept|try\s*\{|catch\s*\(|std::terminate
+REPORT AS area_of_interest
+REASON Detects exceptions thrown from destructors or deallocation functions.
+TRACE Externalized rule logic for Exceptions in Destructors: Risk of Unhandled Behavior.

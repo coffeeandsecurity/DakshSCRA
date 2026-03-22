@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT ObjectStateFormatter\.Deserialize\s*\(|LosFormatter\.Deserialize\s*\(|NetDataContractSerializer\s*\(
+WHEN EXPR MISSING:trusted|allowlist|validate|SerializationBinder && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects additional insecure .NET serialization formatters susceptible to gadget-chain attacks.
+TRACE Externalized rule logic for Insecure Deserialization: ObjectStateFormatter and LosFormatter.

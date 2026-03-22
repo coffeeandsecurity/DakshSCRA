@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT WebView|evaluateJavaScript\(|javaScriptEnabled
+WHEN EXPR MISSING:originWhitelist|onShouldOverrideUrlLoading
+REPORT AS area_of_interest
+REASON Detects WebView and dynamic script execution patterns.
+TRACE Externalized mobile rule logic for NativeScript WebView Script Execution Marker.

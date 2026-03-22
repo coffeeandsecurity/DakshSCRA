@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(strcpy|strcat|sprintf|gets)\s*\(
+WHEN EXPR MISSING:strlcpy|snprintf|strncpy|vTaskStacks|configMAX_TASK_NAME_LEN
+REPORT AS area_of_interest
+REASON Detects unsafe string APIs common in memory-corruption vulnerabilities.
+TRACE Externalized rule logic for Freertos Unsafe String Copy API.

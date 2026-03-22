@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bsession_register\s*\(\s*['"]?[\w\s]*['"]?\s*\)
+WHEN EXPR MISSING:$_SESSION|session_start|session_regenerate_id && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects usage of the deprecated session_register() function, which is no longer supported in modern PHP versions.
+TRACE Externalized rule logic for Deprecated Session Register Function.

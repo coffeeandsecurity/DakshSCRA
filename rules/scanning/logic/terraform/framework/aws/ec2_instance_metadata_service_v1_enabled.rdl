@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT resource\s+"aws_instance"
+WHEN EXPR MISSING:http_tokens\s*=\s*"required"
+REPORT AS area_of_interest
+REASON Detects EC2 instances that allow IMDSv1 (unauthenticated metadata service access).
+TRACE Externalized rule logic for EC2 Instance Metadata Service v1 Enabled.

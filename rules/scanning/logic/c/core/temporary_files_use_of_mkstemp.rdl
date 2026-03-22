@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT ^[^*/]*\bmktemp\s*\(
+WHEN EXPR MISSING:mkstemp|tmpfile|O_EXCL
+REPORT AS area_of_interest
+REASON Detects usage of the unsafe `mktemp()` function.
+TRACE Externalized rule logic for Temporary Files: Use of mkstemp().

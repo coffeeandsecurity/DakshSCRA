@@ -2,8 +2,8 @@
     <category name="Injection">
         <rule>
             <name>Command Injection via eval</name>
-            <regex><![CDATA[eval\s+["']?\$\{?\w]]></regex>
-            <rdl><![CDATA[[FLAG:eval\s+["']?\$\{?\w][IF(MISSING:printf\s+%q|sanitize|validate|allowlist)]]]></rdl>
+            <regex>eval\s+["']?\$\{?\w</regex>
+            <rdl_ref>logic/bash/core/command_injection_via_eval.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>Unquoted Variable in Command Context</name>
-            <regex><![CDATA[(?:exec|system|run|sh\s+-c)\s+[^"'][^;|\n]*\$\w]]></regex>
-            <rdl><![CDATA[[FLAG:(?:exec|system|run|sh\s+-c)\s+[^"'][^;|\n]*\$\w][IF(MISSING:"\"$|'$|shellcheck\s+disable|# shellcheck && MISSING:test\s+-z|test\s+-n|\[\s*-z|\[\s*-n)]]]></rdl>
+            <regex>(?:exec|system|run|sh\s+-c)\s+[^"'][^;|\n]*\$\w</regex>
+            <rdl_ref>logic/bash/core/unquoted_variable_in_command_context.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>Backtick Command Substitution with Variable</name>
-            <regex><![CDATA[`[^`]*\$\w[^`]*`]]></regex>
-            <rdl><![CDATA[[FLAG:`[^`]*\$\w[^`]*`][IF(MISSING:sanitize|validate|allowlist)]]]></rdl>
+            <regex>`[^`]*\$\w[^`]*`</regex>
+            <rdl_ref>logic/bash/core/backtick_command_substitution_with_variable.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -55,8 +55,8 @@
     <category name="Sensitive Data Exposure">
         <rule>
             <name>Hardcoded Credential in Shell Script</name>
-            <regex><![CDATA[(?i)(password|passwd|secret|api_key|apikey|token|access_key)\s*=\s*['"]?[A-Za-z0-9@#$%^&*!_\-]{8,}['"]?]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(password|passwd|secret|api_key|apikey|token|access_key)\s*=\s*['"]?[A-Za-z0-9@#$%^&*!_\-]{8,}['"]?][IF(MISSING:vault|secret_manager|\$\{.*\})]]]></rdl>
+            <regex>(?i)(password|passwd|secret|api_key|apikey|token|access_key)\s*=\s*['"]?[A-Za-z0-9@#$%^&amp;*!_\-]{8,}['"]?</regex>
+            <rdl_ref>logic/bash/core/hardcoded_credential_in_shell_script.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -72,8 +72,8 @@
         </rule>
         <rule>
             <name>Credentials Passed via Command Line Arguments</name>
-            <regex><![CDATA[(?i)(?:--password|--secret|--token|--key|--api-key)\s*=?\s*\S]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(?:--password|--secret|--token|--key|--api-key)\s*=?\s*\S][IF(MISSING:\$\{|\$\()]]]></rdl>
+            <regex>(?i)(?:--password|--secret|--token|--key|--api-key)\s*=?\s*\S</regex>
+            <rdl_ref>logic/bash/core/credentials_passed_via_command_line_arguments.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -91,8 +91,8 @@
     <category name="File and Permission Issues">
         <rule>
             <name>Overly Permissive chmod</name>
-            <regex><![CDATA[chmod\s+(?:0?777|[augo]+\+[rwx]*w[rwx]*|a\+x)]]></regex>
-            <rdl><![CDATA[[FLAG:chmod\s+(?:0?777|[augo]+\+[rwx]*w[rwx]*|a\+x)][IF(MISSING:# intentional|# required|umask && MISSING:test|example|sample)]]]></rdl>
+            <regex>chmod\s+(?:0?777|[augo]+\+[rwx]*w[rwx]*|a\+x)</regex>
+            <rdl_ref>logic/bash/core/overly_permissive_chmod.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -108,8 +108,8 @@
         </rule>
         <rule>
             <name>Insecure Temporary File Creation</name>
-            <regex><![CDATA[(?:/tmp/|/var/tmp/)[^"'\s]*\$\w|>\s*/tmp/\w]]></regex>
-            <rdl><![CDATA[[FLAG:(?:/tmp/|/var/tmp/)[^"'\s]*\$\w|>\s*/tmp/\w][IF(MISSING:mktemp)]]]></rdl>
+            <regex>(?:/tmp/|/var/tmp/)[^"'\s]*\$\w|&gt;\s*/tmp/\w</regex>
+            <rdl_ref>logic/bash/core/insecure_temporary_file_creation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -125,8 +125,8 @@
         </rule>
         <rule>
             <name>World-Readable Sensitive File Write</name>
-            <regex><![CDATA[>\s*(?:/etc/|/root/|~/)(?:passwd|shadow|sudoers|ssh|\.ssh|crontab)\b]]></regex>
-            <rdl><![CDATA[[FLAG:>\s*(?:/etc/|/root/|~/)(?:passwd|shadow|sudoers|ssh|\.ssh|crontab)\b][IF(MISSING:# intentional|test|example)]]]></rdl>
+            <regex>&gt;\s*(?:/etc/|/root/|~/)(?:passwd|shadow|sudoers|ssh|\.ssh|crontab)\b</regex>
+            <rdl_ref>logic/bash/core/world_readable_sensitive_file_write.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -144,8 +144,8 @@
     <category name="Network and Transport">
         <rule>
             <name>curl with TLS Verification Disabled</name>
-            <regex><![CDATA[curl\s+(?:[^\n]*\s)?(?:-k|--insecure)]]></regex>
-            <rdl><![CDATA[[FLAG:curl\s+(?:[^\n]*\s)?(?:-k|--insecure)][IF(MISSING:test|development|localhost|staging|# intentional|# nosec)]]]></rdl>
+            <regex>curl\s+(?:[^\n]*\s)?(?:-k|--insecure)</regex>
+            <rdl_ref>logic/bash/core/curl_with_tls_verification_disabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -161,8 +161,8 @@
         </rule>
         <rule>
             <name>wget with Certificate Check Disabled</name>
-            <regex><![CDATA[wget\s+(?:[^\n]*\s)?(?:--no-check-certificate)]]></regex>
-            <rdl><![CDATA[[FLAG:wget\s+(?:[^\n]*\s)?(?:--no-check-certificate)][IF(MISSING:test|development|localhost|staging|# intentional|# nosec)]]]></rdl>
+            <regex>wget\s+(?:[^\n]*\s)?(?:--no-check-certificate)</regex>
+            <rdl_ref>logic/bash/core/wget_with_certificate_check_disabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -180,8 +180,8 @@
     <category name="Script Hardening">
         <rule>
             <name>Missing errexit or pipefail Options</name>
-            <regex><![CDATA[^#!\s*/(?:bin/|usr/bin/env\s+)(?:bash|sh)\b]]></regex>
-            <rdl><![CDATA[[FLAG:^#!\s*/(?:bin/|usr/bin/env\s+)(?:bash|sh)\b][IF(MISSING:set\s+-[euo]*e|set\s+-o\s+errexit)]]]></rdl>
+            <regex>^#!\s*/(?:bin/|usr/bin/env\s+)(?:bash|sh)\b</regex>
+            <rdl_ref>logic/bash/core/missing_errexit_or_pipefail_options.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -197,8 +197,8 @@
         </rule>
         <rule>
             <name>sudo Usage Without Privilege Validation</name>
-            <regex><![CDATA[\bsudo\s+(?!visudo|passwd\s+-l|-l\b|-v\b)\S]]></regex>
-            <rdl><![CDATA[[FLAG:\bsudo\s+(?!visudo|passwd\s+-l|-l\b|-v\b)\S][IF(MISSING:if\s+\[|check|validate|authorized)]]]></rdl>
+            <regex>\bsudo\s+(?!visudo|passwd\s+-l|-l\b|-v\b)\S</regex>
+            <rdl_ref>logic/bash/core/sudo_usage_without_privilege_validation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>

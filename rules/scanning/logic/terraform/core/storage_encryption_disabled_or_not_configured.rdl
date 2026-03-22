@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT resource\s+"aws_s3_bucket"\s*"[^"]+"\s*\{
+WHEN EXPR MISSING:server_side_encryption_configuration|aws_s3_bucket_server_side_encryption_configuration
+REPORT AS area_of_interest
+REASON Detects S3 buckets or storage resources without server-side encryption configured.
+TRACE Externalized rule logic for Storage Encryption Disabled or Not Configured.

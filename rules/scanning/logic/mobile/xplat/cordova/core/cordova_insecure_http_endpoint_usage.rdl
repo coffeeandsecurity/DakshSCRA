@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT http://
+REPORT AS area_of_interest
+REASON Detects cleartext endpoint references in Cordova code/config.
+TRACE Externalized mobile rule logic for Cordova Insecure HTTP Endpoint Usage.

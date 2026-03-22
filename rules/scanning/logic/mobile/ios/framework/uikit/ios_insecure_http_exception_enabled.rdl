@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT NSExceptionAllowsInsecureHTTPLoads
+WHEN EXPR MISSING:NSIncludesSubdomains\s*</key>\s*<false/>
+REPORT AS area_of_interest
+REASON Detects ATS domain exception allowing insecure HTTP loads.
+TRACE Externalized mobile rule logic for iOS Insecure HTTP Exception Enabled.

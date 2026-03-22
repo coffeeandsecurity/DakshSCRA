@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT allowRunningInsecureContent\s*:\s*true
+WHEN EXPR PRESENT:allowRunningInsecureContent:\s*true && MISSING:test|development|localhost
+REPORT AS area_of_interest
+REASON Detects Electron configurations that allow loading insecure (HTTP) content in HTTPS pages.
+TRACE Externalized rule logic for allowRunningInsecureContent Enabled.

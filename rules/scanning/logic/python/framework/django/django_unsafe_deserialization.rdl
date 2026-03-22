@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT pickle\.loads\(|yaml\.load\(\s*[^,\)]*\)|marshal\.loads\(
+WHEN EXPR MISSING:yaml\.safe_load|Loader=SafeLoader|trusted|allowlist|from_trusted_source
+REPORT AS area_of_interest
+REASON Detects unsafe deserialization primitives in framework request/worker flows.
+TRACE Externalized rule logic for Django Unsafe Deserialization.

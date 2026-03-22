@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)https?://
+WHEN EXPR PRESENT:(?i)\b(redirect|forward|window\.location|location\.href|window\.open|fetch|axios|httpclient|request|url|uri|endpoint)\b && PRESENT:(?i)(\+|\$\{|request|params|query|input|user) && MISSING:(?i)\b(allowlist|whitelist|trusted|isTrusted|validateUrl|same-origin)\b
+REPORT AS area_of_interest
+REASON Detects the presence of URLs in the application that may pose security risks or indicate potential trust issues with third-party URLs.
+TRACE Externalized rule logic for Trusted Or Untrusted URLs.

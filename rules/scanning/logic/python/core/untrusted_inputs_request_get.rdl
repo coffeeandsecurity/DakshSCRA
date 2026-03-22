@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT request\.GET
+WHEN EXPR PRESENT:(execute|raw\(|extra\(|eval\(|subprocess|os\.system|redirect|HttpResponse|mark_safe|safe_filter) && MISSING:(escape|sanitize|validate|cleaned_data|get_validators)
+REPORT AS area_of_interest
+REASON Detects the usage of request.GET, which may contain untrusted inputs.
+TRACE Externalized rule logic for Untrusted Inputs: request.GET.

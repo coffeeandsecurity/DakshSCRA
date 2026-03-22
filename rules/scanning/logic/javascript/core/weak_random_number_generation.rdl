@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT Math\.random\(.*\)
+WHEN EXPR PRESENT:(token|secret|nonce|otp|session|password|key)
+REPORT AS area_of_interest
+REASON Detects the usage of Math.random() in security-sensitive contexts.
+TRACE Externalized rule logic for Weak Random Number Generation.

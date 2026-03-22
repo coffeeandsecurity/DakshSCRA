@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(?:query|execute|prepare)\s*!?\s*\(\s*["'][^"']*(?:\{\}|\+)
+WHEN EXPR MISSING:query!\s*\(|sqlx::query!|prepare\s*\(|bind\s*\(|QueryBuilder|params|bindParams && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects likely dynamic SQL string construction in database calls.
+TRACE Externalized rule logic for Potential SQL Query Concatenation.

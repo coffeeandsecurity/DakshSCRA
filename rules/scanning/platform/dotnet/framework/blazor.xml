@@ -2,8 +2,8 @@
     <category name="Framework-Specific Issues - Blazor">
         <rule>
             <name>MarkupString Cast from User Input</name>
-            <regex><![CDATA[@\(\s*\(MarkupString\)\s*|new\s+MarkupString\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:@\(\s*\(MarkupString\)\s*|new\s+MarkupString\s*\(][IF(MISSING:HtmlEncoder|Sanitize|AntiXss|allowlist)]]]></rdl>
+            <regex>@\(\s*\(MarkupString\)\s*|new\s+MarkupString\s*\(</regex>
+            <rdl_ref>logic/dotnet/framework/blazor/markupstring_cast_from_user_input.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>IJSRuntime InvokeVoidAsync with User Input</name>
-            <regex><![CDATA[InvokeVoidAsync\s*\(\s*["'][^"']*["']\s*,.*(?:request\.|Request\.|HttpContext\.|model\.|Model\.|Input\.|input\.)|\bInvokeAsync\s*<[^>]+>\s*\(\s*["'][^"']*["']\s*,.*(?:request\.|Request\.))]]></regex>
-            <rdl><![CDATA[[FLAG:InvokeVoidAsync\s*\(\s*["']\s*eval\s*["']|InvokeVoidAsync\s*\(\s*["']\s*Function\s*["']][IF(MISSING:validate|sanitize|allowlist|trusted|HtmlEncoder|WebUtility\.HtmlEncode && MISSING:test|example)]]]></rdl>
+            <regex>InvokeVoidAsync\s*\(\s*["'][^"']*["']\s*,.*(?:request\.|Request\.|HttpContext\.|model\.|Model\.|Input\.|input\.)|\bInvokeAsync\s*&lt;[^&gt;]+&gt;\s*\(\s*["'][^"']*["']\s*,.*(?:request\.|Request\.)</regex>
+            <rdl_ref>logic/dotnet/framework/blazor/ijsruntime_invokevoidasync_with_user_input.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>Blazor WebAssembly with Sensitive Logic</name>
-            <regex><![CDATA[\[Authorize\]|\.HasClaim\s*\(|\.IsInRole\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\[Authorize\]][IF(MISSING:@rendermode\s+InteractiveServer|HttpContext|server-side)]]]></rdl>
+            <regex>\[Authorize\]|\.HasClaim\s*\(|\.IsInRole\s*\(</regex>
+            <rdl_ref>logic/dotnet/framework/blazor/blazor_webassembly_with_sensitive_logic.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>

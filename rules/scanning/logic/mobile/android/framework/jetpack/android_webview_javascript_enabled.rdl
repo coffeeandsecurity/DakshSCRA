@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT setJavaScriptEnabled\(\s*true\s*\)
+WHEN EXPR MISSING:setSafeBrowsingEnabled\(\s*true\s*\) && MISSING:setAllowFileAccess\(\s*false\s*\)
+REPORT AS area_of_interest
+REASON Detects JavaScript enabled in WebView.
+TRACE Externalized mobile rule logic for Android WebView JavaScript Enabled.

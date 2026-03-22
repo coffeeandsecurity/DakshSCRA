@@ -2,8 +2,8 @@
     <category name="Framework-Specific Issues - Hive (Flutter)">
         <rule>
             <name>Hive Box Opened Without Encryption</name>
-            <regex><![CDATA[Hive\.openBox\s*\(|Hive\.openLazyBox\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:Hive\.openBox\s*\(|Hive\.openLazyBox\s*\(][IF(MISSING:encryptionCipher|HiveAesCipher|encryptionKey)]]]></rdl>
+            <regex>Hive\.openBox\s*\(|Hive\.openLazyBox\s*\(</regex>
+            <rdl_ref>logic/mobile/xplat/flutter/framework/hive/hive_box_opened_without_encryption.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -22,8 +22,8 @@
         </rule>
         <rule>
             <name>Hive Encryption Key Stored Insecurely</name>
-            <regex><![CDATA[Hive\.generateSecureKey\s*\(\s*\)|HiveAesCipher\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:HiveAesCipher\s*\(|Hive\.generateSecureKey\s*\(\s*\)][IF(MISSING:flutter_secure_storage|FlutterSecureStorage|SecureStoragePlugin)]]]></rdl>
+            <regex>Hive\.generateSecureKey\s*\(\s*\)|HiveAesCipher\s*\(</regex>
+            <rdl_ref>logic/mobile/xplat/flutter/framework/hive/hive_encryption_key_stored_insecurely.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>

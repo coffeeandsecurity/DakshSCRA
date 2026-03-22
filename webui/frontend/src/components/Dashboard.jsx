@@ -115,7 +115,7 @@ function StatusDonut({ counts = {} }) {
   )
 }
 
-function ProjectsTable({ projects = [], onNavigate, onDeleteProject }) {
+function ProjectsTable({ projects = [], onNavigate, onOpenProject, onDeleteProject }) {
   const [confirming, setConfirming] = useState(null)
   if (projects.length === 0) return null
   return (
@@ -144,7 +144,7 @@ function ProjectsTable({ projects = [], onNavigate, onDeleteProject }) {
               {projects.map((p) => (
                 <tr key={p.project_key}>
                   <td style={{ fontWeight: 600, color: 'var(--text)', cursor: 'pointer' }}
-                    onClick={() => onNavigate('projects')}>
+                    onClick={() => onOpenProject(p)}>
                     {p.project_name}
                     {p.running_scans > 0 && (
                       <span className="badge running" style={{ marginLeft: 8, fontSize: 10 }}>
@@ -310,7 +310,7 @@ function VersionNotification({ versionInfo, latestRelease, githubChecked }) {
   )
 }
 
-export default function Dashboard({ metrics, projects = [], runs = [], onNavigate, onDeleteProject, versionInfo, latestRelease, githubChecked }) {
+export default function Dashboard({ metrics, projects = [], runs = [], onNavigate, onOpenProject, onDeleteProject, versionInfo, latestRelease, githubChecked }) {
   const statusCounts = {
     success: metrics?.success_scans || 0,
     running: metrics?.running_scans || 0,
@@ -407,7 +407,7 @@ export default function Dashboard({ metrics, projects = [], runs = [], onNavigat
       </div>
 
       {/* Projects */}
-      <ProjectsTable projects={projects} onNavigate={onNavigate} onDeleteProject={onDeleteProject} />
+      <ProjectsTable projects={projects} onNavigate={onNavigate} onOpenProject={onOpenProject} onDeleteProject={onDeleteProject} />
 
       {/* Recent Scans */}
       <div className="card">

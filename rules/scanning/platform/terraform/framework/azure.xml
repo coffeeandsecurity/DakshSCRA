@@ -2,8 +2,8 @@
     <category name="Azure Compute Security">
         <rule>
             <name>Azure VM with Password Authentication Enabled</name>
-            <regex><![CDATA[resource\s+"azurerm_linux_virtual_machine"[^}]*disable_password_authentication\s*=\s*false|resource\s+"azurerm_virtual_machine"[^}]*password_authentication\s*=\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:disable_password_authentication\s*=\s*false][IF(PRESENT:disable_password_authentication\s*=\s*false && MISSING:# intentional|# development|admin_ssh_key)]]]></rdl>
+            <regex>resource\s+"azurerm_linux_virtual_machine"[^}]*disable_password_authentication\s*=\s*false|resource\s+"azurerm_virtual_machine"[^}]*password_authentication\s*=\s*true</regex>
+            <rdl_ref>logic/terraform/framework/azure/azure_vm_with_password_authentication_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -21,8 +21,8 @@
     <category name="Azure Storage Security">
         <rule>
             <name>Azure Storage Account Allows Public Blob Access</name>
-            <regex><![CDATA[resource\s+"azurerm_storage_account"[^}]*allow_nested_items_to_be_public\s*=\s*true|blob_properties\s*\{[^}]*allow_blob_public_access\s*=\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:allow_nested_items_to_be_public\s*=\s*true|allow_blob_public_access\s*=\s*true][IF(PRESENT:allow_blob_public_access\s*=\s*true|allow_nested_items_to_be_public\s*=\s*true && MISSING:# intentional|# static-website|static_website)]]]></rdl>
+            <regex>resource\s+"azurerm_storage_account"[^}]*allow_nested_items_to_be_public\s*=\s*true|blob_properties\s*\{[^}]*allow_blob_public_access\s*=\s*true</regex>
+            <rdl_ref>logic/terraform/framework/azure/azure_storage_account_allows_public_blob_access.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -38,8 +38,8 @@
         </rule>
         <rule>
             <name>Azure Storage Account Without Secure Transfer Required</name>
-            <regex><![CDATA[resource\s+"azurerm_storage_account"[^}]*enable_https_traffic_only\s*=\s*false]]></regex>
-            <rdl><![CDATA[[FLAG:enable_https_traffic_only\s*=\s*false][IF(PRESENT:enable_https_traffic_only\s*=\s*false|min_tls_version\s*=\s*"TLS1_0" && MISSING:# intentional|# legacy)]]]></rdl>
+            <regex>resource\s+"azurerm_storage_account"[^}]*enable_https_traffic_only\s*=\s*false</regex>
+            <rdl_ref>logic/terraform/framework/azure/azure_storage_account_without_secure_transfer_required.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -57,8 +57,8 @@
     <category name="Azure Network Security">
         <rule>
             <name>Azure NSG Rule Allows All Inbound Traffic</name>
-            <regex><![CDATA[resource\s+"azurerm_network_security_rule"[^}]*access\s*=\s*"Allow"[^}]*source_address_prefix\s*=\s*"\*"[^}]*direction\s*=\s*"Inbound"]]></regex>
-            <rdl><![CDATA[[FLAG:source_address_prefix\s*=\s*"\*"[^}]*direction\s*=\s*"Inbound"|direction\s*=\s*"Inbound"[^}]*source_address_prefix\s*=\s*"\*"][IF(PRESENT:source_address_prefix\s*=\s*"\*"|source_address_prefix\s*=\s*"Internet" && PRESENT:access\s*=\s*"Allow" && MISSING:# intentional|# required|egress)]]]></rdl>
+            <regex>resource\s+"azurerm_network_security_rule"[^}]*access\s*=\s*"Allow"[^}]*source_address_prefix\s*=\s*"\*"[^}]*direction\s*=\s*"Inbound"</regex>
+            <rdl_ref>logic/terraform/framework/azure/azure_nsg_rule_allows_all_inbound_traffic.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -76,8 +76,8 @@
     <category name="Azure Database Security">
         <rule>
             <name>Azure SQL Server Allows All Azure Services</name>
-            <regex><![CDATA[resource\s+"azurerm_sql_firewall_rule"[^}]*start_ip_address\s*=\s*"0\.0\.0\.0"[^}]*end_ip_address\s*=\s*"0\.0\.0\.0"]]></regex>
-            <rdl><![CDATA[[FLAG:start_ip_address\s*=\s*"0\.0\.0\.0"[^}]*end_ip_address\s*=\s*"0\.0\.0\.0"][IF(PRESENT:start_ip_address\s*=\s*"0\.0\.0\.0".*end_ip_address\s*=\s*"0\.0\.0\.0" && MISSING:# intentional|# development|firewall_rule)]]]></rdl>
+            <regex>resource\s+"azurerm_sql_firewall_rule"[^}]*start_ip_address\s*=\s*"0\.0\.0\.0"[^}]*end_ip_address\s*=\s*"0\.0\.0\.0"</regex>
+            <rdl_ref>logic/terraform/framework/azure/azure_sql_server_allows_all_azure_services.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -93,8 +93,8 @@
         </rule>
         <rule>
             <name>Azure SQL Transparent Data Encryption Disabled</name>
-            <regex><![CDATA[resource\s+"azurerm_mssql_server_transparent_data_encryption"[^}]*key_vault_key_id\s*=]]></regex>
-            <rdl><![CDATA[[FLAG:resource\s+"azurerm_mssql_database"\b][IF(MISSING:transparent_data_encryption|azurerm_mssql_server_transparent_data_encryption)]]]></rdl>
+            <regex>resource\s+"azurerm_mssql_server_transparent_data_encryption"[^}]*key_vault_key_id\s*=</regex>
+            <rdl_ref>logic/terraform/framework/azure/azure_sql_transparent_data_encryption_disabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

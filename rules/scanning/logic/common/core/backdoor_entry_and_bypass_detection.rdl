@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\b(backdoor|bypass|sneaky|exploit|unauthorized_access|unauthorized_entry|hidden_entry|stealthy_entry|secret_entry)\b
+WHEN EXPR MISSING:(?i)\b(example|sample|dummy|test|placeholder|ctf|training)\b
+REPORT AS area_of_interest
+REASON Detects the presence of keywords commonly associated with backdoor entries or methods used to bypass security restrictions in code.
+TRACE Externalized rule logic for Backdoor Entry and Bypass Detection.

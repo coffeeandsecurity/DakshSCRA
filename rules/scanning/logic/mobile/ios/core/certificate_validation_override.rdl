@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT didReceive\s+challenge|NSURLSessionAuthChallengeDisposition\.useCredential
+WHEN EXPR MISSING:SecTrustEvaluate|SecPolicyCreateSSL|pinnedCertificates|ServerTrustManager && MISSING:test|development|localhost
+REPORT AS area_of_interest
+REASON Detects custom TLS challenge handling that may weaken certificate validation.
+TRACE Externalized mobile rule logic for Certificate Validation Override.

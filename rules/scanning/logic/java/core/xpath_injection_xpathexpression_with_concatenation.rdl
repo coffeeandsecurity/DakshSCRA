@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT xpath\.evaluate\s*\(|XPathExpression\.evaluate\s*\(|XPath\.compile\s*\(
+WHEN EXPR PRESENT:request|getParameter|input|query|\+ && MISSING:XPathVariableResolver|parameterized|encodeForXPath
+REPORT AS area_of_interest
+REASON Detects XPath evaluation calls that may use user-supplied input in the expression.
+TRACE Externalized rule logic for XPath Injection: XPathExpression with Concatenation.

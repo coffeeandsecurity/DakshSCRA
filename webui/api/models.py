@@ -23,8 +23,8 @@ class ScanRun(Base):
     run_uuid = Column(String(64), unique=True, nullable=False, index=True)
     status = Column(String(32), nullable=False, default="queued", index=True)
     task_id = Column(String(128), nullable=True, index=True)
-    project_key = Column(String(96), nullable=False, default="legacy", index=True)
-    project_name = Column(String(255), nullable=False, default="Legacy")
+    project_key = Column(String(96), nullable=False, default="default", index=True)
+    project_name = Column(String(255), nullable=False, default="Default")
 
     rules = Column(String(255), nullable=False)
     target_dir = Column(Text, nullable=False)

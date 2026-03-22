@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT ((\bprint|out\.print(ln)?|response\.write)\(.*|response\.getWriter|out\.write)(\s)*\((\s)*("|')[^("|')]*
+WHEN EXPR PRESENT:(request|getParameter|requestParameters|cookie|header) && MISSING:(escapeHtml|StringEscapeUtils|Encode\.forHtml|htmlspecialchars|sanitize)
+REPORT AS area_of_interest
+REASON Detects potential untrusted inputs in Java code that are included in application responses. The identified functions can be used to print content either to a web page or to the console, depending on the code implementation and context.
+TRACE Externalized rule logic for Untrusted Input(s) in Application Response.

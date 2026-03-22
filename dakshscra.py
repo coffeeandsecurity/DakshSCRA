@@ -18,6 +18,8 @@ import core.estimator as estimate
 import core.parser as parser
 import core.recon as rec
 import core.reports as report
+from core.analysis import report as analysis_report
+from core import analysis_dispatch
 
 from core.analysis.php import analyzer as php_analysis
 from core.analysis.dotnet import analyzer as dotnet_analysis
@@ -25,6 +27,10 @@ from core.analysis.java import analyzer as java_analysis
 from core.analysis.python import analyzer as py_analysis
 from core.analysis.javascript import analyzer as js_analysis
 from core.analysis.golang import analyzer as go_analysis
+from core.analysis.ruby import analyzer as ruby_analysis
+from core.analysis.kotlin import analyzer as kotlin_analysis
+from core.analysis.c import analyzer as c_analysis
+from core.analysis.cpp import analyzer as cpp_analysis
 
 import state.constants as constants
 import state.runtime_state as state
@@ -375,6 +381,10 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
         "java": java_analysis.run,
         "dotnet": dotnet_analysis.run,
         "golang": go_analysis.run,
+        "ruby": ruby_analysis.run,
+        "kotlin": kotlin_analysis.run,
+        "c": c_analysis.run,
+        "cpp": cpp_analysis.run,
     }
     alias_map = {
         "py": "python",
@@ -385,13 +395,18 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
         "node": "javascript",
         "nodejs": "javascript",
         "java": "java",
-        "kotlin": "java",
+        "kotlin": "kotlin",
         "dotnet": "dotnet",
         ".net": "dotnet",
         "csharp": "dotnet",
         "c#": "dotnet",
         "go": "golang",
         "golang": "golang",
+        "ruby": "ruby",
+        "rails": "ruby",
+        "c": "c",
+        "cpp": "cpp",
+        "c++": "cpp",
     }
 
     aoi_raw = _safe_load_json(state.outputAoI_JSON, [])
@@ -405,6 +420,7 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
     results_payload = []
     cache = {}
     platform_result_map = {}
+    language_hints = analysis_dispatch.project_language_hints(source_root)
 
     platform_targets = sorted({str(p).strip().lower() for p in selected_platforms if str(p).strip() and str(p).strip().lower() != "common"})
     total_platform_targets = len(platform_targets)
@@ -416,8 +432,7 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
     result.update_scan_summary("analyzer_summary.heartbeat_message", "Analyzer queued")
 
     for index, platform in enumerate(platform_targets, start=1):
-        canonical = alias_map.get(platform, platform)
-        runner = analyzers.get(canonical)
+        canonical, runner = analysis_dispatch.resolve_analysis_target(platform, alias_map, analyzers, language_hints)
         target_started_at = time.time()
         scan_state_mgr.update_cursor({
             "stage": "analysis",
@@ -441,6 +456,7 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
             "target": platform,
             "platform": platform,
             "engine": "heuristic_fallback",
+            "engine_platform": canonical,
             "analysis_kind": "heuristic",
             "supported_engine": bool(runner),
             "status": "completed",
@@ -529,6 +545,14 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
                     "xref_html": str(legacy_html_path.parent / "analysis_xref.html") if legacy_html_path else "",
                     "modern_variants": modern_variants,
                 }
+                security_inventory = analysis_report.build_security_inventory(
+                    cache_entry.get("flows", []),
+                    scan_root=Path(source_root),
+                    platform=platform,
+                    source_findings=aoi_records,
+                    supported_engine=bool(runner),
+                )
+                entry["security_inventory"] = security_inventory
                 scores = []
                 for flow in cache_entry.get("flows", []):
                     if not isinstance(flow, dict):
@@ -557,6 +581,21 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
                         "source": source_loc,
                         "sink": sink_loc,
                         "trace_chain": trace_chain,
+                        "path": path_steps,
+                        "xref": flow.get("xref", []) if isinstance(flow.get("xref", []), list) else [],
+                        "input_surface": flow.get("input_surface", {}) if isinstance(flow.get("input_surface", {}), dict) else {},
+                        "attack_vectors": flow.get("attack_vectors", []) if isinstance(flow.get("attack_vectors", []), list) else [],
+                        "file": str(flow.get("file", "")).strip(),
+                        "function": str(flow.get("function", "")).strip(),
+                        "line": flow.get("line"),
+                        "source_file": source_step.get("file", "") if isinstance(source_step, dict) else "",
+                        "source_line": source_step.get("line") if isinstance(source_step, dict) else "",
+                        "sink_file": sink_step.get("file", "") if isinstance(sink_step, dict) else "",
+                        "sink_line": sink_step.get("line") if isinstance(sink_step, dict) else "",
+                        "termination_nodes": flow.get("termination_nodes", []) if isinstance(flow.get("termination_nodes", []), list) else [],
+                        "cross_file": bool(flow.get("cross_file", False)),
+                        "risk_score": flow.get("risk_score"),
+                        "severity": str(flow.get("severity", "")).strip(),
                         "confidence_score": score,
                         "confidence_label": _confidence_label(score),
                         "source_count": len(path_steps),
@@ -621,11 +660,33 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
                         "confidence_label": _confidence_label(inherited_score),
                         "findings": fw_findings,
                         "artifacts": parent.get("artifacts", {}) if parent else {},
+                        "security_inventory": {
+                            "summary": {
+                                "confirmed_vulnerabilities": 0,
+                                "mitigated_implementations": 0,
+                                "validated_findings": 0,
+                                "suppressed_false_positives": 0,
+                                "manual_review_recommended": 0,
+                                "by_kind": {},
+                                "mitigated_by_kind": {},
+                            },
+                            "vulnerabilities": [],
+                            "mitigations": [],
+                            "finding_reviews": [],
+                            "false_positives": [],
+                            "manual_reviews": [],
+                        },
                     }
                     results_payload.append(fw_entry_payload)
 
     total_findings = sum(len(item.get("findings", [])) for item in results_payload)
     taint_targets = len([item for item in results_payload if item.get("engine") == "dataflow_controlflow"])
+    platform_security = [item.get("security_inventory", {}) for item in results_payload if item.get("target_type") == "platform"]
+    total_vulnerabilities = sum(int((item.get("summary", {}) or {}).get("confirmed_vulnerabilities", 0) or 0) for item in platform_security if isinstance(item, dict))
+    total_mitigations = sum(int((item.get("summary", {}) or {}).get("mitigated_implementations", 0) or 0) for item in platform_security if isinstance(item, dict))
+    total_validated_findings = sum(int((item.get("summary", {}) or {}).get("validated_findings", 0) or 0) for item in platform_security if isinstance(item, dict))
+    total_suppressed_false_positives = sum(int((item.get("summary", {}) or {}).get("suppressed_false_positives", 0) or 0) for item in platform_security if isinstance(item, dict))
+    total_manual_review_recommended = sum(int((item.get("summary", {}) or {}).get("manual_review_recommended", 0) or 0) for item in platform_security if isinstance(item, dict))
     summary = {
         "enabled": True,
         "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -633,6 +694,11 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
         "targets_analyzed": len([item for item in results_payload if item.get("status") in {"completed", "no_findings"}]),
         "taint_targets": taint_targets,
         "findings_identified": total_findings,
+        "validated_findings": total_validated_findings,
+        "confirmed_vulnerabilities": total_vulnerabilities,
+        "mitigated_implementations": total_mitigations,
+        "suppressed_false_positives": total_suppressed_false_positives,
+        "manual_review_recommended": total_manual_review_recommended,
         "platform_targets_total": total_platform_targets,
         "platform_targets_completed": total_platform_targets,
         "current_target": "",
@@ -843,6 +909,7 @@ result.update_scan_summary("inputs_received.platform_specific_rules", platform_r
 result.update_scan_summary("inputs_received.framework_rules_count", str(framework_rules_total))
 result.update_scan_summary("inputs_received.common_rules", str(common_rules_total))
 result.update_scan_summary("inputs_received.total_rules_loaded", str(total_rules_loaded))
+result.update_scan_summary("inputs_received.rule_engine", state.ruleEngine)
 
 resume_progress = {}
 if results.rule_file:
@@ -858,6 +925,7 @@ if results.rule_file:
         "state_enabled": bool(state_enabled),
         "persist_after_seconds": state_cfg["persist_after_seconds"],
         "persist_interval_seconds": state_cfg["persist_interval_seconds"],
+        "rule_engine": state.ruleEngine,
     }
 
     restored = None

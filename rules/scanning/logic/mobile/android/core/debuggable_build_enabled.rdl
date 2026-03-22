@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT debuggable\s*=\s*true
+REPORT AS area_of_interest
+REASON Detects if a build configuration enables debugging for release builds.
+TRACE Externalized mobile rule logic for Debuggable Build Enabled.

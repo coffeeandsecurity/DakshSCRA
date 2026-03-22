@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\b(redirect|forward|sendRedirect|Response\.Redirect|res\.redirect|window\.location|location\.href)\s*(\(|=)
+WHEN EXPR MISSING:(?i)\b(allowlist|whitelist|isLocalUrl|startsWith\(\s*['\"]/|same-origin)\b
+REPORT AS area_of_interest
+REASON Detects potential unvalidated redirect and forward vulnerabilities.
+TRACE Externalized rule logic for Unvalidated Redirects and Forwards.

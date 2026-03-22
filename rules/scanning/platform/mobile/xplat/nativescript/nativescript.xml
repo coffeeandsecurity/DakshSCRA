@@ -2,9 +2,9 @@
     <category name="Framework-Specific Issues - NativeScript">
         <rule>
             <name>Insecure HTTP Requests</name>
-            <regex><![CDATA[(?i)\b(?:fetch\s*\(|Http\.request\s*\(|axios\.(?:get|post|put|delete|request)\s*\(|url\s*[:=]|endpoint\s*[:=]|baseUrl\s*[:=]|api(?:[_-]?(?:url|endpoint))?\s*[:=]|src\s*[:=]|href\s*[:=])[^\n]{0,220}http://]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\b(?:fetch\s*\(|Http\.request\s*\(|axios\.(?:get|post|put|delete|request)\s*\(|url\s*[:=]|endpoint\s*[:=]|baseUrl\s*[:=]|api(?:[_-]?(?:url|endpoint))?\s*[:=]|src\s*[:=]|href\s*[:=])[^\n]{0,220}http://][IF(MISSING:https://)]]]></rdl>
-            <exclude><![CDATA[(?i)apache\.org/licenses|opensource\.org/licenses|w3\.org|^\s*(//|/\*|\*|#|<!--|~)]]></exclude>
+            <regex>(?i)\b(?:fetch\s*\(|Http\.request\s*\(|axios\.(?:get|post|put|delete|request)\s*\(|url\s*[:=]|endpoint\s*[:=]|baseUrl\s*[:=]|api(?:[_-]?(?:url|endpoint))?\s*[:=]|src\s*[:=]|href\s*[:=])[^\n]{0,220}http://</regex>
+            <rdl_ref>logic/mobile/xplat/nativescript/core/insecure_http_requests.rdl</rdl_ref>
+            <exclude>(?i)apache\.org/licenses|opensource\.org/licenses|w3\.org|^\s*(//|/\*|\*|#|&lt;!--|~)</exclude>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>Weak Local Secret Storage</name>
-            <regex><![CDATA[\b(?:application-settings|ApplicationSettings\.set|setString\s*\()]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:application-settings|ApplicationSettings\.set|setString\s*\()][IF(PRESENT:ApplicationSettings\.setString.*(?:password|token|secret|key|credential)|getString.*(?:password|token|secret|key|credential) && MISSING:nativescript-secure-storage|encrypt|AES)]]]></rdl>
+            <regex>\b(?:application-settings|ApplicationSettings\.set|setString\s*\()</regex>
+            <rdl_ref>logic/mobile/xplat/nativescript/core/weak_local_secret_storage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>WebView Usage with Dynamic Sources</name>
-            <regex><![CDATA[<WebView|webView\.src\s*=]]></regex>
-            <rdl><![CDATA[[FLAG:<WebView|webView\.src\s*=][IF(MISSING:shouldOverrideUrl|allowList|trustedOrigins|validate && MISSING:test|example)]]]></rdl>
+            <regex>&lt;WebView|webView\.src\s*=</regex>
+            <rdl_ref>logic/mobile/xplat/nativescript/core/webview_usage_with_dynamic_sources.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -55,8 +55,8 @@
     <category name="Framework-Specific Security">
         <rule>
             <name>NativeScript Debug/Dev Marker</name>
-            <regex><![CDATA[NODE_ENV\s*=\s*[\'\"]development[\'\"]|debug\s*[:=]\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:NODE_ENV\s*=\s*[\'\"]development[\'\"]|debug\s*[:=]\s*true][IF(MISSING:NODE_ENV\s*=\s*[\'\"]production[\'\"])]]]></rdl>
+            <regex>NODE_ENV\s*=\s*[\'\"]development[\'\"]|debug\s*[:=]\s*true</regex>
+            <rdl_ref>logic/mobile/xplat/nativescript/core/nativescript_debug_dev_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -72,7 +72,7 @@
         <rule>
             <name>NativeScript Insecure HTTP Usage</name>
             <regex>http://</regex>
-            <rdl><![CDATA[[FLAG:http://][IF(MISSING:https://)]]]></rdl>
+            <rdl_ref>logic/mobile/xplat/nativescript/core/nativescript_insecure_http_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -87,8 +87,8 @@
         </rule>
         <rule>
             <name>NativeScript WebView Script Execution Marker</name>
-            <regex><![CDATA[WebView|evaluateJavaScript\(|javaScriptEnabled]]></regex>
-            <rdl><![CDATA[[FLAG:WebView|evaluateJavaScript\(|javaScriptEnabled][IF(MISSING:originWhitelist|onShouldOverrideUrlLoading)]]]></rdl>
+            <regex>WebView|evaluateJavaScript\(|javaScriptEnabled</regex>
+            <rdl_ref>logic/mobile/xplat/nativescript/core/nativescript_webview_script_execution_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -104,8 +104,8 @@
         </rule>
         <rule>
             <name>NativeScript Local Storage Secret Marker</name>
-            <regex><![CDATA[(application-settings|secure-storage|localStorage)\.(setString|setItem)\(.*(token|secret|password|apikey)]]></regex>
-            <rdl><![CDATA[[FLAG:(application-settings|secure-storage|localStorage)\.(setString|setItem)\(.*(token|secret|password|apikey)][IF(MISSING:Keychain|Keystore)]]]></rdl>
+            <regex>(application-settings|secure-storage|localStorage)\.(setString|setItem)\(.*(token|secret|password|apikey)</regex>
+            <rdl_ref>logic/mobile/xplat/nativescript/core/nativescript_local_storage_secret_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -120,8 +120,8 @@
         </rule>
         <rule>
             <name>NativeScript TLS Bypass Marker</name>
-            <regex><![CDATA[allowInvalidCertificates|InsecureSkipVerify|trustAll]]></regex>
-            <rdl><![CDATA[[FLAG:allowInvalidCertificates|InsecureSkipVerify|trustAll][IF(MISSING:certificatePinning|publicKeyPinning)]]]></rdl>
+            <regex>allowInvalidCertificates|InsecureSkipVerify|trustAll</regex>
+            <rdl_ref>logic/mobile/xplat/nativescript/core/nativescript_tls_bypass_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -137,8 +137,8 @@
         </rule>
         <rule>
             <name>NativeScript Hardcoded Secret Marker</name>
-            <regex><![CDATA[(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]]]></regex>
-            <rdl><![CDATA[[FLAG:(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]][IF(MISSING:development)]]]></rdl>
+            <regex>(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]</regex>
+            <rdl_ref>logic/mobile/xplat/nativescript/core/nativescript_hardcoded_secret_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -156,8 +156,8 @@
     <category name="Platform-Specific Issues - Android">
         <rule>
             <name>Android Debuggable Build Enabled</name>
-            <regex><![CDATA[debuggable\s*[:=]\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:debuggable\s*[:=]\s*true][IF(MISSING:release|production)]]]></rdl>
+            <regex>debuggable\s*[:=]\s*true</regex>
+            <rdl_ref>logic/mobile/xplat/nativescript/core/android_debuggable_build_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -175,8 +175,8 @@
     <category name="Platform-Specific Issues - iOS">
         <rule>
             <name>iOS ATS Relaxed Settings</name>
-            <regex><![CDATA[NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]></regex>
-            <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>][IF(PRESENT:NSAllowsArbitraryLoads.*true && MISSING:NSExceptionDomains|localhost|development|# intentional)]]]></rdl>
+            <regex>NSAllowsArbitraryLoads\s*&lt;/key&gt;\s*&lt;true\s*/&gt;</regex>
+            <rdl_ref>logic/mobile/xplat/nativescript/core/ios_ats_relaxed_settings.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>

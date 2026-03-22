@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT chmod\s+(?:0?777|[augo]+\+[rwx]*w[rwx]*|a\+x)
+WHEN EXPR MISSING:# intentional|# required|umask && MISSING:test|example|sample
+REPORT AS area_of_interest
+REASON Detects chmod commands granting world-writable or globally executable permissions.
+TRACE Externalized rule logic for Overly Permissive chmod.

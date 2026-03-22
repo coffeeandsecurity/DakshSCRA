@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT (?i)(mfa|multi_factor|2fa|otp)
+WHEN EXPR PRESENT:(?i)(/|\\\\).*(mfa|2fa|otp|auth)
+REPORT AS area_of_interest
+REASON Detects file paths that may indicate the implementation or handling of Multi-Factor Validation.

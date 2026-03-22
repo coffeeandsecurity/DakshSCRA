@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(?:std::mem::transmute|core::mem::transmute|mem::transmute|mem::uninitialized|MaybeUninit::assume_init)\s*(?:<[^>]+>)?\s*\(
+WHEN EXPR MISSING:// SAFETY:|// Safety:|bytemuck|pod_read_unaligned|std::mem::zeroed
+REPORT AS area_of_interest
+REASON Detects high-risk memory conversion and uninitialized-memory patterns in Rust.
+TRACE Externalized rule logic for Unsafe Memory Reinterpretation or Uninitialized Data.

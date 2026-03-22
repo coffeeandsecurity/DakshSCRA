@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)^[^#]*\.\s*(raw|extra)\s*\(\s*
+WHEN EXPR PRESENT:(request|params|query|format\(|f\"|f'|\+) && MISSING:(params=|placeholders|bindparam)
+REPORT AS area_of_interest
+REASON Detects insecure SQL queries using the "raw" and "extra" methods in Python.
+TRACE Externalized rule logic for Insecure SQL Queries: raw and extra.

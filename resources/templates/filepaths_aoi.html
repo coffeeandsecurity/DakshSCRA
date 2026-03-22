@@ -1,11 +1,11 @@
 <h2 class="section-title">Parsed Paths – Areas of Interest</h2>
 <p class="p-justified" style="margin-bottom: 35px;">
-    This section contains a list of file paths that have been identified by matching them with a
-predefined set of keywords. These files are typically of interest to a code reviewer, and should be
-examined for possible security vulnerabilities or insecure implementations.
+    This section contains file and directory paths that matched path-based review rules. Each match
+    includes a short explanation of why the area matters, the typical attack surface if the match is
+    accurate, and focused guidance for both reviewers and developers.
 </p>
 {% set ruleno = namespace(value=0) -%}
-{% for filepath in filepaths_aoi %}
+{% for filepath in items %}
     {% if filepath["paths"] %}
 
         <div class="fpaths-aoi-wrap"> 
@@ -14,6 +14,26 @@ examined for possible security vulnerabilities or insecure implementations.
                     {{ruleno.value}}.<span class="keyword-ht"> Rule Title </span> : {{filepath["keyword"]}}
                     <hr />
                 </h3>
+                {% if filepath["brief_desc"] %}
+                    <div class="source-file-block">
+                        <span class="source-ht">About this match</span> : {{filepath["brief_desc"]}}
+                    </div>
+                {% endif %}
+                {% if filepath["attack_desc"] %}
+                    <div class="source-file-block">
+                        <span class="source-ht">Potential / Typical Attacks</span> : {{filepath["attack_desc"]}}
+                    </div>
+                {% endif %}
+                {% if filepath["reviewer_note"] %}
+                    <div class="source-file-block">
+                        <span class="source-ht">Reviewer Focus</span> : {{filepath["reviewer_note"]}}
+                    </div>
+                {% endif %}
+                {% if filepath["developer_note"] %}
+                    <div class="source-file-block">
+                        <span class="source-ht">Developer Focus</span> : {{filepath["developer_note"]}}
+                    </div>
+                {% endif %}
                 {% for path in filepath["paths"] %}
                     <div class="source-file-block">
                         - <span class="source-ht">Source File </span> : {{path}}

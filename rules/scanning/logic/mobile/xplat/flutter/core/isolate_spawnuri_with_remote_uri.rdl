@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bIsolate\.spawnUri\s*\(
+WHEN EXPR PRESENT:http://|https://|Uri\.parse.*http && MISSING:// trusted|// internal
+REPORT AS area_of_interest
+REASON Detects Isolate.spawnUri calls pointing to remote HTTP/HTTPS URIs.
+TRACE Externalized mobile rule logic for Isolate.spawnUri with Remote URI.

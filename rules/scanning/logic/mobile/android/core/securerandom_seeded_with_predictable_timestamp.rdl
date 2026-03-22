@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \.setSeed\s*\(
+WHEN EXPR PRESENT:setSeed.*currentTimeMillis|setSeed.*nanoTime|setSeed.*System\.current|setSeed.*hashCode
+REPORT AS area_of_interest
+REASON Detects SecureRandom seeded with a timestamp or other predictable value, destroying cryptographic randomness.
+TRACE Externalized mobile rule logic for SecureRandom Seeded with Predictable Timestamp.

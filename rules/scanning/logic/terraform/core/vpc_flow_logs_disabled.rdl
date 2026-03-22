@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT resource\s+"aws_vpc"\b
+WHEN EXPR MISSING:aws_flow_log|enable_flow_logs|flow_log
+REPORT AS area_of_interest
+REASON Detects VPC resources without associated VPC Flow Logs configuration.
+TRACE Externalized rule logic for VPC Flow Logs Disabled.

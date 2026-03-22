@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)Response\.Redirect
+WHEN EXPR MISSING:(IsLocalUrl|allowlist|whitelist|Uri\.TryCreate)
+REPORT AS area_of_interest
+REASON Detects the usage of open redirect methods that can introduce security vulnerabilities.
+TRACE Externalized rule logic for Unvalidated Redirects and Forwards.

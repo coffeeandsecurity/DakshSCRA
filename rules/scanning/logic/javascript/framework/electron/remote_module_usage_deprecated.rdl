@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT require\s*\(\s*['"]electron['"]\s*\)\s*\.\s*remote|@electron/remote
+WHEN EXPR MISSING:contextBridge|ipcRenderer|ipcMain && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects use of Electron's deprecated remote module in renderer processes.
+TRACE Externalized rule logic for Remote Module Usage (Deprecated).

@@ -2,8 +2,8 @@
     <category name="Untrusted Input Handling or Injection Flaws">
         <rule>
             <name>Untrusted Inputs: $_REQUEST, $_GET, $_POST, $_COOKIE</name>
-            <regex><![CDATA[\$_(REQUEST|GET|POST|COOKIE)]]></regex>
-            <rdl><![CDATA[[FLAG:\$_(REQUEST|GET|POST|COOKIE)][IF(PRESENT:(query|execute|include|require|header|echo|print|system|exec|shell_exec|eval|assert) && MISSING:(filter_input|filter_var|htmlspecialchars|htmlentities|intval|floatval|preg_match))]]]></rdl>
+            <regex>\$_(REQUEST|GET|POST|COOKIE)</regex>
+            <rdl_ref>logic/php/core/untrusted_inputs_request_get_post_cookie.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>Command Injection: shell_exec, exec, passthru, system, popen, backtick</name>
-            <regex><![CDATA[(shell_exec|exec|passthru|system|popen|`)\(]]></regex>
-            <rdl><![CDATA[[FLAG:(shell_exec|exec|passthru|system|popen|`)\(][IF(PRESENT:\$_(GET|POST|REQUEST|COOKIE)|\$_SERVER|argv|request && MISSING:escapeshellarg|escapeshellcmd)]]]></rdl>
+            <regex>(shell_exec|exec|passthru|system|popen|`)\(</regex>
+            <rdl_ref>logic/php/core/command_injection_shell_exec_exec_passthru_system_popen_backtick.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>4</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>Arbitrary Code Execution: eval and exec</name>
-            <regex><![CDATA[\b(?:eval|exec)\b]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:eval|exec)\b][IF(PRESENT:\$_(GET|POST|REQUEST|COOKIE)|base64_decode|gzinflate|str_rot13|preg_replace && MISSING:allowlist|whitelist)]]]></rdl>
+            <regex>\b(?:eval|exec)\b</regex>
+            <rdl_ref>logic/php/core/arbitrary_code_execution_eval_and_exec.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -53,8 +53,8 @@
         </rule>
         <rule>
             <name>Object Injection via Serialization</name>
-            <regex><![CDATA[\b(?:unserialize|serialize)\b]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:unserialize|serialize)\b][IF(PRESENT:unserialize\s*\(|\$_(GET|POST|REQUEST|COOKIE) && MISSING:allowed_classes\s*=>\s*false|json_decode\s*\())]]]></rdl>
+            <regex>\b(?:unserialize|serialize)\b</regex>
+            <rdl_ref>logic/php/core/object_injection_via_serialization.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -70,8 +70,8 @@
         </rule>
         <rule>
             <name>Regular Expression Injection: preg_replace with /e Modifier or Untrusted Input</name>
-            <regex><![CDATA[preg_replace\(([^,]+,\s*)?[^/]*e[^/]*|preg_replace\(\$_(GET|POST|REQUEST|COOKIE)]]></regex>
-            <rdl><![CDATA[[FLAG:preg_replace\(([^,]+,\s*)?[^/]*e[^/]*|preg_replace\(\$_(GET|POST|REQUEST|COOKIE)][IF(MISSING:preg_replace_callback)]]]></rdl>
+            <regex>preg_replace\(([^,]+,\s*)?[^/]*e[^/]*|preg_replace\(\$_(GET|POST|REQUEST|COOKIE)</regex>
+            <rdl_ref>logic/php/core/regular_expression_injection_preg_replace_with_e_modifier_or_untrusted_input.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -87,8 +87,8 @@
         </rule>
         <rule>
             <name>Cross-Site Scripting (XSS) via PHP_SELF</name>
-            <regex><![CDATA[\$_SERVER\['PHP_SELF']]></regex>
-            <rdl><![CDATA[[FLAG:\$_SERVER\['PHP_SELF'][IF(PRESENT:(echo|print|action\s*=|header\s*\() && MISSING:htmlspecialchars|htmlentities|basename)]]]></rdl>
+            <regex>\$_SERVER\['PHP_SELF'</regex>
+            <rdl_ref>logic/php/core/cross_site_scripting_xss_via_php_self.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -106,8 +106,8 @@
     <category name="Insecure Method/Function Call">
         <rule>
             <name>Insecure Method Call: preg_replace() with Code Execution</name>
-            <regex><![CDATA[preg_replace\s*\(\s*['"](eval|assert|system|passthru|shell_exec|exec|popen|proc_open|pcntl_exec)['"]\s*,\s*\$([^\s,]*)\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:preg_replace\s*\(\s*['"](eval|assert|system|passthru|shell_exec|exec|popen|proc_open|pcntl_exec)['"]\s*,\s*\$([^\s,]*)\s*\)][IF(MISSING:preg_replace_callback|str_replace|validate|test|example)]]]></rdl>
+            <regex>preg_replace\s*\(\s*['"](eval|assert|system|passthru|shell_exec|exec|popen|proc_open|pcntl_exec)['"]\s*,\s*\$([^\s,]*)\s*\)</regex>
+            <rdl_ref>logic/php/core/insecure_method_call_preg_replace_with_code_execution.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -123,8 +123,8 @@
         </rule>
         <rule>
             <name>Insecure Redirect: header() with Location</name>
-            <regex><![CDATA[header\s*\(\s*['\"]\s*Location\s*:\s*['\"]\s*\.\s*\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)]]></regex>
-            <rdl><![CDATA[[FLAG:header\s*\(\s*['\"]\s*Location\s*:\s*['\"]\s*\.\s*\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)][IF(MISSING:parse_url|filter_var\s*\(.*FILTER_VALIDATE_URL|allowlist|whitelist)]]]></rdl>
+            <regex>header\s*\(\s*['\"]\s*Location\s*:\s*['\"]\s*\.\s*\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)</regex>
+            <rdl_ref>logic/php/core/insecure_redirect_header_with_location.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -140,8 +140,8 @@
         </rule>
         <rule>
             <name>Insecure File Inclusion: include(), require()</name>
-            <regex><![CDATA[\b(?:include|require)(_once)?\s*\(\s*(?:(?:\'[^\']*\'|\"[^\"]*\")\s*\.\s*)?\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\.\s*(?:\'[^\']*\'|\"[^\"]*\"))?\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:include|require)(_once)?\s*\(\s*(?:(?:\'[^\']*\'|\"[^\"]*\")\s*\.\s*)?\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\.\s*(?:\'[^\']*\'|\"[^\"]*\"))?\s*\)][IF(MISSING:realpath|basename|__DIR__|allowlist|whitelist|in_array)]]]></rdl>
+            <regex>\b(?:include|require)(_once)?\s*\(\s*(?:(?:\'[^\']*\'|\"[^\"]*\")\s*\.\s*)?\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\.\s*(?:\'[^\']*\'|\"[^\"]*\"))?\s*\)</regex>
+            <rdl_ref>logic/php/core/insecure_file_inclusion_include_require.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -157,8 +157,8 @@
         </rule>
         <rule>
             <name>Insecure Variable Injection: extract()</name>
-            <regex><![CDATA[extract\s*\(\s*(\$_(GET|POST|REQUEST)|\$\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}?)\s*,\s*(?:\s*EXTR_(?:OVERWRITE|SKIP|PREFIX_SAME|PREFIX_ALL|IF_EXISTS|IF_DOESNT_EXIST|PREFIX_INVALID))?]]></regex>
-            <rdl><![CDATA[[FLAG:extract\s*\(\s*(\$_(GET|POST|REQUEST)|\$\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}?)\s*,\s*(?:\s*EXTR_(?:OVERWRITE|SKIP|PREFIX_SAME|PREFIX_ALL|IF_EXISTS|IF_DOESNT_EXIST|PREFIX_INVALID))?][IF(MISSING:EXTR_SKIP|EXTR_PREFIX_ALL|allowlist|filter_var|validate && MISSING:test|example)]]]></rdl>
+            <regex>extract\s*\(\s*(\$_(GET|POST|REQUEST)|\$\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}?)\s*,\s*(?:\s*EXTR_(?:OVERWRITE|SKIP|PREFIX_SAME|PREFIX_ALL|IF_EXISTS|IF_DOESNT_EXIST|PREFIX_INVALID))?</regex>
+            <rdl_ref>logic/php/core/insecure_variable_injection_extract.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -174,8 +174,8 @@
         </rule>
         <rule>
             <name>Insecure Code Execution: assert() and eval()</name>
-            <regex><![CDATA[(assert|eval)\s*\(\s*(\$_(GET|POST|REQUEST)|\$\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}?)]]></regex>
-            <rdl><![CDATA[[FLAG:(assert|eval)\s*\(\s*(\$_(GET|POST|REQUEST)|\$\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}?)][IF(MISSING:validate|allowlist|trusted|intval|is_int|is_numeric && MISSING:test|example)]]]></rdl>
+            <regex>(assert|eval)\s*\(\s*(\$_(GET|POST|REQUEST)|\$\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}?)</regex>
+            <rdl_ref>logic/php/core/insecure_code_execution_assert_and_eval.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -191,8 +191,8 @@
         </rule>
         <rule>
             <name>Insecure File Operations: fopen(), file_get_contents(), file_put_contents()</name>
-            <regex><![CDATA[(fopen|file_get_contents|file_put_contents)\s*\(\s*(?:(?:\'[^\']*\'|\"[^\"]*\")\s*\.\s*)?\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\.\s*(?:\'[^\']*\'|\"[^\"]*\"))?\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:(fopen|file_get_contents|file_put_contents)\s*\(\s*(?:(?:\'[^\']*\'|\"[^\"]*\")\s*\.\s*)?\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\.\s*(?:\'[^\']*\'|\"[^\"]*\"))?\s*\)][IF(MISSING:realpath|basename|open_basedir|filter_input|allowlist|whitelist|__DIR__)]]]></rdl>
+            <regex>(fopen|file_get_contents|file_put_contents)\s*\(\s*(?:(?:\'[^\']*\'|\"[^\"]*\")\s*\.\s*)?\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\.\s*(?:\'[^\']*\'|\"[^\"]*\"))?\s*\)</regex>
+            <rdl_ref>logic/php/core/insecure_file_operations_fopen_file_get_contents_file_put_contents.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -210,8 +210,8 @@
     <category name="Information Disclosure">
         <rule>
             <name>Stack Trace or Error Disclosure</name>
-            <regex><![CDATA[(?i)(echo .*Exception.*;|print_r\(.*Exception.*\)|trigger_error\(.+\))]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(echo .*Exception.*;|print_r\(.*Exception.*\)|trigger_error\(.+\))][IF(MISSING:ini_set.*display_errors.*0|error_reporting\s*\(\s*0\s*\)|log_errors|try.*catch && MISSING:development|localhost)]]]></rdl>
+            <regex>(?i)(echo .*Exception.*;|print_r\(.*Exception.*\)|trigger_error\(.+\))</regex>
+            <rdl_ref>logic/php/core/stack_trace_or_error_disclosure.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -229,8 +229,8 @@
     <category name="Deprecated Functions">
         <rule>
             <name>Deprecated and Potentially Insecure SQL Functions</name>
-            <regex><![CDATA[(?i)\b(mysql_query|mysqli_query|new\s+PDO\(|pg_connect\(|mysql_connect\(|mysqli_connect\(|sqlite3_open|mysql_fetch_array|mysql_fetch_assoc|mysql_num_rows)\b|(?:mysql_query|pg_query|sqlite_query|mysqli_query|pdo->query)\s*\(\s*['\"]?\b(SELECT|INSERT|UPDATE|DELETE)\b\s+.*\s*['\"]?\s*\.\s*\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\b(mysql_query|mysqli_query|new\s+PDO\(|pg_connect\(|mysql_connect\(|mysqli_connect\(|sqlite3_open|mysql_fetch_array|mysql_fetch_assoc|mysql_num_rows)\b|(?:mysql_query|pg_query|sqlite_query|mysqli_query|pdo->query)\s*\(\s*['\"]?\b(SELECT|INSERT|UPDATE|DELETE)\b\s+.*\s*['\"]?\s*\.\s*\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)][IF(MISSING:PDO::|mysqli_|prepare\s*\(|bindParam|bindValue && MISSING:test|example)]]]></rdl>
+            <regex>(?i)\b(mysql_query|mysqli_query|new\s+PDO\(|pg_connect\(|mysql_connect\(|mysqli_connect\(|sqlite3_open|mysql_fetch_array|mysql_fetch_assoc|mysql_num_rows)\b|(?:mysql_query|pg_query|sqlite_query|mysqli_query|pdo-&gt;query)\s*\(\s*['\"]?\b(SELECT|INSERT|UPDATE|DELETE)\b\s+.*\s*['\"]?\s*\.\s*\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)</regex>
+            <rdl_ref>logic/php/core/deprecated_and_potentially_insecure_sql_functions.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -245,8 +245,8 @@
         </rule>
         <rule>
             <name>Deprecated Regular Expression Functions</name>
-            <regex><![CDATA[\b(ereg|eregi)\b]]></regex>
-            <rdl><![CDATA[[FLAG:\b(ereg|eregi)\b][IF(MISSING:preg_match|preg_replace|preg_split && MISSING:test|example)]]]></rdl>
+            <regex>\b(ereg|eregi)\b</regex>
+            <rdl_ref>logic/php/core/deprecated_regular_expression_functions.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -261,8 +261,8 @@
         </rule>
         <rule>
             <name>Deprecated String Split Function</name>
-            <regex><![CDATA[\bsplit\s*\(\s*[^;]*\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:\bsplit\s*\(\s*[^;]*\s*\)][IF(MISSING:explode|str_split|preg_split && MISSING:test|example)]]]></rdl>
+            <regex>\bsplit\s*\(\s*[^;]*\s*\)</regex>
+            <rdl_ref>logic/php/core/deprecated_string_split_function.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -277,8 +277,8 @@
         </rule>
         <rule>
             <name>Deprecated Session Register Function</name>
-            <regex><![CDATA[\bsession_register\s*\(\s*['"]?[\w\s]*['"]?\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:\bsession_register\s*\(\s*['"]?[\w\s]*['"]?\s*\)][IF(MISSING:$_SESSION|session_start|session_regenerate_id && MISSING:test|example)]]]></rdl>
+            <regex>\bsession_register\s*\(\s*['"]?[\w\s]*['"]?\s*\)</regex>
+            <rdl_ref>logic/php/core/deprecated_session_register_function.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -293,8 +293,8 @@
         </rule>
         <rule>
             <name>Deprecated register_globals Directive</name>
-            <regex><![CDATA[\bregister_globals\b]]></regex>
-            <rdl><![CDATA[[FLAG:\bregister_globals\b][IF(PRESENT:register_globals\s*=\s*On|register_globals\s*=\s*1 && MISSING:# intentional)]]]></rdl>
+            <regex>\bregister_globals\b</regex>
+            <rdl_ref>logic/php/core/deprecated_register_globals_directive.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -310,8 +310,8 @@
         </rule>
         <rule>
             <name>Deprecated create_function() Usage</name>
-            <regex><![CDATA[\bcreate_function\(\s*]]></regex>
-            <rdl><![CDATA[[FLAG:\bcreate_function\(\s*][IF(MISSING:anonymous\s+function|fn\s*\(|Closure && MISSING:test|example)]]]></rdl>
+            <regex>\bcreate_function\(\s*</regex>
+            <rdl_ref>logic/php/core/deprecated_create_function_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -330,7 +330,7 @@
         <rule>
             <name>Insecure Mitigation: SQL Injection (mysql_real_escape_string)</name>
             <regex>mysql_real_escape_string</regex>
-            <rdl><![CDATA[[FLAG:mysql_real_escape_string][IF(PRESENT:mysql_real_escape_string|addslashes && MISSING:PDO::|prepare\s*\(|bindParam|bindValue|parameterized)]]]></rdl>
+            <rdl_ref>logic/php/core/insecure_mitigation_sql_injection_mysql_real_escape_string.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -348,7 +348,7 @@
         <rule>
             <name>Mitigation Identified: XSS</name>
             <regex>htmlentities</regex>
-            <rdl><![CDATA[[FLAG:htmlentities][IF(PRESENT:htmlspecialchars|htmlentities|strip_tags|esc_html|h\s*\( && MISSING:test|example)]]]></rdl>
+            <rdl_ref>logic/php/core/mitigation_identified_xss.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -365,8 +365,8 @@
     <category name="Database Queries">
         <rule>
             <name>RDL Conditional: SQL Query with Untrusted Input and Missing Parameterization</name>
-            <regex><![CDATA[(?i)\b(?:mysql_query|mysqli_query|pg_query|sqlite_query|->query)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\b(?:mysql_query|mysqli_query|pg_query|sqlite_query|->query)\s*\(][IF(PRESENT:\$_(GET|POST|REQUEST|COOKIE)|\.\s*\$|sprintf\s*\(|format\s*\( && MISSING:prepare\s*\(|bind_param|bindValue|bindParam|PDO::prepare)]]]></rdl>
+            <regex>(?i)\b(?:mysql_query|mysqli_query|pg_query|sqlite_query|-&gt;query)\s*\(</regex>
+            <rdl_ref>logic/php/core/rdl_conditional_sql_query_with_untrusted_input_and_missing_parameterization.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -382,8 +382,8 @@
         </rule>
         <rule>
             <name>SQL Query: Non-parameterized SELECT Statements with WHERE or ORDER BY</name>
-            <regex><![CDATA[(?i)\bSELECT\s+\*?\s+FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\bSELECT\s+\*?\s+FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*][IF(PRESENT:(\.\s*\$|\$_(GET|POST|REQUEST|COOKIE)|sprintf\s*\(|format\s*\() && MISSING:prepare\s*\(|bind_param|bindValue|bindParam|PDO::prepare)]]]></rdl>
+            <regex>(?i)\bSELECT\s+\*?\s+FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*</regex>
+            <rdl_ref>logic/php/core/sql_query_non_parameterized_select_statements_with_where_or_order_by.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -399,8 +399,8 @@
         </rule>
         <rule>
             <name>SQL Query: Unrestricted SELECT *</name>
-            <regex><![CDATA[\bSELECT\s+\*\s+FROM\b]]></regex>
-            <rdl><![CDATA[[FLAG:\bSELECT\s+\*\s+FROM\b][IF(MISSING:LIMIT\s+[0-9]+)]]]></rdl>
+            <regex>\bSELECT\s+\*\s+FROM\b</regex>
+            <rdl_ref>logic/php/core/sql_query_unrestricted_select.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -415,8 +415,8 @@
         </rule>
         <rule>
             <name>SQL Query: Non-parameterized INSERT/UPDATE Statements</name>
-            <regex><![CDATA[(?i)\b(INSERT INTO|UPDATE)\s+[^\s]+\s+(SET|VALUES)\s+.*=.*\$.*]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\b(INSERT INTO|UPDATE)\s+[^\s]+\s+(SET|VALUES)\s+.*=.*\$.*][IF(MISSING:prepare\s*\(|bind_param|bindValue|bindParam|PDO::prepare)]]]></rdl>
+            <regex>(?i)\b(INSERT INTO|UPDATE)\s+[^\s]+\s+(SET|VALUES)\s+.*=.*\$.*</regex>
+            <rdl_ref>logic/php/core/sql_query_non_parameterized_insert_update_statements.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -432,8 +432,8 @@
         </rule>
         <rule>
             <name>SQL Query: Hardcoded Sensitive Information in WHERE Clauses</name>
-            <regex><![CDATA[(?i)\bSELECT\s+[^\s]+\s+FROM\s+[^\s]+\s+WHERE\s+(username|password|apikey|token)=['"][^'"]+['"]]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\bSELECT\s+[^\s]+\s+FROM\s+[^\s]+\s+WHERE\s+(username|password|apikey|token)=['"][^'"]+['"]][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <regex>(?i)\bSELECT\s+[^\s]+\s+FROM\s+[^\s]+\s+WHERE\s+(username|password|apikey|token)=['"][^'"]+['"]</regex>
+            <rdl_ref>logic/php/core/sql_query_hardcoded_sensitive_information_in_where_clauses.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -449,8 +449,8 @@
         </rule>
         <rule>
             <name>SQL Query: Non-parameterized DELETE Statements</name>
-            <regex><![CDATA[(?i)\bDELETE\s+FROM\s+[^\s]+\s+WHERE\s+.*=.*\$.*]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\bDELETE\s+FROM\s+[^\s]+\s+WHERE\s+.*=.*\$.*][IF(MISSING:prepare\s*\(|bind_param|bindValue|bindParam|PDO::prepare)]]]></rdl>
+            <regex>(?i)\bDELETE\s+FROM\s+[^\s]+\s+WHERE\s+.*=.*\$.*</regex>
+            <rdl_ref>logic/php/core/sql_query_non_parameterized_delete_statements.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -468,8 +468,8 @@
     <category name="XML External Entity (XXE)">
         <rule>
             <name>XXE: DOMDocument loadXML Without Entity Disablement</name>
-            <regex><![CDATA[\$dom\s*=\s*new\s+DOMDocument|DOMDocument\s*\(\s*\)|simplexml_load_string\s*\(|simplexml_load_file\s*\(|SimpleXMLElement\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\$dom\s*=\s*new\s+DOMDocument|simplexml_load_string\s*\(|simplexml_load_file\s*\(][IF(MISSING:LIBXML_NOENT\s*=\s*0|libxml_disable_entity_loader\s*\(\s*true\s*\)|LIBXML_DTDLOAD)]]]></rdl>
+            <regex>\$dom\s*=\s*new\s+DOMDocument|DOMDocument\s*\(\s*\)|simplexml_load_string\s*\(|simplexml_load_file\s*\(|SimpleXMLElement\s*\(</regex>
+            <rdl_ref>logic/php/core/xxe_domdocument_loadxml_without_entity_disablement.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -485,8 +485,8 @@
         </rule>
         <rule>
             <name>XXE: XMLReader or XMLParser Without External Entity Protection</name>
-            <regex><![CDATA[xml_parser_create\s*\(|XMLReader::open\s*\(|new\s+XMLReader\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:xml_parser_create\s*\(|XMLReader::open\s*\(|new\s+XMLReader\s*\(][IF(MISSING:libxml_disable_entity_loader|XML_OPTION_SKIP_WHITE|LIBXML_NOENT\s*=\s*0)]]]></rdl>
+            <regex>xml_parser_create\s*\(|XMLReader::open\s*\(|new\s+XMLReader\s*\(</regex>
+            <rdl_ref>logic/php/core/xxe_xmlreader_or_xmlparser_without_external_entity_protection.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -504,8 +504,8 @@
     <category name="Server-Side Request Forgery (SSRF)">
         <rule>
             <name>SSRF: curl_exec with User-Controlled URL</name>
-            <regex><![CDATA[curl_setopt\s*\(\s*\$\w+\s*,\s*CURLOPT_URL|curl_init\s*\(\s*\$_(GET|POST|REQUEST|COOKIE)]]></regex>
-            <rdl><![CDATA[[FLAG:curl_setopt\s*\(\s*\$\w+\s*,\s*CURLOPT_URL|curl_init\s*\(\s*\$_(GET|POST|REQUEST|COOKIE)][IF(MISSING:allowlist|whitelist|filter_var\s*\(.*FILTER_VALIDATE_URL|parse_url|CURLOPT_PROTOCOLS)]]]></rdl>
+            <regex>curl_setopt\s*\(\s*\$\w+\s*,\s*CURLOPT_URL|curl_init\s*\(\s*\$_(GET|POST|REQUEST|COOKIE)</regex>
+            <rdl_ref>logic/php/core/ssrf_curl_exec_with_user_controlled_url.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -521,8 +521,8 @@
         </rule>
         <rule>
             <name>SSRF: file_get_contents with User-Controlled URL</name>
-            <regex><![CDATA[file_get_contents\s*\(\s*\$_(GET|POST|REQUEST|COOKIE)|\$\w+\s*=\s*file_get_contents\s*\(\s*\$]]></regex>
-            <rdl><![CDATA[[FLAG:file_get_contents\s*\(\s*\$_(GET|POST|REQUEST|COOKIE)|\$\w+\s*=\s*file_get_contents\s*\(\s*\$][IF(MISSING:allowlist|whitelist|parse_url|filter_var|stream_context_create)]]]></rdl>
+            <regex>file_get_contents\s*\(\s*\$_(GET|POST|REQUEST|COOKIE)|\$\w+\s*=\s*file_get_contents\s*\(\s*\$</regex>
+            <rdl_ref>logic/php/core/ssrf_file_get_contents_with_user_controlled_url.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>

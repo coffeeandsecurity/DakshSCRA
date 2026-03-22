@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bmemset\s*\(\s*(?:\w*(?:password|passwd|secret|token|api[_-]?key|private[_-]?key)\w*|\w+_buffer)\s*,\s*[^,]+,\s*[^)]+\)
+WHEN EXPR MISSING:example|sample|dummy|test|placeholder
+REPORT AS area_of_interest
+REASON Detects potential improper clearing of sensitive data.
+TRACE Externalized rule logic for Improper Use of `memset` for Sensitive Data.

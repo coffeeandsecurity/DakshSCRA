@@ -2,8 +2,8 @@
     <category name="Framework-Specific Issues - Electron">
         <rule>
             <name>nodeIntegration Enabled in Renderer Process</name>
-            <regex><![CDATA[nodeIntegration\s*:\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:nodeIntegration\s*:\s*true][IF(MISSING:contextIsolation:\s*true|preload|sandbox:\s*true)]]]></rdl>
+            <regex>nodeIntegration\s*:\s*true</regex>
+            <rdl_ref>logic/javascript/framework/electron/nodeintegration_enabled_in_renderer_process.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>contextIsolation Disabled</name>
-            <regex><![CDATA[contextIsolation\s*:\s*false]]></regex>
-            <rdl><![CDATA[[FLAG:contextIsolation\s*:\s*false][IF(PRESENT:contextIsolation:\s*false && MISSING:test|development)]]]></rdl>
+            <regex>contextIsolation\s*:\s*false</regex>
+            <rdl_ref>logic/javascript/framework/electron/contextisolation_disabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>webSecurity Disabled</name>
-            <regex><![CDATA[webSecurity\s*:\s*false]]></regex>
-            <rdl><![CDATA[[FLAG:webSecurity\s*:\s*false][IF(MISSING:test|development|localhost && PRESENT:webSecurity:\s*false|allowRunningInsecureContent:\s*true)]]]></rdl>
+            <regex>webSecurity\s*:\s*false</regex>
+            <rdl_ref>logic/javascript/framework/electron/websecurity_disabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -53,8 +53,8 @@
         </rule>
         <rule>
             <name>allowRunningInsecureContent Enabled</name>
-            <regex><![CDATA[allowRunningInsecureContent\s*:\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:allowRunningInsecureContent\s*:\s*true][IF(PRESENT:allowRunningInsecureContent:\s*true && MISSING:test|development|localhost)]]]></rdl>
+            <regex>allowRunningInsecureContent\s*:\s*true</regex>
+            <rdl_ref>logic/javascript/framework/electron/allowrunninginsecurecontent_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -70,8 +70,8 @@
         </rule>
         <rule>
             <name>Remote Module Usage (Deprecated)</name>
-            <regex><![CDATA[require\s*\(\s*['"]electron['"]\s*\)\s*\.\s*remote|@electron/remote]]></regex>
-            <rdl><![CDATA[[FLAG:require\s*\(\s*['"]electron['"]\s*\)\s*\.\s*remote|@electron/remote][IF(MISSING:contextBridge|ipcRenderer|ipcMain && MISSING:test|example)]]]></rdl>
+            <regex>require\s*\(\s*['"]electron['"]\s*\)\s*\.\s*remote|@electron/remote</regex>
+            <rdl_ref>logic/javascript/framework/electron/remote_module_usage_deprecated.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bSecItemAdd\s*\(|\bSecItemUpdate\s*\(
+WHEN EXPR MISSING:kSecAttrAccessControl|SecAccessControlCreateWithFlags
+REPORT AS area_of_interest
+REASON Detects Keychain item storage without an explicit access control object.
+TRACE Externalized mobile rule logic for Keychain Item Missing Access Control Object.

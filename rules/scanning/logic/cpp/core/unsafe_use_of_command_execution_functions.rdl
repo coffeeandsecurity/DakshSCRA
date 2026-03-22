@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(?:system|popen|exec|execp|CreateProcess)\b\s*\(
+WHEN EXPR MISSING:validate|sanitize|allowlist|whitelist|escapeShellArg
+REPORT AS area_of_interest
+REASON Detects the usage of command execution functions that may introduce command injection risks and unauthorized access to system resources.
+TRACE Externalized rule logic for Unsafe Use of Command Execution Functions.

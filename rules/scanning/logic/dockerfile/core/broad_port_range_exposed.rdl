@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT ^EXPOSE\s+\d+-\d{4,}|^EXPOSE\s+0\.0\.0\.0
+WHEN EXPR MISSING:# intentional|# required|# documentation
+REPORT AS area_of_interest
+REASON Detects EXPOSE instructions declaring broad port ranges or binding to all interfaces.
+TRACE Externalized rule logic for Broad Port Range Exposed.

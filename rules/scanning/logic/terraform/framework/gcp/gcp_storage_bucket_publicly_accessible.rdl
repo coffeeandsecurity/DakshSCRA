@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT allUsers|allAuthenticatedUsers
+WHEN EXPR PRESENT:role\s*=\s*"roles/storage\.objectViewer".*allUsers|allAuthenticatedUsers && MISSING:# intentional|# static-website|website\s*\{
+REPORT AS area_of_interest
+REASON Detects GCS bucket IAM bindings that grant access to allUsers or allAuthenticatedUsers.
+TRACE Externalized rule logic for GCP Storage Bucket Publicly Accessible.

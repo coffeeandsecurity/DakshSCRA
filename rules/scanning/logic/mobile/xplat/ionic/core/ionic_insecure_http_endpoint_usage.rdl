@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT http://
+REPORT AS area_of_interest
+REASON Detects cleartext endpoint references in Ionic/Capacitor apps.
+TRACE Externalized mobile rule logic for Ionic Insecure HTTP Endpoint Usage.

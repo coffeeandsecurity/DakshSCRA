@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT amsiInitFailed|AmsiScanBuffer|amsi\.dll|amsiContext|Disable.*AMSI|AMSI.*bypass
+WHEN EXPR PRESENT:amsi|AmsiScanBuffer|amsiContext|amsiInitFailed && MISSING:test|development|example|research
+REPORT AS area_of_interest
+REASON Detects known patterns associated with Antimalware Scan Interface (AMSI) bypass techniques.
+TRACE Externalized rule logic for AMSI Bypass Attempt.

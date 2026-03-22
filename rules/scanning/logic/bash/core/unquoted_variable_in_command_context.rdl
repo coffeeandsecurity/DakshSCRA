@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?:exec|system|run|sh\s+-c)\s+[^"'][^;|\n]*\$\w
+WHEN EXPR MISSING:"\"$|'$|shellcheck\s+disable|# shellcheck && MISSING:test\s+-z|test\s+-n|\[\s*-z|\[\s*-n
+REPORT AS area_of_interest
+REASON Detects unquoted variables passed to shell execution contexts.
+TRACE Externalized rule logic for Unquoted Variable in Command Context.

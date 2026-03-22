@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bLinking\.openURL\s*\(
+WHEN EXPR MISSING:allowlist|Linking\.canOpenURL|validateUrl|startsWith.*https|trustedDomains && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects external URL launches that require strict allowlist validation.
+TRACE Externalized mobile rule logic for Arbitrary External URL Opening.

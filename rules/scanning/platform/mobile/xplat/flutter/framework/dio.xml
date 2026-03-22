@@ -2,8 +2,8 @@
     <category name="Framework-Specific Issues - Dio (Flutter)">
         <rule>
             <name>Bad Certificate Callback Accepting All Certificates</name>
-            <regex><![CDATA[badCertificateCallback\s*:\s*\([^)]*\)\s*(?:=>|{)[^}]*(?:=>|return)\s*true|onBadCertificate\s*:\s*\(_\)\s*(?:=>|{)[^}]*true]]></regex>
-            <rdl><![CDATA[[FLAG:badCertificateCallback\s*:\s*\([^)]*\)\s*(?:=>|\{)[^}]*(?:=>|return)\s*true][IF(MISSING:test|development|localhost|staging|certificate pinning)]]]></rdl>
+            <regex>badCertificateCallback\s*:\s*\([^)]*\)\s*(?:=&gt;|{)[^}]*(?:=&gt;|return)\s*true|onBadCertificate\s*:\s*\(_\)\s*(?:=&gt;|{)[^}]*true</regex>
+            <rdl_ref>logic/mobile/xplat/flutter/framework/dio/bad_certificate_callback_accepting_all_certificates.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>LogInterceptor with Response Body in Non-Debug Build</name>
-            <regex><![CDATA[LogInterceptor\s*\([^)]*responseBody\s*:\s*true|LogInterceptor\s*\([^)]*requestBody\s*:\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:LogInterceptor\s*\([^)]*responseBody\s*:\s*true|LogInterceptor\s*\([^)]*requestBody\s*:\s*true][IF(MISSING:kDebugMode|kReleaseMode\s*==\s*false|assert\b)]]]></rdl>
+            <regex>LogInterceptor\s*\([^)]*responseBody\s*:\s*true|LogInterceptor\s*\([^)]*requestBody\s*:\s*true</regex>
+            <rdl_ref>logic/mobile/xplat/flutter/framework/dio/loginterceptor_with_response_body_in_non_debug_build.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>Dio BaseOptions Without Connection Timeout</name>
-            <regex><![CDATA[BaseOptions\s*\(|Dio\s*\(\s*BaseOptions\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:BaseOptions\s*\(][IF(MISSING:connectTimeout|receiveTimeout|sendTimeout)]]]></rdl>
+            <regex>BaseOptions\s*\(|Dio\s*\(\s*BaseOptions\s*\(</regex>
+            <rdl_ref>logic/mobile/xplat/flutter/framework/dio/dio_baseoptions_without_connection_timeout.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT preg_replace\(([^,]+,\s*)?[^/]*e[^/]*|preg_replace\(\$_(GET|POST|REQUEST|COOKIE)
+WHEN EXPR MISSING:preg_replace_callback
+REPORT AS area_of_interest
+REASON Detects usage of preg_replace() with the /e modifier or direct use of untrusted inputs, leading to regular expression injection.
+TRACE Externalized rule logic for Regular Expression Injection: preg_replace with /e Modifier or Untrusted Input.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (\w+)\s*=\s*NULL\s*;\s*\w+\s*\(.*\1.*\)
+WHEN EXPR MISSING:if\s*\(.*!=\s*NULL\)|if\s*\(.*!=\s*nullptr\)|assert\s*\(|NULL\s*!=|nullptr\s*!=
+REPORT AS area_of_interest
+REASON Detects potential null pointer dereference errors.
+TRACE Externalized rule logic for Null Pointer Dereference.

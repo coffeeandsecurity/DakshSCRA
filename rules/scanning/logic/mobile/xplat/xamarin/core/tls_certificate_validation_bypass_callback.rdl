@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT ServerCertificateCustomValidationCallback\s*=\s*\(.*\)\s*=>\s*true
+REPORT AS area_of_interest
+REASON Detects explicit certificate validation bypass in HTTP client configuration.
+TRACE Externalized mobile rule logic for TLS Certificate Validation Bypass Callback.

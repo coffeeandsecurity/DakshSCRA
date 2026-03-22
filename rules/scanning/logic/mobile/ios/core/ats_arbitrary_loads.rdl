@@ -1,0 +1,7 @@
+VERSION 1
+WHEN FILE_NAME_IS Info.plist
+WHEN CURRENT_FILE_MATCHES /NSAllowsArbitraryLoads\s*<\/key>\s*<true\s*\/>/i
+OBSERVE PROJECT_HAS_GLOB **/*.plist AS plist_files
+REPORT AS area_of_interest
+REASON ATS arbitrary loads remain review-worthy even when other plist exceptions exist; project plist artifacts were inspected for context.
+TRACE Mobile RDL pilot evaluated the Info.plist transport exception and recorded related project plist files for review context.

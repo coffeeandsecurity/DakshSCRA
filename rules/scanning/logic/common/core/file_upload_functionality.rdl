@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\bupload\b
+WHEN EXPR PRESENT:(?i)\b(file|multipart|mime|extension|content-type)\b && MISSING:(?i)\b(secure|protected|restricted|virus|clamav)\b
+REPORT AS area_of_interest
+REASON Detects likely implementations of file upload functionality by matching common terms associated with file upload services or modules.
+TRACE Externalized rule logic for File Upload Functionality.

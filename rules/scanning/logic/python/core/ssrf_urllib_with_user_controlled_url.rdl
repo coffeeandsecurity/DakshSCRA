@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT urllib\.request\.urlopen\s*\(|urllib\.urlopen\s*\(
+WHEN EXPR PRESENT:request\.|input\(|argv|\+ && MISSING:allowlist|whitelist|urlparse|is_private
+REPORT AS area_of_interest
+REASON Detects urllib-based outbound requests potentially influenced by user input.
+TRACE Externalized rule logic for SSRF: urllib with User-Controlled URL.

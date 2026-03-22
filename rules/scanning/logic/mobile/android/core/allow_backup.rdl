@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT android:allowBackup\s*=\s*"(true|TRUE)"
+REPORT AS area_of_interest
+REASON Detects the use of allowBackup="true" in the application's manifest.
+TRACE Externalized mobile rule logic for Allow Backup.

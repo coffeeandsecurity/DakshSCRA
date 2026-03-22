@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT aps-environment
+WHEN EXPR PRESENT:aps-environment|com\.apple\.developer\.aps-environment && MISSING:# intentional|# required
+REPORT AS area_of_interest
+REASON Detects push notification entitlement usage.
+TRACE Externalized mobile rule logic for Push Notification Entitlement Enabled.

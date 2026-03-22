@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bstrncpy\s*\(\s*\w+\s*,\s*\w+\s*,\s*\w+\s*\-\s*1\s*\)
+WHEN EXPR MISSING:strlcpy|memcpy|snprintf
+REPORT AS area_of_interest
+REASON Detects misuse of `strncpy()` with potentially unsafe size calculations.
+TRACE Externalized rule logic for Potential Buffer Overflow: strncpy() Misuse.

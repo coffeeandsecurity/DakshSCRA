@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT NSPersistentStoreCoordinator|NSPersistentContainer\s*\(
+WHEN EXPR MISSING:NSFileProtectionComplete|NSFileProtectionCompleteUnlessOpen|fileProtection|NSPersistentStoreFileProtectionKey
+REPORT AS area_of_interest
+REASON Detects Core Data persistent store creation without file protection attributes.
+TRACE Externalized mobile rule logic for Core Data Store Without Data Protection.

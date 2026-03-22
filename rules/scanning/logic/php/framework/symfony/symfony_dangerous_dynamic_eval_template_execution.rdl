@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \beval\s*\(|assert\s*\(\s*\$|create_function\s*\(
+WHEN EXPR MISSING:validate|allowlist|trusted|twig|test|example
+REPORT AS area_of_interest
+REASON Detects dangerous dynamic code execution primitives in PHP code paths.
+TRACE Externalized rule logic for Symfony Dangerous Dynamic Eval/Template Execution.

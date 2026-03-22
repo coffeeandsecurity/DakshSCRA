@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT M(?:ODE_)?WORLD_READABLE
+WHEN EXPR MISSING:EncryptedSharedPreferences|EncryptedFile|KeyStore|test|example
+REPORT AS area_of_interest
+REASON Detects usage of the deprecated MODE_WORLD_READABLE mode.
+TRACE Externalized rule logic for Deprecated MODE_WORLD_READABLE Usage.

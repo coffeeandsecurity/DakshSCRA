@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (fopen|file_get_contents|file_put_contents)\s*\(\s*(?:(?:\'[^\']*\'|\"[^\"]*\")\s*\.\s*)?\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\.\s*(?:\'[^\']*\'|\"[^\"]*\"))?\s*\)
+WHEN EXPR MISSING:realpath|basename|open_basedir|filter_input|allowlist|whitelist|__DIR__
+REPORT AS area_of_interest
+REASON Detects insecure usage of file operations with untrusted input in file paths, potentially leading to file inclusion or manipulation vulnerabilities.
+TRACE Externalized rule logic for Insecure File Operations: fopen(), file_get_contents(), file_put_contents().

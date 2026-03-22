@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bsystem\s*\(\s*["'].*(/bin|/usr/bin)
+WHEN EXPR MISSING:validate|check|verify && MISSING:test|example|sample
+REPORT AS area_of_interest
+REASON Detects the use of `system()` with hardcoded file paths that may introduce security risks.
+TRACE Externalized rule logic for Use of `system()` with Hardcoded Paths.

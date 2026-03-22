@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT setAllowUniversalAccessFromFileURLs\(\s*true\s*\)|setAllowFileAccessFromFileURLs\(\s*true\s*\)
+WHEN EXPR MISSING:setAllowUniversalAccessFromFileURLs\(\s*false\s*\) && MISSING:setAllowFileAccessFromFileURLs\(\s*false\s*\)
+REPORT AS area_of_interest
+REASON Detects permissive WebView file URL access settings.
+TRACE Externalized mobile rule logic for Android WebView File URL Universal Access.

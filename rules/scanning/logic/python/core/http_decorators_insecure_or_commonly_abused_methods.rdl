@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (@require_http_methods\s*\(\s*\["(?:GET|PUT|DELETE|.*?)"\]\))|(@require_GET)
+WHEN EXPR MISSING:@login_required|@permission_required|validate|sanitize
+REPORT AS area_of_interest
+REASON Detects the usage of insecure or commonly abused HTTP decorators.
+TRACE Externalized rule logic for HTTP Decorators: Insecure or Commonly Abused Methods.

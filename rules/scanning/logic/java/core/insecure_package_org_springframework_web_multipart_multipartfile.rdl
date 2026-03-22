@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT org\.springframework\.web\.multipart\.MultipartFile
+WHEN EXPR MISSING:validate|allowlist|getOriginalFilename.*replace|ContentType|getSize\s*\(\s*\) && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects the use of MultipartFile for file uploads without validation, which can lead to file upload vulnerabilities.
+TRACE Externalized rule logic for Insecure Package: org.springframework.web.multipart.MultipartFile.

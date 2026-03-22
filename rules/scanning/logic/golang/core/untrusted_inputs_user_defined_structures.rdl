@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT struct
+WHEN EXPR PRESENT:r\.FormValue|r\.URL\.Query|json\.Unmarshal|c\.Bind|c\.ShouldBind && MISSING:validate|Validate|binding:|required:
+REPORT AS area_of_interest
+REASON Detects the usage of user-defined structures without proper validation and sanitization of fields.
+TRACE Externalized rule logic for Untrusted Inputs: User-Defined Structures.

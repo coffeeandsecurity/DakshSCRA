@@ -2,8 +2,8 @@
     <category name="Framework-Specific Security">
         <rule>
             <name>SwiftUI ATS Relaxation Enabled</name>
-            <regex><![CDATA[NSAllowsArbitraryLoads|NSExceptionAllowsInsecureHTTPLoads]]></regex>
-            <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads|NSExceptionAllowsInsecureHTTPLoads][IF(MISSING:NSExceptionDomains)]]]></rdl>
+            <regex>NSAllowsArbitraryLoads|NSExceptionAllowsInsecureHTTPLoads</regex>
+            <rdl_ref>logic/mobile/ios/framework/swiftui/swiftui_ats_relaxation_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -23,7 +23,7 @@
         <rule>
             <name>SwiftUI Insecure URL Usage</name>
             <regex>http://</regex>
-            <rdl><![CDATA[[FLAG:http://][IF(MISSING:https://)]]]></rdl>
+            <rdl_ref>logic/mobile/ios/framework/swiftui/swiftui_insecure_url_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -42,8 +42,8 @@
         </rule>
         <rule>
             <name>SwiftUI Dynamic Web Content Injection Marker</name>
-            <regex><![CDATA[WKWebView|evaluateJavaScript\(|JavaScriptEnabled]]></regex>
-            <rdl><![CDATA[[FLAG:WKWebView|evaluateJavaScript\(|JavaScriptEnabled][IF(MISSING:limitsNavigationsToAppBoundDomains\s*=\s*true)]]]></rdl>
+            <regex>WKWebView|evaluateJavaScript\(|JavaScriptEnabled</regex>
+            <rdl_ref>logic/mobile/ios/framework/swiftui/swiftui_dynamic_web_content_injection_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -62,8 +62,8 @@
         </rule>
         <rule>
             <name>SwiftUI Insecure Certificate Handling Marker</name>
-            <regex><![CDATA[didReceive\s+challenge.*useCredential|allowInvalidCertificates]]></regex>
-            <rdl><![CDATA[[FLAG:didReceive\s+challenge.*useCredential|allowInvalidCertificates][IF(MISSING:SecTrustEvaluate|SecTrustEvaluateWithError)]]]></rdl>
+            <regex>didReceive\s+challenge.*useCredential|allowInvalidCertificates</regex>
+            <rdl_ref>logic/mobile/ios/framework/swiftui/swiftui_insecure_certificate_handling_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -82,8 +82,8 @@
         </rule>
         <rule>
             <name>SwiftUI Sensitive Data in UserDefaults Marker</name>
-            <regex><![CDATA[UserDefaults\.standard\.set\(.*(token|secret|password|apikey)]]></regex>
-            <rdl><![CDATA[[FLAG:UserDefaults\.standard\.set\(.*(token|secret|password|apikey)][IF(MISSING:Keychain)]]]></rdl>
+            <regex>UserDefaults\.standard\.set\(.*(token|secret|password|apikey)</regex>
+            <rdl_ref>logic/mobile/ios/framework/swiftui/swiftui_sensitive_data_in_userdefaults_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -103,7 +103,7 @@
         <rule>
             <name>SwiftUI Pasteboard Sensitive Data Marker</name>
             <regex>UIPasteboard</regex>
-            <rdl><![CDATA[[FLAG:UIPasteboard][IF(MISSING:expirationDate && MISSING:localOnly)]]]></rdl>
+            <rdl_ref>logic/mobile/ios/framework/swiftui/swiftui_pasteboard_sensitive_data_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -122,8 +122,8 @@
         </rule>
         <rule>
             <name>SwiftUI Hardcoded Secret Marker</name>
-            <regex><![CDATA[(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"]]></regex>
-            <rdl><![CDATA[[FLAG:(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:DEBUG && MISSING:example|sample|dummy)]]]></rdl>
+            <regex>(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"</regex>
+            <rdl_ref>logic/mobile/ios/framework/swiftui/swiftui_hardcoded_secret_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>none</context_type>

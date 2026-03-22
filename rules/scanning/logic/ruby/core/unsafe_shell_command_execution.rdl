@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(?:system|exec|spawn|popen|Open3\.(?:capture2e?|pipeline|popen2e?))\s*\(
+WHEN EXPR MISSING:Shellwords\.escape|Shellwords\.shellescape|validate|sanitize|allowlist && MISSING:test|spec|example
+REPORT AS area_of_interest
+REASON Detects shell command execution APIs in Ruby that can be dangerous when fed untrusted input.
+TRACE Externalized rule logic for Unsafe Shell Command Execution.

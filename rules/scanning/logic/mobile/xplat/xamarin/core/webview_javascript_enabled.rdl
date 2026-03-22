@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(?:WebView|HybridWebView).*?(?:JavaScriptEnabled\s*=\s*true|EnableJavascript\s*=\s*true)
+WHEN EXPR MISSING:ShouldOverrideUrlLoading|NavigationDelegate|allowList|trustedOrigins && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects potentially risky web view JavaScript configuration in Xamarin apps.
+TRACE Externalized mobile rule logic for WebView JavaScript Enabled.

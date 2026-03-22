@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT Request\.Form
+WHEN EXPR PRESENT:(SqlCommand|Execute|Response\.Write|Redirect|File|Path|Process|Xml) && MISSING:(ValidateInput|HtmlEncode|UrlEncode|Sanitize|TryParse|Regex\.IsMatch)
+REPORT AS area_of_interest
+REASON Detects the usage of Request.Form, which can introduce untrusted inputs into the code.
+TRACE Externalized rule logic for Untrusted Input: Request.Form.

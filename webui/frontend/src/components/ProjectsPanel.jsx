@@ -38,7 +38,6 @@ export default function ProjectsPanel({ projects, selectedProject, onSelectProje
           <div className="section-title">Projects</div>
           <div className="section-sub">{projects.length} project{projects.length !== 1 ? 's' : ''}</div>
         </div>
-        <button className="btn btn-primary btn-sm" onClick={onNewScan}>+ New Scan</button>
       </div>
 
       <div className="project-grid">

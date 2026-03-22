@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)(monkey_patch|patched_code|custom_patch)\s*\(
+WHEN EXPR MISSING:(?i)\b(test|spec|fixture|mock)\b
+REPORT AS area_of_interest
+REASON Detects the presence of monkey patched code in a project.
+TRACE Externalized rule logic for Monkey Patched Code.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT UIPasteboard\.general|setValue\(.*forPasteboardType
+WHEN EXPR MISSING:expirationDate && MISSING:localOnly
+REPORT AS area_of_interest
+REASON Detects shared pasteboard operations.
+TRACE Externalized mobile rule logic for iOS Pasteboard Usage.

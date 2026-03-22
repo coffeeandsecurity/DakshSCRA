@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT mysql_real_escape_string
+WHEN EXPR PRESENT:mysql_real_escape_string|addslashes && MISSING:PDO::|prepare\s*\(|bindParam|bindValue|parameterized
+REPORT AS area_of_interest
+REASON Detects the usage of the mysql_real_escape_string function for SQL injection mitigation.
+TRACE Externalized rule logic for Insecure Mitigation: SQL Injection (mysql_real_escape_string).

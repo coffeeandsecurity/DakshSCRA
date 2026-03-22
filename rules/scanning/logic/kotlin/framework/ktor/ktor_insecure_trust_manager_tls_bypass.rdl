@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT HostnameVerifier\s*\{\s*.*true\s*\}|TrustAllCerts|setHostnameVerifier\(
+WHEN EXPR MISSING:test|development|localhost|staging
+REPORT AS area_of_interest
+REASON Detects TLS certificate/hostname verification bypass patterns.
+TRACE Externalized rule logic for Ktor Insecure Trust Manager / TLS Bypass.

@@ -2,8 +2,8 @@
     <category name="Framework-Specific Security">
         <rule>
             <name>Freertos Unsafe String Copy API</name>
-            <regex><![CDATA[\b(strcpy|strcat|sprintf|gets)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(strcpy|strcat|sprintf|gets)\s*\(][IF(MISSING:strlcpy|snprintf|strncpy|vTaskStacks|configMAX_TASK_NAME_LEN)]]]></rdl>
+            <regex>\b(strcpy|strcat|sprintf|gets)\s*\(</regex>
+            <rdl_ref>logic/c/framework/freertos/freertos_unsafe_string_copy_api.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>Freertos Command Execution Sink</name>
-            <regex><![CDATA[\b(system|popen|execv|execl)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(system|popen|execv|execl)\s*\(][IF(MISSING:validate|sanitize|allowlist)]]]></rdl>
+            <regex>\b(system|popen|execv|execl)\s*\(</regex>
+            <rdl_ref>logic/c/framework/freertos/freertos_command_execution_sink.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>Freertos Insecure Transport/Cert Bypass Marker</name>
-            <regex><![CDATA[CURLOPT_SSL_VERIFYPEER\s*,\s*0|CURLOPT_SSL_VERIFYHOST\s*,\s*0]]></regex>
-            <rdl><![CDATA[[FLAG:CURLOPT_SSL_VERIFYPEER\s*,\s*0|CURLOPT_SSL_VERIFYHOST\s*,\s*0][IF(MISSING:test|development|staging)]]]></rdl>
+            <regex>CURLOPT_SSL_VERIFYPEER\s*,\s*0|CURLOPT_SSL_VERIFYHOST\s*,\s*0</regex>
+            <rdl_ref>logic/c/framework/freertos/freertos_insecure_transport_cert_bypass_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -53,8 +53,8 @@
         </rule>
         <rule>
             <name>Freertos Hardcoded Secret Material</name>
-            <regex><![CDATA[(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <regex>(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"</regex>
+            <rdl_ref>logic/c/framework/freertos/freertos_hardcoded_secret_material.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -70,8 +70,8 @@
         </rule>
         <rule>
             <name>Freertos FreeRTOS Privileged API Review Marker</name>
-            <regex><![CDATA[vTaskPrioritySet\(|xTaskCreate\(|xQueueReceive\(]]></regex>
-            <rdl><![CDATA[[FLAG:vTaskPrioritySet\(|xTaskCreate\(|xQueueReceive\(][IF(MISSING:assert|check|verify|privilege_check|permission)]]]></rdl>
+            <regex>vTaskPrioritySet\(|xTaskCreate\(|xQueueReceive\(</regex>
+            <rdl_ref>logic/c/framework/freertos/freertos_freertos_privileged_api_review_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>

@@ -2,8 +2,8 @@
     <category name="Injection and Untrusted Input Handling">
         <rule>
             <name>Unsafe Shell Command Execution</name>
-            <regex><![CDATA[\b(?:system|exec|spawn|popen|Open3\.(?:capture2e?|pipeline|popen2e?))\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:system|exec|spawn|popen|Open3\.(?:capture2e?|pipeline|popen2e?))\s*\(][IF(MISSING:Shellwords\.escape|Shellwords\.shellescape|validate|sanitize|allowlist && MISSING:test|spec|example)]]]></rdl>
+            <regex>\b(?:system|exec|spawn|popen|Open3\.(?:capture2e?|pipeline|popen2e?))\s*\(</regex>
+            <rdl_ref>logic/ruby/core/unsafe_shell_command_execution.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>Potential SQL Injection via String Interpolation</name>
-            <regex><![CDATA[\b(?:where|find_by_sql|execute|order|joins)\s*\(\s*["'][^"']*#\{]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:where|find_by_sql|execute|order|joins)\s*\(\s*["'][^"']*#\{][IF(MISSING:where\s*\(\s*"[^"]*\?|sanitize_sql_for_conditions|Arel)]]]></rdl>
+            <regex>\b(?:where|find_by_sql|execute|order|joins)\s*\(\s*["'][^"']*#\{</regex>
+            <rdl_ref>logic/ruby/core/potential_sql_injection_via_string_interpolation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -38,8 +38,8 @@
     <category name="Deserialization and Code Execution Risks">
         <rule>
             <name>Unsafe YAML Deserialization</name>
-            <regex><![CDATA[\bYAML\.load\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\bYAML\.load\s*\(][IF(MISSING:YAML\.safe_load|Psych\.safe_load|permitted_classes|allowed_classes)]]]></rdl>
+            <regex>\bYAML\.load\s*\(</regex>
+            <rdl_ref>logic/ruby/core/unsafe_yaml_deserialization.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -55,8 +55,8 @@
         </rule>
         <rule>
             <name>Dynamic Code Evaluation</name>
-            <regex><![CDATA[\b(?:eval|instance_eval|class_eval|module_eval)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:eval|instance_eval|class_eval|module_eval)\s*\(][IF(MISSING:trusted|allowlist|static_method && MISSING:test|spec|example|dummy)]]]></rdl>
+            <regex>\b(?:eval|instance_eval|class_eval|module_eval)\s*\(</regex>
+            <rdl_ref>logic/ruby/core/dynamic_code_evaluation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -74,8 +74,8 @@
     <category name="Authentication and Session Security">
         <rule>
             <name>Weak Session Secret Configuration</name>
-            <regex><![CDATA[(?i)secret_key_base\s*[:=]\s*["'](?:changeme|secret|test|default)["']]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)secret_key_base\s*[:=]\s*["'](?:changeme|secret|test|default)["']][IF(PRESENT:secret_key_base\s*[:=]\s*["'](changeme|secret|test|default|password|123)["']|SECRET_KEY_BASE.*=.*["']\w{4,20}["'] && MISSING:Rails\.application\.credentials|ENV\[|ENV\.fetch)]]]></rdl>
+            <regex>(?i)secret_key_base\s*[:=]\s*["'](?:changeme|secret|test|default)["']</regex>
+            <rdl_ref>logic/ruby/core/weak_session_secret_configuration.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -91,8 +91,8 @@
         </rule>
         <rule>
             <name>Cookies Missing Secure or HttpOnly Flags</name>
-            <regex><![CDATA[\bcookies\[[^\]]+\]\s*=\s*\{(?![^\}]*\b(?:secure|httponly)\b)]]></regex>
-            <rdl><![CDATA[[FLAG:\bcookies\[[^\]]+\]\s*=\s*\{(?![^\}]*\b(?:secure|httponly)\b)][IF(MISSING:secure:\s*true|httponly:\s*true|SameSite|HttpOnly && PRESENT:cookies\[.*\]\s*=\s*\{)]]]></rdl>
+            <regex>\bcookies\[[^\]]+\]\s*=\s*\{(?![^\}]*\b(?:secure|httponly)\b)</regex>
+            <rdl_ref>logic/ruby/core/cookies_missing_secure_or_httponly_flags.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -108,8 +108,8 @@
         </rule>
         <rule>
             <name>CSRF Protection Disabled or Relaxed</name>
-            <regex><![CDATA[(?i)\b(?:skip_before_action\s*:verify_authenticity_token|protect_from_forgery\s+with:\s*:null_session|protect_from_forgery\s+except:)]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\b(?:skip_before_action\s*:verify_authenticity_token|protect_from_forgery\s+with:\s*:null_session|protect_from_forgery\s+except:)][IF(MISSING:before_action\s*:verify_authenticity_token|api_key|JWT|Bearer)]]]></rdl>
+            <regex>(?i)\b(?:skip_before_action\s*:verify_authenticity_token|protect_from_forgery\s+with:\s*:null_session|protect_from_forgery\s+except:)</regex>
+            <rdl_ref>logic/ruby/core/csrf_protection_disabled_or_relaxed.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -127,8 +127,8 @@
     <category name="Information Disclosure and Logging">
         <rule>
             <name>Stack Trace or Sensitive Exception Disclosure</name>
-            <regex><![CDATA[\b(?:puts|print|logger\.(?:debug|info|error)|Rails\.logger\.(?:debug|info|error))\s*\(?.*(?:exception|backtrace)]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:puts|print|logger\.(?:debug|info|error)|Rails\.logger\.(?:debug|info|error))\s*\(?.*(?:exception|backtrace)][IF(MISSING:release|production)]]]></rdl>
+            <regex>\b(?:puts|print|logger\.(?:debug|info|error)|Rails\.logger\.(?:debug|info|error))\s*\(?.*(?:exception|backtrace)</regex>
+            <rdl_ref>logic/ruby/core/stack_trace_or_sensitive_exception_disclosure.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -137,7 +137,7 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <exclude><![CDATA[(?i)^\s*(#|//|/\*|\*)|apache\.org/licenses|opensource\.org/licenses]]></exclude>
+            <exclude>(?i)^\s*(#|//|/\*|\*)|apache\.org/licenses|opensource\.org/licenses</exclude>
             <rule_desc>Detects logging or printing of exception/backtrace details.</rule_desc>
             <vuln_desc>Exposing stack traces can leak internals such as file paths, secrets, and implementation details.</vuln_desc>
             <developer>Log exceptions securely with redaction policies and avoid returning internal errors to clients.</developer>

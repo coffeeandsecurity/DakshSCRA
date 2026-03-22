@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (^|\s|=\s?)eval\(
+WHEN EXPR PRESENT:(input\(|request|params|query|user_input|base64|pickle) && MISSING:(allowlist|whitelist)
+REPORT AS area_of_interest
+REASON Detects instances of eval() that can lead to command injection vulnerabilities if used with untrusted input.
+TRACE Externalized rule logic for Command Injection: eval().

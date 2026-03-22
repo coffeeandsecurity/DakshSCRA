@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT (?i)(payment|pay)
+WHEN EXPR PRESENT:(?i)(/|\\\\).*(payment|billing|checkout|invoice|transaction) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/)
+REPORT AS area_of_interest
+REASON Detects file paths related to payment functionality.

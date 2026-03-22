@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\b(urllib2|commands)\b
+WHEN EXPR PRESENT:urllib2|commands\.getoutput|commands\.getstatusoutput|urllib\.urlopen && MISSING:test|example|migration|legacy
+REPORT AS area_of_interest
+REASON Detects the use of deprecated Python functions and modules.
+TRACE Externalized rule logic for Deprecated Python Functions.

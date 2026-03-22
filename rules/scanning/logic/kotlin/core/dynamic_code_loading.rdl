@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT DexClassLoader\s*\(|PathClassLoader\s*\(|URLClassLoader\s*\(
+WHEN EXPR MISSING:android_asset|getFilesDir\(\)|getCodeCacheDir\(\)|getCacheDir\(\)|Context\.getDir\(
+REPORT AS area_of_interest
+REASON Detects dynamic class loading from potentially untrusted paths.
+TRACE Externalized rule logic for Dynamic Code Loading.

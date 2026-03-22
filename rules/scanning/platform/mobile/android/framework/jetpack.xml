@@ -2,8 +2,8 @@
     <category name="Framework-Specific Security">
         <rule>
             <name>Android Cleartext Traffic Enabled</name>
-            <regex><![CDATA[android:usesCleartextTraffic\s*=\s*"true"|cleartextTrafficPermitted\s*=\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:android:usesCleartextTraffic\s*=\s*"true"|cleartextTrafficPermitted\s*=\s*true][IF(MISSING:networkSecurityConfig\s*=\s*"@xml/.*" && MISSING:cleartextTrafficPermitted\s*=\s*false)]]]></rdl>
+            <regex>android:usesCleartextTraffic\s*=\s*"true"|cleartextTrafficPermitted\s*=\s*true</regex>
+            <rdl_ref>logic/mobile/android/framework/jetpack/android_cleartext_traffic_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -22,8 +22,8 @@
         </rule>
         <rule>
             <name>Android Backup Allowed</name>
-            <regex><![CDATA[android:allowBackup\s*=\s*"true"]]></regex>
-            <rdl><![CDATA[[FLAG:android:allowBackup\s*=\s*"true"][IF(MISSING:android:fullBackupContent\s*= && MISSING:android:dataExtractionRules\s*=)]]]></rdl>
+            <regex>android:allowBackup\s*=\s*"true"</regex>
+            <rdl_ref>logic/mobile/android/framework/jetpack/android_backup_allowed.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -42,8 +42,8 @@
         </rule>
         <rule>
             <name>Android Debuggable Build Flag</name>
-            <regex><![CDATA[android:debuggable\s*=\s*"true"|debuggable\s+true]]></regex>
-            <rdl><![CDATA[[FLAG:android:debuggable\s*=\s*"true"|debuggable\s+true][IF(MISSING:buildTypes\s*\{[^\}]*release[^\}]*debuggable\s+false)]]]></rdl>
+            <regex>android:debuggable\s*=\s*"true"|debuggable\s+true</regex>
+            <rdl_ref>logic/mobile/android/framework/jetpack/android_debuggable_build_flag.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -62,8 +62,8 @@
         </rule>
         <rule>
             <name>Android WebView JavaScript Enabled</name>
-            <regex><![CDATA[setJavaScriptEnabled\(\s*true\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:setJavaScriptEnabled\(\s*true\s*\)][IF(MISSING:setSafeBrowsingEnabled\(\s*true\s*\) && MISSING:setAllowFileAccess\(\s*false\s*\))]]]></rdl>
+            <regex>setJavaScriptEnabled\(\s*true\s*\)</regex>
+            <rdl_ref>logic/mobile/android/framework/jetpack/android_webview_javascript_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -82,8 +82,8 @@
         </rule>
         <rule>
             <name>Android WebView File URL Universal Access</name>
-            <regex><![CDATA[setAllowUniversalAccessFromFileURLs\(\s*true\s*\)|setAllowFileAccessFromFileURLs\(\s*true\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:setAllowUniversalAccessFromFileURLs\(\s*true\s*\)|setAllowFileAccessFromFileURLs\(\s*true\s*\)][IF(MISSING:setAllowUniversalAccessFromFileURLs\(\s*false\s*\) && MISSING:setAllowFileAccessFromFileURLs\(\s*false\s*\))]]]></rdl>
+            <regex>setAllowUniversalAccessFromFileURLs\(\s*true\s*\)|setAllowFileAccessFromFileURLs\(\s*true\s*\)</regex>
+            <rdl_ref>logic/mobile/android/framework/jetpack/android_webview_file_url_universal_access.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -102,8 +102,8 @@
         </rule>
         <rule>
             <name>Android JavaScript Interface Exposure</name>
-            <regex><![CDATA[addJavascriptInterface\(]]></regex>
-            <rdl><![CDATA[[FLAG:addJavascriptInterface\(][IF(MISSING:@JavascriptInterface|validate|allowlist|trusted && MISSING:test|example)]]]></rdl>
+            <regex>addJavascriptInterface\(</regex>
+            <rdl_ref>logic/mobile/android/framework/jetpack/android_javascript_interface_exposure.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -122,8 +122,8 @@
         </rule>
         <rule>
             <name>Android Hardcoded Secret Marker</name>
-            <regex><![CDATA[(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"]]></regex>
-            <rdl><![CDATA[[FLAG:(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:System\.getenv\s*\(|System\.getProperty\s*\(|BuildConfig\.[A-Z_]+ && MISSING:example|sample|dummy|test|placeholder|TODO|\$\{)]]]></rdl>
+            <regex>(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"</regex>
+            <rdl_ref>logic/mobile/android/framework/jetpack/android_hardcoded_secret_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>none</context_type>

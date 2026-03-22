@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT source_address_prefix\s*=\s*"\*"[^}]*direction\s*=\s*"Inbound"|direction\s*=\s*"Inbound"[^}]*source_address_prefix\s*=\s*"\*"
+WHEN EXPR PRESENT:source_address_prefix\s*=\s*"\*"|source_address_prefix\s*=\s*"Internet" && PRESENT:access\s*=\s*"Allow" && MISSING:# intentional|# required|egress
+REPORT AS area_of_interest
+REASON Detects Azure NSG rules that allow all inbound traffic from any source.
+TRACE Externalized rule logic for Azure NSG Rule Allows All Inbound Traffic.

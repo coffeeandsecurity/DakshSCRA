@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT allow_any_origin\(\)|Any\s*,\s*allow_origin|allow_origin\(Any\)
+WHEN EXPR PRESENT:allow_any_origin\(\)|AllowOrigin::any\(\)|CorsLayer::permissive && MISSING:AllowOrigin::exact|allow_origin.*https?://[^*] && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects permissive CORS configurations.
+TRACE Externalized rule logic for Axum Permissive CORS.

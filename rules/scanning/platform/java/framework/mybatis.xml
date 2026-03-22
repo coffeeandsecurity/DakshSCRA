@@ -2,8 +2,8 @@
     <category name="Framework-Specific Issues - MyBatis">
         <rule>
             <name>String Substitution in MyBatis Mapper (${} Syntax)</name>
-            <regex><![CDATA[\$\{(?!__frch_|index|item|foreach)[^}]+\}]]></regex>
-            <rdl><![CDATA[[FLAG:\$\{(?!__frch_|index|item|foreach)[^}]+\}][IF(MISSING:#\{|@Param|parameterType && MISSING:validate|sanitize)]]]></rdl>
+            <regex>\$\{(?!__frch_|index|item|foreach)[^}]+\}</regex>
+            <rdl_ref>logic/java/framework/mybatis/string_substitution_in_mybatis_mapper_syntax.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>OrderBy Clause with Dynamic Substitution</name>
-            <regex><![CDATA[ORDER\s+BY\s+\$\{|order\s+by\s+\$\{]]></regex>
-            <rdl><![CDATA[[FLAG:ORDER\s+BY\s+\$\{|order\s+by\s+\$\{][IF(MISSING:allowlist|whitelist|validateColumn|allowedColumns|escapeSQL)]]]></rdl>
+            <regex>ORDER\s+BY\s+\$\{|order\s+by\s+\$\{</regex>
+            <rdl_ref>logic/java/framework/mybatis/orderby_clause_with_dynamic_substitution.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>selectKey or Provider with Dynamic SQL Building</name>
-            <regex><![CDATA[@SelectProvider\s*\(|@UpdateProvider\s*\(|@InsertProvider\s*\(|@DeleteProvider\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:@SelectProvider\s*\(|@UpdateProvider\s*\(|@InsertProvider\s*\(|@DeleteProvider\s*\(][IF(MISSING:escapeSQL|sanitize|allowlist|validateColumn)]]]></rdl>
+            <regex>@SelectProvider\s*\(|@UpdateProvider\s*\(|@InsertProvider\s*\(|@DeleteProvider\s*\(</regex>
+            <rdl_ref>logic/java/framework/mybatis/selectkey_or_provider_with_dynamic_sql_building.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>

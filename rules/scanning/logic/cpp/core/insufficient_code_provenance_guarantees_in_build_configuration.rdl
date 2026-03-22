@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT /ZH:SHA_SHA256|/Zi|/SOURCELINK
+WHEN EXPR PRESENT:FetchContent_Declare|ExternalProject_Add|find_package|add_subdirectory|pkg_check_modules && MISSING:DOWNLOAD_EXTRACT_TIMESTAMP|GIT_TAG.*[a-f0-9]{40}|URL_HASH|SHA256|verify
+REPORT AS area_of_interest
+REASON Detects missing compiler flags that ensure strong code provenance.
+TRACE Externalized rule logic for Insufficient Code Provenance Guarantees in Build Configuration.

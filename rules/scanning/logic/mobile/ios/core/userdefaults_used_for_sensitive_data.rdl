@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(?:UserDefaults\.standard|NSUserDefaults\s+standardUserDefaults)
+WHEN EXPR PRESENT:UserDefaults.*(?:password|token|secret|key|credential|auth)|set\s*\(\s*\w+\s*,\s*forKey:\s*"(?:password|token|secret|key|auth) && MISSING:Keychain|CryptoKit|encrypt|SecItem
+REPORT AS area_of_interest
+REASON Detects UserDefaults storage usage which may be inappropriate for secrets.
+TRACE Externalized mobile rule logic for UserDefaults Used for Sensitive Data.

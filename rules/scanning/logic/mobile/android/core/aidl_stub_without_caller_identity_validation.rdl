@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT extends\s+\w+\.Stub\b
+WHEN EXPR MISSING:Binder\.getCallingUid\s*\(\)|getCallingPid\s*\(\)|checkCallingPermission|enforceCallingPermission|enforceCallingOrSelfPermission
+REPORT AS area_of_interest
+REASON Detects AIDL Stub implementations that do not validate the calling process identity before handling requests.
+TRACE Externalized mobile rule logic for AIDL Stub Without Caller Identity Validation.

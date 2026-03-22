@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT readOnlyRootFilesystem\s*:\s*false
+WHEN EXPR MISSING:readOnlyRootFilesystem:\s*true|emptyDir|tmpfs:|volumeMounts && PRESENT:kind:\s*Deployment|kind:\s*StatefulSet|kind:\s*DaemonSet|kind:\s*Pod
+REPORT AS area_of_interest
+REASON Detects containers with a writable root filesystem.
+TRACE Externalized rule logic for Read-Only Root Filesystem Not Enforced.

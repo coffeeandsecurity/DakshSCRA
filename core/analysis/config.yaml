@@ -336,6 +336,8 @@ php:
     - "\\bfilter_input\\s*\\("
     - "\\bprepare\\s*\\("
     - "\\bPDOStatement\\b"
+    - "\\bescapeshellarg\\s*\\("
+    - "\\bescapeshellcmd\\s*\\("
     - "\\bsanitize\\b"
     - "\\bvalidate\\b"
     - "\\bescape\\b"
@@ -364,6 +366,10 @@ php:
     - "is_int"
     - "is_numeric"
     - "is_null"
+    - "json_encode"
+    - "InputBag"
+    - "UploadedFileBag"
+    - "FakeStatement"
 
 # ─── JavaScript / TypeScript ───────────────────────────────────────────────────
 javascript:

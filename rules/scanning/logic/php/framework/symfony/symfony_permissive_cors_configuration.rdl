@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT Access-Control-Allow-Origin\s*[:=]\s*[\'\"]\*[\'\"]|allowed_origins\s*=\s*\[?\s*[\'\"]\*[\'\"]
+WHEN EXPR MISSING:allowlist|whitelist|trusted
+REPORT AS area_of_interest
+REASON Detects wildcard CORS settings in application or framework config.
+TRACE Externalized rule logic for Symfony Permissive CORS Configuration.

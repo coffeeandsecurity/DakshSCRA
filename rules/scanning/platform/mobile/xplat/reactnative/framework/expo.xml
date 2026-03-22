@@ -2,8 +2,8 @@
     <category name="Framework-Specific Issues - Expo (React Native)">
         <rule>
             <name>Expo Updates Without Code Signing</name>
-            <regex><![CDATA["expo-updates"|expoConfig.*updates|updates\.url|runtimeVersion]]></regex>
-            <rdl><![CDATA[[FLAG:"expo-updates"|expoConfig.*updates][IF(MISSING:codeSigningCertificate|codeSigningMetadata|code-signing)]]]></rdl>
+            <regex>"expo-updates"|expoConfig.*updates|updates\.url|runtimeVersion</regex>
+            <rdl_ref>logic/mobile/xplat/reactnative/framework/expo/expo_updates_without_code_signing.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -22,8 +22,8 @@
         </rule>
         <rule>
             <name>Expo Linking Without Deep Link Validation</name>
-            <regex><![CDATA[Linking\.addEventListener\s*\(\s*['"]url['"]|Linking\.getInitialURL\s*\(\s*\)|expo-linking|useURL\s*\(\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:Linking\.addEventListener\s*\(\s*['"]url['"]|Linking\.getInitialURL\s*\(\s*\)][IF(MISSING:validate|allowlist|startsWith|parse|sanitize)]]]></rdl>
+            <regex>Linking\.addEventListener\s*\(\s*['"]url['"]|Linking\.getInitialURL\s*\(\s*\)|expo-linking|useURL\s*\(\s*\)</regex>
+            <rdl_ref>logic/mobile/xplat/reactnative/framework/expo/expo_linking_without_deep_link_validation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -42,8 +42,8 @@
         </rule>
         <rule>
             <name>Expo SecureStore Fallback to Unencrypted</name>
-            <regex><![CDATA[SecureStore\.setItemAsync|SecureStore\.getItemAsync]]></regex>
-            <rdl><![CDATA[[FLAG:SecureStore\.setItemAsync|SecureStore\.getItemAsync][IF(MISSING:keychainAccessible|keychainService|requireAuthentication)]]]></rdl>
+            <regex>SecureStore\.setItemAsync|SecureStore\.getItemAsync</regex>
+            <rdl_ref>logic/mobile/xplat/reactnative/framework/expo/expo_securestore_fallback_to_unencrypted.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>

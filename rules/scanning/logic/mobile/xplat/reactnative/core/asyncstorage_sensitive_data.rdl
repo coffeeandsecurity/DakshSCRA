@@ -1,0 +1,7 @@
+VERSION 1
+WHEN CURRENT_FILE_MATCHES /\bAsyncStorage\.(?:setItem|multiSet)\s*\(/i
+WHEN EXPR PRESENT:AsyncStorage\.(?:setItem|multiSet).*(?:password|token|secret|key|auth|credential)
+OBSERVE PROJECT_HAS_GLOB **/package.json AS package_manifests
+REPORT AS area_of_interest
+REASON Detects AsyncStorage use for sensitive values such as tokens or credentials.
+TRACE Mobile RDL pilot evaluated sensitive AsyncStorage usage while allowing the project package manifest to provide extra context.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bstd::thread\b\s*\(
+WHEN EXPR MISSING:std::mutex|std::atomic|std::lock_guard|std::unique_lock|std::shared_mutex|std::condition_variable
+REPORT AS area_of_interest
+REASON Detects the usage of threads without mutex protection, which can lead to race conditions.
+TRACE Externalized rule logic for Race Condition: std::thread without mutex.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT Query\(\s*fmt\.Sprintf|Exec\(\s*fmt\.Sprintf|Raw\(\s*fmt\.Sprintf
+WHEN EXPR MISSING:prepare|parameterize|\?.*args|sqlx\.NamedExec|squirrel
+REPORT AS area_of_interest
+REASON Detects dynamic SQL construction via string formatting.
+TRACE Externalized rule logic for Echo SQL Query Concatenation Sink.

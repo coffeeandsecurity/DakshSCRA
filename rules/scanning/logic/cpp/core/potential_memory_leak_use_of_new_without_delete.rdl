@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bnew\s+\w+(?![^<>]*\s*>)
+WHEN EXPR MISSING:free\s*\(|delete\s+|unique_ptr|shared_ptr|RAII
+REPORT AS area_of_interest
+REASON Detects dynamic memory allocation using `new` but no matching `delete`, potentially leading to memory leaks.
+TRACE Externalized rule logic for Potential Memory Leak: Use of `new` Without `delete`.

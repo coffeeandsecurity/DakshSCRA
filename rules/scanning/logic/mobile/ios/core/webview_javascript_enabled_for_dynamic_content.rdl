@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT WKPreferences\(\)\.javaScriptEnabled\s*=\s*true|setJavaScriptEnabled\s*:\s*YES
+WHEN EXPR MISSING:shouldStartLoadWithRequest|decidePolicyForNavigationAction|navigationDelegate|allowList|trustedOrigins
+REPORT AS area_of_interest
+REASON Detects explicit JavaScript enablement in embedded web views.
+TRACE Externalized mobile rule logic for WebView JavaScript Enabled for Dynamic Content.

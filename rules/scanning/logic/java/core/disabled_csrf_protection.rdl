@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (\b.disable\(\s*['"]csrf['"]\s*\))
+WHEN EXPR MISSING:CsrfTokenRepository|csrfTokenRequestAttributeName|SameSite && PRESENT:csrf\(\)\.disable\(\)|csrf\.disable\(\)|CsrfConfigurer
+REPORT AS area_of_interest
+REASON Detects disabled CSRF (Cross-Site Request Forgery) protection in Java code.
+TRACE Externalized rule logic for Disabled CSRF Protection.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (\bvalidateInput\s*=\s*['"]false['"])
+WHEN EXPR PRESENT:validateRequest\s*=\s*"false"|@SuppressWarnings.*"unchecked"|@Valid\s*=\s*false|disableValidation && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects disabled input validation in Java code.
+TRACE Externalized rule logic for Disabled Input Validation.

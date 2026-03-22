@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT Request\.QueryString
+WHEN EXPR PRESENT:(SqlCommand|Execute|Response\.Write|Redirect|File|Path|Process|Xml) && MISSING:(ValidateInput|HtmlEncode|UrlEncode|Sanitize|TryParse|Regex\.IsMatch)
+REPORT AS area_of_interest
+REASON Identifies the usage of Request.QueryString, which may lead to untrusted inputs being used in the code.
+TRACE Externalized rule logic for Untrusted Input: Request.QueryString.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT jinja2\.Template\s*\(|Environment\s*\(.*\)\.from_string\s*\(|render_template_string\s*\(
+WHEN EXPR PRESENT:request\.|input\(|argv|query|\+ && MISSING:autoescape\s*=\s*True|sandbox
+REPORT AS area_of_interest
+REASON Detects Jinja2 template creation or rendering from user-supplied strings.
+TRACE Externalized rule logic for SSTI: Jinja2 Template from User Input.

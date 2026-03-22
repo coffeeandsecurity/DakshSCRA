@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \.filter\s*\(\s*["']|\.filter\s*\(\s*f["']|\.filter\s*\(\s*["'][^"']*["']\s*%
+WHEN EXPR MISSING:bindparams|bindparam|:(?!:)\w|params
+REPORT AS area_of_interest
+REASON Detects SQLAlchemy filter() calls using raw string conditions instead of ORM column expressions.
+TRACE Externalized rule logic for filter() with Raw String Condition.

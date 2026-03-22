@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT Build\.FINGERPRINT\.contains\s*\(|Build\.MODEL\.contains\s*\(
+WHEN EXPR PRESENT:isEmulator|emulatorCheck|checkEmulator && MISSING:PackageManager|SystemProperties|IMEI|TelephonyManager|Build\.HARDWARE|getSensorList
+REPORT AS area_of_interest
+REASON Detects emulator detection logic that relies only on Build string property comparisons, which are trivially spoofable.
+TRACE Externalized mobile rule logic for Emulator Detection via Build Properties Only.

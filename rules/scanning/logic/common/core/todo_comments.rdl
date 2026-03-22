@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)TODO(\s?)
+WHEN EXPR PRESENT:(?i)\b(security|auth|password|token|encrypt|sql|xss|csrf)\b && MISSING:(?i)\b(done|fixed|resolved|wontfix|false positive)\b
+REPORT AS area_of_interest
+REASON Detects TODO comments in the code.
+TRACE Externalized rule logic for TODO Comments.

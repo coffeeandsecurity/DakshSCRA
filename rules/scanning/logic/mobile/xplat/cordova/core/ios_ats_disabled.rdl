@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>
+REPORT AS area_of_interest
+REASON Detects App Transport Security disablement in iOS Cordova builds.
+TRACE Externalized mobile rule logic for iOS ATS Disabled.

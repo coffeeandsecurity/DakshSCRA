@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT android.intent.action.BOOT_COMPLETED
+REPORT AS area_of_interest
+REASON Detects unsafe broadcast receivers.
+TRACE Externalized mobile rule logic for Unsafe Broadcast Receivers.

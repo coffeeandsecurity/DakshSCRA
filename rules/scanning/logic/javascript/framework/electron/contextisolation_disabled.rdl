@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT contextIsolation\s*:\s*false
+WHEN EXPR PRESENT:contextIsolation:\s*false && MISSING:test|development
+REPORT AS area_of_interest
+REASON Detects Electron BrowserWindow configurations with context isolation disabled.
+TRACE Externalized rule logic for contextIsolation Disabled.

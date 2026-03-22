@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\.mark_safe\(\s*["']
+WHEN EXPR MISSING:escape|bleach\.clean|html\.escape|strip_tags|validate && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects potentially insecure usage of Django's mark_safe function, which can lead to Cross-Site Scripting (XSS) vulnerabilities.
+TRACE Externalized rule logic for Insecure Use of Django mark_safe.

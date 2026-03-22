@@ -2,8 +2,8 @@
     <category name="Untrusted Input/Output Handling">
         <rule>
             <name>Untrusted Input: Request.Form</name>
-            <regex><![CDATA[Request\.Form]]></regex>
-            <rdl><![CDATA[[FLAG:Request\.Form][IF(PRESENT:(SqlCommand|Execute|Response\.Write|Redirect|File|Path|Process|Xml) && MISSING:(ValidateInput|HtmlEncode|UrlEncode|Sanitize|TryParse|Regex\.IsMatch))]]]></rdl>
+            <regex>Request\.Form</regex>
+            <rdl_ref>logic/dotnet/core/untrusted_input_request_form.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>Untrusted Input: Request.QueryString</name>
-            <regex><![CDATA[Request\.QueryString]]></regex>
-            <rdl><![CDATA[[FLAG:Request\.QueryString][IF(PRESENT:(SqlCommand|Execute|Response\.Write|Redirect|File|Path|Process|Xml) && MISSING:(ValidateInput|HtmlEncode|UrlEncode|Sanitize|TryParse|Regex\.IsMatch))]]]></rdl>
+            <regex>Request\.QueryString</regex>
+            <rdl_ref>logic/dotnet/core/untrusted_input_request_querystring.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>Untrusted Input Handling in HTLM Output: Response.Write</name>
-            <regex><![CDATA[Response\.Write\(.*\)]]></regex>
-            <rdl><![CDATA[[FLAG:Response\.Write\(.*\)][IF(PRESENT:(Request\.|HttpContext\.Current\.Request) && MISSING:(HtmlEncode|HttpUtility\.HtmlEncode|AntiXssEncoder|TagBuilder))]]]></rdl>
+            <regex>Response\.Write\(.*\)</regex>
+            <rdl_ref>logic/dotnet/core/untrusted_input_handling_in_htlm_output_response_write.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -53,8 +53,8 @@
         </rule>
         <rule>
             <name>Untrusted Input Handling in SQL Query: SqlCommand</name>
-            <regex><![CDATA[new SqlCommand\(.*\)]]></regex>
-            <rdl><![CDATA[[FLAG:new SqlCommand\(.*\)][IF(PRESENT:(\+|String\.Format|Request\.|QueryString|Form) && MISSING:(SqlParameter|AddWithValue|Parameters\.Add|Parameters\.AddWithValue))]]]></rdl>
+            <regex>new SqlCommand\(.*\)</regex>
+            <rdl_ref>logic/dotnet/core/untrusted_input_handling_in_sql_query_sqlcommand.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -70,8 +70,8 @@
         </rule>
         <rule>
             <name>Untrusted Input Handling in XML Query</name>
-            <regex><![CDATA[(?i)(XmlDocument\.Load|XmlDocument\.LoadXml|XmlTextReader\.Create|XmlReader\.Create|XmlSerializer\.Deserialize|XDocument\.Load|XDocument\.Parse|XElement\.Load|XElement\.Parse|XPathDocument\.Create|XPathDocument\.Load|XPathDocument\.LoadXml|XPathNavigator\.Create|XPathNavigator\.Load|XPathNavigator\.LoadXml|XslCompiledTransform\.Load|XslCompiledTransform\.LoadXml|XslTransform\.Load|XslTransform\.LoadXml|XmlSchema\.Read|XmlSchemaSet\.Add|XmlSchemaSet\.Read)]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(XmlDocument\.Load|XmlDocument\.LoadXml|XmlTextReader\.Create|XmlReader\.Create|XmlSerializer\.Deserialize|XDocument\.Load|XDocument\.Parse|XElement\.Load|XElement\.Parse|XPathDocument\.Create|XPathDocument\.Load|XPathDocument\.LoadXml|XPathNavigator\.Create|XPathNavigator\.Load|XPathNavigator\.LoadXml|XslCompiledTransform\.Load|XslCompiledTransform\.LoadXml|XslTransform\.Load|XslTransform\.LoadXml|XmlSchema\.Read|XmlSchemaSet\.Add|XmlSchemaSet\.Read)][IF(MISSING:(DtdProcessing\s*=\s*Prohibit|XmlResolver\s*=\s*null|MaxCharactersFromEntities|ProhibitDtd\s*=\s*true))]]]></rdl>
+            <regex>(?i)(XmlDocument\.Load|XmlDocument\.LoadXml|XmlTextReader\.Create|XmlReader\.Create|XmlSerializer\.Deserialize|XDocument\.Load|XDocument\.Parse|XElement\.Load|XElement\.Parse|XPathDocument\.Create|XPathDocument\.Load|XPathDocument\.LoadXml|XPathNavigator\.Create|XPathNavigator\.Load|XPathNavigator\.LoadXml|XslCompiledTransform\.Load|XslCompiledTransform\.LoadXml|XslTransform\.Load|XslTransform\.LoadXml|XmlSchema\.Read|XmlSchemaSet\.Add|XmlSchemaSet\.Read)</regex>
+            <rdl_ref>logic/dotnet/core/untrusted_input_handling_in_xml_query.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -87,8 +87,8 @@
         </rule>
         <rule>
             <name>Untrusted URL Concatenation: Append Method</name>
-            <regex><![CDATA[\.Append\(.*HttpContext\.Current\.Request\.Url]]></regex>
-            <rdl><![CDATA[[FLAG:\.Append\(.*HttpContext\.Current\.Request\.Url][IF(MISSING:(Uri\.EscapeDataString|UrlEncode|IsLocalUrl|allowlist|whitelist))]]]></rdl>
+            <regex>\.Append\(.*HttpContext\.Current\.Request\.Url</regex>
+            <rdl_ref>logic/dotnet/core/untrusted_url_concatenation_append_method.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -104,8 +104,8 @@
         </rule>
         <rule>
             <name>Untrusted Data Output: HttpContext.Current.Request</name>
-            <regex><![CDATA[\.(Append|WriteLine)\([^\)]*?HttpContext\.Current\.Request\.(Url|Form|QueryString)]]></regex>
-            <rdl><![CDATA[[FLAG:\.(Append|WriteLine)\([^\)]*?HttpContext\.Current\.Request\.(Url|Form|QueryString)][IF(MISSING:(HtmlEncode|UrlEncode|Sanitize|AntiXssEncoder))]]]></rdl>
+            <regex>\.(Append|WriteLine)\([^\)]*?HttpContext\.Current\.Request\.(Url|Form|QueryString)</regex>
+            <rdl_ref>logic/dotnet/core/untrusted_data_output_httpcontext_current_request.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -119,21 +119,10 @@
             <developer>Any data output involving HttpContext. Current. Request is properly validated, sanitized, and encoded. Avoid directly outputting untrusted data without appropriate measures in place to mitigate security risks. Developers should implement input validation, output encoding, and secure data handling practices to prevent vulnerabilities.</developer>
             <reviewer>Check for the presence of untrusted data output involving HttpContext. Current. Request. Verify if developers have implemented proper input validation, output encoding, and secure data handling techniques to prevent security vulnerabilities. Also assess the sensitivity of the output data and confirm the presence of appropriate security controls. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-        <!--
-        <rule>
-            <name>Untrusted Data Output: HttpContext.Current.Request</name>
-            <regex><![CDATA[\.WriteLine\(.*HttpContext\.Current\.Request\.Url|\.WriteLine\(.*HttpContext\.Current\.Request\.Form|\.WriteLine\(.*HttpContext\.Current\.Request\.QueryString]]></regex>
-            <rdl><![CDATA[[FLAG:\.WriteLine\(.*HttpContext\.Current\.Request\.Url|\.WriteLine\(.*HttpContext\.Current\.Request\.Form|\.WriteLine\(.*HttpContext\.Current\.Request\.QueryString]]]></rdl>
-            <rule_desc>Detects the usage of untrusted data output with HttpContext.Current.Request, which may lead to security vulnerabilities.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using untrusted data output with HttpContext.Current.Request. Attackers can manipulate the data output to inject malicious or unexpected content, leading to security vulnerabilities such as cross-site scripting (XSS), injection attacks, or sensitive information exposure.</vuln_desc>
-            <developer>Any data output involving HttpContext. Current. Request is properly validated, sanitized, and encoded. Avoid directly outputting untrusted data without appropriate measures in place to mitigate security risks. Developers should implement input validation, output encoding, and secure data handling practices to prevent vulnerabilities.</developer>
-            <reviewer>Check for the presence of untrusted data output involving HttpContext. Current. Request. Verify if developers have implemented proper input validation, output encoding, and secure data handling techniques to prevent security vulnerabilities. Also assess the sensitivity of the output data and confirm the presence of appropriate security controls. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
-        </rule>
-        -->
         <rule>
             <name>Untrusted Data Output: HttpContext.Current.Request.Form</name>
-            <regex><![CDATA[\.Append\(.*HttpContext\.Current\.Request\.Form]]></regex>
-            <rdl><![CDATA[[FLAG:\.Append\(.*HttpContext\.Current\.Request\.Form][IF(MISSING:(HtmlEncode|UrlEncode|Sanitize|AntiXssEncoder))]]]></rdl>
+            <regex>\.Append\(.*HttpContext\.Current\.Request\.Form</regex>
+            <rdl_ref>logic/dotnet/core/untrusted_data_output_httpcontext_current_request_form.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -149,8 +138,8 @@
         </rule>
         <rule>
             <name>Untrusted Data Output: HttpContext.Current.Request.QueryString</name>
-            <regex><![CDATA[\.Append\(.*HttpContext\.Current\.Request\.QueryString]]></regex>
-            <rdl><![CDATA[[FLAG:\.Append\(.*HttpContext\.Current\.Request\.QueryString][IF(MISSING:(HtmlEncode|UrlEncode|Sanitize|AntiXssEncoder))]]]></rdl>
+            <regex>\.Append\(.*HttpContext\.Current\.Request\.QueryString</regex>
+            <rdl_ref>logic/dotnet/core/untrusted_data_output_httpcontext_current_request_querystring.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -168,8 +157,8 @@
     <category name="File System Vulnerabilities">
         <rule>
             <name>Path Traversal: Directory.GetFiles</name>
-            <regex><![CDATA[Directory\.GetFiles\(.*\)]]></regex>
-            <rdl><![CDATA[[FLAG:Directory\.GetFiles\(.*\)][IF(PRESENT:(Request\.|QueryString|Form|userInput|path) && MISSING:(Path\.GetFullPath|Path\.Combine|StartsWith|allowlist|whitelist))]]]></rdl>
+            <regex>Directory\.GetFiles\(.*\)</regex>
+            <rdl_ref>logic/dotnet/core/path_traversal_directory_getfiles.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -187,8 +176,8 @@
     <category name="Insecure Method/Function Call">
         <rule>
             <name>Unsafe Method: Command Execution</name>
-            <regex><![CDATA[(?i)execute\s(\@|\()]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)execute\s(\@|\()][IF(PRESENT:(Request\.|QueryString|Form|userInput|args) && MISSING:(allowlist|whitelist|argument escaping|ProcessStartInfo))]]]></rdl>
+            <regex>(?i)execute\s(\@|\()</regex>
+            <rdl_ref>logic/dotnet/core/unsafe_method_command_execution.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -206,8 +195,8 @@
     <category name="Trust-boundary Validation or 3rd-Party Interactions">
         <rule>
             <name>Unvalidated Redirects and Forwards</name>
-            <regex><![CDATA[(?i)Response\.Redirect]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)Response\.Redirect][IF(MISSING:(IsLocalUrl|allowlist|whitelist|Uri\.TryCreate))]]]></rdl>
+            <regex>(?i)Response\.Redirect</regex>
+            <rdl_ref>logic/dotnet/core/unvalidated_redirects_and_forwards.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -225,8 +214,8 @@
     <category name="Database Queries">
         <rule>
             <name>SQL Query: SELECT Statements with WHERE or ORDER BY</name>
-            <regex><![CDATA[(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*][IF(PRESENT:(\+|String\.Format|Request\.|QueryString|Form) && MISSING:(SqlParameter|AddWithValue|Parameters\.Add|Parameters\.AddWithValue))]]]></rdl>
+            <regex>(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*</regex>
+            <rdl_ref>logic/dotnet/core/sql_query_select_statements_with_where_or_order_by.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -242,8 +231,8 @@
         </rule>
         <rule>
             <name>SQL Query: Unrestricted SELECT *</name>
-            <regex><![CDATA[\bSELECT\s+\*\s+FROM\b]]></regex>
-            <rdl><![CDATA[[FLAG:\bSELECT\s+\*\s+FROM\b][IF(MISSING:TOP\s+\d+|LIMIT\s+\d+)]]]></rdl>
+            <regex>\bSELECT\s+\*\s+FROM\b</regex>
+            <rdl_ref>logic/dotnet/core/sql_query_unrestricted_select.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -259,8 +248,8 @@
         </rule>
         <rule>
             <name>SQL Query: Non-parameterized INSERT Statements</name>
-            <regex><![CDATA[(?i)\bINSERT INTO\s+[^\s]+\s+\(.*=.*\$.*]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\bINSERT INTO\s+[^\s]+\s+\(.*=.*\$.*][IF(MISSING:(SqlParameter|AddWithValue|Parameters\.Add|Parameters\.AddWithValue))]]]></rdl>
+            <regex>(?i)\bINSERT INTO\s+[^\s]+\s+\(.*=.*\$.*</regex>
+            <rdl_ref>logic/dotnet/core/sql_query_non_parameterized_insert_statements.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -276,8 +265,8 @@
         </rule>
         <rule>
             <name>SQL Query: UNION Queries with User Input</name>
-            <regex><![CDATA[(?i)\bUNION\s+SELECT\s+.*\$.*]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\bUNION\s+SELECT\s+.*\$.*][IF(MISSING:(SqlParameter|AddWithValue|Parameters\.Add|Parameters\.AddWithValue))]]]></rdl>
+            <regex>(?i)\bUNION\s+SELECT\s+.*\$.*</regex>
+            <rdl_ref>logic/dotnet/core/sql_query_union_queries_with_user_input.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -295,8 +284,8 @@
     <category name="Information Disclosure">
         <rule>
             <name>Stack Trace or Error Disclosure</name>
-            <regex><![CDATA[(?i)(Response\.Write\s*\([^)]{0,200}StackTrace|ex\.ToString\(\)|Console\.WriteLine\([^)]{0,200}Exception[^)]*\)|throw new \w*Exception\([^)]{0,200}\))]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(Response\.Write\s*\([^)]{0,200}StackTrace|ex\.ToString\(\)|Console\.WriteLine\([^)]{0,200}Exception[^)]*\)|throw new \w*Exception\([^)]{0,200}\))][IF(MISSING:ini_set.*display_errors.*0|error_reporting\s*\(\s*0\s*\)|log_errors|try.*catch && MISSING:development|localhost)]]]></rdl>
+            <regex>(?i)(Response\.Write\s*\([^)]{0,200}StackTrace|ex\.ToString\(\)|Console\.WriteLine\([^)]{0,200}Exception[^)]*\)|throw new \w*Exception\([^)]{0,200}\))</regex>
+            <rdl_ref>logic/dotnet/core/stack_trace_or_error_disclosure.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -314,8 +303,8 @@
     <category name="Insecure Configuration">
         <rule>
             <name>API Route Prefix: Improper Usage</name>
-            <regex><![CDATA[\[RoutePrefix\("]]></regex>
-            <rdl><![CDATA[[FLAG:\[RoutePrefix\("][IF(MISSING:Authorize|RequireAuthorization|ApiKeyRequired|[ApiController] && MISSING:test|example)]]]></rdl>
+            <regex>\[RoutePrefix\("</regex>
+            <rdl_ref>logic/dotnet/core/api_route_prefix_improper_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -333,8 +322,8 @@
     <category name="Disabled/Missing Security Controls">
         <rule>
             <name>Request Validation: Disabled Configuration</name>
-            <regex><![CDATA[%@\s?Page\s?.*\s?ValidateRequest\s?=\s?(\'|\")false(\'|\")]]></regex>
-            <rdl><![CDATA[[FLAG:%@\s?Page\s?.*\s?ValidateRequest\s?=\s?(\'|\")false(\'|\")][IF(PRESENT:validateRequest\s*=\s*"false"|ValidateInput\s*\(\s*false|RequestValidationMode && MISSING:test|example|AntiXssEncoder|HtmlEncode)]]]></rdl>
+            <regex>%@\s?Page\s?.*\s?ValidateRequest\s?=\s?(\'|\")false(\'|\")</regex>
+            <rdl_ref>logic/dotnet/core/request_validation_disabled_configuration.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -350,8 +339,8 @@
         </rule>
         <rule>
             <name>Server Certificate Validation: Insecure Configuration</name>
-            <regex><![CDATA[ServerCertificateValidationCallback\s*?\(.*?(\=|false|true)]]></regex>
-            <rdl><![CDATA[[FLAG:ServerCertificateValidationCallback\s*?\(.*?(\=|false|true)][IF(MISSING:test|development|localhost|staging|// intentional)]]]></rdl>
+            <regex>ServerCertificateValidationCallback\s*?\(.*?(\=|false|true)</regex>
+            <rdl_ref>logic/dotnet/core/server_certificate_validation_insecure_configuration.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -369,8 +358,8 @@
     <category name="Effective/Standard Mitigations Implemented">
         <rule>
             <name>XSS Mitigation: HTML Encoding using Razor</name>
-            <regex><![CDATA[\@Html\.Raw\(.*\)]]></regex>
-            <rdl><![CDATA[[FLAG:\@Html\.Raw\(.*\)][IF(PRESENT:@Html\.Raw\s*\(|Html\.Raw\s*\(|HtmlString && MISSING:AntiXssEncoder|HtmlEncode|sanitize)]]]></rdl>
+            <regex>Html\.Encode\s*\(|HttpUtility\.HtmlEncode\s*\(|AntiXssEncoder\.HtmlEncode\s*\(|HtmlEncoder\.Default\.Encode\s*\(</regex>
+            <rdl_ref>logic/dotnet/core/xss_mitigation_html_encoding_using_razor.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -379,15 +368,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>green</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of HTML encoding using Razor to mitigate XSS vulnerabilities.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates that HTML encoding using Razor's `Html.Raw` method is being used to mitigate XSS vulnerabilities. This is a recommended best practice to prevent the execution of untrusted user input as HTML or script code.</vuln_desc>
-            <developer>HTML encoding using Razor's `Html. Raw` method is implemented to mitigate XSS vulnerabilities. By properly encoding user-generated or dynamic content before rendering it in HTML templates, the risk of injecting malicious code can be significantly reduced.</developer>
-            <reviewer>Check for the presence of HTML encoding using Razor's `Html. Raw` method as a mitigation against XSS vulnerabilities. Verify if developers have consistently applied encoding to user-generated or dynamic content and assess the effectiveness of this mitigation in preventing the injection of malicious code. Also ensure that secure coding practices are followed in conjunction with HTML encoding to provide comprehensive protection against XSS attacks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+            <rule_desc>Detects .NET HTML encoding helpers that act as XSS mitigations in Razor and related rendering paths.</rule_desc>
+            <vuln_desc>If this rule matches, it indicates that server-side output encoding is being applied before rendering untrusted data into HTML. Helpers such as `Html.Encode`, `HttpUtility.HtmlEncode`, `AntiXssEncoder.HtmlEncode`, and `HtmlEncoder.Default.Encode` are defensive signals that reduce XSS risk by encoding dangerous characters before output.</vuln_desc>
+            <developer>Use context-appropriate output encoding before rendering untrusted data into HTML. Prefer built-in .NET encoders and avoid treating raw HTML rendering helpers such as `Html.Raw` as mitigations.</developer>
+            <reviewer>Check that user-controlled content is passed through an appropriate .NET HTML encoder before rendering, and confirm that raw rendering helpers are not being mistaken for XSS defenses. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>CORS Mitigation: Allow Specific Origins</name>
-            <regex><![CDATA[\[EnableCors\s*\(\s*\"AllowSpecificOrigins\"\s*\)\]]]></regex>
-            <rdl><![CDATA[[FLAG:\[EnableCors\s*\(\s*\"AllowSpecificOrigins\"\s*\)\]][IF(PRESENT:AllowAnyOrigin\s*\(\s*\)|WithOrigins\s*\(\s*"\*"|Access-Control-Allow-Origin.*\* && MISSING:WithOrigins\s*\(\s*"https?://[^*]|AllowCredentials|SetIsOriginAllowed)]]]></rdl>
+            <regex>\[EnableCors\s*\(\s*\"AllowSpecificOrigins\"\s*\)\]</regex>
+            <rdl_ref>logic/dotnet/core/cors_mitigation_allow_specific_origins.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -405,8 +394,8 @@
     <category name="Insecure Deserialization">
         <rule>
             <name>Insecure Deserialization: BinaryFormatter</name>
-            <regex><![CDATA[BinaryFormatter\s*\(\s*\)|new\s+BinaryFormatter|BinaryFormatter\.Deserialize\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:BinaryFormatter\s*\(\s*\)|new\s+BinaryFormatter|BinaryFormatter\.Deserialize\s*\(][IF(MISSING:SerializationBinder|AllowType|TypeNameHandling\.None|Activator\.CreateInstance && MISSING:test|example)]]]></rdl>
+            <regex>BinaryFormatter\s*\(\s*\)|new\s+BinaryFormatter|BinaryFormatter\.Deserialize\s*\(</regex>
+            <rdl_ref>logic/dotnet/core/insecure_deserialization_binaryformatter.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -422,8 +411,8 @@
         </rule>
         <rule>
             <name>Insecure Deserialization: ObjectStateFormatter and LosFormatter</name>
-            <regex><![CDATA[ObjectStateFormatter\.Deserialize\s*\(|LosFormatter\.Deserialize\s*\(|NetDataContractSerializer\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:ObjectStateFormatter\.Deserialize\s*\(|LosFormatter\.Deserialize\s*\(|NetDataContractSerializer\s*\(][IF(MISSING:trusted|allowlist|validate|SerializationBinder && MISSING:test|example)]]]></rdl>
+            <regex>ObjectStateFormatter\.Deserialize\s*\(|LosFormatter\.Deserialize\s*\(|NetDataContractSerializer\s*\(</regex>
+            <rdl_ref>logic/dotnet/core/insecure_deserialization_objectstateformatter_and_losformatter.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -441,8 +430,8 @@
     <category name="Server-Side Request Forgery (SSRF)">
         <rule>
             <name>SSRF: HttpClient with User-Controlled URL</name>
-            <regex><![CDATA[httpClient\.(GetAsync|PostAsync|PutAsync|DeleteAsync|SendAsync|GetStringAsync|GetByteArrayAsync)\s*\(|new\s+HttpClient\s*\(\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:httpClient\.(GetAsync|PostAsync|PutAsync|DeleteAsync|SendAsync|GetStringAsync|GetByteArrayAsync)\s*\(][IF(PRESENT:Request\.|QueryString|Form|userInput|\+ && MISSING:allowlist|whitelist|Uri\.IsWellFormedUriString|IsLocalUrl)]]]></rdl>
+            <regex>httpClient\.(GetAsync|PostAsync|PutAsync|DeleteAsync|SendAsync|GetStringAsync|GetByteArrayAsync)\s*\(|new\s+HttpClient\s*\(\s*\)</regex>
+            <rdl_ref>logic/dotnet/core/ssrf_httpclient_with_user_controlled_url.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -458,8 +447,8 @@
         </rule>
         <rule>
             <name>SSRF: WebRequest/WebClient with User-Controlled URL</name>
-            <regex><![CDATA[WebRequest\.Create\s*\(|new\s+WebClient\s*\(\s*\)|new\s+HttpWebRequest\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:WebRequest\.Create\s*\(|new\s+WebClient\s*\(\s*\)|new\s+HttpWebRequest\s*\(][IF(PRESENT:Request\.|QueryString|Form|userInput|\+ && MISSING:allowlist|whitelist|Uri\.IsWellFormedUriString)]]]></rdl>
+            <regex>WebRequest\.Create\s*\(|new\s+WebClient\s*\(\s*\)|new\s+HttpWebRequest\s*\(</regex>
+            <rdl_ref>logic/dotnet/core/ssrf_webrequest_webclient_with_user_controlled_url.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -477,8 +466,8 @@
     <category name="LDAP Injection">
         <rule>
             <name>LDAP Injection: DirectorySearcher Filter with User Input</name>
-            <regex><![CDATA[new\s+DirectorySearcher\s*\(|DirectorySearcher\.Filter\s*=|new\s+DirectoryEntry\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:new\s+DirectorySearcher\s*\(|DirectorySearcher\.Filter\s*=][IF(PRESENT:Request\.|QueryString|Form|userInput|\+ && MISSING:EscapeLdapFilter|ldapEscape|Encoder\.LdapFilterEncode|AntiXss\.LdapFilterEncode)]]]></rdl>
+            <regex>new\s+DirectorySearcher\s*\(|DirectorySearcher\.Filter\s*=|new\s+DirectoryEntry\s*\(</regex>
+            <rdl_ref>logic/dotnet/core/ldap_injection_directorysearcher_filter_with_user_input.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -494,8 +483,8 @@
         </rule>
         <rule>
             <name>LDAP Injection: LdapConnection Bind or Search</name>
-            <regex><![CDATA[LdapConnection\s*\(|new\s+LdapConnection|LdapConnection\.Bind\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:LdapConnection\s*\(|new\s+LdapConnection][IF(PRESENT:Request\.|QueryString|Form|userInput|\+ && MISSING:EscapeLdapFilter|AntiXss\.LdapFilterEncode)]]]></rdl>
+            <regex>LdapConnection\s*\(|new\s+LdapConnection|LdapConnection\.Bind\s*\(</regex>
+            <rdl_ref>logic/dotnet/core/ldap_injection_ldapconnection_bind_or_search.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>

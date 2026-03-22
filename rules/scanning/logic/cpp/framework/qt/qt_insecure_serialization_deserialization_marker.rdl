@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT boost::archive|QDataStream\s*&gt;&gt;
+WHEN EXPR MISSING:trusted|validate|verify|schema|registerTag|QMetaType && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects serialization/deserialization APIs that need trust-boundary review.
+TRACE Externalized rule logic for Qt Insecure Serialization/Deserialization Marker.

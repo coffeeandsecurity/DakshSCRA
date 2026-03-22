@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bopen\s*\(
+WHEN EXPR PRESENT:request\.|input\(|argv|os\.path\.join && MISSING:os\.path\.realpath|os\.path\.abspath|startswith|allowlist|whitelist
+REPORT AS area_of_interest
+REASON Detects file open calls that incorporate user-controlled path components.
+TRACE Externalized rule logic for Path Traversal: open() with User-Controlled Path.

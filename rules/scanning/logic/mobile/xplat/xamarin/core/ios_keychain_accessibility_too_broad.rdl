@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT kSecAttrAccessibleAlways
+REPORT AS area_of_interest
+REASON Detects permissive keychain accessibility constants in iOS-specific Xamarin code.
+TRACE Externalized mobile rule logic for iOS Keychain Accessibility Too Broad.

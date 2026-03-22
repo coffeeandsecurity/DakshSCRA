@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT http\.Request|http\.RequestForm|http\.FormValue
+WHEN EXPR MISSING:Validate|validate|sanitize|regexp\.MustCompile|strconv\.Atoi|strconv\.ParseInt|json\.Unmarshal
+REPORT AS area_of_interest
+REASON Detects the usage of HTTP request parameters without proper validation and sanitization.
+TRACE Externalized rule logic for Untrusted Inputs: HTTP Request Parameters.

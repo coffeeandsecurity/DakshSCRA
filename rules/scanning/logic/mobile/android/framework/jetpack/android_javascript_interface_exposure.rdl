@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT addJavascriptInterface\(
+WHEN EXPR MISSING:@JavascriptInterface|validate|allowlist|trusted && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects JavaScript bridge exposure into WebView.
+TRACE Externalized mobile rule logic for Android JavaScript Interface Exposure.

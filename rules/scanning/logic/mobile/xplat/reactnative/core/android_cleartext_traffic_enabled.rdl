@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT usesCleartextTraffic\s*=\s*"?(?:true|TRUE)"?
+REPORT AS area_of_interest
+REASON Detects cleartext traffic allowance in Android-side configuration files.
+TRACE Externalized mobile rule logic for Android Cleartext Traffic Enabled.

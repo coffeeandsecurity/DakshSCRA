@@ -2,8 +2,8 @@
     <category name="Platform-Specific Issues - iOS Configuration">
         <rule>
             <name>App Transport Security Allows Arbitrary Loads</name>
-            <regex><![CDATA[NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]></regex>
-            <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>][IF(PRESENT:NSAllowsArbitraryLoads.*true|NSAllowsArbitraryLoads\s*=\s*<true && MISSING:NSExceptionDomains|NSAllowsArbitraryLoadsForMedia|NSAllowsLocalNetworking)]]]></rdl>
+            <regex>NSAllowsArbitraryLoads\s*&lt;/key&gt;\s*&lt;true\s*/&gt;</regex>
+            <rdl_ref>logic/mobile/ios/core/ats_arbitrary_loads.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -22,8 +22,8 @@
         </rule>
         <rule>
             <name>Insecure URL Scheme Registration</name>
-            <regex><![CDATA[CFBundleURLSchemes]]></regex>
-            <rdl><![CDATA[[FLAG:CFBundleURLSchemes][IF(PRESENT:CFBundleURLSchemes && MISSING:assetlinks|apple-app-site-association|autoVerify|applinks)]]]></rdl>
+            <regex>CFBundleURLSchemes</regex>
+            <rdl_ref>logic/mobile/ios/core/insecure_url_scheme_registration.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -42,8 +42,8 @@
         </rule>
         <rule>
             <name>Application Queries Schemes Broad Allowlist</name>
-            <regex><![CDATA[LSApplicationQueriesSchemes]]></regex>
-            <rdl><![CDATA[[FLAG:LSApplicationQueriesSchemes][IF(PRESENT:LSApplicationQueriesSchemes && MISSING:# intentional|# required)]]]></rdl>
+            <regex>LSApplicationQueriesSchemes</regex>
+            <rdl_ref>logic/mobile/ios/core/application_queries_schemes_broad_allowlist.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -64,8 +64,8 @@
     <category name="Platform-Specific Issues - iOS Runtime Security">
         <rule>
             <name>Keychain Accessibility Too Permissive</name>
-            <regex><![CDATA[kSecAttrAccessible\s*:\s*kSecAttrAccessibleAlways]]></regex>
-            <rdl><![CDATA[[FLAG:kSecAttrAccessible\s*:\s*kSecAttrAccessibleAlways][IF(PRESENT:kSecAttrAccessibleAlways|kSecAttrAccessibleAlwaysThisDeviceOnly && MISSING:kSecAttrAccessibleWhenUnlocked|kSecAttrAccessibleAfterFirstUnlock|test|example)]]]></rdl>
+            <regex>kSecAttrAccessible\s*:\s*kSecAttrAccessibleAlways</regex>
+            <rdl_ref>logic/mobile/ios/core/keychain_accessibility_too_permissive.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -84,8 +84,8 @@
         </rule>
         <rule>
             <name>UserDefaults Used for Sensitive Data</name>
-            <regex><![CDATA[\b(?:UserDefaults\.standard|NSUserDefaults\s+standardUserDefaults)]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:UserDefaults\.standard|NSUserDefaults\s+standardUserDefaults)][IF(PRESENT:UserDefaults.*(?:password|token|secret|key|credential|auth)|set\s*\(\s*\w+\s*,\s*forKey:\s*"(?:password|token|secret|key|auth) && MISSING:Keychain|CryptoKit|encrypt|SecItem)]]]></rdl>
+            <regex>\b(?:UserDefaults\.standard|NSUserDefaults\s+standardUserDefaults)</regex>
+            <rdl_ref>logic/mobile/ios/core/userdefaults_used_for_sensitive_data.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -104,8 +104,8 @@
         </rule>
         <rule>
             <name>WebView JavaScript Enabled for Dynamic Content</name>
-            <regex><![CDATA[WKPreferences\(\)\.javaScriptEnabled\s*=\s*true|setJavaScriptEnabled\s*:\s*YES]]></regex>
-            <rdl><![CDATA[[FLAG:WKPreferences\(\)\.javaScriptEnabled\s*=\s*true|setJavaScriptEnabled\s*:\s*YES][IF(MISSING:shouldStartLoadWithRequest|decidePolicyForNavigationAction|navigationDelegate|allowList|trustedOrigins)]]]></rdl>
+            <regex>WKPreferences\(\)\.javaScriptEnabled\s*=\s*true|setJavaScriptEnabled\s*:\s*YES</regex>
+            <rdl_ref>logic/mobile/ios/core/webview_javascript_enabled_for_dynamic_content.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -124,8 +124,8 @@
         </rule>
         <rule>
             <name>Certificate Validation Override</name>
-            <regex><![CDATA[didReceive\s+challenge|NSURLSessionAuthChallengeDisposition\.useCredential]]></regex>
-            <rdl><![CDATA[[FLAG:didReceive\s+challenge|NSURLSessionAuthChallengeDisposition\.useCredential][IF(MISSING:SecTrustEvaluate|SecPolicyCreateSSL|pinnedCertificates|ServerTrustManager && MISSING:test|development|localhost)]]]></rdl>
+            <regex>didReceive\s+challenge|NSURLSessionAuthChallengeDisposition\.useCredential</regex>
+            <rdl_ref>logic/mobile/ios/core/certificate_validation_override.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -144,8 +144,8 @@
         </rule>
         <rule>
             <name>UIPasteboard Write with Sensitive Data</name>
-            <regex><![CDATA[UIPasteboard\.general\.(string|setValue|setData|setObjects)\s*[=\(]]]></regex>
-            <rdl><![CDATA[[FLAG:UIPasteboard\.general\.(string|setValue|setData|setObjects)\s*[=\(]][IF(PRESENT:password|token|secret|key|credential|auth && MISSING:localOnly|expirationDate|UIPasteboardOption)]]]></rdl>
+            <regex>UIPasteboard\.general\.(string|setValue|setData|setObjects)\s*[=\(]</regex>
+            <rdl_ref>logic/mobile/ios/core/uipasteboard_write_with_sensitive_data.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -164,8 +164,8 @@
         </rule>
         <rule>
             <name>evaluateJavaScript with Potentially User-Controlled Input</name>
-            <regex><![CDATA[\.evaluateJavaScript\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\.evaluateJavaScript\s*\(][IF(MISSING:sanitize|escape|encode|htmlEncode|jsEncode|allowList|trustedScript|#\ safe)]]]></rdl>
+            <regex>\.evaluateJavaScript\s*\(</regex>
+            <rdl_ref>logic/mobile/ios/core/evaluatejavascript_with_potentially_user_controlled_input.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -184,8 +184,8 @@
         </rule>
         <rule>
             <name>Keychain Item Missing Access Control Object</name>
-            <regex><![CDATA[\bSecItemAdd\s*\(|\bSecItemUpdate\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\bSecItemAdd\s*\(|\bSecItemUpdate\s*\(][IF(MISSING:kSecAttrAccessControl|SecAccessControlCreateWithFlags)]]]></rdl>
+            <regex>\bSecItemAdd\s*\(|\bSecItemUpdate\s*\(</regex>
+            <rdl_ref>logic/mobile/ios/core/keychain_item_missing_access_control_object.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -204,8 +204,8 @@
         </rule>
         <rule>
             <name>openURL with Unvalidated Input Scheme</name>
-            <regex><![CDATA[\bUIApplication\.shared\.open\s*\(|\bUIApplication\.sharedApplication\(\)\.openURL\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\bUIApplication\.shared\.open\s*\(|\bUIApplication\.sharedApplication\(\)\.openURL\s*\(][IF(MISSING:scheme|canOpenURL|allowedSchemes|guard|whitelist|allowlist)]]]></rdl>
+            <regex>\bUIApplication\.shared\.open\s*\(|\bUIApplication\.sharedApplication\(\)\.openURL\s*\(</regex>
+            <rdl_ref>logic/mobile/ios/core/openurl_with_unvalidated_input_scheme.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -226,8 +226,8 @@
     <category name="Platform-Specific Issues - iOS Build and Entitlements">
         <rule>
             <name>Debug Logging in Production Code Paths</name>
-            <regex><![CDATA[\b(?:NSLog\(|print\(|debugPrint\()]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:NSLog\(|print\(|debugPrint\()][IF(MISSING:release|production)]]]></rdl>
+            <regex>\b(?:NSLog\(|print\(|debugPrint\()</regex>
+            <rdl_ref>logic/mobile/ios/core/debug_logging_in_production_code_paths.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -246,8 +246,8 @@
         </rule>
         <rule>
             <name>Associated Domains Entitlement Present</name>
-            <regex><![CDATA[com\.apple\.developer\.associated-domains]]></regex>
-            <rdl><![CDATA[[FLAG:com\.apple\.developer\.associated-domains][IF(PRESENT:com\.apple\.developer\.associated-domains && MISSING:# intentional|# required)]]]></rdl>
+            <regex>com\.apple\.developer\.associated-domains</regex>
+            <rdl_ref>logic/mobile/ios/core/associated_domains_entitlement_present.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -266,8 +266,8 @@
         </rule>
         <rule>
             <name>Push Notification Entitlement Enabled</name>
-            <regex><![CDATA[aps-environment]]></regex>
-            <rdl><![CDATA[[FLAG:aps-environment][IF(PRESENT:aps-environment|com\.apple\.developer\.aps-environment && MISSING:# intentional|# required)]]]></rdl>
+            <regex>aps-environment</regex>
+            <rdl_ref>logic/mobile/ios/core/push_notification_entitlement_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -288,8 +288,8 @@
     <category name="Framework-Specific Security">
         <rule>
             <name>Deprecated UIWebView Usage</name>
-            <regex><![CDATA[\bUIWebView\b|UIWebViewDelegate]]></regex>
-            <rdl><![CDATA[[FLAG:\bUIWebView\b|UIWebViewDelegate][IF(MISSING:WKWebView|WKNavigationDelegate)]]]></rdl>
+            <regex>\bUIWebView\b|UIWebViewDelegate</regex>
+            <rdl_ref>logic/mobile/ios/core/deprecated_uiwebview_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -308,8 +308,8 @@
         </rule>
         <rule>
             <name>Insecure Random Number Generation</name>
-            <regex><![CDATA[\barc4random\s*\(|\barc4random_uniform\s*\(|\brand\s*\(|\bsrand\s*\(|\bdrand48\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\barc4random\s*\(|\barc4random_uniform\s*\(|\brand\s*\(][IF(PRESENT:token|key|secret|nonce|session|otp|password|salt && MISSING:SecRandomCopyBytes|CryptorRandomByte|CCRandomGenerateBytes)]]]></rdl>
+            <regex>\barc4random\s*\(|\barc4random_uniform\s*\(|\brand\s*\(|\bsrand\s*\(|\bdrand48\s*\(</regex>
+            <rdl_ref>logic/mobile/ios/core/insecure_random_number_generation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -328,8 +328,8 @@
         </rule>
         <rule>
             <name>Hardcoded Cryptographic Key or Secret</name>
-            <regex><![CDATA[(?i)(apiKey|api_key|secret|privateKey|encryptionKey|password|token)\s*[:=]\s*["'][A-Za-z0-9/+]{16,}["']]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(apiKey|api_key|secret|privateKey|encryptionKey|password|token)\s*[:=]\s*["'][A-Za-z0-9/+]{16,}["']][IF(MISSING:example|sample|dummy|test|placeholder|Keychain)]]]></rdl>
+            <regex>(?i)(apiKey|api_key|secret|privateKey|encryptionKey|password|token)\s*[:=]\s*["'][A-Za-z0-9/+]{16,}["']</regex>
+            <rdl_ref>logic/mobile/ios/core/hardcoded_cryptographic_key_or_secret.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>none</context_type>
@@ -346,8 +346,8 @@
         </rule>
         <rule>
             <name>Certificate Pinning Using Leaf Certificate Hash Only</name>
-            <regex><![CDATA[\bSecCertificateCopyData\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\bSecCertificateCopyData\s*\(][IF(MISSING:SecCertificateCopyPublicKey|SecCertificateCopyKey|SecKeyRef|publicKeyHash|spki|SubjectPublicKeyInfo)]]]></rdl>
+            <regex>\bSecCertificateCopyData\s*\(</regex>
+            <rdl_ref>logic/mobile/ios/core/certificate_pinning_using_leaf_certificate_hash_only.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>

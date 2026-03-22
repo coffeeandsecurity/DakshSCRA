@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (assert|eval)\s*\(\s*(\$_(GET|POST|REQUEST)|\$\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}?)
+WHEN EXPR MISSING:validate|allowlist|trusted|intval|is_int|is_numeric && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects usage of assert() and eval() with potentially untrusted inputs, leading to code injection vulnerabilities.
+TRACE Externalized rule logic for Insecure Code Execution: assert() and eval().

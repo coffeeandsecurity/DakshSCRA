@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\b(?:skip_before_action\s*:verify_authenticity_token|protect_from_forgery\s+with:\s*:null_session|protect_from_forgery\s+except:)
+WHEN EXPR MISSING:before_action\s*:verify_authenticity_token|api_key|JWT|Bearer
+REPORT AS area_of_interest
+REASON Detects Rails patterns that disable or weaken default CSRF protections.
+TRACE Externalized rule logic for CSRF Protection Disabled or Relaxed.

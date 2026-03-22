@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\bSELECT\b.*\bORDER BY\b
+WHEN EXPR PRESENT:(?i)(\+|\$\{|format\(|sprintf\(|f\"|f'|request|params|query|input) && MISSING:(?i)(prepare|bind|parameterized|replacements|sqlparameter)
+REPORT AS area_of_interest
+REASON Detects the usage of SELECT statements with ORDER BY clauses.
+TRACE Externalized rule logic for SQL Query: SELECT Statement with ORDER BY Clause.

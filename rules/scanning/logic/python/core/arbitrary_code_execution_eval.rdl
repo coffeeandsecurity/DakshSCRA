@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \beval\(.+\)
+WHEN EXPR PRESENT:(input\(|request|params|query|user_input|base64|pickle) && MISSING:(allowlist|whitelist)
+REPORT AS area_of_interest
+REASON Detects the usage of eval() function, which can lead to arbitrary code execution vulnerabilities.
+TRACE Externalized rule logic for Arbitrary Code Execution: eval().

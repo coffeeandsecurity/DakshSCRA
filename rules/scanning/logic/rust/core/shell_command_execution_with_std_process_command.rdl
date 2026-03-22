@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(?:std::process::)?Command::new\s*\(
+WHEN EXPR MISSING:validate|sanitize|allowlist|whitelist|args\s*\(\s*&\s*\[|arg\s*\(\s*"[^"]*" && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects command execution entry points in Rust applications.
+TRACE Externalized rule logic for Shell Command Execution with std::process::Command.

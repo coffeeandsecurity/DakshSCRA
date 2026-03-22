@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT <provider\b|android:authorities\s*=
+REPORT AS area_of_interest
+REASON Detects content providers without specific permissions.
+TRACE Externalized mobile rule logic for Content Providers with No Permissions.

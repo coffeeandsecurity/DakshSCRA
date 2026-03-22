@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bsetMethodCallHandler\s*\(
+WHEN EXPR MISSING:call\.method|methodName|switch.*call|if.*call\.method|assert
+REPORT AS area_of_interest
+REASON Detects MethodChannel handlers that may not validate the incoming method name or arguments.
+TRACE Externalized mobile rule logic for Flutter MethodChannel Handler Without Input Validation.

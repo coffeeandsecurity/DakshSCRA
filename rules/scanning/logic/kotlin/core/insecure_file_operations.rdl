@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT openFile(?:Output|Input)\s*\([^,]*,\s*M(?:ODE_)?WORLD_(?:WRITEABLE|READABLE)
+WHEN EXPR MISSING:EncryptedFile|openFileOutput.*MODE_PRIVATE|test|example
+REPORT AS area_of_interest
+REASON Detects insecure file operations using deprecated world-readable or world-writable modes.
+TRACE Externalized rule logic for Insecure File Operations.

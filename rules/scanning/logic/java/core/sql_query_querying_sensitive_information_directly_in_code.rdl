@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\bSELECT\s+(password|ssn|creditcard|api_key|token|pin)\s+FROM\s+[^\s]+\b
+WHEN EXPR MISSING:example|sample|dummy|test|placeholder
+REPORT AS area_of_interest
+REASON Detects SQL statements querying sensitive data directly, which could expose data if logs or exceptions are mishandled.
+TRACE Externalized rule logic for SQL Query: Querying Sensitive Information Directly in Code.

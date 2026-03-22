@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\b(mysql_query|mysqli_query|new\s+PDO\(|pg_connect\(|mysql_connect\(|mysqli_connect\(|sqlite3_open|mysql_fetch_array|mysql_fetch_assoc|mysql_num_rows)\b|(?:mysql_query|pg_query|sqlite_query|mysqli_query|pdo->query)\s*\(\s*['\"]?\b(SELECT|INSERT|UPDATE|DELETE)\b\s+.*\s*['\"]?\s*\.\s*\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)
+WHEN EXPR MISSING:PDO::|mysqli_|prepare\s*\(|bindParam|bindValue && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects usage of deprecated or insecure SQL functions and dynamic SQL queries with user input that may lead to SQL injection vulnerabilities.
+TRACE Externalized rule logic for Deprecated and Potentially Insecure SQL Functions.

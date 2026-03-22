@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bmalloc\s*\(\s*[^\)]*user_input
+WHEN EXPR MISSING:sizeof\s*\(|MAX_SIZE|MAX_LEN|limit|bounds|check
+REPORT AS area_of_interest
+REASON Detects memory allocation functions (`malloc()`, `calloc()`) where size is influenced by user input without validation.
+TRACE Externalized rule logic for Unbounded Memory Allocation.

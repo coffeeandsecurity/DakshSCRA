@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT AllowAnyOrigin\(\)|WithOrigins\(\s*[\'\"]\*[\'\"]
+WHEN EXPR PRESENT:AllowAnyOrigin\s*\(\s*\)|origins.*"\*" && MISSING:AllowCredentials\s*\(\s*\)|WithOrigins\s*\(\s*"https?://[^*]|SetIsOriginAllowed
+REPORT AS area_of_interest
+REASON Detects overly broad CORS policy configuration.
+TRACE Externalized rule logic for Entityframework Permissive CORS.

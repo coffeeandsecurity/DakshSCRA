@@ -2,8 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { artifactUrl, getScanFindings, getSuppressedFindings, stopScan, streamScanLog } from '../api'
 import FindingsReport from './FindingsReport'
 import TaintAnalysis from './TaintAnalysis'
+import AdvancedAnalysis from './AdvancedAnalysis'
 import InsightsPanel from './InsightsPanel'
 import SuppressedPanel from './SuppressedPanel'
+import VulnerabilitiesPanel from './VulnerabilitiesPanel'
 
 function StatusBadge({ status }) {
   return (
@@ -168,7 +170,7 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
     return (
       <div className="detail-panel">
         <div className="detail-header">
-          <div className="detail-title">Findings Workspace</div>
+          <div className="detail-title">Areas of Interest Workspace</div>
         </div>
         <div className="detail-tab-content">
           <div className="empty-state">
@@ -176,7 +178,7 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zm-7.518-.267A8.25 8.25 0 1120.25 10.5M8.288 14.212A5.25 5.25 0 1117.25 10.5" />
             </svg>
             <div className="empty-title">No scan selected</div>
-            <div className="empty-msg">Select a scan from the list to view its findings, artifacts, and execution log.</div>
+            <div className="empty-msg">Select a scan from the list to view its areas of interest, artifacts, and execution log.</div>
           </div>
         </div>
       </div>
@@ -215,7 +217,7 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
           className={`detail-tab${tab === 'findings' ? ' active' : ''}`}
           onClick={() => setTab('findings')}
         >
-          Findings{!isActive && findingsCount > 0 ? ` (${findingsCount})` : ''}
+          Areas of Interest{!isActive && findingsCount > 0 ? ` (${findingsCount})` : ''}
         </button>
         <button
           className={`detail-tab${tab === 'taint' ? ' active' : ''}`}
@@ -227,6 +229,27 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
               ?.flatMap((r) => (r.findings || []).filter((f) => f.analysis_kind === 'taint_flow'))
               ?.length ?? 0
             return `Taint Flows${!isActive && taintCount > 0 ? ` (${taintCount})` : ''}`
+          })()}
+        </button>
+        <button
+          className={`detail-tab${tab === 'advanced-analysis' ? ' active' : ''}`}
+          onClick={() => setTab('advanced-analysis')}
+        >
+          {(() => {
+            const taintCount = findingsData?.analysis?.results
+              ?.filter((r) => r.engine === 'dataflow_controlflow')
+              ?.flatMap((r) => (r.findings || []).filter((f) => f.analysis_kind === 'taint_flow'))
+              ?.length ?? 0
+            return `Advanced Analysis${!isActive && taintCount > 0 ? ` (${taintCount})` : ''}`
+          })()}
+        </button>
+        <button
+          className={`detail-tab${tab === 'vulnerabilities' ? ' active' : ''}`}
+          onClick={() => setTab('vulnerabilities')}
+        >
+          {(() => {
+            const vulnCount = findingsData?.analysis?.summary?.confirmed_vulnerabilities ?? 0
+            return `Vulnerabilities${!isActive && vulnCount > 0 ? ` (${vulnCount})` : ''}`
           })()}
         </button>
         <button
@@ -267,7 +290,7 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
         </button>
       </div>
 
-      {/* Tab: Findings */}
+      {/* Tab: Areas of Interest */}
       {tab === 'findings' && (
         <div className="detail-tab-content findings-tab-content">
           {isActive ? (
@@ -276,15 +299,19 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
               </svg>
               <div className="empty-title">Scan in progress…</div>
-              <div className="empty-msg">Findings will appear here once the scan completes. Check the Log tab for live output.</div>
+              <div className="empty-msg">Areas of interest will appear here once the scan completes. Check the Log tab for live output.</div>
             </div>
           ) : findingsLoading ? (
             <div className="fr-loading">
               <div className="fr-spinner" />
-              <span>Loading findings…</span>
+              <span>Loading areas of interest…</span>
             </div>
           ) : (
-            <FindingsReport data={findingsData} status={run.status} />
+            <FindingsReport
+              data={findingsData}
+              status={run.status}
+              onViewAnalysis={() => setTab('vulnerabilities')}
+            />
           )}
         </div>
       )}
@@ -307,6 +334,45 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
             </div>
           ) : (
             <TaintAnalysis analysis={findingsData?.analysis} />
+          )}
+        </div>
+      )}
+
+      {tab === 'advanced-analysis' && (
+        <div className="detail-tab-content findings-tab-content">
+          {isActive ? (
+            <div className="empty-state" style={{ padding: '40px 20px' }}>
+              <svg className="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+              </svg>
+              <div className="empty-title">Scan in progress…</div>
+              <div className="empty-msg">Advanced Analysis will appear here once the scan completes.</div>
+            </div>
+          ) : findingsLoading ? (
+            <div className="fr-loading">
+              <div className="fr-spinner" />
+              <span>Loading advanced analysis…</span>
+            </div>
+          ) : (
+            <AdvancedAnalysis analysis={findingsData?.analysis} artifactIndex={artifactIndex} />
+          )}
+        </div>
+      )}
+
+      {tab === 'vulnerabilities' && (
+        <div className="detail-tab-content findings-tab-content">
+          {isActive ? (
+            <div className="empty-state" style={{ padding: '40px 20px' }}>
+              <div className="empty-title">Scan in progress…</div>
+              <div className="empty-msg">Confirmed vulnerabilities and mitigated implementations will appear here once the scan completes.</div>
+            </div>
+          ) : findingsLoading ? (
+            <div className="fr-loading">
+              <div className="fr-spinner" />
+              <span>Loading vulnerability confirmation…</span>
+            </div>
+          ) : (
+            <VulnerabilitiesPanel analysis={findingsData?.analysis} />
           )}
         </div>
       )}
@@ -477,7 +543,7 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
           {isActive ? (
             <div className="empty-state" style={{ padding: '40px 20px' }}>
               <div className="empty-title">Scan in progress…</div>
-              <div className="empty-msg">Suppressed findings will appear once the scan completes.</div>
+              <div className="empty-msg">Suppressed areas of interest will appear once the scan completes.</div>
             </div>
           ) : (
             <SuppressedPanel runUuid={run.run_uuid} onLoaded={setSuppressedCount} />

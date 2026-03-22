@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(?:wget|curl)\s+[^\n]{0,120}http://
+WHEN EXPR MISSING:https://
+REPORT AS area_of_interest
+REASON Detects downloads from insecure sources using HTTP.
+TRACE Externalized rule logic for Download from Insecure Sources.

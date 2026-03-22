@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bstd::vector<.*>::at\(\s*\d+\s*\)
+WHEN EXPR MISSING:try\s*\{|catch\s*\(|std::out_of_range
+REPORT AS area_of_interest
+REASON Detects unsafe access to `std::vector` elements without boundary checks.
+TRACE Externalized rule logic for Unsafe Use of std::vector::at().

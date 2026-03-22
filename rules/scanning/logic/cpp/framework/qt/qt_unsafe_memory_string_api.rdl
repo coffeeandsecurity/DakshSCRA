@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(strcpy|strcat|sprintf|gets|memcpy)\s*\(
+WHEN EXPR MISSING:QByteArray|QString::fromUtf8|bounds|size|length && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects unsafe memory/string APIs in C++ code.
+TRACE Externalized rule logic for Qt Unsafe Memory/String API.

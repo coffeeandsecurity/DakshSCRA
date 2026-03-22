@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT APP_DEBUG\s*=\s*true|kernel\.debug\s*=\s*true|WP_DEBUG\s*,\s*true|ENVIRONMENT\s*=\s*[\'\"]development[\'\"]
+WHEN EXPR MISSING:release|production
+REPORT AS area_of_interest
+REASON Detects framework/application debug mode enabled in deployable configuration.
+TRACE Externalized rule logic for Codeigniter Debug Mode Enabled.

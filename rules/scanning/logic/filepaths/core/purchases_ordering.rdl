@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT (?i)(purchase|order|cart)
+WHEN EXPR PRESENT:(?i)(/|\\\\).*(purchase|order|cart|checkout) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/)
+REPORT AS area_of_interest
+REASON Detects file paths related to purchasing or ordering functionality.

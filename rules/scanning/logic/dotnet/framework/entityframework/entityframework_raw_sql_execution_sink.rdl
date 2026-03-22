@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT FromSqlRaw\(|ExecuteSqlRaw\(|SqlQueryRaw\(
+WHEN EXPR MISSING:FromSqlInterpolated|SqlParameter|parameterized|\?\s*,|\{[0-9]\}.*params
+REPORT AS area_of_interest
+REASON Detects raw SQL execution APIs in EF/.NET code.
+TRACE Externalized rule logic for Entityframework Raw SQL Execution Sink.

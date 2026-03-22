@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)execute\s(\@|\()
+WHEN EXPR PRESENT:(Request\.|QueryString|Form|userInput|args) && MISSING:(allowlist|whitelist|argument escaping|ProcessStartInfo)
+REPORT AS area_of_interest
+REASON Detects the usage of command execution methods that can introduce security vulnerabilities.
+TRACE Externalized rule logic for Unsafe Method: Command Execution.

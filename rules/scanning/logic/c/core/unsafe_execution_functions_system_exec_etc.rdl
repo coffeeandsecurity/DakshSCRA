@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT ^\s*(?:int|void|char|size_t|auto)?\s*\*?\s*\w+\s*=\s*\b(system|exec|popen|execl)\s*\(.*\)
+WHEN EXPR MISSING:validate|sanitize|allowlist|whitelist|escapeShellArg
+REPORT AS area_of_interest
+REASON Detects unsafe usage of execution functions that may lead to command injection vulnerabilities.
+TRACE Externalized rule logic for Unsafe Execution Functions: system(), exec(), etc..

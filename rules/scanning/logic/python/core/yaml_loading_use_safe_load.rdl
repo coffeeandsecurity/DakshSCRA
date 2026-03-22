@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT yaml\.load\((?!.*Loader=yaml\.FullLoader)(.*?)\)
+WHEN EXPR MISSING:yaml\.safe_load|Loader=yaml\.SafeLoader
+REPORT AS area_of_interest
+REASON Detects the usage of yaml.load without specifying the Loader as yaml.FullLoader, which may lead to potential security risks.
+TRACE Externalized rule logic for YAML Loading: Use safe_load.

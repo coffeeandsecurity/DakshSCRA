@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT LockoutOnFailure\s*=\s*false|LockoutEnabled\s*=\s*false
+WHEN EXPR PRESENT:AllowedForNewUsers\s*=\s*false|MaxFailedAccessAttempts\s*=\s*0|LockoutEnabled\s*=\s*false && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects ASP.NET Core Identity configurations with account lockout disabled.
+TRACE Externalized rule logic for Account Lockout Disabled.

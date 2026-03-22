@@ -2,7 +2,7 @@
     <rule>
         <name>Authentication</name>
         <regex><![CDATA[(?i)(Login|Signin|Authentication|Authenticated|Oauth|JWT)]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)(Login|Signin|Authentication|Authenticated|Oauth|JWT)][IF(PRESENT:(?i)(/|\\\\).*(auth|login|signin|oauth|jwt) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/authentication.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -19,7 +19,7 @@
     <rule>
         <name>Authorization</name>
         <regex><![CDATA[(?i)(authorization|authz|access_control)]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)(authorization|authz|access_control)][IF(PRESENT:(?i)(/|\\\\).*(authz|authorization|access|permission|policy) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/authorization.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -36,7 +36,7 @@
     <rule>
         <name>Session Management</name>
         <regex><![CDATA[(?i)(session|cookie|token)]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)(session|cookie|token)][IF(PRESENT:(?i)(/|\\\\).*(session|cookie|token) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/|example|sample|dummy|test|placeholder))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/session_management.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -53,7 +53,7 @@
     <rule>
         <name>Permission Management or Handling</name>
         <regex><![CDATA[(?i)Permission]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)Permission][IF(PRESENT:(?i)(/|\\\\).*(permission|policy|acl|rbac))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/permission_management_or_handling.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -70,7 +70,7 @@
     <rule>
         <name>Multi-Factor Validation</name>
         <regex><![CDATA[(?i)(mfa|multi_factor|2fa|otp)]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)(mfa|multi_factor|2fa|otp)][IF(PRESENT:(?i)(/|\\\\).*(mfa|2fa|otp|auth))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/multi_factor_validation.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -87,7 +87,7 @@
     <rule>
         <name>Admin Section</name>
         <regex><![CDATA[(?i)(Admin|Administrator)]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)(Admin|Administrator)][IF(PRESENT:(?i)(/|\\\\).*(admin|administrator) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/admin_section.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -104,7 +104,7 @@
     <rule>
         <name>User Section</name>
         <regex><![CDATA[(?i)(user)]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)\buser\b][IF(PRESENT:(?i)(/|\\\\).*(user|users|profile|account) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/user_section.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -121,7 +121,7 @@
     <rule>
         <name>Password Related Functionality</name>
         <regex><![CDATA[(?i)(Password|password|pwd|passwd|credential|forgotpassword)]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)(Password|password|pwd|passwd|credential|forgotpassword)][IF(PRESENT:(?i)(/|\\\\).*(password|credential|auth|secret) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/|example|sample|dummy|test|placeholder))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/password_related_functionality.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -138,7 +138,7 @@
     <rule>
         <name>Sensitive Data Handling</name>
         <regex><![CDATA[(?i)(sensitive|secret|private_key)]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)(sensitive|secret|private_key)][IF(PRESENT:(?i)(/|\\\\).*(secret|key|vault|credential|token) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/|example|sample|dummy|test|placeholder))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/sensitive_data_handling.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -155,7 +155,7 @@
     <rule>
         <name>Security Functionality</name>
         <regex><![CDATA[(?i)security]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)security][IF(PRESENT:(?i)(/|\\\\).*(security|auth|policy|hardening) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/security_functionality.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -172,7 +172,7 @@
     <rule>
         <name>Input Validation</name>
         <regex><![CDATA[(?i)(validation|sanitize|input)]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)(validation|sanitize|input)][IF(PRESENT:(?i)(/|\\\\).*(validation|validator|sanitize|input) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/input_validation.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -189,7 +189,7 @@
     <rule>
         <name>API</name>
         <regex><![CDATA[(?i)(api)]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)\bapi\b][IF(PRESENT:(?i)(/|\\\\).*(api|endpoint|route|controller|handler) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/api.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -206,7 +206,7 @@
     <rule>
         <name>Libraries | Extensions | Plugins</name>
         <regex><![CDATA[(?i)(Libraries|Extension|Plugin)]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)(Libraries|Extension|Plugin)][IF(PRESENT:(?i)(/|\\\\).*(lib|libs|extension|plugin|addons?))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/libraries_extensions_plugins.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -223,7 +223,7 @@
     <rule>
         <name>Monkey Patched Code Files</name>
         <regex><![CDATA[(?i)(?:monkey_patch|patched_code|custom_patch)]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)(?:monkey_patch|patched_code|custom_patch)][IF(MISSING:(?i)(/tests?/|/fixtures?/|/mocks?/))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/monkey_patched_code_files.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -240,7 +240,7 @@
     <rule>
         <name>CAPTCHA</name>
         <regex><![CDATA[(?i)(CAPTCHA)]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)(CAPTCHA)][IF(PRESENT:(?i)(/|\\\\).*(captcha|recaptcha|anti-bot))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/captcha.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -257,7 +257,7 @@
     <rule>
         <name>File Upload</name>
         <regex><![CDATA[(?i)Upload]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)Upload][IF(PRESENT:(?i)(/|\\\\).*(upload|uploader|attachments?|files?) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/file_upload.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -274,7 +274,7 @@
     <rule>
         <name>Payment Functionality</name>
         <regex><![CDATA[(?i)(payment|pay)]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)(payment|pay)][IF(PRESENT:(?i)(/|\\\\).*(payment|billing|checkout|invoice|transaction) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/payment_functionality.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -291,7 +291,7 @@
     <rule>
         <name>Purchases | Ordering</name>
         <regex><![CDATA[(?i)(purchase|order|cart)]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)(purchase|order|cart)][IF(PRESENT:(?i)(/|\\\\).*(purchase|order|cart|checkout) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/purchases_ordering.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -308,7 +308,7 @@
     <rule>
         <name>Models</name>
         <regex><![CDATA[(?i)\/(Models)\/]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)/(Models)/][IF(PRESENT:(?i)(/|\\\\).*(models?|entities?))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/models.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -325,7 +325,7 @@
     <rule>
         <name>Views</name>
         <regex><![CDATA[(?i)\/(Views|View)\/]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)/(Views|View)/][IF(PRESENT:(?i)(/|\\\\).*(views?|templates?))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/views.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -342,7 +342,7 @@
     <rule>
         <name>ViewModel</name>
         <regex><![CDATA[(?i)\/(ViewModel)\/]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)/(ViewModel)/][IF(PRESENT:(?i)(/|\\\\).*(viewmodel|presenter))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/viewmodel.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -359,7 +359,7 @@
     <rule>
         <name>Controllers</name>
         <regex><![CDATA[(?i)\/(Controllers|Controller)\/]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)/(Controllers|Controller)/][IF(PRESENT:(?i)(/|\\\\).*(controllers?|handlers?|routes?))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/controllers.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -376,7 +376,7 @@
     <rule>
         <name>Presenter</name>
         <regex><![CDATA[(?i)\/(Presenter)\/]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)/(Presenter)/][IF(PRESENT:(?i)(/|\\\\).*(presenter|presentation))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/presenter.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -393,7 +393,7 @@
     <rule>
         <name>Logging</name>
         <regex><![CDATA[(?i)(log|logging|logger)]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)(log|logging|logger)][IF(PRESENT:(?i)(/|\\\\).*(log|logging|logger|audit) && MISSING:(?i)(blog|blogging|/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/logging.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -411,7 +411,7 @@
     <rule>
         <name>Exception Handling</name>
         <regex><![CDATA[(?i)(exception|error_handling)]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)(exception|error_handling)][IF(PRESENT:(?i)(/|\\\\).*(exception|errors?|handling|fault))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/exception_handling.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -428,7 +428,7 @@
     <rule>
         <name>Database Interaction</name>
         <regex><![CDATA[(?i)(database|db|sql)]]></regex>
-        <rdl><![CDATA[[FLAG:(?i)(database|db|sql)][IF(PRESENT:(?i)(/|\\\\).*(db|database|sql|repository|dao|migration) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/))]]]></rdl>
+        <rdl_ref>logic/filepaths/core/database_interaction.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>

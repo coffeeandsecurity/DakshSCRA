@@ -1,0 +1,7 @@
+VERSION 1
+WHEN FILE_NAME_IS AndroidManifest.xml
+WHEN CURRENT_FILE_MATCHES /android:usesCleartextTraffic\s*=\s*"(true|TRUE)"/i
+OBSERVE PROJECT_HAS_GLOB **/network_security_config*.xml AS network_security_configs
+REPORT AS area_of_interest
+REASON Cleartext traffic is enabled in the manifest and should be reviewed together with any network security configuration files.
+TRACE Mobile RDL pilot checked the manifest hit and also looked for project-level network security configuration artifacts.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT badCertificateCallback\s*=|onBadCertificate\s*=
+WHEN EXPR MISSING:test|development|localhost|staging|// intentional|badCertificateCallback.*throw
+REPORT AS area_of_interest
+REASON Detects custom HTTP client callbacks that may bypass certificate validation.
+TRACE Externalized mobile rule logic for Ignoring TLS Certificate Errors.

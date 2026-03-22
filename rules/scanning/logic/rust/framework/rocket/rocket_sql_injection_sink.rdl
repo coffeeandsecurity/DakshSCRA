@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT format!\(\s*"\s*SELECT|format!\(\s*"\s*INSERT|sql_query\(\s*format!
+WHEN EXPR MISSING:query!\s*\(|sqlx::query!|prepare\s*\(|bind\s*\(|QueryBuilder|params && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects likely formatted SQL query construction.
+TRACE Externalized rule logic for Rocket SQL Injection Sink.

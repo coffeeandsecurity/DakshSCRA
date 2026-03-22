@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)(CSRF|XSS|SQLi)
+WHEN EXPR PRESENT:(?i)(ToLower|ToUpper) && MISSING:(?i)(sanitize|escape|encode|prepared|parameterized)
+REPORT AS area_of_interest
+REASON Detects standard mitigation techniques for CSRF, XSS, and SQL injection vulnerabilities.
+TRACE Externalized rule logic for Miscellaneous Webapp Mitigations: CSRF, XSS, SQL Injection.

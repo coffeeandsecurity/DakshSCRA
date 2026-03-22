@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT CFLAGS\s*=.*\b(-fno-stack-protector|-z execstack)\b
+WHEN EXPR PRESENT:-fno-stack-protector|-D_FORTIFY_SOURCE=0|-z\s+execstack|--no-pie|-fno-pie|-fno-aslr
+REPORT AS area_of_interest
+REASON Detects insecure compiler flags that disable security protections.
+TRACE Externalized rule logic for Insecure Compiler Flags.

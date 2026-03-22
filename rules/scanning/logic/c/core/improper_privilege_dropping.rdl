@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT ^[^*/]*(setuid|setgid|initgroups)\s*\(\s*[^)]+\s*\)\s*[^/]*$
+WHEN EXPR MISSING:if\s*\(|==\s*-1|!=\s*0|perror|strerror|errno
+REPORT AS area_of_interest
+REASON Detects the usage of privilege management functions that need proper ordering for secure operation.
+TRACE Externalized rule logic for Improper Privilege Dropping.

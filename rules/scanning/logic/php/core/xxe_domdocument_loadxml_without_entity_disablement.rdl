@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \$dom\s*=\s*new\s+DOMDocument|simplexml_load_string\s*\(|simplexml_load_file\s*\(
+WHEN EXPR MISSING:LIBXML_NOENT\s*=\s*0|libxml_disable_entity_loader\s*\(\s*true\s*\)|LIBXML_DTDLOAD
+REPORT AS area_of_interest
+REASON Detects PHP XML parsing functions that may be vulnerable to XXE attacks.
+TRACE Externalized rule logic for XXE: DOMDocument loadXML Without Entity Disablement.

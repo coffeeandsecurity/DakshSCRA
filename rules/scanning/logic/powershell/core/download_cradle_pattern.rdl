@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?:IEX|Invoke-Expression)\s*\(\s*(?:New-Object\s+Net\.WebClient|Invoke-WebRequest|iwr|curl|wget)\s*[^)]*\)
+WHEN EXPR MISSING:test|CI|pipeline|AllowList|InternalSource|development|example|-WhatIf
+REPORT AS area_of_interest
+REASON Detects download-and-execute cradle patterns commonly used in living-off-the-land attacks.
+TRACE Externalized rule logic for Download Cradle Pattern.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT resource\s+"aws_cloudtrail"[^}]*enable_logging\s*=\s*false
+WHEN EXPR PRESENT:enable_logging\s*=\s*false|is_logging\s*=\s*false|enabled\s*=\s*false && MISSING:# intentional|# cost|# development
+REPORT AS area_of_interest
+REASON Detects CloudTrail configurations with logging explicitly disabled.
+TRACE Externalized rule logic for CloudTrail Logging Disabled.

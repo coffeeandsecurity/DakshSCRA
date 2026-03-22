@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)(XmlDocument\.Load|XmlDocument\.LoadXml|XmlTextReader\.Create|XmlReader\.Create|XmlSerializer\.Deserialize|XDocument\.Load|XDocument\.Parse|XElement\.Load|XElement\.Parse|XPathDocument\.Create|XPathDocument\.Load|XPathDocument\.LoadXml|XPathNavigator\.Create|XPathNavigator\.Load|XPathNavigator\.LoadXml|XslCompiledTransform\.Load|XslCompiledTransform\.LoadXml|XslTransform\.Load|XslTransform\.LoadXml|XmlSchema\.Read|XmlSchemaSet\.Add|XmlSchemaSet\.Read)
+WHEN EXPR MISSING:(DtdProcessing\s*=\s*Prohibit|XmlResolver\s*=\s*null|MaxCharactersFromEntities|ProhibitDtd\s*=\s*true)
+REPORT AS area_of_interest
+REASON Detects the usage of XML processing methods in .NET that can introduce XML External Entity (XXE) vulnerabilities.
+TRACE Externalized rule logic for Untrusted Input Handling in XML Query.

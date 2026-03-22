@@ -2,8 +2,8 @@
     <category name="Framework-Specific Issues - GORM">
         <rule>
             <name>Raw SQL via Raw() with String Concatenation</name>
-            <regex><![CDATA[\.Raw\s*\(\s*["'][^"']*["']\s*\+|\.Raw\s*\(\s*fmt\.Sprintf\s*\(["'][^"']*%[sv]]]></regex>
-            <rdl><![CDATA[[FLAG:\.Raw\s*\(\s*["'][^"']*["']\s*\+|\.Raw\s*\(\s*fmt\.Sprintf\s*\(["'][^"']*%[sv]][IF(MISSING:\.Raw\s*\(\s*"[^"]*\?|\.Raw\s*\(\s*"[^"]*@|db\.Where\s*\(\s*"[^"]*\?|gorm\.Expr)]]]></rdl>
+            <regex>\.Raw\s*\(\s*["'][^"']*["']\s*\+|\.Raw\s*\(\s*fmt\.Sprintf\s*\(["'][^"']*%[sv]</regex>
+            <rdl_ref>logic/golang/framework/gorm/raw_sql_via_raw_with_string_concatenation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>Unparameterized Where() Clause</name>
-            <regex><![CDATA[\.Where\s*\(\s*["'][^"']*["']\s*\+|\.Where\s*\(\s*fmt\.Sprintf\s*\(["'][^"']*%[sv]]]></regex>
-            <rdl><![CDATA[[FLAG:\.Where\s*\(\s*["'][^"']*["']\s*\+|\.Where\s*\(\s*fmt\.Sprintf\s*\(["'][^"']*%[sv]][IF(MISSING:\.Where\s*\(\s*"[^"]*\?|\.Where\s*\(\s*&\w+|\.Where\s*\(\s*map\[|db\.Model)]]]></rdl>
+            <regex>\.Where\s*\(\s*["'][^"']*["']\s*\+|\.Where\s*\(\s*fmt\.Sprintf\s*\(["'][^"']*%[sv]</regex>
+            <rdl_ref>logic/golang/framework/gorm/unparameterized_where_clause.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>Exec() with Unparameterized SQL</name>
-            <regex><![CDATA[\.Exec\s*\(\s*["'][^"']*["']\s*\+|\.Exec\s*\(\s*fmt\.Sprintf\s*\(["'][^"']*%[sv]]]></regex>
-            <rdl><![CDATA[[FLAG:\.Exec\s*\(\s*["'][^"']*["']\s*\+|\.Exec\s*\(\s*fmt\.Sprintf\s*\(["'][^"']*%[sv]][IF(MISSING:\.Exec\s*\(\s*"[^"]*\?|\.Exec\s*\(\s*"[^"]*@|PreparedStatement|parameterized)]]]></rdl>
+            <regex>\.Exec\s*\(\s*["'][^"']*["']\s*\+|\.Exec\s*\(\s*fmt\.Sprintf\s*\(["'][^"']*%[sv]</regex>
+            <rdl_ref>logic/golang/framework/gorm/exec_with_unparameterized_sql.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT Runtime\.exec\(".*"\)
+WHEN EXPR MISSING:validate|sanitize|allowlist|ProcessBuilder\s*\(listOf
+REPORT AS area_of_interest
+REASON Detects insecure usage of the Runtime.exec() method for executing shell commands.
+TRACE Externalized rule logic for Insecure Method Call: Runtime.exec().

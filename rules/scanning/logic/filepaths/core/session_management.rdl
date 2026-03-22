@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT (?i)(session|cookie|token)
+WHEN EXPR PRESENT:(?i)(/|\\\\).*(session|cookie|token) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/|example|sample|dummy|test|placeholder)
+REPORT AS area_of_interest
+REASON Detects file paths related to session management functionality.

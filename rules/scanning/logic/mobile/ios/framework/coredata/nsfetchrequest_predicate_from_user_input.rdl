@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT NSPredicate\s*\(\s*format\s*:\s*["'][^"']*%@
+WHEN EXPR MISSING:argumentArray|CVarArg|predicateWithValue
+REPORT AS area_of_interest
+REASON Detects NSPredicate format strings that interpolate values without using the argument array pattern.
+TRACE Externalized mobile rule logic for NSFetchRequest Predicate from User Input.

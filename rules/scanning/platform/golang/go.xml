@@ -1,10 +1,9 @@
 <root>
     <category name="Untrusted Input Handling or Injection Flaws">
-        <!-- Rule to detect untrusted inputs from HTTP requests -->
         <rule>
             <name>Untrusted Inputs: HTTP Request Parameters</name>
-            <regex><![CDATA[http\.Request|http\.RequestForm|http\.FormValue]]></regex>
-            <rdl><![CDATA[[FLAG:http\.Request|http\.RequestForm|http\.FormValue][IF(MISSING:Validate|validate|sanitize|regexp\.MustCompile|strconv\.Atoi|strconv\.ParseInt|json\.Unmarshal)]]]></rdl>
+            <regex>http\.Request|http\.RequestForm|http\.FormValue</regex>
+            <rdl_ref>logic/golang/core/untrusted_inputs_http_request_parameters.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -18,11 +17,10 @@
             <developer>Validate and sanitize user input received from HTTP requests before using it in any sensitive operations. Implement strong input validation, ensuring that only expected and sanitized values are accepted from request parameters. Additionally, developers should be cautious about the potential risks associated with using user-supplied data and follow secure coding practices.</developer>
             <reviewer>Ensure that proper input handling is in place for HTTP request parameters. Verify that developers have implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-        <!-- Rule to detect untrusted inputs from user-defined structures -->
         <rule>
             <name>Untrusted Inputs: User-Defined Structures</name>
             <regex>struct</regex>
-            <rdl><![CDATA[[FLAG:struct][IF(PRESENT:r\.FormValue|r\.URL\.Query|json\.Unmarshal|c\.Bind|c\.ShouldBind && MISSING:validate|Validate|binding:|required:)]]]></rdl>
+            <rdl_ref>logic/golang/core/untrusted_inputs_user_defined_structures.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -38,11 +36,10 @@
         </rule>
     </category>
     <category name="Command Injection">
-        <!-- Rule to detect command injection vulnerabilities -->
         <rule>
             <name>Command Injection: exec, os/exec</name>
-            <regex><![CDATA[os/exec\.Command|exec\.(Command|CommandContext)]]></regex>
-            <rdl><![CDATA[[FLAG:os/exec\.Command|exec\.(Command|CommandContext)][IF(MISSING:validate|sanitize|allowlist|filepath\.EvalSymlinks)]]]></rdl>
+            <regex>os/exec\.Command|exec\.(Command|CommandContext)</regex>
+            <rdl_ref>logic/golang/core/command_injection_exec_os_exec.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -56,14 +53,12 @@
             <developer>Avoid executing shell commands with user-supplied input whenever possible. If necessary, it is crucial to employ strict input validation, input sanitization, and command parameterization techniques to prevent command injection attacks.</developer>
             <reviewer>Check for the secure usage of shell-executing functions and assess if user input is properly validated, sanitized, and appropriately used as command parameters. Ensure that developers have implemented strong input validation measures, command parameterization techniques, and proper context-aware security controls to mitigate command injection vulnerabilities. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
-        <!-- Add more rules for other sources of command execution if applicable -->
     </category>
     <category name="Arbitrary Code Execution">
-        <!-- Rule to detect arbitrary code execution vulnerabilities -->
         <rule>
             <name>Arbitrary Code Execution: unsafe, go:generate</name>
-            <regex><![CDATA[unsafe\.|go:generate]]></regex>
-            <rdl><![CDATA[[FLAG:unsafe\.|go:generate][IF(MISSING:// #nosec|gosec:disable|SECURITY_REVIEW)]]]></rdl>
+            <regex>unsafe\.|go:generate</regex>
+            <rdl_ref>logic/golang/core/arbitrary_code_execution_unsafe_go_generate.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -79,11 +74,10 @@
         </rule>
     </category>
     <category name="Effective/Standard Mitigations Implemented">
-        <!-- Rule to detect usage of html.EscapeString function for XSS mitigation -->
         <rule>
             <name>Mitigation Identified: XSS</name>
-            <regex>html.EscapeString</regex>
-            <rdl><![CDATA[[FLAG:html.EscapeString][IF(PRESENT:htmlspecialchars|htmlentities|strip_tags|esc_html|h\s*\( && MISSING:test|example)]]]></rdl>
+            <regex>html\.EscapeString|template\.HTMLEscapeString|bluemonday\.\w+</regex>
+            <rdl_ref>logic/golang/core/mitigation_identified_xss.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -92,10 +86,10 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>green</highlight_color>
             </scan_config>
-            <rule_desc>Detects the presence of XSS mitigation using html.EscapeString function.</rule_desc>
-            <vuln_desc>This rule checks if the "html.EscapeString" function is utilized as a recommended mitigation technique against Cross-Site Scripting (XSS) vulnerabilities. XSS vulnerabilities arise when untrusted data is displayed on a web page without proper sanitization, enabling attackers to inject malicious scripts. By employing the "html.EscapeString" function, special characters are encoded to prevent script execution.</vuln_desc>
-            <developer>The implementation of the "html. EscapeString" function is thorough and consistent across the application to effectively mitigate XSS vulnerabilities. Verify that all user-supplied data displayed in HTML context undergoes proper sanitization using this function to encode special characters and thwart script injection attempts.</developer>
-            <reviewer>The "html. EscapeString" function is adequately implemented and consistently applied throughout the application to mitigate XSS vulnerabilities. Assess its usage on user-supplied data displayed in HTML context, and evaluate the effectiveness of this mitigation approach in preventing script injection attacks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+            <rule_desc>Detects Go-specific XSS mitigation helpers such as html.EscapeString, template.HTMLEscapeString, or bluemonday sanitization.</rule_desc>
+            <vuln_desc>This rule checks whether Go code applies common XSS mitigation helpers before rendering untrusted data into HTML contexts. Cross-Site Scripting (XSS) vulnerabilities arise when attacker-controlled content is rendered without proper encoding or sanitization. Functions such as html.EscapeString, template.HTMLEscapeString, and bluemonday sanitizers are typical defensive signals.</vuln_desc>
+            <developer>Verify that untrusted data rendered into HTML is consistently escaped or sanitized with Go-appropriate helpers, and confirm the chosen helper matches the output context instead of relying on ad hoc string replacement.</developer>
+            <reviewer>Assess whether Go-specific output encoding or sanitization is applied consistently before user-controlled data reaches HTML output. Confirm the defense is appropriate for the rendering context and that reachable paths do not bypass it. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
 </root>

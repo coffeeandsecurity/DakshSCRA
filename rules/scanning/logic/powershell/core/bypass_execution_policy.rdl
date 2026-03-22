@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)-ExecutionPolicy\s+(?:Bypass|Unrestricted)|Set-ExecutionPolicy\s+(?:Bypass|Unrestricted)
+WHEN EXPR PRESENT:-ExecutionPolicy\s+Bypass|Set-ExecutionPolicy\s+Bypass|executionpolicy.*bypass && MISSING:test|CI|pipeline|development|example
+REPORT AS area_of_interest
+REASON Detects PowerShell execution policy bypass or unrestricted policy settings.
+TRACE Externalized rule logic for Bypass Execution Policy.

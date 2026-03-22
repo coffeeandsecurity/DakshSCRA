@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT \bFlutterSecureStorage\s*\(|\bconst\s+FlutterSecureStorage\b
+REPORT AS area_of_interest
+REASON Detects FlutterSecureStorage instantiation that may sync data to iCloud by default on iOS.
+TRACE Externalized mobile rule logic for FlutterSecureStorage Without iCloud Sync Disabled.

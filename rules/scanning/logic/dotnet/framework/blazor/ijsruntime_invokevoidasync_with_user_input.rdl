@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT InvokeVoidAsync\s*\(\s*["']\s*eval\s*["']|InvokeVoidAsync\s*\(\s*["']\s*Function\s*["']
+WHEN EXPR MISSING:validate|sanitize|allowlist|trusted|HtmlEncoder|WebUtility\.HtmlEncode && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects IJSRuntime JavaScript invocations calling eval or Function constructor.
+TRACE Externalized rule logic for IJSRuntime InvokeVoidAsync with User Input.

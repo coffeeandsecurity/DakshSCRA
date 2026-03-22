@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \[EnableCors\s*\(\s*\"AllowSpecificOrigins\"\s*\)\]
+WHEN EXPR PRESENT:AllowAnyOrigin\s*\(\s*\)|WithOrigins\s*\(\s*"\*"|Access-Control-Allow-Origin.*\* && MISSING:WithOrigins\s*\(\s*"https?://[^*]|AllowCredentials|SetIsOriginAllowed
+REPORT AS area_of_interest
+REASON Detects the usage of specific origin-based CORS configuration.
+TRACE Externalized rule logic for CORS Mitigation: Allow Specific Origins.

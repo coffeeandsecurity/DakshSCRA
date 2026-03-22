@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT ^RUN\s+(?:apt-get\s+install|yum\s+install|apk\s+add|dnf\s+install)
+WHEN EXPR MISSING:rm\s+-rf|clean\s+all|--no-cache
+REPORT AS area_of_interest
+REASON Detects package installation without clearing the package manager cache in the same layer.
+TRACE Externalized rule logic for Package Manager Cache Not Cleared.

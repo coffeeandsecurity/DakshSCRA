@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT addLogger\s*\(\s*StdOutSqlLogger\s*\)|addLogger\s*\(\s*Slf4jSqlDebugLogger\s*\)
+WHEN EXPR MISSING:if.*debug|DEBUG|isDevelopment|isTest|\.debug
+REPORT AS area_of_interest
+REASON Detects Kotlin Exposed SQL loggers enabled without debug/development build gating.
+TRACE Externalized rule logic for addLogger in Production Code Path.

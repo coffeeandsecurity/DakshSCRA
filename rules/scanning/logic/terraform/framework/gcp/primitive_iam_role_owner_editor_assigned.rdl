@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT role\s*=\s*"roles/(?:owner|editor)"
+WHEN EXPR PRESENT:roles/owner|roles/editor && MISSING:# intentional|# required|# break-glass|condition\s*\{
+REPORT AS area_of_interest
+REASON Detects assignment of primitive IAM roles (Owner or Editor) that grant broad permissions.
+TRACE Externalized rule logic for Primitive IAM Role (Owner/Editor) Assigned.

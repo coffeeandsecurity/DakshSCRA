@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bcreate_function\(\s*
+WHEN EXPR MISSING:anonymous\s+function|fn\s*\(|Closure && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects usage of the deprecated and potentially insecure create_function() method.
+TRACE Externalized rule logic for Deprecated create_function() Usage.

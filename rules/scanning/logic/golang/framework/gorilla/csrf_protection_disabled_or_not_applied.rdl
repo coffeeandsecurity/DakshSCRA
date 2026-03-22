@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT csrf\.Protect\s*\([^)]*Secure\s*:\s*false
+WHEN EXPR MISSING:csrf\.Protect\s*\(.*Secure:\s*true|SameSite:\s*csrf\.SameSiteStrictMode|csrf\.Protect\s*\(.*HttpOnly:\s*true
+REPORT AS area_of_interest
+REASON Detects Gorilla CSRF middleware configured with weakened security options.
+TRACE Externalized rule logic for CSRF Protection Disabled or Not Applied.

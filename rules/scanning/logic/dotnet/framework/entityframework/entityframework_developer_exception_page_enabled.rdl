@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT UseDeveloperExceptionPage\(\)
+WHEN EXPR MISSING:app\.Environment\.IsProduction\(\)|ASPNETCORE_ENVIRONMENT.*Production|IsDevelopment\(\).*false && PRESENT:UseDeveloperExceptionPage\s*\(\s*\)
+REPORT AS area_of_interest
+REASON Detects developer exception middleware usage.
+TRACE Externalized rule logic for Entityframework Developer Exception Page Enabled.

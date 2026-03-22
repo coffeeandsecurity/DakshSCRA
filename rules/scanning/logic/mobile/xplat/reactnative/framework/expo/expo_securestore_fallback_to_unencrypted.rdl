@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT SecureStore\.setItemAsync|SecureStore\.getItemAsync
+WHEN EXPR MISSING:keychainAccessible|keychainService|requireAuthentication
+REPORT AS area_of_interest
+REASON Detects Expo SecureStore usage without explicit accessibility and authentication options.
+TRACE Externalized mobile rule logic for Expo SecureStore Fallback to Unencrypted.

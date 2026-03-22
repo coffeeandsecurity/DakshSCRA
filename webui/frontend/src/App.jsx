@@ -196,6 +196,38 @@ export default function App() {
     }
   }
 
+  async function handleOpenProject(project) {
+    setSelectedProject(project.project_key)
+    setSection('scans')
+    setError('')
+    setSelected(null)
+    setSelectedDetail(null)
+    setSelectedArtifacts(null)
+    setSelectedLog('')
+
+    if (!project.latest_run_uuid) {
+      return
+    }
+
+    try {
+      const [detail, artifacts, logRes] = await Promise.all([
+        getScan(project.latest_run_uuid),
+        getScanArtifacts(project.latest_run_uuid),
+        getScanLog(project.latest_run_uuid),
+      ])
+      setSelected(detail)
+      setSelectedDetail(detail)
+      setSelectedArtifacts(artifacts)
+      setSelectedLog(logRes.log_tail || '')
+    } catch (e) {
+      setSelected(null)
+      setSelectedDetail(null)
+      setSelectedArtifacts(null)
+      setSelectedLog('')
+      addToast(`Failed to open latest scan for ${project.project_name}: ${e.message}`, 'error', 'Open Project Failed')
+    }
+  }
+
   /* ── Navigation handler (from child components) ── */
   function handleNavigate(dest, run = null) {
     setSection(dest)
@@ -253,6 +285,24 @@ export default function App() {
     help: 'Help & Documentation',
   }
 
+  const showingScanWorkspace = section === 'scans' && !!selectedDetail?.run_uuid
+
+  function handleNewScan() {
+    setSection('scans')
+    setSelected(null)
+    setSelectedDetail(null)
+    setSelectedArtifacts(null)
+    setSelectedLog('')
+    setError('')
+  }
+
+  function handleBackToScans() {
+    setSelected(null)
+    setSelectedDetail(null)
+    setSelectedArtifacts(null)
+    setSelectedLog('')
+  }
+
   return (
     <div className="app-shell">
       {/* Sidebar */}
@@ -273,14 +323,31 @@ export default function App() {
           </div>
           <div className="topbar-right">
             {section === 'projects' && (
-              <button className="btn btn-ghost btn-sm" onClick={() => setSection('scans')}>
-                View Scans →
-              </button>
+              <>
+                <button className="btn btn-primary btn-sm" onClick={handleNewScan}>
+                  + New Scan
+                </button>
+                <button className="btn btn-ghost btn-sm" onClick={() => setSection('scans')}>
+                  View Scans
+                </button>
+              </>
             )}
             {section === 'scans' && selectedProject && (
-              <span className="text-sm text-muted">
-                Project: <strong>{projects.find((p) => p.project_key === selectedProject)?.project_name || selectedProject}</strong>
-              </span>
+              <>
+                {showingScanWorkspace && (
+                  <button className="btn btn-ghost btn-sm" onClick={handleBackToScans}>
+                    View Scans
+                  </button>
+                )}
+                {showingScanWorkspace && (
+                  <button className="btn btn-ghost btn-sm" onClick={handleNewScan}>
+                    + New Scan
+                  </button>
+                )}
+                <span className="text-sm text-muted">
+                  Project: <strong>{projects.find((p) => p.project_key === selectedProject)?.project_name || selectedProject}</strong>
+                </span>
+              </>
             )}
           </div>
         </header>
@@ -304,6 +371,7 @@ export default function App() {
               projects={projects}
               runs={runs}
               onNavigate={handleNavigate}
+              onOpenProject={handleOpenProject}
               onDeleteProject={handleDeleteProject}
               versionInfo={versionInfo}
               latestRelease={latestRelease}
@@ -320,41 +388,53 @@ export default function App() {
                 setSelectedProject(key)
                 setSection('scans')
               }}
-              onNewScan={() => setSection('scans')}
+              onNewScan={handleNewScan}
               onDeleteProject={handleDeleteProject}
             />
           )}
 
           {/* ── Scans ── */}
           {section === 'scans' && (
-            <div className="scans-layout">
-              {/* Left: Form */}
-              <div>
-                <ScanForm
-                  values={form}
-                  setValues={setForm}
-                  creating={creating}
-                  onSubmit={submitScan}
-                  onBrowse={() => setBrowserOpen(true)}
-                />
-              </div>
-
-              {/* Right: Table + Detail */}
-              <div className="scans-right">
-                <ScanTable
-                  runs={runs}
-                  selected={selected}
-                  onSelect={(r) => {
-                    setSelected(r)
-                  }}
-                />
-                <ScanDetail
-                  run={selectedDetail}
-                  log={selectedLog}
-                  artifactIndex={selectedArtifacts}
-                  onStopped={refreshSelected}
-                />
-              </div>
+            <div className={`scans-layout ${showingScanWorkspace ? 'workspace' : 'setup'}`}>
+              {!showingScanWorkspace ? (
+                <>
+                  <div className="scans-side">
+                    <ScanForm
+                      values={form}
+                      setValues={setForm}
+                      creating={creating}
+                      onSubmit={submitScan}
+                      onBrowse={() => setBrowserOpen(true)}
+                    />
+                  </div>
+                  <div className="scans-main">
+                    <div className="scans-panel-head">
+                      <div>
+                        <div className="scans-panel-title">Recent Scans</div>
+                        <div className="scans-panel-copy">Browse current and saved runs, then open one into the workspace.</div>
+                      </div>
+                    </div>
+                    <ScanTable
+                      runs={runs}
+                      selected={selected}
+                      onSelect={(r) => {
+                        setSelected(r)
+                      }}
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="scans-main scans-main-detail scans-main-detail-full">
+                    <ScanDetail
+                      run={selectedDetail}
+                      log={selectedLog}
+                      artifactIndex={selectedArtifacts}
+                      onStopped={refreshSelected}
+                    />
+                  </div>
+                </>
+              )}
             </div>
           )}
           {/* ── Settings ── */}

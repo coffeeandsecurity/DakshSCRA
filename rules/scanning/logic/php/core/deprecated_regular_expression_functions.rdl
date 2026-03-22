@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(ereg|eregi)\b
+WHEN EXPR MISSING:preg_match|preg_replace|preg_split && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects usage of deprecated regular expression functions that may lead to security issues.
+TRACE Externalized rule logic for Deprecated Regular Expression Functions.

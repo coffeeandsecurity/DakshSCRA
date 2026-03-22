@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT containers\s*:
+WHEN EXPR MISSING:resources\s*:|limits\s*:|requests\s*:
+REPORT AS area_of_interest
+REASON Detects container specifications missing resource limits and requests.
+TRACE Externalized rule logic for No Resource Limits Defined.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT kDebugMode|assert\(|debugShowCheckedModeBanner\s*:\s*true
+WHEN EXPR MISSING:kReleaseMode
+REPORT AS area_of_interest
+REASON Detects debug/development mode markers in Flutter apps.
+TRACE Externalized mobile rule logic for Flutter Debug Mode Marker.

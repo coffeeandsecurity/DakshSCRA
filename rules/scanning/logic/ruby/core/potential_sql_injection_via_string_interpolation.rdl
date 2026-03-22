@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(?:where|find_by_sql|execute|order|joins)\s*\(\s*["'][^"']*#\{
+WHEN EXPR MISSING:where\s*\(\s*"[^"]*\?|sanitize_sql_for_conditions|Arel
+REPORT AS area_of_interest
+REASON Detects SQL query construction using string interpolation in ActiveRecord or raw SQL calls.
+TRACE Externalized rule logic for Potential SQL Injection via String Interpolation.

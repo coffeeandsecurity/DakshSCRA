@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)(url|re_path)\s*\(\s*['"](\^|\^\/)([^'"]+)['"]
+WHEN EXPR MISSING:login_required|permission_required|LoginRequired|csrf_protect
+REPORT AS area_of_interest
+REASON Detects insecure URL configurations in Django's URL patterns.
+TRACE Externalized rule logic for Insecure URL Configuration.

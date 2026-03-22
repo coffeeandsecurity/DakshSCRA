@@ -135,26 +135,100 @@ function CodeEvidence({ evidence }) {
   )
 }
 
-/* ─── Single finding card ────────────────────────────────────── */
-function FindingCard({ finding, index, open, onToggle }) {
+function buildAnalyzerReviewIndex(analysis) {
+  const out = new Map()
+  for (const result of analysis?.results || []) {
+    for (const review of result?.security_inventory?.finding_reviews || []) {
+      const key = [
+        review.platform || result.platform || '',
+        review.rule_title || '',
+        review.rule_id || '',
+      ].join('::').toLowerCase()
+      out.set(key, review)
+    }
+  }
+  return out
+}
+
+/* ─── Single area-of-interest card ───────────────────────────── */
+function FindingCard({ finding, index, open, onToggle, review, onViewAnalysis }) {
   const level = confLevel(finding)
   const score = confScore(finding)
+  const showAnalysisLink = review?.status === 'confirmed_vulnerability' && onViewAnalysis
+  const logicEngine = finding.logic_engine || ''
+  const logicTrace = Array.isArray(finding.logic_trace) ? finding.logic_trace : []
+  const consultedFiles = Array.isArray(finding.logic_consulted_files) ? finding.logic_consulted_files : []
   return (
     <div className={`fr-card${open ? ' open' : ''}`} style={{ '--conf-color': confColor(level) }}>
       <button className="fr-card-header" onClick={onToggle}>
         <span className={confClass(level)}>{level}</span>
         {score > 0 && <span className="fr-score">{score}%</span>}
-        <span className="fr-card-title">{finding.rule_title || finding.rule_id || `Finding #${index + 1}`}</span>
+        <span className="fr-card-title">{finding.rule_title || finding.rule_id || `Area of Interest #${index + 1}`}</span>
         {finding.category && <span className="fr-category-chip">{finding.category}</span>}
         {finding.platform && <span className="fr-platform-chip">{finding.platform}</span>}
+        {logicEngine ? <span className="fr-platform-chip">{logicEngine.toUpperCase()}</span> : null}
+        {review?.status === 'confirmed_vulnerability' && <span className="fr-platform-chip">Confirmed Vulnerability</span>}
+        {showAnalysisLink ? (
+          <span
+            className="fr-platform-chip"
+            onClick={(e) => {
+              e.stopPropagation()
+              onViewAnalysis()
+            }}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                e.stopPropagation()
+                onViewAnalysis()
+              }
+            }}
+            style={{ cursor: 'pointer' }}
+            title="Open confirmed vulnerability analysis"
+          >
+            View Analysis
+          </span>
+        ) : null}
+        {review?.status === 'suppressed_false_positive' && <span className="fr-category-chip">Suppressed False Positive</span>}
+        {review?.status === 'manual_review_recommended' && <span className="fr-category-chip">Manual Inspection Recommended</span>}
         <span className="fr-card-caret">{open ? '▲' : '▼'}</span>
       </button>
 
       {open && (
         <div className="fr-card-body">
+          {review?.technical_rationale ? (
+            <div className="fr-note rev">
+              <div className="fr-note-label">Analyzer Review</div>
+              <div className="fr-note-text">{review.technical_rationale}</div>
+              {showAnalysisLink ? (
+                <div style={{ marginTop: 10 }}>
+                  <button className="btn btn-sm btn-secondary" onClick={onViewAnalysis}>
+                    View Vulnerability Analysis
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
           {finding.issue_desc && (
             <p className="fr-issue-desc">{finding.issue_desc}</p>
           )}
+
+          {(finding.logic_reason || logicTrace.length || consultedFiles.length) ? (
+            <div className="fr-note logic">
+              <div className="fr-note-label">Rule Logic{logicEngine ? ` (${logicEngine.toUpperCase()})` : ''}</div>
+              {finding.logic_reason ? <div className="fr-note-text">{finding.logic_reason}</div> : null}
+              {logicTrace.length ? (
+                <div className="fr-logic-list">
+                  {logicTrace.map((entry, idx) => <div key={idx} className="fr-note-text">{entry}</div>)}
+                </div>
+              ) : null}
+              {consultedFiles.length ? (
+                <div className="fr-note-text">Consulted files: {consultedFiles.join(', ')}</div>
+              ) : null}
+            </div>
+          ) : null}
 
           <CodeEvidence evidence={finding.evidence} />
 
@@ -203,7 +277,7 @@ function FileHeatmap({ findings }) {
         <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" style={{ color: 'var(--primary)' }}>
           <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
         </svg>
-        Top Files by Findings
+        Top Files by Areas of Interest
       </div>
       <div className="fr-heatmap">
         {fileMap.map(([file, count]) => {
@@ -235,7 +309,7 @@ function ScanMeta({ summary, scanMeta }) {
 
   const items = [
     { label: 'Total Files Scanned', value: sources.total_files_scanned ?? detection.total_files_scanned },
-    { label: 'Files with Findings', value: detection.files_with_aoi },
+    { label: 'Files with Areas of Interest', value: detection.files_with_aoi },
     { label: 'Rules Applied', value: detection.rules_applied },
     { label: 'Scan Duration', value: timeline.scan_completed_in },
     { label: 'Start Time', value: timeline.scan_start_time },
@@ -265,19 +339,19 @@ function EmptyFindings({ status }) {
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
       </svg>
       <div className="empty-title">
-        {isPending ? 'Scan in progress…' : 'No findings available'}
+        {isPending ? 'Scan in progress…' : 'No areas of interest available'}
       </div>
       <div className="empty-msg">
         {isPending
-          ? 'Findings will appear here once the scan completes.'
-          : 'This scan did not produce any findings, or the scan output was not found.'}
+          ? 'Areas of interest will appear here once the scan completes.'
+          : 'This scan did not produce any areas of interest, or the scan output was not found.'}
       </div>
     </div>
   )
 }
 
-/* ─── Main FindingsReport ────────────────────────────────────── */
-export default function FindingsReport({ data, status }) {
+/* ─── Main AreasOfInterestReport ─────────────────────────────── */
+export default function FindingsReport({ data, status, onViewAnalysis }) {
   const [search, setSearch] = useState('')
   const [filterLevel, setFilterLevel] = useState('all')
   const [filterCategory, setFilterCategory] = useState('all')
@@ -287,6 +361,7 @@ export default function FindingsReport({ data, status }) {
   const findings = data?.findings || []
   const summary = data?.summary
   const scanMeta = data?.scan_meta
+  const analyzerReviewIndex = useMemo(() => buildAnalyzerReviewIndex(data?.analysis), [data?.analysis])
 
   /* ── counts ── */
   const counts = useMemo(() => {
@@ -349,7 +424,7 @@ export default function FindingsReport({ data, status }) {
       {/* ── Stats Row ── */}
       <div className="fr-stats-row">
         <StatCard
-          label="Total Findings"
+          label="Total Areas of Interest"
           value={findings.length}
           color="var(--primary)"
           icon={
@@ -389,11 +464,14 @@ export default function FindingsReport({ data, status }) {
       {/* ── File heatmap ── */}
       <FileHeatmap findings={findings} />
 
-      {/* ── Findings header ── */}
+      {/* ── Areas of Interest header ── */}
       <div className="fr-findings-header">
-        <div className="fr-findings-title">
-          Findings
-          <span className="fr-findings-count">{filtered.length}{filtered.length !== findings.length ? ` / ${findings.length}` : ''}</span>
+        <div>
+          <div className="fr-findings-title">
+            Areas of Interest
+            <span className="fr-findings-count">{filtered.length}{filtered.length !== findings.length ? ` / ${findings.length}` : ''}</span>
+          </div>
+          <div className="fr-section-subcopy">Potential issues pending analyzer confirmation, false-positive suppression, or manual inspection where automatic analysis is not supported yet.</div>
         </div>
         <div className="fr-filter-row">
           {/* Search */}
@@ -403,7 +481,7 @@ export default function FindingsReport({ data, status }) {
             </svg>
             <input
               className="fr-search"
-              placeholder="Search findings…"
+              placeholder="Search areas of interest…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -430,10 +508,10 @@ export default function FindingsReport({ data, status }) {
         </div>
       </div>
 
-      {/* ── Findings list ── */}
+      {/* ── Areas of Interest list ── */}
       {filtered.length === 0 ? (
         <div className="empty-state" style={{ padding: '30px 20px' }}>
-          <div className="empty-title">No matching findings</div>
+          <div className="empty-title">No matching areas of interest</div>
           <div className="empty-msg">Try adjusting your search or filters.</div>
         </div>
       ) : (
@@ -445,6 +523,8 @@ export default function FindingsReport({ data, status }) {
               index={i}
               open={openIds.has(i)}
               onToggle={() => toggleCard(i)}
+              review={analyzerReviewIndex.get([f.platform || '', f.rule_title || '', f.rule_id || ''].join('::').toLowerCase())}
+              onViewAnalysis={() => onViewAnalysis?.(f)}
             />
           ))}
         </div>

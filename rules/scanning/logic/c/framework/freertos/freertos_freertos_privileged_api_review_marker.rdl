@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT vTaskPrioritySet\(|xTaskCreate\(|xQueueReceive\(
+WHEN EXPR MISSING:assert|check|verify|privilege_check|permission
+REPORT AS area_of_interest
+REASON Detects privileged task/queue operations that require security review context.
+TRACE Externalized rule logic for Freertos FreeRTOS Privileged API Review Marker.

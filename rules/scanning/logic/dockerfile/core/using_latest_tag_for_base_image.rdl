@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT ^FROM\s+\S+:latest\b|^FROM\s+(?!scratch\b)\S+\s*$
+REPORT AS area_of_interest
+REASON Detects use of the latest tag or untagged image references in FROM instructions.
+TRACE Externalized rule logic for Using latest Tag for Base Image.

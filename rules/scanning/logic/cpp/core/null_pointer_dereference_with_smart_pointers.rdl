@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(std::unique_ptr|std::shared_ptr)<.*>\s*=\s*nullptr
+WHEN EXPR MISSING:if\s*\(.*!=\s*nullptr\)|if\s*\(.*!=\s*NULL\)|assert\s*\(|nullptr\s*!=
+REPORT AS area_of_interest
+REASON Detects potential misuse of smart pointers, leading to null pointer dereference.
+TRACE Externalized rule logic for Null Pointer Dereference with Smart Pointers.

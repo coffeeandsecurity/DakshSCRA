@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT createQuery\(\s*"[^"]*"\s*\+|createNativeQuery\(\s*"[^"]*"\s*\+|Statement\s+\w+\s*=\s*.*createStatement\(
+WHEN EXPR MISSING:queryForObject\s*\(.*\?|NamedParameterJdbcTemplate|query\s*\(.*\?|PreparedStatement
+REPORT AS area_of_interest
+REASON Detects dynamic SQL/HQL query concatenation patterns.
+TRACE Externalized rule logic for Springboot SQL Query Concatenation Sink.

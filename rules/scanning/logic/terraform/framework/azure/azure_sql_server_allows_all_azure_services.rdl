@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT start_ip_address\s*=\s*"0\.0\.0\.0"[^}]*end_ip_address\s*=\s*"0\.0\.0\.0"
+WHEN EXPR PRESENT:start_ip_address\s*=\s*"0\.0\.0\.0".*end_ip_address\s*=\s*"0\.0\.0\.0" && MISSING:# intentional|# development|firewall_rule
+REPORT AS area_of_interest
+REASON Detects Azure SQL firewall rules using the 0.0.0.0/0.0.0.0 pattern that allows all Azure services to connect.
+TRACE Externalized rule logic for Azure SQL Server Allows All Azure Services.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \{\{\{.*?\}\}\}
+WHEN EXPR MISSING:(sanitize|escape|xss|safeHtml)
+REPORT AS area_of_interest
+REASON Detects instances of unescaped Handlebars strings in the code, which can indicate a potential security vulnerability.
+TRACE Externalized rule logic for Handlebars Unescaped String.

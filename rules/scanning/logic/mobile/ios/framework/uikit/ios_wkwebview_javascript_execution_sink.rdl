@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT WKWebView|evaluateJavaScript\(
+WHEN EXPR MISSING:limitsNavigationsToAppBoundDomains\s*=\s*true
+REPORT AS area_of_interest
+REASON Detects dynamic JavaScript execution and WebView usage requiring trust review.
+TRACE Externalized mobile rule logic for iOS WKWebView JavaScript Execution Sink.

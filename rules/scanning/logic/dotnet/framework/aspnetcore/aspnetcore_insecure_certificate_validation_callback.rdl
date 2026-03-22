@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT ServerCertificateCustomValidationCallback\s*=\s*\(.*=>\s*true
+WHEN EXPR MISSING:test|development|localhost|staging
+REPORT AS area_of_interest
+REASON Detects TLS certificate validation bypass patterns.
+TRACE Externalized rule logic for Aspnetcore Insecure Certificate Validation Callback.

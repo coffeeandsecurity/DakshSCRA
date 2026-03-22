@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT resource\s+"aws_db_instance"[^}]*publicly_accessible\s*=\s*true
+WHEN EXPR PRESENT:publicly_accessible\s*=\s*true && MISSING:# intentional|# development|# staging
+REPORT AS area_of_interest
+REASON Detects RDS instances configured to be publicly accessible from the internet.
+TRACE Externalized rule logic for RDS Instance Publicly Accessible.

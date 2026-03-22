@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\bDELETE\s+FROM\s+[^\s]+\s+WHERE\s+.*=.*\$.*
+WHEN EXPR MISSING:%s|\?|:\w+|params=|execute\(
+REPORT AS area_of_interest
+REASON Detects DELETE statements using user input directly without parameterization, increasing SQL injection risks.
+TRACE Externalized rule logic for SQL Query: Direct DELETE with User Input.

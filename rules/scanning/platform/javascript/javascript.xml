@@ -2,8 +2,8 @@
     <category name="Untrusted Input Handling or Injection Flaws">
         <rule>
             <name>Untrusted Data in 'document.getElementById().value'</name>
-            <regex><![CDATA[document\.getElementById\(.+\)\.value]]></regex>
-            <rdl><![CDATA[[FLAG:document\.getElementById\(.+\)\.value][IF(PRESENT:(innerHTML|outerHTML|document\.write|eval\(|setTimeout\(|setInterval\(|fetch\(|XMLHttpRequest|location\.) && MISSING:(DOMPurify|sanitize|encodeURI|encodeURIComponent|textContent|innerText))]]]></rdl>
+            <regex>document\.getElementById\(.+\)\.value</regex>
+            <rdl_ref>logic/javascript/core/untrusted_data_in_document_getelementbyid_value.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>Untrusted Data in InnerHTML</name>
-            <regex><![CDATA[\.innerHTML\s?=\s?.+]]></regex>
-            <rdl><![CDATA[[FLAG:\.innerHTML\s?=\s?.+][IF(MISSING:DOMPurify\.sanitize|sanitizeHtml|textContent|innerText|escapeHtml|encodeHTML && MISSING:test|example|spec)]]]></rdl>
+            <regex>\.innerHTML\s?=\s?.+</regex>
+            <rdl_ref>logic/javascript/core/untrusted_data_in_innerhtml.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>Untrusted Data in 'document.write'</name>
-            <regex><![CDATA[document\.write\(|innerHTML\s?=\s?.+]]></regex>
-            <rdl><![CDATA[[FLAG:document\.write\(|innerHTML\s?=\s?.+][IF(MISSING:DOMPurify\.sanitize|sanitizeHtml|textContent|innerText|escapeHtml|encodeHTML && MISSING:test|example|spec)]]]></rdl>
+            <regex>document\.write\(|innerHTML\s?=\s?.+</regex>
+            <rdl_ref>logic/javascript/core/untrusted_data_in_document_write.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -55,8 +55,8 @@
     <category name="Untrusted Input in Web/API Response">
         <rule>
             <name>Handlebars Unescaped String</name>
-            <regex><![CDATA[\{\{\{.*?\}\}\}]]></regex>
-            <rdl><![CDATA[[FLAG:\{\{\{.*?\}\}\}][IF(MISSING:(sanitize|escape|xss|safeHtml))]]]></rdl>
+            <regex>\{\{\{.*?\}\}\}</regex>
+            <rdl_ref>logic/javascript/core/handlebars_unescaped_string.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -75,8 +75,8 @@
     <category name="Insecure Method/Function Call">
         <rule>
             <name>Insecure Method Call: child_process.exec()</name>
-            <regex><![CDATA[(^|\s|=\s?)require\(\s*('|")child_process('|")\s*\)(\s*\.(\s*\w+\s*)*\()?\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:(^|\s|=\s?)require\(\s*('|")child_process('|")\s*\)(\s*\.(\s*\w+\s*)*\()?\s*\)][IF(MISSING:execFile|spawn\s*\(|validate|sanitize|allowlist|escapeShellArg && MISSING:test|example|spec)]]]></rdl>
+            <regex>(^|\s|=\s?)require\(\s*('|")child_process('|")\s*\)(\s*\.(\s*\w+\s*)*\()?\s*\)</regex>
+            <rdl_ref>logic/javascript/core/insecure_method_call_child_process_exec.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -92,8 +92,8 @@
         </rule>
         <rule>
             <name>Insecure Method Call: eval|setTimeout|setInterval</name>
-            <regex><![CDATA[\b(eval|setTimeout|setInterval)\(.+\)]]></regex>
-            <rdl><![CDATA[[FLAG:\b(eval|setTimeout|setInterval)\(.+\)][IF(PRESENT:(\+|`|\$\{|location|document\.cookie|localStorage|sessionStorage|req\.|res\.) && MISSING:allowlist|whitelist|JSON\.parse|Function\s*\(|trusted|DOMPurify && MISSING:function\s*\(|=>\s*\{|callback|test|example|spec|mock)]]]></rdl>
+            <regex>\b(eval|setTimeout|setInterval)\(.+\)</regex>
+            <rdl_ref>logic/javascript/core/insecure_method_call_eval_settimeout_setinterval.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -111,8 +111,8 @@
     <category name="Cryptographic Issues">
         <rule>
             <name>Weak Cryptography</name>
-            <regex><![CDATA[(CryptoJS\.DES\.encrypt|MD5|SHA-1|RC4)\(.+\)]]></regex>
-            <rdl><![CDATA[[FLAG:(CryptoJS\.DES\.encrypt|MD5|SHA-1|RC4)\(.+\)][IF(MISSING:crypto\.subtle|node:crypto|webcrypto|bcrypt|argon2|scrypt && MISSING:test|example|spec|checksum|integrity)]]]></rdl>
+            <regex>(CryptoJS\.DES\.encrypt|MD5|SHA-1|RC4)\(.+\)</regex>
+            <rdl_ref>logic/javascript/core/weak_cryptography.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -128,8 +128,8 @@
         </rule>
         <rule>
             <name>Weak Random Number Generation</name>
-            <regex><![CDATA[Math\.random\(.*\)]]></regex>
-            <rdl><![CDATA[[FLAG:Math\.random\(.*\)][IF(PRESENT:(token|secret|nonce|otp|session|password|key))]]]></rdl>
+            <regex>Math\.random\(.*\)</regex>
+            <rdl_ref>logic/javascript/core/weak_random_number_generation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -147,8 +147,8 @@
     <category name="Information Disclosure">
         <rule>
             <name>Routes</name>
-            <regex><![CDATA[(?i)route:\s+'.*(\s?)]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)route:\s+'.*(\s?)][IF(PRESENT:app\.(get|post|put|delete|patch)\s*\(\s*["']/|router\.(get|post|put|delete|patch)\s*\(\s*["']/[^"']*:\w && MISSING:authenticate|authorize|auth|middleware|passport|jwt|session)]]]></rdl>
+            <regex>(?i)route:\s+'.*(\s?)</regex>
+            <rdl_ref>logic/javascript/core/routes.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -164,8 +164,8 @@
         </rule>
         <rule>
             <name>Stack Trace or Error Disclosure (Node/Express)</name>
-            <regex><![CDATA[res\.(?:send|json|end)\s*\(\s*err(?:or)?(?:\.stack|\.message)?\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:res\.(?:send|json|end)\s*\(\s*err(?:or)?(?:\.stack|\.message)?\s*\)][IF(MISSING:statusCode|status\s*\(\s*[45]|genericMessage|sanitize|message\s*:\s*["'])]]]></rdl>
+            <regex>res\.(?:send|json|end)\s*\(\s*err(?:or)?(?:\.stack|\.message)?\s*\)</regex>
+            <rdl_ref>logic/javascript/core/stack_trace_or_error_disclosure_node_express.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -183,8 +183,8 @@
     <category name="Node Runtime Hardening">
         <rule>
             <name>Node Inspector Exposed via --inspect</name>
-            <regex><![CDATA[\B--inspect(?:-brk)?(?:=\S+)?\b]]></regex>
-            <rdl><![CDATA[[FLAG:\B--inspect(?:-brk)?(?:=\S+)?\b][IF(PRESENT:--inspect|--inspect-brk && MISSING:development|localhost|127\.0\.0\.1|test)]]]></rdl>
+            <regex>\B--inspect(?:-brk)?(?:=\S+)?\b</regex>
+            <rdl_ref>logic/javascript/core/node_inspector_exposed_via_inspect.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -200,8 +200,8 @@
         </rule>
         <rule>
             <name>Insecure HTTP Parser Enabled</name>
-            <regex><![CDATA[\binsecureHTTPParser\s*:\s*true\b]]></regex>
-            <rdl><![CDATA[[FLAG:\binsecureHTTPParser\s*:\s*true\b][IF(PRESENT:insecureHTTPParser:\s*true|legacyHeaders:\s*true && MISSING:test|development|legacy)]]]></rdl>
+            <regex>\binsecureHTTPParser\s*:\s*true\b</regex>
+            <rdl_ref>logic/javascript/core/insecure_http_parser_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -219,8 +219,8 @@
     <category name="Insecure/Weak Mitigations">
         <rule>
             <name>Weak Mitigation: Using disable|bypass|ignore|suppress|unsafe</name>
-            <regex><![CDATA[\b(disable|bypass|ignore|suppress|unsafe)\b]]></regex>
-            <rdl><![CDATA[[FLAG:\b(disable|bypass|ignore|suppress|unsafe)\b][IF(PRESENT:(auth|csrf|xss|cors|tls|ssl|verify|validation|sanitize|security) && MISSING:(example|sample|dummy|test|placeholder))]]]></rdl>
+            <regex>\b(disable|bypass|ignore|suppress|unsafe)\b</regex>
+            <rdl_ref>logic/javascript/core/weak_mitigation_using_disable_bypass_ignore_suppress_unsafe.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -238,8 +238,8 @@
     <category name="Database Queries">
         <rule>
             <name>SQL Query: SELECT Statements with WHERE or ORDER BY</name>
-            <regex><![CDATA[(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*][IF(PRESENT:(\+|`|\$\{|req\.|params|query|body) && MISSING:(\?|prepare|bind|replacements|sequelize\.query\s*\(.*replacements))]]]></rdl>
+            <regex>(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*</regex>
+            <rdl_ref>logic/javascript/core/sql_query_select_statements_with_where_or_order_by.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -255,8 +255,8 @@
         </rule>
         <rule>
             <name>SQL Query: Unrestricted SELECT *</name>
-            <regex><![CDATA[\bSELECT\s+\*\s+FROM\b]]></regex>
-            <rdl><![CDATA[[FLAG:\bSELECT\s+\*\s+FROM\b][IF(MISSING:LIMIT\s+\d+|pagination|rownum|TOP\s+\d+|fetchSize && MISSING:test|example)]]]></rdl>
+            <regex>\bSELECT\s+\*\s+FROM\b</regex>
+            <rdl_ref>logic/javascript/core/sql_query_unrestricted_select.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -272,8 +272,8 @@
         </rule>
         <rule>
             <name>SQL Query: Non-parameterized INSERT Statements</name>
-            <regex><![CDATA[(?i)\bINSERT\s+INTO\s+[^\s]+\s+\(.*=.*\$.*\)]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\bINSERT\s+INTO\s+[^\s]+\s+\(.*=.*\$.*\)][IF(MISSING:\?|prepare|bind|replacements|sequelize\.query\s*\(.*replacements|mysql\.escape|pg\.escape)]]]></rdl>
+            <regex>(?i)\bINSERT\s+INTO\s+[^\s]+\s+\(.*=.*\$.*\)</regex>
+            <rdl_ref>logic/javascript/core/sql_query_non_parameterized_insert_statements.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -289,8 +289,8 @@
         </rule>
         <rule>
             <name>Deprecated SQL Functions</name>
-            <regex><![CDATA[(?i)\b(mysql_query|pg_query|sqlite_query|db.query|db.execute|knex.raw)\s*\(\s*['\"]?SELECT|INSERT|UPDATE|DELETE\s+.+\s*['\"]?\s*\.\s*\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\b(mysql_query|pg_query|sqlite_query|db.query|db.execute|knex.raw)\s*\(][IF(PRESENT:(\+|`|\$\{|req\.|params|query|body) && MISSING:(\?|prepare|bind|replacements))]]]></rdl>
+            <regex>(?is)\b(?:mysql_query|pg_query|sqlite_query|db\.query|db\.execute|knex\.raw)\s*\(\s*(?:['"`]\s*(?:SELECT|INSERT|UPDATE|DELETE)\b[^'"`]*['"`]|(?:SELECT|INSERT|UPDATE|DELETE)\b[^,\n;)]*(?:\+|\$\{)[^,\n;)]*)</regex>
+            <rdl_ref>logic/javascript/core/deprecated_sql_functions.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -308,8 +308,8 @@
     <category name="Deprecated Functions">
         <rule>
             <name>Deprecated JS Function: escape|unescape|eval</name>
-            <regex><![CDATA[\b(escape|unescape|eval)\b]]></regex>
-            <rdl><![CDATA[[FLAG:\b(escape|unescape|eval)\b][IF(MISSING:JSON\.parse|Function\s*\(|trusted|allowlist|DOMPurify && MISSING:test|example|spec|mock)]]]></rdl>
+            <regex>\b(escape|unescape|eval)\b</regex>
+            <rdl_ref>logic/javascript/core/deprecated_js_function_escape_unescape_eval.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -327,8 +327,8 @@
     <category name="MISC Checks">
         <rule>
             <name>Insecure Direct Object References (IDOR)</name>
-            <regex><![CDATA[(req\.params|req\.query|req\.body)[\s\S]*?(\[|\.)[\s\S]*?]]></regex>
-            <rdl><![CDATA[[FLAG:(req\.params|req\.query|req\.body)[\s\S]*?(\[|\.)[\s\S]*?][IF(PRESENT:(findByPk|findOne|findAll|where|delete|update|patch|put|remove|destroy) && MISSING:(authorize|isAuthorized|canAccess|hasRole|ownership|tenantId))]]]></rdl>
+            <regex>(req\.params|req\.query|req\.body)[\s\S]*?(\[|\.)[\s\S]*?</regex>
+            <rdl_ref>logic/javascript/core/insecure_direct_object_references_idor.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -344,8 +344,8 @@
         </rule>
         <rule>
             <name>Server-Side Request Forgery (SSRF)</name>
-            <regex><![CDATA[XMLHttpRequest\.open\(|fetch\(|axios\.get\(|http\.request\(|https\.request\(|http\.get\(|https\.get\(|http\.post\(|https\.post\(|http\.put\(|https\.put\(|http\.delete\(|https\.delete\(|\$.ajax\({\s*url:\s*['"].+['"]]]></regex>
-            <rdl><![CDATA[[FLAG:XMLHttpRequest\.open\(|fetch\(|axios\.get\(|http\.request\(|https\.request\(|http\.get\(|https\.get\(|http\.post\(|https\.post\(|http\.put\(|https\.put\(|http\.delete\(|https\.delete\(|\$.ajax\({\s*url:\s*['"].+['"]][IF(PRESENT:(req\.|params|query|body|userInput|target|url) && MISSING:(allowlist|whitelist|isPrivateIPBlocked|validateUrl|new URL\())]]]></rdl>
+            <regex>XMLHttpRequest\.open\(|fetch\(|axios\.get\(|http\.request\(|https\.request\(|http\.get\(|https\.get\(|http\.post\(|https\.post\(|http\.put\(|https\.put\(|http\.delete\(|https\.delete\(|\$.ajax\({\s*url:\s*['"].+['"]</regex>
+            <rdl_ref>logic/javascript/core/server_side_request_forgery_ssrf.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -361,8 +361,8 @@
         </rule>
         <rule>
             <name>Prototype Pollution</name>
-            <regex><![CDATA[(\b__proto__\b|Object\.prototype\.(?!hasOwnProperty)[a-zA-Z]+\s?=)]]></regex>
-            <rdl><![CDATA[[FLAG:(\b__proto__\b|Object\.prototype\.(?!hasOwnProperty)[a-zA-Z]+\s?=)][IF(MISSING:Object\.freeze|hasOwnProperty|Object\.create\s*\(\s*null|__proto__.*check)]]]></rdl>
+            <regex>(\b__proto__\b|Object\.prototype\.(?!hasOwnProperty)[a-zA-Z]+\s?=)</regex>
+            <rdl_ref>logic/javascript/core/prototype_pollution.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -378,8 +378,8 @@
         </rule>
         <rule>
             <name>Missing Cookie Security Flags</name>
-            <regex><![CDATA[res\.cookie\s*\(|document\.cookie\s*=]]></regex>
-            <rdl><![CDATA[[FLAG:res\.cookie\s*\(|document\.cookie\s*=][IF(MISSING:httpOnly\s*:\s*true|secure\s*:\s*true|sameSite|SameSite)]]]></rdl>
+            <regex>res\.cookie\s*\(|document\.cookie\s*=</regex>
+            <rdl_ref>logic/javascript/core/missing_cookie_security_flags.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

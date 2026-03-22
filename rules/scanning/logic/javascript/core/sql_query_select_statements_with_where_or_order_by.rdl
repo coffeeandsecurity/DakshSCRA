@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*
+WHEN EXPR PRESENT:(\+|`|\$\{|req\.|params|query|body) && MISSING:(\?|prepare|bind|replacements|sequelize\.query\s*\(.*replacements)
+REPORT AS area_of_interest
+REASON Detects SELECT statements with WHERE or ORDER BY clauses in SQL queries, which may be vulnerable to SQL injection if user input is not handled securely in JavaScript environments.
+TRACE Externalized rule logic for SQL Query: SELECT Statements with WHERE or ORDER BY.

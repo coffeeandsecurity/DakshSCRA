@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT requests\.(get|post|put|delete|patch|head|request)\s*\(
+WHEN EXPR PRESENT:request\.GET|request\.POST|request\.args|request\.form|input\(|argv|\+ && MISSING:allowlist|whitelist|urlparse|ipaddress|is_private|validators\.url
+REPORT AS area_of_interest
+REASON Detects HTTP requests made with user-supplied URL values that may enable SSRF.
+TRACE Externalized rule logic for SSRF: requests Library with User-Controlled URL.

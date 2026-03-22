@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?is)\b(?:mysql_query|pg_query|sqlite_query|db\.query|db\.execute|knex\.raw)\s*\(\s*(?:['"`]\s*(?:SELECT|INSERT|UPDATE|DELETE)\b|(?:SELECT|INSERT|UPDATE|DELETE)\b)
+WHEN EXPR PRESENT:(?i)(\+|`|\$\{|req\.|params|query|body|userInput|input) && MISSING:(?i)(\?|prepare|bind|replacements|parameterized|sequelize\.query\s*\([^)]*replacements|mysql\.escape|pg\.escape) && MISSING:(?i)test|example|spec|fixture|mock
+REPORT AS area_of_interest
+REASON Detects usage of deprecated or insecure SQL functions and dynamic SQL queries that may lead to security vulnerabilities in JavaScript applications.
+TRACE Externalized rule logic for Deprecated SQL Functions.

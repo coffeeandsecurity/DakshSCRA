@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT res\.cookie\s*\(|document\.cookie\s*=
+WHEN EXPR MISSING:httpOnly\s*:\s*true|secure\s*:\s*true|sameSite|SameSite
+REPORT AS area_of_interest
+REASON Detects cookie creation without essential security flags such as httpOnly, secure, and SameSite.
+TRACE Externalized rule logic for Missing Cookie Security Flags.

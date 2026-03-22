@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \breinterpret_cast<[^>]+>\(
+WHEN EXPR MISSING:static_assert|static_cast|bit_cast|is_trivially_copyable
+REPORT AS area_of_interest
+REASON Detects the usage of `reinterpret_cast`, which can lead to unsafe type conversions.
+TRACE Externalized rule logic for Unsafe Type Conversion: reinterpret_cast.

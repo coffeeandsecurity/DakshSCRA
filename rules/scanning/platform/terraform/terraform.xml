@@ -2,8 +2,8 @@
     <category name="Identity and Access Management">
         <rule>
             <name>Wildcard IAM Policy Action</name>
-            <regex><![CDATA[actions\s*=\s*\[\s*"\*"\s*\]|effect\s*=\s*"Allow"[^}]*actions\s*=\s*\["\*"\]]]></regex>
-            <rdl><![CDATA[[FLAG:actions\s*=\s*\[\s*"\*"\s*\]][IF(PRESENT:"Action":\s*"\*"|actions\s*=\s*\["\*"\]|action\s*=\s*"\*" && MISSING:effect\s*=\s*"Deny"|NotAction|# intentional|# required)]]]></rdl>
+            <regex>actions\s*=\s*\[\s*"\*"\s*\]|effect\s*=\s*"Allow"[^}]*actions\s*=\s*\["\*"\]</regex>
+            <rdl_ref>logic/terraform/core/wildcard_iam_policy_action.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>Wildcard IAM Resource</name>
-            <regex><![CDATA[resources\s*=\s*\[\s*"\*"\s*\]]]></regex>
-            <rdl><![CDATA[[FLAG:resources\s*=\s*\[\s*"\*"\s*\]][IF(MISSING:condition|Condition)]]]></rdl>
+            <regex>resources\s*=\s*\[\s*"\*"\s*\]</regex>
+            <rdl_ref>logic/terraform/core/wildcard_iam_resource.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -38,8 +38,8 @@
     <category name="Network Security">
         <rule>
             <name>Security Group Open to All Traffic (0.0.0.0/0)</name>
-            <regex><![CDATA[cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\]|cidr_ipv6\s*=\s*\["::/0"\]]]></regex>
-            <rdl><![CDATA[[FLAG:cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\]|cidr_ipv6\s*=\s*\["::/0"\]][IF(MISSING:from_port\s*=\s*(?:443|80)\b)]]]></rdl>
+            <regex>cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\]|cidr_ipv6\s*=\s*\["::/0"\]</regex>
+            <rdl_ref>logic/terraform/core/security_group_open_to_all_traffic_0_0_0_0_0.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -55,8 +55,8 @@
         </rule>
         <rule>
             <name>SSH Port Open to All Internet</name>
-            <regex><![CDATA[from_port\s*=\s*22[^\d][^}]*cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\]|cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\][^}]*from_port\s*=\s*22[^\d]]]></regex>
-            <rdl><![CDATA[[FLAG:from_port\s*=\s*22[^\d][^}]*cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\]][IF(PRESENT:from_port\s*=\s*22|to_port\s*=\s*22 && PRESENT:cidr_blocks.*0\.0\.0\.0/0|cidr_ipv6.*::/0 && MISSING:# intentional|# bastion|# jump-host)]]]></rdl>
+            <regex>from_port\s*=\s*22[^\d][^}]*cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\]|cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\][^}]*from_port\s*=\s*22[^\d]</regex>
+            <rdl_ref>logic/terraform/core/ssh_port_open_to_all_internet.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -72,8 +72,8 @@
         </rule>
         <rule>
             <name>RDP Port Open to All Internet</name>
-            <regex><![CDATA[from_port\s*=\s*3389[^\d][^}]*cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\]|cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\][^}]*from_port\s*=\s*3389[^\d]]]></regex>
-            <rdl><![CDATA[[FLAG:from_port\s*=\s*3389[^\d][^}]*cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\]][IF(PRESENT:from_port\s*=\s*3389|to_port\s*=\s*3389 && PRESENT:cidr_blocks.*0\.0\.0\.0/0|cidr_ipv6.*::/0 && MISSING:# intentional|# bastion)]]]></rdl>
+            <regex>from_port\s*=\s*3389[^\d][^}]*cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\]|cidr_blocks\s*=\s*\["0\.0\.0\.0/0"\][^}]*from_port\s*=\s*3389[^\d]</regex>
+            <rdl_ref>logic/terraform/core/rdp_port_open_to_all_internet.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -91,8 +91,8 @@
     <category name="Storage Security">
         <rule>
             <name>S3 Bucket Publicly Accessible</name>
-            <regex><![CDATA[acl\s*=\s*"public-read(?:-write)?"|block_public_acls\s*=\s*false|block_public_policy\s*=\s*false|ignore_public_acls\s*=\s*false|restrict_public_buckets\s*=\s*false]]></regex>
-            <rdl><![CDATA[[FLAG:acl\s*=\s*"public-read(?:-write)?"|block_public_acls\s*=\s*false|block_public_policy\s*=\s*false][IF(PRESENT:acl\s*=\s*"public-read|block_public_acls\s*=\s*false|ignore_public_acls\s*=\s*false && MISSING:# intentional|# static-website|website\s*\{)]]]></rdl>
+            <regex>acl\s*=\s*"public-read(?:-write)?"|block_public_acls\s*=\s*false|block_public_policy\s*=\s*false|ignore_public_acls\s*=\s*false|restrict_public_buckets\s*=\s*false</regex>
+            <rdl_ref>logic/terraform/core/s3_bucket_publicly_accessible.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -108,8 +108,8 @@
         </rule>
         <rule>
             <name>Storage Encryption Disabled or Not Configured</name>
-            <regex><![CDATA[resource\s+"aws_s3_bucket"\s*"[^"]+"\s*\{]]></regex>
-            <rdl><![CDATA[[FLAG:resource\s+"aws_s3_bucket"\s*"[^"]+"\s*\{][IF(MISSING:server_side_encryption_configuration|aws_s3_bucket_server_side_encryption_configuration)]]]></rdl>
+            <regex>resource\s+"aws_s3_bucket"\s*"[^"]+"\s*\{</regex>
+            <rdl_ref>logic/terraform/core/storage_encryption_disabled_or_not_configured.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -127,8 +127,8 @@
     <category name="Logging and Monitoring">
         <rule>
             <name>CloudTrail Logging Disabled</name>
-            <regex><![CDATA[resource\s+"aws_cloudtrail"[^}]*enable_logging\s*=\s*false]]></regex>
-            <rdl><![CDATA[[FLAG:resource\s+"aws_cloudtrail"[^}]*enable_logging\s*=\s*false][IF(PRESENT:enable_logging\s*=\s*false|is_logging\s*=\s*false|enabled\s*=\s*false && MISSING:# intentional|# cost|# development)]]]></rdl>
+            <regex>resource\s+"aws_cloudtrail"[^}]*enable_logging\s*=\s*false</regex>
+            <rdl_ref>logic/terraform/core/cloudtrail_logging_disabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -144,8 +144,8 @@
         </rule>
         <rule>
             <name>VPC Flow Logs Disabled</name>
-            <regex><![CDATA[resource\s+"aws_vpc"[^}]*\}(?![^}]*aws_flow_log)]]></regex>
-            <rdl><![CDATA[[FLAG:resource\s+"aws_vpc"\b][IF(MISSING:aws_flow_log|enable_flow_logs|flow_log)]]]></rdl>
+            <regex>resource\s+"aws_vpc"[^}]*\}(?![^}]*aws_flow_log)</regex>
+            <rdl_ref>logic/terraform/core/vpc_flow_logs_disabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -163,8 +163,8 @@
     <category name="Secrets Management">
         <rule>
             <name>Hardcoded Secret or Password in Terraform Variables</name>
-            <regex><![CDATA[(?i)(?:password|secret|api_key|apikey|token|private_key)\s*=\s*"[A-Za-z0-9@#$%^&*!_\-]{8,}"]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(?:password|secret|api_key|apikey|token|private_key)\s*=\s*"[A-Za-z0-9@#$%^&*!_\-]{8,}"][IF(MISSING:var\.|data\.|local\.|sensitive)]]]></rdl>
+            <regex>(?i)(?:password|secret|api_key|apikey|token|private_key)\s*=\s*"[A-Za-z0-9@#$%^&amp;*!_\-]{8,}"</regex>
+            <rdl_ref>logic/terraform/core/hardcoded_secret_or_password_in_terraform_variables.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

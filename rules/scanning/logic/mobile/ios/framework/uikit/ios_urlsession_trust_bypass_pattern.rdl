@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT didReceive\s+challenge.*completionHandler\(\.useCredential|allowInvalidCertificates
+WHEN EXPR MISSING:SecTrustEvaluate|SecTrustEvaluateWithError
+REPORT AS area_of_interest
+REASON Detects URLSession trust challenge handling patterns indicating bypass risk.
+TRACE Externalized mobile rule logic for iOS URLSession Trust Bypass Pattern.

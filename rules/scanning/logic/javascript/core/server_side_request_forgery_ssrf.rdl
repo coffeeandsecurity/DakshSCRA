@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT XMLHttpRequest\.open\(|fetch\(|axios\.get\(|http\.request\(|https\.request\(|http\.get\(|https\.get\(|http\.post\(|https\.post\(|http\.put\(|https\.put\(|http\.delete\(|https\.delete\(|\$.ajax\({\s*url:\s*['"].+['"]
+WHEN EXPR PRESENT:(req\.|params|query|body|userInput|target|url) && MISSING:(allowlist|whitelist|isPrivateIPBlocked|validateUrl|new URL\()
+REPORT AS area_of_interest
+REASON Detects potential server-side request forgery (SSRF) vulnerabilities.
+TRACE Externalized rule logic for Server-Side Request Forgery (SSRF).

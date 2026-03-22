@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT ValidateIssuer\s*=\s*false|ValidateAudience\s*=\s*false|ValidateLifetime\s*=\s*false|ValidateIssuerSigningKey\s*=\s*false
+WHEN EXPR PRESENT:ValidateIssuer\s*=\s*false|ValidateAudience\s*=\s*false|ValidateLifetime\s*=\s*false|ValidateIssuerSigningKey\s*=\s*false && MISSING:test|example|development
+REPORT AS area_of_interest
+REASON Detects JWT token validation with one or more critical validation checks disabled.
+TRACE Externalized rule logic for JWT Token Validation Parameters Weakened.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(?:ifstream|ofstream|fstream)\b.*\.open\s*\(.*\)
+WHEN EXPR MISSING:validate|sanitize|canonical|realpath|filesystem::path
+REPORT AS area_of_interest
+REASON Detects file handling operations (`ifstream`, `ofstream`, `fstream`) to ensure they are secure and protected against path traversal vulnerabilities.
+TRACE Externalized rule logic for Unsafe File Handling: Insecure File Path Usage.

@@ -664,6 +664,20 @@
                         <p><b>Issue Description:</b> {{ snippet["issue_desc"] }}</p>
                         <p><b>Developer Note:</b> {{ snippet["dev_note"] }}</p>
                         <p><b>Reviewer Note:</b> {{ snippet["rev_note"] }}</p>
+                        {% if snippet["logic_engine"] or snippet["logic_reason"] %}
+                        <p><b>Rule Logic{% if snippet["logic_engine"] %} ({{ snippet["logic_engine"]|upper }}){% endif %}:</b> {{ snippet["logic_reason"] }}</p>
+                        {% endif %}
+                        {% if snippet["logic_trace"] %}
+                        <p><b>Logic Trace:</b></p>
+                        <ul>
+                          {% for trace in snippet["logic_trace"] %}
+                          <li>{{ trace }}</li>
+                          {% endfor %}
+                        </ul>
+                        {% endif %}
+                        {% if snippet["logic_consulted_files"] %}
+                        <p><b>Consulted Files:</b> {{ snippet["logic_consulted_files"]|join(', ') }}</p>
+                        {% endif %}
 
                         {% for source in snippet["sources"] %}
                           <div class="source-block">

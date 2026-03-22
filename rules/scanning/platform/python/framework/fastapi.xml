@@ -2,8 +2,8 @@
     <category name="Framework-Specific Security">
         <rule>
             <name>Fastapi Debug Mode Enabled</name>
-            <regex><![CDATA[\bDEBUG\s*=\s*True\b|FLASK_DEBUG\s*=\s*1|reload\s*=\s*True]]></regex>
-            <rdl><![CDATA[[FLAG:\bDEBUG\s*=\s*True\b|FLASK_DEBUG\s*=\s*1|reload\s*=\s*True][IF(MISSING:release|production)]]]></rdl>
+            <regex>\bDEBUG\s*=\s*True\b|FLASK_DEBUG\s*=\s*1|reload\s*=\s*True</regex>
+            <rdl_ref>logic/python/framework/fastapi/fastapi_debug_mode_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>Fastapi Unsafe Deserialization</name>
-            <regex><![CDATA[pickle\.loads\(|yaml\.load\(\s*[^,\)]*\)|marshal\.loads\(]]></regex>
-            <rdl><![CDATA[[FLAG:pickle\.loads\(|yaml\.load\(\s*[^,\)]*\)|marshal\.loads\(][IF(MISSING:yaml\.safe_load|Loader=SafeLoader|trusted|allowlist|from_trusted_source)]]]></rdl>
+            <regex>pickle\.loads\(|yaml\.load\(\s*[^,\)]*\)|marshal\.loads\(</regex>
+            <rdl_ref>logic/python/framework/fastapi/fastapi_unsafe_deserialization.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>Fastapi SQL Injection Sink</name>
-            <regex><![CDATA[\.execute\(\s*f[\'\"]|\.execute\(\s*[^\)]*%\s*\(|raw\(\s*f[\'\"]]]></regex>
-            <rdl><![CDATA[[FLAG:\.execute\(\s*f[\'\"]|\.execute\(\s*[^\)]*%\s*\(|raw\(\s*f[\'\"]]][IF(MISSING:paramstyle|cursor\.execute\s*\(.*%s.*,|bindparams|params=)]]]></rdl>
+            <regex>\.execute\(\s*f[\'\"]|\.execute\(\s*[^\)]*%\s*\(|raw\(\s*f[\'\"]</regex>
+            <rdl_ref>logic/python/framework/fastapi/fastapi_sql_injection_sink.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -53,8 +53,8 @@
         </rule>
         <rule>
             <name>Fastapi Permissive CORS</name>
-            <regex><![CDATA[allow_origins\s*=\s*\[\s*[\'\"]\*[\'\"]\s*\]|CORS\(.*origins\s*=\s*[\'\"]\*[\'\"]]]></regex>
-            <rdl><![CDATA[[FLAG:allow_origins\s*=\s*\[\s*[\'\"]\*[\'\"]\s*\]|CORS\(.*origins\s*=\s*[\'\"]\*[\'\"]]][IF(MISSING:allowlist|trusted_origins|configuration\.allowed_origins)]]]></rdl>
+            <regex>allow_origins\s*=\s*\[\s*[\'\"]\*[\'\"]\s*\]|CORS\(.*origins\s*=\s*[\'\"]\*[\'\"]</regex>
+            <rdl_ref>logic/python/framework/fastapi/fastapi_permissive_cors.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -70,8 +70,8 @@
         </rule>
         <rule>
             <name>Fastapi Hardcoded Secret Material</name>
-            <regex><![CDATA[(SECRET_KEY|API[_-]?KEY|TOKEN|PASSWORD)\s*=\s*[\'\"][^\'\"]{8,}[\'\"]]]></regex>
-            <rdl><![CDATA[[FLAG:(SECRET_KEY|API[_-]?KEY|TOKEN|PASSWORD)\s*=\s*[\'\"][^\'\"]{8,}[\'\"]][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <regex>(SECRET_KEY|API[_-]?KEY|TOKEN|PASSWORD)\s*=\s*[\'\"][^\'\"]{8,}[\'\"]</regex>
+            <rdl_ref>logic/python/framework/fastapi/fastapi_hardcoded_secret_material.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

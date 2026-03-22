@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bopen\s*\(.*\bO_CREAT\b.*\)
+WHEN EXPR MISSING:0600|0644|0660|0640|S_IRUSR|S_IWUSR|umask
+REPORT AS area_of_interest
+REASON Detects file creation with potentially insecure permissions.
+TRACE Externalized rule logic for Insecure File Permissions.

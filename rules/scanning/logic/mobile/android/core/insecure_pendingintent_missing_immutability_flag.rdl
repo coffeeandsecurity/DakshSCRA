@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT PendingIntent\.(getBroadcast|getActivity|getService|getForegroundService)\s*\(
+WHEN EXPR MISSING:FLAG_IMMUTABLE|FLAG_UPDATE_CURRENT\s*\|\s*FLAG_IMMUTABLE|PendingIntentCompat
+REPORT AS area_of_interest
+REASON Detects PendingIntent creation without the FLAG_IMMUTABLE flag, enabling intent injection on Android 12+.
+TRACE Externalized mobile rule logic for Insecure PendingIntent: Missing Immutability Flag.

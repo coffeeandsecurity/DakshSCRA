@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT mako\.template\.Template\s*\(|chameleon\.PageTemplate\s*\(
+WHEN EXPR PRESENT:request\.|input\(|argv|\+ && MISSING:strict_undefined|escape
+REPORT AS area_of_interest
+REASON Detects Mako or Chameleon template construction from potentially user-controlled values.
+TRACE Externalized rule logic for SSTI: Mako/Chameleon Template Rendering with User Input.

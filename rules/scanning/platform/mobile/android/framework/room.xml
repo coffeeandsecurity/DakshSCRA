@@ -2,8 +2,8 @@
     <category name="Framework-Specific Issues - Room (Android)">
         <rule>
             <name>RawQuery with User-Controlled Input</name>
-            <regex><![CDATA[@RawQuery|rawQuery\s*\(\s*[^,)]*\+|rawQuery\s*\(\s*[^,)]*\$\{]]></regex>
-            <rdl><![CDATA[[FLAG:@RawQuery|rawQuery\s*\(\s*[^,)]*\+][IF(MISSING:SupportSQLiteQuery|SimpleSQLiteQuery|bindArgs)]]]></rdl>
+            <regex>@RawQuery|rawQuery\s*\(\s*[^,)]*\+|rawQuery\s*\(\s*[^,)]*\$\{</regex>
+            <rdl_ref>logic/mobile/android/framework/room/rawquery_with_user_controlled_input.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -22,8 +22,8 @@
         </rule>
         <rule>
             <name>Database Without Encryption</name>
-            <regex><![CDATA[Room\.databaseBuilder\s*\(|Room\.inMemoryDatabaseBuilder\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:Room\.databaseBuilder\s*\(][IF(MISSING:SQLCipher|net\.zetetic\.database|openHelperFactory|SupportFactory)]]]></rdl>
+            <regex>Room\.databaseBuilder\s*\(|Room\.inMemoryDatabaseBuilder\s*\(</regex>
+            <rdl_ref>logic/mobile/android/framework/room/database_without_encryption.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>

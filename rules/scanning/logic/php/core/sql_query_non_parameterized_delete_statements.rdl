@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\bDELETE\s+FROM\s+[^\s]+\s+WHERE\s+.*=.*\$.*
+WHEN EXPR MISSING:prepare\s*\(|bind_param|bindValue|bindParam|PDO::prepare
+REPORT AS area_of_interest
+REASON Detects non-parameterized DELETE statements that use user input directly, which can lead to SQL injection vulnerabilities.
+TRACE Externalized rule logic for SQL Query: Non-parameterized DELETE Statements.

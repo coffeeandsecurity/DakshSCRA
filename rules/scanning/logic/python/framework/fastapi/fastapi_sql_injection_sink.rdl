@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \.execute\(\s*f[\'\"]|\.execute\(\s*[^\)]*%\s*\(|raw\(\s*f[\'\"]
+WHEN EXPR MISSING:paramstyle|cursor\.execute\s*\(.*%s.*,|bindparams|params=
+REPORT AS area_of_interest
+REASON Detects likely string-built SQL execution in framework data access paths.
+TRACE Externalized rule logic for Fastapi SQL Injection Sink.

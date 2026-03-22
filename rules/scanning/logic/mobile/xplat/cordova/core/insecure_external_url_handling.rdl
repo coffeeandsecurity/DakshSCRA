@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(?:window\.open|cordova\.InAppBrowser\.open)\s*\(
+WHEN EXPR MISSING:allowlist|trustedUrls|validateUrl|startsWith.*https && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects browser launch calls that require URL validation and allowlist checks.
+TRACE Externalized mobile rule logic for Insecure External URL Handling.

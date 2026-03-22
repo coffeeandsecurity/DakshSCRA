@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)(pickle\.load\(.*\)|pickle\.loads\(.*\)|shelve\.open\(.*\))
+WHEN EXPR MISSING:(trusted|signed|verify|hmac|safe_serialization)
+REPORT AS area_of_interest
+REASON Detects insecure usage of the pickle and shelve modules, which can introduce deserialization vulnerabilities.
+TRACE Externalized rule logic for Insecure Serialization: pickle and shelve.

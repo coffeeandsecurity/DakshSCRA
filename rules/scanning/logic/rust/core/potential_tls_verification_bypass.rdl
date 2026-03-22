@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(?:danger_accept_invalid_certs|danger_accept_invalid_hostnames)\s*\(\s*true\s*\)
+WHEN EXPR MISSING:test|development|localhost|staging
+REPORT AS area_of_interest
+REASON Detects disabled TLS certificate or hostname validation.
+TRACE Externalized rule logic for Potential TLS Verification Bypass.

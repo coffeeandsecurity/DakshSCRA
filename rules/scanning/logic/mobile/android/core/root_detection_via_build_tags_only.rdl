@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT Build\.TAGS\.contains\s*\(\s*"test-keys"\s*\)|"test-keys"\.equals\s*\(\s*Build\.TAGS\s*\)
+WHEN EXPR MISSING:new\s+File.*bin/su|new\s+File.*xbin/su|Runtime\.getRuntime\(\)\.exec|RootBeer|RootTools|whichSu
+REPORT AS area_of_interest
+REASON Detects root detection logic that relies solely on Build.TAGS containing "test-keys", which is trivially bypassable.
+TRACE Externalized mobile rule logic for Root Detection via Build Tags Only.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT res\.(?:send|json|end)\s*\(\s*err(?:or)?(?:\.stack|\.message)?\s*\)
+WHEN EXPR MISSING:statusCode|status\s*\(\s*[45]|genericMessage|sanitize|message\s*:\s*["']
+REPORT AS area_of_interest
+REASON Detects Node/Express response patterns that send raw error objects or stack traces directly to HTTP clients.
+TRACE Externalized rule logic for Stack Trace or Error Disclosure (Node/Express).

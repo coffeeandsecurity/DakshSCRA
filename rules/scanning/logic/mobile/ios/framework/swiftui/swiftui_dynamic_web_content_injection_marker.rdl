@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT WKWebView|evaluateJavaScript\(|JavaScriptEnabled
+WHEN EXPR MISSING:limitsNavigationsToAppBoundDomains\s*=\s*true
+REPORT AS area_of_interest
+REASON Detects web content execution points in SwiftUI-integrated views.
+TRACE Externalized mobile rule logic for SwiftUI Dynamic Web Content Injection Marker.

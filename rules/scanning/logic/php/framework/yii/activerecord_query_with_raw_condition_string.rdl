@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT ->where\s*\(\s*["'][^"']*["']\s*\.\s*\$|->andWhere\s*\(\s*["'][^"']*["']\s*\.\s*\$|->orWhere\s*\(\s*["'][^"']*["']\s*\.\s*\$|->where\s*\(\s*["'][^"']*\$\{?|->andWhere\s*\(\s*["'][^"']*\$\{?
+WHEN EXPR MISSING:where\s*\(.*\?|where\s*\(.*:|\$this->db->query.*\?|prepared|PDO:: && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects Yii ActiveQuery where() conditions built with string concatenation of variables.
+TRACE Externalized rule logic for ActiveRecord Query with Raw Condition String.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)public\s+(?:Cursor|int|String)\s+\w+\s*\(\s*Uri\b
+WHEN EXPR MISSING:selectionArgs|DatabaseUtils\.sqlEscapeString|rawQuery.*\?,|whitelist|allowedColumns|throw.*IllegalArgumentException
+REPORT AS area_of_interest
+REASON Detects ContentProvider query/update/delete method signatures that may forward raw caller-supplied selection strings to the database.
+TRACE Externalized mobile rule logic for ContentProvider Raw Selection Parameter Injection.

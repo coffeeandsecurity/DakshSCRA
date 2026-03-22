@@ -2,8 +2,8 @@
     <category name="Framework-Specific Security">
         <rule>
             <name>Aspnetcore Developer Exception Page Enabled</name>
-            <regex><![CDATA[UseDeveloperExceptionPage\(\)]]></regex>
-            <rdl><![CDATA[[FLAG:UseDeveloperExceptionPage\(\)][IF(MISSING:app\.Environment\.IsProduction\(\)|ASPNETCORE_ENVIRONMENT.*Production|IsDevelopment\(\).*false && PRESENT:UseDeveloperExceptionPage\s*\(\s*\))]]]></rdl>
+            <regex>UseDeveloperExceptionPage\(\)</regex>
+            <rdl_ref>logic/dotnet/framework/aspnetcore/aspnetcore_developer_exception_page_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>Aspnetcore Insecure Certificate Validation Callback</name>
-            <regex><![CDATA[ServerCertificateCustomValidationCallback\s*=\s*\(.*=>\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:ServerCertificateCustomValidationCallback\s*=\s*\(.*=>\s*true][IF(MISSING:test|development|localhost|staging)]]]></rdl>
+            <regex>ServerCertificateCustomValidationCallback\s*=\s*\(.*=&gt;\s*true</regex>
+            <rdl_ref>logic/dotnet/framework/aspnetcore/aspnetcore_insecure_certificate_validation_callback.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>Aspnetcore Raw SQL Execution Sink</name>
-            <regex><![CDATA[FromSqlRaw\(|ExecuteSqlRaw\(|SqlQueryRaw\(]]></regex>
-            <rdl><![CDATA[[FLAG:FromSqlRaw\(|ExecuteSqlRaw\(|SqlQueryRaw\(][IF(MISSING:FromSqlInterpolated|SqlParameter|parameterized|\?\s*,|\{[0-9]\}.*params)]]]></rdl>
+            <regex>FromSqlRaw\(|ExecuteSqlRaw\(|SqlQueryRaw\(</regex>
+            <rdl_ref>logic/dotnet/framework/aspnetcore/aspnetcore_raw_sql_execution_sink.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -53,8 +53,8 @@
         </rule>
         <rule>
             <name>Aspnetcore Permissive CORS</name>
-            <regex><![CDATA[AllowAnyOrigin\(\)|WithOrigins\(\s*[\'\"]\*[\'\"]]]></regex>
-            <rdl><![CDATA[[FLAG:AllowAnyOrigin\(\)|WithOrigins\(\s*[\'\"]\*[\'\"]][IF(PRESENT:AllowAnyOrigin\s*\(\s*\)|origins.*"\*" && MISSING:AllowCredentials\s*\(\s*\)|WithOrigins\s*\(\s*"https?://[^*]|SetIsOriginAllowed)]]]></rdl>
+            <regex>AllowAnyOrigin\(\)|WithOrigins\(\s*[\'\"]\*[\'\"]</regex>
+            <rdl_ref>logic/dotnet/framework/aspnetcore/aspnetcore_permissive_cors.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -70,8 +70,8 @@
         </rule>
         <rule>
             <name>Aspnetcore Hardcoded Secret Material</name>
-            <regex><![CDATA[(Secret|ApiKey|Token|Password)\s*=\s*"[^\"]{8,}"]]></regex>
-            <rdl><![CDATA[[FLAG:(Secret|ApiKey|Token|Password)\s*=\s*"[^\"]{8,}"][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <regex>(Secret|ApiKey|Token|Password)\s*=\s*"[^\"]{8,}"</regex>
+            <rdl_ref>logic/dotnet/framework/aspnetcore/aspnetcore_hardcoded_secret_material.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

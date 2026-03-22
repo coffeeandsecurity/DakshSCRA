@@ -2,8 +2,8 @@
     <category name="Framework-Specific Security">
         <rule>
             <name>iOS ATS Arbitrary Loads Enabled</name>
-            <regex><![CDATA[NSAllowsArbitraryLoads\s*</key>\s*<true/>|NSAllowsArbitraryLoads]]></regex>
-            <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads][IF(MISSING:NSExceptionDomains)]]]></rdl>
+            <regex>NSAllowsArbitraryLoads\s*&lt;/key&gt;\s*&lt;true/&gt;|NSAllowsArbitraryLoads</regex>
+            <rdl_ref>logic/mobile/ios/framework/uikit/ios_ats_arbitrary_loads_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -23,7 +23,7 @@
         <rule>
             <name>iOS Insecure HTTP Exception Enabled</name>
             <regex>NSExceptionAllowsInsecureHTTPLoads</regex>
-            <rdl><![CDATA[[FLAG:NSExceptionAllowsInsecureHTTPLoads][IF(MISSING:NSIncludesSubdomains\s*</key>\s*<false/>)]]]></rdl>
+            <rdl_ref>logic/mobile/ios/framework/uikit/ios_insecure_http_exception_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -42,8 +42,8 @@
         </rule>
         <rule>
             <name>iOS URLSession Trust Bypass Pattern</name>
-            <regex><![CDATA[didReceive\s+challenge.*completionHandler\(\.useCredential|allowInvalidCertificates]]></regex>
-            <rdl><![CDATA[[FLAG:didReceive\s+challenge.*completionHandler\(\.useCredential|allowInvalidCertificates][IF(MISSING:SecTrustEvaluate|SecTrustEvaluateWithError)]]]></rdl>
+            <regex>didReceive\s+challenge.*completionHandler\(\.useCredential|allowInvalidCertificates</regex>
+            <rdl_ref>logic/mobile/ios/framework/uikit/ios_urlsession_trust_bypass_pattern.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -62,8 +62,8 @@
         </rule>
         <rule>
             <name>iOS WKWebView JavaScript Execution Sink</name>
-            <regex><![CDATA[evaluateJavaScript\(|WKWebView]]></regex>
-            <rdl><![CDATA[[FLAG:WKWebView|evaluateJavaScript\(][IF(MISSING:limitsNavigationsToAppBoundDomains\s*=\s*true)]]]></rdl>
+            <regex>evaluateJavaScript\(|WKWebView</regex>
+            <rdl_ref>logic/mobile/ios/framework/uikit/ios_wkwebview_javascript_execution_sink.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -82,8 +82,8 @@
         </rule>
         <rule>
             <name>iOS Pasteboard Usage</name>
-            <regex><![CDATA[UIPasteboard\.general|setValue\(.*forPasteboardType]]></regex>
-            <rdl><![CDATA[[FLAG:UIPasteboard\.general|setValue\(.*forPasteboardType][IF(MISSING:expirationDate && MISSING:localOnly)]]]></rdl>
+            <regex>UIPasteboard\.general|setValue\(.*forPasteboardType</regex>
+            <rdl_ref>logic/mobile/ios/framework/uikit/ios_pasteboard_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -102,8 +102,8 @@
         </rule>
         <rule>
             <name>iOS UserDefaults Secret Storage Marker</name>
-            <regex><![CDATA[UserDefaults\.standard\.set\(.*(token|secret|password|apikey)]]></regex>
-            <rdl><![CDATA[[FLAG:UserDefaults\.standard\.set\(.*(token|secret|password|apikey)][IF(MISSING:Keychain)]]]></rdl>
+            <regex>UserDefaults\.standard\.set\(.*(token|secret|password|apikey)</regex>
+            <rdl_ref>logic/mobile/ios/framework/uikit/ios_userdefaults_secret_storage_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -123,7 +123,7 @@
         <rule>
             <name>iOS Insecure URL Usage</name>
             <regex>http://</regex>
-            <rdl><![CDATA[[FLAG:http://][IF(MISSING:https://)]]]></rdl>
+            <rdl_ref>logic/mobile/ios/framework/uikit/ios_insecure_url_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -142,8 +142,8 @@
         </rule>
         <rule>
             <name>iOS Hardcoded Secret Marker</name>
-            <regex><![CDATA[(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"]]></regex>
-            <rdl><![CDATA[[FLAG:(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:DEBUG && MISSING:example|sample|dummy)]]]></rdl>
+            <regex>(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"</regex>
+            <rdl_ref>logic/mobile/ios/framework/uikit/ios_hardcoded_secret_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>none</context_type>

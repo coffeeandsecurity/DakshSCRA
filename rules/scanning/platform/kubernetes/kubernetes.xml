@@ -2,8 +2,8 @@
     <category name="Container Security">
         <rule>
             <name>Privileged Container Enabled</name>
-            <regex><![CDATA[privileged\s*:\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:privileged\s*:\s*true][IF(PRESENT:privileged:\s*true && MISSING:# intentional|# required|# system)]]]></rdl>
+            <regex>privileged\s*:\s*true</regex>
+            <rdl_ref>logic/kubernetes/core/privileged_container_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>allowPrivilegeEscalation Not Disabled</name>
-            <regex><![CDATA[allowPrivilegeEscalation\s*:\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:allowPrivilegeEscalation\s*:\s*true][IF(PRESENT:allowPrivilegeEscalation:\s*true && MISSING:# intentional|# required|capabilities\.drop)]]]></rdl>
+            <regex>allowPrivilegeEscalation\s*:\s*true</regex>
+            <rdl_ref>logic/kubernetes/core/allowprivilegeescalation_not_disabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>Container Running as Root User</name>
-            <regex><![CDATA[runAsUser\s*:\s*0\b|runAsNonRoot\s*:\s*false]]></regex>
-            <rdl><![CDATA[[FLAG:runAsUser\s*:\s*0\b|runAsNonRoot\s*:\s*false][IF(PRESENT:runAsUser:\s*0|runAsNonRoot:\s*false && MISSING:# intentional|# required)]]]></rdl>
+            <regex>runAsUser\s*:\s*0\b|runAsNonRoot\s*:\s*false</regex>
+            <rdl_ref>logic/kubernetes/core/container_running_as_root_user.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -53,8 +53,8 @@
         </rule>
         <rule>
             <name>Read-Only Root Filesystem Not Enforced</name>
-            <regex><![CDATA[readOnlyRootFilesystem\s*:\s*false]]></regex>
-            <rdl><![CDATA[[FLAG:readOnlyRootFilesystem\s*:\s*false][IF(MISSING:readOnlyRootFilesystem:\s*true|emptyDir|tmpfs:|volumeMounts && PRESENT:kind:\s*Deployment|kind:\s*StatefulSet|kind:\s*DaemonSet|kind:\s*Pod)]]]></rdl>
+            <regex>readOnlyRootFilesystem\s*:\s*false</regex>
+            <rdl_ref>logic/kubernetes/core/read_only_root_filesystem_not_enforced.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -72,8 +72,8 @@
     <category name="Host Namespace Sharing">
         <rule>
             <name>Host PID Namespace Shared</name>
-            <regex><![CDATA[hostPID\s*:\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:hostPID\s*:\s*true][IF(PRESENT:hostPID:\s*true && MISSING:# intentional|# required)]]]></rdl>
+            <regex>hostPID\s*:\s*true</regex>
+            <rdl_ref>logic/kubernetes/core/host_pid_namespace_shared.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -89,8 +89,8 @@
         </rule>
         <rule>
             <name>Host Network Namespace Shared</name>
-            <regex><![CDATA[hostNetwork\s*:\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:hostNetwork\s*:\s*true][IF(PRESENT:hostNetwork:\s*true && MISSING:# intentional|# required)]]]></rdl>
+            <regex>hostNetwork\s*:\s*true</regex>
+            <rdl_ref>logic/kubernetes/core/host_network_namespace_shared.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -106,8 +106,8 @@
         </rule>
         <rule>
             <name>Host IPC Namespace Shared</name>
-            <regex><![CDATA[hostIPC\s*:\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:hostIPC\s*:\s*true][IF(PRESENT:hostIPC:\s*true && MISSING:# intentional|# required)]]]></rdl>
+            <regex>hostIPC\s*:\s*true</regex>
+            <rdl_ref>logic/kubernetes/core/host_ipc_namespace_shared.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -125,9 +125,8 @@
     <category name="RBAC and Access Control">
         <rule>
             <name>Wildcard RBAC Verb Permission</name>
-            <regex><![CDATA[verbs\s*:\s*\[?\s*["']?\*["']?\s*\]?]]></regex>
-            <rdl><![CDATA[[FLAG:verbs\s*:\s*\[?\s*["']?\*["']?\s*\]?][IF(PRESENT:verbs:.*\*|verbs:\s*
-\s*-\s*['"]\*['"] && MISSING:# intentional|# required|system:|kube-system)]]]></rdl>
+            <regex>verbs\s*:\s*\[?\s*["']?\*["']?\s*\]?</regex>
+            <rdl_ref>logic/kubernetes/core/wildcard_rbac_verb_permission.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -143,9 +142,8 @@
         </rule>
         <rule>
             <name>Wildcard RBAC Resource</name>
-            <regex><![CDATA[resources\s*:\s*\[?\s*["']?\*["']?\s*\]?]]></regex>
-            <rdl><![CDATA[[FLAG:resources\s*:\s*\[?\s*["']?\*["']?\s*\]?][IF(PRESENT:resources:.*\*|resources:\s*
-\s*-\s*['"]\*['"] && MISSING:# intentional|# required|system:|kube-system)]]]></rdl>
+            <regex>resources\s*:\s*\[?\s*["']?\*["']?\s*\]?</regex>
+            <rdl_ref>logic/kubernetes/core/wildcard_rbac_resource.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -161,8 +159,8 @@
         </rule>
         <rule>
             <name>ClusterRoleBinding to cluster-admin</name>
-            <regex><![CDATA[roleRef\s*:[^}]*name\s*:\s*cluster-admin]]></regex>
-            <rdl><![CDATA[[FLAG:roleRef\s*:[^}]*name\s*:\s*cluster-admin][IF(PRESENT:cluster-admin && MISSING:# intentional|# required|system:|kube-system|namespace:\s*kube)]]]></rdl>
+            <regex>roleRef\s*:[^}]*name\s*:\s*cluster-admin</regex>
+            <rdl_ref>logic/kubernetes/core/clusterrolebinding_to_cluster_admin.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -180,8 +178,8 @@
     <category name="Secrets Management">
         <rule>
             <name>Secret Exposed as Environment Variable</name>
-            <regex><![CDATA[secretKeyRef\s*:|valueFrom\s*:[^}]*secretKeyRef]]></regex>
-            <rdl><![CDATA[[FLAG:secretKeyRef\s*:|valueFrom\s*:[^}]*secretKeyRef][IF(MISSING:volumes\s*:|volumeMounts\s*:)]]]></rdl>
+            <regex>secretKeyRef\s*:|valueFrom\s*:[^}]*secretKeyRef</regex>
+            <rdl_ref>logic/kubernetes/core/secret_exposed_as_environment_variable.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -199,8 +197,8 @@
     <category name="Resource Management">
         <rule>
             <name>No Resource Limits Defined</name>
-            <regex><![CDATA[containers\s*:]]></regex>
-            <rdl><![CDATA[[FLAG:containers\s*:][IF(MISSING:resources\s*:|limits\s*:|requests\s*:)]]]></rdl>
+            <regex>containers\s*:</regex>
+            <rdl_ref>logic/kubernetes/core/no_resource_limits_defined.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -216,8 +214,8 @@
         </rule>
         <rule>
             <name>Default Service Account Token Auto-Mounted</name>
-            <regex><![CDATA[automountServiceAccountToken\s*:\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:automountServiceAccountToken\s*:\s*true][IF(MISSING:automountServiceAccountToken:\s*false && PRESENT:kind:\s*Deployment|kind:\s*StatefulSet|kind:\s*Pod|kind:\s*DaemonSet)]]]></rdl>
+            <regex>automountServiceAccountToken\s*:\s*true</regex>
+            <rdl_ref>logic/kubernetes/core/default_service_account_token_auto_mounted.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT ServerCertificateValidationCallback\s*?\(.*?(\=|false|true)
+WHEN EXPR MISSING:test|development|localhost|staging|// intentional
+REPORT AS area_of_interest
+REASON Detects insecure configuration of the ServerCertificateValidationCallback, which may lead to improper validation of server certificates.
+TRACE Externalized rule logic for Server Certificate Validation: Insecure Configuration.

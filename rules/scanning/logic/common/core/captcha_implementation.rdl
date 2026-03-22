@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)(captcha|recaptcha)
+WHEN EXPR MISSING:(?i)\b(hcaptcha|recaptcha-enterprise|turnstile)\b
+REPORT AS area_of_interest
+REASON Detects the presence of CAPTCHA implementations that are potentially insecure or weak.
+TRACE Externalized rule logic for CAPTCHA Implementation.

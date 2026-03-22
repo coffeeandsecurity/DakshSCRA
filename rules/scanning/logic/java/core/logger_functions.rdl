@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT logger\.(error|warn|info|debug|trace)
+WHEN EXPR MISSING:release|production
+REPORT AS area_of_interest
+REASON Detects the usage of Java logger functions (error, warn, info, debug, trace), which can introduce potential security vulnerabilities if not handled properly.
+TRACE Externalized rule logic for Logger Functions.

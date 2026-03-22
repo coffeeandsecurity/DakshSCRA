@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT UserDefaults\.standard\.set\(.*(token|secret|password|apikey)
+WHEN EXPR MISSING:Keychain
+REPORT AS area_of_interest
+REASON Detects potential secret storage in UserDefaults.
+TRACE Externalized mobile rule logic for SwiftUI Sensitive Data in UserDefaults Marker.

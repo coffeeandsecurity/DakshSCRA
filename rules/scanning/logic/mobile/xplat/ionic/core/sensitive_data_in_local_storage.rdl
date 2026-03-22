@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(?:localStorage\.setItem|sessionStorage\.setItem|Storage\.set)\s*\(
+WHEN EXPR PRESENT:localStorage\.setItem.*(?:password|token|secret|key|auth|credential)|sessionStorage\.setItem.*(?:password|token|secret|key|auth|credential)|Storage\.set.*(?:password|token|secret|key|auth|credential)
+REPORT AS area_of_interest
+REASON Detects local storage write paths that may include sensitive data.
+TRACE Externalized mobile rule logic for Sensitive Data in Local Storage.

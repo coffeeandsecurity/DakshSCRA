@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT http://|Uri\.parse\(\s*[\'\"]http://
+REPORT AS area_of_interest
+REASON Detects cleartext endpoint usage in Flutter apps.
+TRACE Externalized mobile rule logic for Flutter Insecure HTTP Usage.

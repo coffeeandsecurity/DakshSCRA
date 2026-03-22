@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT ->load\s*\(\s*\$_(?:POST|GET|REQUEST)|->setAttributes\s*\(\s*\$_(?:POST|GET|REQUEST)
+WHEN EXPR MISSING:safeAttributes|rules|scenarios|safe\s*=>
+REPORT AS area_of_interest
+REASON Detects Yii model load() or setAttributes() calls directly using superglobal input arrays.
+TRACE Externalized rule logic for Unsafe Mass Assignment via load() or setAttributes().

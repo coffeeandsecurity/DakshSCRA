@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT ^[^*/]*\b(malloc|calloc|realloc)\s*\(
+WHEN EXPR PRESENT:user_input|argv|getenv|scanf|fgets|recv\s*\(|read\s*\(|atoi|atol|strtol|strtoul|input|request|len\s*\*|size\s*\*
+REPORT AS area_of_interest
+REASON Detects usage of memory allocation functions in code.
+TRACE Externalized rule logic for Risky Memory Allocation: malloc() and Related Functions.

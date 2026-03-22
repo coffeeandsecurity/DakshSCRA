@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT file_get_contents\s*\(\s*\$_(GET|POST|REQUEST|COOKIE)|\$\w+\s*=\s*file_get_contents\s*\(\s*\$
+WHEN EXPR MISSING:allowlist|whitelist|parse_url|filter_var|stream_context_create
+REPORT AS area_of_interest
+REASON Detects file_get_contents used with a user-controlled URL parameter.
+TRACE Externalized rule logic for SSRF: file_get_contents with User-Controlled URL.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT create_engine\s*\(\s*["'](?:postgresql|mysql|sqlite|mssql|oracle)[^"']*://[^"']*:[^"'@]{6,}@
+WHEN EXPR MISSING:os\.environ|getenv|config\.|settings\.
+REPORT AS area_of_interest
+REASON Detects hardcoded database credentials in SQLAlchemy connection strings.
+TRACE Externalized rule logic for Hardcoded Database Connection String.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT enable-oslogin\s*=\s*"FALSE"|enable-oslogin\s*=\s*"false"
+WHEN EXPR PRESENT:enable-oslogin\s*=\s*"false"|enable-oslogin\s*=\s*false && MISSING:# intentional|# legacy|# migration
+REPORT AS area_of_interest
+REASON Detects GCP instances with OS Login disabled, falling back to SSH key management.
+TRACE Externalized rule logic for GCP VM with OS Login Disabled.

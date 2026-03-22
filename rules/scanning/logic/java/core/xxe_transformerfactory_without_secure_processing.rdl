@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT TransformerFactory\.newInstance\s*\(|SchemaFactory\.newInstance\s*\(
+WHEN EXPR MISSING:setFeature\s*\(.*FEATURE_SECURE_PROCESSING|setAttribute\s*\(.*ACCESS_EXTERNAL
+REPORT AS area_of_interest
+REASON Detects TransformerFactory or SchemaFactory use without external access restrictions.
+TRACE Externalized rule logic for XXE: TransformerFactory Without Secure Processing.

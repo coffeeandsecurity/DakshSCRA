@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT unsafe\.|go:generate
+WHEN EXPR MISSING:// #nosec|gosec:disable|SECURITY_REVIEW
+REPORT AS area_of_interest
+REASON Detects instances of unsafe code execution without proper validation.
+TRACE Externalized rule logic for Arbitrary Code Execution: unsafe, go:generate.

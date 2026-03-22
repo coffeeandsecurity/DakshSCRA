@@ -3,7 +3,7 @@
         <rule>
             <name>Untrusted Input(s): requestParameters</name>
             <regex>requestParameters</regex>
-            <rdl><![CDATA[[FLAG:requestParameters][IF(PRESENT:(execute|query|print|write|redirect|Runtime|ProcessBuilder|File|URL|Http) && MISSING:(validate|sanitize|escape|encode|PreparedStatement|allowlist|whitelist))]]]></rdl>
+            <rdl_ref>logic/java/core/untrusted_input_s_requestparameters.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>Untrusted Input(s): getParameter</name>
-            <regex><![CDATA[getParameter\(]]></regex>
-            <rdl><![CDATA[[FLAG:getParameter\(][IF(PRESENT:(execute|query|print|write|redirect|Runtime|ProcessBuilder|File|URL|Http) && MISSING:(validate|sanitize|escape|encode|PreparedStatement|allowlist|whitelist))]]]></rdl>
+            <regex>getParameter\(</regex>
+            <rdl_ref>logic/java/core/untrusted_input_s_getparameter.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>Untrusted Input(s) in Application Response</name>
-            <regex><![CDATA[((\bprint|out\.print(ln)?|response\.write)\(.*|response\.getWriter|out\.write)(\s)*\((\s)*("|')[^("|')]*]]></regex>
-            <rdl><![CDATA[[FLAG:((\bprint|out\.print(ln)?|response\.write)\(.*|response\.getWriter|out\.write)(\s)*\((\s)*("|')[^("|')]*][IF(PRESENT:(request|getParameter|requestParameters|cookie|header) && MISSING:(escapeHtml|StringEscapeUtils|Encode\.forHtml|htmlspecialchars|sanitize))]]]></rdl>
+            <regex>((\bprint|out\.print(ln)?|response\.write)\(.*|response\.getWriter|out\.write)(\s)*\((\s)*("|')[^("|')]*</regex>
+            <rdl_ref>logic/java/core/untrusted_input_s_in_application_response.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -53,8 +53,8 @@
         </rule>
         <rule>
             <name>Untrusted Input(s) in SQL Query (PreparedStatement)</name>
-            <regex><![CDATA[PreparedStatement(\s)*(\.|->)execute( |Query|Update)]]></regex>
-            <rdl><![CDATA[[FLAG:PreparedStatement(\s)*(\.|->)execute( |Query|Update)][IF(PRESENT:(\+|String\.format|MessageFormat|append\() && MISSING:setString\(|setInt\(|setLong\(|setObject\())]]]></rdl>
+            <regex>PreparedStatement(\s)*(\.|-&gt;)execute( |Query|Update)</regex>
+            <rdl_ref>logic/java/core/untrusted_input_s_in_sql_query_preparedstatement.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -70,8 +70,8 @@
         </rule>
         <rule>
             <name>Serialization/Deserialization Handling</name>
-            <regex><![CDATA[\.readObject|\.writeObject|ObjectInputStream|ObjectOutputStream]]></regex>
-            <rdl><![CDATA[[FLAG:\.readObject|\.writeObject|ObjectInputStream|ObjectOutputStream][IF(MISSING:SerialKiller|ValidatingObjectInputStream|ObjectInputFilter|allowlist|whitelist|trusted)]]]></rdl>
+            <regex>\.readObject|\.writeObject|ObjectInputStream|ObjectOutputStream</regex>
+            <rdl_ref>logic/java/core/serialization_deserialization_handling.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -87,8 +87,8 @@
         </rule>
         <rule>
             <name>Command Injection</name>
-            <regex><![CDATA[(Runtime(\s)*\.getRuntime(\s)*(\.|->)exec|ProcessBuilder(\s)*(\.|->)start)]]></regex>
-            <rdl><![CDATA[[FLAG:(Runtime(\s)*\.getRuntime(\s)*(\.|->)exec|ProcessBuilder(\s)*(\.|->)start)][IF(PRESENT:(getParameter|requestParameters|System\.getProperty|args\[) && MISSING:(allowlist|whitelist))]]]></rdl>
+            <regex>(Runtime(\s)*\.getRuntime(\s)*(\.|-&gt;)exec|ProcessBuilder(\s)*(\.|-&gt;)start)</regex>
+            <rdl_ref>logic/java/core/command_injection.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -104,11 +104,10 @@
         </rule>
     </category>
     <category name="Internal Storage - Insecure File Permissions">
-        <!-- Applicable to Java/Kotlin source files (e.g., .java, .kt) -->
         <rule>
             <name>Deprecated MODE_WORLD_WRITEABLE Usage</name>
-            <regex><![CDATA[M(?:ODE_)?WORLD_WRITEABLE]]></regex>
-            <rdl><![CDATA[[FLAG:M(?:ODE_)?WORLD_WRITEABLE][IF(MISSING:EncryptedSharedPreferences|EncryptedFile|KeyStore|test|example)]]]></rdl>
+            <regex>M(?:ODE_)?WORLD_WRITEABLE</regex>
+            <rdl_ref>logic/java/core/deprecated_mode_world_writeable_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -124,8 +123,8 @@
         </rule>
         <rule>
             <name>Deprecated MODE_WORLD_READABLE Usage</name>
-            <regex><![CDATA[M(?:ODE_)?WORLD_READABLE]]></regex>
-            <rdl><![CDATA[[FLAG:M(?:ODE_)?WORLD_READABLE][IF(MISSING:EncryptedSharedPreferences|EncryptedFile|KeyStore|test|example)]]]></rdl>
+            <regex>M(?:ODE_)?WORLD_READABLE</regex>
+            <rdl_ref>logic/java/core/deprecated_mode_world_readable_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -141,8 +140,8 @@
         </rule>
         <rule>
             <name>Insecure File Operations</name>
-            <regex><![CDATA[openFile(?:Output|Input)\s*\([^,]*,\s*M(?:ODE_)?WORLD_(?:WRITEABLE|READABLE)]]></regex>
-            <rdl><![CDATA[[FLAG:openFile(?:Output|Input)\s*\([^,]*,\s*M(?:ODE_)?WORLD_(?:WRITEABLE|READABLE)][IF(MISSING:EncryptedFile|openFileOutput.*MODE_PRIVATE|test|example)]]]></rdl>
+            <regex>openFile(?:Output|Input)\s*\([^,]*,\s*M(?:ODE_)?WORLD_(?:WRITEABLE|READABLE)</regex>
+            <rdl_ref>logic/java/core/insecure_file_operations.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -158,8 +157,8 @@
         </rule>
         <rule>
             <name>File Sharing Without Content Provider</name>
-            <regex><![CDATA[Intent\s*\(\s*(?:[^,]*,\s*)?Uri\.parse]]></regex>
-            <rdl><![CDATA[[FLAG:Intent\s*\(\s*(?:[^,]*,\s*)?Uri\.parse][IF(MISSING:FileProvider|FLAG_GRANT_READ_URI_PERMISSION|content://)]]]></rdl>
+            <regex>Intent\s*\(\s*(?:[^,]*,\s*)?Uri\.parse</regex>
+            <rdl_ref>logic/java/core/file_sharing_without_content_provider.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -175,11 +174,10 @@
         </rule>
     </category>
     <category name="External Storage - Insecure Practices">
-        <!-- Applicable to Java/Kotlin source files (e.g., .java, .kt) -->
         <rule>
             <name>Insecure External Storage Write</name>
-            <regex><![CDATA[(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*\.write]]></regex>
-            <rdl><![CDATA[[FLAG:(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*\.write][IF(MISSING:EncryptedFile|AES|encrypt|cipher|KeyStore && MISSING:test|example|sample)]]]></rdl>
+            <regex>(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*\.write</regex>
+            <rdl_ref>logic/java/core/insecure_external_storage_write.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -195,8 +193,8 @@
         </rule>
         <rule>
             <name>Dynamic Loading from External Storage</name>
-            <regex><![CDATA[(DexClassLoader|PathClassLoader)\s*\([^,]*Environment\.getExternalStorageDirectory]]></regex>
-            <rdl><![CDATA[[FLAG:(DexClassLoader|PathClassLoader)\s*\([^,]*Environment\.getExternalStorageDirectory][IF(MISSING:verif|checksum|signature|PackageManager|test|example)]]]></rdl>
+            <regex>(DexClassLoader|PathClassLoader)\s*\([^,]*Environment\.getExternalStorageDirectory</regex>
+            <rdl_ref>logic/java/core/dynamic_loading_from_external_storage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -212,8 +210,8 @@
         </rule>
         <rule>
             <name>Insecure External Storage Read</name>
-            <regex><![CDATA[(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*\.read]]></regex>
-            <rdl><![CDATA[[FLAG:(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*\.read][IF(MISSING:validate|sanitize|allowlist && MISSING:test|example|sample)]]]></rdl>
+            <regex>(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*\.read</regex>
+            <rdl_ref>logic/java/core/insecure_external_storage_read.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -229,8 +227,8 @@
         </rule>
         <rule>
             <name>Executable File Storage on External Storage</name>
-            <regex><![CDATA[(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*.*\.(dex|so|jar|apk)]]></regex>
-            <rdl><![CDATA[[FLAG:(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*.*\.(dex|so|jar|apk)][IF(MISSING:getInternalFilesDir|getFilesDir|getNoBackupFilesDir|test|example)]]]></rdl>
+            <regex>(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*.*\.(dex|so|jar|apk)</regex>
+            <rdl_ref>logic/java/core/executable_file_storage_on_external_storage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -248,8 +246,8 @@
     <category name="Untrusted File Handling">
         <rule>
             <name>File Upload Functionality</name>
-            <regex><![CDATA[(?i)(FileUpload|MultipartFile|CommonsMultipartFile)\s*\(.*\)|\bPart\s*\(.*\)]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(FileUpload|MultipartFile|CommonsMultipartFile)\s*\(.*\)|\bPart\s*\(.*\)][IF(MISSING:getContentType|getOriginalFilename|getSize|allowedTypes|allowedExtensions|maximumSize|validate|sanitize)]]]></rdl>
+            <regex>(?i)(FileUpload|MultipartFile|CommonsMultipartFile)\s*\(.*\)|\bPart\s*\(.*\)</regex>
+            <rdl_ref>logic/java/core/file_upload_functionality.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -265,8 +263,8 @@
         </rule>
         <rule>
             <name>File Inclusion Vulnerability</name>
-            <regex><![CDATA[(request\.getParameter|response\.sendRedirect|response\.setHeader|response\.addHeader)\s*\(\s*("|')[^\s'"]+\.(jsp|php|txt|html|xml|json|csv|log)("|')]]></regex>
-            <rdl><![CDATA[[FLAG:(request\.getParameter|response\.sendRedirect|response\.setHeader|response\.addHeader)\s*\(\s*("|')[^\s'"]+\.(jsp|php|txt|html|xml|json|csv|log)("|')][IF(MISSING:allowlist|whitelist|isLocalUrl|validateUrl|same-origin)]]]></rdl>
+            <regex>(request\.getParameter|response\.sendRedirect|response\.setHeader|response\.addHeader)\s*\(\s*("|')[^\s'"]+\.(jsp|php|txt|html|xml|json|csv|log)("|')</regex>
+            <rdl_ref>logic/java/core/file_inclusion_vulnerability.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -284,8 +282,8 @@
     <category name="Insecure/Deprecated Libraries">
         <rule>
             <name>Insecure Package: java.util.Random</name>
-            <regex><![CDATA[java\.util\.Random]]></regex>
-            <rdl><![CDATA[[FLAG:java\.util\.Random][IF(MISSING:SecureRandom|new\s+Random\s*\(\s*seed|ThreadLocalRandom && MISSING:test|mock|dummy|example)]]]></rdl>
+            <regex>java\.util\.Random</regex>
+            <rdl_ref>logic/java/core/insecure_package_java_util_random.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -301,8 +299,8 @@
         </rule>
         <rule>
             <name>Insecure Package: java.net.HttpURLConnection</name>
-            <regex><![CDATA[java\.net\.HttpURLConnection]]></regex>
-            <rdl><![CDATA[[FLAG:java\.net\.HttpURLConnection][IF(MISSING:https://|HttpsURLConnection|SSLContext|TrustManager|HSTS && MISSING:localhost|127\.0\.0\.1|test|example)]]]></rdl>
+            <regex>java\.net\.HttpURLConnection</regex>
+            <rdl_ref>logic/java/core/insecure_package_java_net_httpurlconnection.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -318,8 +316,8 @@
         </rule>
         <rule>
             <name>Insecure Package: org.apache.commons.collections</name>
-            <regex><![CDATA[org\.apache\.commons\.collections]]></regex>
-            <rdl><![CDATA[[FLAG:org\.apache\.commons\.collections][IF(MISSING:SerializationBinder|AllowType|ValidatingObjectInputStream|trusted && MISSING:test|example)]]]></rdl>
+            <regex>org\.apache\.commons\.collections</regex>
+            <rdl_ref>logic/java/core/insecure_package_org_apache_commons_collections.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -335,8 +333,8 @@
         </rule>
         <rule>
             <name>Insecure Package: javax.xml.parsers.DocumentBuilderFactory</name>
-            <regex><![CDATA[javax\.xml\.parsers\.DocumentBuilderFactory]]></regex>
-            <rdl><![CDATA[[FLAG:javax\.xml\.parsers\.DocumentBuilderFactory][IF(MISSING:setFeature.*XMLConstants\.FEATURE_SECURE_PROCESSING|setFeature.*disallow-doctype-decl|setExpandEntityReferences\s*\(\s*false|XMLInputFactory.*IS_SUPPORTING_EXTERNAL_ENTITIES.*false)]]]></rdl>
+            <regex>javax\.xml\.parsers\.DocumentBuilderFactory</regex>
+            <rdl_ref>logic/java/core/insecure_package_javax_xml_parsers_documentbuilderfactory.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -352,8 +350,8 @@
         </rule>
         <rule>
             <name>Insecure Package: org.springframework.web.multipart.MultipartFile</name>
-            <regex><![CDATA[org\.springframework\.web\.multipart\.MultipartFile]]></regex>
-            <rdl><![CDATA[[FLAG:org\.springframework\.web\.multipart\.MultipartFile][IF(MISSING:validate|allowlist|getOriginalFilename.*replace|ContentType|getSize\s*\(\s*\) && MISSING:test|example)]]]></rdl>
+            <regex>org\.springframework\.web\.multipart\.MultipartFile</regex>
+            <rdl_ref>logic/java/core/insecure_package_org_springframework_web_multipart_multipartfile.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -369,8 +367,8 @@
         </rule>
         <rule>
             <name>Insecure Package: org.apache.poi.hssf.usermodel.HSSFWorkbook</name>
-            <regex><![CDATA[org\.apache\.poi\.hssf\.usermodel\.HSSFWorkbook]]></regex>
-            <rdl><![CDATA[[FLAG:org\.apache\.poi\.hssf\.usermodel\.HSSFWorkbook][IF(MISSING:XSSFWorkbook|validate|allowlist && MISSING:test|example)]]]></rdl>
+            <regex>org\.apache\.poi\.hssf\.usermodel\.HSSFWorkbook</regex>
+            <rdl_ref>logic/java/core/insecure_package_org_apache_poi_hssf_usermodel_hssfworkbook.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -388,8 +386,8 @@
     <category name="Disabled/Missing Security Controls">
         <rule>
             <name>Missing 'httpOnly' Flag in Cookie</name>
-            <regex><![CDATA[(\bSet-Cookie:\s*)(?!(.*;\s*)*HttpOnly\b).*]]></regex>
-            <rdl><![CDATA[[FLAG:(\bSet-Cookie:\s*)(?!(.*;\s*)*HttpOnly\b).*][IF(MISSING:setHttpOnly\s*\(\s*true|setSecure\s*\(\s*true|SameSite)]]]></rdl>
+            <regex>(\bSet-Cookie:\s*)(?!(.*;\s*)*HttpOnly\b).*</regex>
+            <rdl_ref>logic/java/core/missing_httponly_flag_in_cookie.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -405,8 +403,8 @@
         </rule>
         <rule>
             <name>Disabled CSRF Protection</name>
-            <regex><![CDATA[(\b.disable\(\s*['"]csrf['"]\s*\))]]></regex>
-            <rdl><![CDATA[[FLAG:(\b.disable\(\s*['"]csrf['"]\s*\))][IF(MISSING:CsrfTokenRepository|csrfTokenRequestAttributeName|SameSite && PRESENT:csrf\(\)\.disable\(\)|csrf\.disable\(\)|CsrfConfigurer)]]]></rdl>
+            <regex>(\b.disable\(\s*['"]csrf['"]\s*\))</regex>
+            <rdl_ref>logic/java/core/disabled_csrf_protection.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -422,8 +420,8 @@
         </rule>
         <rule>
             <name>Disabled Input Validation</name>
-            <regex><![CDATA[(\bvalidateInput\s*=\s*['"]false['"])]]></regex>
-            <rdl><![CDATA[[FLAG:(\bvalidateInput\s*=\s*['"]false['"])][IF(PRESENT:validateRequest\s*=\s*"false"|@SuppressWarnings.*"unchecked"|@Valid\s*=\s*false|disableValidation && MISSING:test|example)]]]></rdl>
+            <regex>(\bvalidateInput\s*=\s*['"]false['"])</regex>
+            <rdl_ref>logic/java/core/disabled_input_validation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -441,8 +439,8 @@
     <category name="Information Disclosure">
         <rule>
             <name>Logger Functions</name>
-            <regex><![CDATA[logger\.(error|warn|info|debug|trace)]]></regex>
-            <rdl><![CDATA[[FLAG:logger\.(error|warn|info|debug|trace)][IF(MISSING:release|production)]]]></rdl>
+            <regex>logger\.(error|warn|info|debug|trace)</regex>
+            <rdl_ref>logic/java/core/logger_functions.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -458,8 +456,8 @@
         </rule>
         <rule>
             <name>Debugging and Logging Statements</name>
-            <regex><![CDATA[(System\.out\.print|System\.err\.print|System\.out\.println|System\.err\.println|log\.(debug|trace))]]></regex>
-            <rdl><![CDATA[[FLAG:(System\.out\.print|System\.err\.print|System\.out\.println|System\.err\.println|log\.(debug|trace))][IF(MISSING:release|production)]]]></rdl>
+            <regex>(System\.out\.print|System\.err\.print|System\.out\.println|System\.err\.println|log\.(debug|trace))</regex>
+            <rdl_ref>logic/java/core/debugging_and_logging_statements.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -475,8 +473,8 @@
         </rule>
         <rule>
             <name>Stack Trace or Error Disclosure</name>
-            <regex><![CDATA[(?i)(e\.printStackTrace\(\)|e\.getCause\(\)\.printStackTrace\(\)|System\.out\.print\(.*Exception.*\)|throw new \w+Exception\(.+\))]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(e\.printStackTrace\(\)|e\.getCause\(\)\.printStackTrace\(\)|System\.out\.print\(.*Exception.*\)|throw new \w+Exception\(.+\))][IF(MISSING:log\.error|logger\.error|LogManager|SLF4J && MISSING:production|release)]]]></rdl>
+            <regex>(?i)(e\.printStackTrace\(\)|e\.getCause\(\)\.printStackTrace\(\)|System\.out\.print\(.*Exception.*\)|throw new \w+Exception\(.+\))</regex>
+            <rdl_ref>logic/java/core/stack_trace_or_error_disclosure.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -492,8 +490,8 @@
         </rule>
         <rule>
             <name>Unencrypted Data Transmission over HTTP</name>
-            <regex><![CDATA[new\s*HttpGet|new\s*HttpPost|new\s*HttpPut|new\s*HttpDelete|new\s*HttpURLConnection]]></regex>
-            <rdl><![CDATA[[FLAG:new\s*HttpGet|new\s*HttpPost|new\s*HttpPut|new\s*HttpDelete|new\s*HttpURLConnection][IF(PRESENT:http:// && MISSING:https://)]]]></rdl>
+            <regex>new\s*HttpGet|new\s*HttpPost|new\s*HttpPut|new\s*HttpDelete|new\s*HttpURLConnection</regex>
+            <rdl_ref>logic/java/core/unencrypted_data_transmission_over_http.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -511,8 +509,8 @@
     <category name="Database Queries">
         <rule>
             <name>SQL Query: SELECT Statements with WHERE or ORDER BY</name>
-            <regex><![CDATA[(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*][IF(PRESENT:(\+|String\.format|MessageFormat|requestParameters|getParameter) && MISSING:PreparedStatement|setString\(|setInt\(|setLong\(|setObject\())]]]></rdl>
+            <regex>(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*</regex>
+            <rdl_ref>logic/java/core/sql_query_select_statements_with_where_or_order_by.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -528,8 +526,8 @@
         </rule>
         <rule>
             <name>SQL Query: Unrestricted SELECT *</name>
-            <regex><![CDATA[\bSELECT\s+\*\s+FROM\b]]></regex>
-            <rdl><![CDATA[[FLAG:\bSELECT\s+\*\s+FROM\b][IF(MISSING:LIMIT\s+[0-9]+)]]]></rdl>
+            <regex>\bSELECT\s+\*\s+FROM\b</regex>
+            <rdl_ref>logic/java/core/sql_query_unrestricted_select.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -545,8 +543,8 @@
         </rule>
         <rule>
             <name>SQL Query: Non-parameterized DELETE Statements</name>
-            <regex><![CDATA[(?i)\bDELETE\s+FROM\s+[^\s]+\s+WHERE\s+.*=.*\$.*]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\bDELETE\s+FROM\s+[^\s]+\s+WHERE\s+.*=.*\$.*][IF(MISSING:PreparedStatement|setString\(|setInt\(|setLong\(|setObject\())]]]></rdl>
+            <regex>(?i)\bDELETE\s+FROM\s+[^\s]+\s+WHERE\s+.*=.*\$.*</regex>
+            <rdl_ref>logic/java/core/sql_query_non_parameterized_delete_statements.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -562,8 +560,8 @@
         </rule>
         <rule>
             <name>SQL Query: Querying Sensitive Information Directly in Code</name>
-            <regex><![CDATA[(?i)\bSELECT\s+(password|ssn|creditcard|api_key|token|pin)\s+FROM\s+[^\s]+\b]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\bSELECT\s+(password|ssn|creditcard|api_key|token|pin)\s+FROM\s+[^\s]+\b][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <regex>(?i)\bSELECT\s+(password|ssn|creditcard|api_key|token|pin)\s+FROM\s+[^\s]+\b</regex>
+            <rdl_ref>logic/java/core/sql_query_querying_sensitive_information_directly_in_code.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -582,8 +580,8 @@
     <category name="XML External Entity (XXE)">
         <rule>
             <name>XXE: DocumentBuilderFactory Without Secure Processing</name>
-            <regex><![CDATA[DocumentBuilderFactory\.newInstance\s*\(|SAXParserFactory\.newInstance\s*\(|XMLInputFactory\.newInstance\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:DocumentBuilderFactory\.newInstance\s*\(|SAXParserFactory\.newInstance\s*\(|XMLInputFactory\.newInstance\s*\(][IF(MISSING:setFeature\s*\(.*FEATURE_SECURE_PROCESSING|setExpandEntityReferences\s*\(\s*false|DISALLOW_DOCTYPE_DECL|SUPPORT_DTD\s*,\s*false)]]]></rdl>
+            <regex>DocumentBuilderFactory\.newInstance\s*\(|SAXParserFactory\.newInstance\s*\(|XMLInputFactory\.newInstance\s*\(</regex>
+            <rdl_ref>logic/java/core/xxe_documentbuilderfactory_without_secure_processing.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -599,8 +597,8 @@
         </rule>
         <rule>
             <name>XXE: TransformerFactory Without Secure Processing</name>
-            <regex><![CDATA[TransformerFactory\.newInstance\s*\(|SchemaFactory\.newInstance\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:TransformerFactory\.newInstance\s*\(|SchemaFactory\.newInstance\s*\(][IF(MISSING:setFeature\s*\(.*FEATURE_SECURE_PROCESSING|setAttribute\s*\(.*ACCESS_EXTERNAL)]]]></rdl>
+            <regex>TransformerFactory\.newInstance\s*\(|SchemaFactory\.newInstance\s*\(</regex>
+            <rdl_ref>logic/java/core/xxe_transformerfactory_without_secure_processing.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -618,8 +616,8 @@
     <category name="LDAP Injection">
         <rule>
             <name>LDAP Injection: InitialDirContext Search with User Input</name>
-            <regex><![CDATA[InitialDirContext|InitialLdapContext|DirContext\.search\s*\(|new\s+SearchControls\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:InitialDirContext|InitialLdapContext|DirContext\.search\s*\(][IF(PRESENT:request|getParameter|getHeader|query|input && MISSING:escapeLDAPSearchFilter|ESAPI\.encoder\(\)\.encodeForLDAP|ldapEscape)]]]></rdl>
+            <regex>InitialDirContext|InitialLdapContext|DirContext\.search\s*\(|new\s+SearchControls\s*\(</regex>
+            <rdl_ref>logic/java/core/ldap_injection_initialdircontext_search_with_user_input.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -637,8 +635,8 @@
     <category name="XPath Injection">
         <rule>
             <name>XPath Injection: XPathExpression with Concatenation</name>
-            <regex><![CDATA[xpath\.evaluate\s*\(|XPathExpression\.evaluate\s*\(|XPath\.compile\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:xpath\.evaluate\s*\(|XPathExpression\.evaluate\s*\(|XPath\.compile\s*\(][IF(PRESENT:request|getParameter|input|query|\+ && MISSING:XPathVariableResolver|parameterized|encodeForXPath)]]]></rdl>
+            <regex>xpath\.evaluate\s*\(|XPathExpression\.evaluate\s*\(|XPath\.compile\s*\(</regex>
+            <rdl_ref>logic/java/core/xpath_injection_xpathexpression_with_concatenation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -656,8 +654,8 @@
     <category name="JNDI Injection">
         <rule>
             <name>JNDI Injection: InitialContext Lookup with User Input</name>
-            <regex><![CDATA[InitialContext\s*\(\s*\)|new\s+InitialContext\s*\(|context\.lookup\s*\(|jndiContext\.lookup\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:context\.lookup\s*\(|jndiContext\.lookup\s*\(][IF(PRESENT:request|getParameter|getHeader|input|\+ && MISSING:allowlist|whitelist|validateJndiName)]]]></rdl>
+            <regex>InitialContext\s*\(\s*\)|new\s+InitialContext\s*\(|context\.lookup\s*\(|jndiContext\.lookup\s*\(</regex>
+            <rdl_ref>logic/java/core/jndi_injection_initialcontext_lookup_with_user_input.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT __DEV__|NODE_ENV\s*=\s*[\'\"]development[\'\"]
+WHEN EXPR MISSING:NODE_ENV\s*=\s*[\'\"]production[\'\"]
+REPORT AS area_of_interest
+REASON Detects React Native debug/development mode usage.
+TRACE Externalized mobile rule logic for React Native Debug Mode Marker.

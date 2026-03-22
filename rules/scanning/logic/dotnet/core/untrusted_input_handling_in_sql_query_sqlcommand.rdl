@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT new SqlCommand\(.*\)
+WHEN EXPR PRESENT:(\+|String\.Format|Request\.|QueryString|Form) && MISSING:(SqlParameter|AddWithValue|Parameters\.Add|Parameters\.AddWithValue)
+REPORT AS area_of_interest
+REASON Detects the usage of SqlCommand without parameterized queries, which can lead to SQL injection vulnerabilities.
+TRACE Externalized rule logic for Untrusted Input Handling in SQL Query: SqlCommand.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT CFLAGS\s*=.*\b(-w)\b
+WHEN EXPR PRESENT:#pragma\s+warning\s*\(\s*disable|-Wno-error|-w\b|/W0|__attribute__.*unused.*//.*suppress && MISSING:// intentional|// NOLINT
+REPORT AS area_of_interest
+REASON Detects flags that suppress compiler warnings.
+TRACE Externalized rule logic for Suppressing Compiler Warnings.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT http://|server\.ssl\.enabled\s*=\s*false|allowInsecureProtocol\s*=\s*true
+WHEN EXPR MISSING:https://
+REPORT AS area_of_interest
+REASON Detects insecure transport usage/settings in code or config.
+TRACE Externalized rule logic for Hibernate Insecure Transport Setting.

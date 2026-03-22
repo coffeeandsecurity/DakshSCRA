@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT <interceptor-ref\s+name="fileUpload"
+WHEN EXPR MISSING:maximumSize|allowedTypes|allowedExtensions
+REPORT AS area_of_interest
+REASON Detects Struts file upload configurations without size or type restrictions.
+TRACE Externalized rule logic for File Upload Without Type and Size Restrictions.

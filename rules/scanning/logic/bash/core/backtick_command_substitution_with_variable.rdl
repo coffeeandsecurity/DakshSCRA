@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT `[^`]*\$\w[^`]*`
+WHEN EXPR MISSING:sanitize|validate|allowlist
+REPORT AS area_of_interest
+REASON Detects backtick command substitution containing interpolated variables.
+TRACE Externalized rule logic for Backtick Command Substitution with Variable.

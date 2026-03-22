@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT origin\s*:\s*[\'\"]\*[\'\"]|Access-Control-Allow-Origin\s*[:=]\s*[\'\"]\*[\'\"]
+WHEN EXPR MISSING:allowlist|whitelist|trusted
+REPORT AS area_of_interest
+REASON Detects wildcard CORS policies in framework/server config.
+TRACE Externalized rule logic for Nestjs Permissive CORS.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \.(query|execute)\(\s*`|\$where\s*:\s*|sequelize\.query\(
+WHEN EXPR MISSING:parameterize|prepare|sanitize|validate|escape && MISSING:test|spec|example
+REPORT AS area_of_interest
+REASON Detects query construction patterns requiring injection review.
+TRACE Externalized rule logic for Vue SQL/NoSQL Injection Sink.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT Log\.[dviweVIWDE]\s*\(.*(?:password|token|secret|apiKey|credential|authToken|accessToken)
+WHEN EXPR MISSING:BuildConfig\.DEBUG|if\s*\(\s*BuildConfig\.DEBUG|if\s*\(\s*DEBUG
+REPORT AS area_of_interest
+REASON Detects Android log statements that reference sensitive data outside a debug build guard.
+TRACE Externalized mobile rule logic for Sensitive Data Written to Android Logs.

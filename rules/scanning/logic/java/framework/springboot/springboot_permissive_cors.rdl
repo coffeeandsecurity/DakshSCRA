@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT @CrossOrigin\(.*\*|allowedOrigins\s*=\s*\{?\s*"\*"
+WHEN EXPR MISSING:allowHost|origin|trustedOrigins|allowSpecificOrigins
+REPORT AS area_of_interest
+REASON Detects wildcard CORS in controller/global config.
+TRACE Externalized rule logic for Springboot Permissive CORS.

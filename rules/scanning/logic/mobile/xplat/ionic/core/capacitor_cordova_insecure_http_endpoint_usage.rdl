@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT (?i)\b(?:fetch|XMLHttpRequest|HttpClient|axios\.(?:get|post|put|delete|request)|\$.ajax|url\s*[:=]|baseUrl\s*[:=]|serverUrl\s*[:=]|endpoint\s*[:=]|api(?:[_-]?(?:url|endpoint))?\s*[:=]|src\s*[:=]|href\s*[:=]|window\.open|Browser\.open|InAppBrowser|allow-navigation|access\s+origin)[^\n]{0,220}http://
+REPORT AS area_of_interest
+REASON Detects cleartext endpoint references in hybrid mobile application code/configuration.
+TRACE Externalized mobile rule logic for Capacitor/Cordova Insecure HTTP Endpoint Usage.

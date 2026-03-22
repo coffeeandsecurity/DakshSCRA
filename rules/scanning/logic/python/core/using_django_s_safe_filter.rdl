@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\.safe_filter\s*\(\s*
+WHEN EXPR MISSING:escape|bleach\.clean|html\.escape|strip_tags|validate && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects the use of Django's Safe Filter without proper sanitization.
+TRACE Externalized rule logic for Using Django's Safe Filter.

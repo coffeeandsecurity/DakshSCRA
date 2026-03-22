@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT http://
+REPORT AS area_of_interest
+REASON Detects cleartext endpoint references in Xamarin apps.
+TRACE Externalized mobile rule logic for Xamarin Insecure HTTP Endpoint Usage.

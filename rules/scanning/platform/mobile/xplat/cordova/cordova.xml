@@ -2,8 +2,8 @@
     <category name="Framework-Specific Issues - Cordova">
         <rule>
             <name>Overly Permissive Cordova Whitelist</name>
-            <regex><![CDATA[<allow-navigation\s+href="\*"\s*/>|<access\s+origin="\*"\s*/>]]></regex>
-            <rdl><![CDATA[[FLAG:<allow-navigation\s+href="\*"\s*/>|<access\s+origin="\*"\s*/>][IF(MISSING:allowlist|whitelist|trusted)]]]></rdl>
+            <regex>&lt;allow-navigation\s+href="\*"\s*/&gt;|&lt;access\s+origin="\*"\s*/&gt;</regex>
+            <rdl_ref>logic/mobile/xplat/cordova/core/overly_permissive_cordova_whitelist.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>Insecure External URL Handling</name>
-            <regex><![CDATA[\b(?:window\.open|cordova\.InAppBrowser\.open)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:window\.open|cordova\.InAppBrowser\.open)\s*\(][IF(MISSING:allowlist|trustedUrls|validateUrl|startsWith.*https && MISSING:test|example)]]]></rdl>
+            <regex>\b(?:window\.open|cordova\.InAppBrowser\.open)\s*\(</regex>
+            <rdl_ref>logic/mobile/xplat/cordova/core/insecure_external_url_handling.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>Sensitive Data Stored in Web Storage</name>
-            <regex><![CDATA[\b(?:localStorage\.setItem|sessionStorage\.setItem)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:localStorage\.setItem|sessionStorage\.setItem)\s*\(][IF(PRESENT:localStorage\.setItem.*(?:password|token|secret|key|auth|credential)|sessionStorage\.setItem.*(?:password|token|secret|key|auth) && MISSING:encrypt|CryptoJS|subtle\.encrypt)]]]></rdl>
+            <regex>\b(?:localStorage\.setItem|sessionStorage\.setItem)\s*\(</regex>
+            <rdl_ref>logic/mobile/xplat/cordova/core/sensitive_data_stored_in_web_storage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -55,8 +55,8 @@
     <category name="Framework-Specific Security">
         <rule>
             <name>Cordova Wildcard Access Origin</name>
-            <regex><![CDATA[<access\s+origin=\"\*\"]]></regex>
-            <rdl><![CDATA[[FLAG:<access\s+origin=\"\*\"][IF(MISSING:Content-Security-Policy)]]]></rdl>
+            <regex>&lt;access\s+origin=\"\*\"</regex>
+            <rdl_ref>logic/mobile/xplat/cordova/core/cordova_wildcard_access_origin.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -72,8 +72,8 @@
         </rule>
         <rule>
             <name>Cordova Wildcard Allow Navigation</name>
-            <regex><![CDATA[<allow-navigation\s+href=\"\*\"]]></regex>
-            <rdl><![CDATA[[FLAG:<allow-navigation\s+href=\"\*\"][IF(MISSING:allow-navigation\s+href=\"https://)]]]></rdl>
+            <regex>&lt;allow-navigation\s+href=\"\*\"</regex>
+            <rdl_ref>logic/mobile/xplat/cordova/core/cordova_wildcard_allow_navigation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -89,8 +89,8 @@
         </rule>
         <rule>
             <name>Cordova Unsafe CSP Directives</name>
-            <regex><![CDATA[unsafe-inline|unsafe-eval]]></regex>
-            <rdl><![CDATA[[FLAG:unsafe-inline|unsafe-eval][IF(MISSING:nonce-|sha256-)]]]></rdl>
+            <regex>unsafe-inline|unsafe-eval</regex>
+            <rdl_ref>logic/mobile/xplat/cordova/core/cordova_unsafe_csp_directives.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -107,7 +107,7 @@
         <rule>
             <name>Cordova Insecure HTTP Endpoint Usage</name>
             <regex>http://</regex>
-            <rdl><![CDATA[[FLAG:http://][IF(MISSING:https://)]]]></rdl>
+            <rdl_ref>logic/mobile/xplat/cordova/core/cordova_insecure_http_endpoint_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -122,8 +122,8 @@
         </rule>
         <rule>
             <name>Cordova WebView JavaScript Bridge Marker</name>
-            <regex><![CDATA[addJavascriptInterface\(|cordova\.exec\(]]></regex>
-            <rdl><![CDATA[[FLAG:addJavascriptInterface\(|cordova\.exec\(][IF(MISSING:allow-navigation\s+href=\"https://)]]]></rdl>
+            <regex>addJavascriptInterface\(|cordova\.exec\(</regex>
+            <rdl_ref>logic/mobile/xplat/cordova/core/cordova_webview_javascript_bridge_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -139,8 +139,8 @@
         </rule>
         <rule>
             <name>Cordova Hardcoded Secret Marker</name>
-            <regex><![CDATA[(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]]]></regex>
-            <rdl><![CDATA[[FLAG:(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]][IF(MISSING:example|sample|dummy)]]]></rdl>
+            <regex>(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]</regex>
+            <rdl_ref>logic/mobile/xplat/cordova/core/cordova_hardcoded_secret_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -158,8 +158,8 @@
     <category name="Platform-Specific Issues - Android">
         <rule>
             <name>Android Cleartext Traffic Allowed</name>
-            <regex><![CDATA[usesCleartextTraffic\s*=\s*"?(?:true|TRUE)"?]]></regex>
-            <rdl><![CDATA[[FLAG:usesCleartextTraffic\s*=\s*"?(?:true|TRUE)"?][IF(PRESENT:android:usesCleartextTraffic\s*=\s*"true"|cleartextTrafficPermitted\s*=\s*"true" && MISSING:networkSecurityConfig|# intentional|localhost|development)]]]></rdl>
+            <regex>usesCleartextTraffic\s*=\s*"?(?:true|TRUE)"?</regex>
+            <rdl_ref>logic/mobile/xplat/cordova/core/android_cleartext_traffic_allowed.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -177,8 +177,8 @@
     <category name="Platform-Specific Issues - iOS">
         <rule>
             <name>iOS ATS Disabled</name>
-            <regex><![CDATA[NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]></regex>
-            <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>][IF(PRESENT:NSAllowsArbitraryLoads.*true && MISSING:NSExceptionDomains|localhost|development|# intentional)]]]></rdl>
+            <regex>NSAllowsArbitraryLoads\s*&lt;/key&gt;\s*&lt;true\s*/&gt;</regex>
+            <rdl_ref>logic/mobile/xplat/cordova/core/ios_ats_disabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>

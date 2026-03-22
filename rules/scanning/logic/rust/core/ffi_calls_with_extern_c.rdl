@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bextern\s+"C"\b
+WHEN EXPR MISSING:// SAFETY:|// Safety:|#\[no_mangle\]|unsafe fn && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects foreign function interface boundaries.
+TRACE Externalized rule logic for FFI Calls with extern "C".

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)(Response\.Write\s*\([^)]{0,200}StackTrace|ex\.ToString\(\)|Console\.WriteLine\([^)]{0,200}Exception[^)]*\)|throw new \w*Exception\([^)]{0,200}\))
+WHEN EXPR MISSING:ini_set.*display_errors.*0|error_reporting\s*\(\s*0\s*\)|log_errors|try.*catch && MISSING:development|localhost
+REPORT AS area_of_interest
+REASON Detects unsafe error handling and stack trace exposure in .NET applications.
+TRACE Externalized rule logic for Stack Trace or Error Disclosure.

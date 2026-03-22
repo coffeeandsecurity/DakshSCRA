@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\bUNION\s+SELECT\s+.*\$.*
+WHEN EXPR MISSING:(SqlParameter|AddWithValue|Parameters\.Add|Parameters\.AddWithValue)
+REPORT AS area_of_interest
+REASON Detects UNION queries that incorporate user input, which could allow SQL injection if not parameterized securely.
+TRACE Externalized rule logic for SQL Query: UNION Queries with User Input.

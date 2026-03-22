@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (DexClassLoader|PathClassLoader)\s*\([^,]*Environment\.getExternalStorageDirectory
+WHEN EXPR MISSING:verify|signature|checksum|MessageDigest|trusted
+REPORT AS area_of_interest
+REASON Detects dynamic loading of files from external storage.
+TRACE Externalized rule logic for Dynamic Loading from External Storage.

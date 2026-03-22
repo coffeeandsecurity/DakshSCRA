@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT WebView|EvaluateJavaScriptAsync\(|addJavascriptInterface\(
+WHEN EXPR MISSING:Navigating\s*\+=
+REPORT AS area_of_interest
+REASON Detects webview/bridge execution points needing security review.
+TRACE Externalized mobile rule logic for Xamarin WebView Script Bridge Marker.

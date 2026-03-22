@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*\.read
+WHEN EXPR MISSING:validate|sanitize|allowlist && MISSING:test|example|sample
+REPORT AS area_of_interest
+REASON Detects reading data from external storage without proper input validation.
+TRACE Externalized rule logic for Insecure External Storage Read.

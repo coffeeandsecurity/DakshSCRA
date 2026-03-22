@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\b(SESSION_COOKIE_SECURE|CSRF_COOKIE_SECURE)\s*=\s*False\b
+WHEN EXPR MISSING:SESSION_COOKIE_SECURE\s*=\s*True|CSRF_COOKIE_SECURE\s*=\s*True|production|test|example
+REPORT AS area_of_interest
+REASON Detects potential security vulnerabilities related to insecure session cookies or CSRF token configurations in Django and similar Python web frameworks.
+TRACE Externalized rule logic for Insecure Session Cookies or CSRF Tokens Configuration.

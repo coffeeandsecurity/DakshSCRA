@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT (?i)\buser\b
+WHEN EXPR PRESENT:(?i)(/|\\\\).*(user|users|profile|account) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/)
+REPORT AS area_of_interest
+REASON Detects file paths related to user section functionality.

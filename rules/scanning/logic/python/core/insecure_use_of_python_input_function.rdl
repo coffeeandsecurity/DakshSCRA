@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT input\(\)
+WHEN EXPR PRESENT:(eval\(|exec\(|subprocess|os\.system|os\.popen|sql|execute) && MISSING:(strip\(|isdigit\(|isnumeric\(|re\.match|re\.fullmatch)
+REPORT AS area_of_interest
+REASON Detects potentially insecure usage of Python's input() function for user input.
+TRACE Externalized rule logic for Insecure Use of Python input() Function.

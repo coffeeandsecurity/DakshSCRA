@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)(echo .*Exception.*;|print_r\(.*Exception.*\)|trigger_error\(.+\))
+WHEN EXPR MISSING:ini_set.*display_errors.*0|error_reporting\s*\(\s*0\s*\)|log_errors|try.*catch && MISSING:development|localhost
+REPORT AS area_of_interest
+REASON Detects unsafe practices in error handling or logging in PHP applications.
+TRACE Externalized rule logic for Stack Trace or Error Disclosure.

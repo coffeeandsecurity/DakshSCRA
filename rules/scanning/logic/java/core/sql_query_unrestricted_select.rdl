@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bSELECT\s+\*\s+FROM\b
+WHEN EXPR MISSING:LIMIT\s+[0-9]+
+REPORT AS area_of_interest
+REASON Detects "SELECT * FROM" in SQL queries, which can expose unnecessary or sensitive data.
+TRACE Externalized rule logic for SQL Query: Unrestricted SELECT *.

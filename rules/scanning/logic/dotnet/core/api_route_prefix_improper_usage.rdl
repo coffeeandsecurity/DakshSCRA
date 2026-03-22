@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \[RoutePrefix\("
+WHEN EXPR MISSING:Authorize|RequireAuthorization|ApiKeyRequired|[ApiController] && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects the usage of [RoutePrefix] attribute in an API controller, potentially indicating improper route prefix configuration.
+TRACE Externalized rule logic for API Route Prefix: Improper Usage.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \.readObject|\.writeObject|ObjectInputStream|ObjectOutputStream
+WHEN EXPR MISSING:SerialKiller|ValidatingObjectInputStream|ObjectInputFilter|allowlist|whitelist|trusted
+REPORT AS area_of_interest
+REASON Detects potential serialization/deserialization vulnerabilities in Java code.
+TRACE Externalized rule logic for Serialization/Deserialization Handling.

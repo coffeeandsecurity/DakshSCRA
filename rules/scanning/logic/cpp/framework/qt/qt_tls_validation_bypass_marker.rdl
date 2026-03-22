@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT ignoreSslErrors\(\)|setPeerVerifyMode\(\s*QSslSocket::VerifyNone
+WHEN EXPR MISSING:test|development|localhost|staging
+REPORT AS area_of_interest
+REASON Detects TLS validation bypass markers in C++/Qt networking code.
+TRACE Externalized rule logic for Qt TLS Validation Bypass Marker.

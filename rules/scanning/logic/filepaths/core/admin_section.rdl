@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT (?i)(Admin|Administrator)
+WHEN EXPR PRESENT:(?i)(/|\\\\).*(admin|administrator) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/)
+REPORT AS area_of_interest
+REASON Detects file paths related to admin section functionality.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(memset|mlock|setrlimit|unlink|remove|std::string)\s*\(
+WHEN EXPR MISSING:memset\s*\(|SecureZeroMemory|explicit_bzero|sodium_memzero|encrypt|cipher|redact && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects the improper handling of sensitive data.
+TRACE Externalized rule logic for Insecure Handling of Sensitive Data.

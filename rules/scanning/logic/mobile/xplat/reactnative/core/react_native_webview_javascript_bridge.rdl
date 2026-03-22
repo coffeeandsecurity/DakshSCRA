@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT onMessage\s*=|injectedJavaScript\s*=|javaScriptEnabled\s*=\s*\{?true\}?
+REPORT AS area_of_interest
+REASON Detects JS bridge/script injection capabilities in React Native WebView.
+TRACE Externalized mobile rule logic for React Native WebView JavaScript Bridge.

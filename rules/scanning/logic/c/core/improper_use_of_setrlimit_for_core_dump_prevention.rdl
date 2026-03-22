@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bsetrlimit\s*\(\s*RLIMIT_CORE\s*,\s*0\s*\)
+WHEN EXPR MISSING:RLIMIT_CORE\s*,\s*0|RLIMIT_CORE.*rlim_max\s*=\s*0
+REPORT AS area_of_interest
+REASON Detects improper handling of `setrlimit` for preventing core dumps.
+TRACE Externalized rule logic for Improper Use of `setrlimit` for Core Dump Prevention.

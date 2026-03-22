@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT ContentResolver\.query\(".*"\)
+WHEN EXPR MISSING:selectionArgs|bindArgs|\?,\s*arrayOf|validate|sanitize
+REPORT AS area_of_interest
+REASON Detects insecure usage of ContentResolver.query() method, which may lead to SQL injection vulnerabilities.
+TRACE Externalized rule logic for Insecure Method Call: ContentResolver.query().

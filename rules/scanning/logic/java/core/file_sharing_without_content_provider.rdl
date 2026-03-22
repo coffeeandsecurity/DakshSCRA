@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT Intent\s*\(\s*(?:[^,]*,\s*)?Uri\.parse
+WHEN EXPR MISSING:FileProvider|FLAG_GRANT_READ_URI_PERMISSION|content://
+REPORT AS area_of_interest
+REASON Detects file sharing operations that use URIs without a content provider.
+TRACE Externalized rule logic for File Sharing Without Content Provider.

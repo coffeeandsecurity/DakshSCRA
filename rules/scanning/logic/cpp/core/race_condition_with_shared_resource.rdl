@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bpthread_create\s*\(.*\);\s*.*\s*=.*shared_var
+WHEN EXPR MISSING:mutex|lock|atomic|pthread_mutex|synchronized|volatile\s+std::atomic|std::mutex|__sync_|std::lock_guard
+REPORT AS area_of_interest
+REASON Detects potential race conditions in multi-threaded applications.
+TRACE Externalized rule logic for Race Condition with Shared Resource.

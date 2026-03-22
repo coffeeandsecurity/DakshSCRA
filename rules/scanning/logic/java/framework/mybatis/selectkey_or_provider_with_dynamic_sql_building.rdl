@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT @SelectProvider\s*\(|@UpdateProvider\s*\(|@InsertProvider\s*\(|@DeleteProvider\s*\(
+WHEN EXPR MISSING:escapeSQL|sanitize|allowlist|validateColumn
+REPORT AS area_of_interest
+REASON Detects MyBatis Provider annotations that dynamically build SQL queries.
+TRACE Externalized rule logic for selectKey or Provider with Dynamic SQL Building.

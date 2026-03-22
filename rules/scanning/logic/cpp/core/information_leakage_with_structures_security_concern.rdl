@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bstruct\s+\w+\s*\{
+WHEN EXPR PRESENT:struct\s+\w+.*\{.*\}|memcpy\s*\(|send\s*\( && MISSING:memset\s*\(|SecureZeroMemory|redact|sanitize && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects passing structures across trust boundaries, potentially leaking sensitive information.
+TRACE Externalized rule logic for Information Leakage with Structures: Security Concern.

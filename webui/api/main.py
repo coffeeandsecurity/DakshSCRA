@@ -11,9 +11,10 @@ from uuid import uuid4
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from sqlalchemy import inspect, text
 from sqlalchemy.orm import Session
+from core.parser import FILEPATH_RULE_GUIDANCE
 
 from .config import ROOT_DIR, get_browse_roots
 from .database import Base, SessionLocal, engine
@@ -42,6 +43,24 @@ from .schemas import (
 )
 
 app = FastAPI(title="DakshSCRA API", version="2.0.0")
+
+
+def _enrich_file_path_findings(items):
+    out = []
+    for item in items or []:
+        if not isinstance(item, dict):
+            out.append(item)
+            continue
+        title = str(item.get("rule_title", "")).strip()
+        guidance = FILEPATH_RULE_GUIDANCE.get(title, {})
+        out.append({
+            **item,
+            "brief_desc": str(item.get("brief_desc", "")).strip() or guidance.get("brief_desc", "") or str(item.get("rule_desc", "")).strip(),
+            "attack_desc": str(item.get("attack_desc", "")).strip() or guidance.get("attack_desc", "") or str(item.get("vuln_desc", "")).strip(),
+            "developer_note": str(item.get("developer_note", "")).strip() or guidance.get("developer_note", ""),
+            "reviewer_note": str(item.get("reviewer_note", "")).strip() or guidance.get("reviewer_note", ""),
+        })
+    return out
 
 app.add_middleware(
     CORSMiddleware,
@@ -87,14 +106,14 @@ def _ensure_schema_compatibility() -> None:
     with engine.begin() as conn:
         conn.execute(
             text(
-                "UPDATE scan_runs SET project_key = COALESCE(project_key, 'legacy') "
-                "WHERE project_key IS NULL OR project_key = ''"
+                "UPDATE scan_runs SET project_key = 'default' "
+                "WHERE project_key IS NULL OR project_key = '' OR project_key = 'legacy'"
             )
         )
         conn.execute(
             text(
-                "UPDATE scan_runs SET project_name = COALESCE(project_name, 'Legacy') "
-                "WHERE project_name IS NULL OR project_name = ''"
+                "UPDATE scan_runs SET project_name = 'Default' "
+                "WHERE project_name IS NULL OR project_name = '' OR project_name = 'Legacy'"
             )
         )
 
@@ -562,7 +581,7 @@ def get_scan_findings(run_uuid: str, db: Session = Depends(db_session)):
 
     findings = _load_json_safe(json_dir / "areas_of_interest.json") or []
     summary = _load_json_safe(json_dir / "summary.json")
-    filepaths = _load_json_safe(json_dir / "filepaths_aoi.json") or []
+    filepaths = _enrich_file_path_findings(_load_json_safe(json_dir / "filepaths_aoi.json") or [])
     analysis = _load_json_safe(json_dir / "analysis.json")
     recon = _load_json_safe(json_dir / "recon.json")
     scan_meta = _load_json_safe(runtime_dir / "scan_summary.json")
@@ -596,7 +615,8 @@ def list_projects(db: Session = Depends(db_session)):
         scans = db.query(ScanRun).filter(ScanRun.project_key == p.project_key).all()
         running = sum(1 for s in scans if s.status in ("running", "queued"))
         failed = sum(1 for s in scans if s.status == "failed")
-        latest = max([s.created_at for s in scans if s.created_at], default=None)
+        latest_scan = max(scans, key=lambda s: s.created_at or datetime.min, default=None)
+        latest = latest_scan.created_at if latest_scan and latest_scan.created_at else None
         out.append(
             ProjectSummary(
                 project_key=p.project_key,
@@ -607,6 +627,7 @@ def list_projects(db: Session = Depends(db_session)):
                 running_scans=running,
                 failed_scans=failed,
                 latest_scan_at=latest.isoformat() if latest else None,
+                latest_run_uuid=latest_scan.run_uuid if latest_scan else None,
             )
         )
 
@@ -619,17 +640,18 @@ def list_projects(db: Session = Depends(db_session)):
         latest_scan = sorted(scans, key=lambda x: x.created_at or datetime.min, reverse=True)[0]
         running = sum(1 for s in scans if s.status in ("running", "queued"))
         failed = sum(1 for s in scans if s.status == "failed")
-        latest = max([s.created_at for s in scans if s.created_at], default=None)
+        latest = latest_scan.created_at if latest_scan.created_at else None
         out.append(
             ProjectSummary(
                 project_key=scan_key,
-                project_name=latest_scan.project_name or "Legacy",
+                project_name=latest_scan.project_name or "Default",
                 target_dir=latest_scan.target_dir,
                 rules=latest_scan.rules,
                 total_scans=len(scans),
                 running_scans=running,
                 failed_scans=failed,
                 latest_scan_at=latest.isoformat() if latest else None,
+                latest_run_uuid=latest_scan.run_uuid,
             )
         )
 
@@ -1141,7 +1163,7 @@ def _build_suppressed_html_report(run_uuid: str, suppressed: list) -> str:
 
 
 @app.get("/api/v1/artifacts")
-def get_artifact(path: str = Query(...)):
+def get_artifact(path: str = Query(...), embed: bool = Query(False)):
     p = Path(path)
     base = ROOT_DIR
     abs_path = (base / p).resolve() if not p.is_absolute() else p.resolve()
@@ -1153,4 +1175,104 @@ def get_artifact(path: str = Query(...)):
 
     if not abs_path.exists() or not abs_path.is_file():
         raise HTTPException(status_code=404, detail="artifact_not_found")
+
+    if embed and abs_path.suffix.lower() == ".html":
+        try:
+            html = abs_path.read_text(encoding="utf-8")
+            embed_style = """
+<style id="daksh-embed-style">
+  :root {
+    --embed-bg: #f6f8fb;
+    --embed-panel: #ffffff;
+    --embed-line: #d8dee8;
+    --embed-line-strong: #c4cdd9;
+    --embed-text: #1f2937;
+    --embed-muted: #6b7280;
+    --embed-accent: #2563eb;
+    --embed-accent-soft: #eef4ff;
+  }
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: var(--embed-bg) !important;
+    color: var(--embed-text) !important;
+    font-family: var(--font-sans, Inter, Segoe UI, Arial, sans-serif) !important;
+  }
+  body {
+    padding: 16px !important;
+  }
+  h1, h2, h3, h4, h5, h6, .h1, .meta, .k, .v, summary.head, td, th, .panel, .mcard, .sec, .quick, .chip, .badge, .lg {
+    color: var(--embed-text) !important;
+  }
+  h1 {
+    font-size: 24px !important;
+    font-weight: 800 !important;
+    margin: 0 0 8px !important;
+  }
+  body > p:first-of-type,
+  .back {
+    display: none !important;
+  }
+  table {
+    border-collapse: separate !important;
+    border-spacing: 0 8px !important;
+  }
+  th {
+    background: #f8fafc !important;
+    color: var(--embed-text) !important;
+    border: 1px solid var(--embed-line) !important;
+    font-weight: 700 !important;
+  }
+  td {
+    background: var(--embed-panel) !important;
+    color: var(--embed-text) !important;
+    border: 1px solid var(--embed-line) !important;
+  }
+  .muted {
+    color: var(--embed-muted) !important;
+  }
+  .badge, .chip, .file-pill, .lg {
+    background: var(--embed-accent-soft) !important;
+    color: var(--embed-accent) !important;
+    border: 1px solid #bfd2ff !important;
+    font-weight: 700 !important;
+  }
+  .panel, .mcard, .sec, details.card, .path-step, .section-card {
+    background: var(--embed-panel) !important;
+    border: 1px solid var(--embed-line) !important;
+    border-radius: 12px !important;
+    box-shadow: none !important;
+  }
+  .code-block, .code, .flow-chain, .graph-note {
+    background: #f8fafc !important;
+    color: var(--embed-text) !important;
+    border: 1px solid var(--embed-line-strong) !important;
+  }
+  .quick, .xref-link {
+    background: var(--embed-accent-soft) !important;
+    color: var(--embed-accent) !important;
+    border: 1px solid #bfd2ff !important;
+    font-weight: 700 !important;
+  }
+  .graph {
+    background: #f8fafc !important;
+    border: 1px solid var(--embed-line) !important;
+  }
+  .graph svg text {
+    fill: var(--embed-text) !important;
+    font-weight: 700 !important;
+  }
+  .graph svg path, .graph svg line, .graph svg polyline {
+    stroke-width: 2 !important;
+    stroke-opacity: 1 !important;
+  }
+</style>
+"""
+            if "</head>" in html:
+                html = html.replace("</head>", embed_style + "\n</head>", 1)
+            else:
+                html = embed_style + html
+            return HTMLResponse(html)
+        except OSError:
+            pass
     return FileResponse(abs_path)

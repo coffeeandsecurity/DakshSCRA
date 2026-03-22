@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT @(csrf_exempt)
+WHEN EXPR MISSING:@login_required|token_required|api_key|JWT|Bearer && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects decorators that exempt views from CSRF protection.
+TRACE Externalized rule logic for CSRF Exempt Decorators.

@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT badCertificateCallback\s*=\s*\(|badCertificateCallback\s*:\s*\(
+REPORT AS area_of_interest
+REASON Detects custom certificate callback patterns requiring trust validation review.
+TRACE Externalized mobile rule logic for Flutter Certificate Validation Bypass.

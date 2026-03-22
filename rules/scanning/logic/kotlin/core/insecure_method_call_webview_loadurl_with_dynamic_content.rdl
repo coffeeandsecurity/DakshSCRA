@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \.loadUrl\s*\(
+WHEN EXPR MISSING:loadUrl\s*\(\s*"(?:about:|javascript:window\.|file:///android_asset) && MISSING:loadUrl\s*\(\s*"https://[a-zA-Z0-9]
+REPORT AS area_of_interest
+REASON Detects WebView.loadUrl() calls where the URL argument is a variable or contains Kotlin string interpolation, which may allow JavaScript or URL injection.
+TRACE Externalized rule logic for Insecure Method Call: WebView.loadUrl() with Dynamic Content.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT management\.endpoints\.web\.exposure\.include\s*=\s*\*|/actuator
+WHEN EXPR MISSING:management\.endpoint\..*\.enabled\s*=\s*false|spring\.security|@PreAuthorize|hasRole|authentication
+REPORT AS area_of_interest
+REASON Detects potentially overexposed management endpoints.
+TRACE Externalized rule logic for Springboot Actuator/Management Overexposure.

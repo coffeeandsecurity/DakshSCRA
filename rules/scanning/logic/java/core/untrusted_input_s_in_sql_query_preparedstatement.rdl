@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT PreparedStatement(\s)*(\.|->)execute( |Query|Update)
+WHEN EXPR PRESENT:(\+|String\.format|MessageFormat|append\() && MISSING:setString\(|setInt\(|setLong\(|setObject\()
+REPORT AS area_of_interest
+REASON Detects potential SQL injection vulnerabilities in Java code that uses prepared statements.
+TRACE Externalized rule logic for Untrusted Input(s) in SQL Query (PreparedStatement).

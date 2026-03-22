@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT resource\s+"aws_db_instance"
+WHEN EXPR MISSING:storage_encrypted\s*=\s*true
+REPORT AS area_of_interest
+REASON Detects RDS instances without storage encryption enabled.
+TRACE Externalized rule logic for RDS Storage Not Encrypted.

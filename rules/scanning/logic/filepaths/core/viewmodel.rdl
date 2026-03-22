@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT (?i)/(ViewModel)/
+WHEN EXPR PRESENT:(?i)(/|\\\\).*(viewmodel|presenter)
+REPORT AS area_of_interest
+REASON Detects file paths related to view models.

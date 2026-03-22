@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>
+REPORT AS area_of_interest
+REASON Detects iOS transport policy relaxation in React Native iOS projects.
+TRACE Externalized mobile rule logic for ATS Arbitrary Loads Enabled.

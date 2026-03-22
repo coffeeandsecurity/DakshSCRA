@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT android:allowBackup\s*=\s*"true"
+REPORT AS area_of_interest
+REASON Detects app backup enabled in AndroidManifest.
+TRACE Externalized mobile rule logic for Android Backup Allowed.

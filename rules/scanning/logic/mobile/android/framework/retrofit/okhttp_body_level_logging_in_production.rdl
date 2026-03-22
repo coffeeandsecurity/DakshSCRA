@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT HttpLoggingInterceptor\.Level\.BODY
+WHEN EXPR MISSING:BuildConfig\.DEBUG|if.*debug|if.*DEBUG|FLAVOR
+REPORT AS area_of_interest
+REASON Detects OkHttp logging interceptor configured at BODY level potentially in production builds.
+TRACE Externalized mobile rule logic for OkHttp Body-Level Logging in Production.

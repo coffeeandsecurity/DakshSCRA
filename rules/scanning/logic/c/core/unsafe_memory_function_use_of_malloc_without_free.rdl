@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bmalloc\s*\(.*\)(?!.*free)
+WHEN EXPR MISSING:free\s*\(|delete\s+|RAII|unique_ptr|shared_ptr|defer
+REPORT AS area_of_interest
+REASON Detects usage of `malloc()` without a corresponding `free()`.
+TRACE Externalized rule logic for Unsafe Memory Function: Use of malloc() Without free().

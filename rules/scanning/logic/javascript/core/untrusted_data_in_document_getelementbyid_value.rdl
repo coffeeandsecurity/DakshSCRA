@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT document\.getElementById\(.+\)\.value
+WHEN EXPR PRESENT:(innerHTML|outerHTML|document\.write|eval\(|setTimeout\(|setInterval\(|fetch\(|XMLHttpRequest|location\.) && MISSING:(DOMPurify|sanitize|encodeURI|encodeURIComponent|textContent|innerText)
+REPORT AS area_of_interest
+REASON Detects the usage of unvalidated input.
+TRACE Externalized rule logic for Untrusted Data in 'document.getElementById().value'.

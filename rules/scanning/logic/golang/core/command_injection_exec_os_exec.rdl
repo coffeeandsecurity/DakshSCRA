@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT os/exec\.Command|exec\.(Command|CommandContext)
+WHEN EXPR MISSING:validate|sanitize|allowlist|filepath\.EvalSymlinks
+REPORT AS area_of_interest
+REASON Detects instances of executing shell commands without proper validation and sanitization.
+TRACE Externalized rule logic for Command Injection: exec, os/exec.

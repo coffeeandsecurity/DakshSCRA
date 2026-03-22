@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT JavaScriptMode\.unrestricted|evaluateJavascript\(
+WHEN EXPR MISSING:NavigationDelegate
+REPORT AS area_of_interest
+REASON Detects unrestricted JS execution in Flutter WebView contexts.
+TRACE Externalized mobile rule logic for Flutter WebView JavaScript Unrestricted.

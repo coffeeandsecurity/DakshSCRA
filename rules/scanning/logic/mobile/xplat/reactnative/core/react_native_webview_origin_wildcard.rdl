@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT originWhitelist\s*=\s*\{?\s*\[\s*[\'\"]\*[\'\"]
+WHEN EXPR MISSING:onShouldStartLoadWithRequest
+REPORT AS area_of_interest
+REASON Detects wildcard origin allowlist in React Native WebView.
+TRACE Externalized mobile rule logic for React Native WebView Origin Wildcard.

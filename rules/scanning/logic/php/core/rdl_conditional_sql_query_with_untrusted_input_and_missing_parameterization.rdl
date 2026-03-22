@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\b(?:mysql_query|mysqli_query|pg_query|sqlite_query|->query)\s*\(
+WHEN EXPR PRESENT:\$_(GET|POST|REQUEST|COOKIE)|\.\s*\$|sprintf\s*\(|format\s*\( && MISSING:prepare\s*\(|bind_param|bindValue|bindParam|PDO::prepare
+REPORT AS area_of_interest
+REASON Flags SQL query execution in files that also process untrusted PHP input without evidence of parameterized query APIs.
+TRACE Externalized rule logic for RDL Conditional: SQL Query with Untrusted Input and Missing Parameterization.

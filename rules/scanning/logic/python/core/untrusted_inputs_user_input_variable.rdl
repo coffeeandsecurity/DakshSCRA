@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT user_input_variable
+WHEN EXPR PRESENT:(execute|raw\(|extra\(|eval\(|subprocess|os\.system|redirect|HttpResponse) && MISSING:(escape|sanitize|validate|allowlist|whitelist)
+REPORT AS area_of_interest
+REASON Detects the usage of user_input_variable, which can introduce untrusted inputs into the code.
+TRACE Externalized rule logic for Untrusted Inputs: user_input_variable.

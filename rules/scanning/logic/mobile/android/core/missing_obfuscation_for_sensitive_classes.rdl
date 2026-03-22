@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)-keepclassmembers\s+class\s+[^\n{]*(?:password|secret|token|apikey)[^\n{]*
+WHEN EXPR MISSING:example|sample|dummy|test|placeholder
+REPORT AS area_of_interest
+REASON Detects missing obfuscation for sensitive classes or methods.
+TRACE Externalized mobile rule logic for Missing Obfuscation for Sensitive Classes.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \B--inspect(?:-brk)?(?:=\S+)?\b
+WHEN EXPR PRESENT:--inspect|--inspect-brk && MISSING:development|localhost|127\.0\.0\.1|test
+REPORT AS area_of_interest
+REASON Detects Node.js debug inspector flags that may expose a remotely reachable debug endpoint.
+TRACE Externalized rule logic for Node Inspector Exposed via --inspect.

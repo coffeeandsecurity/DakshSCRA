@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT curl_setopt\s*\(\s*\$\w+\s*,\s*CURLOPT_URL|curl_init\s*\(\s*\$_(GET|POST|REQUEST|COOKIE)
+WHEN EXPR MISSING:allowlist|whitelist|filter_var\s*\(.*FILTER_VALIDATE_URL|parse_url|CURLOPT_PROTOCOLS
+REPORT AS area_of_interest
+REASON Detects cURL requests configured with potentially user-controlled destination URLs.
+TRACE Externalized rule logic for SSRF: curl_exec with User-Controlled URL.

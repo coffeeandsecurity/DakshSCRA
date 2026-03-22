@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT org\.apache\.poi\.hssf\.usermodel\.HSSFWorkbook
+WHEN EXPR MISSING:XSSFWorkbook|validate|allowlist && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects the use of HSSFWorkbook for Excel file manipulation, which may expose applications to vulnerabilities due to outdated libraries.
+TRACE Externalized rule logic for Insecure Package: org.apache.poi.hssf.usermodel.HSSFWorkbook.

@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT (?i)(Libraries|Extension|Plugin)
+WHEN EXPR PRESENT:(?i)(/|\\\\).*(lib|libs|extension|plugin|addons?)
+REPORT AS area_of_interest
+REASON Detects file paths related to libraries, extensions, or plugins.

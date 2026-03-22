@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT requestParameters
+WHEN EXPR PRESENT:(execute|query|print|write|redirect|Runtime|ProcessBuilder|File|URL|Http) && MISSING:(validate|sanitize|escape|encode|PreparedStatement|allowlist|whitelist)
+REPORT AS area_of_interest
+REASON Detects the usage of `requestParameters`, which can introduce untrusted inputs into the code.
+TRACE Externalized rule logic for Untrusted Input(s): requestParameters.

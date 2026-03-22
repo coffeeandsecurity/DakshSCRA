@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT getSharedPreferences\(\s*[^,]+,\s*Context\.MODE_PRIVATE\s*\)
+WHEN EXPR PRESENT:(putString|putInt|putLong|putBoolean|getString|getInt|getLong|getBoolean) && PRESENT:(token|secret|password|auth|session|apikey|key) && MISSING:(EncryptedSharedPreferences|MasterKey|KeyStore|Keystore|Cipher|encrypt|decrypt)
+REPORT AS area_of_interest
+REASON Detects insecure usage of SharedPreferences without proper encryption or secure storage.
+TRACE Externalized rule logic for Insecure Method Call: SharedPreferences.

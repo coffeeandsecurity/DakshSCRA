@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bmlock\s*\(.*?\)
+WHEN EXPR MISSING:munlock|sodium_mlock|MADV_DONTDUMP
+REPORT AS area_of_interest
+REASON Detects improper use of `mlock` for securing sensitive data.
+TRACE Externalized rule logic for Improper Use of `mlock` for Sensitive Data.

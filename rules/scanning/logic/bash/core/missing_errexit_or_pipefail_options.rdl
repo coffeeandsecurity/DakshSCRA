@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT ^#!\s*/(?:bin/|usr/bin/env\s+)(?:bash|sh)\b
+WHEN EXPR MISSING:set\s+-[euo]*e|set\s+-o\s+errexit
+REPORT AS area_of_interest
+REASON Detects shell scripts that do not enable errexit or pipefail safety options.
+TRACE Externalized rule logic for Missing errexit or pipefail Options.

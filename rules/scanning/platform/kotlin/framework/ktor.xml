@@ -2,8 +2,8 @@
     <category name="Framework-Specific Security">
         <rule>
             <name>Ktor Debug/Development Build Exposure</name>
-            <regex><![CDATA[BuildConfig\.DEBUG|debuggable\s+true]]></regex>
-            <rdl><![CDATA[[FLAG:BuildConfig\.DEBUG|debuggable\s+true][IF(MISSING:release|production)]]]></rdl>
+            <regex>BuildConfig\.DEBUG|debuggable\s+true</regex>
+            <rdl_ref>logic/kotlin/framework/ktor/ktor_debug_development_build_exposure.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>Ktor Insecure Trust Manager / TLS Bypass</name>
-            <regex><![CDATA[HostnameVerifier\s*\{\s*.*true\s*\}|TrustAllCerts|setHostnameVerifier\(]]></regex>
-            <rdl><![CDATA[[FLAG:HostnameVerifier\s*\{\s*.*true\s*\}|TrustAllCerts|setHostnameVerifier\(][IF(MISSING:test|development|localhost|staging)]]]></rdl>
+            <regex>HostnameVerifier\s*\{\s*.*true\s*\}|TrustAllCerts|setHostnameVerifier\(</regex>
+            <rdl_ref>logic/kotlin/framework/ktor/ktor_insecure_trust_manager_tls_bypass.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>Ktor SQL Injection Sink</name>
-            <regex><![CDATA[rawQuery\(\s*"[^"]*"\s*\+|execSQL\(\s*"[^"]*"\s*\+]]></regex>
-            <rdl><![CDATA[[FLAG:rawQuery\(\s*"[^"]*"\s*\+|execSQL\(\s*"[^"]*"\s*\+][IF(MISSING:prepareStatement|setString\s*\(|setInt\s*\(|NamedParameterJdbcTemplate|?|bindParam)]]]></rdl>
+            <regex>rawQuery\(\s*"[^"]*"\s*\+|execSQL\(\s*"[^"]*"\s*\+</regex>
+            <rdl_ref>logic/kotlin/framework/ktor/ktor_sql_injection_sink.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -53,8 +53,8 @@
         </rule>
         <rule>
             <name>Ktor Permissive CORS/Origin</name>
-            <regex><![CDATA[allowedOrigins\s*=\s*arrayOf\(\s*"\*"\s*\)|origin\s*=\s*"\*"]]></regex>
-            <rdl><![CDATA[[FLAG:allowedOrigins\s*=\s*arrayOf\(\s*"\*"\s*\)|origin\s*=\s*"\*"][IF(PRESENT:anyHost\s*\(\s*\)|allowHost\s*\(\s*"\*"|allowCredentials.*anyHost && MISSING:allowHost\s*\(\s*"[^*]|anyHost\s*\(\s*\).*false)]]]></rdl>
+            <regex>allowedOrigins\s*=\s*arrayOf\(\s*"\*"\s*\)|origin\s*=\s*"\*"</regex>
+            <rdl_ref>logic/kotlin/framework/ktor/ktor_permissive_cors_origin.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -70,8 +70,8 @@
         </rule>
         <rule>
             <name>Ktor Hardcoded Secret Material</name>
-            <regex><![CDATA[(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <regex>(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"</regex>
+            <rdl_ref>logic/kotlin/framework/ktor/ktor_hardcoded_secret_material.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\bSELECT\b.*\bFROM\b.*\bWHERE\b.*\+.*\+
+WHEN EXPR PRESENT:(?i)\b(input|request|param|query|\$_GET|\$_POST|\$_REQUEST)\b
+REPORT AS area_of_interest
+REASON Detects SQL queries with unsafe string concatenation of user input.
+TRACE Externalized rule logic for Insecure SQL Query: Unsafe String Concatenation.

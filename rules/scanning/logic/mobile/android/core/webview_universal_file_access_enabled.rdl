@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT setAllowUniversalAccessFromFileURLs\s*\(\s*true\s*\)|setAllowFileAccessFromFileURLs\s*\(\s*true\s*\)
+WHEN EXPR PRESENT:setAllowUniversalAccessFromFileURLs\s*\(\s*true|setAllowFileAccessFromFileURLs\s*\(\s*true && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects WebView settings that enable cross-origin file access, breaking the same-origin policy.
+TRACE Externalized mobile rule logic for WebView Universal File Access Enabled.

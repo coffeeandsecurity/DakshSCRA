@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT enable_https_traffic_only\s*=\s*false
+WHEN EXPR PRESENT:enable_https_traffic_only\s*=\s*false|min_tls_version\s*=\s*"TLS1_0" && MISSING:# intentional|# legacy
+REPORT AS area_of_interest
+REASON Detects storage accounts that allow unencrypted HTTP access.
+TRACE Externalized rule logic for Azure Storage Account Without Secure Transfer Required.

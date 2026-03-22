@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bUIWebView\b|UIWebViewDelegate
+WHEN EXPR MISSING:WKWebView|WKNavigationDelegate
+REPORT AS area_of_interest
+REASON Detects use of the deprecated UIWebView class which has known security vulnerabilities.
+TRACE Externalized mobile rule logic for Deprecated UIWebView Usage.

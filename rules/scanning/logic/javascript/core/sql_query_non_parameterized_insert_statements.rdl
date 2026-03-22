@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\bINSERT\s+INTO\s+[^\s]+\s+\(.*=.*\$.*\)
+WHEN EXPR MISSING:\?|prepare|bind|replacements|sequelize\.query\s*\(.*replacements|mysql\.escape|pg\.escape
+REPORT AS area_of_interest
+REASON Detects non-parameterized INSERT statements that may include user input directly, leading to SQL injection vulnerabilities in JavaScript environments.
+TRACE Externalized rule logic for SQL Query: Non-parameterized INSERT Statements.

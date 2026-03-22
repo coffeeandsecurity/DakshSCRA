@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT ^(?:ENTRYPOINT|CMD)\s
+WHEN EXPR MISSING:^USER\s
+REPORT AS area_of_interest
+REASON Detects Dockerfiles that do not specify a USER directive, defaulting to root at runtime.
+TRACE Externalized rule logic for No USER Directive Present.

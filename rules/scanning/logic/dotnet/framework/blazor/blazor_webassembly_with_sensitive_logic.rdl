@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \[Authorize\]
+WHEN EXPR MISSING:@rendermode\s+InteractiveServer|HttpContext|server-side
+REPORT AS area_of_interest
+REASON Detects authorization logic in Blazor WebAssembly components where server-side enforcement may be absent.
+TRACE Externalized rule logic for Blazor WebAssembly with Sensitive Logic.

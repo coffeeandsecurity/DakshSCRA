@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \.Raw\s*\(\s*["'][^"']*["']\s*\+|\.Raw\s*\(\s*fmt\.Sprintf\s*\(["'][^"']*%[sv]
+WHEN EXPR MISSING:\.Raw\s*\(\s*"[^"]*\?|\.Raw\s*\(\s*"[^"]*@|db\.Where\s*\(\s*"[^"]*\?|gorm\.Expr
+REPORT AS area_of_interest
+REASON Detects GORM Raw() calls with SQL built via string concatenation or fmt.Sprintf.
+TRACE Externalized rule logic for Raw SQL via Raw() with String Concatenation.

@@ -20,14 +20,22 @@
    - [Understanding Findings](#understanding-findings)
    - [Reports & Artifacts](#reports--artifacts)
 5. [Platforms & Rules](#platforms--rules)
-6. [scan_config — Rule-Driven Scanning & Reporting](#scan_config--rule-driven-scanning--reporting)
+6. [RDL - Rule Description Language](#rdl---rule-description-language)
+   - [Rule Evaluation Sequence](#rule-evaluation-sequence)
+   - [Rule XML Structure](#rule-xml-structure)
+   - [External RDL File Structure](#external-rdl-file-structure)
+   - [RDL Commands](#rdl-commands)
+   - [Examples](#rdl-examples)
+   - [How RDL Reduces False Positives](#how-rdl-reduces-false-positives)
+   - [Authoring Guidance](#authoring-guidance)
+7. [scan_config — Rule-Driven Scanning & Reporting](#scan_config--rule-driven-scanning--reporting)
    - [Full Schema](#full-schema)
    - [Platform Profiles](#platform-profiles)
    - [Highlighting](#highlighting)
    - [Rule Authoring Guide](#rule-authoring-guide)
-7. [Findings Reference](#findings-reference)
-8. [PDF Reports](#pdf-reports)
-9. [Tips & Common Patterns](#tips--common-patterns)
+8. [Findings Reference](#findings-reference)
+9. [PDF Reports](#pdf-reports)
+10. [Tips & Common Patterns](#tips--common-patterns)
 
 ---
 
@@ -493,26 +501,204 @@ See `.env.example` in the repository root for the full list of variables and per
 
 ## RDL - Rule Description Language
 
-RDL is DakshSCRA's second-pass conditional filter applied **after** a regex match. Every rule can optionally include an `<rdl>` block that adds context-aware conditions, significantly reducing false positives without writing separate rules for every edge case.
+RDL is DakshSCRA's rule logic layer for contextual filtering, suppression, and reporting decisions.
+In the current engine, RDL lives in external `.rdl` files and is attached to XML rules through
+`<rdl_ref>`. The older inline `<rdl>` format is retired.
 
-> **World's first in open source** - conditional rule logic previously found only in commercial security scanners.
+> **Current model:** XML supplies the candidate match pattern and reporting metadata. The external
+> `.rdl` file decides whether that candidate stays visible, gets suppressed, or records extra trace
+> information.
 
-### How it works
+### Rule evaluation sequence
 
-When the scanner finds a regex match, it evaluates the RDL expression against the **entire file content** - not just the matched line. If the RDL condition is not satisfied, the match is suppressed and never reaches the report.
+For source and framework rules, DakshSCRA processes a rule in this order:
 
-### Operators
+1. Reconnaissance detects the relevant platform/framework or the user selects rules explicitly.
+2. The scanner loads the matching XML rule from `rules/scanning/platform/...`.
+3. The rule's `<regex>` finds candidate matches.
+4. Optional `<exclude>` removes known-noise lines for that rule.
+5. The rule's external `.rdl` file from `<rdl_ref>` is loaded from `rules/scanning/...` and evaluated.
+6. If the RDL script passes, the finding is reported. If it fails, the candidate is suppressed with the recorded fail reason and trace.
 
-| Operator | Behaviour | When to use |
+For file-path analysis, the same `rdl_ref` model is used, but the evaluation subject is the normalized
+relative path rather than source code text.
+
+### Rule XML structure
+
+This is the current XML layout for scanner rules:
+
+```xml
+<rule>
+  <name>Rule Name</name>
+  <regex><![CDATA[regex_to_match]]></regex>
+  <rdl_ref>logic/common/core/insecure_sql_query_unsafe_string_concatenation.rdl</rdl_ref>
+  <exclude><![CDATA[pattern_to_exclude_lines]]></exclude>  <!-- optional -->
+  <scan_config>...</scan_config>                           <!-- optional -->
+  <rule_desc>Short description of what the rule detects.</rule_desc>
+  <vuln_desc>Explanation of why the pattern matters.</vuln_desc>
+  <developer>Fix guidance for developers.</developer>
+  <reviewer>Manual confirmation guidance for reviewers.</reviewer>
+</rule>
+```
+
+What each field does:
+
+| Element | Purpose |
+|---|---|
+| `<regex>` | Finds candidate lines or file-level matches |
+| `<rdl_ref>` | Points to the external `.rdl` script that decides if the candidate should survive |
+| `<exclude>` | Removes noisy matches before RDL evaluation |
+| `<scan_config>` | Controls match mode, context capture, aggregation, highlighting, and report formatting |
+| Descriptive fields | Explain the issue and provide reviewer/developer guidance |
+
+### External RDL file structure
+
+The external `.rdl` file is a small line-oriented script:
+
+```text
+VERSION 1
+WHEN PRESENT /\b(?:mysql_query|mysqli_query|->query)\s*\(/i
+WHEN EXPR PRESENT:\$_(GET|POST|REQUEST|COOKIE) && MISSING:\b(?:prepare|bindParam|bindValue|PDO::prepare)\b
+REPORT AS area_of_interest
+REASON Query execution appears to rely on direct input without parameterisation.
+FAIL_REASON Matching query API was found, but prepared-statement indicators also exist in the same file.
+TRACE SQLi gate: input source present and mitigation missing.
+```
+
+The engine evaluates RDL against the **entire file content** of the current file, not only the
+matched line. File-path rules evaluate against the normalized relative path string. Project-level
+observations can also be recorded from the repository root.
+
+### RDL commands
+
+| Command | Behaviour | When to use |
 |---|---|---|
-| `FLAG:<pattern>` | Anchors the condition - the subject the rule is built around | Always the first clause |
-| `IF(condition)` | Match is reported only when this condition is true | Wraps PRESENT / MISSING predicates |
-| `PRESENT:<pattern>` | True when the pattern **is** found anywhere in the file | Require a co-occurring risky call |
-| `MISSING:<pattern>` | True when the pattern is **not** found anywhere in the file | Suppress when a mitigation is already present |
-| `EXISTS:<pattern>` | Like PRESENT but evaluated at file-path level | Check for a related config file |
-| `&&` | Both conditions must hold | Require multiple simultaneous conditions |
-| `\|\|` | Either condition must hold | Match any one of several conditions |
-| `!` | Negation | Invert a predicate |
+| `WHEN PRESENT <regex>` | Require a pattern to appear in the current file text | Confirm a risky API or sensitive field exists |
+| `WHEN MISSING <regex>` | Require a pattern to be absent from the current file text | Suppress when a mitigation is already present |
+| `WHEN EXPR <expr>` | Evaluate a boolean expression using `PRESENT:` / `MISSING:` / `EXISTS:` | Combine multiple conditions compactly |
+| `WHEN CURRENT_FILE_MATCHES <regex>` | Match against the entire current file content | Whole-file config or structure checks |
+| `WHEN FILE_NAME_IS <name>` | Require an exact filename | `AndroidManifest.xml`, `Info.plist`, `web.xml` |
+| `WHEN FILE_PATH_MATCHES <glob>` | Require the current path to match a glob | Path-specific or framework-specific rules |
+| `UNLESS PRESENT <regex>` | Fail if a safe pattern is present | Early mitigation exclusion |
+| `UNLESS CURRENT_FILE_MATCHES <regex>` | Fail if the full file matches an exclusion pattern | Skip known-safe structural cases |
+| `OBSERVE PROJECT_HAS_GLOB <glob> AS <label>` | Record related files from the project root in the trace | Supporting config visibility |
+| `REPORT AS <outcome>` | Set the rule outcome | Usually `area_of_interest` |
+| `REASON <text>` | Explanation stored when the rule passes | Report-side rationale |
+| `FAIL_REASON <text>` | Explanation stored when the rule suppresses a match | Suppression rationale |
+| `TRACE <text>` | Add trace/debug notes | Migration, tuning, or reviewer context |
+
+Inside `WHEN EXPR`, the engine supports:
+
+- `PRESENT:<regex>`
+- `MISSING:<regex>`
+- `EXISTS:<regex>`
+- `&&`, `||`, `!`
+- Parentheses for grouping
+
+### RDL examples
+
+#### Example 1 - PHP SQL injection with missing parameterisation
+
+XML rule:
+
+```xml
+<rule>
+  <name>Possible SQL Injection in Query Execution</name>
+  <regex><![CDATA[(?i)\b(?:mysql_query|mysqli_query|->query)\s*\(]]></regex>
+  <rdl_ref>logic/common/core/insecure_sql_query_unsafe_string_concatenation.rdl</rdl_ref>
+  <rule_desc>Detects unsafe SQL query execution patterns.</rule_desc>
+</rule>
+```
+
+External RDL:
+
+```text
+VERSION 1
+WHEN PRESENT /\b(?:mysql_query|mysqli_query|->query)\s*\(/i
+WHEN EXPR PRESENT:\$_(GET|POST|REQUEST|COOKIE) && MISSING:\b(?:prepare|bindParam|bindValue|PDO::prepare)\b
+REPORT AS area_of_interest
+REASON Query execution appears to rely on direct input without parameterisation.
+FAIL_REASON Query API matched, but parameterised query indicators were also found in the file.
+```
+
+The regex stays broad enough to catch all candidate query APIs. The `.rdl` file then keeps only the
+cases where user input is present and parameterisation appears absent.
+
+#### Example 2 - Android manifest rule using filename and full-file checks
+
+XML rule:
+
+```xml
+<rule>
+  <name>Exported Components Without Permission</name>
+  <regex><![CDATA[<(?P<component>activity|service|receiver|provider)\s[^>]*android:name="(?P<name>[^"]+)"[^>]*android:exported="true"[^>]*(?:/>|>)]]></regex>
+  <rdl_ref>logic/mobile/android/core/exported_components.rdl</rdl_ref>
+  <scan_config>
+    <match_mode>file</match_mode>
+    <context_type>named_groups</context_type>
+    <aggregate>file</aggregate>
+    <report_format>component_list</report_format>
+  </scan_config>
+</rule>
+```
+
+External RDL:
+
+```text
+VERSION 1
+WHEN FILE_NAME_IS AndroidManifest.xml
+WHEN CURRENT_FILE_MATCHES /android:exported\s*=\s*"true"/i
+WHEN MISSING /android:permission\s*=\s*"/i
+REPORT AS area_of_interest
+REASON Exported component appears reachable without a permission guard.
+FAIL_REASON Exported component marker was found, but the file also contains a permission requirement.
+```
+
+This is a good example of the split of responsibilities:
+
+- `regex` finds candidate exported components.
+- `scan_config` decides how to present them.
+- `rdl_ref` confirms the broader file context before the finding survives.
+
+#### Example 3 - File-path rule
+
+XML rule:
+
+```xml
+<rule>
+  <name>Admin Section File Path</name>
+  <regex><![CDATA[(?i)(^|/)(admin|administrator|root)(/|$)]]></regex>
+  <rdl_ref>logic/filepaths/core/admin_section.rdl</rdl_ref>
+</rule>
+```
+
+External RDL:
+
+```text
+VERSION 1
+WHEN CURRENT_FILE_MATCHES /(^|\/)(admin|administrator|root)(\/|$)/i
+UNLESS CURRENT_FILE_MATCHES /(^|\/)(tests?|docs?|samples?|examples?)(\/|$)/i
+REPORT AS area_of_interest
+REASON File path suggests privileged application functionality.
+FAIL_REASON Path matched an excluded documentation or sample location.
+```
+
+For file-path analysis there is still a regex candidate stage, but the current file text for RDL is
+the normalized relative path string, not the file contents.
+
+#### Example 4 - Project observation rule
+
+```text
+VERSION 1
+WHEN FILE_NAME_IS AndroidManifest.xml
+WHEN CURRENT_FILE_MATCHES /android:usesCleartextTraffic\s*=\s*"true"/i
+OBSERVE PROJECT_HAS_GLOB **/network_security_config*.xml AS network_security_configs
+REPORT AS area_of_interest
+REASON Cleartext traffic is enabled; related network security config files were recorded for reviewer context.
+```
+
+`OBSERVE` does not currently gate the rule result. It records related project files into trace metadata
+so the reviewer can see that supporting config exists.
 
 ### How RDL reduces false positives
 
@@ -524,51 +710,19 @@ When the scanner finds a regex match, it evaluates the RDL expression against th
 | `System.getenv("SECRET")` | Flags as hardcoded secret (FP - it is a safe read) | Suppressed by `MISSING:System.getenv` condition |
 | `viewModelScope.launch {}` | Flags every coroutine dispatch including benign UI commands | Only flags when body contains sensitive ops without error handling |
 
-> **File-scope limitation:** PRESENT and MISSING conditions are evaluated against the entire file, not per-line. If a mitigation pattern appears *anywhere* in the file, all matches in that file are suppressed - even an unprotected call in the same file. This is a deliberate trade-off: lower noise at the cost of occasionally missing an issue in an otherwise-safe file. The reviewer note on every finding always advises manual confirmation.
+> **Whole-file limitation:** `WHEN PRESENT`, `WHEN MISSING`, and `WHEN EXPR` are evaluated against
+> the entire file text, not per-line. If a mitigation appears anywhere in the file, all candidate
+> matches for that file can be suppressed. This is deliberate: lower noise at the cost of potentially
+> hiding an issue in an otherwise-safe file. Reviewer guidance should always reflect that trade-off.
 
-### Example 1 - PHP SQL injection with missing parameterisation
+### Authoring guidance
 
-```xml
-<rule>
-  <name>Conditional SQLi Check</name>
-  <regex><![CDATA[(?i)(?:mysql_query|mysqli_query|->query)\s*\(]]></regex>
-  <rdl><![CDATA[[FLAG:\$_(GET|POST|REQUEST|COOKIE)][IF(MISSING:(?:prepare|bindParam|bindValue|PDO::prepare))]]></rdl>
-  <rule_desc>...</rule_desc>
-</rule>
-```
-
-Fires when user-controlled input (`$_GET`, `$_POST`, etc.) is present **and** no parameterised query APIs are found in the file. A file that already uses `PDO::prepare` is not flagged.
-
-### Example 2 - Android SharedPreferences storing sensitive data without encryption
-
-```xml
-<rdl><![CDATA[[FLAG:getSharedPreferences\(][IF(PRESENT:(token|secret|password|auth|session) && MISSING:(EncryptedSharedPreferences|MasterKey|KeyStore|Cipher|encrypt))]]]></rdl>
-```
-
-Fires only when the file references sensitive field names (token, password, etc.) **and** no Android encryption APIs are present. Files using `EncryptedSharedPreferences` are automatically suppressed.
-
-### Example 3 - Hardcoded secrets excluding environment-variable reads
-
-```xml
-<rdl><![CDATA[[FLAG:(api_key|secret|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:System\.getenv\s*\(|System\.getProperty\s*\(|BuildConfig\. && MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
-```
-
-Without this RDL, `TOKEN = "${System.getenv("TOKEN")}"` would be flagged as hardcoded. The MISSING conditions exclude reads from environment variables, build config, and placeholder values in comments or tests.
-
-### Rule XML structure reference
-
-```xml
-<rule>
-  <name>Rule Name</name>
-  <regex><![CDATA[regex_to_match]]></regex>
-  <rdl><![CDATA[[FLAG:anchor_pattern][IF(PRESENT:risky_pattern && MISSING:mitigation_pattern)]]]></rdl>
-  <exclude><![CDATA[pattern_to_exclude_lines]]></exclude>  <!-- optional -->
-  <rule_desc>Short description of what the rule detects.</rule_desc>
-  <vuln_desc>Explanation of the vulnerability class.</vuln_desc>
-  <developer>Guidance for developers on how to fix.</developer>
-  <reviewer>Guidance for reviewers on how to confirm the issue.</reviewer>
-</rule>
-```
+- Keep `<regex>` broad enough to catch candidate matches. Let RDL remove safe contexts.
+- Use `<rdl_ref>` for every new rule. Do not add new inline `<rdl>` blocks.
+- Prefer `WHEN PRESENT` / `WHEN MISSING` for simple gating and `WHEN EXPR` only when the logic genuinely needs boolean composition.
+- Put report-facing intent in `REASON` and suppression-facing intent in `FAIL_REASON`.
+- For path rules, write the regex and RDL conditions against normalized slash-separated relative paths.
+- Use `TRACE` and `OBSERVE` when reviewers benefit from extra context, but do not rely on `OBSERVE` for gating.
 
 ## scan_config — Rule-Driven Scanning & Reporting
 
@@ -717,7 +871,7 @@ as labelled columns alongside the line number.
 <rule>
     <name>Exported Components Without Permission</name>
     <regex><![CDATA[<(?P<component>activity|service|receiver|provider)\s[^>]*android:name="(?P<name>[^"]+)"[^>]*android:exported="true"[^>]*(?:/>|>)]]></regex>
-    <rdl><![CDATA[[FLAG:android:exported\s*=\s*"true"][IF(MISSING:android:permission)]]]></rdl>
+    <rdl_ref>logic/mobile/android/core/exported_components.rdl</rdl_ref>
     <scan_config>
         <match_mode>file</match_mode>
         <context_type>named_groups</context_type>
@@ -778,7 +932,7 @@ arguments). Use `context_lines_after` to show what follows (error handling, retu
 <rule>
     <name>Insecure File Inclusion</name>
     <regex><![CDATA[\b(?:include|require)(?:_once)?\s*\(\s*\$\w+]]></regex>
-    <rdl><![CDATA[[FLAG:\b(?:include|require)(?:_once)?\s*\(\s*\$\w+][IF(MISSING:realpath|basename|__DIR__|allowlist|in_array)]]]></rdl>
+    <rdl_ref>logic/php/core/insecure_file_inclusion_include_require.rdl</rdl_ref>
     <scan_config>
         <match_mode>line</match_mode>
         <context_type>lines</context_type>

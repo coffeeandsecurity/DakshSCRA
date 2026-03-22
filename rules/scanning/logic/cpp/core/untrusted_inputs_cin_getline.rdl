@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(?:std::cin|getline)\b
+WHEN EXPR MISSING:validate|sanitize|check|regex|isdigit|isalpha|stoi|stol|stof && MISSING:cin\.ignore|cin\.clear
+REPORT AS area_of_interest
+REASON Detects usage of standard input functions that can introduce untrusted input into the program.
+TRACE Externalized rule logic for Untrusted Inputs: cin / getline.

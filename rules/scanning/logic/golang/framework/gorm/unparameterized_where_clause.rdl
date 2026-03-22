@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \.Where\s*\(\s*["'][^"']*["']\s*\+|\.Where\s*\(\s*fmt\.Sprintf\s*\(["'][^"']*%[sv]
+WHEN EXPR MISSING:\.Where\s*\(\s*"[^"]*\?|\.Where\s*\(\s*&\w+|\.Where\s*\(\s*map\[|db\.Model
+REPORT AS area_of_interest
+REASON Detects GORM Where() calls with conditions built via string concatenation or fmt.Sprintf.
+TRACE Externalized rule logic for Unparameterized Where() Clause.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT hostPID\s*:\s*true
+WHEN EXPR PRESENT:hostPID:\s*true && MISSING:# intentional|# required
+REPORT AS area_of_interest
+REASON Detects pods configured to share the host's PID namespace.
+TRACE Externalized rule logic for Host PID Namespace Shared.

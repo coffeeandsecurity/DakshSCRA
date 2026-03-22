@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT outState\.put\w+\s*\(
+WHEN EXPR PRESENT:outState\.put.*(?:password|token|secret|key|credential|auth|card|pin) && MISSING:encrypted|cipher|// intentional
+REPORT AS area_of_interest
+REASON Detects sensitive data being saved to the Activity instance state bundle in onSaveInstanceState.
+TRACE Externalized mobile rule logic for Sensitive Data Persisted in onSaveInstanceState.

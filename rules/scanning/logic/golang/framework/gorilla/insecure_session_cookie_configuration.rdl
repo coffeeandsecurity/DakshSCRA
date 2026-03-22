@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT sessions\.NewCookieStore|sessions\.NewFilesystemStore
+WHEN EXPR MISSING:Secure\s*:\s*true|HttpOnly\s*:\s*true
+REPORT AS area_of_interest
+REASON Detects Gorilla sessions configured without Secure or HttpOnly flags.
+TRACE Externalized rule logic for Insecure Session Cookie Configuration.

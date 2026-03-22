@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT setHtmlText\s*\(.*\)
+WHEN EXPR MISSING:HtmlUtils\.htmlEscape|StringEscapeUtils\.escapeHtml|ESAPI\.encoder|Jsoup\.clean|sanitize
+REPORT AS area_of_interest
+REASON Detects insecure usage of the setHtmlText method.
+TRACE Externalized rule logic for Insecure Method Call: setHtmlText.

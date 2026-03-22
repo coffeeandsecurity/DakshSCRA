@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \brealloc\s*\(
+WHEN EXPR MISSING:if\s*\(|NULL\s*!=|!=\s*NULL|check|validate|assert
+REPORT AS area_of_interest
+REASON Detects usage of `realloc()` which may modify object alignment.
+TRACE Externalized rule logic for Unsafe Use of realloc().

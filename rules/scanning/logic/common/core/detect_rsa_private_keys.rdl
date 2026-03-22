@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT BEGIN RSA PRIVATE KEY
+WHEN EXPR MISSING:example|sample|test|dummy|placeholder|README|\.md:
+REPORT AS area_of_interest
+REASON Detects the presence of RSA private keys.
+TRACE Externalized rule logic for Detect RSA Private Keys.

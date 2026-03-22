@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT hostIPC\s*:\s*true
+WHEN EXPR PRESENT:hostIPC:\s*true && MISSING:# intentional|# required
+REPORT AS area_of_interest
+REASON Detects pods configured to share the host IPC namespace.
+TRACE Externalized rule logic for Host IPC Namespace Shared.

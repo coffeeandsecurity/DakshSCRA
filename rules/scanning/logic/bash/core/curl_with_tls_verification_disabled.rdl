@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT curl\s+(?:[^\n]*\s)?(?:-k|--insecure)
+WHEN EXPR MISSING:test|development|localhost|staging|# intentional|# nosec
+REPORT AS area_of_interest
+REASON Detects curl invocations that disable TLS certificate verification.
+TRACE Externalized rule logic for curl with TLS Verification Disabled.

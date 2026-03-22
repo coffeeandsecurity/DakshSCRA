@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT (?i)Permission
+WHEN EXPR PRESENT:(?i)(/|\\\\).*(permission|policy|acl|rbac)
+REPORT AS area_of_interest
+REASON Detects file paths related to permission management or handling functionality.

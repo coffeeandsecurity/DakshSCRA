@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bdelete\s+\b(?:[^\s]+)\b
+WHEN EXPR MISSING:=\s*nullptr|=\s*NULL|std::unique_ptr|std::shared_ptr|std::weak_ptr
+REPORT AS area_of_interest
+REASON Detects use of `delete` without setting the pointer to `nullptr`, which can result in dangling pointers.
+TRACE Externalized rule logic for Dangling Pointer: delete without nullptr.

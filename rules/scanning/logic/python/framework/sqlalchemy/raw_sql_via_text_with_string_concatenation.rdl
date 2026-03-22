@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT text\s*\(\s*["'][^"']*["']\s*\+|text\s*\(\s*f["']|text\s*\(\s*["'][^"']*%\s*(?:\(|\w)
+WHEN EXPR MISSING:bindparams|bindparam|:(?!:)\w
+REPORT AS area_of_interest
+REASON Detects SQLAlchemy text() calls constructed via string concatenation or f-strings.
+TRACE Externalized rule logic for Raw SQL via text() with String Concatenation.

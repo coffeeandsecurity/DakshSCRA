@@ -2,8 +2,8 @@
     <category name="Framework-Specific Security">
         <rule>
             <name>Sinatra Development/Debug Mode Enabled</name>
-            <regex><![CDATA[RAILS_ENV\s*=\s*[\'\"]development[\'\"]|config\.consider_all_requests_local\s*=\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:RAILS_ENV\s*=\s*[\'\"]development[\'\"]|config\.consider_all_requests_local\s*=\s*true][IF(MISSING:release|production)]]]></rdl>
+            <regex>RAILS_ENV\s*=\s*[\'\"]development[\'\"]|config\.consider_all_requests_local\s*=\s*true</regex>
+            <rdl_ref>logic/ruby/framework/sinatra/sinatra_development_debug_mode_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>Sinatra Unsafe Deserialization</name>
-            <regex><![CDATA[YAML\.load\(|Marshal\.load\(]]></regex>
-            <rdl><![CDATA[[FLAG:YAML\.load\(|Marshal\.load\(][IF(MISSING:YAML\.safe_load|Marshal\.restore.*trusted|allowlist)]]]></rdl>
+            <regex>YAML\.load\(|Marshal\.load\(</regex>
+            <rdl_ref>logic/ruby/framework/sinatra/sinatra_unsafe_deserialization.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>Sinatra SQL Injection Sink</name>
-            <regex><![CDATA[where\(\s*"[^"]*#\{|find_by_sql\(|connection\.execute\(]]></regex>
-            <rdl><![CDATA[[FLAG:where\(\s*"[^"]*#\{|find_by_sql\(|connection\.execute\(][IF(MISSING:where\s*\(\s*".*?",|sanitize_sql|Arel::Nodes)]]]></rdl>
+            <regex>where\(\s*"[^"]*#\{|find_by_sql\(|connection\.execute\(</regex>
+            <rdl_ref>logic/ruby/framework/sinatra/sinatra_sql_injection_sink.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -53,8 +53,8 @@
         </rule>
         <rule>
             <name>Sinatra Permissive CORS</name>
-            <regex><![CDATA[origins\s+[\'\"]\*[\'\"]|Access-Control-Allow-Origin\s*=\s*[\'\"]\*[\'\"]]]></regex>
-            <rdl><![CDATA[[FLAG:origins\s+[\'\"]\*[\'\"]|Access-Control-Allow-Origin\s*=\s*[\'\"]\*[\'\"]][IF(MISSING:allowlist|whitelist|trusted)]]]></rdl>
+            <regex>origins\s+[\'\"]\*[\'\"]|Access-Control-Allow-Origin\s*=\s*[\'\"]\*[\'\"]</regex>
+            <rdl_ref>logic/ruby/framework/sinatra/sinatra_permissive_cors.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -70,8 +70,8 @@
         </rule>
         <rule>
             <name>Sinatra Hardcoded Secret Material</name>
-            <regex><![CDATA[(?i)(secret_key_base|secret|apikey|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(secret_key_base|secret|apikey|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <regex>(?i)(secret_key_base|secret|apikey|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]</regex>
+            <rdl_ref>logic/ruby/framework/sinatra/sinatra_hardcoded_secret_material.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

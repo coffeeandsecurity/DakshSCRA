@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?:apt-get|yum|apk|dnf)\s+install\s+[^\n]*\bsudo\b
+WHEN EXPR MISSING:# intentional|gosu|su-exec|# required
+REPORT AS area_of_interest
+REASON Detects installation of sudo or privilege escalation tools inside container images.
+TRACE Externalized rule logic for sudo or su Installed in Container.

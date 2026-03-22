@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(?:NSLog\(|print\(|debugPrint\()
+WHEN EXPR MISSING:release|production
+REPORT AS area_of_interest
+REASON Detects debug logging statements that may leak runtime internals or sensitive data.
+TRACE Externalized mobile rule logic for Debug Logging in Production Code Paths.

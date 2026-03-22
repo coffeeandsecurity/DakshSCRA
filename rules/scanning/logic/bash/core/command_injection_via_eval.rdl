@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT eval\s+["']?\$\{?\w
+WHEN EXPR MISSING:printf\s+%q|sanitize|validate|allowlist
+REPORT AS area_of_interest
+REASON Detects eval statements that interpolate variables, enabling arbitrary command execution.
+TRACE Externalized rule logic for Command Injection via eval.

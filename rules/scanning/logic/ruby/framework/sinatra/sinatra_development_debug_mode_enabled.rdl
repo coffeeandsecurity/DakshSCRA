@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT RAILS_ENV\s*=\s*[\'\"]development[\'\"]|config\.consider_all_requests_local\s*=\s*true
+WHEN EXPR MISSING:release|production
+REPORT AS area_of_interest
+REASON Detects development/debug settings in deployable Ruby app configs.
+TRACE Externalized rule logic for Sinatra Development/Debug Mode Enabled.

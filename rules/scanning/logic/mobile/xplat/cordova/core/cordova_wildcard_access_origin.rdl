@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT <access\s+origin=\"\*\"
+WHEN EXPR MISSING:Content-Security-Policy
+REPORT AS area_of_interest
+REASON Detects wildcard access origin in Cordova config.
+TRACE Externalized mobile rule logic for Cordova Wildcard Access Origin.

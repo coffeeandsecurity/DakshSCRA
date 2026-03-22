@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \.Append\(.*HttpContext\.Current\.Request\.Url
+WHEN EXPR MISSING:(Uri\.EscapeDataString|UrlEncode|IsLocalUrl|allowlist|whitelist)
+REPORT AS area_of_interest
+REASON Detects the usage of untrusted URL concatenation using the Append method, which may lead to security vulnerabilities.
+TRACE Externalized rule logic for Untrusted URL Concatenation: Append Method.

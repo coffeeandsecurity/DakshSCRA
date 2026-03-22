@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT new\s+Intent\s*\(\s*"[a-z][a-z._]+"\s*\)
+WHEN EXPR PRESENT:putExtra.*(?:password|token|secret|key|credential|auth|ssn|card) && MISSING:setPackage\s*\(|setComponent\s*\(|setClassName\s*\(|createChooser
+REPORT AS area_of_interest
+REASON Detects implicit intents that place sensitive data in extras without restricting the target package.
+TRACE Externalized mobile rule logic for Implicit Intent Carrying Sensitive Data.

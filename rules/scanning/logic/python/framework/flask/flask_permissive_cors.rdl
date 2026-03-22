@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT allow_origins\s*=\s*\[\s*[\'\"]\*[\'\"]\s*\]|CORS\(.*origins\s*=\s*[\'\"]\*[\'\"]
+WHEN EXPR MISSING:allowlist|trusted_origins|configuration\.allowed_origins
+REPORT AS area_of_interest
+REASON Detects wildcard CORS policy definitions.
+TRACE Externalized rule logic for Flask Permissive CORS.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)http://
+WHEN EXPR PRESENT:(?i)\b(url|uri|endpoint|fetch|axios|request|httpclient|redirect|href|src)\b && MISSING:(?i)\b(https://|apache\.org/licenses|opensource\.org/licenses|w3\.org|xmlns=|localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+)\b
+REPORT AS area_of_interest
+REASON Detects the use of insecure HTTP communication.
+TRACE Externalized rule logic for Insecure HTTP Communication.

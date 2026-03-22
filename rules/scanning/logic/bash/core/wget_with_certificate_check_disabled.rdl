@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT wget\s+(?:[^\n]*\s)?(?:--no-check-certificate)
+WHEN EXPR MISSING:test|development|localhost|staging|# intentional|# nosec
+REPORT AS area_of_interest
+REASON Detects wget invocations that skip TLS certificate validation.
+TRACE Externalized rule logic for wget with Certificate Check Disabled.

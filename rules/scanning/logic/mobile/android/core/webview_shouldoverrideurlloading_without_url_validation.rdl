@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT shouldOverrideUrlLoading\s*\(
+WHEN EXPR MISSING:getHost\s*\(\)|getScheme\s*\(\)|startsWith.*https|allowedHosts|trustedDomains|allowList|Uri\.parse
+REPORT AS area_of_interest
+REASON Detects shouldOverrideUrlLoading implementations that do not validate the incoming URL host or scheme.
+TRACE Externalized mobile rule logic for WebView shouldOverrideUrlLoading Without URL Validation.

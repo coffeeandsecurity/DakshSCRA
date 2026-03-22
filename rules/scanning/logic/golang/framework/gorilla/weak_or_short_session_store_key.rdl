@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT sessions\.NewCookieStore\s*\(\s*\[\]byte\s*\(\s*["'][^"']{1,15}["']\s*\)
+WHEN EXPR MISSING:rand\.Read|crypto/rand|os\.Getenv|SecretKeyBase|config\. && MISSING:test|example|placeholder
+REPORT AS area_of_interest
+REASON Detects Gorilla session stores initialized with short or hardcoded authentication keys.
+TRACE Externalized rule logic for Weak or Short Session Store Key.

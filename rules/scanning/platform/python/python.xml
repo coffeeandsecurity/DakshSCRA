@@ -2,8 +2,8 @@
     <category name="Untrusted Input Handling or Injection Flaws">
         <rule>
             <name>Untrusted Inputs: request.GET</name>
-            <regex><![CDATA[request\.GET]]></regex>
-            <rdl><![CDATA[[FLAG:request\.GET][IF(PRESENT:(execute|raw\(|extra\(|eval\(|subprocess|os\.system|redirect|HttpResponse|mark_safe|safe_filter) && MISSING:(escape|sanitize|validate|cleaned_data|get_validators))]]]></rdl>
+            <regex>request\.GET</regex>
+            <rdl_ref>logic/python/core/untrusted_inputs_request_get.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>Untrusted Inputs: request.POST</name>
-            <regex><![CDATA[request\.POST]]></regex>
-            <rdl><![CDATA[[FLAG:request\.POST][IF(PRESENT:(execute|raw\(|extra\(|eval\(|subprocess|os\.system|redirect|HttpResponse|mark_safe|safe_filter) && MISSING:(escape|sanitize|validate|cleaned_data|get_validators))]]]></rdl>
+            <regex>request\.POST</regex>
+            <rdl_ref>logic/python/core/untrusted_inputs_request_post.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>Untrusted Inputs: Request Usage with require_GET or require_POST Decorator</name>
-            <regex><![CDATA[@require_(GET|POST)[\s\S]*?def\s+(\w+)\(.*?request.*?:]]></regex>
-            <rdl><![CDATA[[FLAG:@require_(GET|POST)[\s\S]*?def\s+(\w+)\(.*?request.*?:][IF(MISSING:cleaned_data|validate|sanitize|escape)]]]></rdl>
+            <regex>@require_(GET|POST)[\s\S]*?def\s+(\w+)\(.*?request.*?:</regex>
+            <rdl_ref>logic/python/core/untrusted_inputs_request_usage_with_require_get_or_require_post_decorator.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -54,7 +54,7 @@
         <rule>
             <name>Untrusted Inputs: user_input_variable</name>
             <regex>user_input_variable</regex>
-            <rdl><![CDATA[[FLAG:user_input_variable][IF(PRESENT:(execute|raw\(|extra\(|eval\(|subprocess|os\.system|redirect|HttpResponse) && MISSING:(escape|sanitize|validate|allowlist|whitelist))]]]></rdl>
+            <rdl_ref>logic/python/core/untrusted_inputs_user_input_variable.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -70,8 +70,8 @@
         </rule>
         <rule>
             <name>Insecure Use of Python input() Function</name>
-            <regex><![CDATA[input\(\)]]></regex>
-            <rdl><![CDATA[[FLAG:input\(\)][IF(PRESENT:(eval\(|exec\(|subprocess|os\.system|os\.popen|sql|execute) && MISSING:(strip\(|isdigit\(|isnumeric\(|re\.match|re\.fullmatch))]]]></rdl>
+            <regex>input\(\)</regex>
+            <rdl_ref>logic/python/core/insecure_use_of_python_input_function.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -87,8 +87,8 @@
         </rule>
         <rule>
             <name>Insecure Serialization: pickle and shelve</name>
-            <regex><![CDATA[(?i)(pickle\.load\(.*\)|pickle\.loads\(.*\)|shelve\.open\(.*\))]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(pickle\.load\(.*\)|pickle\.loads\(.*\)|shelve\.open\(.*\))][IF(MISSING:(trusted|signed|verify|hmac|safe_serialization))]]]></rdl>
+            <regex>(?i)(pickle\.load\(.*\)|pickle\.loads\(.*\)|shelve\.open\(.*\))</regex>
+            <rdl_ref>logic/python/core/insecure_serialization_pickle_and_shelve.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -104,8 +104,8 @@
         </rule>
         <rule>
             <name>Network Calls: urllib2 and socket</name>
-            <regex><![CDATA[(?i)(urllib2|socket)]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(urllib2|socket)][IF(PRESENT:(connect|send|recv|urlopen|request) && MISSING:(timeout=|ssl|TLS|verify=True|cert_reqs))]]]></rdl>
+            <regex>(?i)(urllib2|socket)</regex>
+            <rdl_ref>logic/python/core/network_calls_urllib2_and_socket.rdl</rdl_ref>
             <exclude>(?i).*import\s.*</exclude>
             <scan_config>
                 <match_mode>line</match_mode>
@@ -122,8 +122,8 @@
         </rule>
         <rule>
             <name>Insecure URL Configuration</name>
-            <regex><![CDATA[(?i)(url|re_path)\s*\(\s*['"](\^|\^\/)([^'"]+)['"]]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(url|re_path)\s*\(\s*['"](\^|\^\/)([^'"]+)['"]]][IF(MISSING:login_required|permission_required|LoginRequired|csrf_protect)]]]></rdl>
+            <regex>(?i)(url|re_path)\s*\(\s*['"](\^|\^\/)([^'"]+)['"]</regex>
+            <rdl_ref>logic/python/core/insecure_url_configuration.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -139,8 +139,8 @@
         </rule>
         <rule>
             <name>YAML Loading: Use safe_load</name>
-            <regex><![CDATA[yaml\.load\((?!.*Loader=yaml\.FullLoader)(.*?)\)]]></regex>
-            <rdl><![CDATA[[FLAG:yaml\.load\((?!.*Loader=yaml\.FullLoader)(.*?)\)][IF(MISSING:yaml\.safe_load|Loader=yaml\.SafeLoader)]]]></rdl>
+            <regex>yaml\.load\((?!.*Loader=yaml\.FullLoader)(.*?)\)</regex>
+            <rdl_ref>logic/python/core/yaml_loading_use_safe_load.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -158,8 +158,8 @@
     <category name="Insecure File Operations">
         <rule>
             <name>Insecure File Operations</name>
-            <regex><![CDATA[(?i)(os\.remove|os\.unlink|shutil\.rmtree)]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(os\.remove|os\.unlink|shutil\.rmtree)][IF(PRESENT:(request|input\(|argv|user_input|params|query) && MISSING:(abspath|realpath|normpath|startswith\(|allowlist|whitelist))]]]></rdl>
+            <regex>(?i)(os\.remove|os\.unlink|shutil\.rmtree)</regex>
+            <rdl_ref>logic/python/core/insecure_file_operations.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -177,8 +177,8 @@
     <category name="Information Disclosure">
         <rule>
             <name>Stack Trace or Error Disclosure</name>
-            <regex><![CDATA[(?i)(traceback\.format_exc\(\)|traceback\.print_exc\(\)|print\(.*Exception.*\))]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(traceback\.format_exc\(\)|traceback\.print_exc\(\)|print\(.*Exception.*\))][IF(MISSING:(DEBUG=False|logger\.exception|logging\.exception|production))]]]></rdl>
+            <regex>(?i)(traceback\.format_exc\(\)|traceback\.print_exc\(\)|print\(.*Exception.*\))</regex>
+            <rdl_ref>logic/python/core/stack_trace_or_error_disclosure.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -196,8 +196,8 @@
     <category name="Database Queries">
         <rule>
             <name>Insecure SQL Queries: raw and extra</name>
-            <regex><![CDATA[(?i)^[^#]*\.\s*(raw|extra)\s*\(\s*]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)^[^#]*\.\s*(raw|extra)\s*\(\s*][IF(PRESENT:(request|params|query|format\(|f\"|f'|\+) && MISSING:(params=|placeholders|bindparam))]]]></rdl>
+            <regex>(?i)^[^#]*\.\s*(raw|extra)\s*\(\s*</regex>
+            <rdl_ref>logic/python/core/insecure_sql_queries_raw_and_extra.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -213,8 +213,8 @@
         </rule>
         <rule>
             <name>SQL Query: SELECT Statements with WHERE or ORDER BY</name>
-            <regex><![CDATA[(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*][IF(PRESENT:(request|params|query|format\(|f\"|f'|\+) && MISSING:%s|\?|:\w+|params=|execute\()]]]></rdl>
+            <regex>(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*</regex>
+            <rdl_ref>logic/python/core/sql_query_select_statements_with_where_or_order_by.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -230,8 +230,8 @@
         </rule>
         <rule>
             <name>SQL Query: Unrestricted SELECT *</name>
-            <regex><![CDATA[\bSELECT\s+\*\s+FROM\b]]></regex>
-            <rdl><![CDATA[[FLAG:\bSELECT\s+\*\s+FROM\b][IF(MISSING:LIMIT\s+\d+)]]]></rdl>
+            <regex>\bSELECT\s+\*\s+FROM\b</regex>
+            <rdl_ref>logic/python/core/sql_query_unrestricted_select.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -247,8 +247,8 @@
         </rule>
         <rule>
             <name>SQL Query: Direct DELETE with User Input</name>
-            <regex><![CDATA[(?i)\bDELETE\s+FROM\s+[^\s]+\s+WHERE\s+.*=.*\$.*]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\bDELETE\s+FROM\s+[^\s]+\s+WHERE\s+.*=.*\$.*][IF(MISSING:%s|\?|:\w+|params=|execute\()]]]></rdl>
+            <regex>(?i)\bDELETE\s+FROM\s+[^\s]+\s+WHERE\s+.*=.*\$.*</regex>
+            <rdl_ref>logic/python/core/sql_query_direct_delete_with_user_input.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -264,8 +264,8 @@
         </rule>
         <rule>
             <name>SQL Query: Subqueries with User Input</name>
-            <regex><![CDATA[(?i)\bSELECT\s+[^\s]+\s+FROM\s+\((SELECT\s+.*\$.*)\)]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\bSELECT\s+[^\s]+\s+FROM\s+\((SELECT\s+.*\$.*)\)][IF(MISSING:%s|\?|:\w+|params=|execute\()]]]></rdl>
+            <regex>(?i)\bSELECT\s+[^\s]+\s+FROM\s+\((SELECT\s+.*\$.*)\)</regex>
+            <rdl_ref>logic/python/core/sql_query_subqueries_with_user_input.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -283,8 +283,8 @@
     <category name="Command Injection">
         <rule>
             <name>Command Injection: subprocess</name>
-            <regex><![CDATA[subprocess\.run\(.*\)]]></regex>
-            <rdl><![CDATA[[FLAG:subprocess\.run\(.*\)][IF(PRESENT:(shell=True|input\(|request|params|query|argv) && MISSING:(shlex\.quote|list2cmdline|allowlist|whitelist))]]]></rdl>
+            <regex>subprocess\.run\(.*\)</regex>
+            <rdl_ref>logic/python/core/command_injection_subprocess.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -300,8 +300,8 @@
         </rule>
         <rule>
             <name>Subprocess Modules: os.system, os.spawn, os.popen, popen2., os.kill, commands.</name>
-            <regex><![CDATA[(?i)(os\.system|os\.spawn|os\.popen|popen2\.|os\.kill|commands\.)]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(os\.system|os\.spawn|os\.popen|popen2\.|os\.kill|commands\.)][IF(PRESENT:(input\(|request|params|query|argv) && MISSING:(shlex\.quote|allowlist|whitelist))]]]></rdl>
+            <regex>(?i)(os\.system|os\.spawn|os\.popen|popen2\.|os\.kill|commands\.)</regex>
+            <rdl_ref>logic/python/core/subprocess_modules_os_system_os_spawn_os_popen_popen2_os_kill_commands.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -317,8 +317,8 @@
         </rule>
         <rule>
             <name>Command Injection: eval()</name>
-            <regex><![CDATA[(^|\s|=\s?)eval\(]]></regex>
-            <rdl><![CDATA[[FLAG:(^|\s|=\s?)eval\(][IF(PRESENT:(input\(|request|params|query|user_input|base64|pickle) && MISSING:(allowlist|whitelist))]]]></rdl>
+            <regex>(^|\s|=\s?)eval\(</regex>
+            <rdl_ref>logic/python/core/command_injection_eval.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -336,8 +336,8 @@
     <category name="Arbitrary Code Execution">
         <rule>
             <name>Arbitrary Code Execution: eval()</name>
-            <regex><![CDATA[\beval\(.+\)]]></regex>
-            <rdl><![CDATA[[FLAG:\beval\(.+\)][IF(PRESENT:(input\(|request|params|query|user_input|base64|pickle) && MISSING:(allowlist|whitelist))]]]></rdl>
+            <regex>\beval\(.+\)</regex>
+            <rdl_ref>logic/python/core/arbitrary_code_execution_eval.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -355,8 +355,8 @@
     <category name="Session and State Management">
         <rule>
             <name>Insecure Session Cookies or CSRF Tokens Configuration</name>
-            <regex><![CDATA[(?i)\b(SESSION_COOKIE_SECURE|CSRF_COOKIE_SECURE)\s*=\s*False\b]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\b(SESSION_COOKIE_SECURE|CSRF_COOKIE_SECURE)\s*=\s*False\b][IF(MISSING:SESSION_COOKIE_SECURE\s*=\s*True|CSRF_COOKIE_SECURE\s*=\s*True|production|test|example)]]]></rdl>
+            <regex>(?i)\b(SESSION_COOKIE_SECURE|CSRF_COOKIE_SECURE)\s*=\s*False\b</regex>
+            <rdl_ref>logic/python/core/insecure_session_cookies_or_csrf_tokens_configuration.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -374,8 +374,8 @@
     <category name="Deprecated Functions">
         <rule>
             <name>Deprecated Python Functions</name>
-            <regex><![CDATA[(?i)\b(urllib2|commands)\b]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\b(urllib2|commands)\b][IF(PRESENT:urllib2|commands\.getoutput|commands\.getstatusoutput|urllib\.urlopen && MISSING:test|example|migration|legacy)]]]></rdl>
+            <regex>(?i)\b(urllib2|commands)\b</regex>
+            <rdl_ref>logic/python/core/deprecated_python_functions.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -391,20 +391,10 @@
         </rule>
     </category>
     <category name="Insecure Implementation or Permissions">
-        <!--    # This rule is extreamly verbose. Use it only if you know how to filter out what you need.
-        <rule>
-            <name>Decorators Usage and Placement</name>
-            <regex><![CDATA[@\w+\s*(\([^)]*\))?\s*(def\s+\w+\s*\()?]]></regex>
-            <rdl><![CDATA[[FLAG:@\w+\s*(\([^)]*\))?\s*(def\s+\w+\s*\()?]]]></rdl>
-            <rule_desc>Identifies decorators used in the code and checks their placement.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the presence of decorators in the code. Review the usage and placement of decorators to ensure they are correctly applied where needed and not missed where they are required. Additionally, check for decorators that apply exceptions and review them for potential security issues.</vuln_desc>
-            <developer>Use decorators judiciously and ensure they are correctly placed on functions or methods where they are needed. Carefully review decorators that apply exceptions to ensure they do not introduce security vulnerabilities.</developer>
-            <reviewer>Verify the usage and placement of decorators in the codebase. Ensure that decorators are correctly applied where needed and not omitted where required. Pay special attention to decorators that apply exceptions and assess them for potential security concerns. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
-        </rule> -->
         <rule>
             <name>HTTP Decorators: Insecure or Commonly Abused Methods</name>
-            <regex><![CDATA[(@require_http_methods\s*\(\s*\["(?:GET|PUT|DELETE|.*?)"\]\))|(@require_GET)]]></regex>
-            <rdl><![CDATA[[FLAG:(@require_http_methods\s*\(\s*\["(?:GET|PUT|DELETE|.*?)"\]\))|(@require_GET)][IF(MISSING:@login_required|@permission_required|validate|sanitize)]]]></rdl>
+            <regex>(@require_http_methods\s*\(\s*\["(?:GET|PUT|DELETE|.*?)"\]\))|(@require_GET)</regex>
+            <rdl_ref>logic/python/core/http_decorators_insecure_or_commonly_abused_methods.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -420,8 +410,8 @@
         </rule>
         <rule>
             <name>CSRF Exempt Decorators</name>
-            <regex><![CDATA[@(csrf_exempt)]]></regex>
-            <rdl><![CDATA[[FLAG:@(csrf_exempt)][IF(MISSING:@login_required|token_required|api_key|JWT|Bearer && MISSING:test|example)]]]></rdl>
+            <regex>@(csrf_exempt)</regex>
+            <rdl_ref>logic/python/core/csrf_exempt_decorators.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -439,8 +429,8 @@
     <category name="Software and Library Version Detection">
         <rule>
             <name>Library Version Check</name>
-            <regex><![CDATA[@\w+_version]]></regex>
-            <rdl><![CDATA[[FLAG:@\w+_version][IF(PRESENT:__version__|pkg_resources\.require|version_info && MISSING:test|example|migration)]]]></rdl>
+            <regex>@\w+_version</regex>
+            <rdl_ref>logic/python/core/library_version_check.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -455,14 +445,11 @@
             <reviewer>Verify the library versions used in the codebase and check if they are up-to-date. Identify and report any outdated or EoL library versions that may pose security or compatibility risks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
-    <!--
-    <category name="Missing Mitigations">
-    </category> -->
     <category name="Insecure Mitigations">
         <rule>
             <name>Insecure Mitigation: Django Safe Filter django.utils.safestring</name>
-            <regex><![CDATA[(?i)\.safestring]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\.safestring][IF(MISSING:escape|bleach\.clean|html\.escape|strip_tags|validate && MISSING:test|example)]]]></rdl>
+            <regex>(?i)\.safestring</regex>
+            <rdl_ref>logic/python/core/insecure_mitigation_django_safe_filter_django_utils_safestring.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -478,8 +465,8 @@
         </rule>
         <rule>
             <name>Insecure Use of Django mark_safe</name>
-            <regex><![CDATA[(?i)\.mark_safe\(\s*["']]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\.mark_safe\(\s*["']][IF(MISSING:escape|bleach\.clean|html\.escape|strip_tags|validate && MISSING:test|example)]]]></rdl>
+            <regex>(?i)\.mark_safe\(\s*["']</regex>
+            <rdl_ref>logic/python/core/insecure_use_of_django_mark_safe.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -495,8 +482,8 @@
         </rule>
         <rule>
             <name>Insecure Use of Django csrf_exempt Decorator</name>
-            <regex><![CDATA[(?i)@csrf_exempt]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)@csrf_exempt][IF(MISSING:@login_required|token_required|api_key|JWT|Bearer && MISSING:test|example)]]]></rdl>
+            <regex>(?i)@csrf_exempt</regex>
+            <rdl_ref>logic/python/core/insecure_use_of_django_csrf_exempt_decorator.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -512,8 +499,8 @@
         </rule>
         <rule>
             <name>Insecure Use of Django @login_required Decorator</name>
-            <regex><![CDATA[(?i)@login_required]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)@login_required][IF(MISSING:@permission_required|has_perm|user\.is_authenticated|user\.is_staff)]]]></rdl>
+            <regex>(?i)@login_required</regex>
+            <rdl_ref>logic/python/core/insecure_use_of_django_login_required_decorator.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -529,8 +516,8 @@
         </rule>
         <rule>
             <name>Using Django's Safe Filter</name>
-            <regex><![CDATA[(?i)\.safe_filter\s*\(\s*]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\.safe_filter\s*\(\s*][IF(MISSING:escape|bleach\.clean|html\.escape|strip_tags|validate && MISSING:test|example)]]]></rdl>
+            <regex>(?i)\.safe_filter\s*\(\s*</regex>
+            <rdl_ref>logic/python/core/using_django_s_safe_filter.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -548,8 +535,8 @@
     <category name="Server-Side Request Forgery (SSRF)">
         <rule>
             <name>SSRF: requests Library with User-Controlled URL</name>
-            <regex><![CDATA[requests\.(get|post|put|delete|patch|head|request)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:requests\.(get|post|put|delete|patch|head|request)\s*\(][IF(PRESENT:request\.GET|request\.POST|request\.args|request\.form|input\(|argv|\+ && MISSING:allowlist|whitelist|urlparse|ipaddress|is_private|validators\.url)]]]></rdl>
+            <regex>requests\.(get|post|put|delete|patch|head|request)\s*\(</regex>
+            <rdl_ref>logic/python/core/ssrf_requests_library_with_user_controlled_url.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -565,8 +552,8 @@
         </rule>
         <rule>
             <name>SSRF: urllib with User-Controlled URL</name>
-            <regex><![CDATA[urllib\.request\.urlopen\s*\(|urllib\.urlopen\s*\(|httplib|http\.client\.HTTPConnection\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:urllib\.request\.urlopen\s*\(|urllib\.urlopen\s*\(][IF(PRESENT:request\.|input\(|argv|\+ && MISSING:allowlist|whitelist|urlparse|is_private)]]]></rdl>
+            <regex>urllib\.request\.urlopen\s*\(|urllib\.urlopen\s*\(|httplib|http\.client\.HTTPConnection\s*\(</regex>
+            <rdl_ref>logic/python/core/ssrf_urllib_with_user_controlled_url.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -584,8 +571,8 @@
     <category name="XML External Entity (XXE)">
         <rule>
             <name>XXE: lxml etree Parser Without Resolve Entities Disabled</name>
-            <regex><![CDATA[lxml\.etree\.parse\s*\(|etree\.fromstring\s*\(|etree\.XMLParser\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:lxml\.etree\.parse\s*\(|etree\.fromstring\s*\(|etree\.XMLParser\s*\(][IF(MISSING:resolve_entities\s*=\s*False|no_network\s*=\s*True|XMLParser\s*\(.*resolve_entities\s*=\s*False)]]]></rdl>
+            <regex>lxml\.etree\.parse\s*\(|etree\.fromstring\s*\(|etree\.XMLParser\s*\(</regex>
+            <rdl_ref>logic/python/core/xxe_lxml_etree_parser_without_resolve_entities_disabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -601,8 +588,8 @@
         </rule>
         <rule>
             <name>XXE: stdlib xml.etree.ElementTree Vulnerable Parser</name>
-            <regex><![CDATA[xml\.etree\.ElementTree\.parse\s*\(|ElementTree\.parse\s*\(|xml\.dom\.minidom\.parse\s*\(|xml\.sax\.parse\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:xml\.etree\.ElementTree\.parse\s*\(|ElementTree\.parse\s*\(|xml\.dom\.minidom\.parse\s*\(|xml\.sax\.parse\s*\(][IF(MISSING:defusedxml|no_network|resolve_entities\s*=\s*False)]]]></rdl>
+            <regex>xml\.etree\.ElementTree\.parse\s*\(|ElementTree\.parse\s*\(|xml\.dom\.minidom\.parse\s*\(|xml\.sax\.parse\s*\(</regex>
+            <rdl_ref>logic/python/core/xxe_stdlib_xml_etree_elementtree_vulnerable_parser.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -620,8 +607,8 @@
     <category name="Server-Side Template Injection (SSTI)">
         <rule>
             <name>SSTI: Jinja2 Template from User Input</name>
-            <regex><![CDATA[jinja2\.Template\s*\(|Environment\s*\(.*\)\.from_string\s*\(|render_template_string\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:jinja2\.Template\s*\(|Environment\s*\(.*\)\.from_string\s*\(|render_template_string\s*\(][IF(PRESENT:request\.|input\(|argv|query|\+ && MISSING:autoescape\s*=\s*True|sandbox)]]]></rdl>
+            <regex>jinja2\.Template\s*\(|Environment\s*\(.*\)\.from_string\s*\(|render_template_string\s*\(</regex>
+            <rdl_ref>logic/python/core/ssti_jinja2_template_from_user_input.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -637,8 +624,8 @@
         </rule>
         <rule>
             <name>SSTI: Mako/Chameleon Template Rendering with User Input</name>
-            <regex><![CDATA[mako\.template\.Template\s*\(|Template\s*\(\s*text\s*=|chameleon\.PageTemplate\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:mako\.template\.Template\s*\(|chameleon\.PageTemplate\s*\(][IF(PRESENT:request\.|input\(|argv|\+ && MISSING:strict_undefined|escape)]]]></rdl>
+            <regex>mako\.template\.Template\s*\(|Template\s*\(\s*text\s*=|chameleon\.PageTemplate\s*\(</regex>
+            <rdl_ref>logic/python/core/ssti_mako_chameleon_template_rendering_with_user_input.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -656,8 +643,8 @@
     <category name="Path Traversal">
         <rule>
             <name>Path Traversal: open() with User-Controlled Path</name>
-            <regex><![CDATA[\bopen\s*\(\s*(?:os\.path\.join\s*\(|request\.|input\(|argv)]]></regex>
-            <rdl><![CDATA[[FLAG:\bopen\s*\(][IF(PRESENT:request\.|input\(|argv|os\.path\.join && MISSING:os\.path\.realpath|os\.path\.abspath|startswith|allowlist|whitelist)]]]></rdl>
+            <regex>\bopen\s*\(\s*(?:os\.path\.join\s*\(|request\.|input\(|argv)</regex>
+            <rdl_ref>logic/python/core/path_traversal_open_with_user_controlled_path.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>

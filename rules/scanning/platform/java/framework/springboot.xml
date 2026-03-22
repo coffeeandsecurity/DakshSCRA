@@ -2,8 +2,8 @@
     <category name="Framework-Specific Security">
         <rule>
             <name>Springboot Actuator/Management Overexposure</name>
-            <regex><![CDATA[management\.endpoints\.web\.exposure\.include\s*=\s*\*|/actuator]]></regex>
-            <rdl><![CDATA[[FLAG:management\.endpoints\.web\.exposure\.include\s*=\s*\*|/actuator][IF(MISSING:management\.endpoint\..*\.enabled\s*=\s*false|spring\.security|@PreAuthorize|hasRole|authentication)]]]></rdl>
+            <regex>management\.endpoints\.web\.exposure\.include\s*=\s*\*|/actuator</regex>
+            <rdl_ref>logic/java/framework/springboot/springboot_actuator_management_overexposure.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>Springboot SQL Query Concatenation Sink</name>
-            <regex><![CDATA[createQuery\(\s*"[^"]*"\s*\+|createNativeQuery\(\s*"[^"]*"\s*\+|Statement\s+\w+\s*=\s*.*createStatement\(]]></regex>
-            <rdl><![CDATA[[FLAG:createQuery\(\s*"[^"]*"\s*\+|createNativeQuery\(\s*"[^"]*"\s*\+|Statement\s+\w+\s*=\s*.*createStatement\(][IF(MISSING:queryForObject\s*\(.*\?|NamedParameterJdbcTemplate|query\s*\(.*\?|PreparedStatement)]]]></rdl>
+            <regex>createQuery\(\s*"[^"]*"\s*\+|createNativeQuery\(\s*"[^"]*"\s*\+|Statement\s+\w+\s*=\s*.*createStatement\(</regex>
+            <rdl_ref>logic/java/framework/springboot/springboot_sql_query_concatenation_sink.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>Springboot Permissive CORS</name>
-            <regex><![CDATA[@CrossOrigin\(.*\*|allowedOrigins\s*=\s*\{?\s*"\*"]]></regex>
-            <rdl><![CDATA[[FLAG:@CrossOrigin\(.*\*|allowedOrigins\s*=\s*\{?\s*"\*"][IF(MISSING:allowHost|origin|trustedOrigins|allowSpecificOrigins)]]]></rdl>
+            <regex>@CrossOrigin\(.*\*|allowedOrigins\s*=\s*\{?\s*"\*"</regex>
+            <rdl_ref>logic/java/framework/springboot/springboot_permissive_cors.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -53,8 +53,8 @@
         </rule>
         <rule>
             <name>Springboot Insecure Transport Setting</name>
-            <regex><![CDATA[http://|server\.ssl\.enabled\s*=\s*false|allowInsecureProtocol\s*=\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:http://|server\.ssl\.enabled\s*=\s*false|allowInsecureProtocol\s*=\s*true][IF(MISSING:https://)]]]></rdl>
+            <regex>http://|server\.ssl\.enabled\s*=\s*false|allowInsecureProtocol\s*=\s*true</regex>
+            <rdl_ref>logic/java/framework/springboot/springboot_insecure_transport_setting.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -70,8 +70,8 @@
         </rule>
         <rule>
             <name>Springboot Hardcoded Secret Material</name>
-            <regex><![CDATA[(secret|apikey|token|password)\s*[=:]\s*"[^\"]{8,}"]]></regex>
-            <rdl><![CDATA[[FLAG:(secret|apikey|token|password)\s*[=:]\s*"[^\"]{8,}"][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <regex>(secret|apikey|token|password)\s*[=:]\s*"[^\"]{8,}"</regex>
+            <rdl_ref>logic/java/framework/springboot/springboot_hardcoded_secret_material.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

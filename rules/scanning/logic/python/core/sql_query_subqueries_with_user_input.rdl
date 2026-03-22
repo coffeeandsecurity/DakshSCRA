@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\bSELECT\s+[^\s]+\s+FROM\s+\((SELECT\s+.*\$.*)\)
+WHEN EXPR MISSING:%s|\?|:\w+|params=|execute\(
+REPORT AS area_of_interest
+REASON Detects nested subqueries with user input, which can lead to SQL injection vulnerabilities if input is not parameterized.
+TRACE Externalized rule logic for SQL Query: Subqueries with User Input.

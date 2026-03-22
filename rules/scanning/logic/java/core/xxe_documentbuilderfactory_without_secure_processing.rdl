@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT DocumentBuilderFactory\.newInstance\s*\(|SAXParserFactory\.newInstance\s*\(|XMLInputFactory\.newInstance\s*\(
+WHEN EXPR MISSING:setFeature\s*\(.*FEATURE_SECURE_PROCESSING|setExpandEntityReferences\s*\(\s*false|DISALLOW_DOCTYPE_DECL|SUPPORT_DTD\s*,\s*false
+REPORT AS area_of_interest
+REASON Detects XML parser factory instantiation without XXE-hardening features.
+TRACE Externalized rule logic for XXE: DocumentBuilderFactory Without Secure Processing.

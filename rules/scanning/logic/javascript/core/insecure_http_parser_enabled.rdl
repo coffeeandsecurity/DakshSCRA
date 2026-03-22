@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \binsecureHTTPParser\s*:\s*true\b
+WHEN EXPR PRESENT:insecureHTTPParser:\s*true|legacyHeaders:\s*true && MISSING:test|development|legacy
+REPORT AS area_of_interest
+REASON Detects explicit enablement of Node's insecure HTTP parser option.
+TRACE Externalized rule logic for Insecure HTTP Parser Enabled.

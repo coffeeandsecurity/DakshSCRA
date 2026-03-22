@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\bSELECT\s+[^\s]+\s+FROM\s+[^\s]+\s+WHERE\s+(username|password|apikey|token)=['"][^'"]+['"]
+WHEN EXPR MISSING:example|sample|dummy|test|placeholder
+REPORT AS area_of_interest
+REASON Detects hardcoded sensitive data in WHERE clauses of SQL queries, which can increase the risk of data exposure or compromise.
+TRACE Externalized rule logic for SQL Query: Hardcoded Sensitive Information in WHERE Clauses.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT viewModelScope\.launch\s*\{[^}]*(?:query|rawQuery|execSQL|getPassword|getToken|decrypt|encrypt|credential|authToken)[^}]*\}
+WHEN EXPR MISSING:try\s*\{|catch\s*\(|runCatching|CoroutineExceptionHandler
+REPORT AS area_of_interest
+REASON Detects security-sensitive operations inside viewModelScope.launch without exception handling.
+TRACE Externalized rule logic for Insecure Method Call: viewModelScope.launch (No Error Handling).

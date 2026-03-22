@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bWebViewController\b|\bWebViewWidget\b
+WHEN EXPR MISSING:scheme|canLaunchUrl|allowedSchemes|guard.*scheme|Uri\.parse.*scheme|navigationDelegate|onNavigationRequest
+REPORT AS area_of_interest
+REASON Detects Flutter WebView usage that may load user-controlled URLs without scheme or origin validation.
+TRACE Externalized mobile rule logic for WebView Loading User-Controlled URL Without Scheme Validation.

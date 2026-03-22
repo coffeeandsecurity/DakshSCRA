@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(eval|setTimeout|setInterval)\(.+\)
+WHEN EXPR PRESENT:(\+|`|\$\{|location|document\.cookie|localStorage|sessionStorage|req\.|res\.) && MISSING:allowlist|whitelist|JSON\.parse|Function\s*\(|trusted|DOMPurify && MISSING:function\s*\(|=>\s*\{|callback|test|example|spec|mock
+REPORT AS area_of_interest
+REASON Detects the usage of the `eval`, `setTimeout`, and `setInterval` functions.
+TRACE Externalized rule logic for Insecure Method Call: eval|setTimeout|setInterval.

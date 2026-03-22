@@ -2,8 +2,8 @@
     <category name="Injection">
         <rule>
             <name>Invoke-Expression with Variable Input</name>
-            <regex><![CDATA[Invoke-Expression\s+["']?.*\$\w|iex\s+["']?.*\$\w]]></regex>
-            <rdl><![CDATA[[FLAG:Invoke-Expression\s+["']?.*\$\w|iex\s+["']?.*\$\w][IF(MISSING:Validate|Sanitize|allowlist|\[ValidateSet\]|\[ValidatePattern\])]]]></rdl>
+            <regex>Invoke-Expression\s+["']?.*\$\w|iex\s+["']?.*\$\w</regex>
+            <rdl_ref>logic/powershell/core/invoke_expression_with_variable_input.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>Start-Process or cmd.exe with Variable Arguments</name>
-            <regex><![CDATA[(?:Start-Process|&\s+cmd(?:\.exe)?|Invoke-Command)\s+[^`\n]*\$(?:args|input|params|\w+URL|\w+Path|\w+Cmd)]]></regex>
-            <rdl><![CDATA[[FLAG:(?:Start-Process|&\s+cmd(?:\.exe)?|Invoke-Command)\s+[^`\n]*\$(?:args|input|params|\w+URL|\w+Path|\w+Cmd)][IF(MISSING:EscapeShellArgument|Sanitize|\[ValidatePattern\])]]]></rdl>
+            <regex>(?:Start-Process|&amp;\s+cmd(?:\.exe)?|Invoke-Command)\s+[^`\n]*\$(?:args|input|params|\w+URL|\w+Path|\w+Cmd)</regex>
+            <rdl_ref>logic/powershell/core/start_process_or_cmd_exe_with_variable_arguments.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -38,8 +38,8 @@
     <category name="Sensitive Data Exposure">
         <rule>
             <name>Hardcoded Credential in PowerShell Script</name>
-            <regex><![CDATA[(?i)(?:password|passwd|secret|apikey|api_key|token|accesskey)\s*=\s*["'][A-Za-z0-9@#$%^&*!_\-]{8,}["']]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(?:password|passwd|secret|apikey|api_key|token|accesskey)\s*=\s*["'][A-Za-z0-9@#$%^&*!_\-]{8,}["']][IF(MISSING:SecureString|Get-Secret|Vault|\$env:)]]]></rdl>
+            <regex>(?i)(?:password|passwd|secret|apikey|api_key|token|accesskey)\s*=\s*["'][A-Za-z0-9@#$%^&amp;*!_\-]{8,}["']</regex>
+            <rdl_ref>logic/powershell/core/hardcoded_credential_in_powershell_script.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -55,8 +55,8 @@
         </rule>
         <rule>
             <name>ConvertTo-SecureString with PlainText</name>
-            <regex><![CDATA[ConvertTo-SecureString\s+.*-AsPlainText\s+-Force|ConvertTo-SecureString\s+.*-Force\s+.*-AsPlainText]]></regex>
-            <rdl><![CDATA[[FLAG:ConvertTo-SecureString\s+.*-AsPlainText\s+-Force][IF(MISSING:Get-Secret|[System\.Environment]::GetEnvironmentVariable|$env:|placeholder|example|test)]]]></rdl>
+            <regex>ConvertTo-SecureString\s+.*-AsPlainText\s+-Force|ConvertTo-SecureString\s+.*-Force\s+.*-AsPlainText</regex>
+            <rdl_ref>logic/powershell/core/convertto_securestring_with_plaintext.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -74,8 +74,8 @@
     <category name="Download and Execution">
         <rule>
             <name>Download Cradle Pattern</name>
-            <regex><![CDATA[(?:IEX|Invoke-Expression)\s*\(\s*(?:New-Object\s+Net\.WebClient|Invoke-WebRequest|iwr|curl|wget)\s*[^)]*\)]]></regex>
-            <rdl><![CDATA[[FLAG:(?:IEX|Invoke-Expression)\s*\(\s*(?:New-Object\s+Net\.WebClient|Invoke-WebRequest|iwr|curl|wget)\s*[^)]*\)][IF(MISSING:test|CI|pipeline|AllowList|InternalSource|development|example|-WhatIf)]]]></rdl>
+            <regex>(?:IEX|Invoke-Expression)\s*\(\s*(?:New-Object\s+Net\.WebClient|Invoke-WebRequest|iwr|curl|wget)\s*[^)]*\)</regex>
+            <rdl_ref>logic/powershell/core/download_cradle_pattern.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -91,8 +91,8 @@
         </rule>
         <rule>
             <name>WebClient DownloadString Execution</name>
-            <regex><![CDATA[(?:New-Object\s+(?:System\.)?Net\.WebClient|Net\.WebClient\b)[^|;\n]*\.\s*DownloadString]]></regex>
-            <rdl><![CDATA[[FLAG:(?:New-Object\s+(?:System\.)?Net\.WebClient|Net\.WebClient\b)[^|;\n]*\.\s*DownloadString][IF(MISSING:checksum|hash|signature|verify)]]]></rdl>
+            <regex>(?:New-Object\s+(?:System\.)?Net\.WebClient|Net\.WebClient\b)[^|;\n]*\.\s*DownloadString</regex>
+            <rdl_ref>logic/powershell/core/webclient_downloadstring_execution.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -110,8 +110,8 @@
     <category name="Execution Policy and Security Controls">
         <rule>
             <name>Bypass Execution Policy</name>
-            <regex><![CDATA[(?i)-ExecutionPolicy\s+(?:Bypass|Unrestricted)|Set-ExecutionPolicy\s+(?:Bypass|Unrestricted)]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)-ExecutionPolicy\s+(?:Bypass|Unrestricted)|Set-ExecutionPolicy\s+(?:Bypass|Unrestricted)][IF(PRESENT:-ExecutionPolicy\s+Bypass|Set-ExecutionPolicy\s+Bypass|executionpolicy.*bypass && MISSING:test|CI|pipeline|development|example)]]]></rdl>
+            <regex>(?i)-ExecutionPolicy\s+(?:Bypass|Unrestricted)|Set-ExecutionPolicy\s+(?:Bypass|Unrestricted)</regex>
+            <rdl_ref>logic/powershell/core/bypass_execution_policy.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -127,8 +127,8 @@
         </rule>
         <rule>
             <name>AMSI Bypass Attempt</name>
-            <regex><![CDATA[amsiInitFailed|AmsiScanBuffer|amsi\.dll|amsiContext|Disable.*AMSI|AMSI.*bypass]]></regex>
-            <rdl><![CDATA[[FLAG:amsiInitFailed|AmsiScanBuffer|amsi\.dll|amsiContext|Disable.*AMSI|AMSI.*bypass][IF(PRESENT:amsi|AmsiScanBuffer|amsiContext|amsiInitFailed && MISSING:test|development|example|research)]]]></rdl>
+            <regex>amsiInitFailed|AmsiScanBuffer|amsi\.dll|amsiContext|Disable.*AMSI|AMSI.*bypass</regex>
+            <rdl_ref>logic/powershell/core/amsi_bypass_attempt.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -146,8 +146,8 @@
     <category name="Network and Transport">
         <rule>
             <name>TLS Validation Disabled via Callback</name>
-            <regex><![CDATA[ServerCertificateValidationCallback\s*=\s*\{[^}]*\$true\}|ServerCertificateValidationCallback\s*=\s*\{\s*\$true\s*\}|IgnoreSSL|DisableCertCheck|CertificatePolicy.*Accept]]></regex>
-            <rdl><![CDATA[[FLAG:ServerCertificateValidationCallback\s*=\s*\{[^}]*\$true\}|ServerCertificateValidationCallback\s*=\s*\{\s*\$true\s*\}][IF(MISSING:test|development|localhost|staging)]]]></rdl>
+            <regex>ServerCertificateValidationCallback\s*=\s*\{[^}]*\$true\}|ServerCertificateValidationCallback\s*=\s*\{\s*\$true\s*\}|IgnoreSSL|DisableCertCheck|CertificatePolicy.*Accept</regex>
+            <rdl_ref>logic/powershell/core/tls_validation_disabled_via_callback.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>

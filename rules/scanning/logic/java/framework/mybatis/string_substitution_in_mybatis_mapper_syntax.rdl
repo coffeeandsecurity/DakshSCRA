@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \$\{(?!__frch_|index|item|foreach)[^}]+\}
+WHEN EXPR MISSING:#\{|@Param|parameterType && MISSING:validate|sanitize
+REPORT AS area_of_interest
+REASON Detects use of MyBatis ${} string substitution syntax in mapper XML files.
+TRACE Externalized rule logic for String Substitution in MyBatis Mapper (${} Syntax).

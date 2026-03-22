@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT >\s*(?:/etc/|/root/|~/)(?:passwd|shadow|sudoers|ssh|\.ssh|crontab)\b
+WHEN EXPR MISSING:# intentional|test|example
+REPORT AS area_of_interest
+REASON Detects writes to sensitive system files including shadow, sudoers, and SSH configuration.
+TRACE Externalized rule logic for World-Readable Sensitive File Write.

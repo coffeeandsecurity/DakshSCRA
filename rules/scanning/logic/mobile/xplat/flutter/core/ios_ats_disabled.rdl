@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>
+REPORT AS area_of_interest
+REASON Detects relaxed iOS transport security settings in Flutter iOS projects.
+TRACE Externalized mobile rule logic for iOS ATS Disabled.

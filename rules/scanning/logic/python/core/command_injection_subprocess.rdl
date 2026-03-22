@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT subprocess\.run\(.*\)
+WHEN EXPR PRESENT:(shell=True|input\(|request|params|query|argv) && MISSING:(shlex\.quote|list2cmdline|allowlist|whitelist)
+REPORT AS area_of_interest
+REASON Detects instances of subprocess.run() that can lead to command injection vulnerabilities if used with untrusted input.
+TRACE Externalized rule logic for Command Injection: subprocess.

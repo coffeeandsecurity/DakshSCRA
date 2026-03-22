@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bDEBUG\b|debuggable\s*[:=]\s*true
+WHEN EXPR MISSING:RELEASE
+REPORT AS area_of_interest
+REASON Detects debug build markers in Xamarin/mobile .NET code paths.
+TRACE Externalized mobile rule logic for Xamarin Debug Build Marker.

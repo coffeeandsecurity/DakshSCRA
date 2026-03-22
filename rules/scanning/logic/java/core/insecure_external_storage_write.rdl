@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*\.write
+WHEN EXPR MISSING:EncryptedFile|AES|encrypt|cipher|KeyStore && MISSING:test|example|sample
+REPORT AS area_of_interest
+REASON Detects writing to external storage without proper validation or encryption.
+TRACE Externalized rule logic for Insecure External Storage Write.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT danger_accept_invalid_certs\(\s*true\s*\)|danger_accept_invalid_hostnames\(\s*true\s*\)
+WHEN EXPR MISSING:test|development|localhost|staging
+REPORT AS area_of_interest
+REASON Detects TLS certificate/hostname validation bypass in Rust HTTP clients.
+TRACE Externalized rule logic for Actix Insecure TLS Handling.

@@ -2,8 +2,8 @@
     <category name="Image and Base Configuration">
         <rule>
             <name>Running as Root User</name>
-            <regex><![CDATA[^USER\s+(?:root|0)\s*$]]></regex>
-            <rdl><![CDATA[[FLAG:^USER\s+(?:root|0)\s*$][IF(MISSING:USER\s+(?!0|root)[a-zA-Z]|useradd|adduser|gosu|su-exec)]]]></rdl>
+            <regex>^USER\s+(?:root|0)\s*$</regex>
+            <rdl_ref>logic/dockerfile/core/running_as_root_user.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>No USER Directive Present</name>
-            <regex><![CDATA[^(?:ENTRYPOINT|CMD)\s]]></regex>
-            <rdl><![CDATA[[FLAG:^(?:ENTRYPOINT|CMD)\s][IF(MISSING:^USER\s)]]]></rdl>
+            <regex>^(?:ENTRYPOINT|CMD)\s</regex>
+            <rdl_ref>logic/dockerfile/core/no_user_directive_present.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -36,9 +36,8 @@
         </rule>
         <rule>
             <name>Using latest Tag for Base Image</name>
-            <regex><![CDATA[^FROM\s+\S+:latest\b|^FROM\s+(?!scratch\b)\S+\s*$]]></regex>
-            <rdl><![CDATA[[FLAG:^FROM\s+\S+:latest\b|^FROM\s+(?!scratch\b)\S+\s*$][IF(PRESENT:FROM\s+\S+:latest|FROM\s+\S+
- && MISSING:@sha256:|# pinned|# renovate|# digest)]]]></rdl>
+            <regex>^FROM\s+\S+:latest\b|^FROM\s+(?!scratch\b)\S+\s*$</regex>
+            <rdl_ref>logic/dockerfile/core/using_latest_tag_for_base_image.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -56,8 +55,8 @@
     <category name="Secret and Credential Exposure">
         <rule>
             <name>Secret Passed via ENV Instruction</name>
-            <regex><![CDATA[(?i)^ENV\s+(?:PASSWORD|SECRET|API_KEY|APIKEY|TOKEN|ACCESS_KEY|PRIVATE_KEY|AUTH_TOKEN)\s*=?\s*\S]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)^ENV\s+(?:PASSWORD|SECRET|API_KEY|APIKEY|TOKEN|ACCESS_KEY|PRIVATE_KEY|AUTH_TOKEN)\s*=?\s*\S][IF(MISSING:placeholder|example|test|dummy|TODO && MISSING:ARG\s+\w+\s*$|--build-arg|SECRET_)]]]></rdl>
+            <regex>(?i)^ENV\s+(?:PASSWORD|SECRET|API_KEY|APIKEY|TOKEN|ACCESS_KEY|PRIVATE_KEY|AUTH_TOKEN)\s*=?\s*\S</regex>
+            <rdl_ref>logic/dockerfile/core/secret_passed_via_env_instruction.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -73,8 +72,8 @@
         </rule>
         <rule>
             <name>Secret Passed via ARG Instruction</name>
-            <regex><![CDATA[(?i)^ARG\s+(?:PASSWORD|SECRET|API_KEY|APIKEY|TOKEN|ACCESS_KEY|PRIVATE_KEY|AUTH_TOKEN)]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)^ARG\s+(?:PASSWORD|SECRET|API_KEY|APIKEY|TOKEN|ACCESS_KEY|PRIVATE_KEY|AUTH_TOKEN)][IF(MISSING:placeholder|example|test|dummy|TODO && PRESENT:ARG.*(KEY|SECRET|PASSWORD|TOKEN|PASS|CREDENTIAL))]]]></rdl>
+            <regex>(?i)^ARG\s+(?:PASSWORD|SECRET|API_KEY|APIKEY|TOKEN|ACCESS_KEY|PRIVATE_KEY|AUTH_TOKEN)</regex>
+            <rdl_ref>logic/dockerfile/core/secret_passed_via_arg_instruction.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -90,8 +89,8 @@
         </rule>
         <rule>
             <name>Private Key or Certificate Copied into Image</name>
-            <regex><![CDATA[^(?:COPY|ADD)\s+[^\n]*(?:\.pem|\.key|\.p12|\.pfx|\.jks|id_rsa|id_dsa|id_ecdsa|\.ppk)\b]]></regex>
-            <rdl><![CDATA[[FLAG:^(?:COPY|ADD)\s+[^\n]*(?:\.pem|\.key|\.p12|\.pfx|\.jks|id_rsa|id_dsa|id_ecdsa|\.ppk)\b][IF(MISSING:\.pub\b|public|example|test|dummy|placeholder)]]]></rdl>
+            <regex>^(?:COPY|ADD)\s+[^\n]*(?:\.pem|\.key|\.p12|\.pfx|\.jks|id_rsa|id_dsa|id_ecdsa|\.ppk)\b</regex>
+            <rdl_ref>logic/dockerfile/core/private_key_or_certificate_copied_into_image.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -109,8 +108,8 @@
     <category name="Build and Layer Security">
         <rule>
             <name>ADD Used to Fetch Remote Content</name>
-            <regex><![CDATA[^ADD\s+https?://]]></regex>
-            <rdl><![CDATA[[FLAG:^ADD\s+https?://][IF(MISSING:checksum|sha256|sha512|verify)]]]></rdl>
+            <regex>^ADD\s+https?://</regex>
+            <rdl_ref>logic/dockerfile/core/add_used_to_fetch_remote_content.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -126,8 +125,8 @@
         </rule>
         <rule>
             <name>Package Manager Cache Not Cleared</name>
-            <regex><![CDATA[^RUN\s+(?:apt-get\s+install|yum\s+install|apk\s+add|dnf\s+install)(?![^\n]*&&[^\n]*(?:rm\s+-rf\s+/var/(?:cache|lib)/apt|yum\s+clean\s+all|apk\s+--no-cache|dnf\s+clean\s+all))]]></regex>
-            <rdl><![CDATA[[FLAG:^RUN\s+(?:apt-get\s+install|yum\s+install|apk\s+add|dnf\s+install)][IF(MISSING:rm\s+-rf|clean\s+all|--no-cache)]]]></rdl>
+            <regex>^RUN\s+(?:apt-get\s+install|yum\s+install|apk\s+add|dnf\s+install)(?![^\n]*&amp;&amp;[^\n]*(?:rm\s+-rf\s+/var/(?:cache|lib)/apt|yum\s+clean\s+all|apk\s+--no-cache|dnf\s+clean\s+all))</regex>
+            <rdl_ref>logic/dockerfile/core/package_manager_cache_not_cleared.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -143,8 +142,8 @@
         </rule>
         <rule>
             <name>sudo or su Installed in Container</name>
-            <regex><![CDATA[(?:apt-get|yum|apk|dnf)\s+install\s+[^\n]*\bsudo\b]]></regex>
-            <rdl><![CDATA[[FLAG:(?:apt-get|yum|apk|dnf)\s+install\s+[^\n]*\bsudo\b][IF(MISSING:# intentional|gosu|su-exec|# required)]]]></rdl>
+            <regex>(?:apt-get|yum|apk|dnf)\s+install\s+[^\n]*\bsudo\b</regex>
+            <rdl_ref>logic/dockerfile/core/sudo_or_su_installed_in_container.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -162,8 +161,8 @@
     <category name="Network Exposure">
         <rule>
             <name>Broad Port Range Exposed</name>
-            <regex><![CDATA[^EXPOSE\s+\d+-\d{4,}|^EXPOSE\s+0\.0\.0\.0]]></regex>
-            <rdl><![CDATA[[FLAG:^EXPOSE\s+\d+-\d{4,}|^EXPOSE\s+0\.0\.0\.0][IF(MISSING:# intentional|# required|# documentation)]]]></rdl>
+            <regex>^EXPOSE\s+\d+-\d{4,}|^EXPOSE\s+0\.0\.0\.0</regex>
+            <rdl_ref>logic/dockerfile/core/broad_port_range_exposed.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

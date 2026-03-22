@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT acl\s*=\s*"public-read(?:-write)?"|block_public_acls\s*=\s*false|block_public_policy\s*=\s*false
+WHEN EXPR PRESENT:acl\s*=\s*"public-read|block_public_acls\s*=\s*false|ignore_public_acls\s*=\s*false && MISSING:# intentional|# static-website|website\s*\{
+REPORT AS area_of_interest
+REASON Detects S3 bucket configurations that allow public access or disable public access block settings.
+TRACE Externalized rule logic for S3 Bucket Publicly Accessible.

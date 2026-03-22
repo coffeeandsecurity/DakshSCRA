@@ -2,8 +2,8 @@
     <category name="Framework-Specific Issues - Apache Struts">
         <rule>
             <name>OGNL Expression Injection via Action Name</name>
-            <regex><![CDATA[ActionContext\.getContext\(\)\.getValueStack\(\)|getValue\s*\(\s*[^)]*\+|findValue\s*\(\s*[^)]*(?:request|param|getParameter)]]></regex>
-            <rdl><![CDATA[[FLAG:getValue\s*\(\s*[^)]*\+|findValue\s*\(\s*[^)]*(?:request|param|getParameter)][IF(MISSING:ESAPI\.encoder|AntiXss|sanitize|escapeHtml)]]]></rdl>
+            <regex>ActionContext\.getContext\(\)\.getValueStack\(\)|getValue\s*\(\s*[^)]*\+|findValue\s*\(\s*[^)]*(?:request|param|getParameter)</regex>
+            <rdl_ref>logic/java/framework/struts/ognl_expression_injection_via_action_name.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>Dynamic Method Invocation Enabled</name>
-            <regex><![CDATA[struts\.enable\.DynamicMethodInvocation\s*=\s*true|<constant\s+name="struts\.enable\.DynamicMethodInvocation"\s+value="true"]]></regex>
-            <rdl><![CDATA[[FLAG:struts\.enable\.DynamicMethodInvocation\s*=\s*true|<constant\s+name="struts\.enable\.DynamicMethodInvocation"\s+value="true"][IF(MISSING:SecurityMemberAccess|OgnlContextState|allowlist|xwork\.security\.excludedClasses)]]]></rdl>
+            <regex>struts\.enable\.DynamicMethodInvocation\s*=\s*true|&lt;constant\s+name="struts\.enable\.DynamicMethodInvocation"\s+value="true"</regex>
+            <rdl_ref>logic/java/framework/struts/dynamic_method_invocation_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>File Upload Without Type and Size Restrictions</name>
-            <regex><![CDATA[<interceptor-ref\s+name="fileUpload"(?![^>]*maximumSize)|FileUploadInterceptor(?![^;]*allowedTypes)]]></regex>
-            <rdl><![CDATA[[FLAG:<interceptor-ref\s+name="fileUpload"][IF(MISSING:maximumSize|allowedTypes|allowedExtensions)]]]></rdl>
+            <regex>&lt;interceptor-ref\s+name="fileUpload"(?![^&gt;]*maximumSize)|FileUploadInterceptor(?![^;]*allowedTypes)</regex>
+            <rdl_ref>logic/java/framework/struts/file_upload_without_type_and_size_restrictions.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>

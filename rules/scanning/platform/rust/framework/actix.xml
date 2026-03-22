@@ -2,8 +2,8 @@
     <category name="Framework-Specific Security">
         <rule>
             <name>Actix Debug/Dev Exposure</name>
-            <regex><![CDATA[RUST_LOG\s*=\s*"debug"|env_logger::init\(\)]]></regex>
-            <rdl><![CDATA[[FLAG:RUST_LOG\s*=\s*"debug"|env_logger::init\(\)][IF(MISSING:release|production)]]]></rdl>
+            <regex>RUST_LOG\s*=\s*"debug"|env_logger::init\(\)</regex>
+            <rdl_ref>logic/rust/framework/actix/actix_debug_dev_exposure.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>Actix Insecure TLS Handling</name>
-            <regex><![CDATA[danger_accept_invalid_certs\(\s*true\s*\)|danger_accept_invalid_hostnames\(\s*true\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:danger_accept_invalid_certs\(\s*true\s*\)|danger_accept_invalid_hostnames\(\s*true\s*\)][IF(MISSING:test|development|localhost|staging)]]]></rdl>
+            <regex>danger_accept_invalid_certs\(\s*true\s*\)|danger_accept_invalid_hostnames\(\s*true\s*\)</regex>
+            <rdl_ref>logic/rust/framework/actix/actix_insecure_tls_handling.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>Actix SQL Injection Sink</name>
-            <regex><![CDATA[format!\(\s*"\s*SELECT|format!\(\s*"\s*INSERT|sql_query\(\s*format!]]></regex>
-            <rdl><![CDATA[[FLAG:format!\(\s*"\s*SELECT|format!\(\s*"\s*INSERT|sql_query\(\s*format!][IF(MISSING:query!\s*\(|sqlx::query!|prepare\s*\(|bind\s*\(|QueryBuilder|params && MISSING:test|example)]]]></rdl>
+            <regex>format!\(\s*"\s*SELECT|format!\(\s*"\s*INSERT|sql_query\(\s*format!</regex>
+            <rdl_ref>logic/rust/framework/actix/actix_sql_injection_sink.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -53,8 +53,8 @@
         </rule>
         <rule>
             <name>Actix Permissive CORS</name>
-            <regex><![CDATA[allow_any_origin\(\)|Any\s*,\s*allow_origin|allow_origin\(Any\)]]></regex>
-            <rdl><![CDATA[[FLAG:allow_any_origin\(\)|Any\s*,\s*allow_origin|allow_origin\(Any\)][IF(PRESENT:allow_any_origin\(\)|AllowOrigin::any\(\)|allow_origin.*Any && MISSING:AllowOrigin::exact|AllowOrigin::predicate|allow_origin.*https?://[^*] && MISSING:test|example)]]]></rdl>
+            <regex>allow_any_origin\(\)|Any\s*,\s*allow_origin|allow_origin\(Any\)</regex>
+            <rdl_ref>logic/rust/framework/actix/actix_permissive_cors.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -70,8 +70,8 @@
         </rule>
         <rule>
             <name>Actix Hardcoded Secret Material</name>
-            <regex><![CDATA[(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <regex>(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"</regex>
+            <rdl_ref>logic/rust/framework/actix/actix_hardcoded_secret_material.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

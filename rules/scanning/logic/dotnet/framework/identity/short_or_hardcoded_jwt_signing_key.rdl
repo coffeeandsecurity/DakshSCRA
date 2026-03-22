@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT IssuerSigningKey\s*=\s*new\s+SymmetricSecurityKey\s*\(\s*Encoding\.[^.]+\.GetBytes\s*\(\s*["'][^"']{1,31}["']\s*\)\s*\)
+WHEN EXPR MISSING:Configuration\[|GetEnvironmentVariable|_secretsManager
+REPORT AS area_of_interest
+REASON Detects hardcoded JWT symmetric signing keys shorter than 32 characters.
+TRACE Externalized rule logic for Short or Hardcoded JWT Signing Key.

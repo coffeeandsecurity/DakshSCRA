@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bdelete\s+\[?\]?
+WHEN EXPR MISSING:=\s*nullptr|=\s*NULL|unique_ptr|shared_ptr
+REPORT AS area_of_interest
+REASON Detects improper usage of `delete` vs. `delete[]` for memory deallocation.
+TRACE Externalized rule logic for Memory Deallocation: delete vs. delete[].

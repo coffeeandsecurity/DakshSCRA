@@ -131,6 +131,32 @@ def _termination_summary(flow: Dict) -> List[str]:
     return lines
 
 
+def _sink_fingerprint(flow: Dict) -> Tuple[str, str, int]:
+    sink_name = str(flow.get("sink", "")).strip()
+    for step in reversed(flow.get("path", []) or []):
+        if str(step.get("role", "")).lower() == "sink":
+            return (
+                sink_name,
+                str(step.get("file", "")).strip(),
+                int(step.get("line", 0) or 0),
+            )
+    return (
+        sink_name,
+        str(flow.get("file", "")).strip(),
+        int(flow.get("line", 0) or 0),
+    )
+
+
+def _source_fingerprint(flow: Dict) -> Tuple[str, str]:
+    for step in flow.get("path", []) or []:
+        if str(step.get("role", "")).lower() in {"source", "param"}:
+            return (
+                str(step.get("source_symbol") or step.get("symbol") or "").strip(),
+                str(step.get("code", "")).strip(),
+            )
+    return ("", "")
+
+
 def _ensure_source_step(flow: Dict) -> Dict:
     normalized = dict(flow)
     path = list(normalized.get("path", []) or [])
@@ -235,9 +261,42 @@ def rank_and_dedupe_flows(flows: List[Dict], platform: str = None) -> List[Dict]
         if prev is None or normalized["risk_score"] > prev["risk_score"]:
             best_by_key[key] = normalized
 
+    deduped = list(best_by_key.values())
+    complete_sink_fingerprints = {
+        _sink_fingerprint(flow)
+        for flow in deduped
+        if _trace_status(flow) == "complete"
+    }
+    complete_real_sources = {
+        (_sink_fingerprint(flow), _source_fingerprint(flow)[0])
+        for flow in deduped
+        if _trace_status(flow) == "complete" and not _source_fingerprint(flow)[1].lower().startswith("[inferred]")
+    }
+    complete_real_sink_fingerprints = {
+        _sink_fingerprint(flow)
+        for flow in deduped
+        if _trace_status(flow) == "complete" and not _source_fingerprint(flow)[1].lower().startswith("[inferred]")
+    }
+    filtered: List[Dict] = []
+    for flow in deduped:
+        sink_fp = _sink_fingerprint(flow)
+        source_fp = _source_fingerprint(flow)
+        if _trace_status(flow) == "partial" and sink_fp in complete_sink_fingerprints:
+            continue
+        if (
+            _trace_status(flow) == "complete"
+            and source_fp[1].lower().startswith("[inferred]")
+            and (
+                (sink_fp, source_fp[0]) in complete_real_sources
+                or sink_fp in complete_real_sink_fingerprints
+            )
+        ):
+            continue
+        filtered.append(flow)
+
     _CONFIDENCE_ORDER = {"high": 2, "medium": 1, "low": 0}
     ranked = sorted(
-        best_by_key.values(),
+        filtered,
         key=lambda f: (
             -int(f.get("risk_score", 0)),
             -_CONFIDENCE_ORDER.get(str(f.get("confidence", "low")).lower(), 0),
@@ -507,10 +566,396 @@ NOISE_TOKENS = {
     "string", "int", "bool", "void", "object", "array", "dict", "list", "json",
 }
 
-LOCAL_FILE_RE = re.compile(r"\b(open|read(all|text|bytes)?|file|getcontentas|string|readfile|fopen|ifstream|filereader|multipartfile|iformfile|upload(edfile)?)\b", re.IGNORECASE)
+LOCAL_FILE_RE = re.compile(r"\b(open|read(all|text|bytes)?|getcontentas|readfile|fopen|ifstream|filereader|multipartfile|iformfile|upload(edfile)?|move_uploaded_file)\b", re.IGNORECASE)
 ENDPOINT_RE = re.compile(r"\b(@RequestMapping|@GetMapping|@PostMapping|router\.(get|post|put|patch|delete)|Map(Get|Post|Put|Patch|Delete)|Route\(|endpoint|restcontroller|controllerbase)\b", re.IGNORECASE)
 ENV_INPUT_RE = re.compile(r"\b(process\.env|system\.getenv|environment\.get(environment)?variable|configurationmanager|appsettings|getproperty)\b", re.IGNORECASE)
 NETWORK_INPUT_RE = re.compile(r"\b(httpclient|webrequest|webclient|resttemplate|webclient|fetch\(|axios\.|socket|websocket|recv\(|listen\(|accept\()\b", re.IGNORECASE)
+SOURCE_HTTP_RE = re.compile(r"\[source\]\s+(?:PHP|Request)\s+([A-Z]+)\s+(?:parameter|input|value)\s+`([^`]+)`", re.IGNORECASE)
+FORM_SUBMIT_RE = re.compile(r"submitted via\s+([A-Z]+)\s+to\s+`([^`]+)`", re.IGNORECASE)
+SOURCE_ASSIGN_RE = re.compile(r"\[source\].*assigned to\s+`?\$?([A-Za-z_][A-Za-z0-9_]*)`?", re.IGNORECASE)
+
+def _vuln_rule(kind: str, title: str, sink_names: List[str], cwe: str, reason: str) -> Dict:
+    return {
+        "kind": kind,
+        "title": title,
+        "sink_names": {str(name or "").strip().lower() for name in sink_names if str(name or "").strip()},
+        "cwe": cwe,
+        "reason": reason,
+    }
+
+
+def _mit_rule(kind: str, title: str, primary: str, required: List[str], description: str) -> Dict:
+    return {
+        "kind": kind,
+        "title": title,
+        "primary": re.compile(primary, re.IGNORECASE),
+        "required": [re.compile(item, re.IGNORECASE) for item in (required or [])],
+        "description": description,
+    }
+
+
+MITIGATION_GUIDANCE = {
+    "sql_injection": {
+        "what_it_does": "Separates attacker-controlled data from SQL structure by using placeholders or bound parameters.",
+        "effectiveness": "This is still a modern and effective baseline control against SQL injection when queries consistently avoid string-built SQL.",
+        "recommendation": "Keep all query construction parameterized, validate high-risk inputs, and avoid fallback paths that concatenate raw SQL fragments.",
+    },
+    "xss": {
+        "what_it_does": "Encodes or sanitizes untrusted content before it reaches an HTML rendering sink.",
+        "effectiveness": "This remains a modern and effective baseline for reflected or stored XSS, provided the escaping matches the output context.",
+        "recommendation": "Verify context-specific encoding for HTML, attribute, JavaScript, and URL sinks separately. Prefer safe templating defaults where possible.",
+    },
+    "command_injection": {
+        "what_it_does": "Constrains shell or process execution so attacker input is treated as data rather than executable syntax.",
+        "effectiveness": "This is still effective when command execution avoids shell parsing entirely or escapes every untrusted argument correctly.",
+        "recommendation": "Prefer argument arrays or dedicated APIs over shell strings, and add allowlists for command verbs and sensitive flags.",
+    },
+    "unrestricted_file_upload": {
+        "what_it_does": "Validates uploaded file names, paths, extensions, or MIME characteristics before storage.",
+        "effectiveness": "This is useful but only robust when combined with server-side type validation, storage isolation, and strict execution controls on upload directories.",
+        "recommendation": "Add content-type and magic-byte validation, randomize stored filenames, and ensure uploaded files cannot execute as code.",
+    },
+    "path_traversal": {
+        "what_it_does": "Normalizes attacker-influenced paths before filesystem access so traversal sequences are reduced or rejected.",
+        "effectiveness": "This remains a valid baseline, but normalization alone is not sufficient unless access is also constrained to an approved base directory.",
+        "recommendation": "Enforce canonical path prefix checks after normalization and prefer allowlisted filenames or IDs over raw path input.",
+    },
+    "ssti": {
+        "what_it_does": "Uses sandboxing or auto-escaping controls to reduce template-driven code or markup execution risk.",
+        "effectiveness": "This is modern and effective when the engine’s safe mode is enabled consistently and dangerous template features remain disabled.",
+        "recommendation": "Confirm that untrusted template fragments cannot opt out of sandboxing or escape modes through alternate rendering paths.",
+    },
+    "insecure_deserialization": {
+        "what_it_does": "Switches deserialization to safer loaders or explicit type filters so hostile objects are not materialized freely.",
+        "effectiveness": "This is still a strong mitigation when unsafe deserializers are fully replaced or tightly filtered.",
+        "recommendation": "Prefer schema-bound formats over object deserialization and verify there is no legacy unsafe loader path left reachable.",
+    },
+    "ssrf": {
+        "what_it_does": "Validates or parses outbound request targets before the server makes a network call.",
+        "effectiveness": "This is only effective when validation is combined with destination allowlisting and internal-network denial rules.",
+        "recommendation": "Block loopback, link-local, and RFC1918 ranges where not required, and resolve DNS safely before connecting.",
+    },
+    "open_redirect": {
+        "what_it_does": "Constrains redirect targets to local routes or validated destinations.",
+        "effectiveness": "This remains an effective mitigation if every redirect path uses the same local-only or allowlisted validation.",
+        "recommendation": "Normalize destination URLs before checking them and avoid bypasses through encoded paths, protocol-relative URLs, or alternate host representations.",
+    },
+    "sandbox_escape": {
+        "what_it_does": "Hardens sandbox execution settings so user-controlled code runs with tighter boundaries.",
+        "effectiveness": "This can be effective, but sandbox APIs are fragile and should be treated as defense-in-depth rather than complete isolation.",
+        "recommendation": "Verify timeouts, disabled capabilities, and host object exposure carefully, and prefer process isolation for high-risk execution.",
+    },
+    "xxe": {
+        "what_it_does": "Disables dangerous XML parser features so external entities and hostile DTD behavior cannot resolve automatically.",
+        "effectiveness": "This remains the standard and effective XXE mitigation when every parser entry point applies the same hardening.",
+        "recommendation": "Review all XML parser constructors, not just the primary one, and keep resolver behavior disabled by default.",
+    },
+    "ldap_injection": {
+        "what_it_does": "Encodes or safely builds LDAP query components before directory lookup.",
+        "effectiveness": "This is still effective when every filter and DN component is encoded according to its exact LDAP context.",
+        "recommendation": "Separate DN escaping from filter escaping and verify no alternate raw query construction path bypasses the encoder.",
+    },
+    "javascript_injection": {
+        "what_it_does": "Reduces script execution exposure in embedded browser contexts by disabling or gating risky JavaScript behavior.",
+        "effectiveness": "This is effective when WebView or browser execution paths consistently enforce the same restrictions.",
+        "recommendation": "Review navigation handlers, bridge interfaces, and dynamically loaded content for alternate script execution paths.",
+    },
+    "template_injection": {
+        "what_it_does": "Uses a safer template engine or escaping pathway so user-controlled content is not interpreted as executable template syntax.",
+        "effectiveness": "This is a modern and effective baseline when the safer rendering engine is used consistently.",
+        "recommendation": "Confirm unsafe template APIs are not reachable elsewhere and keep untrusted content in data variables, not template source.",
+    },
+    "arbitrary_file_write": {
+        "what_it_does": "Cleans or constrains attacker-influenced write paths before creating or modifying files.",
+        "effectiveness": "This helps significantly, but it is strongest when paired with a strict output directory policy and deny-by-default path handling.",
+        "recommendation": "Check final canonical paths, isolate writable directories, and avoid exposing raw filesystem paths to callers.",
+    },
+    "buffer_overflow": {
+        "what_it_does": "Uses bounded string or formatting APIs so writes respect destination buffer limits.",
+        "effectiveness": "This remains standard and effective provided the supplied size values are correct and destination buffers are sized safely.",
+        "recommendation": "Review length calculations, truncation handling, and downstream assumptions that may still create memory safety bugs.",
+    },
+    "format_string": {
+        "what_it_does": "Keeps the format string constant so attacker input is treated as data rather than formatting directives.",
+        "effectiveness": "This remains an effective and modern mitigation for classic format-string issues.",
+        "recommendation": "Verify the format string is never attacker-controlled indirectly and that all variadic call sites follow the same pattern.",
+    },
+}
+
+
+def _mitigation_assessment(rule: Dict) -> Dict:
+    kind = str(rule.get("kind", "")).strip().lower()
+    guidance = MITIGATION_GUIDANCE.get(kind, {})
+    required_count = len(rule.get("required", []) or [])
+    implementation = (
+        "The implementation appears correctly applied by this heuristic: the primary mitigation pattern is present"
+        + (f" and {required_count} supporting control{'s are' if required_count != 1 else ' is'} also detected." if required_count else ".")
+    )
+    return {
+        "mitigation_summary": str(rule.get("description", "")).strip(),
+        "what_it_does": guidance.get("what_it_does", "This code pattern adds a defensive control intended to reduce exploitability for the matched vulnerability class."),
+        "effectiveness": guidance.get("effectiveness", "This appears to be a reasonable mitigation pattern, but it still requires context-specific review."),
+        "modernity": "Generally modern and effective when applied consistently.",
+        "implementation_assessment": implementation,
+        "recommendation": guidance.get("recommendation", "Review adjacent code paths to ensure the same mitigation is applied consistently and cannot be bypassed."),
+    }
+
+
+VULNERABILITY_RULES = {
+    "php": [
+        _vuln_rule("sql_injection", "SQL Injection", ["pdo query", "mysqli_query", "mysql_query"], "CWE-89", "Tainted request data reaches a SQL execution sink without parameterization."),
+        _vuln_rule("xss", "Cross-Site Scripting", ["echo/print (xss)"], "CWE-79", "Tainted input is rendered into an HTML response without output encoding."),
+        _vuln_rule("command_injection", "Command Injection", ["exec/system"], "CWE-78", "Tainted input reaches OS command execution."),
+        _vuln_rule("code_injection", "Dynamic Code Injection", ["eval", "preg_replace /e", "assert (string)"], "CWE-94", "User-controlled data reaches dynamic PHP execution features."),
+        _vuln_rule("insecure_deserialization", "Insecure Deserialization", ["unserialize"], "CWE-502", "Tainted data reaches PHP object deserialization."),
+        _vuln_rule("file_inclusion", "File Inclusion", ["include/require"], "CWE-98", "Tainted input controls include or require behavior."),
+        _vuln_rule("arbitrary_file_write", "Arbitrary File Write", ["file_put_contents"], "CWE-73", "Tainted input reaches file write logic."),
+        _vuln_rule("ssrf", "Server-Side Request Forgery", ["file_get_contents (remote)", "curl"], "CWE-918", "Tainted input controls a server-side outbound request target."),
+        _vuln_rule("ldap_injection", "LDAP Injection", ["ldap_search"], "CWE-90", "Tainted input reaches an LDAP query sink."),
+        _vuln_rule("xpath_injection", "XPath Injection", ["xpath"], "CWE-643", "Tainted input reaches XPath query construction or evaluation."),
+        _vuln_rule("email_header_injection", "Email Header Injection", ["mail"], "CWE-93", "Tainted input reaches email sending logic where headers or recipients can be manipulated."),
+        _vuln_rule("unrestricted_file_upload", "Unsafe File Upload", ["move_uploaded_file"], "CWE-434", "User-controlled upload data reaches file storage logic without sufficient path or type hardening."),
+        _vuln_rule("open_redirect", "Open Redirect", ["header (redirect)"], "CWE-601", "Tainted input is used in redirect logic."),
+    ],
+    "python": [
+        _vuln_rule("code_injection", "Dynamic Code Injection", ["eval", "exec", "compile"], "CWE-94", "User-controlled input reaches Python dynamic execution primitives."),
+        _vuln_rule("command_injection", "Command Injection", ["os.system", "os.popen", "subprocess"], "CWE-78", "Tainted input reaches process or shell execution."),
+        _vuln_rule("insecure_deserialization", "Insecure Deserialization", ["pickle.loads", "marshal.loads", "shelve.open", "yaml.load"], "CWE-502", "Tainted input reaches unsafe deserialization or object loading."),
+        _vuln_rule("sql_injection", "SQL Injection", ["sql (cursor)", "sql (django orm raw)", "sql (sqlalchemy text)"], "CWE-89", "Tainted input reaches a raw SQL execution sink."),
+        _vuln_rule("ssti", "Server-Side Template Injection", ["ssti (render_template_string)", "ssti (jinja2 template)"], "CWE-1336", "Tainted input reaches server-side template evaluation."),
+        _vuln_rule("arbitrary_file_write", "Arbitrary File Write", ["open (file write)"], "CWE-73", "Tainted input controls file write behavior."),
+        _vuln_rule("ssrf", "Server-Side Request Forgery", ["urllib.request", "requests", "httpx"], "CWE-918", "Tainted input controls a server-side HTTP request target."),
+        _vuln_rule("email_header_injection", "Email Header Injection", ["smtplib"], "CWE-93", "Tainted input reaches email send logic that may be abused for header injection."),
+        _vuln_rule("weak_hash", "Weak Cryptographic Hash", ["hashlib (weak)"], "CWE-328", "Tainted security-sensitive input reaches a weak hashing primitive."),
+    ],
+    "javascript": [
+        _vuln_rule("xss", "Cross-Site Scripting", ["innerhtml", "outerhtml", "document.write", "document.writeln", "dangerouslysetinnerhtml"], "CWE-79", "Tainted input reaches a DOM or template rendering sink."),
+        _vuln_rule("code_injection", "Dynamic Code Injection", ["eval", "function constructor", "settimeout (string)", "setinterval (string)"], "CWE-94", "Tainted input reaches JavaScript dynamic execution."),
+        _vuln_rule("command_injection", "Command Injection", ["child_process", "require('child_process')"], "CWE-78", "Tainted input reaches Node.js process execution."),
+        _vuln_rule("sql_injection", "SQL Injection", ["sql (raw query)", "sql (sequelize literal)"], "CWE-89", "Tainted input reaches a raw SQL sink."),
+        _vuln_rule("nosql_injection", "NoSQL Injection", ["sql (mongoose $where)"], "CWE-943", "Tainted input reaches a MongoDB query operator sink."),
+        _vuln_rule("ssrf", "Server-Side Request Forgery", ["fetch (ssrf)", "axios (ssrf)", "http/https (ssrf)"], "CWE-918", "Tainted input controls a server-side request target."),
+        _vuln_rule("open_redirect", "Open Redirect", ["open redirect (res)", "open redirect (window)"], "CWE-601", "Tainted input controls redirect destination logic."),
+        _vuln_rule("path_traversal", "Path Traversal", ["path.join traversal", "fs read"], "CWE-22", "Tainted input influences filesystem path resolution or read access."),
+        _vuln_rule("arbitrary_file_write", "Arbitrary File Write", ["fs write"], "CWE-73", "Tainted input reaches file write logic."),
+        _vuln_rule("sandbox_escape", "Sandbox Escape / Script Injection", ["vm.runincontext", "serialize-javascript"], "CWE-94", "Tainted input reaches code generation or sandbox execution helpers."),
+    ],
+    "java": [
+        _vuln_rule("command_injection", "Command Injection", ["runtime.exec", "processbuilder"], "CWE-78", "Tainted input reaches JVM process execution."),
+        _vuln_rule("sql_injection", "SQL Injection", ["sql (statement)", "sql (jdbctemplate)", "sql (jpa native)", "sql (hibernate hql)"], "CWE-89", "Tainted input reaches a SQL or HQL execution sink."),
+        _vuln_rule("jndi_injection", "JNDI Injection", ["jndi lookup"], "CWE-74", "Tainted input reaches a JNDI lookup sink."),
+        _vuln_rule("code_injection", "Dynamic Code Execution", ["scriptengine"], "CWE-94", "Tainted input reaches Java script-engine evaluation."),
+        _vuln_rule("ssrf", "Server-Side Request Forgery", ["ssrf (url.openconnection)", "ssrf (httpclient)", "ssrf (webclient)"], "CWE-918", "Tainted input controls an outbound HTTP request target."),
+        _vuln_rule("insecure_deserialization", "Insecure Deserialization", ["deserialization (objectinputstream)"], "CWE-502", "Tainted input reaches Java object deserialization."),
+        _vuln_rule("expression_injection", "Expression Language Injection", ["ognl / spel injection"], "CWE-917", "Tainted input reaches an expression-language evaluation sink."),
+        _vuln_rule("xxe", "XML External Entity Injection", ["xml (xxe)"], "CWE-611", "Tainted input reaches XML parsing features that can resolve external entities."),
+        _vuln_rule("ldap_injection", "LDAP Injection", ["ldap injection"], "CWE-90", "Tainted input reaches an LDAP search sink."),
+        _vuln_rule("path_traversal", "Path Traversal", ["path traversal"], "CWE-22", "Tainted input influences file-system path access."),
+        _vuln_rule("log_injection", "Log Injection", ["log injection (slf4j)"], "CWE-117", "Tainted input reaches structured logging in a way that can forge or corrupt log records."),
+    ],
+    "kotlin": [
+        _vuln_rule("command_injection", "Command Injection", ["runtime.exec", "processbuilder"], "CWE-78", "Tainted input reaches JVM process execution."),
+        _vuln_rule("sql_injection", "SQL Injection", ["sql (jdbc)", "sql (jdbctemplate)", "sql (jpa native)"], "CWE-89", "Tainted input reaches a SQL execution sink."),
+        _vuln_rule("code_injection", "Dynamic Code Execution", ["scriptengine"], "CWE-94", "Tainted input reaches script execution facilities."),
+        _vuln_rule("ssrf", "Server-Side Request Forgery", ["ssrf"], "CWE-918", "Tainted input controls an outbound HTTP request target."),
+        _vuln_rule("javascript_injection", "WebView JavaScript Injection", ["webview.loadurl"], "CWE-79", "Tainted input reaches a mobile WebView or JavaScript bridge sink."),
+        _vuln_rule("insecure_deserialization", "Insecure Deserialization", ["deserialization"], "CWE-502", "Tainted input reaches object deserialization."),
+        _vuln_rule("jndi_injection", "JNDI Injection", ["jndi"], "CWE-74", "Tainted input reaches a JNDI lookup sink."),
+    ],
+    "dotnet": [
+        _vuln_rule("command_injection", "Command Injection", ["process.start", "processstartinfo"], "CWE-78", "Tainted input reaches .NET process execution."),
+        _vuln_rule("sql_injection", "SQL Injection", ["sqlcommand", "oledbcommand", "mysqlcommand", "dataadapter", "ef raw sql", "dapper"], "CWE-89", "Tainted input reaches SQL execution without parameter hardening."),
+        _vuln_rule("code_injection", "Dynamic Code Execution", ["eval / databinder", "csharpcodeprovider", "scriptengine"], "CWE-94", "Tainted input reaches dynamic code or expression execution."),
+        _vuln_rule("ssrf", "Server-Side Request Forgery", ["ssrf (httpclient)"], "CWE-918", "Tainted input controls a server-side request target."),
+        _vuln_rule("open_redirect", "Open Redirect / Response Injection", ["redirect / response.write"], "CWE-601", "Tainted input influences redirect or raw response output."),
+        _vuln_rule("path_traversal", "Path Traversal / Arbitrary File Access", ["file io", "path traversal"], "CWE-22", "Tainted input influences filesystem access or write paths."),
+        _vuln_rule("insecure_deserialization", "Insecure Deserialization", ["deserialization (binaryformatter)"], "CWE-502", "Tainted input reaches unsafe .NET deserialization."),
+        _vuln_rule("ldap_injection", "LDAP Injection", ["ldap injection"], "CWE-90", "Tainted input reaches an LDAP query sink."),
+        _vuln_rule("xxe", "XML External Entity Injection", ["xml (xxe)"], "CWE-611", "Tainted input reaches XML parsing APIs with external-entity risk."),
+    ],
+    "golang": [
+        _vuln_rule("command_injection", "Command Injection", ["exec.command"], "CWE-78", "Tainted input reaches OS command execution."),
+        _vuln_rule("sql_injection", "SQL Injection", ["sql (db.query/exec)", "sql (sqlx)"], "CWE-89", "Tainted input reaches SQL execution."),
+        _vuln_rule("xss", "Cross-Site Scripting", ["template/html", "fmt.fprintf (response)"], "CWE-79", "Tainted input reaches HTML or response rendering."),
+        _vuln_rule("template_injection", "Template Injection", ["text/template (unsafe)"], "CWE-1336", "Tainted input reaches unsafe Go text templating."),
+        _vuln_rule("open_redirect", "Open Redirect", ["http.redirect"], "CWE-601", "Tainted input controls redirect target selection."),
+        _vuln_rule("arbitrary_file_write", "Arbitrary File Write", ["os.openfile (write)"], "CWE-73", "Tainted input reaches filesystem write APIs."),
+        _vuln_rule("ssrf", "Server-Side Request Forgery", ["net/http client (ssrf)"], "CWE-918", "Tainted input controls outbound HTTP requests."),
+        _vuln_rule("log_injection", "Log Injection", ["log.printf (format)"], "CWE-117", "Tainted input reaches formatted logging output."),
+    ],
+    "ruby": [
+        _vuln_rule("code_injection", "Dynamic Code Injection", ["eval"], "CWE-94", "Tainted input reaches Ruby eval or dynamic constant lookup."),
+        _vuln_rule("command_injection", "Command Injection", ["system/exec"], "CWE-78", "Tainted input reaches Ruby process execution."),
+        _vuln_rule("sql_injection", "SQL Injection", ["sql (activerecord raw)"], "CWE-89", "Tainted input reaches raw SQL execution."),
+        _vuln_rule("template_injection", "Template Injection / XSS", ["erb/template injection"], "CWE-1336", "Tainted input reaches ERB inline rendering or template evaluation."),
+        _vuln_rule("open_redirect", "Open Redirect", ["redirect_to (user params)"], "CWE-601", "Tainted input controls redirect target selection."),
+        _vuln_rule("path_traversal", "Path Traversal", ["send_file"], "CWE-22", "Tainted input reaches file-send APIs."),
+        _vuln_rule("insecure_deserialization", "Insecure Deserialization", ["marshal.load", "yaml.load (unsafe)"], "CWE-502", "Tainted input reaches unsafe Ruby deserialization."),
+        _vuln_rule("ssrf", "SSRF / Dangerous Kernel.open", ["kernel.open (ssrf/rce)"], "CWE-918", "Tainted input controls a URL or pipe target in Kernel.open."),
+    ],
+    "c": [
+        _vuln_rule("command_injection", "Command Injection", ["system", "popen", "exec family"], "CWE-78", "Tainted input reaches native process execution."),
+        _vuln_rule("buffer_overflow", "Buffer Overflow", ["sprintf (overflow)", "strcpy (overflow)", "strcat (overflow)", "gets (overflow)", "scanf (overflow)"], "CWE-120", "Tainted input reaches an unsafe buffer-handling primitive."),
+        _vuln_rule("format_string", "Format String Injection", ["printf (format)", "fprintf (format)"], "CWE-134", "Tainted input reaches a format-string sink."),
+        _vuln_rule("sql_injection", "SQL Injection", ["sql (sqlite3_exec)", "sql (mysql_query)", "sql (pqexec)"], "CWE-89", "Tainted input reaches a native SQL execution sink."),
+    ],
+    "cpp": [
+        _vuln_rule("command_injection", "Command Injection", ["system", "popen", "exec family", "std::system"], "CWE-78", "Tainted input reaches native process execution."),
+        _vuln_rule("buffer_overflow", "Buffer Overflow", ["sprintf (overflow)", "strcpy (overflow)"], "CWE-120", "Tainted input reaches an unsafe buffer-handling primitive."),
+        _vuln_rule("format_string", "Format String Injection", ["printf (format)"], "CWE-134", "Tainted input reaches a format-string sink."),
+        _vuln_rule("sql_injection", "SQL Injection", ["sql"], "CWE-89", "Tainted input reaches a native SQL execution sink."),
+    ],
+}
+
+MITIGATION_RULES = {
+    "php": [
+        _mit_rule("sql_injection", "Prepared SQL statement", r"->\s*prepare\s*\(", [r"bind(?:Value|Param)\s*\(", r"->\s*execute\s*\("], "Prepared statement with bound parameters reduces SQL injection risk."),
+        _mit_rule("xss", "HTML output escaping", r"\bhtmlspecialchars\s*\(|\bhtmlentities\s*\(", [], "Output is encoded before rendering to HTML."),
+        _mit_rule("command_injection", "Shell argument escaping", r"\bescapeshellarg\s*\(|\bescapeshellcmd\s*\(", [], "Shell arguments are escaped before command execution."),
+        _mit_rule("unrestricted_file_upload", "Upload path and extension validation", r"\bmove_uploaded_file\s*\(", [r"\bbasename\s*\(|\bpathinfo\s*\(", r"\bin_array\s*\(|\bmime_content_type\s*\(|\bfinfo_(?:file|open)\b"], "Upload handling validates or normalizes attacker-controlled file names or types before storing."),
+        _mit_rule("path_traversal", "File path normalization", r"\brealpath\s*\(|\bbasename\s*\(", [], "Attacker-controlled file paths are normalized before use."),
+    ],
+    "python": [
+        _mit_rule("sql_injection", "Parameterized database execution", r"\b(?:cursor|db|conn|connection|session)\.execute\s*\(", [r"%s|:\w+|\?", r"\b(?:params|parameters|execute)\b"], "Python database execution uses placeholders or bound parameters instead of string-built SQL."),
+        _mit_rule("command_injection", "Quoted shell argument", r"\bshlex\.quote\s*\(", [], "Command arguments are shell-escaped before execution."),
+        _mit_rule("xss", "HTML escaping", r"\b(?:html\.escape|markupsafe\.escape|bleach\.clean)\s*\(", [], "User input is escaped or sanitized before HTML rendering."),
+        _mit_rule("ssti", "Sandboxed or auto-escaped template environment", r"\b(?:SandboxedEnvironment|select_autoescape|autoescape\s*=\s*True)\b", [], "Template rendering is configured to escape or sandbox user-controlled content."),
+        _mit_rule("insecure_deserialization", "Safe loader usage", r"\byaml\.safe_load\s*\(", [], "Safe deserialization APIs are used instead of arbitrary object loading."),
+        _mit_rule("ssrf", "URL allowlist or parser gate", r"\b(?:urlparse|urlsplit|ipaddress\.ip_address|validators?\.url)\s*\(", [], "Outbound URLs are parsed or validated before server-side requests."),
+    ],
+    "javascript": [
+        _mit_rule("sql_injection", "Parameterized SQL execution", r"\b(?:replacements|bind|parameterizedQuery|sequelize\.query)\b", [r"\?|\$\d|:\w+"], "The query uses placeholders or ORM bindings instead of direct string concatenation."),
+        _mit_rule("xss", "DOM sanitization or escaping", r"\b(?:DOMPurify\.sanitize|xss\.filterXSS|sanitizeHtml|he\.(?:encode|escape)|escapeHtml)\s*\(", [], "Rendered content is sanitized or escaped before insertion into the DOM or template."),
+        _mit_rule("path_traversal", "Normalized path resolution", r"\b(?:path\.(?:normalize|resolve)|fs\.realpath(?:Sync)?)\s*\(", [], "Filesystem paths are normalized before file access."),
+        _mit_rule("open_redirect", "Local redirect guard", r"\b(?:isLocalUrl|startsWith\s*\(\s*[\"']\\/|new URL\s*\()", [], "Redirect targets are constrained to local or validated destinations."),
+        _mit_rule("ssrf", "Request target allowlist", r"\b(?:new URL\s*\(|isSafeUrl|allowlist|whitelist)\b", [], "Outbound request targets are validated before network use."),
+        _mit_rule("sandbox_escape", "Sandbox hardening", r"\bvm\.(?:createContext|Script)\b", [r"\btimeout\b|\bmicrotaskMode\b"], "VM execution is configured with explicit sandbox constraints."),
+    ],
+    "java": [
+        _mit_rule("sql_injection", "PreparedStatement usage", r"\bprepareStatement\s*\(", [r"\bset(?:String|Int|Long|Object|Parameter)\s*\("], "Java SQL execution uses prepared statements with bound parameters."),
+        _mit_rule("xss", "HTML escaping", r"\b(?:HtmlUtils\.htmlEscape|StringEscapeUtils\.escapeHtml4|ESAPI\.encoder\(\)\.encodeForHTML)\s*\(", [], "User-controlled output is encoded before HTML rendering."),
+        _mit_rule("command_injection", "ProcessBuilder argument separation", r"\bProcessBuilder\s*\(", [r"List\.of|Arrays\.asList|new String\[\]"], "Process execution is built from discrete arguments instead of shell strings."),
+        _mit_rule("xxe", "XXE parser hardening", r"\bsetFeature\s*\(\s*[\"']http://apache\.org/xml/features/disallow-doctype-decl[\"']", [], "XML parser disables external entity or DTD resolution."),
+        _mit_rule("insecure_deserialization", "ObjectInputFilter usage", r"\bObjectInputFilter\b|\bsetObjectInputFilter\s*\(", [], "Deserialization applies an allowlist filter before object materialization."),
+        _mit_rule("path_traversal", "Canonical path check", r"\b(?:getCanonicalPath|getRealPath|normalize)\s*\(", [], "Filesystem access is normalized before use."),
+        _mit_rule("ldap_injection", "LDAP escaping", r"\b(?:LdapEncoder\.filterEncode|LdapNameBuilder)\b", [], "LDAP search input is encoded before query construction."),
+    ],
+    "kotlin": [
+        _mit_rule("sql_injection", "Prepared statement or parameter binding", r"\b(?:prepareStatement|namedParameterJdbcTemplate|jdbcTemplate)\b", [r"\bset(?:String|Int|Long|Object)\s*\(|:\w+"], "Kotlin SQL execution uses placeholders or bound parameters."),
+        _mit_rule("javascript_injection", "WebView JavaScript guard", r"\b(?:shouldOverrideUrlLoading|setJavaScriptEnabled\s*\(\s*false\s*\)|Uri\.parse)\b", [], "WebView input is gated or JavaScript execution is disabled before navigation."),
+        _mit_rule("ssrf", "Validated outbound URL", r"\b(?:URI\s*\(|URL\s*\(|HttpUrl\.parse)\b", [], "Outbound URLs are parsed or validated before request execution."),
+        _mit_rule("insecure_deserialization", "Object input filtering", r"\bObjectInputFilter\b|\bsetObjectInputFilter\s*\(", [], "Deserialization is protected with explicit filtering."),
+    ],
+    "dotnet": [
+        _mit_rule("sql_injection", "Parameterized SQL command", r"\b(?:SqlCommand|OleDbCommand|MySqlCommand)\b", [r"\bParameters\.Add(?:WithValue)?\s*\(|\bDbParameter\b|\bSqlParameter\b"], ".NET database access uses parameter objects instead of concatenated SQL."),
+        _mit_rule("xss", "HTML encoding", r"\b(?:HttpUtility\.HtmlEncode|AntiXssEncoder\.HtmlEncode|Encoder\.HtmlEncode)\s*\(", [], "Output is HTML-encoded before rendering."),
+        _mit_rule("command_injection", "ProcessStartInfo argument separation", r"\bProcessStartInfo\b", [r"\bArgumentList\b|\bUseShellExecute\s*=\s*false\b"], "Process execution uses explicit arguments and avoids shell interpretation."),
+        _mit_rule("xxe", "DTD disabled in XML parser", r"\bDtdProcessing\s*=\s*DtdProcessing\.Prohibit\b|\bXmlResolver\s*=\s*null\b", [], "XML readers disable external entity resolution."),
+        _mit_rule("insecure_deserialization", "Safe serialization settings", r"\bSerializationBinder\b|\bTypeNameHandling\s*=\s*TypeNameHandling\.None\b", [], "Deserializer settings constrain or disable polymorphic type loading."),
+        _mit_rule("path_traversal", "Full-path canonicalization", r"\b(?:Path\.GetFullPath|Path\.GetFileName)\s*\(", [], "Filesystem paths are canonicalized before access."),
+        _mit_rule("open_redirect", "Local redirect enforcement", r"\b(?:LocalRedirect|Url\.IsLocalUrl)\s*\(", [], "Redirects are restricted to local destinations."),
+    ],
+    "golang": [
+        _mit_rule("sql_injection", "Parameterized DB query", r"\b(?:db|tx|stmt)\.(?:Query|Exec|QueryRow|NamedExec)\s*\(", [r"\$1|\?|\:\w+"], "Go database access uses placeholders instead of string-built SQL."),
+        _mit_rule("xss", "Escaped template or HTML output", r"\b(?:template\.HTMLEscapeString|html\.EscapeString)\s*\(", [], "User-controlled output is escaped before HTML rendering."),
+        _mit_rule("template_injection", "html/template usage", r"\bhtml/template\b", [], "The safer Go template engine is used instead of unescaped text/template rendering."),
+        _mit_rule("ssrf", "Validated request target", r"\b(?:url\.Parse|url\.ParseRequestURI|net\.ParseIP)\s*\(", [], "Outbound request targets are parsed or validated before use."),
+        _mit_rule("arbitrary_file_write", "Path cleaning before file write", r"\b(?:filepath\.Clean|filepath\.Base)\s*\(", [], "Write paths are normalized before file creation or append."),
+        _mit_rule("open_redirect", "Local redirect path enforcement", r"\bstrings\.HasPrefix\s*\(\s*[^,]+,\s*\"/\"", [], "Redirect targets are restricted to local application paths."),
+    ],
+    "ruby": [
+        _mit_rule("sql_injection", "ActiveRecord sanitization", r"\b(?:sanitize_sql(?:_for_conditions)?|where\s*\(\s*[\"'][^\"']*[?])", [], "Rails query construction uses sanitization helpers or placeholder binding."),
+        _mit_rule("template_injection", "Escaped template output", r"\b(?:ERB::Util\.html_escape|CGI\.escape_html|sanitize)\s*\(", [], "User-controlled template content is escaped before rendering."),
+        _mit_rule("path_traversal", "Path basename or cleanpath", r"\b(?:File\.basename|Pathname\.new\([^)]*\)\.cleanpath)\b", [], "File paths are normalized before file-send operations."),
+        _mit_rule("insecure_deserialization", "Safe YAML load", r"\bYAML\.safe_load\s*\(", [], "Ruby uses a safe deserialization API instead of arbitrary object loading."),
+        _mit_rule("open_redirect", "Host/local redirect allowlist", r"\b(?:allow_other_host:\s*false|URI\.parse|Addressable::URI)\b", [], "Redirect targets are validated or constrained to local hosts."),
+        _mit_rule("ssrf", "URI parsing before open", r"\b(?:URI\.parse|Addressable::URI\.parse)\s*\(", [], "Remote targets are parsed or validated before network/file open operations."),
+    ],
+    "c": [
+        _mit_rule("buffer_overflow", "Bounded string operation", r"\b(?:snprintf|strncpy|strncat|strcpy_s|sprintf_s)\s*\(", [], "The code uses bounded copy/format APIs instead of unbounded buffer writes."),
+        _mit_rule("command_injection", "Argument allowlisting", r"\b(?:strcmp|strncmp|strspn|strcspn)\s*\(", [], "Input is validated against expected tokens before process execution."),
+        _mit_rule("format_string", "Constant format string", r"\bprintf\s*\(\s*\"|\bfprintf\s*\(\s*[^,]+,\s*\"", [], "Formatted output uses a fixed format string rather than attacker-controlled format data."),
+        _mit_rule("sql_injection", "Parameterized native query", r"\b(?:sqlite3_prepare_v2|mysql_stmt_prepare|PQexecParams)\s*\(", [], "Native SQL execution uses prepared or parameterized query APIs."),
+    ],
+    "cpp": [
+        _mit_rule("buffer_overflow", "Bounded string operation", r"\b(?:snprintf|strncpy|strncat|strcpy_s|sprintf_s)\s*\(", [], "The code uses bounded copy/format APIs instead of unbounded buffer writes."),
+        _mit_rule("command_injection", "Argument validation before exec", r"\b(?:std::regex_match|std::all_of|std::find_if)\s*\(", [], "Input is validated before native process execution."),
+        _mit_rule("format_string", "Constant format string", r"\bprintf\s*\(\s*\"|\bfprintf\s*\(\s*[^,]+,\s*\"", [], "Formatted output uses a fixed format string."),
+        _mit_rule("sql_injection", "Parameterized native query", r"\b(?:sqlite3_prepare_v2|mysql_stmt_prepare|PQexecParams)\s*\(", [], "Native SQL execution uses prepared or parameterized query APIs."),
+    ],
+}
+
+FILE_GLOBS = {
+    "php": "*.php",
+    "python": ("*.py",),
+    "javascript": ("*.js", "*.jsx", "*.ts", "*.tsx", "*.mjs", "*.cjs"),
+    "java": "*.java",
+    "kotlin": ("*.kt", "*.kts"),
+    "dotnet": "*.cs",
+    "golang": "*.go",
+    "ruby": "*.rb",
+    "c": ("*.c", "*.h"),
+    "cpp": ("*.cpp", "*.cc", "*.cxx", "*.hpp", "*.hh"),
+}
+
+VULN_MITIGATION_HINTS = {
+    "sql_injection": ("prepare", "preparedstatement", "bindvalue", "bindparam", "parameterized", "addwithvalue", "sqlparameter", "namedexec", "where(\"", "execute("),
+    "xss": ("htmlspecialchars", "htmlentities", "html.escape", "escapehtml", "template.htmlescape", "markupsafe.escape", "bleach.clean", "safehtml"),
+    "command_injection": ("escapeshellarg", "escapeshellcmd", "shlex.quote", "processstartinfo", "argumentlist", "exec.commandcontext"),
+    "unrestricted_file_upload": ("basename", "pathinfo", "mime_content_type", "finfo", "in_array", "getclientoriginalextension", "contenttype"),
+    "open_redirect": ("allowlist", "whitelist", "validate", "islocalurl", "localredirect", "uri.parse"),
+    "ssrf": ("allowlist", "whitelist", "islocalurl", "startswith(\"https://", "startswith('https://", "parse_url", "urlparse", "uri.trycreate"),
+    "path_traversal": ("realpath", "basename", "path.clean", "filepath.clean", "path.normalize", "path.resolve", "getfullpath"),
+    "insecure_deserialization": ("safe_load", "safeloader", "serializationbinder", "typefilterlevel", "objectinputfilter"),
+    "xxe": ("disallowdoctype", "resolveexternals = false", "prohibitdtd", "supportingexternalentities = false", "setfeature"),
+    "ldap_injection": ("escapeldap", "ldapescape", "filterencoder"),
+    "xpath_injection": ("xpathliteral", "securityelement.escape", "xmlconvert"),
+    "ssti": ("sandboxedenvironment", "autoescape", "select_autoescape"),
+    "template_injection": ("escape", "sanitize", "safe_join"),
+    "log_injection": ("replace(\"\\n\"", "replace('\\n'", "sanitizeforlog", "structuredlog"),
+    "weak_hash": ("sha256", "sha512", "argon2", "bcrypt", "scrypt", "pbkdf2"),
+}
+
+KIND_CWE_MAP = {
+    rule["kind"]: rule.get("cwe", "")
+    for rules in VULNERABILITY_RULES.values()
+    for rule in rules
+}
+
+KIND_TITLE_MAP = {
+    rule["kind"]: rule.get("title", rule["kind"])
+    for rules in VULNERABILITY_RULES.values()
+    for rule in rules
+}
+
+FINDING_KIND_PATTERNS = {
+    "sql_injection": re.compile(r"\b(sql|sqli|hql|jdbc|query)\b", re.IGNORECASE),
+    "xss": re.compile(r"\b(xss|cross[\s-]?site scripting|innerhtml|document\.write|response\.write|webview)\b", re.IGNORECASE),
+    "command_injection": re.compile(r"\b(command|exec|os command|processbuilder|runtime\.exec|child_process|system\(|popen)\b", re.IGNORECASE),
+    "code_injection": re.compile(r"\b(eval|dynamic code|scriptengine|code execution|preg_replace\s*/e|function constructor)\b", re.IGNORECASE),
+    "insecure_deserialization": re.compile(r"\b(deseriali[sz]ation|pickle|marshal|unserialize|objectinputstream|binaryformatter|yaml\.load)\b", re.IGNORECASE),
+    "open_redirect": re.compile(r"\b(open redirect|redirect|location header)\b", re.IGNORECASE),
+    "ssrf": re.compile(r"\b(ssrf|server[- ]side request forgery|urlopen|httpclient|webclient|requests\.|fetch\(|curl|openconnection)\b", re.IGNORECASE),
+    "path_traversal": re.compile(r"\b(path traversal|directory traversal|send_file|filepath|path\.join|file read)\b", re.IGNORECASE),
+    "arbitrary_file_write": re.compile(r"\b(file write|writefile|file_put_contents|upload|move_uploaded_file|createwrite|openfile)\b", re.IGNORECASE),
+    "file_inclusion": re.compile(r"\b(file inclusion|lfi|rfi|include/require)\b", re.IGNORECASE),
+    "unrestricted_file_upload": re.compile(r"\b(file upload|upload|multipart|move_uploaded_file)\b", re.IGNORECASE),
+    "ldap_injection": re.compile(r"\bldap\b", re.IGNORECASE),
+    "xpath_injection": re.compile(r"\bxpath\b", re.IGNORECASE),
+    "xxe": re.compile(r"\b(xxe|xml external entity)\b", re.IGNORECASE),
+    "ssti": re.compile(r"\b(ssti|server[- ]side template injection|render_template_string|jinja|template injection)\b", re.IGNORECASE),
+    "template_injection": re.compile(r"\b(template injection|erb|text/template|serialize-javascript)\b", re.IGNORECASE),
+    "nosql_injection": re.compile(r"\b(nosql|\$where|mongodb|mongoose)\b", re.IGNORECASE),
+    "buffer_overflow": re.compile(r"\b(buffer overflow|sprintf|strcpy|strcat|gets|scanf)\b", re.IGNORECASE),
+    "format_string": re.compile(r"\b(format string|printf|fprintf)\b", re.IGNORECASE),
+    "log_injection": re.compile(r"\b(log injection|log4shell|logger|slf4j|printf)\b", re.IGNORECASE),
+    "weak_hash": re.compile(r"\b(weak hash|md5|sha1)\b", re.IGNORECASE),
+    "jndi_injection": re.compile(r"\b(jndi|initialcontext)\b", re.IGNORECASE),
+    "expression_injection": re.compile(r"\b(ognl|spel|expression language)\b", re.IGNORECASE),
+    "javascript_injection": re.compile(r"\b(webview|evaluatejavascript|javascript injection)\b", re.IGNORECASE),
+    "email_header_injection": re.compile(r"\b(email header|smtp|mail\(|sendmail|header injection)\b", re.IGNORECASE),
+    "sandbox_escape": re.compile(r"\b(vm\.run|sandbox|serialize-javascript)\b", re.IGNORECASE),
+}
 
 
 def _extract_call_names(code: str) -> List[str]:
@@ -529,6 +974,99 @@ def _extract_security_tokens(text: str) -> List[str]:
             continue
         tokens.append(t)
     return tokens
+
+
+def _source_steps(flow: Dict) -> List[Dict]:
+    return [
+        step for step in (flow.get("path", []) or [])
+        if str(step.get("role", "")).lower() in {"source", "param"}
+    ]
+
+
+def _infer_source_hints(flow: Dict) -> Dict:
+    methods: List[str] = []
+    uris: List[str] = []
+    params: List[str] = []
+    derived_params: List[str] = []
+    examples: List[str] = []
+    channels: List[str] = []
+
+    def add_unique(items: List[str], value: str, limit: int) -> None:
+        token = str(value or "").strip()
+        if token and token not in items and len(items) < limit:
+            items.append(token)
+
+    for step in _source_steps(flow):
+        code = str(step.get("code", ""))
+        upper_code = code.upper()
+        http_match = SOURCE_HTTP_RE.search(code)
+        if http_match:
+            scope = str(http_match.group(1) or "").upper()
+            key = str(http_match.group(2) or "").strip()
+            method_hint = "POST" if scope in {"POST", "REQUEST", "FILES", "FORM"} else ("GET" if scope == "QUERY" else scope)
+            if method_hint in {"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"}:
+                add_unique(methods, method_hint, 4)
+            if key:
+                add_unique(params, key, 6)
+            if scope in {"GET", "POST", "REQUEST", "FILES", "COOKIE", "HEADER", "QUERY"}:
+                add_unique(channels, "web-app", 2)
+            if scope == "FILES":
+                add_unique(channels, "upload", 2)
+        form_match = FORM_SUBMIT_RE.search(code)
+        if form_match:
+            add_unique(methods, str(form_match.group(1) or "").upper(), 4)
+            add_unique(uris, str(form_match.group(2) or "").strip(), 4)
+            add_unique(channels, "web-app", 2)
+        assign_match = SOURCE_ASSIGN_RE.search(code)
+        if assign_match:
+            add_unique(derived_params, str(assign_match.group(1) or "").strip(), 6)
+        for uri in URI_LITERAL_RE.findall(code):
+            add_unique(uris, uri, 4)
+
+    channel = "code-path"
+    if any(uri.lower().startswith("/api") for uri in uris):
+        channel = "api"
+    elif "web-app" in channels or methods or uris:
+        channel = "web-app"
+    elif "upload" in channels:
+        channel = "web-app"
+
+    if not uris and channel in {"web-app", "api"}:
+        source_file = str(flow.get("source_file") or flow.get("file") or "")
+        if source_file:
+            uri_guess = "/" + Path(source_file).name
+            if uri_guess.endswith(".php"):
+                add_unique(uris, uri_guess, 4)
+
+    if params:
+        picked_params = params[:2]
+    else:
+        picked_params = []
+
+    if channel in {"web-app", "api"} and uris:
+        method_pick = methods[:2] if methods else ["GET"]
+        param_pick = picked_params or ["input"]
+        for uri in uris[:2]:
+            for method in method_pick:
+                if method == "GET":
+                    query = "&".join(f"{name}=<PAYLOAD>" for name in param_pick)
+                    examples.append(f"{method} {uri}?{query}")
+                else:
+                    body = ", ".join(f'"{name}":"<PAYLOAD>"' for name in param_pick)
+                    examples.append(f"{method} {uri}  body: {{{body}}}")
+                if len(examples) >= 4:
+                    break
+            if len(examples) >= 4:
+                break
+
+    return {
+        "channel": channel,
+        "methods": methods[:4],
+        "uris": uris[:4],
+        "params": picked_params,
+        "derived_params": derived_params[:6],
+        "examples": examples[:4],
+    }
 
 
 def _flow_value_hotspots(flow: Dict, limit: int = 12) -> List[Dict]:
@@ -732,6 +1270,10 @@ def _flow_graph_steps(graph: Dict) -> List[str]:
 
 
 def _infer_input_surface(flow: Dict) -> Dict:
+    source_hints = _infer_source_hints(flow)
+    if source_hints.get("params") or source_hints.get("methods") or source_hints.get("uris") or source_hints.get("channel") in {"web-app", "api"}:
+        return source_hints
+
     text_chunks: List[str] = []
     for step in flow.get("path", []) or []:
         text_chunks.append(str(step.get("code", "")))
@@ -763,6 +1305,8 @@ def _infer_input_surface(flow: Dict) -> Dict:
         for step in flow.get("path", []) or []:
             if str(step.get("role", "")).lower() in {"param", "source"}:
                 for t in _extract_security_tokens(step.get("code", "")):
+                    if t in {"source", "php", "request", "input", "inferred", "upstream"}:
+                        continue
                     if t not in params:
                         params.append(t)
                     if len(params) >= 6:
@@ -837,6 +1381,7 @@ def _derive_attack_vectors(flow: Dict) -> List[Dict]:
             return
         vectors.append({"kind": kind, "label": label, "reason": reason, "examples": examples[:3], "taint_symbols": taint_symbols[:4]})
 
+    step_text = "\n".join([str(step.get("code", "")) for step in path])
     joined = "\n".join(
         [
             str(flow.get("file", "")),
@@ -847,6 +1392,9 @@ def _derive_attack_vectors(flow: Dict) -> List[Dict]:
         + [str(step.get("code", "")) for step in path]
     )
     joined_l = joined.lower()
+    step_text_l = step_text.lower()
+    source_codes = [str(step.get("code", "")) for step in _source_steps(flow)]
+    source_text = "\n".join(source_codes).lower()
 
     if input_surface.get("channel") in {"web-app", "api"} or ENDPOINT_RE.search(joined):
         examples = input_surface.get("examples") or []
@@ -857,7 +1405,7 @@ def _derive_attack_vectors(flow: Dict) -> List[Dict]:
             examples or [f"{method} {uri}" for method in (input_surface.get('methods') or ['GET']) for uri in (input_surface.get('uris') or ['/endpoint'])][:3],
         )
 
-    if any(token in joined_l for token in ["request", "query", "params", "body", "form", "cookie", "header"]):
+    if any(token in source_text for token in ["request get", "request post", "request query", "request input", "request cookie", "request header", "php get", "php post", "php request", "php cookie", "php files"]):
         add(
             "user_input",
             "User-controlled request input",
@@ -865,15 +1413,31 @@ def _derive_attack_vectors(flow: Dict) -> List[Dict]:
             input_surface.get("examples") or [", ".join(input_surface.get("params") or ["input"])],
         )
 
-    if LOCAL_FILE_RE.search(joined):
+    if "files" in source_text or "move_uploaded_file" in step_text_l or LOCAL_FILE_RE.search(step_text):
         add(
-            "local_file",
-            "Local disk or uploaded file input",
-            "The path references file reads, uploads, or local content sources that may be attacker-influenced.",
-            [f"File-derived value influencing {flow.get('sink', 'sink')}", "User-controlled file name, path, or content"],
+            "uploaded_file",
+            "Uploaded file input",
+            "The flow includes upload handling, file moves, or file-derived data that may be attacker-controlled.",
+            [f"Uploaded content influences {flow.get('sink', 'sink')}", "User-controlled file name, path, or content"],
         )
 
-    if ENV_INPUT_RE.search(joined):
+    if "[session]" in step_text_l:
+        add(
+            "session_state",
+            "Session-carried input",
+            "Tainted data is stored in session state and later consumed by another path or sink.",
+            ["Session bucket carries attacker-influenced value across requests or handlers"],
+        )
+
+    if "cookie" in source_text:
+        add(
+            "cookie_input",
+            "Cookie-supplied input",
+            "The tainted value originates from a cookie or request cookie wrapper.",
+            input_surface.get("examples") or ["Cookie value influences sensitive sink"],
+        )
+
+    if ENV_INPUT_RE.search(step_text):
         add(
             "environment",
             "Environment or configuration input",
@@ -881,7 +1445,7 @@ def _derive_attack_vectors(flow: Dict) -> List[Dict]:
             ["Environment variable override", "Configuration value influencing sensitive sink"],
         )
 
-    if NETWORK_INPUT_RE.search(joined):
+    if NETWORK_INPUT_RE.search(step_text):
         add(
             "network",
             "Upstream service or network input",
@@ -917,6 +1481,576 @@ def _attack_surface_summary(flows: List[Dict]) -> List[Dict]:
         {"kind": kind, "label": label, "count": count, "example": examples.get(kind, "")}
         for (kind, label), count in counts.most_common()
     ]
+
+
+def _line_for_offset(text: str, offset: int) -> int:
+    return str(text or "").count("\n", 0, max(0, offset)) + 1
+
+
+def _text_contains_all(text: str, patterns: List[re.Pattern]) -> bool:
+    return all(pattern.search(text) for pattern in patterns)
+
+
+def _find_primary_source_symbol(flow: Dict) -> str:
+    for step in flow.get("path", []) or []:
+        if str(step.get("role", "")).lower() in {"source", "param"}:
+            return str(step.get("source_symbol") or step.get("target_symbol") or step.get("symbol") or "").strip()
+    return ""
+
+
+def _response_is_plain_text(source_path: str) -> bool:
+    if not source_path:
+        return False
+    try:
+        text = Path(source_path).read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return False
+    return "content-type: text/plain" in text.lower()
+
+
+def _flow_locations(flow: Dict) -> Dict:
+    path = flow.get("path", []) or []
+    source_step = next((step for step in path if str(step.get("role", "")).lower() == "source"), None)
+    sink_step = next((step for step in reversed(path) if str(step.get("role", "")).lower() == "sink"), None)
+    return {
+        "source_file": str((source_step or {}).get("file", flow.get("source_file", "")) or ""),
+        "source_line": (source_step or {}).get("line", flow.get("source_line")),
+        "sink_file": str((sink_step or {}).get("file", flow.get("sink_file", flow.get("file", ""))) or ""),
+        "sink_line": (sink_step or {}).get("line", flow.get("sink_line", flow.get("line"))),
+    }
+
+
+def _flow_code_text(flow: Dict) -> str:
+    return "\n".join(str(step.get("code", "")) for step in (flow.get("path", []) or []))
+
+
+def _has_mitigation_hints(flow: Dict, kind: str) -> bool:
+    joined = _flow_code_text(flow).lower()
+    return any(token in joined for token in VULN_MITIGATION_HINTS.get(kind, ()))
+
+
+def _rule_blocked_by_mitigation(flow: Dict, rule: Dict) -> bool:
+    kind = str(rule.get("kind", "")).strip().lower()
+    if not kind:
+        return False
+
+    if kind in {
+        "sql_injection",
+        "xss",
+        "command_injection",
+        "unrestricted_file_upload",
+        "open_redirect",
+        "ssrf",
+        "path_traversal",
+        "insecure_deserialization",
+        "xxe",
+        "ldap_injection",
+        "xpath_injection",
+        "ssti",
+        "template_injection",
+        "log_injection",
+        "weak_hash",
+    } and _has_mitigation_hints(flow, kind):
+        return True
+
+    if kind == "xss":
+        joined = _flow_code_text(flow).lower()
+        if any(token in joined for token in ("shell_exec", "exec(", "system(", "passthru(", "popen(")):
+            return True
+
+    return False
+
+
+def _finding_text(finding: Dict) -> str:
+    parts = [
+        str(finding.get("rule_title", "")),
+        str(finding.get("rule_desc", "")),
+        str(finding.get("issue_desc", "")),
+        str(finding.get("developer_note", "")),
+        str(finding.get("reviewer_note", "")),
+        str(finding.get("category", "")),
+    ]
+    for ev in finding.get("evidence", []) or []:
+        if not isinstance(ev, dict):
+            continue
+        parts.extend([
+            str(ev.get("file", "")),
+            str(ev.get("code", "")),
+            " ".join(str(m.get("code", "")) for m in (ev.get("matches", []) or []) if isinstance(m, dict)),
+        ])
+    return " ".join(part for part in parts if part).strip()
+
+
+def _infer_finding_kinds(finding: Dict) -> List[str]:
+    text = _finding_text(finding)
+    kinds = [kind for kind, pattern in FINDING_KIND_PATTERNS.items() if pattern.search(text)]
+    return kinds
+
+
+def _finding_locations(finding: Dict) -> List[Tuple[str, int]]:
+    locations: List[Tuple[str, int]] = []
+    for ev in finding.get("evidence", []) or []:
+        if not isinstance(ev, dict):
+            continue
+        file_path = str(ev.get("file", "")).strip()
+        line = int(ev.get("line", 0) or 0)
+        if file_path:
+            locations.append((file_path, line))
+        for match in ev.get("matches", []) or []:
+            if not isinstance(match, dict):
+                continue
+            match_line = int(match.get("line", 0) or 0)
+            if file_path:
+                locations.append((file_path, match_line))
+    deduped = []
+    seen = set()
+    for item in locations:
+        if item in seen:
+            continue
+        seen.add(item)
+        deduped.append(item)
+    return deduped
+
+
+def _flow_candidate_kinds(flow: Dict, platform: str) -> List[str]:
+    confirmed = _confirm_vulnerability_from_flow(flow, platform=platform or "")
+    if confirmed:
+        return [str(confirmed.get("kind", "")).strip().lower()]
+
+    text = " ".join([
+        str(flow.get("sink", "")),
+        str(flow.get("description", "")),
+        str(flow.get("explanation", "")),
+        _flow_code_text(flow),
+    ])
+    kinds = [kind for kind, pattern in FINDING_KIND_PATTERNS.items() if pattern.search(text)]
+    return kinds
+
+
+def _flow_matches_finding(flow: Dict, finding: Dict, platform: str) -> bool:
+    candidate_kinds = _infer_finding_kinds(finding)
+    flow_kinds = _flow_candidate_kinds(flow, platform=platform)
+    if candidate_kinds and flow_kinds and not set(candidate_kinds).intersection(flow_kinds):
+        return False
+
+    locations = _finding_locations(finding)
+    if not locations:
+        return False
+
+    flow_points = []
+    for step in flow.get("path", []) or []:
+        if not isinstance(step, dict):
+            continue
+        flow_file = str(step.get("file", "")).strip()
+        flow_line = int(step.get("line", 0) or 0)
+        if flow_file:
+            flow_points.append((flow_file, flow_line))
+    for candidate_file in [flow.get("file"), flow.get("sink_file"), flow.get("source"), flow.get("source_file")]:
+        flow_file = str(candidate_file or "").strip()
+        if flow_file:
+            flow_points.append((flow_file, int(flow.get("line", 0) or flow.get("sink_line", 0) or 0)))
+
+    for find_file, find_line in locations:
+        for flow_file, flow_line in flow_points:
+            if not flow_file:
+                continue
+            if str(flow_file).strip() != str(find_file).strip():
+                continue
+            if not find_line or not flow_line or abs(int(find_line) - int(flow_line)) <= 12:
+                return True
+    return False
+
+
+def _false_positive_rationale(
+    finding: Dict,
+    platform: str,
+    flows: List[Dict],
+    vulnerabilities: List[Dict],
+    mitigations: List[Dict],
+    supported_engine: bool,
+) -> str:
+    candidate_kinds = _infer_finding_kinds(finding)
+    files = {file_path for file_path, _ in _finding_locations(finding)}
+
+    if not supported_engine:
+        return "No analyzer engine is available for this platform, so the scanner match could not be source-to-sink validated and remains suppressed by the analyzer gate."
+
+    for item in mitigations:
+        if not isinstance(item, dict):
+            continue
+        item_file = str(item.get("file", "")).strip()
+        if item_file and item_file in files and (not candidate_kinds or item.get("kind") in candidate_kinds):
+            return f"Analyzer found mitigation evidence at {item_file}:{int(item.get('line', 0) or 0)} for the same vulnerability class, so the rule hit is treated as a false positive until a live taint path bypassing that defense is proven."
+
+    if candidate_kinds:
+        same_kind_flows = [flow for flow in flows if set(candidate_kinds).intersection(_flow_candidate_kinds(flow, platform))]
+        if same_kind_flows:
+            return "Analyzer resolved taint flows in the same codebase, but none of them terminate in the sink class and location pattern described by this rule hit. The rule matched syntax, not a reachable vulnerable path."
+        return "Analyzer did not resolve any tainted source-to-sink path for the vulnerability class inferred from this finding. The scanner evidence is pattern-based only, so the hit is suppressed as a false positive."
+
+    if vulnerabilities:
+        return "Analyzer confirmed other vulnerabilities in this scan, but this rule hit could not be mapped to any analyzer-confirmed sink, path, or vulnerable data flow. It remains suppressed as a pattern-only match."
+
+    return "Analyzer completed for this platform and did not confirm a reachable source-to-sink path for this rule hit. Without a validated path, the finding is suppressed as a false positive."
+
+
+def _manual_review_rationale(
+    finding: Dict,
+    platform: str,
+    supported_engine: bool,
+) -> str:
+    candidate_kinds = _infer_finding_kinds(finding)
+    if not supported_engine:
+        return (
+            "Automatic analyzer review is not supported for this platform yet. "
+            "Manual inspection is recommended because this area of interest could not be source-to-sink validated automatically."
+        )
+    if not candidate_kinds:
+        return (
+            "Automatic analyzer review is not supported for this issue type yet. "
+            "Manual inspection is recommended because this area of interest cannot currently be mapped to an analyzer-validated vulnerability class."
+        )
+    return (
+        f"Automatic analyzer review is not available for this {platform or 'target'} finding yet. "
+        "Manual inspection is recommended."
+    )
+
+
+def _validated_vulnerability_from_finding(finding: Dict, flow: Dict, platform: str) -> Dict:
+    kinds = _infer_finding_kinds(finding)
+    kind = kinds[0] if kinds else "analyzer_validated"
+    loc = _flow_locations(flow)
+    source_symbol = _find_primary_source_symbol(flow)
+    return {
+        "id": f"{str(platform).upper()}-VALIDATED-{str(finding.get('rule_id', finding.get('rule_title', 'finding'))).upper().replace(' ', '-')}",
+        "kind": kind,
+        "title": KIND_TITLE_MAP.get(kind, str(finding.get("rule_title", "")).strip() or "Analyzer-validated finding"),
+        "status": "confirmed",
+        "platform": platform,
+        "cwe": KIND_CWE_MAP.get(kind, ""),
+        "severity": str(flow.get("severity", "Low") or "Low"),
+        "risk_score": int(flow.get("risk_score", 0) or 0),
+        "trace_status": _trace_status(flow),
+        "cross_file": bool(flow.get("cross_file", False)),
+        "source_symbol": source_symbol,
+        "source": f"{loc['source_file']}" + (f":{loc['source_line']}" if loc["source_line"] not in (None, "") else ""),
+        "sink": f"{loc['sink_file']}" + (f":{loc['sink_line']}" if loc["sink_line"] not in (None, "") else ""),
+        "file": loc["sink_file"] or str(flow.get("file", "")).strip(),
+        "line": loc["sink_line"] if loc["sink_line"] not in (None, "") else flow.get("line"),
+        "function": str(flow.get("function", "")).strip(),
+        "sink_name": str(flow.get("sink", "")).strip(),
+        "reason": f"Analyzer validated scanner finding `{str(finding.get('rule_title', '')).strip() or 'Unnamed rule'}` by resolving a tainted path into the matching sink class.",
+        "description": str(finding.get("issue_desc", "")).strip() or str(flow.get("description", "")).strip(),
+        "explanation": str(flow.get("explanation", "")).strip(),
+        "input_surface": flow.get("input_surface", {}) if isinstance(flow.get("input_surface"), dict) else {},
+        "attack_vectors": flow.get("attack_vectors", []) if isinstance(flow.get("attack_vectors"), list) else [],
+        "flow_rank": int(flow.get("rank", 0) or 0),
+        "path_length": len(flow.get("path", []) or []),
+        "validated_from_finding": True,
+        "origin_rule_id": str(finding.get("rule_id", "")).strip(),
+        "origin_rule_title": str(finding.get("rule_title", "")).strip(),
+    }
+
+
+def validate_source_findings(
+    source_findings: List[Dict],
+    flows: List[Dict],
+    vulnerabilities: List[Dict],
+    mitigations: List[Dict],
+    platform: str,
+    supported_engine: bool = True,
+) -> Dict:
+    reviewed = []
+    false_positives = []
+    manual_reviews = []
+    synthetic_vulnerabilities = []
+    vulnerability_keys = {
+        (
+            str(item.get("kind", "")).strip().lower(),
+            str(item.get("file", "")).strip(),
+            int(item.get("line", 0) or 0),
+        )
+        for item in vulnerabilities
+    }
+
+    for finding in source_findings or []:
+        if not isinstance(finding, dict):
+            continue
+        if str(finding.get("platform", "")).strip().lower() != str(platform or "").strip().lower():
+            continue
+
+        matching_flow = next((flow for flow in flows if _flow_matches_finding(flow, finding, platform=platform)), None)
+        if matching_flow:
+            candidate_kinds = _infer_finding_kinds(finding)
+            confirmed = _confirm_vulnerability_from_flow(matching_flow, platform=platform or "")
+            existing = None
+            for item in vulnerabilities:
+                if _flow_matches_finding(matching_flow, finding, platform=platform) and (
+                    not candidate_kinds or str(item.get("kind", "")).strip().lower() in candidate_kinds
+                ):
+                    existing = item
+                    break
+            review = {
+                "id": str(finding.get("rule_id", "")).strip() or str(finding.get("rule_title", "")).strip(),
+                "rule_id": str(finding.get("rule_id", "")).strip(),
+                "rule_title": str(finding.get("rule_title", "")).strip() or "Unnamed rule",
+                "platform": platform,
+                "status": "confirmed_vulnerability",
+                "kind": str((confirmed or {}).get("kind", "")).strip() or (candidate_kinds[0] if candidate_kinds else ""),
+                "file": existing.get("file", "") if existing else str(matching_flow.get("file", "")).strip(),
+                "line": existing.get("line", 0) if existing else int(matching_flow.get("line", 0) or 0),
+                "technical_rationale": f"Analyzer resolved a tainted path from {str(matching_flow.get('source') or matching_flow.get('source_file') or 'source').strip()} to {str(matching_flow.get('sink') or matching_flow.get('sink_file') or 'sink').strip()}, which validates the scanner match as reachable.",
+                "matched_flow_rank": int(matching_flow.get("rank", 0) or 0),
+                "matched_vulnerability_id": existing.get("id", "") if existing else "",
+            }
+            reviewed.append(review)
+            if not existing:
+                synthesized = _validated_vulnerability_from_finding(finding, matching_flow, platform)
+                key = (
+                    str(synthesized.get("kind", "")).strip().lower(),
+                    str(synthesized.get("file", "")).strip(),
+                    int(synthesized.get("line", 0) or 0),
+                )
+                if key not in vulnerability_keys:
+                    vulnerability_keys.add(key)
+                    synthetic_vulnerabilities.append(synthesized)
+            continue
+
+        base_review = {
+            "id": str(finding.get("rule_id", "")).strip() or str(finding.get("rule_title", "")).strip(),
+            "rule_id": str(finding.get("rule_id", "")).strip(),
+            "rule_title": str(finding.get("rule_title", "")).strip() or "Unnamed rule",
+            "platform": platform,
+            "kind": (_infer_finding_kinds(finding) or [""])[0],
+            "evidence": finding.get("evidence", []) if isinstance(finding.get("evidence"), list) else [],
+            "issue_desc": str(finding.get("issue_desc", "")).strip(),
+            "rule_desc": str(finding.get("rule_desc", "")).strip(),
+            "confidence_level": str(finding.get("confidence_level", "")).strip(),
+            "confidence_score": finding.get("confidence_score"),
+        }
+        if not supported_engine or not _infer_finding_kinds(finding):
+            review = {
+                **base_review,
+                "status": "manual_review_recommended",
+                "technical_rationale": _manual_review_rationale(
+                    finding,
+                    platform=platform,
+                    supported_engine=supported_engine,
+                ),
+            }
+            manual_reviews.append(review)
+            reviewed.append(review)
+            continue
+
+        fp = {
+            **base_review,
+            "status": "suppressed_false_positive",
+            "technical_rationale": _false_positive_rationale(
+                finding,
+                platform=platform,
+                flows=flows,
+                vulnerabilities=vulnerabilities,
+                mitigations=mitigations,
+                supported_engine=supported_engine,
+            ),
+        }
+        false_positives.append(fp)
+        reviewed.append(fp)
+
+    return {
+        "reviews": reviewed,
+        "false_positives": false_positives,
+        "manual_reviews": manual_reviews,
+        "synthetic_vulnerabilities": synthetic_vulnerabilities,
+    }
+
+
+def _confirm_vulnerability_from_flow(flow: Dict, platform: str) -> Dict:
+    platform_rules = VULNERABILITY_RULES.get(str(platform or "").lower(), [])
+    if not platform_rules:
+        return {}
+
+    sink_name = str(flow.get("sink", "")).strip().lower()
+    for rule in platform_rules:
+        if sink_name not in rule.get("sink_names", set()):
+            continue
+        if _rule_blocked_by_mitigation(flow, rule):
+            return {}
+
+        loc = _flow_locations(flow)
+        source_symbol = _find_primary_source_symbol(flow)
+        entry = {
+            "id": f"{str(platform).upper()}-{rule['kind'].upper()}-{int(flow.get('rank', 0) or 0)}",
+            "kind": rule["kind"],
+            "title": rule["title"],
+            "status": "confirmed",
+            "platform": platform,
+            "cwe": rule.get("cwe", ""),
+            "severity": str(flow.get("severity", "Low") or "Low"),
+            "risk_score": int(flow.get("risk_score", 0) or 0),
+            "trace_status": _trace_status(flow),
+            "cross_file": bool(flow.get("cross_file", False)),
+            "source_symbol": source_symbol,
+            "source": f"{loc['source_file']}" + (f":{loc['source_line']}" if loc["source_line"] not in (None, "") else ""),
+            "sink": f"{loc['sink_file']}" + (f":{loc['sink_line']}" if loc["sink_line"] not in (None, "") else ""),
+            "file": loc["sink_file"] or str(flow.get("file", "")).strip(),
+            "line": loc["sink_line"] if loc["sink_line"] not in (None, "") else flow.get("line"),
+            "function": str(flow.get("function", "")).strip(),
+            "sink_name": str(flow.get("sink", "")).strip(),
+            "reason": rule["reason"],
+            "description": str(flow.get("description", "")).strip(),
+            "explanation": str(flow.get("explanation", "")).strip(),
+            "input_surface": flow.get("input_surface", {}) if isinstance(flow.get("input_surface"), dict) else {},
+            "attack_vectors": flow.get("attack_vectors", []) if isinstance(flow.get("attack_vectors"), list) else [],
+            "flow_rank": int(flow.get("rank", 0) or 0),
+            "path_length": len(flow.get("path", []) or []),
+        }
+        return entry
+    return {}
+
+
+def _discover_mitigations(scan_root: Path, platform: str) -> List[Dict]:
+    platform_key = str(platform or "").lower()
+    if not scan_root or not Path(scan_root).exists():
+        return []
+    rules = MITIGATION_RULES.get(platform_key, [])
+    if not rules:
+        return []
+
+    items: List[Dict] = []
+    seen = set()
+    raw_globs = FILE_GLOBS.get(platform_key, "*")
+    globs = raw_globs if isinstance(raw_globs, (list, tuple, set)) else (raw_globs,)
+    for glob in globs:
+        for file_path in Path(scan_root).rglob(glob):
+            if not file_path.is_file():
+                continue
+            try:
+                text = file_path.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            for rule in rules:
+                if not _text_contains_all(text, [rule["primary"], *rule.get("required", [])]):
+                    continue
+                for match in rule["primary"].finditer(text):
+                    line = _line_for_offset(text, match.start())
+                    key = (rule["kind"], str(file_path), line)
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    snippet = text[max(0, match.start() - 80):match.end() + 80].replace("\n", " ").strip()
+                    items.append(
+                        {
+                            "id": f"{platform_key.upper()}-MIT-{rule['kind'].upper()}-{len(items) + 1}",
+                            "kind": rule["kind"],
+                            "title": rule["title"],
+                            "status": "mitigated",
+                            "platform": platform_key,
+                            "file": str(file_path),
+                            "line": line,
+                            "description": rule["description"],
+                            "evidence": snippet[:240],
+                            **_mitigation_assessment(rule),
+                        }
+                    )
+                    break
+    return sorted(items, key=lambda item: (item["kind"], item["file"], int(item["line"] or 0)))
+
+
+def _path_matches(candidate: str, known_paths: set) -> bool:
+    token = str(candidate or "").strip()
+    if not token or not known_paths:
+        return False
+    norm = Path(token).as_posix().lstrip("./")
+    name = Path(token).name
+    for item in known_paths:
+        other = Path(str(item or "")).as_posix().lstrip("./")
+        if not other:
+            continue
+        if norm == other or other.endswith(norm) or norm.endswith(other):
+            return True
+        if name and Path(other).name == name:
+            return True
+    return False
+
+
+def build_security_inventory(flows: List[Dict], scan_root: Path = None, platform: str = None, source_findings: List[Dict] = None, supported_engine: bool = True) -> Dict:
+    ranked_flows = rank_and_dedupe_flows(flows or [], platform=platform)
+    mitigations = _discover_mitigations(Path(scan_root), platform) if scan_root else []
+    mitigation_paths_by_kind = {}
+    for item in mitigations:
+        mitigation_paths_by_kind.setdefault(item["kind"], set()).add(str(item.get("file", "")))
+
+    vulnerabilities: List[Dict] = []
+    seen = set()
+    for flow in ranked_flows:
+        item = _confirm_vulnerability_from_flow(flow, platform=platform or "")
+        if not item:
+            continue
+        sink_file = str(item.get("file", "") or "")
+        source_file = str(flow.get("file", "") or "")
+        known_paths = mitigation_paths_by_kind.get(item["kind"], set())
+        if _path_matches(sink_file, known_paths) or _path_matches(source_file, known_paths):
+            continue
+        key = (item["kind"], item["file"], int(item["line"] or 0), item["sink_name"], item["source_symbol"])
+        if key in seen:
+            continue
+        seen.add(key)
+        vulnerabilities.append(item)
+
+    command_sources = {
+        str(item.get("source", "")).split(":", 1)[0]
+        for item in vulnerabilities
+        if item.get("kind") == "command_injection"
+    }
+    vulnerabilities = [
+        item for item in vulnerabilities
+        if not (
+            item.get("kind") == "xss"
+            and str(item.get("source", "")).split(":", 1)[0] in command_sources
+        )
+    ]
+    vulnerabilities = [
+        item for item in vulnerabilities
+        if not (
+            item.get("kind") == "xss"
+            and _response_is_plain_text(str(item.get("source", "")).split(":", 1)[0])
+        )
+    ]
+
+    finding_validation = validate_source_findings(
+        source_findings=source_findings or [],
+        flows=ranked_flows,
+        vulnerabilities=vulnerabilities,
+        mitigations=mitigations,
+        platform=platform or "",
+        supported_engine=supported_engine,
+    )
+    for item in finding_validation.get("synthetic_vulnerabilities", []):
+        vulnerabilities.append(item)
+
+    mitigation_counts = Counter(item["kind"] for item in mitigations)
+    for item in vulnerabilities:
+        item["matching_mitigation_count"] = int(mitigation_counts.get(item["kind"], 0))
+
+    vulnerabilities.sort(key=lambda item: (-int(item.get("risk_score", 0)), item.get("kind", ""), item.get("file", ""), int(item.get("line", 0) or 0)))
+    summary = {
+        "confirmed_vulnerabilities": len(vulnerabilities),
+        "mitigated_implementations": len(mitigations),
+        "validated_findings": len([item for item in finding_validation.get("reviews", []) if item.get("status") == "confirmed_vulnerability"]),
+        "suppressed_false_positives": len(finding_validation.get("false_positives", [])),
+        "manual_review_recommended": len(finding_validation.get("manual_reviews", [])),
+        "by_kind": dict(Counter(item["kind"] for item in vulnerabilities)),
+        "mitigated_by_kind": dict(Counter(item["kind"] for item in mitigations)),
+    }
+    return {
+        "summary": summary,
+        "vulnerabilities": vulnerabilities,
+        "mitigations": mitigations,
+        "finding_reviews": finding_validation.get("reviews", []),
+        "false_positives": finding_validation.get("false_positives", []),
+        "manual_reviews": finding_validation.get("manual_reviews", []),
+    }
 
 
 def render_xref_html(flows: List[Dict], output_path: Path, title: str = "Dataflow XREF"):

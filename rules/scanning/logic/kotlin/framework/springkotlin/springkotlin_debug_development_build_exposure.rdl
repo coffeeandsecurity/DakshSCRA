@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT BuildConfig\.DEBUG|debuggable\s+true
+WHEN EXPR MISSING:release|production
+REPORT AS area_of_interest
+REASON Detects debug/development flags in Kotlin app/service code.
+TRACE Externalized rule logic for Springkotlin Debug/Development Build Exposure.

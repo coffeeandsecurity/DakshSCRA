@@ -2,8 +2,8 @@
     <category name="AWS Compute Security">
         <rule>
             <name>EC2 Instance Metadata Service v1 Enabled</name>
-            <regex><![CDATA[resource\s+"aws_instance"[^}]*http_tokens\s*=\s*"optional"]]></regex>
-            <rdl><![CDATA[[FLAG:resource\s+"aws_instance"][IF(MISSING:http_tokens\s*=\s*"required")]]]></rdl>
+            <regex>resource\s+"aws_instance"[^}]*http_tokens\s*=\s*"optional"</regex>
+            <rdl_ref>logic/terraform/framework/aws/ec2_instance_metadata_service_v1_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>EC2 Instance with Public IP</name>
-            <regex><![CDATA[associate_public_ip_address\s*=\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:associate_public_ip_address\s*=\s*true][IF(PRESENT:associate_public_ip_address\s*=\s*true && MISSING:# intentional|# bastion|# jump|# nat)]]]></rdl>
+            <regex>associate_public_ip_address\s*=\s*true</regex>
+            <rdl_ref>logic/terraform/framework/aws/ec2_instance_with_public_ip.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -38,8 +38,8 @@
     <category name="AWS Database Security">
         <rule>
             <name>RDS Instance Publicly Accessible</name>
-            <regex><![CDATA[resource\s+"aws_db_instance"[^}]*publicly_accessible\s*=\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:resource\s+"aws_db_instance"[^}]*publicly_accessible\s*=\s*true][IF(PRESENT:publicly_accessible\s*=\s*true && MISSING:# intentional|# development|# staging)]]]></rdl>
+            <regex>resource\s+"aws_db_instance"[^}]*publicly_accessible\s*=\s*true</regex>
+            <rdl_ref>logic/terraform/framework/aws/rds_instance_publicly_accessible.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -55,8 +55,8 @@
         </rule>
         <rule>
             <name>RDS Storage Not Encrypted</name>
-            <regex><![CDATA[resource\s+"aws_db_instance"[^}]*storage_encrypted\s*=\s*false]]></regex>
-            <rdl><![CDATA[[FLAG:resource\s+"aws_db_instance"][IF(MISSING:storage_encrypted\s*=\s*true)]]]></rdl>
+            <regex>resource\s+"aws_db_instance"[^}]*storage_encrypted\s*=\s*false</regex>
+            <rdl_ref>logic/terraform/framework/aws/rds_storage_not_encrypted.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -72,8 +72,8 @@
         </rule>
         <rule>
             <name>RDS Multi-AZ Disabled</name>
-            <regex><![CDATA[resource\s+"aws_db_instance"[^}]*multi_az\s*=\s*false]]></regex>
-            <rdl><![CDATA[[FLAG:resource\s+"aws_db_instance"[^}]*multi_az\s*=\s*false][IF(PRESENT:multi_az\s*=\s*false && MISSING:# intentional|# development|# staging|# cost)]]]></rdl>
+            <regex>resource\s+"aws_db_instance"[^}]*multi_az\s*=\s*false</regex>
+            <rdl_ref>logic/terraform/framework/aws/rds_multi_az_disabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -91,8 +91,8 @@
     <category name="AWS Lambda Security">
         <rule>
             <name>Lambda Function with Broad IAM Role</name>
-            <regex><![CDATA[resource\s+"aws_iam_role_policy"[^}]*lambda[^}]*Action\s*":\s*"\*"]]></regex>
-            <rdl><![CDATA[[FLAG:resource\s+"aws_iam_role_policy"[^}]*Action\s*":\s*"\*"][IF(PRESENT:AdministratorAccess|arn:aws:iam::aws:policy/AdministratorAccess|"\*".*"Allow" && MISSING:# intentional|# required|boundary|permission_boundary)]]]></rdl>
+            <regex>resource\s+"aws_iam_role_policy"[^}]*lambda[^}]*Action\s*":\s*"\*"</regex>
+            <rdl_ref>logic/terraform/framework/aws/lambda_function_with_broad_iam_role.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -108,8 +108,8 @@
         </rule>
         <rule>
             <name>Lambda Environment Variable Contains Secret</name>
-            <regex><![CDATA[resource\s+"aws_lambda_function"[^}]*environment\s*\{[^}]*variables\s*=\s*\{[^}]*(?i)(?:password|secret|api_key|token)\s*=\s*"[^"]{8,}"]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(?:password|secret|api_key|token)\s*=\s*"[^"]{8,}"][IF(MISSING:aws_secretsmanager|var\.|data\.)]]]></rdl>
+            <regex>resource\s+"aws_lambda_function"[^}]*environment\s*\{[^}]*variables\s*=\s*\{[^}]*(?i)(?:password|secret|api_key|token)\s*=\s*"[^"]{8,}"</regex>
+            <rdl_ref>logic/terraform/framework/aws/lambda_environment_variable_contains_secret.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -127,8 +127,8 @@
     <category name="AWS Logging and Monitoring">
         <rule>
             <name>S3 Access Logging Disabled</name>
-            <regex><![CDATA[resource\s+"aws_s3_bucket"[^}]*\}(?![^}]*logging)]]></regex>
-            <rdl><![CDATA[[FLAG:resource\s+"aws_s3_bucket"\b][IF(MISSING:logging\s*\{|aws_s3_bucket_logging)]]]></rdl>
+            <regex>resource\s+"aws_s3_bucket"[^}]*\}(?![^}]*logging)</regex>
+            <rdl_ref>logic/terraform/framework/aws/s3_access_logging_disabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

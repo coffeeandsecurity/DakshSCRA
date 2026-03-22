@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT @\w+_version
+WHEN EXPR PRESENT:__version__|pkg_resources\.require|version_info && MISSING:test|example|migration
+REPORT AS area_of_interest
+REASON Detects the version of the software and various libraries used in the code.
+TRACE Externalized rule logic for Library Version Check.

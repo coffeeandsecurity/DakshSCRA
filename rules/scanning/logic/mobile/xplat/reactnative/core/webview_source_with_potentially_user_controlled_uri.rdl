@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT <WebView[^>]*source\s*=\s*\{\{?\s*uri\s*:
+REPORT AS area_of_interest
+REASON Detects WebView source URI props that may be derived from user-controlled input without validation.
+TRACE Externalized mobile rule logic for WebView Source with Potentially User-Controlled URI.

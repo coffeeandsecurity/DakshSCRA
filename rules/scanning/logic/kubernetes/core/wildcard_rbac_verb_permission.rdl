@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT verbs\s*:\s*\[?\s*["']?\*["']?\s*\]?
+REPORT AS area_of_interest
+REASON Detects RBAC roles or cluster roles granting all verbs (*) on resources.
+TRACE Externalized rule logic for Wildcard RBAC Verb Permission.

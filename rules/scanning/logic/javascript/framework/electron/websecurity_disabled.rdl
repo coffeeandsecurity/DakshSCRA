@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT webSecurity\s*:\s*false
+WHEN EXPR MISSING:test|development|localhost && PRESENT:webSecurity:\s*false|allowRunningInsecureContent:\s*true
+REPORT AS area_of_interest
+REASON Detects Electron BrowserWindow configurations with web security disabled.
+TRACE Externalized rule logic for webSecurity Disabled.

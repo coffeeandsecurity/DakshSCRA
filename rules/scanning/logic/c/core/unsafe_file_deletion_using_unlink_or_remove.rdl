@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(?:unlink|remove)\s*\(\s*(?:"[^"\n]*(?:password|passwd|token|secret|key)[^"\n]*"|sensitive_file\w*)\s*\)
+WHEN EXPR MISSING:example|sample|dummy|test|placeholder
+REPORT AS area_of_interest
+REASON Detects unsafe deletion of sensitive files.
+TRACE Externalized rule logic for Unsafe File Deletion Using `unlink` or `remove`.

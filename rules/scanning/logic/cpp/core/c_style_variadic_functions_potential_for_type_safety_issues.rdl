@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(__attribute__\s*\(\s*format\s*\(\s*__variadic\s*,)
+WHEN EXPR PRESENT:va_list|va_start|va_arg|va_end && MISSING:vsnprintf|type_safe|fmt::|std::format && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects the definition of C-style variadic functions, which can lead to type safety issues.
+TRACE Externalized rule logic for C-style Variadic Functions: Potential for Type Safety Issues.

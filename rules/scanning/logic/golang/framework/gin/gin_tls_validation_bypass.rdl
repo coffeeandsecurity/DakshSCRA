@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT InsecureSkipVerify\s*:\s*true
+WHEN EXPR MISSING:test|development|localhost|staging
+REPORT AS area_of_interest
+REASON Detects TLS certificate verification bypass in HTTP/TLS clients.
+TRACE Externalized rule logic for Gin TLS Validation Bypass.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \beval\s*\(|new\s+Function\s*\(|vm\.runIn
+WHEN EXPR MISSING:trusted|allowlist && MISSING:test|spec|mock|example
+REPORT AS area_of_interest
+REASON Detects dynamic code execution sinks in application flows.
+TRACE Externalized rule logic for Nextjs Injection Sink (Eval/Function).

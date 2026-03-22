@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT (?i)\b(?:fetch\s*\(|Http\.request\s*\(|axios\.(?:get|post|put|delete|request)\s*\(|url\s*[:=]|endpoint\s*[:=]|baseUrl\s*[:=]|api(?:[_-]?(?:url|endpoint))?\s*[:=]|src\s*[:=]|href\s*[:=])[^\n]{0,220}http://
+REPORT AS area_of_interest
+REASON Detects network request usage that may involve insecure HTTP transport.
+TRACE Externalized mobile rule logic for Insecure HTTP Requests.

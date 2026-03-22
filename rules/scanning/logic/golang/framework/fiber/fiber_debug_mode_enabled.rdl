@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT GIN_MODE\s*=\s*debug|SetMode\(\s*gin\.DebugMode\s*\)|\.Debug\s*=\s*true
+WHEN EXPR MISSING:production|release|ReleaseMode|GIN_MODE.*release && MISSING:test|development
+REPORT AS area_of_interest
+REASON Detects debug mode settings in Go web frameworks.
+TRACE Externalized rule logic for Fiber Debug Mode Enabled.

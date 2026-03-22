@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(escape|unescape|eval)\b
+WHEN EXPR MISSING:JSON\.parse|Function\s*\(|trusted|allowlist|DOMPurify && MISSING:test|example|spec|mock
+REPORT AS area_of_interest
+REASON Detects usage of deprecated JavaScript functions.
+TRACE Externalized rule logic for Deprecated JS Function: escape|unescape|eval.

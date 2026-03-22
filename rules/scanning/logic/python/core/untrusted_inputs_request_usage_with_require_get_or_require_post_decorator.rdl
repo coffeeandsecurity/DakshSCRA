@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT @require_(GET|POST)[\s\S]*?def\s+(\w+)\(.*?request.*?:
+WHEN EXPR MISSING:cleaned_data|validate|sanitize|escape
+REPORT AS area_of_interest
+REASON Detects instances where either the require_GET or require_POST decorator is used and the request object is accessed in the view function.
+TRACE Externalized rule logic for Untrusted Inputs: Request Usage with require_GET or require_POST Decorator.

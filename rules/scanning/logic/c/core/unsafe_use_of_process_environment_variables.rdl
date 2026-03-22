@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(getenv|setenv|putenv|clearenv)\s*\(
+WHEN EXPR MISSING:validate|sanitize|allowlist|whitelist|check\s*\(|strlen|strnlen
+REPORT AS area_of_interest
+REASON Detects the usage of functions that access or modify the process environment.
+TRACE Externalized rule logic for Unsafe Use of Process Environment Variables.

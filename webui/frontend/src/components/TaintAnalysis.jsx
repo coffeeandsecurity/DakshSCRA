@@ -365,8 +365,8 @@ function PlatformCoverageNotice({ taintEngineTargets, heuristicOnlyTargets }) {
             {' — '}
             {heuristicOnlyTargets.map(formatPlatformName).join(', ')}
             {'. '}
-            Rule-based findings for {heuristicOnlyTargets.length > 1 ? 'these platforms' : 'this platform'} are available in the{' '}
-            <strong style={{ color: 'var(--text-1)' }}>Findings</strong> tab.
+            Rule-based review candidates for {heuristicOnlyTargets.length > 1 ? 'these platforms' : 'this platform'} are available in the{' '}
+            <strong style={{ color: 'var(--text-1)' }}>Areas of Interest</strong> tab.
           </div>
         </div>
         <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-3)' }}>
@@ -422,7 +422,7 @@ export default function TaintAnalysis({ analysis }) {
   // Only include findings that are actual taint flows (source-to-sink engine output).
   // Heuristic fallback findings (analysis_kind === "heuristic") are regular scan
   // findings re-packaged for platforms without a taint engine — they already appear
-  // in the Findings tab and must not be duplicated here.
+  // in the Areas of Interest tab and must not be duplicated here.
   const allFlows = useMemo(() => {
     if (!analysis?.results?.length) return []
     return analysis.results
@@ -485,12 +485,12 @@ export default function TaintAnalysis({ analysis }) {
           ) : engineRanButEmpty ? (
             <div className="empty-msg">
               The taint engine ran for <strong>{taintEngineTargets.map(formatPlatformName).join(', ')}</strong> but
-              found no cross-file source-to-sink flows. All rule-based findings are in the <strong>Findings</strong> tab.
+              found no cross-file source-to-sink flows. All rule-based review candidates are in the <strong>Areas of Interest</strong> tab.
             </div>
           ) : (
             <div className="empty-msg">
-              All rule-based findings for the scanned platform{heuristicOnlyTargets.length > 1 ? 's' : ''} are
-              available in the <strong>Findings</strong> tab.
+              All rule-based review candidates for the scanned platform{heuristicOnlyTargets.length > 1 ? 's' : ''} are
+              available in the <strong>Areas of Interest</strong> tab.
             </div>
           )}
         </div>

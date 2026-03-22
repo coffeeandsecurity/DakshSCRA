@@ -2,8 +2,8 @@
     <category name="Framework-Specific Issues - Flutter">
         <rule>
             <name>Insecure SharedPreferences for Sensitive Data</name>
-            <regex><![CDATA[\bSharedPreferences\.getInstance\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\bSharedPreferences\.getInstance\s*\(][IF(PRESENT:SharedPreferences.*(?:password|token|secret|key|credential|auth)|prefs\.setString.*(?:password|token|secret|key|auth) && MISSING:flutter_secure_storage|FlutterSecureStorage|encrypt|AES)]]]></rdl>
+            <regex>\bSharedPreferences\.getInstance\s*\(</regex>
+            <rdl_ref>logic/mobile/xplat/flutter/core/sharedpreferences_sensitive_data.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -22,8 +22,8 @@
         </rule>
         <rule>
             <name>WebView Unrestricted JavaScript Mode</name>
-            <regex><![CDATA[JavaScriptMode\.unrestricted]]></regex>
-            <rdl><![CDATA[[FLAG:JavaScriptMode\.unrestricted][IF(MISSING:navigationDelegate|onNavigationRequest|allowList|trustedOrigins|shouldOverrideUrlLoading)]]]></rdl>
+            <regex>JavaScriptMode\.unrestricted</regex>
+            <rdl_ref>logic/mobile/xplat/flutter/core/webview_unrestricted_javascript_mode.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -42,8 +42,8 @@
         </rule>
         <rule>
             <name>Ignoring TLS Certificate Errors</name>
-            <regex><![CDATA[badCertificateCallback\s*=|onBadCertificate\s*=]]></regex>
-            <rdl><![CDATA[[FLAG:badCertificateCallback\s*=|onBadCertificate\s*=][IF(MISSING:test|development|localhost|staging|// intentional|badCertificateCallback.*throw)]]]></rdl>
+            <regex>badCertificateCallback\s*=|onBadCertificate\s*=</regex>
+            <rdl_ref>logic/mobile/xplat/flutter/core/ignoring_tls_certificate_errors.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -62,8 +62,8 @@
         </rule>
         <rule>
             <name>FlutterSecureStorage Without iCloud Sync Disabled</name>
-            <regex><![CDATA[\bFlutterSecureStorage\s*\(|\bconst\s+FlutterSecureStorage\b]]></regex>
-            <rdl><![CDATA[[FLAG:\bFlutterSecureStorage\s*\(|\bconst\s+FlutterSecureStorage\b][IF(MISSING:iCloudSync.*false|iCloudSync:\s*false|IOSOptions.*iCloudSync)]]]></rdl>
+            <regex>\bFlutterSecureStorage\s*\(|\bconst\s+FlutterSecureStorage\b</regex>
+            <rdl_ref>logic/mobile/xplat/flutter/core/fluttersecurestorage_without_icloud_sync_disabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -82,8 +82,8 @@
         </rule>
         <rule>
             <name>Flutter MethodChannel Handler Without Input Validation</name>
-            <regex><![CDATA[\bsetMethodCallHandler\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\bsetMethodCallHandler\s*\(][IF(MISSING:call\.method|methodName|switch.*call|if.*call\.method|assert)]]]></rdl>
+            <regex>\bsetMethodCallHandler\s*\(</regex>
+            <rdl_ref>logic/mobile/xplat/flutter/core/flutter_methodchannel_handler_without_input_validation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -102,8 +102,8 @@
         </rule>
         <rule>
             <name>External Storage Used for Sensitive File Operations</name>
-            <regex><![CDATA[\bgetExternalStorageDirectory\s*\(|\bgetExternalFilesDir\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\bgetExternalStorageDirectory\s*\(|\bgetExternalFilesDir\s*\(][IF(PRESENT:password|token|secret|key|credential|auth|private && MISSING:encrypt|AES|cipher|// non-sensitive|// public)]]]></rdl>
+            <regex>\bgetExternalStorageDirectory\s*\(|\bgetExternalFilesDir\s*\(</regex>
+            <rdl_ref>logic/mobile/xplat/flutter/core/external_storage_used_for_sensitive_file_operations.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -122,8 +122,8 @@
         </rule>
         <rule>
             <name>Isolate.spawnUri with Remote URI</name>
-            <regex><![CDATA[\bIsolate\.spawnUri\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\bIsolate\.spawnUri\s*\(][IF(PRESENT:http://|https://|Uri\.parse.*http && MISSING:// trusted|// internal)]]]></rdl>
+            <regex>\bIsolate\.spawnUri\s*\(</regex>
+            <rdl_ref>logic/mobile/xplat/flutter/core/isolate_spawnuri_with_remote_uri.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -142,8 +142,8 @@
         </rule>
         <rule>
             <name>WebView Loading User-Controlled URL Without Scheme Validation</name>
-            <regex><![CDATA[\bWebViewController\b|\bWebViewWidget\b]]></regex>
-            <rdl><![CDATA[[FLAG:\bWebViewController\b|\bWebViewWidget\b][IF(MISSING:scheme|canLaunchUrl|allowedSchemes|guard.*scheme|Uri\.parse.*scheme|navigationDelegate|onNavigationRequest)]]]></rdl>
+            <regex>\bWebViewController\b|\bWebViewWidget\b</regex>
+            <rdl_ref>logic/mobile/xplat/flutter/core/webview_loading_user_controlled_url_without_scheme_validation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -164,8 +164,8 @@
     <category name="Framework-Specific Security">
         <rule>
             <name>Flutter Debug Mode Marker</name>
-            <regex><![CDATA[kDebugMode|assert\(|debugShowCheckedModeBanner\s*:\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:kDebugMode|assert\(|debugShowCheckedModeBanner\s*:\s*true][IF(MISSING:kReleaseMode)]]]></rdl>
+            <regex>kDebugMode|assert\(|debugShowCheckedModeBanner\s*:\s*true</regex>
+            <rdl_ref>logic/mobile/xplat/flutter/core/flutter_debug_mode_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -184,8 +184,8 @@
         </rule>
         <rule>
             <name>Flutter Insecure HTTP Usage</name>
-            <regex><![CDATA[http://|Uri\.parse\(\s*[\'\"]http://]]></regex>
-            <rdl><![CDATA[[FLAG:http://|Uri\.parse\(\s*[\'\"]http://][IF(MISSING:https://)]]]></rdl>
+            <regex>http://|Uri\.parse\(\s*[\'\"]http://</regex>
+            <rdl_ref>logic/mobile/xplat/flutter/core/flutter_insecure_http_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -204,8 +204,8 @@
         </rule>
         <rule>
             <name>Flutter Certificate Validation Bypass</name>
-            <regex><![CDATA[badCertificateCallback\s*=\s*\(|badCertificateCallback\s*:\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:badCertificateCallback\s*=\s*\(|badCertificateCallback\s*:\s*\(][IF(MISSING:sha256|certificatePinning|SecurityContext)]]]></rdl>
+            <regex>badCertificateCallback\s*=\s*\(|badCertificateCallback\s*:\s*\(</regex>
+            <rdl_ref>logic/mobile/xplat/flutter/core/flutter_certificate_validation_bypass.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -224,8 +224,8 @@
         </rule>
         <rule>
             <name>Flutter WebView JavaScript Unrestricted</name>
-            <regex><![CDATA[JavaScriptMode\.unrestricted|evaluateJavascript\(]]></regex>
-            <rdl><![CDATA[[FLAG:JavaScriptMode\.unrestricted|evaluateJavascript\(][IF(MISSING:NavigationDelegate)]]]></rdl>
+            <regex>JavaScriptMode\.unrestricted|evaluateJavascript\(</regex>
+            <rdl_ref>logic/mobile/xplat/flutter/core/flutter_webview_javascript_unrestricted.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -244,8 +244,8 @@
         </rule>
         <rule>
             <name>Flutter Shared Preferences Secret Marker</name>
-            <regex><![CDATA[SharedPreferences\.getInstance\(\)|setString\(\s*[\'\"].*(token|secret|password|apikey)]]></regex>
-            <rdl><![CDATA[[FLAG:setString\(\s*[\'\"].*(token|secret|password|apikey)][IF(MISSING:flutter_secure_storage|secure_storage)]]]></rdl>
+            <regex>SharedPreferences\.getInstance\(\)|setString\(\s*[\'\"].*(token|secret|password|apikey)</regex>
+            <rdl_ref>logic/mobile/xplat/flutter/core/flutter_shared_preferences_secret_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -264,8 +264,8 @@
         </rule>
         <rule>
             <name>Flutter Hardcoded Secret Marker</name>
-            <regex><![CDATA[(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]]]></regex>
-            <rdl><![CDATA[[FLAG:(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]][IF(MISSING:kDebugMode)]]]></rdl>
+            <regex>(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]</regex>
+            <rdl_ref>logic/mobile/xplat/flutter/core/flutter_hardcoded_secret_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>none</context_type>
@@ -284,8 +284,8 @@
     <category name="Platform-Specific Issues - Android">
         <rule>
             <name>Android Exported Components in Manifest</name>
-            <regex><![CDATA[android:exported\s*=\s*"?(?:true|TRUE)"?]]></regex>
-            <rdl><![CDATA[[FLAG:android:exported\s*=\s*"?(?:true|TRUE)"?][IF(PRESENT:android:exported\s*=\s*"true" && MISSING:android:permission\s*=|android:exported\s*=\s*"false"|android:readPermission|android:writePermission)]]]></rdl>
+            <regex>android:exported\s*=\s*"?(?:true|TRUE)"?</regex>
+            <rdl_ref>logic/mobile/xplat/flutter/core/android_exported_components_in_manifest.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -308,8 +308,8 @@
     <category name="Platform-Specific Issues - iOS">
         <rule>
             <name>iOS ATS Disabled</name>
-            <regex><![CDATA[NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>]]></regex>
-            <rdl><![CDATA[[FLAG:NSAllowsArbitraryLoads\s*</key>\s*<true\s*/>][IF(PRESENT:NSAllowsArbitraryLoads.*true && MISSING:NSExceptionDomains|localhost|development|# intentional)]]]></rdl>
+            <regex>NSAllowsArbitraryLoads\s*&lt;/key&gt;\s*&lt;true\s*/&gt;</regex>
+            <rdl_ref>logic/mobile/xplat/flutter/core/ios_ats_disabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>

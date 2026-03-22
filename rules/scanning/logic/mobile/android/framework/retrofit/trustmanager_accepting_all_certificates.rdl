@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT X509TrustManager[^}]*\{\s*\}|override\s+fun\s+checkServerTrusted
+WHEN EXPR MISSING:CertPathValidator|PKIXParameters|validate|checkValidity
+REPORT AS area_of_interest
+REASON Detects custom TrustManager implementations that perform no certificate validation.
+TRACE Externalized mobile rule logic for TrustManager Accepting All Certificates.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)route:\s+'.*(\s?)
+WHEN EXPR PRESENT:app\.(get|post|put|delete|patch)\s*\(\s*["']/|router\.(get|post|put|delete|patch)\s*\(\s*["']/[^"']*:\w && MISSING:authenticate|authorize|auth|middleware|passport|jwt|session
+REPORT AS area_of_interest
+REASON Detects the presence of hardcoded routes in JavaScript code, which may expose sensitive information or introduce security risks.
+TRACE Externalized rule logic for Routes.

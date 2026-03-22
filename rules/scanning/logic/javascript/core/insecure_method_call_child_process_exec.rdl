@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (^|\s|=\s?)require\(\s*('|")child_process('|")\s*\)(\s*\.(\s*\w+\s*)*\()?\s*\)
+WHEN EXPR MISSING:execFile|spawn\s*\(|validate|sanitize|allowlist|escapeShellArg && MISSING:test|example|spec
+REPORT AS area_of_interest
+REASON Detects the usage of the `require('child_process')` statement with the `exec()` function, which can introduce remote OS command execution vulnerabilities.
+TRACE Externalized rule logic for Insecure Method Call: child_process.exec().

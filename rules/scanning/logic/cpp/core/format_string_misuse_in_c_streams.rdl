@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(std::printf|std::fprintf)\s*\(
+WHEN EXPR MISSING:"%s"|"%d"|"%f"|"%i"|"%u"|"%x" && MISSING:const\s+char\s*\*\s*format
+REPORT AS area_of_interest
+REASON Detects unsafe use of format strings with `printf`-like functions.
+TRACE Externalized rule logic for Format String Misuse in C++ Streams.

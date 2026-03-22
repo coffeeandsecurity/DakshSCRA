@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT rawQuery\(\s*"[^"]*"\s*\+|execSQL\(\s*"[^"]*"\s*\+
+WHEN EXPR MISSING:prepareStatement|setString\s*\(|setInt\s*\(|NamedParameterJdbcTemplate|?|bindParam
+REPORT AS area_of_interest
+REASON Detects dynamic SQL concatenation patterns.
+TRACE Externalized rule logic for Ktor SQL Injection Sink.

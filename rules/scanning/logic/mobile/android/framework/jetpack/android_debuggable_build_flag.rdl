@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT android:debuggable\s*=\s*"true"|debuggable\s+true
+REPORT AS area_of_interest
+REASON Detects debuggable builds/configuration.
+TRACE Externalized mobile rule logic for Android Debuggable Build Flag.

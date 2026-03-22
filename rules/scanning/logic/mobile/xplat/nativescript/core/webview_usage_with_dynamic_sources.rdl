@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT <WebView|webView\.src\s*=
+WHEN EXPR MISSING:shouldOverrideUrl|allowList|trustedOrigins|validate && MISSING:test|example
+REPORT AS area_of_interest
+REASON Detects embedded WebView usage that requires trusted source enforcement.
+TRACE Externalized mobile rule logic for WebView Usage with Dynamic Sources.

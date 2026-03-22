@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \.execute\s*\(\s*["'][^"']*["']\s*\+|\.execute\s*\(\s*f["']|\.execute\s*\(\s*["'][^"']*%\s*(?:\(|\w)
+WHEN EXPR MISSING:bindparams|bindparam|:(?!:)\w|params
+REPORT AS area_of_interest
+REASON Detects direct execute() calls with dynamically constructed SQL strings.
+TRACE Externalized rule logic for execute() with String Formatting.

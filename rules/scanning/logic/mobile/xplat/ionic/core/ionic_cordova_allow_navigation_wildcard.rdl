@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT <allow-navigation\s+href=\"\*\"|<access\s+origin=\"\*\"
+WHEN EXPR MISSING:Content-Security-Policy
+REPORT AS area_of_interest
+REASON Detects wildcard navigation/origin allowlist settings.
+TRACE Externalized mobile rule logic for Ionic/Cordova Allow Navigation Wildcard.

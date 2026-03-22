@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT (?i)(CAPTCHA)
+WHEN EXPR PRESENT:(?i)(/|\\\\).*(captcha|recaptcha|anti-bot)
+REPORT AS area_of_interest
+REASON Detects file paths related to CAPTCHA functionality.

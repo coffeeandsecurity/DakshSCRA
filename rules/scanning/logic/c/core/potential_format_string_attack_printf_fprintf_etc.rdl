@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(printf|fprintf|sprintf|vsprintf|snprintf)\s*\(\s*[^"]+\s*,
+WHEN EXPR MISSING:"%s"|"%d"|"%f"|"%i"|"%u"|"%x" && MISSING:const\s+char\s*\*\s*format
+REPORT AS area_of_interest
+REASON Detects potentially unsafe usage of format functions where user input is passed directly as the format string.
+TRACE Externalized rule logic for Potential Format String Attack: printf(), fprintf(), etc..

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT UIPasteboard\.general\.(string|setValue|setData|setObjects)\s*[=\(]
+WHEN EXPR PRESENT:password|token|secret|key|credential|auth && MISSING:localOnly|expirationDate|UIPasteboardOption
+REPORT AS area_of_interest
+REASON Detects writes of sensitive data to the system pasteboard without expiration or local-only restrictions.
+TRACE Externalized mobile rule logic for UIPasteboard Write with Sensitive Data.

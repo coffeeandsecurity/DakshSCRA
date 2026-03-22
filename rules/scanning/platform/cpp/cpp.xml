@@ -1,10 +1,9 @@
 <root>
     <category name="Untrusted Input Handling or Injection Flaws">
         <rule>
-            <!-- Applicable for C++ -->
             <name>Untrusted Inputs: cin / getline</name>
-            <regex><![CDATA[\b(?:std::cin|getline)\b]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:std::cin|getline)\b][IF(MISSING:validate|sanitize|check|regex|isdigit|isalpha|stoi|stol|stof && MISSING:cin\.ignore|cin\.clear)]]]></rdl>
+            <regex>\b(?:std::cin|getline)\b</regex>
+            <rdl_ref>logic/cpp/core/untrusted_inputs_cin_getline.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -19,10 +18,9 @@
             <reviewer>Reviewers should ensure proper input handling for functions like `cin` or `getline`. Confirm that developers have implemented input validation techniques to handle edge cases and ensure safe processing. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
-            <!-- Applicable for C and C++ -->
             <name>Unsafe Use of Command Execution Functions</name>
-            <regex><![CDATA[\b(?:system|popen|exec|execp|CreateProcess)\b\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:system|popen|exec|execp|CreateProcess)\b\s*\(][IF(MISSING:validate|sanitize|allowlist|whitelist|escapeShellArg)]]]></rdl>
+            <regex>\b(?:system|popen|exec|execp|CreateProcess)\b\s*\(</regex>
+            <rdl_ref>logic/cpp/core/unsafe_use_of_command_execution_functions.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -37,10 +35,9 @@
             <reviewer>Reviewers should ensure that calls to command execution functions are justified, that inputs are thoroughly sanitized, and that safer alternatives are considered. Look for proper error handling and minimal privileges when interacting with system resources. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
-            <!-- Applicable for C and C++ -->
             <name>Unsafe Loop Handling Over Arrays or Vectors</name>
-            <regex><![CDATA[\b(?:for|while)\s*\([^)]*(?:<|<=|>|>=)[^)]*(?:size|length|count|index|idx|i|j|k)[^)]*\)]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:for|while)\s*\([^)]*(?:<|<=|>|>=)[^)]*(?:size|length|count|index|idx|i|j|k)[^)]*\)][IF(MISSING:size\(\)|length\(\)|\.end\(\)|bounds|assert|sizeof\s*\(.*\)/sizeof)]]]></rdl>
+            <regex>\b(?:for|while)\s*\([^)]*(?:&lt;|&lt;=|&gt;|&gt;=)[^)]*(?:size|length|count|index|idx|i|j|k)[^)]*\)</regex>
+            <rdl_ref>logic/cpp/core/unsafe_loop_handling_over_arrays_or_vectors.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -57,10 +54,9 @@
     </category>
     <category name="Memory Safety Issues">
         <rule>
-            <!-- Applicable for C and C++ -->
             <name>Unsafe String Manipulation: strcpy(), strcat(), sprintf()</name>
-            <regex><![CDATA[\b(strcpy|strcat|sprintf)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(strcpy|strcat|sprintf)\s*\(][IF(MISSING:strlcpy|strlcat|snprintf|strncpy|strncat|_s\b|StringCchCopy|StringCchCat)]]]></rdl>
+            <regex>\b(strcpy|strcat|sprintf)\s*\(</regex>
+            <rdl_ref>logic/cpp/core/unsafe_string_manipulation_strcpy_strcat_sprintf.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -75,10 +71,9 @@
             <reviewer>Reviewers should look for unsafe string functions and ensure safe C++ standard library alternatives are used. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
-            <!-- Applicable for C++ -->
             <name>Unsafe Use of std::vector::at()</name>
-            <regex><![CDATA[\bstd::vector<.*>::at\(\s*\d+\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:\bstd::vector<.*>::at\(\s*\d+\s*\)][IF(MISSING:try\s*\{|catch\s*\(|std::out_of_range)]]]></rdl>
+            <regex>\bstd::vector&lt;.*&gt;::at\(\s*\d+\s*\)</regex>
+            <rdl_ref>logic/cpp/core/unsafe_use_of_std_vector_at.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -93,10 +88,9 @@
             <reviewer>Check for proper error handling during vector access. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
-            <!-- Applicable for C++ -->
             <name>Dangling Pointer: delete without nullptr</name>
-            <regex><![CDATA[\bdelete\s+\b(?:[^\s]+)\b]]></regex>
-            <rdl><![CDATA[[FLAG:\bdelete\s+\b(?:[^\s]+)\b][IF(MISSING:=\s*nullptr|=\s*NULL|std::unique_ptr|std::shared_ptr|std::weak_ptr)]]]></rdl>
+            <regex>\bdelete\s+\b(?:[^\s]+)\b</regex>
+            <rdl_ref>logic/cpp/core/dangling_pointer_delete_without_nullptr.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -112,8 +106,8 @@
         </rule>
         <rule>
             <name>Access to Freed Memory</name>
-            <regex><![CDATA[\bfree\s*\(|delete\s*\[?\]?]]></regex>
-            <rdl><![CDATA[[FLAG:\bfree\s*\(|delete\s*\[?\]?][IF(MISSING:=\s*nullptr|=\s*NULL|unique_ptr|shared_ptr)]]]></rdl>
+            <regex>\bfree\s*\(|delete\s*\[?\]?</regex>
+            <rdl_ref>logic/cpp/core/access_to_freed_memory.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -130,10 +124,9 @@
     </category>
     <category name="Memory Management and Allocation">
         <rule>
-            <!-- Applicable for C and C++ -->
             <name>Manual Memory Allocation: Use with Caution</name>
-            <regex><![CDATA[\b(new|malloc)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(new|malloc)\s*\(][IF(MISSING:free\s*\(|delete\s+|unique_ptr|shared_ptr|RAII)]]]></rdl>
+            <regex>\b(new|malloc)\s*\(</regex>
+            <rdl_ref>logic/cpp/core/manual_memory_allocation_use_with_caution.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -148,10 +141,9 @@
             <reviewer>Reviewers should ensure that all manual memory allocations are followed by appropriate null checks or are replaced with smart pointers or standard containers. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
-            <!-- Applicable for C++ -->
             <name>Potential Memory Leak: Use of `new` Without `delete`</name>
-            <regex><![CDATA[\bnew\s+\w+(?![^<>]*\s*>)]]></regex>
-            <rdl><![CDATA[[FLAG:\bnew\s+\w+(?![^<>]*\s*>)][IF(MISSING:free\s*\(|delete\s+|unique_ptr|shared_ptr|RAII)]]]></rdl>
+            <regex>\bnew\s+\w+(?![^&lt;&gt;]*\s*&gt;)</regex>
+            <rdl_ref>logic/cpp/core/potential_memory_leak_use_of_new_without_delete.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -166,10 +158,9 @@
             <reviewer>Check whether allocated memory is properly deallocated using `delete` or managed by smart pointers. If raw pointers are unavoidable, ensure all `new` calls have corresponding `delete` calls. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
-            <!-- Applicable for C++ -->
             <name>Null Pointer Dereference with Smart Pointers</name>
-            <regex><![CDATA[\b(std::unique_ptr|std::shared_ptr)<.*>\s*=\s*nullptr]]></regex>
-            <rdl><![CDATA[[FLAG:\b(std::unique_ptr|std::shared_ptr)<.*>\s*=\s*nullptr][IF(MISSING:if\s*\(.*!=\s*nullptr\)|if\s*\(.*!=\s*NULL\)|assert\s*\(|nullptr\s*!=)]]]></rdl>
+            <regex>\b(std::unique_ptr|std::shared_ptr)&lt;.*&gt;\s*=\s*nullptr</regex>
+            <rdl_ref>logic/cpp/core/null_pointer_dereference_with_smart_pointers.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -184,10 +175,9 @@
             <reviewer>Ensure all smart pointers are validated before use. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
-            <!-- Applicable for C and C++ -->
             <name>Access to Freed Memory</name>
-            <regex><![CDATA[\bfree\s*\(|delete\s*\[?\]?]]></regex>
-            <rdl><![CDATA[[FLAG:\bfree\s*\(|delete\s*\[?\]?][IF(MISSING:=\s*nullptr|=\s*NULL|unique_ptr|shared_ptr)]]]></rdl>
+            <regex>\bfree\s*\(|delete\s*\[?\]?</regex>
+            <rdl_ref>logic/cpp/core/access_to_freed_memory_2.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -202,10 +192,9 @@
             <reviewer>Look for any use-after-free patterns in the code, especially in complex control flows. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
-            <!-- Applicable for C and C++ -->
             <name>Unsafe Use of realloc()</name>
-            <regex><![CDATA[\brealloc\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\brealloc\s*\(][IF(MISSING:if\s*\(|NULL\s*!=|!=\s*NULL|check|validate|assert)]]]></rdl>
+            <regex>\brealloc\s*\(</regex>
+            <rdl_ref>logic/cpp/core/unsafe_use_of_realloc.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -220,10 +209,9 @@
             <reviewer>Check if memory resizing affects object alignment or introduces memory access issues. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
-            <!-- Applicable for C++ -->
             <name>Memory Deallocation: delete vs. delete[]</name>
-            <regex><![CDATA[\bdelete\s+\[?\]?]]></regex>
-            <rdl><![CDATA[[FLAG:\bdelete\s+\[?\]?][IF(MISSING:=\s*nullptr|=\s*NULL|unique_ptr|shared_ptr)]]]></rdl>
+            <regex>\bdelete\s+\[?\]?</regex>
+            <rdl_ref>logic/cpp/core/memory_deallocation_delete_vs_delete.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -240,10 +228,9 @@
     </category>
     <category name="Arithmetic and Numeric Errors">
         <rule>
-            <!-- Applicable for C and C++ -->
             <name>Integer Overflow or Wraparound</name>
-            <regex><![CDATA[\b(int|short|unsigned)\s+\w+\s*=\s*\w+\s*\+\s*(\d{5,}|INT_MAX|UINT_MAX);]]></regex>
-            <rdl><![CDATA[[FLAG:\b(int|short|unsigned)\s+\w+\s*=\s*\w+\s*\+\s*(\d{5,}|INT_MAX|UINT_MAX);][IF(MISSING:INT_MAX|UINT_MAX|__builtin_add_overflow|SafeAdd|checked_add|overflow|bounds)]]]></rdl>
+            <regex>\b(int|short|unsigned)\s+\w+\s*=\s*\w+\s*\+\s*(\d{5,}|INT_MAX|UINT_MAX);</regex>
+            <rdl_ref>logic/cpp/core/integer_overflow_or_wraparound.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -260,10 +247,9 @@
     </category>
     <category name="Type Safety and Casting">
         <rule>
-            <!-- Applicable for C++ -->
             <name>Unsafe Type Conversion: reinterpret_cast</name>
-            <regex><![CDATA[\breinterpret_cast<[^>]+>\(]]></regex>
-            <rdl><![CDATA[[FLAG:\breinterpret_cast<[^>]+>\(][IF(MISSING:static_assert|static_cast|bit_cast|is_trivially_copyable)]]]></rdl>
+            <regex>\breinterpret_cast&lt;[^&gt;]+&gt;\(</regex>
+            <rdl_ref>logic/cpp/core/unsafe_type_conversion_reinterpret_cast.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -280,10 +266,9 @@
     </category>
     <category name="Exception Safety and Resource Management">
         <rule>
-            <!-- Applicable for C++ -->
             <name>Resource Leak on Exception</name>
-            <regex><![CDATA[\btry\s*{[^}]*new\s+\w+]]></regex>
-            <rdl><![CDATA[[FLAG:\btry\s*{[^}]*new\s+\w+][IF(MISSING:unique_ptr|shared_ptr|RAII|catch\s*\(std::bad_alloc)]]]></rdl>
+            <regex>\btry\s*{[^}]*new\s+\w+</regex>
+            <rdl_ref>logic/cpp/core/resource_leak_on_exception.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -300,10 +285,9 @@
     </category>
     <category name="File Handling and Permissions">
         <rule>
-            <!-- Applicable for C++ -->
             <name>Unsafe File Creation with Incorrect Permissions</name>
-            <regex><![CDATA[\bstd::ofstream\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\bstd::ofstream\s*\(][IF(MISSING:umask|S_IRUSR|S_IWUSR|0600|0640|0644)]]]></rdl>
+            <regex>\bstd::ofstream\s*\(</regex>
+            <rdl_ref>logic/cpp/core/unsafe_file_creation_with_incorrect_permissions.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -318,10 +302,9 @@
             <reviewer>Ensure that files are created with correct permissions to prevent unauthorized access to sensitive data. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
-            <!-- Applicable for C++ -->
             <name>Unsafe File Handling: Insecure File Path Usage</name>
-            <regex><![CDATA[\b(?:ifstream|ofstream|fstream)\b.*\.open\s*\(.*\)]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:ifstream|ofstream|fstream)\b.*\.open\s*\(.*\)][IF(MISSING:validate|sanitize|canonical|realpath|filesystem::path)]]]></rdl>
+            <regex>\b(?:ifstream|ofstream|fstream)\b.*\.open\s*\(.*\)</regex>
+            <rdl_ref>logic/cpp/core/unsafe_file_handling_insecure_file_path_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -338,10 +321,9 @@
     </category>
     <category name="Format String Vulnerabilities">
         <rule>
-            <!-- Applicable for C++ -->
             <name>Format String Misuse in C++ Streams</name>
-            <regex><![CDATA[\b(std::printf|std::fprintf)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(std::printf|std::fprintf)\s*\(][IF(MISSING:"%s"|"%d"|"%f"|"%i"|"%u"|"%x" && MISSING:const\s+char\s*\*\s*format)]]]></rdl>
+            <regex>\b(std::printf|std::fprintf)\s*\(</regex>
+            <rdl_ref>logic/cpp/core/format_string_misuse_in_c_streams.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -356,10 +338,9 @@
             <reviewer>Check for any direct use of user input in format strings. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
-            <!-- Applicable for C and C++ -->
             <name>Potential Format String Attack</name>
-            <regex><![CDATA[\b(printf|fprintf|sprintf|vsprintf)\s*\(\s*[^"]+\s*,]]></regex>
-            <rdl><![CDATA[[FLAG:\b(printf|fprintf|sprintf|vsprintf)\s*\(\s*[^"]+\s*,][IF(MISSING:"%s"|"%d"|"%f"|"%i"|"%u"|"%x" && MISSING:const\s+char\s*\*\s*format)]]]></rdl>
+            <regex>\b(printf|fprintf|sprintf|vsprintf)\s*\(\s*[^"]+\s*,</regex>
+            <rdl_ref>logic/cpp/core/potential_format_string_attack.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -376,10 +357,9 @@
     </category>
     <category name="Privilege Management">
         <rule>
-            <!-- Applicable for C and C++ -->
             <name>Insecure Handling of Privileged Operations</name>
-            <regex><![CDATA[\b(setuid|setgid|initgroups)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(setuid|setgid|initgroups)\s*\(][IF(MISSING:if\s*\(|==\s*-1|!=\s*0|perror|strerror|errno)]]]></rdl>
+            <regex>\b(setuid|setgid|initgroups)\s*\(</regex>
+            <rdl_ref>logic/cpp/core/insecure_handling_of_privileged_operations.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -396,10 +376,9 @@
     </category>
     <category name="Process Environment Issues">
         <rule>
-            <!-- Applicable for C and C++ -->
             <name>Unsafe Use of Environment Variables</name>
-            <regex><![CDATA[\b(std::getenv)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(std::getenv)\s*\(][IF(MISSING:validate|sanitize|allowlist|whitelist|check\s*\(|strlen|strnlen)]]]></rdl>
+            <regex>\b(std::getenv)\s*\(</regex>
+            <rdl_ref>logic/cpp/core/unsafe_use_of_environment_variables.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -416,10 +395,9 @@
     </category>
     <category name="Sensitive Information Handling">
         <rule>
-            <!-- Applicable for C++, but concepts are relevant in C -->
             <name>Insecure Handling of Sensitive Data</name>
-            <regex><![CDATA[\b(memset|mlock|setrlimit|unlink|remove|std::string)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(memset|mlock|setrlimit|unlink|remove|std::string)\s*\(][IF(MISSING:memset\s*\(|SecureZeroMemory|explicit_bzero|sodium_memzero|encrypt|cipher|redact && MISSING:test|example)]]]></rdl>
+            <regex>\b(memset|mlock|setrlimit|unlink|remove|std::string)\s*\(</regex>
+            <rdl_ref>logic/cpp/core/insecure_handling_of_sensitive_data.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -436,10 +414,9 @@
     </category>
     <category name="Concurrency and Race Conditions">
         <rule>
-            <!-- Applicable for C++ code using std::thread -->
             <name>Race Condition: std::thread without mutex</name>
-            <regex><![CDATA[\bstd::thread\b\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\bstd::thread\b\s*\(][IF(MISSING:std::mutex|std::atomic|std::lock_guard|std::unique_lock|std::shared_mutex|std::condition_variable)]]]></rdl>
+            <regex>\bstd::thread\b\s*\(</regex>
+            <rdl_ref>logic/cpp/core/race_condition_std_thread_without_mutex.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -454,10 +431,9 @@
             <reviewer>Reviewers should ensure that appropriate synchronization primitives, such as mutexes or atomic variables, are used with `std::thread` to avoid race conditions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
-            <!-- Applicable for C and C++ code using pthreads -->
             <name>Race Condition with Shared Resource</name>
-            <regex><![CDATA[\bpthread_create\s*\(.*\);\s*.*\s*=.*shared_var]]></regex>
-            <rdl><![CDATA[[FLAG:\bpthread_create\s*\(.*\);\s*.*\s*=.*shared_var][IF(MISSING:mutex|lock|atomic|pthread_mutex|synchronized|volatile\s+std::atomic|std::mutex|__sync_|std::lock_guard)]]]></rdl>
+            <regex>\bpthread_create\s*\(.*\);\s*.*\s*=.*shared_var</regex>
+            <rdl_ref>logic/cpp/core/race_condition_with_shared_resource.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -474,10 +450,9 @@
     </category>
     <category name="Declarations and Initialization">
         <rule>
-            <!-- Applicable for C++ -->
             <name>C-style Variadic Functions: Potential for Type Safety Issues</name>
-            <regex><![CDATA[\b(__attribute__\s*\(\s*format\s*\(\s*__variadic\s*,)]]></regex>
-            <rdl><![CDATA[[FLAG:\b(__attribute__\s*\(\s*format\s*\(\s*__variadic\s*,)][IF(PRESENT:va_list|va_start|va_arg|va_end && MISSING:vsnprintf|type_safe|fmt::|std::format && MISSING:test|example)]]]></rdl>
+            <regex>\b(__attribute__\s*\(\s*format\s*\(\s*__variadic\s*,)</regex>
+            <rdl_ref>logic/cpp/core/c_style_variadic_functions_potential_for_type_safety_issues.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -492,10 +467,9 @@
             <reviewer>Investigate the use of variadic functions and assess their impact on type safety and security. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
-            <!-- Applicable for C++ -->
             <name>Information Leakage Across Trust Boundaries: Security Risk</name>
-            <regex><![CDATA[\bclass\s+\w+\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\bclass\s+\w+\s*\(][IF(MISSING:memset\s*\(|sanitize|redact|encrypt|mask && MISSING:test|example)]]]></rdl>
+            <regex>\bclass\s+\w+\s*\(</regex>
+            <rdl_ref>logic/cpp/core/information_leakage_across_trust_boundaries_security_risk.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -510,10 +484,9 @@
             <reviewer>Investigate class interfaces for potential information leakage that could be exploited. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
-            <!-- Applicable for C++ -->
             <name>Static Object Initialization Cycles: Undefined Behavior Risk</name>
-            <regex><![CDATA[\bstatic\s+\w+\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\bstatic\s+\w+\s*\(][IF(PRESENT:static\s+\w+.*=\s*\w+::|static\s+\w+.*getInstance\(\)|Singleton && MISSING:constexpr|constinit|test|example)]]]></rdl>
+            <regex>\bstatic\s+\w+\s*\(</regex>
+            <rdl_ref>logic/cpp/core/static_object_initialization_cycles_undefined_behavior_risk.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -528,10 +501,9 @@
             <reviewer>Investigate static object initializations for potential cycles that could lead to undefined behavior. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
-            <!-- Applicable for C++ -->
             <name>Exceptions in Destructors: Risk of Unhandled Behavior</name>
-            <regex><![CDATA[\bthrow\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\bthrow\s*\(][IF(PRESENT:~\w+\s*\(\s*\)\s*\{|~\w+\s*\(\s*\)\s*noexcept && MISSING:noexcept|try\s*\{|catch\s*\(|std::terminate)]]]></rdl>
+            <regex>\bthrow\s*\(</regex>
+            <rdl_ref>logic/cpp/core/exceptions_in_destructors_risk_of_unhandled_behavior.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -546,10 +518,9 @@
             <reviewer>Investigate destructors that may throw exceptions, ensuring proper handling to avoid security issues. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
-            <!-- Applicable for C and C++ -->
             <name>Information Leakage with Structures: Security Concern</name>
-            <regex><![CDATA[\bstruct\s+\w+\s*\{]]></regex>
-            <rdl><![CDATA[[FLAG:\bstruct\s+\w+\s*\{][IF(PRESENT:struct\s+\w+.*\{.*\}|memcpy\s*\(|send\s*\( && MISSING:memset\s*\(|SecureZeroMemory|redact|sanitize && MISSING:test|example)]]]></rdl>
+            <regex>\bstruct\s+\w+\s*\{</regex>
+            <rdl_ref>logic/cpp/core/information_leakage_with_structures_security_concern.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -566,10 +537,9 @@
     </category>
     <category name="Compiler and Build Configuration Issues">
         <rule>
-            <!-- Applicable for C++ -->
             <name>Missing OS Runtime Security Mitigation Flags in Binaries</name>
-            <regex><![CDATA[/NXCOMPAT|/DYNAMICBASE|/GS|/guard:cf]]></regex>
-            <rdl><![CDATA[[FLAG:/NXCOMPAT|/DYNAMICBASE|/GS|/guard:cf][IF(PRESENT:CFLAGS|LDFLAGS|cmake_minimum_required|add_compile_options|target_compile_options && MISSING:-fstack-protector|-D_FORTIFY_SOURCE|-pie|-fPIE|-Wl.*now|-Wl.*relro)]]]></rdl>
+            <regex>/NXCOMPAT|/DYNAMICBASE|/GS|/guard:cf</regex>
+            <rdl_ref>logic/cpp/core/missing_os_runtime_security_mitigation_flags_in_binaries.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -584,10 +554,9 @@
             <reviewer>Ensure these flags are present in build configurations. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
-            <!-- Applicable for C++ -->
             <name>Insufficient Code Provenance Guarantees in Build Configuration</name>
-            <regex><![CDATA[/ZH:SHA_SHA256|/Zi|/SOURCELINK]]></regex>
-            <rdl><![CDATA[[FLAG:/ZH:SHA_SHA256|/Zi|/SOURCELINK][IF(PRESENT:FetchContent_Declare|ExternalProject_Add|find_package|add_subdirectory|pkg_check_modules && MISSING:DOWNLOAD_EXTRACT_TIMESTAMP|GIT_TAG.*[a-f0-9]{40}|URL_HASH|SHA256|verify)]]]></rdl>
+            <regex>/ZH:SHA_SHA256|/Zi|/SOURCELINK</regex>
+            <rdl_ref>logic/cpp/core/insufficient_code_provenance_guarantees_in_build_configuration.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

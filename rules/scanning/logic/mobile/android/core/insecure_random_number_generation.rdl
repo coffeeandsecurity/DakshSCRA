@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bnew\s+Random\s*\(\s*\)|\bMath\.random\s*\(\s*\)
+WHEN EXPR PRESENT:token|key|secret|nonce|session|otp|password|salt && MISSING:SecureRandom
+REPORT AS area_of_interest
+REASON Detects use of non-cryptographic random number generators in security-sensitive contexts.
+TRACE Externalized mobile rule logic for Insecure Random Number Generation.

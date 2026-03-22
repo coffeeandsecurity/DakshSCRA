@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(system|popen|execv|execl)\s*\(
+WHEN EXPR MISSING:validate|sanitize|allowlist
+REPORT AS area_of_interest
+REASON Detects command execution APIs requiring strict input control review.
+TRACE Externalized rule logic for Freertos Command Execution Sink.

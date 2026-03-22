@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT LdapConnection\s*\(|new\s+LdapConnection
+WHEN EXPR PRESENT:Request\.|QueryString|Form|userInput|\+ && MISSING:EscapeLdapFilter|AntiXss\.LdapFilterEncode
+REPORT AS area_of_interest
+REASON Detects LdapConnection usage in .NET where search queries may use unvalidated user input.
+TRACE Externalized rule logic for LDAP Injection: LdapConnection Bind or Search.

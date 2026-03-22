@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (Runtime(\s)*\.getRuntime(\s)*(\.|->)exec|ProcessBuilder(\s)*(\.|->)start)
+WHEN EXPR PRESENT:(getParameter|requestParameters|System\.getProperty|args\[) && MISSING:(allowlist|whitelist)
+REPORT AS area_of_interest
+REASON Detects potential command injection vulnerabilities in Java code.
+TRACE Externalized rule logic for Command Injection.

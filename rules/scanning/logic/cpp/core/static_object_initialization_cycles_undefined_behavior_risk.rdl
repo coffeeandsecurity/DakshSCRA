@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bstatic\s+\w+\s*\(
+WHEN EXPR PRESENT:static\s+\w+.*=\s*\w+::|static\s+\w+.*getInstance\(\)|Singleton && MISSING:constexpr|constinit|test|example
+REPORT AS area_of_interest
+REASON Detects potential cycles during the initialization of static objects, which can lead to undefined behavior.
+TRACE Externalized rule logic for Static Object Initialization Cycles: Undefined Behavior Risk.

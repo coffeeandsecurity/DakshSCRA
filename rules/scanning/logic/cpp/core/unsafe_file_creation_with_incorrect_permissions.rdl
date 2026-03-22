@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bstd::ofstream\s*\(
+WHEN EXPR MISSING:umask|S_IRUSR|S_IWUSR|0600|0640|0644
+REPORT AS area_of_interest
+REASON Detects the use of `std::ofstream` for file creation without specifying secure permissions.
+TRACE Externalized rule logic for Unsafe File Creation with Incorrect Permissions.

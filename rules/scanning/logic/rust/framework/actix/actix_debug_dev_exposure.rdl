@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT RUST_LOG\s*=\s*"debug"|env_logger::init\(\)
+WHEN EXPR MISSING:release|production
+REPORT AS area_of_interest
+REASON Detects potential debug logging exposure points requiring review.
+TRACE Externalized rule logic for Actix Debug/Dev Exposure.

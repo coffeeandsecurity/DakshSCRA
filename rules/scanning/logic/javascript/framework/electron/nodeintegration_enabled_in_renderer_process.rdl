@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT nodeIntegration\s*:\s*true
+WHEN EXPR MISSING:contextIsolation:\s*true|preload|sandbox:\s*true
+REPORT AS area_of_interest
+REASON Detects Electron BrowserWindow configurations with nodeIntegration enabled.
+TRACE Externalized rule logic for nodeIntegration Enabled in Renderer Process.

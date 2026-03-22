@@ -2,8 +2,8 @@
     <category name="Authentication or Authorization Functionalities">
         <rule>
             <name>Authentication Modules</name>
-            <regex><![CDATA[(?i)\b(Login|authenticate|authenticating|authenticated|oauth|jwt)\b]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\b(login|authenticate|oauth|jwt)\b][IF(PRESENT:(?i)\b(auth|login|token|session|credential)\b && MISSING:(?i)\b(readme|changelog|example|sample|docs?|license|copyright|third[-_ ]party)\b)]]]></rdl>
+            <regex>(?i)\b(Login|authenticate|authenticating|authenticated|oauth|jwt)\b</regex>
+            <rdl_ref>logic/common/core/authentication_modules.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>Authorization Modules</name>
-            <regex><![CDATA[(?i)\b(authoriz(e|ing|ed)|access_control|rbac|abac|acl)\b]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\b(authorize|access_control|rbac|abac|acl)\b][IF(PRESENT:(?i)\b(role|permission|policy|access|authorize)\b && MISSING:(?i)\b(readme|changelog|example|sample|docs?)\b)]]]></rdl>
+            <regex>(?i)\b(authoriz(e|ing|ed)|access_control|rbac|abac|acl)\b</regex>
+            <rdl_ref>logic/common/core/authorization_modules.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -38,8 +38,8 @@
     <category name="Privileged User or Management Functionalities">
         <rule>
             <name>Admin Modules/Section</name>
-            <regex><![CDATA[(?i)\b(admin_func|admin_page|admin_login|administrator|admin_portal|admin_module|admin_interface)\b]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\b(admin_login|admin_portal|admin_module|admin_interface|administrator)\b][IF(PRESENT:(?i)\b(auth|role|permission|access)\b && MISSING:(?i)\b(readme|changelog|example|sample|docs?)\b)]]]></rdl>
+            <regex>(?i)\b(admin_func|admin_page|admin_login|administrator|admin_portal|admin_module|admin_interface)\b</regex>
+            <rdl_ref>logic/common/core/admin_modules_section.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -57,8 +57,8 @@
     <category name="Commonly Targeted Functionalities">
         <rule>
             <name>File Upload Functionality</name>
-            <regex><![CDATA[(?i)(file\s*upload|file\s*input|upload\s*file|upload[_-]handler|upload[_-]service|upload[_-]controller|upload[_-]module)(?!.*\b(secure|protected|restricted)\b)]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\bupload\b][IF(PRESENT:(?i)\b(file|multipart|mime|extension|content-type)\b && MISSING:(?i)\b(secure|protected|restricted|virus|clamav)\b)]]]></rdl>
+            <regex>(?i)(file\s*upload|file\s*input|upload\s*file|upload[_-]handler|upload[_-]service|upload[_-]controller|upload[_-]module)(?!.*\b(secure|protected|restricted)\b)</regex>
+            <rdl_ref>logic/common/core/file_upload_functionality.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -76,8 +76,8 @@
     <category name="Hardcoded Secrets or Sensitive Info">
         <rule>
             <name>Password</name>
-            <regex><![CDATA[(?i)\b(password|pwd|passwd)\b\s*[:=]\s*(?:["'][^"']{6,}["']|[A-Za-z0-9_-]{8,})]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\b(password|pwd|passwd)\b\s*[:=]][IF(MISSING:(?i)\b(example|sample|dummy|test|placeholder|mock|changeme|default)\b)]]]></rdl>
+            <regex>(?i)\b(password|pwd|passwd)\b\s*[:=]\s*(?:["'][^"']{6,}["']|[A-Za-z0-9_-]{8,})</regex>
+            <rdl_ref>logic/common/core/password.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -94,8 +94,8 @@
         </rule>
         <rule>
             <name>Server-side Secrets Handling</name>
-            <regex><![CDATA[(?i)\b(apikey|api[-_]?key|secret|token|access_token|auth_token|client_secret|private_key|encryption_key|db_password|security_key|session_key|service_account_key|passphrase|cert_key|app_secret|api_secret|jwt_secret)\b\s*[:=]\s*["'][^"']{8,}["']]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\b(apikey|api(?:-|_)?key|secret|token|access_token|auth_token|client_secret|private_key|encryption_key|db_password|security_key|session_key|service_account_key|passphrase|cert_key|app_secret|api_secret|jwt_secret)\b\s*[:=]\s*["'][^"']{8,}["']][IF(MISSING:(?i)\b(example|sample|dummy|test|placeholder|mock|getenv|env\(|secretsmanager|vault|kms|buildconfig|gradle\.properties)\b)]]]></rdl>
+            <regex>(?i)\b(apikey|api[-_]?key|secret|token|access_token|auth_token|client_secret|private_key|encryption_key|db_password|security_key|session_key|service_account_key|passphrase|cert_key|app_secret|api_secret|jwt_secret)\b\s*[:=]\s*["'][^"']{8,}["']</regex>
+            <rdl_ref>logic/common/core/server_side_secrets_handling.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -111,8 +111,8 @@
         </rule>
         <rule>
             <name>Credit Card</name>
-            <regex><![CDATA[((\D(6011|5[1-5]\d{2}|4\d{3}|3\d{3})\d{11,12}\D)|(^(6011|5[1-5]\d{2}|4\d{3}|3\d{3})\d{11,12}\D))]]></regex>
-            <rdl><![CDATA[[FLAG:(?:6011|5\d\d\d|4\d\d\d|3\d\d\d)\d{11,12}][IF(PRESENT:(?i)\b(card|credit|payment|pan|cvv)\b)]]]></rdl>
+            <regex>((\D(6011|5[1-5]\d{2}|4\d{3}|3\d{3})\d{11,12}\D)|(^(6011|5[1-5]\d{2}|4\d{3}|3\d{3})\d{11,12}\D))</regex>
+            <rdl_ref>logic/common/core/credit_card.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -129,7 +129,7 @@
         <rule>
             <name>Detect RSA Private Keys</name>
             <regex>BEGIN RSA PRIVATE KEY</regex>
-            <rdl><![CDATA[[FLAG:BEGIN RSA PRIVATE KEY][IF(MISSING:example|sample|test|dummy|placeholder|README|\.md:)]]]></rdl>
+            <rdl_ref>logic/common/core/detect_rsa_private_keys.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -147,8 +147,8 @@
     <category name="Information Disclosure">
         <rule>
             <name>Insecure HTTP Communication</name>
-            <regex><![CDATA[(?i)\b(?:url|uri|endpoint|baseurl|server|host|href|src|fetch|axios|httpclient|xmlhttprequest|request|location|window\.open|redirect)[^\n]{0,220}http://]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)http://][IF(PRESENT:(?i)\b(url|uri|endpoint|fetch|axios|request|httpclient|redirect|href|src)\b && MISSING:(?i)\b(https://|apache\.org/licenses|opensource\.org/licenses|w3\.org|xmlns=|localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+)\b)]]]></rdl>
+            <regex>(?i)\b(?:url|uri|endpoint|baseurl|server|host|href|src|fetch|axios|httpclient|xmlhttprequest|request|location|window\.open|redirect)[^\n]{0,220}http://</regex>
+            <rdl_ref>logic/common/core/insecure_http_communication.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -165,8 +165,8 @@
         </rule>
         <rule>
             <name>Sensitive Debug Information</name>
-            <regex><![CDATA[(?i)\.debug\s*=\s*True|\$debug\s*=\s*true|DEBUG\s*=\s*True|IsDebuggingEnabled\s*=\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\.debug\s*=\s*True|\$debug\s*=\s*true|DEBUG\s*=\s*True|IsDebuggingEnabled\s*=\s*true][IF(MISSING:(?i)\b(release|production)\b)]]]></rdl>
+            <regex>(?i)\.debug\s*=\s*True|\$debug\s*=\s*true|DEBUG\s*=\s*True|IsDebuggingEnabled\s*=\s*true</regex>
+            <rdl_ref>logic/common/core/sensitive_debug_information.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -184,8 +184,8 @@
     <category name="Dynamic SQL Queries">
         <rule>
             <name>Insecure SQL Query: Unsafe String Concatenation</name>
-            <regex><![CDATA[(?i)SELECT\s+\*?\s+FROM\s+([^\s;]+)\s+WHERE\s+([^\s;]+)\s*=\s*'\s*\+\s*([^;]+)\s*\+\s*'\s*;]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\bSELECT\b.*\bFROM\b.*\bWHERE\b.*\+.*\+][IF(PRESENT:(?i)\b(input|request|param|query|\$_GET|\$_POST|\$_REQUEST)\b)]]]></rdl>
+            <regex>(?i)SELECT\s+\*?\s+FROM\s+([^\s;]+)\s+WHERE\s+([^\s;]+)\s*=\s*'\s*\+\s*([^;]+)\s*\+\s*'\s*;</regex>
+            <rdl_ref>logic/common/core/insecure_sql_query_unsafe_string_concatenation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -201,8 +201,8 @@
         </rule>
         <rule>
             <name>SQL Query: SELECT Statement with ORDER BY Clause</name>
-            <regex><![CDATA[(SELECT).*(ORDER BY).*]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\bSELECT\b.*\bORDER BY\b][IF(PRESENT:(?i)(\+|\$\{|format\(|sprintf\(|f\"|f'|request|params|query|input) && MISSING:(?i)(prepare|bind|parameterized|replacements|sqlparameter))]]]></rdl>
+            <regex>(SELECT).*(ORDER BY).*</regex>
+            <rdl_ref>logic/common/core/sql_query_select_statement_with_order_by_clause.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -218,8 +218,8 @@
         </rule>
         <rule>
             <name>SQL Query: SELECT Statement with ORDER BY and @InputName</name>
-            <regex><![CDATA[(SELECT).*(ORDER BY).*\s(\@[a-zA-Z]+)]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\bSELECT\b.*\bORDER BY\b.*\s@\w+][IF(PRESENT:(?i)\b(exec|sp_executesql|query|command)\b)]]]></rdl>
+            <regex>(SELECT).*(ORDER BY).*\s(\@[a-zA-Z]+)</regex>
+            <rdl_ref>logic/common/core/sql_query_select_statement_with_order_by_and_inputname.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -235,8 +235,8 @@
         </rule>
         <rule>
             <name>SQL Query: Using INSERT, UPDATE, DELETE, or DROP</name>
-            <regex><![CDATA[(INSERT|UPDATE|DELETE|DROP).*\$\{[a-zA-Z0-9_]+\}.*]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(INSERT|UPDATE|DELETE|DROP).*\$\{\w+\}.*][IF(PRESENT:(?i)\b(query|execute|statement|sql)\b)]]]></rdl>
+            <regex>(INSERT|UPDATE|DELETE|DROP).*\$\{[a-zA-Z0-9_]+\}.*</regex>
+            <rdl_ref>logic/common/core/sql_query_using_insert_update_delete_or_drop.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -254,8 +254,8 @@
     <category name="Trust-boundary Validation or 3rd-Party Interactions">
         <rule>
             <name>IPv4 / IPv6 Address</name>
-            <regex><![CDATA[(?ix)\b(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\b|(?<![A-Za-z0-9_:.])(?=(?:[0-9A-Fa-f]{1,4}:){4,}[0-9A-Fa-f:]*|[0-9A-Fa-f:]*::[0-9A-Fa-f:]*|[0-9A-Fa-f:]*[A-Fa-f][0-9A-Fa-f:]*|[0-9A-Fa-f:]*:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})(?:(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,7}:|(?:[0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,5}(?::[0-9A-Fa-f]{1,4}){1,2}|(?:[0-9A-Fa-f]{1,4}:){1,4}(?::[0-9A-Fa-f]{1,4}){1,3}|(?:[0-9A-Fa-f]{1,4}:){1,3}(?::[0-9A-Fa-f]{1,4}){1,4}|(?:[0-9A-Fa-f]{1,4}:){1,2}(?::[0-9A-Fa-f]{1,4}){1,5}|[0-9A-Fa-f]{1,4}:(?:(?::[0-9A-Fa-f]{1,4}){1,6})|:(?:(?::[0-9A-Fa-f]{1,4}){1,7}|:)|(?:[0-9A-Fa-f]{1,4}:){1,4}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})(?![A-Za-z0-9_:.])]]></regex>
-            <rdl><![CDATA[[FLAG:(?ix)\b(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\b|(?<![A-Za-z0-9_:.])(?=(?:[0-9A-Fa-f]{1,4}:){4,}[0-9A-Fa-f:]*|[0-9A-Fa-f:]*::[0-9A-Fa-f:]*|[0-9A-Fa-f:]*[A-Fa-f][0-9A-Fa-f:]*|[0-9A-Fa-f:]*:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})(?:(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,7}:|(?:[0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,5}(?::[0-9A-Fa-f]{1,4}){1,2}|(?:[0-9A-Fa-f]{1,4}:){1,4}(?::[0-9A-Fa-f]{1,4}){1,3}|(?:[0-9A-Fa-f]{1,4}:){1,3}(?::[0-9A-Fa-f]{1,4}){1,4}|(?:[0-9A-Fa-f]{1,4}:){1,2}(?::[0-9A-Fa-f]{1,4}){1,5}|[0-9A-Fa-f]{1,4}:(?:(?::[0-9A-Fa-f]{1,4}){1,6})|:(?:(?::[0-9A-Fa-f]{1,4}){1,7}|:)|(?:[0-9A-Fa-f]{1,4}:){1,4}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})(?![A-Za-z0-9_:.]))][IF(PRESENT:(?i)\b(host|server|endpoint|baseurl|api|connect|socket|dns|proxy|url|uri|listen|bind|gateway|peer|target|remote)\b)]]></rdl>
+            <regex>(?ix)\b(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\b|(?&lt;![A-Za-z0-9_:.])(?=(?:[0-9A-Fa-f]{1,4}:){4,}[0-9A-Fa-f:]*|[0-9A-Fa-f:]*::[0-9A-Fa-f:]*|[0-9A-Fa-f:]*[A-Fa-f][0-9A-Fa-f:]*|[0-9A-Fa-f:]*:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})(?:(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,7}:|(?:[0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,5}(?::[0-9A-Fa-f]{1,4}){1,2}|(?:[0-9A-Fa-f]{1,4}:){1,4}(?::[0-9A-Fa-f]{1,4}){1,3}|(?:[0-9A-Fa-f]{1,4}:){1,3}(?::[0-9A-Fa-f]{1,4}){1,4}|(?:[0-9A-Fa-f]{1,4}:){1,2}(?::[0-9A-Fa-f]{1,4}){1,5}|[0-9A-Fa-f]{1,4}:(?:(?::[0-9A-Fa-f]{1,4}){1,6})|:(?:(?::[0-9A-Fa-f]{1,4}){1,7})|(?:[0-9A-Fa-f]{1,4}:){1,4}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})(?![A-Za-z0-9_:.])</regex>
+            <rdl_ref>logic/common/core/ipv4_ipv6_address.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -264,7 +264,7 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <exclude><![CDATA[(?ix)\b\w*(?:version|release|dotnet|oid|urn|mozilla|useragent)\w*\b|::class\b|::class\.java\b|\b(?:xmlns|schemaLocation|xsi:)\b|::[A-Za-z_][A-Za-z0-9_]*]]></exclude>
+            <exclude>(?ix)\b\w*(?:version|release|dotnet|oid|urn|mozilla|useragent)\w*\b|::class\b|::class\.java\b|\b(?:xmlns|schemaLocation|xsi:)\b|::[A-Za-z_][A-Za-z0-9_]*|\bseparator\b\s*(?:=&gt;|:)\s*['"]\s*::\s*['"]|['"]\s*::\s*['"]\s*(?:\.|,|\)|;|=&gt;)</exclude>
             <rule_desc>Detects potential IPv4 or IPv6 addresses in the code.</rule_desc>
             <vuln_desc>If this rule matches, it indicates the potential presence of IP addresses in the code, which can lead to security risks if not handled properly.</vuln_desc>
             <developer>Carefully validate and sanitize input related to IP addresses to prevent security vulnerabilities such as IP spoofing or injection attacks.</developer>
@@ -272,8 +272,8 @@
         </rule>
         <rule>
             <name>Trusted Or Untrusted URLs</name>
-            <regex><![CDATA[(?i)(?:\b(?:redirect|forward|sendRedirect|Response\.Redirect|res\.redirect|window\.location|location\.href|location\.replace|window\.open)\b[^\n]{0,220}https?://|\b(?:fetch|axios|httpclient|xmlhttprequest|request)\b[^\n]{0,220}(https?://|\+|\$\{)|\b(?:url|uri|endpoint|baseurl|api[_-]?url|callback[_-]?url|redirect[_-]?url|host|server)\b\s*[:=]\s*["']?\s*https?://)]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)https?://][IF(PRESENT:(?i)\b(redirect|forward|window\.location|location\.href|window\.open|fetch|axios|httpclient|request|url|uri|endpoint)\b && PRESENT:(?i)(\+|\$\{|request|params|query|input|user) && MISSING:(?i)\b(allowlist|whitelist|trusted|isTrusted|validateUrl|same-origin)\b)]]]></rdl>
+            <regex>(?i)(?:\b(?:redirect|forward|sendRedirect|Response\.Redirect|res\.redirect|window\.location|location\.href|location\.replace|window\.open)\b[^\n]{0,220}https?://|\b(?:fetch|axios|httpclient|xmlhttprequest|request)\b[^\n]{0,220}(https?://|\+|\$\{)|\b(?:url|uri|endpoint|baseurl|api[_-]?url|callback[_-]?url|redirect[_-]?url|host|server)\b\s*[:=]\s*["']?\s*https?://)</regex>
+            <rdl_ref>logic/common/core/trusted_or_untrusted_urls.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -290,8 +290,8 @@
         </rule>
         <rule>
             <name>Unvalidated Redirects and Forwards</name>
-            <regex><![CDATA[(?i)\b(?:redirect|forward|sendRedirect|Response\.Redirect|res\.redirect|window\.location|location\.href)\s*(?:\(|=)]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\b(redirect|forward|sendRedirect|Response\.Redirect|res\.redirect|window\.location|location\.href)\s*(\(|=)][IF(MISSING:(?i)\b(allowlist|whitelist|isLocalUrl|startsWith\(\s*['\"]/|same-origin)\b)]]]></rdl>
+            <regex>(?i)\b(?:redirect|forward|sendRedirect|Response\.Redirect|res\.redirect|window\.location|location\.href)\s*(?:\(|=)</regex>
+            <rdl_ref>logic/common/core/unvalidated_redirects_and_forwards.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -310,8 +310,8 @@
     <category name="APIs and Endpoints">
         <rule>
             <name>API Endpoint Detection</name>
-            <regex><![CDATA[(["'])(\/\w+\/{[^{}]+})\1]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)/\w+/\{\w+\}][IF(PRESENT:(?i)\b(route|router|controller|handler|get|post|put|delete)\b)]]]></rdl>
+            <regex>(["'])(\/\w+\/{[^{}]+})\1</regex>
+            <rdl_ref>logic/common/core/api_endpoint_detection.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -330,8 +330,8 @@
     <category name="Code Quality and Documentation">
         <rule>
             <name>TODO Comments</name>
-            <regex><![CDATA[(?i)TODO(\s?)]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)TODO(\s?)][IF(PRESENT:(?i)\b(security|auth|password|token|encrypt|sql|xss|csrf)\b && MISSING:(?i)\b(done|fixed|resolved|wontfix|false positive)\b)]]]></rdl>
+            <regex>(?i)TODO(\s?)</regex>
+            <rdl_ref>logic/common/core/todo_comments.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -347,8 +347,8 @@
         </rule>
         <rule>
             <name>Monkey Patched Code</name>
-            <regex><![CDATA[(?i)(monkey_patch|patched_code|custom_patch)[\s\S]*?\(\s*\*?\w+\s*\*?\)]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(monkey_patch|patched_code|custom_patch)\s*\(][IF(MISSING:(?i)\b(test|spec|fixture|mock)\b)]]]></rdl>
+            <regex>(?i)(monkey_patch|patched_code|custom_patch)[\s\S]*?\(\s*\*?\w+\s*\*?\)</regex>
+            <rdl_ref>logic/common/core/monkey_patched_code.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -366,8 +366,8 @@
     <category name="Cryptographic Issues">
         <rule>
             <name>Insecure Cryptographic Algorithm</name>
-            <regex><![CDATA[(?i)\b(MD2|MD4|MD5|SHA1|SHA-1|DES|RC2|RC4|RC5|RSA)\b]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\b(MD2|MD4|MD5|SHA1|SHA-1|DES|RC2|RC4|RC5)\b][IF(MISSING:(?i)\b(SHA-256|SHA256|SHA-384|SHA384|SHA-512|SHA512|AES-GCM|AES256)\b)]]]></rdl>
+            <regex>(?i)\b(MD2|MD4|MD5|SHA1|SHA-1|DES|RC2|RC4|RC5|RSA)\b</regex>
+            <rdl_ref>logic/common/core/insecure_cryptographic_algorithm.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -385,8 +385,8 @@
     <category name="Malicious Code or Backdoor Detection">
         <rule>
             <name>Backdoor Entry and Bypass Detection</name>
-            <regex><![CDATA[(?i)\b(backdoor|bypass|sneaky|exploit|unauthorized_access|unauthorized_entry|hidden_entry|stealthy_entry|secret_entry)\b]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)\b(backdoor|bypass|sneaky|exploit|unauthorized_access|unauthorized_entry|hidden_entry|stealthy_entry|secret_entry)\b][IF(MISSING:(?i)\b(example|sample|dummy|test|placeholder|ctf|training)\b)]]]></rdl>
+            <regex>(?i)\b(backdoor|bypass|sneaky|exploit|unauthorized_access|unauthorized_entry|hidden_entry|stealthy_entry|secret_entry)\b</regex>
+            <rdl_ref>logic/common/core/backdoor_entry_and_bypass_detection.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -404,8 +404,8 @@
     <category name="Common Mitigations">
         <rule>
             <name>CAPTCHA Implementation</name>
-            <regex><![CDATA[(?i)(captcha|recaptcha)(\s+(?!secure|strong|reliable|safe)\w+)*]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(captcha|recaptcha)][IF(MISSING:(?i)\b(hcaptcha|recaptcha-enterprise|turnstile)\b)]]]></rdl>
+            <regex>(?i)(captcha|recaptcha)(\s+(?!secure|strong|reliable|safe)\w+)*</regex>
+            <rdl_ref>logic/common/core/captcha_implementation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -421,8 +421,8 @@
         </rule>
         <rule>
             <name>Miscellaneous Webapp Mitigations: CSRF, XSS, SQL Injection</name>
-            <regex><![CDATA[\\S*(CSRF|XSS|SQLi)\\S*(\\.|\\-\\>)(ToLower|ToUpper)\\s*\\]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)(CSRF|XSS|SQLi)][IF(PRESENT:(?i)(ToLower|ToUpper) && MISSING:(?i)(sanitize|escape|encode|prepared|parameterized))]]]></rdl>
+            <regex>\\S*(CSRF|XSS|SQLi)\\S*(\\.|\\-\\&gt;)(ToLower|ToUpper)\\s*\\</regex>
+            <rdl_ref>logic/common/core/miscellaneous_webapp_mitigations_csrf_xss_sql_injection.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

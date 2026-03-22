@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT AllowOrigins\s*:\s*\[\]\s*string\{\s*"\*"\s*\}|AllowOrigins\s*:\s*"\*"
+WHEN EXPR MISSING:AllowOriginFunc|allowedOrigins && PRESENT:AllowOrigins.*"\*"|AllowAnyOrigin
+REPORT AS area_of_interest
+REASON Detects wildcard CORS policies in Go services.
+TRACE Externalized rule logic for Echo Permissive CORS.

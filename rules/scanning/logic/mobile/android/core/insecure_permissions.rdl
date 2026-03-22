@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT android\.permission\.(WRITE_EXTERNAL_STORAGE|READ_EXTERNAL_STORAGE|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION)
+REPORT AS area_of_interest
+REASON Detects insecure permissions that can pose security risks.
+TRACE Externalized mobile rule logic for Insecure Permissions.

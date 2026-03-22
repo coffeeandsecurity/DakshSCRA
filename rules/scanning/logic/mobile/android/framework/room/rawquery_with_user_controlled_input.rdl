@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT @RawQuery|rawQuery\s*\(\s*[^,)]*\+
+WHEN EXPR MISSING:SupportSQLiteQuery|SimpleSQLiteQuery|bindArgs
+REPORT AS area_of_interest
+REASON Detects use of Room @RawQuery or rawQuery() with potential for unsanitized input.
+TRACE Externalized mobile rule logic for RawQuery with User-Controlled Input.

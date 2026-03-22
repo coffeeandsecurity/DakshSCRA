@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT com\.apple\.developer\.associated-domains
+WHEN EXPR PRESENT:com\.apple\.developer\.associated-domains && MISSING:# intentional|# required
+REPORT AS area_of_interest
+REASON Detects associated domains entitlement that requires strict domain ownership and validation.
+TRACE Externalized mobile rule logic for Associated Domains Entitlement Present.

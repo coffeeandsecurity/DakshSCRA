@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(disable|bypass|ignore|suppress|unsafe)\b
+WHEN EXPR PRESENT:(auth|csrf|xss|cors|tls|ssl|verify|validation|sanitize|security) && MISSING:(example|sample|dummy|test|placeholder)
+REPORT AS area_of_interest
+REASON Detects weak or inadequate security mitigations.
+TRACE Externalized rule logic for Weak Mitigation: Using disable|bypass|ignore|suppress|unsafe.

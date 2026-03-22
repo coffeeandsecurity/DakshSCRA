@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT SharedPreferences\.get.*\(".*"
+WHEN EXPR PRESENT:(execute|query|rawQuery|execSQL|Runtime|ProcessBuilder|File\s*\(|URL\s*\() && MISSING:(validate|sanitize|escape|encode)
+REPORT AS area_of_interest
+REASON Identifies the usage of Shared Preferences, which may contain untrusted inputs.
+TRACE Externalized rule logic for Untrusted Inputs: Shared Preferences.

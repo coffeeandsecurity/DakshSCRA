@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT android:contentDescription\s*=\s*["']["']
+WHEN EXPR PRESENT:android:contentDescription\s*=\s*""|android:contentDescription\s*=\s*"@null" && MISSING:android:importantForAccessibility\s*=\s*"no"
+REPORT AS area_of_interest
+REASON Detects UI elements with missing or empty content descriptions.
+TRACE Externalized mobile rule logic for Missing Content Descriptions.

@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \b(strcpy|strcat|sprintf|gets|scanf)\s*\(
+WHEN EXPR MISSING:strlcpy|strlcat|snprintf|strncpy|strncat|_s\b|StringCchCopy|StringCchCat
+REPORT AS area_of_interest
+REASON Detects usage of unsafe functions such as `strcpy()`, `strcat()`, and `sprintf()`.
+TRACE Externalized rule logic for Unsafe String Manipulation: strcpy(), strcat(), sprintf(), etc..

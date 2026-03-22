@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (\b__proto__\b|Object\.prototype\.(?!hasOwnProperty)[a-zA-Z]+\s?=)
+WHEN EXPR MISSING:Object\.freeze|hasOwnProperty|Object\.create\s*\(\s*null|__proto__.*check
+REPORT AS area_of_interest
+REASON Detects potential prototype pollution vulnerabilities.
+TRACE Externalized rule logic for Prototype Pollution.

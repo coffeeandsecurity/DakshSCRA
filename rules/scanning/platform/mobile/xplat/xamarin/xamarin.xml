@@ -2,8 +2,8 @@
     <category name="Framework-Specific Issues - Xamarin/.NET Mobile">
         <rule>
             <name>Insecure Local Storage of Secrets</name>
-            <regex><![CDATA[\b(?:Preferences\.Set|Application\.Current\.Properties\[|SecureStorage\.SetAsync\s*\()]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:Preferences\.Set|Application\.Current\.Properties\[|SecureStorage\.SetAsync\s*\()][IF(PRESENT:Preferences\.Set.*(?:password|token|secret|key|auth|credential)|SecureStorage && MISSING:SecureStorage\.SetAsync|AES|encrypt|Xamarin\.Essentials\.SecureStorage)]]]></rdl>
+            <regex>\b(?:Preferences\.Set|Application\.Current\.Properties\[)</regex>
+            <rdl_ref>logic/mobile/xplat/xamarin/core/insecure_local_storage_of_secrets.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>TLS Certificate Validation Bypass Callback</name>
-            <regex><![CDATA[ServerCertificateCustomValidationCallback\s*=\s*\(.*\)\s*=>\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:ServerCertificateCustomValidationCallback\s*=\s*\(.*\)\s*=>\s*true][IF(MISSING:test|development|localhost|staging|// intentional)]]]></rdl>
+            <regex>ServerCertificateCustomValidationCallback\s*=\s*\(.*\)\s*=&gt;\s*true</regex>
+            <rdl_ref>logic/mobile/xplat/xamarin/core/tls_certificate_validation_bypass_callback.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>WebView JavaScript Enabled</name>
-            <regex><![CDATA[\b(?:WebView|HybridWebView).*?(?:JavaScriptEnabled\s*=\s*true|EnableJavascript\s*=\s*true)]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:WebView|HybridWebView).*?(?:JavaScriptEnabled\s*=\s*true|EnableJavascript\s*=\s*true)][IF(MISSING:ShouldOverrideUrlLoading|NavigationDelegate|allowList|trustedOrigins && MISSING:test|example)]]]></rdl>
+            <regex>\b(?:WebView|HybridWebView).*?(?:JavaScriptEnabled\s*=\s*true|EnableJavascript\s*=\s*true)</regex>
+            <rdl_ref>logic/mobile/xplat/xamarin/core/webview_javascript_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -55,8 +55,8 @@
     <category name="Framework-Specific Security">
         <rule>
             <name>Xamarin Debug Build Marker</name>
-            <regex><![CDATA[\bDEBUG\b|debuggable\s*[:=]\s*true]]></regex>
-            <rdl><![CDATA[[FLAG:\bDEBUG\b|debuggable\s*[:=]\s*true][IF(MISSING:RELEASE)]]]></rdl>
+            <regex>\bDEBUG\b|debuggable\s*[:=]\s*true</regex>
+            <rdl_ref>logic/mobile/xplat/xamarin/core/xamarin_debug_build_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -71,8 +71,8 @@
         </rule>
         <rule>
             <name>Xamarin Certificate Validation Bypass</name>
-            <regex><![CDATA[ServerCertificateCustomValidationCallback\s*=\s*\(.*=>\s*true|ServicePointManager\.ServerCertificateValidationCallback]]></regex>
-            <rdl><![CDATA[[FLAG:ServerCertificateCustomValidationCallback\s*=\s*\(.*=>\s*true|ServicePointManager\.ServerCertificateValidationCallback][IF(MISSING:CertificatePinning|PublicKeyPinning)]]]></rdl>
+            <regex>ServerCertificateCustomValidationCallback\s*=\s*\(.*=&gt;\s*true|ServicePointManager\.ServerCertificateValidationCallback</regex>
+            <rdl_ref>logic/mobile/xplat/xamarin/core/xamarin_certificate_validation_bypass.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -89,7 +89,7 @@
         <rule>
             <name>Xamarin Insecure HTTP Endpoint Usage</name>
             <regex>http://</regex>
-            <rdl><![CDATA[[FLAG:http://][IF(MISSING:https://)]]]></rdl>
+            <rdl_ref>logic/mobile/xplat/xamarin/core/xamarin_insecure_http_endpoint_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -104,8 +104,8 @@
         </rule>
         <rule>
             <name>Xamarin WebView Script Bridge Marker</name>
-            <regex><![CDATA[WebView|EvaluateJavaScriptAsync\(|addJavascriptInterface\(]]></regex>
-            <rdl><![CDATA[[FLAG:WebView|EvaluateJavaScriptAsync\(|addJavascriptInterface\(][IF(MISSING:Navigating\s*\+=)]]]></rdl>
+            <regex>WebView|EvaluateJavaScriptAsync\(|addJavascriptInterface\(</regex>
+            <rdl_ref>logic/mobile/xplat/xamarin/core/xamarin_webview_script_bridge_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -121,8 +121,8 @@
         </rule>
         <rule>
             <name>Xamarin Secret Storage Marker</name>
-            <regex><![CDATA[(Preferences|SecureStorage)\.(Set|SetAsync)\(.*(token|secret|password|apikey)]]></regex>
-            <rdl><![CDATA[[FLAG:(Preferences|SecureStorage)\.(Set|SetAsync)\(.*(token|secret|password|apikey)][IF(MISSING:SecureStorage\.GetAsync)]]]></rdl>
+            <regex>Preferences\.Set\(.*(token|secret|password|apikey)</regex>
+            <rdl_ref>logic/mobile/xplat/xamarin/core/xamarin_secret_storage_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -137,8 +137,8 @@
         </rule>
         <rule>
             <name>Xamarin Hardcoded Secret Marker</name>
-            <regex><![CDATA[(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"]]></regex>
-            <rdl><![CDATA[[FLAG:(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"][IF(MISSING:DEBUG)]]]></rdl>
+            <regex>(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*"[^"]{8,}"</regex>
+            <rdl_ref>logic/mobile/xplat/xamarin/core/xamarin_hardcoded_secret_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -156,8 +156,8 @@
     <category name="Platform-Specific Issues - Android">
         <rule>
             <name>Android Backup Enabled</name>
-            <regex><![CDATA[android:allowBackup\s*=\s*"?(?:true|TRUE)"?]]></regex>
-            <rdl><![CDATA[[FLAG:android:allowBackup\s*=\s*"?(?:true|TRUE)"?][IF(PRESENT:android:allowBackup\s*=\s*"true" && MISSING:android:fullBackupContent|android:dataExtractionRules|backupRules)]]]></rdl>
+            <regex>android:allowBackup\s*=\s*"?(?:true|TRUE)"?</regex>
+            <rdl_ref>logic/mobile/xplat/xamarin/core/android_backup_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -175,8 +175,8 @@
     <category name="Platform-Specific Issues - iOS">
         <rule>
             <name>iOS Keychain Accessibility Too Broad</name>
-            <regex><![CDATA[kSecAttrAccessibleAlways]]></regex>
-            <rdl><![CDATA[[FLAG:kSecAttrAccessibleAlways][IF(PRESENT:kSecAttrAccessibleAlways|kSecAttrAccessibleAlwaysThisDeviceOnly && MISSING:kSecAttrAccessibleWhenUnlocked|kSecAttrAccessibleAfterFirstUnlock)]]]></rdl>
+            <regex>kSecAttrAccessibleAlways</regex>
+            <rdl_ref>logic/mobile/xplat/xamarin/core/ios_keychain_accessibility_too_broad.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>

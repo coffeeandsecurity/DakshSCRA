@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bDEBUG\s*=\s*True\b|FLASK_DEBUG\s*=\s*1|reload\s*=\s*True
+WHEN EXPR MISSING:release|production
+REPORT AS area_of_interest
+REASON Detects framework debug/development mode enabled.
+TRACE Externalized rule logic for Flask Debug Mode Enabled.

@@ -2,8 +2,8 @@
     <category name="Framework-Specific Issues - Alamofire (iOS)">
         <rule>
             <name>ServerTrustEvaluating Disabled with DisabledTrustEvaluator</name>
-            <regex><![CDATA[DisabledTrustEvaluator\s*\(\s*\)|DisabledEvaluation|trustAllCertificates|serverTrustManager\s*=\s*nil]]></regex>
-            <rdl><![CDATA[[FLAG:DisabledTrustEvaluator\s*\(\s*\)|trustAllCertificates|serverTrustManager\s*=\s*nil][IF(MISSING:test|development|localhost|staging|PinnedCertificatesTrustEvaluator|RevocationTrustEvaluator)]]]></rdl>
+            <regex>DisabledTrustEvaluator\s*\(\s*\)|DisabledEvaluation|trustAllCertificates|serverTrustManager\s*=\s*nil</regex>
+            <rdl_ref>logic/mobile/ios/framework/alamofire/servertrustevaluating_disabled_with_disabledtrustevaluator.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -22,8 +22,8 @@
         </rule>
         <rule>
             <name>Alamofire Request Without TLS Pinning</name>
-            <regex><![CDATA[AF\.request\s*\(|Session\.default\s*\.|Alamofire\.request\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:AF\.request\s*\(|Session\.default\s*\.][IF(MISSING:ServerTrustManager|PinnedCertificatesTrustEvaluator|PublicKeysTrustEvaluator)]]]></rdl>
+            <regex>AF\.request\s*\(|Session\.default\s*\.|Alamofire\.request\s*\(</regex>
+            <rdl_ref>logic/mobile/ios/framework/alamofire/alamofire_request_without_tls_pinning.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>

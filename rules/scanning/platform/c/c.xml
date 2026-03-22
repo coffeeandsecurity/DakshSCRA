@@ -2,8 +2,8 @@
     <category name="Untrusted Input Handling and Buffer Overflow">
         <rule>
             <name>Unsafe String Manipulation: strcpy(), strcat(), sprintf(), etc.</name>
-            <regex><![CDATA[\b(strcpy|strcat|sprintf|gets|scanf)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(strcpy|strcat|sprintf|gets|scanf)\s*\(][IF(MISSING:strlcpy|strlcat|snprintf|strncpy|strncat|_s\b|StringCchCopy|StringCchCat)]]]></rdl>
+            <regex>\b(strcpy|strcat|sprintf|gets|scanf)\s*\(</regex>
+            <rdl_ref>logic/c/core/unsafe_string_manipulation_strcpy_strcat_sprintf_etc.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -19,8 +19,8 @@
         </rule>
         <rule>
             <name>Potential Buffer Overflow: strncpy() Misuse</name>
-            <regex><![CDATA[\bstrncpy\s*\(\s*\w+\s*,\s*\w+\s*,\s*\w+\s*\-\s*1\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:\bstrncpy\s*\(\s*\w+\s*,\s*\w+\s*,\s*\w+\s*\-\s*1\s*\)][IF(MISSING:strlcpy|memcpy|snprintf)]]]></rdl>
+            <regex>\bstrncpy\s*\(\s*\w+\s*,\s*\w+\s*,\s*\w+\s*\-\s*1\s*\)</regex>
+            <rdl_ref>logic/c/core/potential_buffer_overflow_strncpy_misuse.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -36,8 +36,8 @@
         </rule>
         <rule>
             <name>Unbounded Memory Allocation</name>
-            <regex><![CDATA[\bmalloc\s*\(\s*[^\)]*user_input]]></regex>
-            <rdl><![CDATA[[FLAG:\bmalloc\s*\(\s*[^\)]*user_input][IF(MISSING:sizeof\s*\(|MAX_SIZE|MAX_LEN|limit|bounds|check)]]]></rdl>
+            <regex>\bmalloc\s*\(\s*[^\)]*user_input</regex>
+            <rdl_ref>logic/c/core/unbounded_memory_allocation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -55,8 +55,8 @@
     <category name="Command Injection">
         <rule>
             <name>Unsafe Execution Functions: system(), exec(), etc.</name>
-            <regex><![CDATA[^\s*(?:int|void|char|size_t|auto)?\s*\*?\s*\w+\s*=\s*\b(system|exec|popen|execl)\s*\(.*\)]]></regex>
-            <rdl><![CDATA[[FLAG:^\s*(?:int|void|char|size_t|auto)?\s*\*?\s*\w+\s*=\s*\b(system|exec|popen|execl)\s*\(.*\)][IF(MISSING:validate|sanitize|allowlist|whitelist|escapeShellArg)]]]></rdl>
+            <regex>^\s*(?:int|void|char|size_t|auto)?\s*\*?\s*\w+\s*=\s*\b(system|exec|popen|execl)\s*\(.*\)</regex>
+            <rdl_ref>logic/c/core/unsafe_execution_functions_system_exec_etc.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -72,8 +72,8 @@
         </rule>
         <rule>
             <name>Use of `system()` with Hardcoded Paths</name>
-            <regex><![CDATA[\bsystem\s*\(\s*["'].*(/bin|/usr/bin)]]></regex>
-            <rdl><![CDATA[[FLAG:\bsystem\s*\(\s*["'].*(/bin|/usr/bin)][IF(MISSING:validate|check|verify && MISSING:test|example|sample)]]]></rdl>
+            <regex>\bsystem\s*\(\s*["'].*(/bin|/usr/bin)</regex>
+            <rdl_ref>logic/c/core/use_of_system_with_hardcoded_paths.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -91,8 +91,8 @@
     <category name="Format String Vulnerabilities">
         <rule>
             <name>Potential Format String Attack: printf(), fprintf(), etc.</name>
-            <regex><![CDATA[\b(printf|fprintf|sprintf|vsprintf|snprintf)\s*\(\s*[^"]+\s*,]]></regex>
-            <rdl><![CDATA[[FLAG:\b(printf|fprintf|sprintf|vsprintf|snprintf)\s*\(\s*[^"]+\s*,][IF(MISSING:"%s"|"%d"|"%f"|"%i"|"%u"|"%x" && MISSING:const\s+char\s*\*\s*format)]]]></rdl>
+            <regex>\b(printf|fprintf|sprintf|vsprintf|snprintf)\s*\(\s*[^"]+\s*,</regex>
+            <rdl_ref>logic/c/core/potential_format_string_attack_printf_fprintf_etc.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -110,8 +110,8 @@
     <category name="Memory Management and Allocation">
         <rule>
             <name>Risky Memory Allocation: malloc() and Related Functions</name>
-            <regex><![CDATA[^[^*/]*\b(malloc|calloc|realloc)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:^[^*/]*\b(malloc|calloc|realloc)\s*\(][IF(PRESENT:user_input|argv|getenv|scanf|fgets|recv\s*\(|read\s*\(|atoi|atol|strtol|strtoul|input|request|len\s*\*|size\s*\*)]]]></rdl>
+            <regex>^[^*/]*\b(malloc|calloc|realloc)\s*\(</regex>
+            <rdl_ref>logic/c/core/risky_memory_allocation_malloc_and_related_functions.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -127,8 +127,8 @@
         </rule>
         <rule>
             <name>Unsafe Memory Function: Use of malloc() Without free()</name>
-            <regex><![CDATA[\bmalloc\s*\(.*\)(?!.*free)]]></regex>
-            <rdl><![CDATA[[FLAG:\bmalloc\s*\(.*\)(?!.*free)][IF(MISSING:free\s*\(|delete\s+|RAII|unique_ptr|shared_ptr|defer)]]]></rdl>
+            <regex>\bmalloc\s*\(.*\)(?!.*free)</regex>
+            <rdl_ref>logic/c/core/unsafe_memory_function_use_of_malloc_without_free.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -144,8 +144,8 @@
         </rule>
         <rule>
             <name>Null Pointer Dereference</name>
-            <regex><![CDATA[(\w+)\s*=\s*NULL\s*;\s*\w+\s*\(.*\1.*\)]]></regex>
-            <rdl><![CDATA[[FLAG:(\w+)\s*=\s*NULL\s*;\s*\w+\s*\(.*\1.*\)][IF(MISSING:if\s*\(.*!=\s*NULL\)|if\s*\(.*!=\s*nullptr\)|assert\s*\(|NULL\s*!=|nullptr\s*!=)]]]></rdl>
+            <regex>(\w+)\s*=\s*NULL\s*;\s*\w+\s*\(.*\1.*\)</regex>
+            <rdl_ref>logic/c/core/null_pointer_dereference.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -163,8 +163,8 @@
     <category name="Arithmetic and Numeric Errors">
         <rule>
             <name>Integer Overflow or Wraparound</name>
-            <regex><![CDATA[\b(int|short|unsigned)\s+\w+\s*=\s*\w+\s*\+\s*(\d{5,}|INT_MAX|UINT_MAX);]]></regex>
-            <rdl><![CDATA[[FLAG:\b(int|short|unsigned)\s+\w+\s*=\s*\w+\s*\+\s*(\d{5,}|INT_MAX|UINT_MAX);][IF(MISSING:INT_MAX|UINT_MAX|__builtin_add_overflow|SafeAdd|checked_add|overflow|bounds)]]]></rdl>
+            <regex>\b(int|short|unsigned)\s+\w+\s*=\s*\w+\s*\+\s*(\d{5,}|INT_MAX|UINT_MAX);</regex>
+            <rdl_ref>logic/c/core/integer_overflow_or_wraparound.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -182,8 +182,8 @@
     <category name="Type Safety">
         <rule>
             <name>Incorrect Casting of malloc() Results</name>
-            <regex><![CDATA[\(\s*\w+\s*\*\)\s*malloc\s*]]></regex>
-            <rdl><![CDATA[[FLAG:\(\s*\w+\s*\*\)\s*malloc\s*][IF(MISSING:// intentional|// cast required|static_cast|reinterpret_cast && MISSING:test|example)]]]></rdl>
+            <regex>\(\s*\w+\s*\*\)\s*malloc\s*</regex>
+            <rdl_ref>logic/c/core/incorrect_casting_of_malloc_results.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -201,8 +201,8 @@
     <category name="Loop Vulnerabilities">
         <rule>
             <name>Unsafe Loop Handling Over Arrays or Strings</name>
-            <regex><![CDATA[\b(?:for|while)\s*\([^)]*(?:<|<=|>|>=)[^)]*(?:len|size|count|index|idx|i|j|k)[^)]*\)]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:for|while)\s*\([^)]*(?:<|<=|>|>=)[^)]*(?:len|size|count|index|idx|i|j|k)[^)]*\)][IF(PRESENT:user_input|argv|getenv|scanf|fgets|recv\s*\(|read\s*\(|atoi|atol|strtol|strlen\s*\(.*argv|input|buf\[|buffer\[)]]]></rdl>
+            <regex>\b(?:for|while)\s*\([^)]*(?:&lt;|&lt;=|&gt;|&gt;=)[^)]*(?:len|size|count|index|idx|i|j|k)[^)]*\)</regex>
+            <rdl_ref>logic/c/core/unsafe_loop_handling_over_arrays_or_strings.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -220,8 +220,8 @@
     <category name="File Handling">
         <rule>
             <name>Temporary Files: Use of mkstemp()</name>
-            <regex><![CDATA[^[^*/]*\bmktemp\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:^[^*/]*\bmktemp\s*\(][IF(MISSING:mkstemp|tmpfile|O_EXCL)]]]></rdl>
+            <regex>^[^*/]*\bmktemp\s*\(</regex>
+            <rdl_ref>logic/c/core/temporary_files_use_of_mkstemp.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -237,8 +237,8 @@
         </rule>
         <rule>
             <name>Insecure File Permissions</name>
-            <regex><![CDATA[\bopen\s*\(.*\bO_CREAT\b.*\)]]></regex>
-            <rdl><![CDATA[[FLAG:\bopen\s*\(.*\bO_CREAT\b.*\)][IF(MISSING:0600|0644|0660|0640|S_IRUSR|S_IWUSR|umask)]]]></rdl>
+            <regex>\bopen\s*\(.*\bO_CREAT\b.*\)</regex>
+            <rdl_ref>logic/c/core/insecure_file_permissions.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -256,8 +256,8 @@
     <category name="Process Environment Issues">
         <rule>
             <name>Unsafe Use of Process Environment Variables</name>
-            <regex><![CDATA[\b(getenv|setenv|putenv|clearenv)\s*\(]]></regex>
-            <rdl><![CDATA[[FLAG:\b(getenv|setenv|putenv|clearenv)\s*\(][IF(MISSING:validate|sanitize|allowlist|whitelist|check\s*\(|strlen|strnlen)]]]></rdl>
+            <regex>\b(getenv|setenv|putenv|clearenv)\s*\(</regex>
+            <rdl_ref>logic/c/core/unsafe_use_of_process_environment_variables.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -275,8 +275,8 @@
     <category name="Privilege Management">
         <rule>
             <name>Improper Privilege Dropping</name>
-            <regex><![CDATA[^[^*/]*(setuid|setgid|initgroups)\s*\(\s*[^)]+\s*\)\s*[^/]*$]]></regex>
-            <rdl><![CDATA[[FLAG:^[^*/]*(setuid|setgid|initgroups)\s*\(\s*[^)]+\s*\)\s*[^/]*$][IF(MISSING:if\s*\(|==\s*-1|!=\s*0|perror|strerror|errno)]]]></rdl>
+            <regex>^[^*/]*(setuid|setgid|initgroups)\s*\(\s*[^)]+\s*\)\s*[^/]*$</regex>
+            <rdl_ref>logic/c/core/improper_privilege_dropping.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -294,8 +294,8 @@
     <category name="Sensitive Information Handling">
         <rule>
             <name>Improper Use of `memset` for Sensitive Data</name>
-            <regex><![CDATA[\bmemset\s*\(\s*(?:\w*(?:password|passwd|secret|token|api[_-]?key|private[_-]?key)\w*|\w+_buffer)\s*,\s*[^,]+,\s*[^)]+\)]]></regex>
-            <rdl><![CDATA[[FLAG:\bmemset\s*\(\s*(?:\w*(?:password|passwd|secret|token|api[_-]?key|private[_-]?key)\w*|\w+_buffer)\s*,\s*[^,]+,\s*[^)]+\)][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <regex>\bmemset\s*\(\s*(?:\w*(?:password|passwd|secret|token|api[_-]?key|private[_-]?key)\w*|\w+_buffer)\s*,\s*[^,]+,\s*[^)]+\)</regex>
+            <rdl_ref>logic/c/core/improper_use_of_memset_for_sensitive_data.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -312,8 +312,8 @@
         </rule>
         <rule>
             <name>Improper Use of `mlock` for Sensitive Data</name>
-            <regex><![CDATA[\bmlock\s*\(.*?\)]]></regex>
-            <rdl><![CDATA[[FLAG:\bmlock\s*\(.*?\)][IF(MISSING:munlock|sodium_mlock|MADV_DONTDUMP)]]]></rdl>
+            <regex>\bmlock\s*\(.*?\)</regex>
+            <rdl_ref>logic/c/core/improper_use_of_mlock_for_sensitive_data.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -329,8 +329,8 @@
         </rule>
         <rule>
             <name>Improper Use of `setrlimit` for Core Dump Prevention</name>
-            <regex><![CDATA[\bsetrlimit\s*\(\s*RLIMIT_CORE\s*,\s*0\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:\bsetrlimit\s*\(\s*RLIMIT_CORE\s*,\s*0\s*\)][IF(MISSING:RLIMIT_CORE\s*,\s*0|RLIMIT_CORE.*rlim_max\s*=\s*0)]]]></rdl>
+            <regex>\bsetrlimit\s*\(\s*RLIMIT_CORE\s*,\s*0\s*\)</regex>
+            <rdl_ref>logic/c/core/improper_use_of_setrlimit_for_core_dump_prevention.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -346,8 +346,8 @@
         </rule>
         <rule>
             <name>Unsafe File Deletion Using `unlink` or `remove`</name>
-            <regex><![CDATA[\b(?:unlink|remove)\s*\(\s*(?:"[^"\n]*(?:password|passwd|token|secret|key)[^"\n]*"|sensitive_file\w*)\s*\)]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:unlink|remove)\s*\(\s*(?:"[^"\n]*(?:password|passwd|token|secret|key)[^"\n]*"|sensitive_file\w*)\s*\)][IF(MISSING:example|sample|dummy|test|placeholder)]]]></rdl>
+            <regex>\b(?:unlink|remove)\s*\(\s*(?:"[^"\n]*(?:password|passwd|token|secret|key)[^"\n]*"|sensitive_file\w*)\s*\)</regex>
+            <rdl_ref>logic/c/core/unsafe_file_deletion_using_unlink_or_remove.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -366,8 +366,8 @@
     <category name="Concurrency and Race Conditions">
         <rule>
             <name>Race Condition with Shared Resource</name>
-            <regex><![CDATA[\bpthread_create\s*\(.*\);\s*.*\s*=.*shared_var]]></regex>
-            <rdl><![CDATA[[FLAG:\bpthread_create\s*\(.*\);\s*.*\s*=.*shared_var][IF(MISSING:mutex|lock|atomic|std::mutex|pthread_mutex|synchronized|volatile\s+std::atomic)]]]></rdl>
+            <regex>\bpthread_create\s*\(.*\);\s*.*\s*=.*shared_var</regex>
+            <rdl_ref>logic/c/core/race_condition_with_shared_resource.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -385,8 +385,8 @@
     <category name="Makefile Configuration Issues">
         <rule>
             <name>Insecure Compiler Flags</name>
-            <regex><![CDATA[CFLAGS\s*=.*\b(-fno-stack-protector|-z execstack)\b]]></regex>
-            <rdl><![CDATA[[FLAG:CFLAGS\s*=.*\b(-fno-stack-protector|-z execstack)\b][IF(PRESENT:-fno-stack-protector|-D_FORTIFY_SOURCE=0|-z\s+execstack|--no-pie|-fno-pie|-fno-aslr)]]]></rdl>
+            <regex>CFLAGS\s*=.*\b(-fno-stack-protector|-z execstack)\b</regex>
+            <rdl_ref>logic/c/core/insecure_compiler_flags.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -402,8 +402,8 @@
         </rule>
         <rule>
             <name>Download from Insecure Sources</name>
-            <regex><![CDATA[\b(?:wget|curl)\s+[^\n]{0,120}http://]]></regex>
-            <rdl><![CDATA[[FLAG:\b(?:wget|curl)\s+[^\n]{0,120}http://][IF(MISSING:https://)]]]></rdl>
+            <regex>\b(?:wget|curl)\s+[^\n]{0,120}http://</regex>
+            <rdl_ref>logic/c/core/download_from_insecure_sources.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -412,7 +412,7 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <exclude><![CDATA[(?i)apache\.org/licenses|opensource\.org/licenses|w3\.org|^\s*(#|//|/\*|\*)]]></exclude>
+            <exclude>(?i)apache\.org/licenses|opensource\.org/licenses|w3\.org|^\s*(#|//|/\*|\*)</exclude>
             <rule_desc>Detects downloads from insecure sources using HTTP.</rule_desc>
             <vuln_desc>Downloading files over HTTP makes the application vulnerable to MITM attacks and tampering.</vuln_desc>
             <developer>Use HTTPS and validate file integrity with checksums.</developer>
@@ -420,8 +420,8 @@
         </rule>
         <rule>
             <name>Suppressing Compiler Warnings</name>
-            <regex><![CDATA[CFLAGS\s*=.*\b(-w)\b]]></regex>
-            <rdl><![CDATA[[FLAG:CFLAGS\s*=.*\b(-w)\b][IF(PRESENT:#pragma\s+warning\s*\(\s*disable|-Wno-error|-w\b|/W0|__attribute__.*unused.*//.*suppress && MISSING:// intentional|// NOLINT)]]]></rdl>
+            <regex>CFLAGS\s*=.*\b(-w)\b</regex>
+            <rdl_ref>logic/c/core/suppressing_compiler_warnings.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -437,8 +437,8 @@
         </rule>
         <rule>
             <name>Hardcoded Secrets in Environment Variables</name>
-            <regex><![CDATA[(?i)export\s+(?:PASSWORD|SECRET|API_KEY|APIKEY|TOKEN|ACCESS_KEY|PRIVATE_KEY|AUTH_TOKEN|PASSWD|CREDENTIAL)\s*=\s*\S]]></regex>
-            <rdl><![CDATA[[FLAG:(?i)export\s+(?:PASSWORD|SECRET|API_KEY|APIKEY|TOKEN|ACCESS_KEY|PRIVATE_KEY|AUTH_TOKEN|PASSWD|CREDENTIAL)\s*=\s*\S][IF(MISSING:\$\(|example|sample|test|placeholder)]]]></rdl>
+            <regex>(?i)export\s+(?:PASSWORD|SECRET|API_KEY|APIKEY|TOKEN|ACCESS_KEY|PRIVATE_KEY|AUTH_TOKEN|PASSWD|CREDENTIAL)\s*=\s*\S</regex>
+            <rdl_ref>logic/c/core/hardcoded_secrets_in_environment_variables.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>

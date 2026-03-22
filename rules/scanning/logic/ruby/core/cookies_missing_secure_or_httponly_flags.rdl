@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bcookies\[[^\]]+\]\s*=\s*\{(?![^\}]*\b(?:secure|httponly)\b)
+WHEN EXPR MISSING:secure:\s*true|httponly:\s*true|SameSite|HttpOnly && PRESENT:cookies\[.*\]\s*=\s*\{
+REPORT AS area_of_interest
+REASON Detects cookie assignments without explicit secure and HttpOnly attributes.
+TRACE Externalized rule logic for Cookies Missing Secure or HttpOnly Flags.

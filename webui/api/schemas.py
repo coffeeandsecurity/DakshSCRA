@@ -49,6 +49,7 @@ class ProjectSummary(BaseModel):
     running_scans: int
     failed_scans: int
     latest_scan_at: Optional[str] = None
+    latest_run_uuid: Optional[str] = None
 
 
 class DashboardMetrics(BaseModel):

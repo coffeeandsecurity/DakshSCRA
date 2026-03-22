@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT \bSecCertificateCopyData\s*\(
+WHEN EXPR MISSING:SecCertificateCopyPublicKey|SecCertificateCopyKey|SecKeyRef|publicKeyHash|spki|SubjectPublicKeyInfo
+REPORT AS area_of_interest
+REASON Detects certificate pinning implementations that copy leaf certificate data without extracting and pinning the public key.
+TRACE Externalized mobile rule logic for Certificate Pinning Using Leaf Certificate Hash Only.

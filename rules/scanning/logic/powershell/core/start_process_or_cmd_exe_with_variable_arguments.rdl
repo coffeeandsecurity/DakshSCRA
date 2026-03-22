@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?:Start-Process|&\s+cmd(?:\.exe)?|Invoke-Command)\s+[^`\n]*\$(?:args|input|params|\w+URL|\w+Path|\w+Cmd)
+WHEN EXPR MISSING:EscapeShellArgument|Sanitize|\[ValidatePattern\]
+REPORT AS area_of_interest
+REASON Detects process invocation with variable arguments that may contain unsanitized input.
+TRACE Externalized rule logic for Start-Process or cmd.exe with Variable Arguments.
