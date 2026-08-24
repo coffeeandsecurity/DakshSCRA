@@ -166,7 +166,7 @@ class ScanStateManager:
         self.data["updated_at"] = self._now()
         self.persist()
 
-    def touch_heartbeat(self, message="", details=None):
+    def touch_heartbeat(self, message="", details=None, force=True):
         if not self.enabled or not self.data:
             return
         progress = self.data.setdefault("progress", {})
@@ -178,7 +178,7 @@ class ScanStateManager:
             payload.update(details)
         progress["heartbeat"] = payload
         self.data["updated_at"] = self._now()
-        self.persist(force=True)
+        self.persist(force=force)
 
     def mark_platform_completed(self, platform_name):
         if not self.enabled or not self.data:

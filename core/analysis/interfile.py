@@ -1580,6 +1580,7 @@ def analyze_multifile_flows(
     platform: str,
     max_files: Optional[int] = None,
     max_functions: Optional[int] = None,
+    progress_callback=None,
 ) -> List[Dict]:
     if max_files is None or max_functions is None:
         _mf, _mfn = _load_analyzer_limits()
@@ -1605,6 +1606,15 @@ def analyze_multifile_flows(
 
     total_files = len(files)
     print(f"     [-] Analyzer Files       : {total_files} {platform} file(s) queued for parsing", flush=True)
+    if callable(progress_callback):
+        progress_callback({
+            "platform": platform,
+            "phase": "queueing",
+            "status": "running",
+            "current_index": 0,
+            "total_items": total_files,
+            "current_file": "",
+        })
 
     file_lines: Dict[Path, List[str]] = {}
     functions: List[FunctionDef] = []
@@ -1617,6 +1627,15 @@ def analyze_multifile_flows(
         if _fi == 1 or _fi % _PARSE_REPORT_EVERY == 0 or _fi == total_files:
             end = "\n" if _fi == total_files else "\r"
             print(f"     [-] Parsing              : {_fi}/{total_files} files", end=end, flush=True)
+            if callable(progress_callback):
+                progress_callback({
+                    "platform": platform,
+                    "phase": "parsing_files",
+                    "status": "running",
+                    "current_index": _fi,
+                    "total_items": total_files,
+                    "current_file": str(file_path),
+                })
         try:
             lines = file_path.read_text(encoding="utf-8", errors="ignore").splitlines()
         except OSError:
@@ -1674,6 +1693,15 @@ def analyze_multifile_flows(
     max_taint_passes = int(cfg.get("max_taint_passes", 7))
     print(f"     [-] Functions parsed     : {len(functions)}", flush=True)
     print(f"     [-] Propagating taint    : running up to {max_taint_passes} passes over {len(functions)} function(s)", flush=True)
+    if callable(progress_callback):
+        progress_callback({
+            "platform": platform,
+            "phase": "taint_setup",
+            "status": "running",
+            "current_index": 0,
+            "total_items": len(functions),
+            "current_file": "",
+        })
 
     summary_by_name: Dict[str, FunctionSummary] = {}
     for fn in functions:
@@ -1713,13 +1741,35 @@ def analyze_multifile_flows(
                 summary_by_name[name] = new_summary
                 changed = True
         print(f"     [-] Taint pass {_pass + 1}/{max_taint_passes}        : {'converged (done early)' if not changed else 'changes found, continuing'}", flush=True)
+        if callable(progress_callback):
+            progress_callback({
+                "platform": platform,
+                "phase": "taint_pass",
+                "status": "converged" if not changed else "running",
+                "current_index": _pass + 1,
+                "total_items": max_taint_passes,
+                "current_file": "",
+                "current_pass": _pass + 1,
+                "max_passes": max_taint_passes,
+            })
         if not changed:
             break
 
     print(f"     [-] Flow tracing         : tracing paths across {len(functions)} function(s)", flush=True)
     flows: List[Dict] = []
 
-    for fn in functions:
+    _TRACE_REPORT_EVERY = max(1, len(functions) // 12) if functions else 1
+    for fn_index, fn in enumerate(functions, start=1):
+        if callable(progress_callback) and (fn_index == 1 or fn_index % _TRACE_REPORT_EVERY == 0 or fn_index == len(functions)):
+            progress_callback({
+                "platform": platform,
+                "phase": "flow_tracing",
+                "status": "running",
+                "current_index": fn_index,
+                "total_items": len(functions),
+                "current_file": str(fn.file),
+                "current_function": fn.name,
+            })
         lines = file_lines.get(fn.file, [])
         session_tainted_paths: Dict[str, List[Dict]] = {}
         tainted_paths: Dict[str, List[Dict]] = {
@@ -2536,4 +2586,14 @@ def analyze_multifile_flows(
                     )
 
     print(f"     [-] Flows identified     : {len(flows)} cross-file flow(s) found", flush=True)
+    if callable(progress_callback):
+        progress_callback({
+            "platform": platform,
+            "phase": "completed",
+            "status": "completed",
+            "current_index": len(functions),
+            "total_items": len(functions),
+            "current_file": "",
+            "flow_count": len(flows),
+        })
     return flows

@@ -526,11 +526,27 @@ Runtime files (scan state, logs, inventory) are written under `runtime/`.
 
 Daksh SCRA includes a browser-based frontend for launching scans and watching progress in real time.
 
+Run in normal (foreground) mode:
+
 ```bash
 docker compose up --build
 ```
 
+Or run in detached (background) mode:
+
+```bash
+docker compose up --build -d
+```
+
 Then open: [http://localhost:8080](http://localhost:8080)
+
+**Login:** The Web UI requires an account. On first startup an initial admin
+account is created from `DAKSH_ADMIN_USERNAME`/`DAKSH_ADMIN_PASSWORD` (set
+these in `.env`, or a random password is generated and printed once to the
+API's startup log). An admin account can create further accounts via the
+`POST /api/v1/auth/users` API endpoint (no dedicated UI for this yet). See
+`.env.example` for the full list of authentication-related settings
+(session lifetime, cookie security, CORS).
 
 **Web UI capabilities:**
 
@@ -554,8 +570,16 @@ The Docker setup supports web UI and CLI independently using separate Compose se
 
 **Launch the web UI:**
 
+Normal (foreground) mode:
+
 ```bash
 docker compose up --build
+```
+
+Detached (background) mode:
+
+```bash
+docker compose up --build -d
 ```
 
 Then open: [http://localhost:8080](http://localhost:8080)

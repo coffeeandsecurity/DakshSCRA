@@ -44,6 +44,9 @@ MANIFEST_RULES = [
     {"category": "Mobile Platforms", "name": "Capacitor", "file": "capacitor.config.json", "confidence": "high"},
     {"category": "Mobile Platforms", "name": "Capacitor", "file": "capacitor.config.ts", "confidence": "high"},
     {"category": "Mobile Platforms", "name": "React Native", "file": "app.json", "regex": r"react-native|expo", "confidence": "high"},
+    {"category": "Mobile Platforms", "name": "MAUI", "file": "MauiProgram.cs", "confidence": "high"},
+    {"category": "Mobile Platforms", "name": "Kotlin Multiplatform", "file": "build.gradle", "regex": r"kotlin\s*\(\s*[\"']multiplatform[\"']\s*\)|org\.jetbrains\.kotlin\.multiplatform", "confidence": "high"},
+    {"category": "Mobile Platforms", "name": "Kotlin Multiplatform", "file": "build.gradle.kts", "regex": r"kotlin\s*\(\s*[\"']multiplatform[\"']\s*\)|org\.jetbrains\.kotlin\.multiplatform", "confidence": "high"},
     {"category": "Frontend", "name": "Next.js", "file": "next.config.js", "confidence": "high"},
     {"category": "Frontend", "name": "Next.js", "file": "next.config.mjs", "confidence": "high"},
     {"category": "Frontend", "name": "Next.js", "file": "next.config.ts", "confidence": "high"},
@@ -268,9 +271,10 @@ def _apply_confidence_override(category, name, confidence, tuning):
     return confidence
 
 
-def _walk_project_files(targetdir):
+def _walk_project_files(targetdir, progress_callback=None):
     started = time.time()
     last_print = started
+    last_callback = 0.0
     visited_dirs = 0
     total_files_seen = 0
     log_filepaths = []
@@ -286,6 +290,20 @@ def _walk_project_files(targetdir):
             log_filepaths.append(file_path)
 
         now = time.time()
+        if callable(progress_callback) and (visited_dirs == 1 or now - last_callback >= 0.35):
+            progress_callback({
+                "phase": "recon_enumerating",
+                "status": "running",
+                "message": "Building reconnaissance inventory",
+                "current_file": root,
+                "directories_scanned": visited_dirs,
+                "files_discovered": total_files_seen,
+                "files_selected": len(log_filepaths),
+                "current_index": total_files_seen,
+                "total_items": 0,
+                "elapsed_seconds": int(now - started),
+            })
+            last_callback = now
         # Print at most once per ~1.2s to keep overhead negligible on large scans.
         if now - last_print >= 1.2:
             elapsed = now - started
@@ -298,6 +316,19 @@ def _walk_project_files(targetdir):
             last_print = now
 
     print(" " * 110, end="\r")
+    if callable(progress_callback):
+        progress_callback({
+            "phase": "recon_inventory_ready",
+            "status": "running",
+            "message": "Reconnaissance inventory ready",
+            "current_file": str(targetdir),
+            "directories_scanned": visited_dirs,
+            "files_discovered": total_files_seen,
+            "files_selected": len(log_filepaths),
+            "current_index": len(log_filepaths),
+            "total_items": len(log_filepaths),
+            "elapsed_seconds": int(time.time() - started),
+        })
     return log_filepaths
 
 
@@ -343,7 +374,7 @@ def detect_framework(language, file_path):
     return None
 
 
-def recon(targetdir, flag=False, strict_mode=False):
+def recon(targetdir, flag=False, strict_mode=False, progress_callback=None):
     """
     Perform reconnaissance (software composition analysis) for a target directory.
     """
@@ -365,7 +396,7 @@ def recon(targetdir, flag=False, strict_mode=False):
         os.remove(state.inventory_Fpathext)
 
     print("     [-] Enumerating project files and directories")
-    log_filepaths = _walk_project_files(targetdir)
+    log_filepaths = _walk_project_files(targetdir, progress_callback=progress_callback)
     print(f"     [-] Total recon candidate files: {len(log_filepaths)}")
     result.update_scan_summary("detection_summary.recon_candidate_files", str(len(log_filepaths)))
 
@@ -444,6 +475,19 @@ def recon(targetdir, flag=False, strict_mode=False):
 
         if idx % 500 == 0:
             print(f"     [-] Recon processed files: {idx}/{len(log_filepaths)}", end="\r")
+        if callable(progress_callback) and (idx == 1 or idx % 100 == 0 or idx == len(log_filepaths)):
+            progress_callback({
+                "phase": "recon_analyzing",
+                "status": "running",
+                "message": "Identifying technologies and frameworks",
+                "current_file": file_path,
+                "directories_scanned": 0,
+                "files_discovered": len(log_filepaths),
+                "files_selected": idx,
+                "current_index": idx,
+                "total_items": len(log_filepaths),
+                "elapsed_seconds": int(time.time() - recon_started_ts),
+            })
 
     print(" " * 90, end="\r")
     print("     [-] Reconnaissance completed.")
@@ -605,17 +649,6 @@ def summarize_recon(json_file_path):
             out_path.write_text(json.dumps(summary_payload, indent=4, sort_keys=True), encoding="utf-8")
         except OSError as exc:
             logger.error("Failed to write recon summary to %s: %s", out_path, exc)
-
-    # Cleanup: remove any legacy text/html recon report from old output paths.
-    for legacy_path in [
-        Path(str(state.root_dir)) / "reports" / "text" / "reconnaissance.txt",
-        Path(str(state.reports_dirpath)) / "html" / "reconnaissance.html",
-    ]:
-        try:
-            if legacy_path.exists():
-                legacy_path.unlink()
-        except OSError as exc:
-            logger.error("Failed to remove legacy recon report %s: %s", legacy_path, exc)
 
     recon_summary_html_report(runtime_summary_path, state.reconreport_Fpath)
     return str(runtime_summary_path)

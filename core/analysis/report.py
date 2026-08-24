@@ -9,6 +9,7 @@ import yaml
 
 import state.runtime_state as state
 from core.analysis.common import load_analysis_config
+from utils.decision_trace import append_trace
 
 
 DEFAULT_RANKING = {
@@ -578,6 +579,35 @@ LOCAL_FILE_RE = re.compile(r"\b(open|read(all|text|bytes)?|getcontentas|readfile
 ENDPOINT_RE = re.compile(r"\b(@RequestMapping|@GetMapping|@PostMapping|router\.(get|post|put|patch|delete)|Map(Get|Post|Put|Patch|Delete)|Route\(|endpoint|restcontroller|controllerbase)\b", re.IGNORECASE)
 ENV_INPUT_RE = re.compile(r"\b(process\.env|system\.getenv|environment\.get(environment)?variable|configurationmanager|appsettings|getproperty)\b", re.IGNORECASE)
 NETWORK_INPUT_RE = re.compile(r"\b(httpclient|webrequest|webclient|resttemplate|webclient|fetch\(|axios\.|socket|websocket|recv\(|listen\(|accept\()\b", re.IGNORECASE)
+# Deliberately specific API/keyword names rather than bare "query"/"file" -
+# those overlap with request-parameter wording and caused the legacy
+# taint-flow classifier (and the datastore Attack Vector bucket before this)
+# to misclassify almost every SQLi-shaped flow as "external" instead.
+#
+# No trailing \b: several alternatives end in "(" or "::", and a call's
+# very next character is frequently another non-word char too (a PHP "$"
+# argument, an empty "()", "::"-qualified name) - \b requires one side of
+# the boundary to be a word character, so "serialize($obj)" or "user.save()"
+# would silently never match with a trailing \b. A leading \b is enough to
+# stop these from matching mid-identifier.
+DATASTORE_SINK_RE = re.compile(
+    r"\b(mysqli_query|mysql_query|pdo::|preparedstatement|executequery|executeupdate|"
+    r"sqlcommand|dbcontext|entitymanager|hibernate|jdbctemplate|sequelize|mongoose|"
+    r"insert\s+into|update\s+\S+\s+set|delete\s+from|"
+    r"redis\.set|memcache\w*\.set|"
+    r"file_put_contents|fwrite|fprintf\(|move_uploaded_file|"
+    r"\.save\(|\.persist\(|\.store\(|"
+    r"serialize\(|pickle\.dump|yaml\.dump)",
+    re.IGNORECASE,
+)
+DATASTORE_SOURCE_RE = re.compile(
+    r"\b(fetchall|fetchone|mysqli_fetch\w*|mysql_fetch\w*|resultset|getresultlist|"
+    r"select\s+.*\s+from|"
+    r"file_get_contents|fread\(|readalltext|"
+    r"redis\.get|memcache\w*\.get|"
+    r"unserialize\(|pickle\.loads?|yaml\.load|json_decode)",
+    re.IGNORECASE,
+)
 SOURCE_HTTP_RE = re.compile(r"\[source\]\s+(?:PHP|Request)\s+([A-Z]+)\s+(?:parameter|input|value)\s+`([^`]+)`", re.IGNORECASE)
 FORM_SUBMIT_RE = re.compile(r"submitted via\s+([A-Z]+)\s+to\s+`([^`]+)`", re.IGNORECASE)
 SOURCE_ASSIGN_RE = re.compile(r"\[source\].*assigned to\s+`?\$?([A-Za-z_][A-Za-z0-9_]*)`?", re.IGNORECASE)
@@ -710,6 +740,69 @@ def _mitigation_assessment(rule: Dict) -> Dict:
 
 
 VULNERABILITY_RULES = {
+    "android": [
+        _vuln_rule("component_exposure", "Exported Component Exposure", ["exported component"], "CWE-926", "An exported Android component is reachable from outside the app without a permission guard."),
+        _vuln_rule("content_provider_exposure", "Unprotected Content Provider", ["content provider exposure"], "CWE-926", "An exported content provider is reachable from outside the app without read/write permission enforcement."),
+        _vuln_rule("deep_link_exposure", "Unverified Deep Link Exposure", ["deep link exposure"], "CWE-939", "A VIEW intent deep-link entrypoint is externally reachable without app-link verification."),
+        _vuln_rule("insecure_transport", "Cleartext Transport Exposure", ["cleartext transport"], "CWE-319", "The Android app explicitly permits cleartext traffic, exposing communications to network attackers."),
+        _vuln_rule("javascript_injection", "Exported Component to WebView Sink", ["exported component webview sink", "webview.loadurl", "evaluatejavascript"], "CWE-79", "An externally reachable Android component reads attacker-controlled intent data and reaches a WebView or JavaScript bridge sink."),
+        _vuln_rule("sql_injection", "Exported Component to SQL Sink", ["exported component sql sink", "content provider sql sink", "sql (jdbc)", "sql (jdbctemplate)", "sql (jpa native)", "sql (statement)"], "CWE-89", "An externally reachable Android component or provider routes attacker-controlled input into SQL execution."),
+        _vuln_rule("command_injection", "Exported Component to Command Sink", ["exported component command sink", "runtime.exec", "processbuilder"], "CWE-78", "An externally reachable Android component routes attacker-controlled input into OS command execution."),
+        _vuln_rule("pendingintent_injection", "Mutable PendingIntent Injection", ["pendingintent mutable sink"], "CWE-927", "An externally influenced Android code path creates a mutable PendingIntent that can be altered by another app."),
+        _vuln_rule("binder_exposure", "Binder/AIDL Caller Validation Missing", ["binder caller validation missing"], "CWE-926", "An exported Android Binder/AIDL service does not validate the calling app identity before servicing requests."),
+    ],
+    "ios": [
+        _vuln_rule("insecure_transport", "ATS Arbitrary Loads Enabled", ["ats arbitrary loads"], "CWE-319", "The iOS app weakens App Transport Security and permits arbitrary network loads."),
+        _vuln_rule("deep_link_exposure", "iOS Deep Link Validation Missing", ["ios deep link exposure"], "CWE-939", "An iOS custom scheme or universal-link handler accepts external URL input without visible validation."),
+        _vuln_rule("javascript_injection", "iOS WebView JavaScript Injection", ["ios evaluatejavascript sink"], "CWE-79", "External iOS URL input reaches `evaluateJavaScript` in a WebView context."),
+        _vuln_rule("open_redirect", "iOS Unvalidated URL Opening", ["ios openurl sink"], "CWE-601", "External iOS URL input reaches `UIApplication.open` without visible destination validation."),
+        _vuln_rule("certificate_validation_bypass", "iOS Certificate Validation Bypass", ["ios certificate validation bypass"], "CWE-295", "Custom iOS TLS challenge handling weakens or bypasses certificate validation."),
+    ],
+    "flutter": [
+        _vuln_rule("bridge_exposure", "Flutter MethodChannel Validation Missing", ["flutter methodchannel unvalidated handler"], "CWE-20", "A Flutter MethodChannel handler processes bridge input without visible method or argument validation."),
+        _vuln_rule("javascript_injection", "Flutter WebView Script Exposure", ["flutter webview unrestricted javascript", "flutter webview user controlled url"], "CWE-79", "Flutter WebView configuration or navigation exposes script execution or untrusted content loading risk."),
+        _vuln_rule("certificate_validation_bypass", "Flutter Certificate Validation Bypass", ["flutter certificate validation bypass"], "CWE-295", "Flutter network code accepts invalid certificates."),
+        _vuln_rule("insecure_transport", "Flutter Insecure HTTP Usage", ["flutter insecure http endpoint"], "CWE-319", "Flutter code uses cleartext HTTP endpoints."),
+        _vuln_rule("code_injection", "Flutter Remote Isolate Execution", ["flutter remote isolate uri"], "CWE-94", "Flutter loads Dart isolate code from a remote URI."),
+    ],
+    "reactnative": [
+        _vuln_rule("bridge_exposure", "React Native Bridge Validation Missing", ["reactnative message bridge without origin validation", "reactnative native bridge without permission check"], "CWE-20", "React Native bridge entrypoints process untrusted messages or native calls without visible validation."),
+        _vuln_rule("javascript_injection", "React Native WebView Trust Boundary Exposure", ["reactnative webview trust boundary exposure"], "CWE-79", "React Native WebView configuration allows untrusted content or script execution without visible origin restrictions."),
+        _vuln_rule("open_redirect", "React Native Unvalidated URL Opening", ["reactnative openurl sink"], "CWE-601", "React Native code opens dynamic external URLs without visible validation."),
+        _vuln_rule("insecure_transport", "React Native Insecure HTTP Usage", ["reactnative insecure http endpoint"], "CWE-319", "React Native code references cleartext HTTP endpoints."),
+    ],
+    "cordova": [
+        _vuln_rule("bridge_exposure", "Cordova JavaScript Bridge Exposure", ["cordova javascript bridge exposure"], "CWE-749", "Cordova bridge capabilities are exposed to web content and become dangerous when untrusted content is reachable."),
+        _vuln_rule("javascript_injection", "Cordova WebView Trust Boundary Exposure", ["cordova wildcard navigation policy", "cordova unsafe csp directives"], "CWE-79", "Cordova configuration or CSP allows untrusted content or weakens script-execution boundaries."),
+        _vuln_rule("open_redirect", "Cordova Unvalidated URL Opening", ["cordova openurl sink"], "CWE-601", "Cordova browser-opening code uses dynamic URLs without visible validation."),
+        _vuln_rule("insecure_transport", "Cordova Insecure HTTP Usage", ["cordova insecure http endpoint"], "CWE-319", "Cordova code or config references cleartext HTTP endpoints."),
+    ],
+    "ionic": [
+        _vuln_rule("javascript_injection", "Ionic WebView Trust Boundary Exposure", ["ionic wildcard navigation policy", "ionic unsafe csp directives"], "CWE-79", "Ionic/Capacitor configuration permits untrusted content or weakens script-execution boundaries."),
+        _vuln_rule("open_redirect", "Ionic Unvalidated URL Opening", ["ionic openurl sink"], "CWE-601", "Ionic browser-opening code uses dynamic URLs without visible validation."),
+        _vuln_rule("insecure_transport", "Ionic Insecure Transport", ["ionic cleartext transport permitted", "ionic insecure http endpoint"], "CWE-319", "Ionic/Capacitor code or config weakens transport security."),
+    ],
+    "nativescript": [
+        _vuln_rule("javascript_injection", "NativeScript WebView Trust Boundary Exposure", ["nativescript webview trust boundary exposure"], "CWE-79", "NativeScript WebView content is loaded or scripted without visible source validation."),
+        _vuln_rule("certificate_validation_bypass", "NativeScript Certificate Validation Bypass", ["nativescript certificate validation bypass"], "CWE-295", "NativeScript networking code bypasses TLS certificate validation."),
+        _vuln_rule("insecure_transport", "NativeScript Insecure HTTP Usage", ["nativescript insecure http endpoint"], "CWE-319", "NativeScript code references cleartext HTTP endpoints."),
+    ],
+    "xamarin": [
+        _vuln_rule("javascript_injection", "Xamarin WebView Trust Boundary Exposure", ["xamarin webview trust boundary exposure"], "CWE-79", "Xamarin WebView scripting or content loading is enabled without visible destination validation."),
+        _vuln_rule("certificate_validation_bypass", "Xamarin Certificate Validation Bypass", ["xamarin certificate validation bypass"], "CWE-295", "Xamarin/.NET mobile networking code bypasses certificate validation."),
+        _vuln_rule("insecure_transport", "Xamarin Insecure HTTP Usage", ["xamarin insecure http endpoint"], "CWE-319", "Xamarin code references cleartext HTTP endpoints."),
+    ],
+    "maui": [
+        _vuln_rule("javascript_injection", ".NET MAUI WebView Trust Boundary Exposure", ["maui webview trust boundary exposure"], "CWE-79", ".NET MAUI embedded web view usage lacks visible destination or script restrictions."),
+        _vuln_rule("certificate_validation_bypass", ".NET MAUI Certificate Validation Bypass", ["maui certificate validation bypass"], "CWE-295", ".NET MAUI networking code bypasses certificate validation."),
+        _vuln_rule("open_redirect", ".NET MAUI Unvalidated URL Opening", ["maui openurl sink"], "CWE-601", ".NET MAUI opens dynamic URLs without visible validation."),
+        _vuln_rule("insecure_transport", ".NET MAUI Insecure HTTP Usage", ["maui insecure http endpoint"], "CWE-319", ".NET MAUI code references cleartext HTTP endpoints."),
+    ],
+    "kmp": [
+        _vuln_rule("certificate_validation_bypass", "Kotlin Multiplatform Certificate Validation Bypass", ["kmp certificate validation bypass"], "CWE-295", "Shared Kotlin Multiplatform networking code weakens or bypasses TLS validation."),
+        _vuln_rule("insecure_transport", "Kotlin Multiplatform Insecure HTTP Usage", ["kmp insecure http endpoint"], "CWE-319", "Shared Kotlin Multiplatform code references cleartext HTTP endpoints."),
+        _vuln_rule("project_marker", "Kotlin Multiplatform Project Detected", ["kmp project marker"], "", "Informational: the project uses Kotlin Multiplatform shared code and should be reviewed as a mobile shared-code target."),
+    ],
     "php": [
         _vuln_rule("sql_injection", "SQL Injection", ["pdo query", "mysqli_query", "mysql_query"], "CWE-89", "Tainted request data reaches a SQL execution sink without parameterization."),
         _vuln_rule("xss", "Cross-Site Scripting", ["echo/print (xss)"], "CWE-79", "Tainted input is rendered into an HTML response without output encoding."),
@@ -815,7 +908,88 @@ VULNERABILITY_RULES = {
     ],
 }
 
+# maui/xamarin/reactnative/ionic/cordova/nativescript/kmp each run the full
+# underlying language engine (dotnet/javascript/kotlin) in addition to
+# their own platform-specific semantic checks, but only listed the
+# platform-specific sinks above - engine-level flows (raw SQL, exec,
+# eval, innerHTML, etc.) could never be confirmed as vulnerabilities for
+# these 7 platforms. `android` already re-lists java+kotlin sinks
+# correctly; extend the rest the same way instead of duplicating the
+# base language's rule text (kept as a live reference so future edits to
+# the base language's rules automatically apply here too).
+VULNERABILITY_RULES["maui"] = VULNERABILITY_RULES["dotnet"] + VULNERABILITY_RULES["maui"]
+VULNERABILITY_RULES["xamarin"] = VULNERABILITY_RULES["dotnet"] + VULNERABILITY_RULES["xamarin"]
+VULNERABILITY_RULES["reactnative"] = VULNERABILITY_RULES["javascript"] + VULNERABILITY_RULES["reactnative"]
+VULNERABILITY_RULES["ionic"] = VULNERABILITY_RULES["javascript"] + VULNERABILITY_RULES["ionic"]
+VULNERABILITY_RULES["cordova"] = VULNERABILITY_RULES["javascript"] + VULNERABILITY_RULES["cordova"]
+VULNERABILITY_RULES["nativescript"] = VULNERABILITY_RULES["javascript"] + VULNERABILITY_RULES["nativescript"]
+VULNERABILITY_RULES["kmp"] = VULNERABILITY_RULES["kotlin"] + VULNERABILITY_RULES["kmp"]
+
 MITIGATION_RULES = {
+    "android": [
+        _mit_rule("component_exposure", "Component permission or non-export", r"android:(?:exported\s*=\s*[\"']false[\"']|permission\s*=)", [], "The component is not exported, or a permission guard is declared in the manifest."),
+        _mit_rule("content_provider_exposure", "Provider read/write permission", r"android:(?:readPermission|writePermission|permission)\s*=", [], "The content provider declares explicit read/write or general permissions."),
+        _mit_rule("deep_link_exposure", "Verified app link", r"android:autoVerify\s*=\s*[\"']true[\"']", [], "The deep-link intent-filter enables app-link verification."),
+        _mit_rule("insecure_transport", "Cleartext transport disabled", r"android:usesCleartextTraffic\s*=\s*[\"']false[\"']", [], "The application manifest disables cleartext transport."),
+        _mit_rule("pendingintent_injection", "Immutable PendingIntent", r"FLAG_IMMUTABLE|PendingIntentCompat", [], "The PendingIntent is marked immutable so another app cannot rewrite the embedded intent."),
+        _mit_rule("binder_exposure", "Binder caller validation", r"Binder\.getCallingUid\s*\(|checkCallingPermission|enforceCallingPermission|enforceCallingOrSelfPermission", [], "The Binder/AIDL implementation validates the caller identity or enforces a permission before processing requests."),
+    ],
+    "ios": [
+        _mit_rule("insecure_transport", "ATS enabled", r"NSAllowsArbitraryLoads\s*</key>\s*<false\s*/>|NSExceptionAllowsInsecureHTTPLoads\s*</key>\s*<false\s*/>", [], "The app keeps ATS enabled and does not allow arbitrary loads."),
+        _mit_rule("deep_link_exposure", "Deep link scheme or host validation", r"\b(?:scheme|host)\s*==\s*[\"']|\b(?:allowedSchemes|allowedHosts|allowlist|whitelist)\b", [], "The handler validates incoming URL schemes or hosts before proceeding."),
+        _mit_rule("javascript_injection", "Static or gated WebView JavaScript", r"\b(?:evaluateJavaScript\s*\(\s*[\"']|WKNavigationDelegate|decidePolicyFor)\b", [], "JavaScript execution is constrained to trusted content or gated by navigation policy."),
+        _mit_rule("open_redirect", "Destination validation before openURL", r"\b(?:canOpenURL|scheme\s*==|host\s*==|allowedSchemes|allowedHosts)\b", [], "The app validates destination URLs before opening them."),
+        _mit_rule("certificate_validation_bypass", "Strict TLS trust evaluation", r"\b(?:SecTrustEvaluateWithError|performDefaultHandling|ServerTrustEvaluating)\b", [], "The app relies on default trust handling or explicit strict certificate validation."),
+    ],
+    "flutter": [
+        _mit_rule("bridge_exposure", "MethodChannel input validation", r"\b(?:call\.method\s*==|switch\s*\(\s*call\.method|case\s+[\"'])", [r"\b(?:call\.arguments\s+is|call\.arguments\s+as|containsKey\s*\()",], "The MethodChannel handler validates both method names and incoming argument types or keys."),
+        _mit_rule("javascript_injection", "Navigation or scheme validation", r"\b(?:NavigationDelegate|onNavigationRequest|uri\.scheme\s*==|startsWith\s*\(\s*[\"']https://|allowlist|whitelist)\b", [], "The Flutter WebView validates destinations or restricts navigation before loading content."),
+        _mit_rule("certificate_validation_bypass", "Reject invalid certificates", r"\bbadCertificateCallback\b", [r"\breturn\s+false\b|=>\s*false\b"], "The certificate callback explicitly rejects invalid certificates."),
+        _mit_rule("insecure_transport", "HTTPS-only endpoints", r"[\"']https://", [], "The app uses HTTPS endpoints instead of cleartext HTTP."),
+        _mit_rule("code_injection", "Local isolate URI only", r"\bIsolate\.spawnUri\s*\(", [r"[\"'](?:asset|file):"], "The app spawns isolates only from local asset or file URIs."),
+    ],
+    "reactnative": [
+        _mit_rule("bridge_exposure", "Origin or caller validation", r"\b(?:event\.origin|originWhitelist|checkSelfPermission|checkCallingPermission|enforceCallingPermission|allowlist|whitelist)\b", [], "The WebView bridge or native module validates origin, caller permissions, or trusted destinations."),
+        _mit_rule("javascript_injection", "WebView origin restrictions", r"\b(?:originWhitelist|onShouldStartLoadWithRequest|allowlist|whitelist)\b", [], "The React Native WebView restricts allowed origins or navigation targets."),
+        _mit_rule("open_redirect", "URL validation before open", r"\b(?:canOpenURL|startsWith\s*\(\s*[\"']https?://|new URL\s*\(|allowlist|whitelist)\b", [], "The app validates external URLs before opening them."),
+        _mit_rule("insecure_transport", "HTTPS-only endpoints", r"[\"']https://", [], "The app uses HTTPS endpoints instead of cleartext HTTP."),
+    ],
+    "cordova": [
+        _mit_rule("bridge_exposure", "Trusted bridge usage", r"\b(?:cordova\.exec|addJavascriptInterface)\b", [r"\b(?:allowlist|whitelist|trusted|origin)\b"], "Bridge usage is constrained by trusted-content controls or origin validation."),
+        _mit_rule("javascript_injection", "Restricted navigation and CSP", r"\b(?:allow-navigation\s+href=\"(?!\*)|access\s+origin=\"(?!\*)|Content-Security-Policy)\b", [], "Cordova restricts navigation/origin policies and uses CSP to reduce script-injection risk."),
+        _mit_rule("open_redirect", "Validated browser target", r"\b(?:allowlist|whitelist|startsWith\s*\(\s*[\"']https?://|new URL\s*\()", [], "Browser-opening code validates or normalizes dynamic URLs before opening them."),
+        _mit_rule("insecure_transport", "HTTPS-only endpoints", r"https://", [], "The app uses HTTPS endpoints instead of cleartext HTTP."),
+    ],
+    "ionic": [
+        _mit_rule("javascript_injection", "Restricted navigation and CSP", r"\b(?:allow-navigation\s+href=\"(?!\*)|access\s+origin=\"(?!\*)|Content-Security-Policy|onNavigationRequest|allowlist|whitelist)\b", [], "The hybrid app restricts navigation/origin policies and uses safer CSP controls."),
+        _mit_rule("open_redirect", "Validated browser target", r"\b(?:allowlist|whitelist|startsWith\s*\(\s*[\"']https?://|new URL\s*\()", [], "Browser-opening code validates dynamic URLs before opening them."),
+        _mit_rule("insecure_transport", "Secure transport enabled", r"\b(?:https://|cleartextTrafficPermitted\s*[:=]\s*false|NSAllowsArbitraryLoads\s*</key>\s*<false\s*/>)", [], "The app uses HTTPS and disables cleartext/ATS relaxations."),
+    ],
+    "nativescript": [
+        _mit_rule("javascript_injection", "Validated WebView source", r"\b(?:allowlist|whitelist|startsWith\s*\(\s*[\"']https://|shouldOverrideUrlLoading|event\.url)\b", [], "The WebView validates destinations or blocks untrusted navigation."),
+        _mit_rule("certificate_validation_bypass", "Strict TLS validation", r"\b(?:allowInvalidCertificates\s*[:=]\s*false|InsecureSkipVerify\s*[:=]\s*false)\b", [], "The networking client rejects invalid certificates and keeps strict trust validation enabled."),
+        _mit_rule("insecure_transport", "HTTPS-only endpoints", r"https://", [], "The app uses HTTPS endpoints instead of cleartext HTTP."),
+    ],
+    "xamarin": [
+        _mit_rule("javascript_injection", "Validated WebView destination", r"\b(?:Uri\.TryCreate|StartsWith\s*\(\s*\"https://|Navigating|allowlist|whitelist)\b", [], "The WebView validates destinations or navigation events before loading content."),
+        _mit_rule("certificate_validation_bypass", "Strict certificate validation", r"\b(?:ServerCertificateCustomValidationCallback|ServerCertificateValidationCallback)\b", [r"\breturn\s+false\b|=>\s*false\b"], "The certificate validation callback rejects invalid certificates."),
+        _mit_rule("insecure_transport", "HTTPS-only endpoints", r"https://", [], "The app uses HTTPS endpoints instead of cleartext HTTP."),
+    ],
+    "maui": [
+        _mit_rule("javascript_injection", "Validated WebView destination", r"\b(?:Uri\.TryCreate|StartsWith\s*\(\s*\"https://|Navigating|allowlist|whitelist)\b", [], "The embedded web view validates destinations or navigation events before loading content."),
+        _mit_rule("certificate_validation_bypass", "Strict certificate validation", r"\b(?:ServerCertificateCustomValidationCallback|ServerCertificateValidationCallback)\b", [r"\breturn\s+false\b|=>\s*false\b"], "The certificate validation callback rejects invalid certificates."),
+        _mit_rule("open_redirect", "Validated URL before launch", r"\b(?:Uri\.TryCreate|StartsWith\s*\(\s*\"https://|allowlist|whitelist)\b", [], "The app validates URLs before launching them externally."),
+        _mit_rule("insecure_transport", "HTTPS-only endpoints", r"https://", [], "The app uses HTTPS endpoints instead of cleartext HTTP."),
+    ],
+    "kmp": [
+        # Bare "checkServerTrusted" was previously accepted here as evidence
+        # of strict validation - but every TrustManager implementation,
+        # secure or not, must override this method, so it can match the
+        # exact same line that triggered the vulnerability rule above,
+        # marking one line as both a bypass and its own mitigation.
+        _mit_rule("certificate_validation_bypass", "Strict trust validation", r"\b(?:hostnameVerifier\s*\{.*false|InsecureTrustManager\s*=\s*false)\b", [], "The shared Kotlin networking layer keeps strict hostname and certificate validation enabled."),
+        _mit_rule("insecure_transport", "HTTPS-only endpoints", r"https://", [], "The shared mobile code uses HTTPS endpoints instead of cleartext HTTP."),
+    ],
     "php": [
         _mit_rule("sql_injection", "Prepared SQL statement", r"->\s*prepare\s*\(", [r"bind(?:Value|Param)\s*\(", r"->\s*execute\s*\("], "Prepared statement with bound parameters reduces SQL injection risk."),
         _mit_rule("xss", "HTML output escaping", r"\bhtmlspecialchars\s*\(|\bhtmlentities\s*\(", [], "Output is encoded before rendering to HTML."),
@@ -893,7 +1067,29 @@ MITIGATION_RULES = {
     ],
 }
 
+# Mirrors the VULNERABILITY_RULES extension above: these 7 platforms now
+# confirm engine-level sinks too, so they need the base language's
+# mitigation patterns as well, or every engine-level flow would look
+# permanently unmitigated even when it's actually guarded.
+MITIGATION_RULES["maui"] = MITIGATION_RULES["dotnet"] + MITIGATION_RULES["maui"]
+MITIGATION_RULES["xamarin"] = MITIGATION_RULES["dotnet"] + MITIGATION_RULES["xamarin"]
+MITIGATION_RULES["reactnative"] = MITIGATION_RULES["javascript"] + MITIGATION_RULES["reactnative"]
+MITIGATION_RULES["ionic"] = MITIGATION_RULES["javascript"] + MITIGATION_RULES["ionic"]
+MITIGATION_RULES["cordova"] = MITIGATION_RULES["javascript"] + MITIGATION_RULES["cordova"]
+MITIGATION_RULES["nativescript"] = MITIGATION_RULES["javascript"] + MITIGATION_RULES["nativescript"]
+MITIGATION_RULES["kmp"] = MITIGATION_RULES["kotlin"] + MITIGATION_RULES["kmp"]
+
 FILE_GLOBS = {
+    "android": ("**/AndroidManifest.xml", "**/*.xml", "**/*.kt", "**/*.java"),
+    "ios": ("**/Info.plist", "**/*.entitlements", "**/*.swift", "**/*.m", "**/*.mm"),
+    "flutter": ("**/*.dart", "**/pubspec.yaml"),
+    "reactnative": ("**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx", "**/*.java", "**/*.kt"),
+    "cordova": ("**/config.xml", "**/*.js", "**/*.ts", "**/*.html"),
+    "ionic": ("**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx", "**/*.html", "**/*.xml", "**/*.json"),
+    "nativescript": ("**/*.js", "**/*.ts", "**/*.xml", "**/*.html"),
+    "xamarin": ("**/*.cs", "**/*.xaml", "**/*.xml"),
+    "maui": ("**/*.cs", "**/*.csproj", "**/*.xaml", "**/*.xml"),
+    "kmp": ("**/*.kt", "**/*.kts", "**/*.gradle", "**/*.gradle.kts"),
     "php": "*.php",
     "python": ("*.py",),
     "javascript": ("*.js", "*.jsx", "*.ts", "*.tsx", "*.mjs", "*.cjs"),
@@ -907,6 +1103,14 @@ FILE_GLOBS = {
 }
 
 VULN_MITIGATION_HINTS = {
+    "component_exposure": ("android:permission", "android:exported=\"false\"", "signature", "signatureorSystem"),
+    "content_provider_exposure": ("readpermission", "writepermission", "android:permission", "exported=\"false\""),
+    "deep_link_exposure": ("autoverify", "app links", "allowlist", "whitelist", "uri.parse"),
+    "insecure_transport": ("usescleartexttraffic=\"false\"", "network security config", "cleartexttrafficpermitted=\"false\""),
+    "certificate_validation_bypass": ("sectrustevaluatewitherror", "performdefaulthandling", "servertrustevaluating", "badcertificatecallback", "return false"),
+    "bridge_exposure": ("call.method ==", "switch(call.method", "call.arguments is", "containskey(", "missingpluginexception"),
+    "pendingintent_injection": ("flag_immutable", "pendingintentcompat", "mutable=false"),
+    "binder_exposure": ("getcallinguid", "checkcallingpermission", "enforcecallingpermission", "enforcecallingorselfpermission"),
     "sql_injection": ("prepare", "preparedstatement", "bindvalue", "bindparam", "parameterized", "addwithvalue", "sqlparameter", "namedexec", "where(\"", "execute("),
     "xss": ("htmlspecialchars", "htmlentities", "html.escape", "escapehtml", "template.htmlescape", "markupsafe.escape", "bleach.clean", "safehtml"),
     "command_injection": ("escapeshellarg", "escapeshellcmd", "shlex.quote", "processstartinfo", "argumentlist", "exec.commandcontext"),
@@ -937,6 +1141,14 @@ KIND_TITLE_MAP = {
 }
 
 FINDING_KIND_PATTERNS = {
+    "component_exposure": re.compile(r"\b(exported component|unsafe broadcast receiver|unprotected component|exported=\"true\"|android:exported)\b", re.IGNORECASE),
+    "content_provider_exposure": re.compile(r"\b(content provider|android:authorities|provider\b)\b", re.IGNORECASE),
+    "deep_link_exposure": re.compile(r"\b(deep link|app link|intent filter|android\.intent\.action\.view|url scheme)\b", re.IGNORECASE),
+    "insecure_transport": re.compile(r"\b(cleartext|usescleartexttraffic|insecure network traffic|http://)\b", re.IGNORECASE),
+    "certificate_validation_bypass": re.compile(r"\b(certificate validation|trust bypass|badcertificatecallback|server trust|usecredential|didreceive challenge)\b", re.IGNORECASE),
+    "bridge_exposure": re.compile(r"\b(methodchannel|reactmethod|bridge|postmessage handler|javascript bridge)\b", re.IGNORECASE),
+    "pendingintent_injection": re.compile(r"\b(pendingintent|flag_immutable|mutable pendingintent)\b", re.IGNORECASE),
+    "binder_exposure": re.compile(r"\b(aidl|binder|stub|callinguid|callingpid)\b", re.IGNORECASE),
     "sql_injection": re.compile(r"\b(sql|sqli|hql|jdbc|query)\b", re.IGNORECASE),
     "xss": re.compile(r"\b(xss|cross[\s-]?site scripting|innerhtml|document\.write|response\.write|webview)\b", re.IGNORECASE),
     "command_injection": re.compile(r"\b(command|exec|os command|processbuilder|runtime\.exec|child_process|system\(|popen)\b", re.IGNORECASE),
@@ -1368,6 +1580,28 @@ def _infer_input_surface(flow: Dict) -> Dict:
     }
 
 
+# Canonical Attack-Vector categories shared with the frontend's VECTOR_GROUPS
+# (webui/frontend/src/components/AdvancedAnalysis.jsx). The specific `kind`
+# values below carry more detail for display/summary purposes, but every
+# kind must map to one of these five categories (or "code-path" as a
+# catch-all) so the frontend can actually bucket what this function emits -
+# previously nothing here ever mapped to "datastore" at all, so that Attack
+# Vector category was always empty regardless of how many SQL/file/cache
+# flows a scan found.
+_VECTOR_CATEGORY_BY_KIND = {
+    "endpoint": "external",
+    "user_input": "external",
+    "cookie_input": "external",
+    "uploaded_file": "external",
+    "environment": "config",
+    "network": "service",
+    "session_state": "auth",
+    "datastore_sink": "datastore",
+    "datastore_source": "datastore",
+    "code_path": "code-path",
+}
+
+
 def _derive_attack_vectors(flow: Dict) -> List[Dict]:
     vectors: List[Dict] = []
     path = flow.get("path", []) or []
@@ -1387,7 +1621,14 @@ def _derive_attack_vectors(flow: Dict) -> List[Dict]:
     def add(kind: str, label: str, reason: str, examples: List[str]) -> None:
         if any(existing.get("kind") == kind for existing in vectors):
             return
-        vectors.append({"kind": kind, "label": label, "reason": reason, "examples": examples[:3], "taint_symbols": taint_symbols[:4]})
+        vectors.append({
+            "kind": kind,
+            "category": _VECTOR_CATEGORY_BY_KIND.get(kind, "code-path"),
+            "label": label,
+            "reason": reason,
+            "examples": examples[:3],
+            "taint_symbols": taint_symbols[:4],
+        })
 
     step_text = "\n".join([str(step.get("code", "")) for step in path])
     joined = "\n".join(
@@ -1461,6 +1702,27 @@ def _derive_attack_vectors(flow: Dict) -> List[Dict]:
             ["Upstream API response influences local sink", "Socket/message payload influences local execution path"],
         )
 
+    sink_text = f"{flow.get('sink', '')}\n{step_text}"
+    if DATASTORE_SINK_RE.search(sink_text):
+        add(
+            "datastore_sink",
+            "Database or storage sink",
+            "The tainted value reaches a SQL/ORM query, file write, cache write, or serialization call - a compromise here persists the impact rather than just executing once.",
+            [f"Tainted value written via {flow.get('sink', 'a storage sink')}", "SQL/ORM query, file write, or cache write receives attacker-influenced data"],
+        )
+
+    # Second-order / stored case: the flow's own SOURCE reads back from a
+    # datastore (DB row, cached value, deserialized payload) rather than
+    # directly from the current request - covers stored/second-order
+    # injection, persisted XSS, and unsafe deserialization of prior input.
+    if DATASTORE_SOURCE_RE.search(source_text):
+        add(
+            "datastore_source",
+            "Previously stored data read back",
+            "The tainted value originates from a database read, cache read, file read, or deserialized payload rather than the current request - this is a second-order/stored flow, so the attacker-controlled data was persisted at an earlier point.",
+            ["Database/cache read result flows into a sensitive sink", "Deserialized or file-read content reaches a sink without re-validation"],
+        )
+
     if not vectors:
         add(
             "code_path",
@@ -1530,6 +1792,88 @@ def _flow_locations(flow: Dict) -> Dict:
 
 def _flow_code_text(flow: Dict) -> str:
     return "\n".join(str(step.get("code", "")) for step in (flow.get("path", []) or []))
+
+
+def _sink_step(flow: Dict) -> Dict:
+    for step in reversed(flow.get("path", []) or []):
+        if isinstance(step, dict) and str(step.get("role", "")).lower() == "sink":
+            return step
+    return {}
+
+
+def _flow_sink_consistent(flow: Dict) -> bool:
+    sink_step = _sink_step(flow)
+    sink_name = str(flow.get("sink", "")).strip().lower()
+    sink_code = str((sink_step or {}).get("code", "")).strip().lower()
+    if not sink_step:
+        return False
+    if not sink_code or sink_code in {"-", "[resolved sink]"}:
+        return False
+    if any(token in sink_name for token in ("webview", "evaluatejavascript", "javascript")):
+        return any(token in sink_code for token in ("loadurl", "evaluatejavascript", "addjavascriptinterface", "webview"))
+    if any(token in sink_name for token in ("sql", "query", "statement")):
+        # Originally only recognized Android/JDBC-flavored code snippets
+        # (rawquery/jdbc/jpa/...) - now that maui/xamarin/reactnative/
+        # ionic/cordova/nativescript/kmp confirm engine-level SQL sinks
+        # too, their dotnet/JS/Kotlin-flavored sink code needs recognizing
+        # here as well, or every one of those confirmations gets silently
+        # dropped by this consistency check regardless of the sink_names match.
+        return any(token in sink_code for token in (
+            "rawquery", "execsql", "query", "statement", "sqlite", "jdbc", "jpa",
+            "sqlcommand", "oledbcommand", "mysqlcommand", "dataadapter", "dapper",
+            "executereader", "executenonquery", "executescalar",
+            "sequelize", "knex", "prisma",
+            "select ", "insert into", "update ", "delete from",
+        ))
+    if any(token in sink_name for token in ("command", "runtime.exec", "processbuilder", "exec")):
+        return any(token in sink_code for token in ("runtime.getruntime().exec", "processbuilder", "exec(", "system(", "shell_exec", "popen"))
+    return True
+
+
+def _android_flow_semantics(flow: Dict) -> Dict:
+    source_step = next((step for step in flow.get("path", []) or [] if isinstance(step, dict) and str(step.get("role", "")).lower() in {"source", "param"}), {}) or {}
+    source_code = str(source_step.get("code", "")).lower()
+    symbols = {
+        str(step.get("source_symbol", "")).strip().lower()
+        for step in flow.get("path", []) or []
+        if isinstance(step, dict) and str(step.get("role", "")).lower() in {"source", "param"}
+    }
+    return {
+        "component_entry": (
+            "[android entrypoint]" in source_code
+            or "external app" in source_code
+            or "external_app" in symbols
+            or any(sym.startswith("intent.") for sym in symbols)
+        ),
+        "provider_entry": (
+            "[android provider]" in source_code
+            or "contentresolver" in source_code
+            or "content_resolver" in symbols
+            or "provider_input" in symbols
+        ),
+    }
+
+
+def _android_rule_semantics_match(flow: Dict, rule: Dict) -> bool:
+    kind = str(rule.get("kind", "")).strip().lower()
+    semantics = _android_flow_semantics(flow)
+    if kind in {"component_exposure", "deep_link_exposure", "pendingintent_injection", "binder_exposure", "javascript_injection", "command_injection"}:
+        return semantics["component_entry"]
+    if kind == "content_provider_exposure":
+        return semantics["provider_entry"]
+    if kind == "sql_injection":
+        return semantics["component_entry"] or semantics["provider_entry"]
+    return True
+
+
+def _android_finding_semantics_match(flow: Dict, finding: Dict) -> bool:
+    text = _finding_text(finding).lower()
+    semantics = _android_flow_semantics(flow)
+    if "content provider" in text or "provider" in text:
+        return semantics["provider_entry"]
+    if any(token in text for token in ("exported component", "deep link", "pendingintent", "binder", "broadcast", "intent")):
+        return semantics["component_entry"]
+    return True
 
 
 def _has_mitigation_hints(flow: Dict, kind: str) -> bool:
@@ -1639,6 +1983,10 @@ def _flow_matches_finding(flow: Dict, finding: Dict, platform: str) -> bool:
     candidate_kinds = _infer_finding_kinds(finding)
     flow_kinds = _flow_candidate_kinds(flow, platform=platform)
     if candidate_kinds and flow_kinds and not set(candidate_kinds).intersection(flow_kinds):
+        return False
+    if not _flow_sink_consistent(flow):
+        return False
+    if str(platform or "").strip().lower() == "android" and not _android_finding_semantics_match(flow, finding):
         return False
 
     locations = _finding_locations(finding)
@@ -1882,7 +2230,20 @@ def _confirm_vulnerability_from_flow(flow: Dict, platform: str) -> Dict:
     for rule in platform_rules:
         if sink_name not in rule.get("sink_names", set()):
             continue
+        if not _flow_sink_consistent(flow):
+            continue
+        if str(platform or "").strip().lower() == "android" and not _android_rule_semantics_match(flow, rule):
+            continue
         if _rule_blocked_by_mitigation(flow, rule):
+            append_trace("analysis_confirmation", {
+                "platform": platform,
+                "status": "blocked_by_mitigation",
+                "sink_name": sink_name,
+                "flow_file": str(flow.get("file", "")).strip(),
+                "flow_line": flow.get("line"),
+                "rule_kind": rule.get("kind", ""),
+                "rule_title": rule.get("title", ""),
+            })
             return {}
 
         loc = _flow_locations(flow)
@@ -1913,6 +2274,19 @@ def _confirm_vulnerability_from_flow(flow: Dict, platform: str) -> Dict:
             "flow_rank": int(flow.get("rank", 0) or 0),
             "path_length": len(flow.get("path", []) or []),
         }
+        append_trace("analysis_confirmation", {
+            "platform": platform,
+            "status": "confirmed",
+            "sink_name": sink_name,
+            "flow_file": str(flow.get("file", "")).strip(),
+            "flow_line": flow.get("line"),
+            "rule_kind": entry.get("kind", ""),
+            "rule_title": entry.get("title", ""),
+            "severity": entry.get("severity", ""),
+            "risk_score": entry.get("risk_score", 0),
+            "cross_file": entry.get("cross_file", False),
+            "trace_status": entry.get("trace_status", ""),
+        })
         return entry
     return {}
 
@@ -2051,6 +2425,18 @@ def build_security_inventory(flows: List[Dict], scan_root: Path = None, platform
         "by_kind": dict(Counter(item["kind"] for item in vulnerabilities)),
         "mitigated_by_kind": dict(Counter(item["kind"] for item in mitigations)),
     }
+    append_trace("analysis_inventory", {
+        "platform": str(platform or "").lower(),
+        "supported_engine": bool(supported_engine),
+        "flows_ranked": len(ranked_flows),
+        "confirmed_vulnerabilities": summary["confirmed_vulnerabilities"],
+        "mitigated_implementations": summary["mitigated_implementations"],
+        "validated_findings": summary["validated_findings"],
+        "suppressed_false_positives": summary["suppressed_false_positives"],
+        "manual_review_recommended": summary["manual_review_recommended"],
+        "by_kind": summary["by_kind"],
+        "mitigated_by_kind": summary["mitigated_by_kind"],
+    })
     return {
         "summary": summary,
         "vulnerabilities": vulnerabilities,

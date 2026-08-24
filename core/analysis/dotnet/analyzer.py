@@ -10,11 +10,11 @@ from core.analysis.report import write_reports
 CFG = get_platform_patterns("dotnet")
 
 
-def analyze_dotnet_flows(source_root: Path):
-    return analyze_multifile_flows(source_root, CFG, platform="dotnet")
+def analyze_dotnet_flows(source_root: Path, progress_callback=None):
+    return analyze_multifile_flows(source_root, CFG, platform="dotnet", progress_callback=progress_callback)
 
 
-def run(source_root: Path):
-    flows = analyze_dotnet_flows(source_root)
+def run(source_root: Path, progress_callback=None):
+    flows = analyze_dotnet_flows(source_root, progress_callback=progress_callback)
     out_dir = Path(state.reports_dirpath) / "analysis/dotnet"
     return write_reports(flows, out_dir, title=".NET Dataflow Analysis", platform="dotnet")

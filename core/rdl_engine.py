@@ -10,22 +10,33 @@ def _strip_comment(line):
     return text
 
 
+_DELIMITED_REGEX_RE = re.compile(r"^/(.*)/([a-zA-Z]*)$", re.DOTALL)
+_VALID_REGEX_FLAG_CHARS = set("ims")
+
+
 def _parse_regex_token(token):
     raw = (token or "").strip()
     if not raw:
         return None, 0
-    if len(raw) >= 2 and raw[0] == "/" and raw.count("/") >= 2:
-        end = raw.rfind("/")
-        pattern = raw[1:end]
-        flags_text = raw[end + 1:].strip().lower()
-        flags = 0
-        if "i" in flags_text:
-            flags |= re.IGNORECASE
-        if "m" in flags_text:
-            flags |= re.MULTILINE
-        if "s" in flags_text:
-            flags |= re.DOTALL
-        return pattern, flags
+
+    match = _DELIMITED_REGEX_RE.match(raw)
+    if match:
+        pattern, flags_text = match.group(1), match.group(2)
+        flags_lower = flags_text.lower()
+        # Only treat this as /pattern/flags/ if the trailing segment is
+        # nothing but valid flag letters - otherwise a bare pattern that
+        # merely starts with "/" (e.g. MSVC-style "/NXCOMPAT|/GS") gets
+        # truncated at its last "/" and left with a dangling "|".
+        if pattern and set(flags_lower).issubset(_VALID_REGEX_FLAG_CHARS):
+            flags = 0
+            if "i" in flags_lower:
+                flags |= re.IGNORECASE
+            if "m" in flags_lower:
+                flags |= re.MULTILINE
+            if "s" in flags_lower:
+                flags |= re.DOTALL
+            return pattern, flags
+
     return raw, re.IGNORECASE | re.MULTILINE
 
 
@@ -35,9 +46,31 @@ def _split_top_level(expr, operator):
     depth = 0
     i = 0
     op_len = len(operator)
+    n = len(expr)
+    escaped = False
+    in_class = False
 
-    while i < len(expr):
+    while i < n:
         char = expr[i]
+
+        if escaped:
+            escaped = False
+            i += 1
+            continue
+        if char == "\\":
+            escaped = True
+            i += 1
+            continue
+        if in_class:
+            if char == "]":
+                in_class = False
+            i += 1
+            continue
+        if char == "[":
+            in_class = True
+            i += 1
+            continue
+
         if char == "(":
             depth += 1
         elif char == ")":
@@ -64,7 +97,22 @@ def _strip_wrapping_parentheses(expr):
     while text.startswith("(") and text.endswith(")"):
         depth = 0
         balanced = True
+        escaped = False
+        in_class = False
         for idx, char in enumerate(text):
+            if escaped:
+                escaped = False
+                continue
+            if char == "\\":
+                escaped = True
+                continue
+            if in_class:
+                if char == "]":
+                    in_class = False
+                continue
+            if char == "[":
+                in_class = True
+                continue
             if char == "(":
                 depth += 1
             elif char == ")":
@@ -79,6 +127,18 @@ def _strip_wrapping_parentheses(expr):
     return text
 
 
+def _safe_search(pattern, text, flags=0):
+    """re.search that fails closed (no match) on a malformed pattern,
+    instead of raising re.error and aborting the whole scan over one bad
+    .rdl rule. Every regex-driven RDL command routes through this."""
+    if not pattern:
+        return False
+    try:
+        return bool(re.search(pattern, text or "", flags=flags))
+    except re.error:
+        return False
+
+
 def _evaluate_predicate(predicate, text):
     token = _strip_wrapping_parentheses(predicate)
     match = re.match(r"^(MISSING|PRESENT|EXISTS)\s*:(.+)$", token, flags=re.IGNORECASE | re.DOTALL)
@@ -90,10 +150,7 @@ def _evaluate_predicate(predicate, text):
     if not pattern:
         return False
 
-    try:
-        found = bool(re.search(pattern, text, flags=re.IGNORECASE | re.MULTILINE))
-    except re.error:
-        return False
+    found = _safe_search(pattern, text, flags=re.IGNORECASE | re.MULTILINE)
 
     if mode == "MISSING":
         return not found
@@ -206,7 +263,7 @@ def evaluate_rdl_with_reason(rdl_script, *, file_text="", file_path="", project_
         if upper.startswith("WHEN CURRENT_FILE_MATCHES "):
             token = line[len("WHEN CURRENT_FILE_MATCHES "):].strip()
             pattern, flags = _parse_regex_token(token)
-            matched = bool(pattern and re.search(pattern, file_text or "", flags=flags))
+            matched = _safe_search(pattern, file_text, flags=flags)
             result["trace"].append(f"current_file_matches {token}: {'matched' if matched else 'missed'}")
             if not matched:
                 result["passes"] = False
@@ -218,7 +275,7 @@ def evaluate_rdl_with_reason(rdl_script, *, file_text="", file_path="", project_
         if upper.startswith("WHEN PRESENT "):
             token = line[len("WHEN PRESENT "):].strip()
             pattern, flags = _parse_regex_token(token)
-            matched = bool(pattern and re.search(pattern, file_text or "", flags=flags))
+            matched = _safe_search(pattern, file_text, flags=flags)
             result["trace"].append(f"present {token}: {'matched' if matched else 'missed'}")
             if not matched:
                 result["passes"] = False
@@ -230,7 +287,7 @@ def evaluate_rdl_with_reason(rdl_script, *, file_text="", file_path="", project_
         if upper.startswith("WHEN MISSING "):
             token = line[len("WHEN MISSING "):].strip()
             pattern, flags = _parse_regex_token(token)
-            matched = bool(pattern and re.search(pattern, file_text or "", flags=flags))
+            matched = _safe_search(pattern, file_text, flags=flags)
             result["trace"].append(f"missing {token}: {'violated' if matched else 'satisfied'}")
             if matched:
                 result["passes"] = False
@@ -253,7 +310,7 @@ def evaluate_rdl_with_reason(rdl_script, *, file_text="", file_path="", project_
         if upper.startswith("UNLESS CURRENT_FILE_MATCHES "):
             token = line[len("UNLESS CURRENT_FILE_MATCHES "):].strip()
             pattern, flags = _parse_regex_token(token)
-            matched = bool(pattern and re.search(pattern, file_text or "", flags=flags))
+            matched = _safe_search(pattern, file_text, flags=flags)
             result["trace"].append(f"unless current_file_matches {token}: {'triggered' if matched else 'not_triggered'}")
             if matched:
                 result["passes"] = False

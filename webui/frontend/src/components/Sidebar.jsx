@@ -1,3 +1,5 @@
+import BrandLogo from './BrandLogo'
+
 const NAV_ITEMS = [
   {
     id: 'dashboard',
@@ -56,47 +58,29 @@ const NAV_ITEMS = [
   },
 ]
 
-export default function Sidebar({ active, onChange, health, runningCount = 0, version }) {
+function LogoutIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path fillRule="evenodd" d="M3 4.25A2.25 2.25 0 015.25 2h5.5A2.25 2.25 0 0113 4.25v2a.75.75 0 01-1.5 0v-2a.75.75 0 00-.75-.75h-5.5a.75.75 0 00-.75.75v11.5c0 .414.336.75.75.75h5.5a.75.75 0 00.75-.75v-2a.75.75 0 011.5 0v2A2.25 2.25 0 0110.75 18h-5.5A2.25 2.25 0 013 15.75V4.25z" clipRule="evenodd" />
+      <path fillRule="evenodd" d="M6 10a.75.75 0 01.75-.75h9.19l-2.72-2.72a.75.75 0 111.06-1.06l4 4a.75.75 0 010 1.06l-4 4a.75.75 0 11-1.06-1.06l2.72-2.72H6.75A.75.75 0 016 10z" clipRule="evenodd" />
+    </svg>
+  )
+}
+
+export default function Sidebar({ active, onChange, health, runningCount = 0, user, version, onLogout }) {
+  const initial = String(user?.username || '?').trim().charAt(0).toUpperCase()
   return (
     <aside className="sidebar">
       {/* Brand */}
       <div className="sidebar-brand">
         <div className="brand-logo">
-          <svg viewBox="0 0 400 400" width="36" height="36" xmlns="http://www.w3.org/2000/svg">
-            <g transform="rotate(144, 200, 200)">
-              <path d="M 200,200 C 244,188 255,115 215,72 Q 200,52 185,72 C 145,115 156,188 200,200 Z" fill="#9d52de"/>
-              <circle cx="200" cy="90" r="11" fill="#141414"/>
-              <circle cx="191" cy="122" r="11" fill="#141414"/>
-              <circle cx="209" cy="152" r="11" fill="#141414"/>
-            </g>
-            <g transform="rotate(216, 200, 200)">
-              <path d="M 200,200 C 244,188 255,115 215,72 Q 200,52 185,72 C 145,115 156,188 200,200 Z" fill="#2dc98a"/>
-              <circle cx="200" cy="90" r="11" fill="#141414"/>
-              <circle cx="191" cy="122" r="11" fill="#141414"/>
-              <circle cx="209" cy="152" r="11" fill="#141414"/>
-            </g>
-            <g transform="rotate(288, 200, 200)">
-              <path d="M 200,200 C 244,188 255,115 215,72 Q 200,52 185,72 C 145,115 156,188 200,200 Z" fill="#f5bf1e"/>
-              <circle cx="200" cy="90" r="11" fill="#141414"/>
-              <circle cx="191" cy="122" r="11" fill="#141414"/>
-              <circle cx="209" cy="152" r="11" fill="#141414"/>
-            </g>
-            <g transform="rotate(72, 200, 200)">
-              <path d="M 200,200 C 244,188 255,115 215,72 Q 200,52 185,72 C 145,115 156,188 200,200 Z" fill="#17b2f0"/>
-              <circle cx="200" cy="90" r="11" fill="#141414"/>
-              <circle cx="191" cy="122" r="11" fill="#141414"/>
-              <circle cx="209" cy="152" r="11" fill="#141414"/>
-            </g>
-            <g transform="rotate(0, 200, 200)">
-              <path d="M 200,200 C 244,188 255,115 215,72 Q 200,52 185,72 C 145,115 156,188 200,200 Z" fill="#f0357a"/>
-              <circle cx="200" cy="90" r="11" fill="#141414"/>
-              <circle cx="191" cy="122" r="11" fill="#141414"/>
-              <circle cx="209" cy="152" r="11" fill="#141414"/>
-            </g>
-          </svg>
+          <BrandLogo size={36} />
         </div>
         <div>
-          <span className="brand-name">DAKSH SCRA</span>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <span className="brand-name">DAKSH SCRA</span>
+            <span className="sidebar-version">v{version || '0.38'}</span>
+          </div>
           <span className="brand-sub">Code Security Review</span>
         </div>
       </div>
@@ -124,7 +108,26 @@ export default function Sidebar({ active, onChange, health, runningCount = 0, ve
           <span className="dot" />
           API {health}
         </div>
-        <span className="sidebar-version">{version ? `v${version}` : 'v1.1.0'}</span>
+
+        {user && (
+          <div className="sidebar-account">
+            <div className="sidebar-account-info">
+              <span className="sidebar-account-avatar">{initial}</span>
+              <div className="sidebar-account-text">
+                <span className="sidebar-account-name" title={user.username}>{user.username}</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="sidebar-logout"
+              onClick={onLogout}
+              title="Log out"
+              aria-label="Log out"
+            >
+              <LogoutIcon />
+            </button>
+          </div>
+        )}
       </div>
     </aside>
   )

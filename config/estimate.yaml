@@ -39,6 +39,32 @@ estimation_days_ranges:
     - files_range: [10001, 999999]  # Range with '999999' upper bound indicates maximum limit exceeded
       effort_range: [6, 10]
 
+# Recon (rules/recon/technology.json) reports 7 categories total, but only
+# Backend/Frontend had calibrated day-ranges above - the other 5 always
+# contributed 0 days to the estimate regardless of file count. Rather than
+# hand-calibrating 5 more full range tables (no real data to calibrate
+# against), each maps to whichever existing curve is the closer shape and
+# scales it by a multiplier - Mobile/System code reviews slower than a
+# typical backend file, Database/Shell/Infrastructure files are usually
+# smaller and faster to review than a typical frontend file. Adjust these
+# multipliers as real review-time data becomes available.
+category_effort_multipliers:
+  Mobile Platforms:
+    base: backend_data
+    multiplier: 1.1
+  System Programs:
+    base: backend_data
+    multiplier: 1.3
+  Database:
+    base: frontend_data
+    multiplier: 0.8
+  Shell Scripts:
+    base: frontend_data
+    multiplier: 0.7
+  Infrastructure:
+    base: frontend_data
+    multiplier: 0.6
+
 report_gen_days_ranges:
   - findings: [1, 10]
     effort_range: [1, 2]

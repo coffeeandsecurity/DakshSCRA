@@ -1,12 +1,15 @@
 # Standard libraries
 import json
 import os
+import tempfile
+import threading
 
 # Local application imports
 import state.runtime_state as runtime
 from utils.log_utils import get_logger
 
 logger = get_logger(__name__)
+_summary_lock = threading.RLock()
 
 
 def _default_summary():
@@ -19,6 +22,9 @@ def _default_summary():
             "target_directory": "",
             "filetypes_selected": "",
             "file_extensions_selected": [],
+            "project_id": "",
+            "run_id": "",
+            "report_root": "",
         },
         "detection_summary": {
             "total_project_files_identified": 0,
@@ -33,6 +39,27 @@ def _default_summary():
             "scan_start_time": "",
             "scan_end_time": "",
             "scan_duration": "",
+        },
+        "live_progress": {
+            "stage": "",
+            "status": "",
+            "message": "",
+            "platform": "",
+            "category": "",
+            "rule_title": "",
+            "current_file": "",
+            "current_function": "",
+            "current_phase": "",
+            "current_index": 0,
+            "total_items": 0,
+            "elapsed_seconds": 0,
+            "rules_match_count": 0,
+            "suppressed_count": 0,
+            "paths_match_count": 0,
+            "parse_error_count": 0,
+            "directories_scanned": 0,
+            "files_discovered": 0,
+            "files_selected": 0,
         },
         "source_files_scanning_summary": {
             "matched_rules": [],
@@ -86,6 +113,63 @@ def _ensure_nested_dict(data, levels):
     return current
 
 
+def _set_summary_value(data, key, value):
+    levels = key.split(".")
+    if len(levels) < 2:
+        logger.error("Invalid scan summary key path: %s", key)
+        return
+
+    parent = _ensure_nested_dict(data, levels[:-1])
+    leaf = levels[-1]
+
+    if key == "detection_summary.file_extensions_identified" and isinstance(value, dict):
+        if leaf not in parent or not isinstance(parent[leaf], dict):
+            parent[leaf] = {}
+        for platform, extensions in value.items():
+            existing = parent[leaf].setdefault(platform, [])
+            existing.extend(extensions if isinstance(extensions, list) else [extensions])
+            parent[leaf][platform] = sorted(set(filter(None, existing)))
+    else:
+        parent[leaf] = value
+
+
+def update_scan_summary_many(updates):
+    """Apply related summary updates with one locked, atomic file replacement."""
+    if not isinstance(updates, dict) or not updates:
+        return
+
+    json_filename = runtime.scanSummary_Fpath
+    output_dir = os.path.dirname(str(json_filename)) or "."
+    os.makedirs(output_dir, exist_ok=True)
+
+    with _summary_lock:
+        data = _load_or_create_summary(json_filename)
+        for key, value in updates.items():
+            _set_summary_value(data, key, value)
+
+        temp_path = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w",
+                encoding="utf-8",
+                dir=output_dir,
+                prefix=".scan-summary-",
+                suffix=".tmp",
+                delete=False,
+            ) as file_obj:
+                json.dump(data, file_obj, indent=4)
+                file_obj.flush()
+                temp_path = file_obj.name
+            os.replace(temp_path, json_filename)
+        except OSError as exc:
+            logger.error("Failed to write scan summary %s: %s", json_filename, exc)
+            if temp_path:
+                try:
+                    os.unlink(temp_path)
+                except OSError:
+                    pass
+
+
 def update_scan_summary(key, value):
     """
     Updates a specified entry in the scan summary JSON file.
@@ -99,34 +183,9 @@ def update_scan_summary(key, value):
     Returns:
         None: The function modifies the JSON file in place.
     """
-    json_filename = runtime.scanSummary_Fpath
-    data = _load_or_create_summary(json_filename)
-
-    levels = key.split(".")
-    if len(levels) < 2:
-        logger.error("Invalid scan summary key path: %s", key)
-        return
-
-    parent = _ensure_nested_dict(data, levels[:-1])
-    leaf = levels[-1]
-
-    # Merge platform extension map to preserve previous values.
-    if key == "detection_summary.file_extensions_identified" and isinstance(value, dict):
-        if leaf not in parent or not isinstance(parent[leaf], dict):
-            parent[leaf] = {}
-        for platform, extensions in value.items():
-            existing = parent[leaf].setdefault(platform, [])
-            existing.extend(extensions if isinstance(extensions, list) else [extensions])
-            parent[leaf][platform] = sorted(set(filter(None, existing)))
-    else:
-        parent[leaf] = value
-
-    try:
-        with open(json_filename, "w", encoding="utf-8") as file_obj:
-            json.dump(data, file_obj, indent=4)
-    except OSError as exc:
-        logger.error("Failed to write scan summary %s: %s", json_filename, exc)
+    update_scan_summary_many({key: value})
 
 
 # Backward-compatible alias for legacy callers.
 updateScanSummary = update_scan_summary
+updateScanSummaryMany = update_scan_summary_many

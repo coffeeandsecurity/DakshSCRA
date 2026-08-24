@@ -1,0 +1,67 @@
+<root>
+    <category name="Framework-Specific Issues - .NET MAUI">
+        <rule>
+            <name>MAUI Insecure HTTP Endpoint Usage</name>
+            <regex>http://</regex>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
+            <rule_desc>Detects cleartext endpoint references in .NET MAUI applications.</rule_desc>
+            <vuln_desc>Cleartext transport can expose sensitive mobile traffic to interception and tampering.</vuln_desc>
+            <developer>Use HTTPS endpoints only and keep strict certificate validation enabled.</developer>
+            <reviewer>Audit endpoint constants and networking client setup. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>MAUI Certificate Validation Bypass</name>
+            <regex>ServerCertificateCustomValidationCallback\s*=|ServerCertificateValidationCallback</regex>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
+            <rule_desc>Detects TLS certificate validation bypass patterns in .NET MAUI networking code.</rule_desc>
+            <vuln_desc>Certificate validation bypass enables man-in-the-middle interception attacks.</vuln_desc>
+            <developer>Remove trust-bypass callbacks and rely on strict system validation or correct pinning.</developer>
+            <reviewer>Verify no callback unconditionally accepts invalid certificates. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>MAUI WebView Script Bridge Marker</name>
+            <regex>BlazorWebView|WebView|EvaluateJavaScriptAsync\(|HybridWebView</regex>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>magenta</highlight_color>
+            </scan_config>
+            <rule_desc>Detects MAUI embedded web view and script execution paths requiring trust-boundary review.</rule_desc>
+            <vuln_desc>Unsafe embedded browser usage can expose native capabilities to untrusted content.</vuln_desc>
+            <developer>Restrict content origins and minimize script/native bridge exposure.</developer>
+            <reviewer>Review webview source restrictions and script execution paths. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>MAUI Unvalidated URL Opening</name>
+            <regex>Launcher\.Default\.OpenAsync\s*\(|Browser\.Default\.OpenAsync\s*\(</regex>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>2</context_lines_before>
+                <context_lines_after>1</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
+            <rule_desc>Detects .NET MAUI Launcher/Browser API calls that open a URL without visible validation.</rule_desc>
+            <vuln_desc>Opening an externally-influenced URL without validation can enable open-redirect or unsafe scheme/deep-link abuse.</vuln_desc>
+            <developer>Validate the target URL's scheme and origin against an allow-list before calling OpenAsync.</developer>
+            <reviewer>Trace the URL argument's origin. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+</root>

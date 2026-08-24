@@ -18,9 +18,13 @@ env/
 # Runtime and generated outputs
 # -----------------------------
 runtime/*
-reports/data/
-reports/scan/
-reports/analysis/
+/reports/*
+
+# -----------------------------
+# Node / frontend build output
+# -----------------------------
+node_modules/
+webui/frontend/dist/
 
 # -----------------------------
 # Local environment/secrets

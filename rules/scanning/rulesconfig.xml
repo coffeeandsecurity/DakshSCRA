@@ -98,6 +98,20 @@
         <common_ftypes>*.config, *.plist, *.json, *.xml, *.resx, *.log</common_ftypes>
     </rule>
     <rule>
+        <platform>maui</platform>
+        <path>/mobile/xplat/maui/maui.xml</path>
+        <platform_ftypes>*.cs, *.csproj, *.xaml, AndroidManifest.xml, Info.plist, Entitlements.plist</platform_ftypes>
+        <project_config_ftypes>*.csproj, *.sln, MauiProgram.cs, AndroidManifest.xml, Info.plist, Entitlements.plist</project_config_ftypes>
+        <common_ftypes>*.config, *.plist, *.json, *.xml, *.resx, *.xaml, *.log</common_ftypes>
+    </rule>
+    <rule>
+        <platform>kmp</platform>
+        <path>/mobile/xplat/kmp/kmp.xml</path>
+        <platform_ftypes>*.kt, *.kts, *.gradle, *.gradle.kts, AndroidManifest.xml, Info.plist</platform_ftypes>
+        <project_config_ftypes>build.gradle, build.gradle.kts, settings.gradle, settings.gradle.kts, gradle.properties, AndroidManifest.xml, Info.plist</project_config_ftypes>
+        <common_ftypes>*.kt, *.kts, *.gradle, *.plist, *.json, *.properties, *.yaml, *.yml, *.log</common_ftypes>
+    </rule>
+    <rule>
         <platform>ionic</platform>
         <path>/mobile/xplat/ionic/ionic.xml</path>
         <platform_ftypes>*.ts, *.js, *.html, capacitor.config.json, capacitor.config.ts, ionic.config.json</platform_ftypes>

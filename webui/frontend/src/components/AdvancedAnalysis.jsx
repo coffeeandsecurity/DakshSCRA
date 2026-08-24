@@ -49,14 +49,6 @@ function ReportTabIcon() {
   )
 }
 
-const GROUPS = [
-  { id: 'external', label: 'External Inputs', match: /(request|query|params|body|form|cookie|header|stdin|argv|user_input)/i },
-  { id: 'service', label: 'Service Boundaries', match: /(http|axios|fetch|curl|grpc|queue|kafka|socket|webhook|remote|service)/i },
-  { id: 'datastore', label: 'Data Layer', match: /(sql|query|database|redis|mongo|file|serialize|deserialize|path traversal|storage)/i },
-  { id: 'auth', label: 'Identity & Auth', match: /(auth|token|jwt|session|password|credential|oauth|role|permission)/i },
-  { id: 'config', label: 'Environment', match: /(env|getenv|process\.env|config|settings|vault|secret_manager|dotenv|environment)/i },
-]
-
 const VECTOR_GROUPS = [
   { id: 'external', label: 'External Inputs', sublabel: 'User-Controlled', color: '#f85149' },
   { id: 'datastore', label: 'Data Layer', sublabel: 'Storage & Persistence', color: '#e3842a' },
@@ -114,6 +106,15 @@ function shortLocation(file, line) {
   const base = shortPath(file)
   if (!base) return line ? `line ${line}` : 'Unknown location'
   return line ? `${base}:${line}` : base
+}
+
+function resolvedStepCode(step, flow) {
+  const raw = String(step?.code || '').trim()
+  if (raw && raw !== '-') return raw
+  if (String(step?.role || '').toLowerCase() === 'sink') {
+    return String(flow?.sink || flow?.title || 'No analyzer code detail recorded for this sink.').trim()
+  }
+  return 'No analyzer code detail recorded for this step.'
 }
 
 function normalizeTraceStatus(flow) {
@@ -477,21 +478,6 @@ function deriveAttackVectors(flow) {
   return out
 }
 
-function groupIdForFlow(flow) {
-  const haystack = [
-    flow.title,
-    flow.description,
-    flow.explanation,
-    flow.source,
-    flow.sink,
-    flow.input_surface?.channel,
-    ...(flow.attack_vectors || []).map((item) => `${item.kind} ${item.label} ${item.reason}`),
-    ...(flow.path || []).map((step) => `${step.role || ''} ${step.code || ''}`),
-  ].join(' ')
-  const match = GROUPS.find((group) => group.match.test(haystack))
-  return match?.id || 'other'
-}
-
 function buildPentestTargets(flows) {
   const grouped = new Map()
   for (const flow of flows) {
@@ -803,7 +789,7 @@ function buildModel(analysis) {
       String(a.file || '').localeCompare(String(b.file || '')) ||
       Number(a.line || 0) - Number(b.line || 0)
     ))
-    .map((flow, index) => ({ ...flow, rank: index + 1, groupId: groupIdForFlow(flow) }))
+    .map((flow, index) => ({ ...flow, rank: index + 1 }))
 
   const stats = {
     total: flows.length,
@@ -828,7 +814,15 @@ function buildModel(analysis) {
   const vectors = Array.from(vectorMap.values()).sort((a, b) => b.count - a.count)
   const vectorGroups = Object.fromEntries(VECTOR_GROUPS.map((group) => [group.id, []]))
   for (const vector of vectors) {
-    const bucket = vectorGroups[vector.kind] ? vector.kind : 'code-path'
+    // Backend-supplied vectors carry a `category` (external/datastore/service/
+    // auth/config/code-path) distinct from their more specific `kind` (e.g.
+    // "datastore_sink"). The frontend's own deriveAttackVectors() fallback
+    // never sets `category` - its `kind` values already ARE category ids -
+    // so fall back to `vector.kind` for those. Bucketing directly on `kind`
+    // alone (the old behavior) never matched any backend kind against any
+    // VECTOR_GROUPS id, so every category but the catch-all stayed empty.
+    const groupId = vector.category || vector.kind
+    const bucket = vectorGroups[groupId] ? groupId : 'code-path'
     vectorGroups[bucket].push(vector)
   }
   const pentestTargets = buildPentestTargets(flows)
@@ -1036,7 +1030,7 @@ function SimpleTraceGraph({ flow }) {
                   </div>
                 ) : null}
                 {transform ? <div className="aa-simple-step-transform">{transform}</div> : null}
-                <code>{step.code || 'No analyzer code detail recorded for this step.'}</code>
+                <code>{resolvedStepCode(step, flow)}</code>
               </div>
             </div>
           )
@@ -1306,7 +1300,7 @@ function PathGraph({ flow }) {
                   {step.target_symbol && step.target_symbol !== step.source_symbol ? <span className="aa-tag">target {step.target_symbol}</span> : null}
                   {step.inferred ? <span className="aa-tag">inferred</span> : null}
                 </div>
-                {step.code ? <pre className="aa-path-node-code">{String(step.code).trim()}</pre> : null}
+                {resolvedStepCode(step, flow) ? <pre className="aa-path-node-code">{resolvedStepCode(step, flow)}</pre> : null}
               </div>
               {index < flow.path.length - 1 ? <div className="aa-path-arrow">{String(step.file || '') !== String(flow.path[index + 1]?.file || '') ? 'cross-file →' : '→'}</div> : null}
             </div>
@@ -2117,11 +2111,14 @@ export default function AdvancedAnalysis({ analysis, artifactIndex }) {
     <div className="aa-root">
       <CoverageNotice taintTargets={model.taintTargets} heuristicTargets={model.heuristicTargets} />
 
-      <div className="aa-subtabs">
+      <div className="aa-subtabs" role="tablist" aria-label="Advanced Analysis sections">
         {subtabs.map((item) => (
           <button
             key={item.key}
             type="button"
+            role="tab"
+            aria-selected={subtab === item.key}
+            title={`View ${item.label}`}
             className={`aa-subtab tone-${item.tone}${subtab === item.key ? ' active' : ''}`}
             onClick={() => setSubtab(item.key)}
           >
@@ -2131,6 +2128,9 @@ export default function AdvancedAnalysis({ analysis, artifactIndex }) {
               <span className="aa-subtab-meta">{item.sublabel}</span>
             </span>
             <span className="aa-subtab-count">{item.count}</span>
+            <span className="aa-subtab-arrow" aria-hidden="true">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.21 14.77a.75.75 0 0 1 0-1.06L11.94 10 7.21 5.29a.75.75 0 1 1 1.06-1.06l5.25 5.25a.75.75 0 0 1 0 1.06l-5.25 5.25a.75.75 0 0 1-1.06 0Z" clipRule="evenodd" /></svg>
+            </span>
           </button>
         ))}
       </div>

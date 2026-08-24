@@ -1,30 +1,49 @@
+import html
 import json
 import os
 import re
 import signal
+import shutil
 import threading
 import time
+from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
 from uuid import uuid4
 
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import APIRouter, Cookie, Depends, FastAPI, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from sqlalchemy import inspect, text
 from sqlalchemy.orm import Session
+import core.reports as core_reports
+import state.runtime_state as runtime_state
 from core.parser import FILEPATH_RULE_GUIDANCE
 
-from .config import ROOT_DIR, get_browse_roots
+from .auth import (
+    bootstrap_admin_user,
+    clear_session_cookie,
+    create_session,
+    delete_session,
+    get_current_user,
+    hash_password,
+    require_admin,
+    require_password_ok,
+    set_session_cookie,
+    verify_password,
+)
+from .config import ADMIN_PASSWORD, ADMIN_USERNAME, ROOT_DIR, SESSION_COOKIE_NAME, get_browse_roots, get_cors_origins
 from .database import Base, SessionLocal, engine
-from .models import Project, ScanRun
+from .models import Project, ScanRun, User, UserSession
 from .scan_runtime import (
     WEB_RUNS_DIR,
     build_cmd,
+    cleanup_run_runtime,
     cmd_as_shell_string,
     execute_scan_sync,
     get_proc,
+    project_reports_dir,
     read_log_tail,
     run_dir,
     safe_rel_path,
@@ -32,17 +51,45 @@ from .scan_runtime import (
 )
 from .schemas import (
     ArtifactIndex,
+    BootstrapInfo,
+    ChangePasswordRequest,
     DashboardMetrics,
     FsEntry,
     FsListResponse,
+    LoginRequest,
     ProjectSummary,
     ScanCreate,
     ScanDetails,
     ScanSummary,
+    SelfChangePasswordRequest,
     SettingsData,
+    UserCreate,
+    UserOut,
 )
 
-app = FastAPI(title="DakshSCRA API", version="2.0.0")
+@asynccontextmanager
+async def _lifespan(app: FastAPI):
+    (ROOT_DIR / "runtime").mkdir(parents=True, exist_ok=True)
+    WEB_RUNS_DIR.mkdir(parents=True, exist_ok=True)
+    Base.metadata.create_all(bind=engine)
+    _ensure_schema_compatibility()
+    _db = SessionLocal()
+    try:
+        bootstrap_admin_user(_db)
+    finally:
+        _db.close()
+    port = os.environ.get("DAKSH_PORT", "8080")
+    print(f"\n  DakshSCRA Web UI  →  http://localhost:{port}\n", flush=True)
+    yield
+
+
+app = FastAPI(title="DakshSCRA API", version="2.0.0", lifespan=_lifespan)
+
+# core.reports/state.runtime_state are written for a single CLI process and
+# hold their output paths in module-level globals. regenerate_reports()
+# below is the only place this API process touches them, so a lock keeps
+# two concurrent regenerate calls from racing on that shared global state.
+_report_regen_lock = threading.Lock()
 
 
 def _enrich_file_path_findings(items):
@@ -64,21 +111,18 @@ def _enrich_file_path_findings(items):
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=get_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
-@app.on_event("startup")
-def startup():
-    (ROOT_DIR / "runtime").mkdir(parents=True, exist_ok=True)
-    WEB_RUNS_DIR.mkdir(parents=True, exist_ok=True)
-    Base.metadata.create_all(bind=engine)
-    _ensure_schema_compatibility()
-    port = os.environ.get("DAKSH_PORT", "8080")
-    print(f"\n  DakshSCRA Web UI  →  http://localhost:{port}\n", flush=True)
+# Every route except health/version/login/logout/me/change-password
+# requires a valid session AND a password that isn't still pending a
+# forced change. Kept as a separate router (rather than a global app-level
+# dependency) so those endpoints can stay reachable pre-login and while a
+# password change is still outstanding.
+protected = APIRouter(dependencies=[Depends(require_password_ok)])
 
 
 def _ensure_schema_compatibility() -> None:
@@ -87,6 +131,13 @@ def _ensure_schema_compatibility() -> None:
 
     if "projects" not in tables:
         Project.__table__.create(bind=engine, checkfirst=True)
+
+    if "users" in tables:
+        user_cols = {c["name"] for c in insp.get_columns("users")}
+        if "must_change_password" not in user_cols:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE users ADD COLUMN must_change_password BOOLEAN DEFAULT 0"))
+                conn.execute(text("UPDATE users SET must_change_password = 0 WHERE must_change_password IS NULL"))
 
     if "scan_runs" not in tables:
         return
@@ -126,6 +177,14 @@ def db_session():
         db.close()
 
 
+def _is_within(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
 def _to_bool(v: str) -> bool:
     return str(v).lower() == "true"
 
@@ -141,6 +200,20 @@ def _normalize_raw_path(raw_path: str) -> str:
         rest = m.group(2)
         return f"/host/{drive}/{rest}"
     return v
+
+
+_PROJECT_KEY_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,95}$")
+
+
+def _validate_project_key(project_key: str) -> str:
+    """Defense-in-depth: project_key drives filesystem paths (reports/<key>,
+    _safe_remove_path). Reject anything that isn't a plain generated slug
+    before it ever reaches a path operation, even though the existing
+    resolve()/relative_to() containment check in _safe_remove_path already
+    blocks traversal outside ROOT_DIR."""
+    if not project_key or not _PROJECT_KEY_RE.match(project_key):
+        raise HTTPException(status_code=400, detail="invalid_project_key")
+    return project_key
 
 
 def _slugify(name: str) -> str:
@@ -290,17 +363,22 @@ def _artifact_index(artifacts: List[str]) -> ArtifactIndex:
 
 # ── Background scan runner ────────────────────────────────────────────────────
 
-def _run_scan_thread(run_uuid: str, cmd: list, cmd_payload: dict, log_path: Path, start_ts: float) -> None:
+def _run_scan_thread(run_uuid: str, cmd: list, log_path: Path, start_ts: float) -> None:
     db = SessionLocal()
     try:
         scan = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
         if not scan:
             return
+        if scan.status == "stopped":
+            # /stop was called while this scan was still "queued" - honor
+            # it instead of clobbering it back to "running" and spawning
+            # the subprocess anyway.
+            return
         scan.status = "running"
         scan.started_at = datetime.now(timezone.utc).replace(tzinfo=None)
         db.commit()
 
-        rc = execute_scan_sync(cmd, log_path, run_uuid=run_uuid)
+        rc = execute_scan_sync(cmd, log_path, run_uuid=run_uuid, project_key=scan.project_key)
 
         scan = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
         if scan:
@@ -319,9 +397,10 @@ def _run_scan_thread(run_uuid: str, cmd: list, cmd_payload: dict, log_path: Path
             else:
                 scan.status = "failed"
 
-            artifacts = scan_artifacts(run_uuid)
+            artifacts = scan_artifacts(run_uuid, project_key=scan.project_key)
             scan.artifacts_json = json.dumps(artifacts)
             db.commit()
+            cleanup_run_runtime(run_uuid)
     except Exception:
         db.rollback()
         db2 = SessionLocal()
@@ -363,7 +442,160 @@ def get_version():
     }
 
 
-@app.post("/api/v1/scans", response_model=ScanDetails)
+def _user_out(user: User) -> UserOut:
+    return UserOut(
+        id=user.id,
+        username=user.username,
+        is_admin=user.is_admin,
+        must_change_password=user.must_change_password,
+        created_at=user.created_at.isoformat() if user.created_at else None,
+        last_login_at=user.last_login_at.isoformat() if user.last_login_at else None,
+    )
+
+
+@app.get("/api/v1/auth/bootstrap-info", response_model=BootstrapInfo)
+def get_bootstrap_info(db: Session = Depends(db_session)):
+    # Public, and only reveals anything while the bootstrapped admin
+    # account is still on its assigned password. default_password only
+    # ever surfaces the *configured* DAKSH_ADMIN_PASSWORD - if that env
+    # var was left unset at bootstrap, a one-time random password was
+    # generated and printed to the startup log instead, and there is no
+    # way to recover it here, so this deliberately stays null in that case
+    # rather than guessing.
+    admin = db.query(User).filter(User.username == ADMIN_USERNAME).first()
+    pending = bool(admin and admin.must_change_password)
+    return BootstrapInfo(
+        default_username=ADMIN_USERNAME,
+        default_credentials_pending=pending,
+        default_password=(ADMIN_PASSWORD or None) if pending else None,
+    )
+
+
+@app.post("/api/v1/auth/login", response_model=UserOut)
+def login(payload: LoginRequest, response: Response, db: Session = Depends(db_session)):
+    user = db.query(User).filter(User.username == payload.username).first()
+    if not user or not verify_password(payload.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="invalid_credentials")
+    token = create_session(db, user)
+    set_session_cookie(response, token)
+    return _user_out(user)
+
+
+@app.post("/api/v1/auth/logout")
+def logout(
+    response: Response,
+    session_token: Optional[str] = Cookie(default=None, alias=SESSION_COOKIE_NAME),
+    db: Session = Depends(db_session),
+):
+    # Intentionally public (no get_current_user dependency): a session that
+    # is already invalid/expired must still be able to clear its cookie
+    # and get a clean 200 rather than a 401 on its way out.
+    delete_session(db, session_token or "")
+    clear_session_cookie(response)
+    return {"status": "logged_out"}
+
+
+@app.get("/api/v1/auth/me", response_model=UserOut)
+def get_me(user: User = Depends(get_current_user)):
+    # Deliberately on the plain `app` (not `protected`/require_password_ok):
+    # the frontend needs this to succeed precisely when must_change_password
+    # is true, so it can detect the flag and show the change-password gate.
+    return _user_out(user)
+
+
+@app.post("/api/v1/auth/change-password", response_model=UserOut)
+def change_own_password(
+    payload: SelfChangePasswordRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+):
+    # Also deliberately on `app`: this is the one action a user with
+    # must_change_password=True must still be able to take.
+    # The login request has already verified the assigned credential for a
+    # user in the mandatory first-time/reset flow. Requiring it again risks
+    # locking out someone who did not retain the temporary password. Normal
+    # voluntary password changes still require current-password verification.
+    if not user.must_change_password and (
+        not payload.current_password
+        or not verify_password(payload.current_password, user.password_hash)
+    ):
+        raise HTTPException(status_code=401, detail="invalid_credentials")
+    # get_current_user resolves `user` through its own DB session
+    # (auth.py's _get_db), separate from this route's `db` (db_session) -
+    # mutating `user` and committing via `db` would silently do nothing,
+    # since `db` never loaded that row. Re-fetch it in `db`'s own session.
+    db_user = db.query(User).filter(User.id == user.id).first()
+
+    new_username = (payload.new_username or "").strip()
+    if new_username and new_username != db_user.username:
+        # Username changes are only permitted while completing the mandatory
+        # first-time/reset flow (must_change_password was true coming into
+        # this request) - never on a later voluntary password change. Once
+        # that flow is done, the username is fixed until an admin resets it
+        # again via exclude/scripts/reset_first_time_setup.py.
+        if not user.must_change_password:
+            raise HTTPException(status_code=403, detail="username_change_not_allowed")
+        taken = db.query(User).filter(User.username == new_username, User.id != db_user.id).first()
+        if taken:
+            raise HTTPException(status_code=409, detail="username_taken")
+        db_user.username = new_username
+
+    db_user.password_hash = hash_password(payload.new_password)
+    db_user.must_change_password = False
+    db.commit()
+    db.refresh(db_user)
+    return _user_out(db_user)
+
+
+@protected.get("/api/v1/auth/users", response_model=List[UserOut], dependencies=[Depends(require_admin)])
+def list_users(db: Session = Depends(db_session)):
+    return [_user_out(u) for u in db.query(User).order_by(User.username).all()]
+
+
+@protected.post("/api/v1/auth/users", response_model=UserOut, dependencies=[Depends(require_admin)])
+def create_user(payload: UserCreate, db: Session = Depends(db_session)):
+    existing = db.query(User).filter(User.username == payload.username).first()
+    if existing:
+        raise HTTPException(status_code=409, detail="username_taken")
+    user = User(
+        username=payload.username,
+        password_hash=hash_password(payload.password),
+        is_admin=payload.is_admin,
+        must_change_password=True,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return _user_out(user)
+
+
+@protected.delete("/api/v1/auth/users/{user_id}", status_code=204, dependencies=[Depends(require_admin)])
+def delete_user(user_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(db_session)):
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="cannot_delete_self")
+    target = db.query(User).filter(User.id == user_id).first()
+    if not target:
+        raise HTTPException(status_code=404, detail="user_not_found")
+    if target.is_admin and db.query(User).filter(User.is_admin.is_(True)).count() <= 1:
+        raise HTTPException(status_code=400, detail="cannot_delete_last_admin")
+    db.query(UserSession).filter(UserSession.user_id == user_id).delete()
+    db.delete(target)
+    db.commit()
+
+
+@protected.post("/api/v1/auth/users/{user_id}/reset-password", dependencies=[Depends(require_admin)])
+def reset_user_password(user_id: int, payload: ChangePasswordRequest, db: Session = Depends(db_session)):
+    target = db.query(User).filter(User.id == user_id).first()
+    if not target:
+        raise HTTPException(status_code=404, detail="user_not_found")
+    target.password_hash = hash_password(payload.new_password)
+    target.must_change_password = True
+    db.query(UserSession).filter(UserSession.user_id == user_id).delete()
+    db.commit()
+    return {"status": "password_reset", "user_id": user_id}
+
+
+@protected.post("/api/v1/scans", response_model=ScanDetails)
 def create_scan(payload: ScanCreate, db: Session = Depends(db_session)):
     run_uuid = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S") + "-" + uuid4().hex[:8]
     roots = [Path(p).resolve() for p in get_browse_roots()]
@@ -401,7 +633,7 @@ def create_scan(payload: ScanCreate, db: Session = Depends(db_session)):
     start_ts = time.time()
     t = threading.Thread(
         target=_run_scan_thread,
-        args=(run_uuid, cmd, cmd_payload, log_path, start_ts),
+        args=(run_uuid, cmd, log_path, start_ts),
         daemon=True,
     )
     t.start()
@@ -409,7 +641,7 @@ def create_scan(payload: ScanCreate, db: Session = Depends(db_session)):
     return _serialize_scan(scan)
 
 
-@app.post("/api/v1/scans/{run_uuid}/stop")
+@protected.post("/api/v1/scans/{run_uuid}/stop")
 def stop_scan(run_uuid: str, db: Session = Depends(db_session)):
     scan = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
     if not scan:
@@ -429,7 +661,7 @@ def stop_scan(run_uuid: str, db: Session = Depends(db_session)):
     return {"run_uuid": run_uuid, "status": "stopped"}
 
 
-@app.get("/api/v1/scans/{run_uuid}/stream")
+@protected.get("/api/v1/scans/{run_uuid}/stream")
 def stream_scan_log(run_uuid: str):
     # Validate run exists before opening the stream
     _db = SessionLocal()
@@ -446,13 +678,16 @@ def stream_scan_log(run_uuid: str):
     def _generate():
         offset = 0
         idle_ticks = 0
+        last_progress_marker = ""
         while True:
             inner_db = SessionLocal()
             try:
                 s = inner_db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
                 current_status = s.status if s else "unknown"
+                scan_started_at = (s.started_at or s.created_at) if s else None
             except Exception:
                 current_status = "unknown"
+                scan_started_at = None
             finally:
                 inner_db.close()
 
@@ -471,9 +706,16 @@ def stream_scan_log(run_uuid: str):
                 # Strip ANSI escape codes and lone backspace/carriage-return chars
                 new_chunk = re.sub(r"\[[0-9;]*[mABCDEFGHJKSTfhilmnprsu]", "", new_chunk)
                 new_chunk = re.sub(r"[\x08\r]+", "", new_chunk)
-            if new_chunk or current_status not in ("running", "queued"):
-                data = json.dumps({"log": new_chunk, "status": current_status})
+            progress_payload = _scan_progress_payload(
+                run_uuid,
+                fallback_status=current_status,
+                started_at=scan_started_at,
+            )
+            progress_marker = json.dumps(progress_payload, sort_keys=True)
+            if new_chunk or current_status not in ("running", "queued") or progress_marker != last_progress_marker:
+                data = json.dumps({"log": new_chunk, "status": current_status, "progress": progress_payload})
                 yield f"data: {data}\n\n"
+                last_progress_marker = progress_marker
             else:
                 # SSE keep-alive comment every ~15 s of silence
                 idle_ticks += 1
@@ -481,7 +723,7 @@ def stream_scan_log(run_uuid: str):
                     yield ": keep-alive\n\n"
 
             if current_status not in ("running", "queued"):
-                yield f"data: {json.dumps({'log': '', 'status': current_status, 'done': True})}\n\n"
+                yield f"data: {json.dumps({'log': '', 'status': current_status, 'done': True, 'progress': progress_payload})}\n\n"
                 break
 
             time.sleep(0.8)
@@ -493,7 +735,7 @@ def stream_scan_log(run_uuid: str):
     )
 
 
-@app.get("/api/v1/scans", response_model=List[ScanSummary])
+@protected.get("/api/v1/scans", response_model=List[ScanSummary])
 def list_scans(
     limit: int = Query(default=50, ge=1, le=200),
     project_key: Optional[str] = Query(default=None),
@@ -520,7 +762,7 @@ def list_scans(
     return out
 
 
-@app.get("/api/v1/scans/{run_uuid}", response_model=ScanDetails)
+@protected.get("/api/v1/scans/{run_uuid}", response_model=ScanDetails)
 def get_scan(run_uuid: str, db: Session = Depends(db_session)):
     row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
     if not row:
@@ -528,7 +770,7 @@ def get_scan(run_uuid: str, db: Session = Depends(db_session)):
     return _serialize_scan(row)
 
 
-@app.get("/api/v1/scans/{run_uuid}/artifacts", response_model=ArtifactIndex)
+@protected.get("/api/v1/scans/{run_uuid}/artifacts", response_model=ArtifactIndex)
 def get_scan_artifacts(run_uuid: str, db: Session = Depends(db_session)):
     row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
     if not row:
@@ -540,7 +782,7 @@ def get_scan_artifacts(run_uuid: str, db: Session = Depends(db_session)):
     # Fall back to a live disk scan if DB cache is empty (e.g. scan predates
     # the artifacts_json column, or an error prevented it from being saved).
     if not artifacts and row.status in ("success", "failed", "stopped"):
-        artifacts = scan_artifacts(run_uuid)
+        artifacts = scan_artifacts(run_uuid, project_key=row.project_key)
         if artifacts:
             try:
                 row.artifacts_json = json.dumps(artifacts)
@@ -550,7 +792,7 @@ def get_scan_artifacts(run_uuid: str, db: Session = Depends(db_session)):
     return _artifact_index(artifacts)
 
 
-@app.get("/api/v1/scans/{run_uuid}/log")
+@protected.get("/api/v1/scans/{run_uuid}/log")
 def get_scan_log(run_uuid: str, db: Session = Depends(db_session)):
     row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
     if not row:
@@ -569,14 +811,96 @@ def _load_json_safe(path: Path):
     return None
 
 
-@app.get("/api/v1/scans/{run_uuid}/findings")
+def _scan_reports_root(project_key: str, run_uuid: str) -> Path:
+    # Deliberately does NOT fall back to the bare top-level `reports/` root -
+    # that directory is the parent of every project's reports, and using it
+    # as a fallback here would leak one project's/run's data into another's
+    # findings/artifacts response whenever a specific run's own dir is
+    # missing, instead of correctly reporting "nothing found".
+    candidates = [
+        project_reports_dir(project_key, run_uuid),
+        ROOT_DIR / "reports" / run_uuid,
+        run_dir(run_uuid) / "reports",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[0]
+
+
+def _scan_data_dir(project_key: str, run_uuid: str) -> Path:
+    return _scan_reports_root(project_key, run_uuid) / "data"
+
+
+def _safe_progress_int(value, default=0):
+    try:
+        return int(value or default)
+    except (TypeError, ValueError):
+        return default
+
+
+def _scan_progress_payload(run_uuid: str, fallback_status: str = "", started_at=None):
+    rdir = run_dir(run_uuid)
+    runtime_dir = rdir / "runtime"
+    scan_state = _load_json_safe(runtime_dir / "scan_state.json") or {}
+    scan_summary = _load_json_safe(runtime_dir / "scan_summary.json") or {}
+
+    progress = (scan_state.get("progress") or {}) if isinstance(scan_state, dict) else {}
+    cursor = progress.get("cursor") or {}
+    heartbeat = progress.get("heartbeat") or {}
+    stages = progress.get("stages") or {}
+    live = (scan_summary.get("live_progress") or {}) if isinstance(scan_summary, dict) else {}
+    analyzer = (scan_summary.get("analyzer_summary") or {}) if isinstance(scan_summary, dict) else {}
+    detection = (scan_summary.get("detection_summary") or {}) if isinstance(scan_summary, dict) else {}
+
+    fallback_stage = "queued" if fallback_status == "queued" else "initialization" if fallback_status == "running" else ""
+    fallback_message = (
+        "Scan queued - preparing isolated workspace"
+        if fallback_status == "queued"
+        else "Scan engine started - preparing repository"
+        if fallback_status == "running"
+        else ""
+    )
+    fallback_elapsed = 0
+    if started_at:
+        try:
+            fallback_elapsed = max(0, int((datetime.now(timezone.utc).replace(tzinfo=None) - started_at).total_seconds()))
+        except (TypeError, ValueError):
+            fallback_elapsed = 0
+
+    current_stage = str(live.get("stage") or progress.get("current_stage") or fallback_stage).strip()
+    stage_status = str((stages.get(current_stage) or {}).get("status") or live.get("status") or "").strip()
+    return {
+        "current_stage": current_stage,
+        "stage_status": stage_status,
+        "message": str(live.get("message") or heartbeat.get("message") or analyzer.get("heartbeat_message") or fallback_message).strip(),
+        "platform": str(live.get("platform") or analyzer.get("current_target") or cursor.get("platform") or "").strip(),
+        "category": str(live.get("category") or cursor.get("category") or "").strip(),
+        "rule_title": str(live.get("rule_title") or cursor.get("rule_title") or "").strip(),
+        "current_file": str(live.get("current_file") or cursor.get("current_file") or cursor.get("filepath") or "").strip(),
+        "current_function": str(live.get("current_function") or cursor.get("current_function") or "").strip(),
+        "current_phase": str(live.get("current_phase") or cursor.get("current_phase") or heartbeat.get("phase") or "").strip(),
+        "current_index": _safe_progress_int(live.get("current_index") or cursor.get("current_index") or cursor.get("file_index")),
+        "total_items": _safe_progress_int(live.get("total_items") or cursor.get("total_items")),
+        "elapsed_seconds": _safe_progress_int(live.get("elapsed_seconds") or heartbeat.get("elapsed_seconds"), fallback_elapsed),
+        "directories_scanned": _safe_progress_int(live.get("directories_scanned")),
+        "files_discovered": _safe_progress_int(live.get("files_discovered") or detection.get("total_project_files_identified")),
+        "files_selected": _safe_progress_int(live.get("files_selected") or detection.get("total_files_identified")),
+        "rules_match_count": _safe_progress_int(live.get("rules_match_count") or detection.get("areas_of_interest_identified")),
+        "suppressed_count": _safe_progress_int(live.get("suppressed_count") or detection.get("suppressed_findings")),
+        "paths_match_count": _safe_progress_int(live.get("paths_match_count") or detection.get("file_paths_areas_of_interest_identified")),
+        "parse_error_count": _safe_progress_int(live.get("parse_error_count")),
+    }
+
+
+@protected.get("/api/v1/scans/{run_uuid}/findings")
 def get_scan_findings(run_uuid: str, db: Session = Depends(db_session)):
     row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
     if not row:
         raise HTTPException(status_code=404, detail="run_not_found")
 
     rdir = run_dir(run_uuid)
-    json_dir = rdir / "reports" / "data"
+    json_dir = _scan_data_dir(row.project_key, run_uuid)
     runtime_dir = rdir / "runtime"
 
     findings = _load_json_safe(json_dir / "areas_of_interest.json") or []
@@ -596,11 +920,16 @@ def get_scan_findings(run_uuid: str, db: Session = Depends(db_session)):
         "analysis": analysis,
         "recon": recon,
         "scan_meta": scan_meta,
+        "progress": _scan_progress_payload(
+            run_uuid,
+            fallback_status=row.status,
+            started_at=row.started_at or row.created_at,
+        ),
         "loc_breakdown": loc_breakdown,
     }
 
 
-@app.get("/api/v1/projects", response_model=List[ProjectSummary])
+@protected.get("/api/v1/projects", response_model=List[ProjectSummary])
 def list_projects(db: Session = Depends(db_session)):
     projects = db.query(Project).order_by(Project.updated_at.desc()).all()
     known_keys = {p.project_key for p in projects}
@@ -659,24 +988,51 @@ def list_projects(db: Session = Depends(db_session)):
     return out
 
 
-@app.delete("/api/v1/projects/{project_key}", status_code=204)
+def _safe_remove_path(path_value: str, *, is_dir: bool) -> None:
+    if not path_value:
+        return
+    p = Path(path_value)
+    if not p.is_absolute():
+        p = (ROOT_DIR / p).resolve()
+    else:
+        p = p.resolve()
+    try:
+        p.relative_to(ROOT_DIR.resolve())
+    except ValueError:
+        return
+    try:
+        if is_dir:
+            shutil.rmtree(p, ignore_errors=True)
+        elif p.exists():
+            p.unlink()
+    except Exception:
+        pass
+
+
+@protected.delete("/api/v1/projects/{project_key}", status_code=204)
 def delete_project(project_key: str, db: Session = Depends(db_session)):
+    project_key = _validate_project_key(project_key)
     project = db.query(Project).filter(Project.project_key == project_key).first()
-    if not project:
+    scans = db.query(ScanRun).filter(ScanRun.project_key == project_key).all()
+    if not project and not scans:
         raise HTTPException(status_code=404, detail="project_not_found")
-    running = (
-        db.query(ScanRun)
-        .filter(ScanRun.project_key == project_key, ScanRun.status.in_(["running", "queued"]))
-        .first()
-    )
+    running = next((scan for scan in scans if scan.status in ("running", "queued")), None)
     if running:
         raise HTTPException(status_code=409, detail="project_has_active_scans")
-    db.query(ScanRun).filter(ScanRun.project_key == project_key).delete()
-    db.delete(project)
+    run_ids = [scan.run_uuid for scan in scans if scan.run_uuid]
+    log_paths = [scan.log_path for scan in scans if scan.log_path]
+    db.query(ScanRun).filter(ScanRun.project_key == project_key).delete(synchronize_session=False)
+    if project:
+        db.delete(project)
     db.commit()
+    _safe_remove_path(str(project_reports_dir(project_key)), is_dir=True)
+    for run_id in run_ids:
+        _safe_remove_path(str(run_dir(run_id)), is_dir=True)
+    for log_path in log_paths:
+        _safe_remove_path(log_path, is_dir=False)
 
 
-@app.get("/api/v1/dashboard/metrics", response_model=DashboardMetrics)
+@protected.get("/api/v1/dashboard/metrics", response_model=DashboardMetrics)
 def dashboard_metrics(db: Session = Depends(db_session)):
     scans = db.query(ScanRun).all()
     total = len(scans)
@@ -714,7 +1070,7 @@ def dashboard_metrics(db: Session = Depends(db_session)):
     )
 
 
-@app.get("/api/v1/fs/list", response_model=FsListResponse)
+@protected.get("/api/v1/fs/list", response_model=FsListResponse)
 def fs_list(path: str = Query(default="")):
     roots = [Path(p).resolve() for p in get_browse_roots()]
 
@@ -771,7 +1127,7 @@ def fs_list(path: str = Query(default="")):
     return FsListResponse(current=str(p), parent=parent, roots=[str(r) for r in roots], directories=dirs)
 
 
-@app.get("/api/v1/settings", response_model=SettingsData)
+@protected.get("/api/v1/settings", response_model=SettingsData)
 def get_settings():
     """Read current settings from all config YAML files."""
     import sys
@@ -822,7 +1178,7 @@ def get_settings():
         raise HTTPException(status_code=500, detail=f"settings_read_error: {exc}")
 
 
-@app.put("/api/v1/settings", response_model=SettingsData)
+@protected.put("/api/v1/settings", response_model=SettingsData)
 def save_settings(payload: SettingsData):
     """Write settings back to config YAML files."""
     import sys
@@ -882,14 +1238,14 @@ def save_settings(payload: SettingsData):
         raise HTTPException(status_code=500, detail=f"settings_write_error: {exc}")
 
 
-@app.get("/api/v1/scans/{run_uuid}/suppressed")
+@protected.get("/api/v1/scans/{run_uuid}/suppressed")
 def get_suppressed_findings(run_uuid: str, db: Session = Depends(db_session)):
     """Return suppressed findings (RDL-filtered FPs) for a scan."""
     row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
     if not row:
         raise HTTPException(status_code=404, detail="run_not_found")
 
-    sup_path = run_dir(run_uuid) / "reports" / "data" / "suppressed_findings.json"
+    sup_path = _scan_data_dir(row.project_key, run_uuid) / "suppressed_findings.json"
     suppressed = _load_json_safe(sup_path) or []
 
     # Build summary metrics
@@ -908,7 +1264,7 @@ def get_suppressed_findings(run_uuid: str, db: Session = Depends(db_session)):
     }
 
 
-@app.put("/api/v1/scans/{run_uuid}/suppressed/{item_id}")
+@protected.put("/api/v1/scans/{run_uuid}/suppressed/{item_id}")
 def update_suppressed_item(
     run_uuid: str,
     item_id: str,
@@ -920,7 +1276,7 @@ def update_suppressed_item(
     if not row:
         raise HTTPException(status_code=404, detail="run_not_found")
 
-    sup_path = run_dir(run_uuid) / "reports" / "data" / "suppressed_findings.json"
+    sup_path = _scan_data_dir(row.project_key, run_uuid) / "suppressed_findings.json"
     suppressed = _load_json_safe(sup_path) or []
 
     item = next((s for s in suppressed if s.get("id") == item_id), None)
@@ -940,7 +1296,7 @@ def update_suppressed_item(
     return item
 
 
-@app.post("/api/v1/scans/{run_uuid}/suppressed/{item_id}/promote")
+@protected.post("/api/v1/scans/{run_uuid}/suppressed/{item_id}/promote")
 def promote_suppressed_to_finding(
     run_uuid: str,
     item_id: str,
@@ -955,8 +1311,7 @@ def promote_suppressed_to_finding(
     if not row:
         raise HTTPException(status_code=404, detail="run_not_found")
 
-    rdir = run_dir(run_uuid)
-    data_dir = rdir / "reports" / "data"
+    data_dir = _scan_data_dir(row.project_key, run_uuid)
     sup_path = data_dir / "suppressed_findings.json"
     findings_path = data_dir / "areas_of_interest.json"
 
@@ -1032,7 +1387,7 @@ def promote_suppressed_to_finding(
     return {"status": "promoted", "item_id": item_id}
 
 
-@app.get("/api/v1/scans/{run_uuid}/suppressed-report")
+@protected.get("/api/v1/scans/{run_uuid}/suppressed-report")
 def get_suppressed_report(
     run_uuid: str,
     format: str = Query(default="json"),
@@ -1043,7 +1398,7 @@ def get_suppressed_report(
     if not row:
         raise HTTPException(status_code=404, detail="run_not_found")
 
-    sup_path = run_dir(run_uuid) / "reports" / "data" / "suppressed_findings.json"
+    sup_path = _scan_data_dir(row.project_key, run_uuid) / "suppressed_findings.json"
     suppressed = _load_json_safe(sup_path) or []
 
     if format == "json":
@@ -1075,27 +1430,43 @@ def get_suppressed_report(
     raise HTTPException(status_code=400, detail="invalid_format")
 
 
-@app.post("/api/v1/scans/{run_uuid}/regenerate-reports")
+@protected.post("/api/v1/scans/{run_uuid}/regenerate-reports")
 def regenerate_reports(run_uuid: str, db: Session = Depends(db_session)):
     """Regenerate HTML/JSON reports for a scan (e.g. after promoting suppressed findings)."""
     row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
     if not row:
         raise HTTPException(status_code=404, detail="run_not_found")
 
-    rdir = run_dir(run_uuid)
-    data_dir = rdir / "reports" / "data"
-    findings_path = data_dir / "areas_of_interest.json"
-    findings = _load_json_safe(findings_path) or []
+    reports_root = _scan_reports_root(row.project_key, run_uuid)
+    if not reports_root.exists():
+        raise HTTPException(status_code=404, detail="reports_not_found")
 
-    import sys
-    sys.path.insert(0, str(ROOT_DIR))
-    try:
-        import core.reports as rpts
-        html_path = rdir / "reports" / "areas_of_interest.html"
-        rpts.build_findings_report_html(findings, str(html_path))
-        return {"status": "regenerated", "run_uuid": run_uuid}
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"regenerate_error: {exc}")
+    with _report_regen_lock:
+        try:
+            # The CLI always gets a fresh per-run runtime_dirpath via the
+            # DAKSH_RUNTIME_DIR env var at process start, so
+            # configure_project_paths() only takes project/run hints and
+            # re-derives its runtime_dirpath-relative globals (scan summary,
+            # filepaths, etc.) from whatever runtime_dirpath already is.
+            # This API process is long-lived and is regenerating a specific
+            # *past* run's report on demand, so runtime_dirpath must be
+            # pointed at that run's own runtime dir BEFORE calling
+            # configure_project_paths(), not after.
+            runtime_state.runtime_dirpath = run_dir(run_uuid) / "runtime"
+            runtime_state.configure_project_paths(row.project_key, run_uuid)
+            core_reports.gen_report(formats="html", include_multifile_pdf=False)
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=f"regenerate_error: {exc}")
+
+    return {"status": "regenerated", "run_uuid": run_uuid}
+
+
+def _esc(value) -> str:
+    """HTML-escape a value that may originate from scanned source content
+    before it is interpolated into a report string, to prevent stored XSS
+    (a scanned file containing e.g. "<script>" must not execute when the
+    generated report is viewed)."""
+    return html.escape(str(value if value is not None else ""))
 
 
 def _build_suppressed_html_report(run_uuid: str, suppressed: list) -> str:
@@ -1114,12 +1485,12 @@ def _build_suppressed_html_report(run_uuid: str, suppressed: list) -> str:
         )
         rows += f"""
         <tr>
-          <td style="padding:8px;border-bottom:1px solid #333">{s.get("platform","")}</td>
-          <td style="padding:8px;border-bottom:1px solid #333">{s.get("rule_title","")}</td>
-          <td style="padding:8px;border-bottom:1px solid #333">{s.get("file","")}</td>
-          <td style="padding:8px;border-bottom:1px solid #333;font-family:monospace;font-size:12px">{s.get("line","")}: {s.get("code","")}</td>
-          <td style="padding:8px;border-bottom:1px solid #333;font-family:monospace;font-size:11px">{s.get("rdl_condition","")}</td>
-          <td style="padding:8px;border-bottom:1px solid #333;font-size:12px">{s.get("suppression_reason","")}</td>
+          <td style="padding:8px;border-bottom:1px solid #333">{_esc(s.get("platform",""))}</td>
+          <td style="padding:8px;border-bottom:1px solid #333">{_esc(s.get("rule_title",""))}</td>
+          <td style="padding:8px;border-bottom:1px solid #333">{_esc(s.get("file",""))}</td>
+          <td style="padding:8px;border-bottom:1px solid #333;font-family:monospace;font-size:12px">{_esc(s.get("line",""))}: {_esc(s.get("code",""))}</td>
+          <td style="padding:8px;border-bottom:1px solid #333;font-family:monospace;font-size:11px">{_esc(s.get("rdl_condition",""))}</td>
+          <td style="padding:8px;border-bottom:1px solid #333;font-size:12px">{_esc(s.get("suppression_reason",""))}</td>
           <td style="padding:8px;border-bottom:1px solid #333">{status_badge}</td>
         </tr>"""
 
@@ -1127,7 +1498,7 @@ def _build_suppressed_html_report(run_uuid: str, suppressed: list) -> str:
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Suppressed Findings Report — {run_uuid[:8]}</title>
+  <title>Suppressed Findings Report - {_esc(run_uuid[:8])}</title>
   <style>
     body {{ background:#0f172a; color:#e2e8f0; font-family:sans-serif; margin:0; padding:24px; }}
     h1 {{ color:#f8fafc; font-size:22px; }}
@@ -1143,7 +1514,7 @@ def _build_suppressed_html_report(run_uuid: str, suppressed: list) -> str:
 </head>
 <body>
   <h1>Suppressed Findings Report</h1>
-  <div class="meta">Scan: {run_uuid} &mdash; Generated: {generated}</div>
+  <div class="meta">Scan: {_esc(run_uuid)} &mdash; Generated: {_esc(generated)}</div>
   <div class="cards">
     <div class="card"><div class="card-val">{total}</div><div class="card-lbl">Total Suppressed</div></div>
     <div class="card"><div class="card-val">{rdl_hit}</div><div class="card-lbl">RDL Conditions Triggered</div></div>
@@ -1162,15 +1533,20 @@ def _build_suppressed_html_report(run_uuid: str, suppressed: list) -> str:
 </html>"""
 
 
-@app.get("/api/v1/artifacts")
+@protected.get("/api/v1/artifacts")
 def get_artifact(path: str = Query(...), embed: bool = Query(False)):
     p = Path(path)
     base = ROOT_DIR
     abs_path = (base / p).resolve() if not p.is_absolute() else p.resolve()
 
-    try:
-        abs_path.relative_to(base.resolve())
-    except Exception:
+    # Scope this to the actual scan-artifact trees, not the whole repo -
+    # this endpoint must not double as a generic file server for configs,
+    # the sqlite DB, source code, or another project's reports.
+    allowed_roots = [
+        (ROOT_DIR / "reports").resolve(),
+        (WEB_RUNS_DIR).resolve(),
+    ]
+    if not any(_is_within(abs_path, root) for root in allowed_roots):
         raise HTTPException(status_code=403, detail="forbidden_artifact")
 
     if not abs_path.exists() or not abs_path.is_file():
@@ -1276,3 +1652,6 @@ def get_artifact(path: str = Query(...), embed: bool = Query(False)):
         except OSError:
             pass
     return FileResponse(abs_path)
+
+
+app.include_router(protected)

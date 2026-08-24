@@ -1,5 +1,6 @@
 import os
 import shlex
+import shutil
 import subprocess
 import sys
 import threading
@@ -11,7 +12,7 @@ from .config import ROOT_DIR
 RUNTIME_DIR = ROOT_DIR / "runtime"
 WEB_RUNS_DIR = RUNTIME_DIR / "web_runs_v2"
 
-# Active subprocess registry — keyed by run_uuid
+# Active subprocess registry - keyed by run_uuid
 _active_procs: Dict[str, subprocess.Popen] = {}
 _procs_lock = threading.Lock()
 
@@ -47,6 +48,29 @@ def run_dir(run_uuid: str) -> Path:
     return WEB_RUNS_DIR / run_uuid
 
 
+def project_reports_dir(project_key: str, run_uuid: str = "") -> Path:
+    base = (ROOT_DIR / "reports" / str(project_key or "default")).resolve()
+    return (base / str(run_uuid)) if run_uuid else base
+
+
+def cleanup_run_runtime(run_uuid: str) -> None:
+    """Remove only the noisy/large scratch data for a finished run.
+
+    scan_summary.json, scan_state.json, filepaths.json etc. under
+    runtime/ are read later by /findings, the progress payload, and
+    report regeneration, so the whole runtime/ tree must not be deleted
+    here - only the decision-trace diagnostics subdirectory, which can
+    grow large and has no reader once the run is done.
+    """
+    if not run_uuid:
+        return
+    diagnostics_dir = run_dir(run_uuid) / "runtime" / "diagnostics"
+    try:
+        shutil.rmtree(diagnostics_dir, ignore_errors=True)
+    except Exception:
+        pass
+
+
 def build_cmd(payload: dict) -> List[str]:
     cmd = [sys.executable, "dakshscra.py", "-r", payload["rules"], "-t", payload["target_dir"]]
     ft = (payload.get("file_types") or "").strip()
@@ -73,15 +97,25 @@ def build_cmd(payload: dict) -> List[str]:
     return cmd
 
 
-def scan_artifacts(run_uuid: str) -> List[str]:
+def scan_artifacts(run_uuid: str, project_key: str = "") -> List[str]:
     """Collect all artifacts written to the per-scan output directory."""
     if not run_uuid:
         return []
     rdir = run_dir(run_uuid)
-    roots = [rdir / "reports", rdir / "runtime"]
+    roots = [
+        project_reports_dir(project_key, run_uuid),
+        ROOT_DIR / "reports" / run_uuid,
+        rdir / "reports",
+        rdir / "runtime",
+    ]
     allowed = {".html", ".pdf", ".json", ".txt", ".log"}
     artifacts = []
+    seen_roots = set()
     for base in roots:
+        base = base.resolve()
+        if str(base) in seen_roots:
+            continue
+        seen_roots.add(str(base))
         if not base.exists():
             continue
         for f in base.rglob("*"):
@@ -98,7 +132,7 @@ def scan_artifacts(run_uuid: str) -> List[str]:
     return sorted(set(artifacts))
 
 
-def execute_scan_sync(cmd: List[str], log_path: Path, run_uuid: str = "") -> int:
+def execute_scan_sync(cmd: List[str], log_path: Path, run_uuid: str = "", project_key: str = "") -> int:
     WEB_RUNS_DIR.mkdir(parents=True, exist_ok=True)
     env = os.environ.copy()
     env["DAKSH_NON_INTERACTIVE"] = "1"
@@ -107,12 +141,12 @@ def execute_scan_sync(cmd: List[str], log_path: Path, run_uuid: str = "") -> int
     # don't get overwritten by concurrent or subsequent scans.
     if run_uuid:
         rdir = run_dir(run_uuid)
-        run_reports = rdir / "reports"
         run_runtime = rdir / "runtime"
-        run_reports.mkdir(parents=True, exist_ok=True)
         run_runtime.mkdir(parents=True, exist_ok=True)
-        env["DAKSH_REPORTS_DIR"] = str(run_reports)
+        env["DAKSH_REPORTS_DIR"] = str(ROOT_DIR / "reports")
         env["DAKSH_RUNTIME_DIR"] = str(run_runtime)
+        env["DAKSH_PROJECT_ID"] = str(project_key or "default")
+        env["DAKSH_RUN_ID"] = str(run_uuid)
 
     with open(log_path, "w", encoding="utf-8") as logf:
         proc = subprocess.Popen(

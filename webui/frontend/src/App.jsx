@@ -1,21 +1,27 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   createScan,
   deleteProject,
   getHealth,
   getLatestGithubRelease,
+  getMe,
   getMetrics,
   getScan,
   getScanArtifacts,
   getScanLog,
+  getSettings,
   getVersion,
   listProjects,
   listScans,
+  logout as apiLogout,
+  setUnauthorizedHandler,
 } from './api'
 import Dashboard from './components/Dashboard'
 import DirectoryBrowserModal from './components/DirectoryBrowserModal'
 import AboutPanel from './components/AboutPanel'
 import HelpPanel from './components/HelpPanel'
+import ChangePasswordGate from './components/ChangePasswordGate'
+import LoginPage from './components/LoginPage'
 import SettingsPanel from './components/SettingsPanel'
 import ProjectsPanel from './components/ProjectsPanel'
 import ScanDetail from './components/ScanDetail'
@@ -77,10 +83,68 @@ function Toast({ toast, onDismiss }) {
   )
 }
 
+function AccountMenu({ user, version, onChangePassword, onLogout }) {
+  const [open, setOpen] = useState(false)
+  const menuRef = useRef(null)
+  const initial = String(user?.username || '?').trim().charAt(0).toUpperCase()
+
+  useEffect(() => {
+    if (!open) return
+    const closeMenu = (event) => {
+      if (!menuRef.current?.contains(event.target)) setOpen(false)
+    }
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', closeMenu)
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('mousedown', closeMenu)
+      document.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [open])
+
+  return (
+    <div className="account-menu" ref={menuRef}>
+      <button
+        type="button"
+        className="account-trigger"
+        onClick={() => setOpen((current) => !current)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
+        <span className="account-avatar">{initial}</span>
+        <span className="account-trigger-name">{user?.username}</span>
+        <span className="account-caret" aria-hidden="true">⌄</span>
+      </button>
+      {open ? (
+        <div className="account-dropdown" role="menu">
+          <div className="account-dropdown-head">
+            <span>Signed in as</span>
+            <strong>{user?.username}</strong>
+          </div>
+          <button type="button" role="menuitem" onClick={() => { setOpen(false); onChangePassword() }}>
+            <span className="account-menu-icon">⌁</span>
+            Change password
+          </button>
+          <button type="button" role="menuitem" className="account-logout" onClick={() => { setOpen(false); onLogout() }}>
+            <span className="account-menu-icon">↪</span>
+            Log out
+          </button>
+          <div className="account-dropdown-version">Daksh SCRA v{version || '0.38'}</div>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 /* ─── Main App ───────────────────────────────────────────────── */
 let toastCounter = 0
 
 export default function App() {
+  const [user, setUser] = useState(null)
+  const [authChecked, setAuthChecked] = useState(false)
+
   const [health, setHealth] = useState('checking')
   const [section, setSection] = useState('dashboard')
 
@@ -103,6 +167,7 @@ export default function App() {
   const [versionInfo, setVersionInfo] = useState(null)      // { version, release_date, github_repo }
   const [latestRelease, setLatestRelease] = useState(null)  // { tag, url, name } | null
   const [githubChecked, setGithubChecked] = useState(false) // true once GitHub check resolves (ok or failed)
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false)
 
   const addToast = useCallback((message, level = 'info', title = '') => {
     const id = ++toastCounter
@@ -124,14 +189,26 @@ export default function App() {
   )
 
   /* ── Data Fetchers ── */
+  // These three poll on an interval (see "Auto-refresh polling" below), so a
+  // failure toasts once per outage (edge-triggered via these refs) rather
+  // than re-toasting on every failed tick - a backend outage would otherwise
+  // spam a new toast every few seconds.
+  const overviewFailedRef = useRef(false)
+  const runsFailedRef = useRef(false)
+  const selectedFailedRef = useRef(false)
+
   async function refreshOverview() {
     try {
       const [m, p] = await Promise.all([getMetrics(), listProjects()])
       setMetrics(m)
       setProjects(p)
       if (!selectedProject && p.length > 0) setSelectedProject(p[0].project_key)
+      overviewFailedRef.current = false
     } catch {
-      // fail silently for background refresh
+      if (!overviewFailedRef.current) {
+        overviewFailedRef.current = true
+        addToast('Unable to refresh dashboard data - check your connection.', 'error', 'Refresh Failed')
+      }
     }
   }
 
@@ -139,8 +216,12 @@ export default function App() {
     try {
       const data = await listScans(80, selectedProject || undefined)
       setRuns(data)
+      runsFailedRef.current = false
     } catch {
-      // fail silently
+      if (!runsFailedRef.current) {
+        runsFailedRef.current = true
+        addToast('Unable to refresh scan list - check your connection.', 'error', 'Refresh Failed')
+      }
     }
   }
 
@@ -155,8 +236,12 @@ export default function App() {
       setSelectedDetail(detail)
       setSelectedArtifacts(artifacts)
       setSelectedLog(logRes.log_tail || '')
+      selectedFailedRef.current = false
     } catch {
-      // fail silently
+      if (!selectedFailedRef.current) {
+        selectedFailedRef.current = true
+        addToast('Unable to refresh scan details - check your connection.', 'error', 'Refresh Failed')
+      }
     }
   }
 
@@ -193,7 +278,7 @@ export default function App() {
       await refreshOverview()
       addToast('Project deleted', 'success')
     } catch (e) {
-      addToast(e.message === 'project_has_active_scans' ? 'Cannot delete — scan is running' : e.message, 'error', 'Delete Failed')
+      addToast(e.message === 'project_has_active_scans' ? 'Cannot delete - scan is running' : e.message, 'error', 'Delete Failed')
     }
   }
 
@@ -235,10 +320,41 @@ export default function App() {
     if (run) setSelected(run)
   }
 
-  /* ── Initial load ── */
+  /* ── Auth check (runs once, before anything else) ── */
   useEffect(() => {
+    setUnauthorizedHandler(() => setUser(null))
+    getMe()
+      .then((me) => setUser(me))
+      .catch(() => setUser(null))
+      .finally(() => setAuthChecked(true))
+    return () => setUnauthorizedHandler(null)
+  }, [])
+
+  async function handleLogout() {
+    try {
+      await apiLogout()
+    } catch {
+      // clear local state regardless of whether the network call succeeded
+    }
+    setUser(null)
+  }
+
+  /* ── Initial load (only once authenticated) ── */
+  useEffect(() => {
+    if (!user || user.must_change_password) return
     getHealth().then(() => setHealth('online')).catch(() => setHealth('offline'))
     refreshOverview()
+
+    // EMPTY_FORM.analysis defaults to false only as a synchronous placeholder;
+    // align the scan form's default with the backend's actual configured
+    // default once it's known. Only applies while the form is still
+    // untouched (reference-equal to EMPTY_FORM) so it never clobbers an
+    // in-progress edit.
+    getSettings().then((data) => {
+      const runByDefault = data?.analysis?.run_by_default
+      if (typeof runByDefault !== 'boolean') return
+      setForm((prev) => (prev === EMPTY_FORM ? { ...prev, analysis: runByDefault } : prev))
+    }).catch(() => {})
 
     // Fetch current version then check GitHub for latest release
     getVersion().then((info) => {
@@ -247,27 +363,31 @@ export default function App() {
         .then((rel) => { setLatestRelease(rel); setGithubChecked(true) })
         .catch(() => setGithubChecked(true))   // failed = still "checked" (offline)
     }).catch(() => setGithubChecked(true))
-  }, [])
+  }, [user])
 
   useEffect(() => {
+    if (!user || user.must_change_password) return
     refreshRuns()
-  }, [selectedProject])
+  }, [user, selectedProject])
 
   useEffect(() => {
+    if (!user || user.must_change_password) return
     if (selected?.run_uuid) {
       refreshSelected(selected.run_uuid)
     }
-  }, [selected?.run_uuid])
+  }, [user, selected?.run_uuid])
 
   // Re-fetch detail when user navigates back to the scans section
   useEffect(() => {
+    if (!user || user.must_change_password) return
     if (section === 'scans' && selected?.run_uuid) {
       refreshSelected(selected.run_uuid)
     }
-  }, [section])
+  }, [user, section])
 
   /* ── Auto-refresh polling ── */
   useEffect(() => {
+    if (!user || user.must_change_password) return
     const intervalMs = hasActiveRun ? 3000 : 12000
     const timer = setInterval(() => {
       refreshRuns()
@@ -275,7 +395,7 @@ export default function App() {
       if (selected?.run_uuid) refreshSelected(selected.run_uuid)
     }, intervalMs)
     return () => clearInterval(timer)
-  }, [hasActiveRun, selected?.run_uuid, selected?.status, selectedProject])
+  }, [user, hasActiveRun, selected?.run_uuid, selected?.status, selectedProject])
 
   /* ── Page title mapping ── */
   const pageTitles = {
@@ -305,6 +425,18 @@ export default function App() {
     setSelectedLog('')
   }
 
+  if (!authChecked) {
+    return null
+  }
+
+  if (!user) {
+    return <LoginPage onLoggedIn={setUser} />
+  }
+
+  if (user.must_change_password) {
+    return <ChangePasswordGate user={user} onChanged={setUser} onLogout={handleLogout} />
+  }
+
   return (
     <div className="app-shell">
       {/* Sidebar */}
@@ -313,7 +445,9 @@ export default function App() {
         onChange={(s) => { setSection(s); setError('') }}
         health={health}
         runningCount={runningCount}
+        user={user}
         version={versionInfo?.version}
+        onLogout={handleLogout}
       />
 
       {/* Main */}
@@ -351,6 +485,12 @@ export default function App() {
                 </span>
               </>
             )}
+            <AccountMenu
+              user={user}
+              version={versionInfo?.version}
+              onChangePassword={() => setPasswordDialogOpen(true)}
+              onLogout={handleLogout}
+            />
           </div>
         </header>
 
@@ -468,6 +608,15 @@ export default function App() {
           <Toast key={t.id} toast={t} onDismiss={dismissToast} />
         ))}
       </div>
+
+      {passwordDialogOpen ? (
+        <ChangePasswordGate
+          user={user}
+          voluntary
+          onChanged={(updated) => { setUser(updated); setPasswordDialogOpen(false) }}
+          onCancel={() => setPasswordDialogOpen(false)}
+        />
+      ) : null}
     </div>
   )
 }

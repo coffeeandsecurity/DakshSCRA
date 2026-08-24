@@ -582,7 +582,7 @@
         <rule_file>xamarin.xml</rule_file>
         <scan_ftypes>*.cs, *.csproj, *.sln, *.config</scan_ftypes>
         <markers>
-            <regex file="*.csproj">Xamarin|UseMaui|Maui</regex>
+            <regex file="*.csproj">Xamarin|monoandroid|xamarinios</regex>
         </markers>
     </framework>
     <framework>
@@ -591,7 +591,7 @@
         <rule_file>jetpack.xml</rule_file>
         <scan_ftypes>*.cs, *.csproj, AndroidManifest.xml, *.xml, *.kt, *.java</scan_ftypes>
         <markers>
-            <regex file="*.csproj">Xamarin|UseMaui|Maui|android</regex>
+            <regex file="*.csproj">Xamarin|monoandroid|android</regex>
         </markers>
     </framework>
     <framework>
@@ -600,7 +600,7 @@
         <rule_file>uikit.xml</rule_file>
         <scan_ftypes>*.cs, *.csproj, Info.plist, Entitlements.plist, *.plist, *.swift, *.m, *.mm</scan_ftypes>
         <markers>
-            <regex file="*.csproj">Xamarin|UseMaui|Maui|ios</regex>
+            <regex file="*.csproj">Xamarin|xamarinios|ios</regex>
         </markers>
     </framework>
     <!-- Flutter Sub-Frameworks -->

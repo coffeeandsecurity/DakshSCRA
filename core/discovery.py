@@ -3,6 +3,7 @@ import fnmatch
 import json
 import os
 import re
+import time
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -24,10 +25,22 @@ AUTO_MARKER_VALIDATED_PLATFORMS = {
     "reactnative",
     "flutter",
     "xamarin",
+    "maui",
+    "kmp",
     "ionic",
     "nativescript",
     "cordova",
     "javascript",
+}
+
+AUTO_RULE_SUPPRESSION = {
+    "reactnative": {"javascript"},
+    "ionic": {"javascript"},
+    "cordova": {"javascript"},
+    "nativescript": {"javascript"},
+    "xamarin": {"dotnet"},
+    "maui": {"dotnet", "xamarin"},
+    "kmp": {"kotlin", "java"},
 }
 
 JSON_DEP_SECTIONS = (
@@ -52,7 +65,7 @@ def _read_text_limited(file_path, max_bytes=200000):
         return ""
 
 
-def detect_mobile_rule_types(sourcepath):
+def detect_mobile_rule_types(sourcepath, progress_callback=None):
     """
     Detect platforms/frameworks from common project and framework markers.
 
@@ -62,6 +75,10 @@ def detect_mobile_rule_types(sourcepath):
 
     detected = set()
     ext_counts = {}
+    walk_started = time.monotonic()
+    last_progress = 0.0
+    directories_scanned = 0
+    files_discovered = 0
 
     def _bump_ext(fname):
         ext = os.path.splitext(fname)[1].lower()
@@ -78,6 +95,23 @@ def detect_mobile_rule_types(sourcepath):
             return {}
 
     for root, dirs, files in os.walk(sourcepath):
+        directories_scanned += 1
+        files_discovered += len(files)
+        now = time.monotonic()
+        if callable(progress_callback) and (directories_scanned == 1 or now - last_progress >= 0.35):
+            progress_callback({
+                "phase": "detecting_markers",
+                "status": "running",
+                "message": "Detecting frameworks and project markers",
+                "current_file": root,
+                "directories_scanned": directories_scanned,
+                "files_discovered": files_discovered,
+                "files_selected": 0,
+                "current_index": files_discovered,
+                "total_items": 0,
+                "elapsed_seconds": int(now - walk_started),
+            })
+            last_progress = now
         files_set = set(files)
         files_set_lower = {f.lower() for f in files_set}
         for file_name in files:
@@ -220,13 +254,22 @@ def detect_mobile_rule_types(sourcepath):
         for csproj in [f for f in files if f.endswith(".csproj")]:
             csproj_content = _read_text_limited(os.path.join(root, csproj))
             detected.add("dotnet")
-            if re.search(r"(Xamarin|UseMaui|Maui|net\d+\.\d+-android|net\d+\.\d+-ios)", csproj_content, re.IGNORECASE):
+            if re.search(r"(UseMaui|MauiProgram|Microsoft\.Maui|net\d+\.\d+-android|net\d+\.\d+-ios)", csproj_content, re.IGNORECASE):
+                detected.update({"maui", "android", "ios"})
+            elif re.search(r"(Xamarin|monoandroid|xamarinios)", csproj_content, re.IGNORECASE):
                 detected.update({"xamarin", "android", "ios"})
             if re.search(r"(Microsoft\.AspNetCore|Microsoft\.EntityFrameworkCore|WebApplication\.CreateBuilder)", csproj_content, re.IGNORECASE):
                 detected.add("dotnet")
 
         if any(name.lower().endswith(".sln") for name in files):
             detected.add("dotnet")
+
+        # Kotlin Multiplatform + Kotlin markers.
+        for gradle_name in ("build.gradle", "build.gradle.kts", "settings.gradle", "settings.gradle.kts"):
+            if gradle_name in files_set:
+                gradle_content = _read_text_limited(os.path.join(root, gradle_name))
+                if re.search(r'kotlin\s*\(\s*["\']multiplatform["\']\s*\)|org\.jetbrains\.kotlin\.multiplatform|kotlin-multiplatform', gradle_content, re.IGNORECASE):
+                    detected.update({"kmp", "kotlin", "android", "ios"})
 
         # Kotlin marker for backend/non-mobile kotlin projects.
         if any(name.lower().endswith(".kt") for name in files):
@@ -256,6 +299,20 @@ def detect_mobile_rule_types(sourcepath):
     js_count = ext_counts.get(".js", 0) + ext_counts.get(".jsx", 0) + ext_counts.get(".ts", 0) + ext_counts.get(".tsx", 0)
     if js_count >= 20:
         detected.add("javascript")
+
+    if callable(progress_callback):
+        progress_callback({
+            "phase": "markers_detected",
+            "status": "running",
+            "message": "Technology markers mapped",
+            "current_file": str(sourcepath),
+            "directories_scanned": directories_scanned,
+            "files_discovered": files_discovered,
+            "files_selected": 0,
+            "current_index": files_discovered,
+            "total_items": files_discovered,
+            "elapsed_seconds": int(time.monotonic() - walk_started),
+        })
 
     return detected
 
@@ -470,7 +527,7 @@ def detect_framework_rule_files(sourcepath, selected_platforms=None):
     return deduped
 
 
-def discover_files(codebase, sourcepath, mode):
+def discover_files(codebase, sourcepath, mode, progress_callback=None):
     """
     Discovers files for specified platforms and logs paths to platform-specific and master log files.
 
@@ -490,6 +547,9 @@ def discover_files(codebase, sourcepath, mode):
     platform_extensions = {}  # Store identified extensions per platform
     matches, total_files_count = [], 0
     identified_files_count = 0
+    directories_scanned = 0
+    walk_started = time.monotonic()
+    last_progress = 0.0
 
     # Create or return the /runtime/platform directory and clear existing logs
     platform_dir = runtime.runtime_dirpath / "platform"
@@ -518,8 +578,23 @@ def discover_files(codebase, sourcepath, mode):
     try:
         with open(master_file_paths, "w+") as master_log:
 
+            if callable(progress_callback):
+                progress_callback({
+                    "phase": "enumerating",
+                    "status": "running",
+                    "message": "Mapping repository files",
+                    "current_file": str(sourcepath),
+                    "directories_scanned": 0,
+                    "files_discovered": 0,
+                    "files_selected": 0,
+                    "current_index": 0,
+                    "total_items": 0,
+                    "elapsed_seconds": 0,
+                })
+
             # Traverse the source path to discover and log files
             for root, _, filenames in os.walk(sourcepath):
+                directories_scanned += 1
                 total_files_count += len(filenames)
 
                 for platform, extensions in platform_filetypes.items():
@@ -547,6 +622,22 @@ def discover_files(codebase, sourcepath, mode):
                                         platform_extensions[platform].append(ext_value)
                     except OSError as exc:
                         logger.error("Failed to write platform log %s: %s", platform_log_path, exc)
+
+                now = time.monotonic()
+                if callable(progress_callback) and (directories_scanned == 1 or now - last_progress >= 0.35):
+                    progress_callback({
+                        "phase": "enumerating",
+                        "status": "running",
+                        "message": "Mapping repository files",
+                        "current_file": root,
+                        "directories_scanned": directories_scanned,
+                        "files_discovered": total_files_count,
+                        "files_selected": identified_files_count,
+                        "current_index": total_files_count,
+                        "total_items": 0,
+                        "elapsed_seconds": int(now - walk_started),
+                    })
+                    last_progress = now
     except OSError as exc:
         logger.error("Failed to write master filepath log at %s: %s", master_file_paths, exc)
         return master_file_paths, platform_file_paths  # Early return; nothing else to do
@@ -577,6 +668,20 @@ def discover_files(codebase, sourcepath, mode):
     #result.update_scan_summary("detection_summary.file_extensions_identified", platform_extensions)
 
     runtime.totalFilesIdentified = identified_files_count
+
+    if callable(progress_callback):
+        progress_callback({
+            "phase": "inventory_ready",
+            "status": "completed",
+            "message": "Repository inventory ready",
+            "current_file": str(sourcepath),
+            "directories_scanned": directories_scanned,
+            "files_discovered": total_files_count,
+            "files_selected": identified_files_count,
+            "current_index": total_files_count,
+            "total_items": total_files_count,
+            "elapsed_seconds": int(time.monotonic() - walk_started),
+        })
 
     return master_file_paths, platform_file_paths  # Return master log path and platform log paths
 
@@ -637,6 +742,11 @@ def auto_detect_rule_types(sourcepath):
         str: Comma-separated platform names whose filetypes match discovered files.
     """
 
+    details = auto_detect_rule_types_with_details(sourcepath)
+    return details.get("result", "")
+
+
+def auto_detect_rule_types_with_details(sourcepath, progress_callback=None):
     supported_rules = rulesops.get_available_rules(exclude=["common"])
     supported_rule_list = [r for r in supported_rules.split(",") if r]
     marker_validated_rules = AUTO_MARKER_VALIDATED_PLATFORMS.intersection(set(supported_rule_list))
@@ -648,17 +758,36 @@ def auto_detect_rule_types(sourcepath):
         patterns = [p.strip() for p in list(dict.fromkeys(filetypes.split(","))) if p.strip()]
         platform_patterns[rule] = patterns
 
-    # Build reverse lookup to avoid walking tree once per platform.
     pattern_to_platforms = {}
     for platform, patterns in platform_patterns.items():
         for patt in patterns:
             pattern_to_platforms.setdefault(patt, set()).add(platform)
 
-    detected_platforms = set()
+    extension_detected = set()
     pending_platforms = set(platform_patterns.keys())
     all_patterns = list(pattern_to_platforms.keys())
+    walk_started = time.monotonic()
+    last_progress = 0.0
+    directories_scanned = 0
+    files_discovered = 0
 
-    for _, _, files in os.walk(sourcepath):
+    if callable(progress_callback):
+        progress_callback({
+            "phase": "auto_detecting",
+            "status": "running",
+            "message": "Detecting source languages",
+            "current_file": str(sourcepath),
+            "directories_scanned": 0,
+            "files_discovered": 0,
+            "files_selected": 0,
+            "current_index": 0,
+            "total_items": 0,
+            "elapsed_seconds": 0,
+        })
+
+    for root, _, files in os.walk(sourcepath):
+        directories_scanned += 1
+        files_discovered += len(files)
         if not pending_platforms:
             break
         for filename in files:
@@ -666,21 +795,64 @@ def auto_detect_rule_types(sourcepath):
                 if fnmatch.fnmatch(filename, patt):
                     newly_detected = pattern_to_platforms[patt].intersection(pending_platforms)
                     if newly_detected:
-                        detected_platforms.update(newly_detected)
+                        extension_detected.update(newly_detected)
                         pending_platforms.difference_update(newly_detected)
                     if not pending_platforms:
                         break
             if not pending_platforms:
                 break
 
-    mobile_platforms = detect_mobile_rule_types(sourcepath)
-    validated_mobile_platforms = mobile_platforms.intersection(marker_validated_rules)
+        now = time.monotonic()
+        if callable(progress_callback) and (directories_scanned == 1 or now - last_progress >= 0.35):
+            progress_callback({
+                "phase": "auto_detecting",
+                "status": "running",
+                "message": "Detecting source languages",
+                "current_file": root,
+                "directories_scanned": directories_scanned,
+                "files_discovered": files_discovered,
+                "files_selected": 0,
+                "current_index": files_discovered,
+                "total_items": 0,
+                "elapsed_seconds": int(now - walk_started),
+            })
+            last_progress = now
 
-    # Deduplicate and sort
-    unique_platforms = sorted(detected_platforms.union(validated_mobile_platforms))
-    result_str = ",".join(unique_platforms)
+    mobile_platforms = detect_mobile_rule_types(sourcepath, progress_callback=progress_callback)
+    marker_detected = mobile_platforms.intersection(marker_validated_rules)
+    combined = extension_detected.union(marker_detected)
 
-    return result_str
+    # Resolve to a fixed point rather than one forward pass, so a platform
+    # that is itself suppressed (e.g. xamarin by maui) doesn't also get to
+    # cascade its own suppressions onto others.
+    suppressed_map = {}
+    suppressed = set()
+    for _ in range(len(combined) + 1):
+        pass_map = {}
+        grew = False
+        for platform in sorted(combined):
+            if platform in suppressed:
+                continue
+            overlaps = sorted(AUTO_RULE_SUPPRESSION.get(platform, set()).intersection(combined))
+            if overlaps:
+                pass_map[platform] = overlaps
+                if not set(overlaps) <= suppressed:
+                    suppressed |= set(overlaps)
+                    grew = True
+        suppressed_map = pass_map
+        if not grew:
+            break
+
+    selected = sorted(combined.difference(suppressed))
+    return {
+        "extension_detected": sorted(extension_detected),
+        "marker_detected": sorted(marker_detected),
+        "combined_detected": sorted(combined),
+        "suppressed_by_platform": suppressed_map,
+        "suppressed": sorted(suppressed),
+        "selected": selected,
+        "result": ",".join(selected),
+    }
 
 
 # Backward-compatible aliases for legacy callers.
@@ -688,4 +860,5 @@ detectMobileRuleTypes = detect_mobile_rule_types
 discoverFiles = discover_files
 reconDiscoverFiles = recon_discover_files
 autoDetectRuleTypes = auto_detect_rule_types
+autoDetectRuleTypesWithDetails = auto_detect_rule_types_with_details
 detectFrameworkRuleFiles = detect_framework_rule_files

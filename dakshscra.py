@@ -2,6 +2,7 @@
 import argparse
 import atexit
 import fnmatch
+import inspect
 import json
 import os
 import re
@@ -11,6 +12,7 @@ import time
 from datetime import datetime
 from os import path  # This lowercase path to be used only to validate whether a directory exists
 from pathlib import Path  # Resolve the Windows / macOS / Linux path issue
+from uuid import uuid4
 
 # Local application imports
 import core.discovery as discover
@@ -31,6 +33,16 @@ from core.analysis.ruby import analyzer as ruby_analysis
 from core.analysis.kotlin import analyzer as kotlin_analysis
 from core.analysis.c import analyzer as c_analysis
 from core.analysis.cpp import analyzer as cpp_analysis
+from core.analysis.mobile import android as android_analysis
+from core.analysis.mobile import ios as ios_analysis
+from core.analysis.mobile import flutter as flutter_analysis
+from core.analysis.mobile import reactnative as reactnative_analysis
+from core.analysis.mobile import ionic as ionic_analysis
+from core.analysis.mobile import cordova as cordova_analysis
+from core.analysis.mobile import nativescript as nativescript_analysis
+from core.analysis.mobile import xamarin as xamarin_analysis
+from core.analysis.mobile import maui as maui_analysis
+from core.analysis.mobile import kmp as kmp_analysis
 
 import state.constants as constants
 import state.runtime_state as state
@@ -43,6 +55,7 @@ import utils.rules_utils as rutils
 import utils.review_utils as review_utils
 import utils.string_utils as strutils
 import utils.suppression_utils as supp
+from utils.decision_trace import append_trace, cleanup_trace_dir, cleanup_trace_dir, cleanup_trace_dir
 from utils.cli_utils import spinner
 from utils.config_utils import get_tool_version
 from utils.scan_state_utils import ScanStateManager
@@ -124,15 +137,15 @@ output_group.add_argument('-rpt', '--report', type=str, action='store', dest='re
 
 output_group.add_argument('--json-input-dir', type=str, action='store', dest='json_input_dir',
                           default='', metavar='PATH',
-                          help='Path to JSON report directory (default: ./reports/data)')
+                          help='Path to JSON report directory (for example: ./reports/<project-id>/<run-id>/data)')
 
 output_group.add_argument('--pdf-output', type=str, action='store', dest='pdf_output',
                           default='', metavar='PATH',
-                          help='Output path for single PDF report (default: ./reports/scan/pdf/report.pdf)')
+                          help='Output path for single PDF report (default: ./reports/<project-id>/<run-id>/scan/pdf/report.pdf)')
 
 output_group.add_argument('--pdf-multi-dir', type=str, action='store', dest='pdf_multi_dir',
                           default='', metavar='PATH',
-                          help='Output directory for multi-file PDF report set (default: ./reports/scan/pdf/multi-file)')
+                          help='Output directory for multi-file PDF report set (default: ./reports/<project-id>/<run-id>/scan/pdf/multi-file)')
 
 output_group.add_argument('--pdf-single-only', action='store_true', dest='pdf_single_only',
                           help='Generate only the combined single-file PDF; skip the per-platform multi-file PDF set')
@@ -196,6 +209,16 @@ if results.pdf_from_json:
     print(constants.AUTHOR_BANNER.format(version=version))
     cli.section_print("[*] On-Demand PDF Generation (JSON)")
 
+    # Resolve the same project/run identity the normal scan flow uses (env vars,
+    # falling back to -t/--target-dir's basename) before computing default paths,
+    # so unset --json-input-dir/--pdf-output/--pdf-multi-dir fall back to the
+    # correct per-project/run directory instead of the legacy flat reports root.
+    _pdf_project_id = os.environ.get("DAKSH_PROJECT_ID", "").strip()
+    if not _pdf_project_id and getattr(results, "target_dir", None):
+        _pdf_project_id = Path(str(results.target_dir).rstrip("/\\")).name
+    _pdf_run_id = os.environ.get("DAKSH_RUN_ID", "").strip()
+    state.configure_project_paths(_pdf_project_id, _pdf_run_id)
+
     json_input_dir = Path(results.json_input_dir).expanduser() if results.json_input_dir else (Path(state.reports_dirpath) / "data")
     single_pdf_output = Path(results.pdf_output).expanduser() if results.pdf_output else Path(state.pdfreport_Fpath)
     multi_pdf_output = Path(results.pdf_multi_dir).expanduser() if results.pdf_multi_dir else (Path(state.reports_dirpath) / "scan" / "pdf" / "multi-file")
@@ -231,6 +254,15 @@ state_enabled = (state_cfg["enabled"] and not results.state_disable) or results.
 state_file_path = results.state_file.strip() if results.state_file else state_cfg["default_state_file"]
 if not Path(state_file_path).is_absolute():
     state_file_path = str(Path(state.root_dir) / state_file_path)
+
+restored_output_cfg = {}
+if (results.resume_scan or state_cfg["resume_mode"] == "auto") and Path(state_file_path).is_file():
+    try:
+        restored_state = json.loads(Path(state_file_path).read_text(encoding="utf-8"))
+        if isinstance(restored_state, dict):
+            restored_output_cfg = restored_state.get("scan_config", {}) or {}
+    except (OSError, json.JSONDecodeError, TypeError, ValueError):
+        restored_output_cfg = {}
 
 if results.skip_analysis:
     analysis_enabled_for_run = False
@@ -385,6 +417,16 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
         "kotlin": kotlin_analysis.run,
         "c": c_analysis.run,
         "cpp": cpp_analysis.run,
+        "android": android_analysis.run,
+        "ios": ios_analysis.run,
+        "flutter": flutter_analysis.run,
+        "reactnative": reactnative_analysis.run,
+        "ionic": ionic_analysis.run,
+        "cordova": cordova_analysis.run,
+        "nativescript": nativescript_analysis.run,
+        "xamarin": xamarin_analysis.run,
+        "maui": maui_analysis.run,
+        "kmp": kmp_analysis.run,
     }
     alias_map = {
         "py": "python",
@@ -396,6 +438,16 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
         "nodejs": "javascript",
         "java": "java",
         "kotlin": "kotlin",
+        "ios": "ios",
+        "flutter": "flutter",
+        "maui": "maui",
+        "kmp": "kmp",
+        "reactnative": "reactnative",
+        "ionic": "ionic",
+        "cordova": "cordova",
+        "nativescript": "nativescript",
+        "xamarin": "xamarin",
+        "android": "android",
         "dotnet": "dotnet",
         ".net": "dotnet",
         "csharp": "dotnet",
@@ -425,15 +477,66 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
     platform_targets = sorted({str(p).strip().lower() for p in selected_platforms if str(p).strip() and str(p).strip().lower() != "common"})
     total_platform_targets = len(platform_targets)
 
-    result.update_scan_summary("analyzer_summary.enabled", True)
-    result.update_scan_summary("analyzer_summary.platform_targets_total", total_platform_targets)
-    result.update_scan_summary("analyzer_summary.platform_targets_completed", 0)
-    result.update_scan_summary("analyzer_summary.current_target", "")
-    result.update_scan_summary("analyzer_summary.heartbeat_message", "Analyzer queued")
+    result.update_scan_summary_many({
+        "analyzer_summary.enabled": True,
+        "analyzer_summary.platform_targets_total": total_platform_targets,
+        "analyzer_summary.platform_targets_completed": 0,
+        "analyzer_summary.current_target": "",
+        "analyzer_summary.heartbeat_message": "Analyzer queued",
+    })
 
     for index, platform in enumerate(platform_targets, start=1):
         canonical, runner = analysis_dispatch.resolve_analysis_target(platform, alias_map, analyzers, language_hints)
+        try:
+            runner_accepts_progress = "progress_callback" in inspect.signature(runner).parameters
+        except (TypeError, ValueError):
+            runner_accepts_progress = False
         target_started_at = time.time()
+        def _analysis_progress(payload):
+            phase = str(payload.get("phase", "running") or "running")
+            current_file = str(payload.get("current_file", "") or "")
+            current_function = str(payload.get("current_function", "") or "")
+            current_index = int(payload.get("current_index", 0) or 0)
+            total_items = int(payload.get("total_items", 0) or 0)
+            elapsed = int(time.time() - target_started_at)
+            message_bits = [f"Analyzing {platform}"]
+            if phase:
+                message_bits.append(phase.replace("_", " "))
+            if current_function:
+                message_bits.append(current_function)
+            elif current_file:
+                message_bits.append(os.path.basename(current_file))
+            message = " | ".join(message_bits)
+            scan_state_mgr.update_cursor({
+                "stage": "analysis",
+                "platform": platform,
+                "current_phase": phase,
+                "current_file": current_file,
+                "current_function": current_function,
+                "current_index": current_index,
+                "total_items": total_items,
+            })
+            scan_state_mgr.touch_heartbeat(message, {
+                "platform": platform,
+                "phase": phase,
+                "current_index": current_index,
+                "total_items": total_items,
+                "current_file": current_file,
+                "current_function": current_function,
+                "elapsed_seconds": elapsed,
+            }, force=False)
+            _update_live_progress(
+                stage="analysis",
+                status=str(payload.get("status", "running")),
+                message=message,
+                platform=platform,
+                current_phase=phase,
+                current_file=current_file,
+                current_function=current_function,
+                current_index=current_index,
+                total_items=total_items,
+                elapsed_seconds=elapsed,
+            )
         scan_state_mgr.update_cursor({
             "stage": "analysis",
             "platform": platform,
@@ -447,9 +550,11 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
             "current_index": index,
             "total_items": total_platform_targets,
         })
-        result.update_scan_summary("analyzer_summary.current_target", platform)
-        result.update_scan_summary("analyzer_summary.last_heartbeat_at", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        result.update_scan_summary("analyzer_summary.heartbeat_message", heartbeat_message)
+        result.update_scan_summary_many({
+            "analyzer_summary.current_target": platform,
+            "analyzer_summary.last_heartbeat_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "analyzer_summary.heartbeat_message": heartbeat_message,
+        })
         print(f"     [-] Analyzer Target      : {platform} ({index}/{total_platform_targets})")
         entry = {
             "target_type": "platform",
@@ -481,14 +586,29 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
                             "total_items": total_platform_targets,
                             "elapsed_seconds": elapsed,
                         })
-                        result.update_scan_summary("analyzer_summary.current_target", platform)
-                        result.update_scan_summary("analyzer_summary.last_heartbeat_at", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-                        result.update_scan_summary("analyzer_summary.heartbeat_message", heartbeat)
+                        _update_live_progress(
+                            stage="analysis",
+                            status="running",
+                            message=heartbeat,
+                            platform=platform,
+                            current_phase="heartbeat",
+                            current_index=index,
+                            total_items=total_platform_targets,
+                            elapsed_seconds=elapsed,
+                        )
+                        result.update_scan_summary_many({
+                            "analyzer_summary.current_target": platform,
+                            "analyzer_summary.last_heartbeat_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            "analyzer_summary.heartbeat_message": heartbeat,
+                        })
 
                 heartbeat_thread = threading.Thread(target=_heartbeat_worker, daemon=True)
                 heartbeat_thread.start()
                 try:
-                    flow_json_path, flow_html_path = runner(source_root)
+                    if runner_accepts_progress:
+                        flow_json_path, flow_html_path = runner(source_root, progress_callback=_analysis_progress)
+                    else:
+                        flow_json_path, flow_html_path = runner(source_root)
                     flow_items = _safe_load_json(flow_json_path, [])
                     cache[canonical] = {
                         "ok": True,
@@ -622,9 +742,21 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
 
         platform_result_map[platform] = entry
         results_payload.append(entry)
-        result.update_scan_summary("analyzer_summary.platform_targets_completed", index)
-        result.update_scan_summary("analyzer_summary.last_heartbeat_at", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        result.update_scan_summary("analyzer_summary.heartbeat_message", f"Analyzer finished target {platform} ({index}/{total_platform_targets})")
+        result.update_scan_summary_many({
+            "analyzer_summary.platform_targets_completed": index,
+            "analyzer_summary.last_heartbeat_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "analyzer_summary.heartbeat_message": f"Analyzer finished target {platform} ({index}/{total_platform_targets})",
+        })
+        _update_live_progress(
+            force=True,
+            stage="analysis",
+            status="running",
+            message=f"Analyzer finished target {platform} ({index}/{total_platform_targets})",
+            platform=platform,
+            current_phase="target_completed",
+            current_index=index,
+            total_items=total_platform_targets,
+        )
 
     if include_frameworks:
         framework_seen = set()
@@ -724,6 +856,63 @@ scan_state_mgr = ScanStateManager(
     cleanup_on_success=state_cfg["cleanup_on_success"],
 )
 
+_live_progress_tick = {"last": 0.0}
+_repository_progress_totals = {
+    "directories_scanned": 0,
+    "files_discovered": 0,
+    "files_selected": 0,
+}
+
+
+def _update_live_progress(force=False, **payload):
+    now = time.time()
+    if not force and (now - _live_progress_tick["last"]) < 0.25:
+        return
+    result.update_scan_summary_many({
+        f"live_progress.{key}": value for key, value in payload.items()
+    })
+    _live_progress_tick["last"] = now
+
+
+def _repository_progress(payload):
+    phase = str(payload.get("phase", "enumerating") or "enumerating")
+    stage = "reconnaissance" if phase.startswith("recon_") else "discovery"
+    current_index = int(payload.get("current_index", 0) or 0)
+    force = current_index == 0 or phase.endswith(("_ready", "_detected"))
+    for metric in _repository_progress_totals:
+        _repository_progress_totals[metric] = max(
+            _repository_progress_totals[metric],
+            int(payload.get(metric, 0) or 0),
+        )
+    _update_live_progress(
+        force=force,
+        stage=stage,
+        status=str(payload.get("status", "running") or "running"),
+        message=str(payload.get("message", "Mapping repository") or "Mapping repository"),
+        platform="",
+        category="",
+        rule_title="",
+        current_function="",
+        current_phase=phase,
+        current_file=str(payload.get("current_file", "") or ""),
+        current_index=current_index,
+        total_items=int(payload.get("total_items", 0) or 0),
+        elapsed_seconds=max(0, int(time.time() - state.start_time)),
+        directories_scanned=_repository_progress_totals["directories_scanned"],
+        files_discovered=_repository_progress_totals["files_discovered"],
+        files_selected=_repository_progress_totals["files_selected"],
+    )
+
+
+project_output_id = os.environ.get("DAKSH_PROJECT_ID", "").strip()
+if not project_output_id and getattr(results, "target_dir", None):
+    project_output_id = Path(str(results.target_dir).rstrip("/\\")).name
+project_output_id = restored_output_cfg.get("project_output_id", project_output_id)
+run_output_id = restored_output_cfg.get("run_output_id", os.environ.get("DAKSH_RUN_ID", "").strip())
+if not run_output_id:
+    run_output_id = datetime.now().strftime("%Y%m%d%H%M%S") + "-" + uuid4().hex[:8]
+state.configure_project_paths(project_output_id, run_output_id)
+
 should_preserve_runtime = bool(results.resume_scan)
 if not should_preserve_runtime:
     futils.dir_cleanup(str(state.runtime_dirpath))
@@ -731,6 +920,21 @@ if not should_preserve_runtime:
     futils.dir_cleanup(str(state.reports_dirpath / "scan"))
     futils.dir_cleanup(str(state.reports_dirpath / "data"))
     futils.dir_cleanup_recursive(str(state.reports_dirpath / "analysis"))
+
+_update_live_progress(
+    force=True,
+    stage="initialization",
+    status="running",
+    message="Scan engine online - preparing repository",
+    current_phase="preparing_workspace",
+    current_file=str(getattr(results, "target_dir", "") or ""),
+    current_index=0,
+    total_items=0,
+    elapsed_seconds=0,
+    directories_scanned=0,
+    files_discovered=0,
+    files_selected=0,
+)
 
 # If rule_file is present but file_types is empty, inherit rule_file value
 if results.rule_file and not results.file_types:
@@ -754,15 +958,21 @@ if (results.recon or results.estimate) and results.target_dir and not results.ru
         sys.exit(1)
     targetdir = results.target_dir
     if results.recon and not results.estimate:
-        rec.recon(targetdir, False, strict_mode=results.recon_strict)
+        rec.recon(targetdir, False, strict_mode=results.recon_strict, progress_callback=_repository_progress)
         sys.exit(1)
     elif results.estimate and not results.recon:
-        _, recSummary = rec.recon(targetdir, False, strict_mode=results.recon_strict)
-        estimate.effort_estimator(recSummary)
+        _, recSummary = rec.recon(targetdir, False, strict_mode=results.recon_strict, progress_callback=_repository_progress)
+        try:
+            estimate.effort_estimator(recSummary)
+        except (ValueError, OSError, KeyError) as exc:
+            print(f"     [-] Effort estimation skipped: {exc}")
         sys.exit(1)
     else:
-        _, recSummary = rec.recon(targetdir, False, strict_mode=results.recon_strict)
-        estimate.effort_estimator(recSummary)
+        _, recSummary = rec.recon(targetdir, False, strict_mode=results.recon_strict, progress_callback=_repository_progress)
+        try:
+            estimate.effort_estimator(recSummary)
+        except (ValueError, OSError, KeyError) as exc:
+            print(f"     [-] Effort estimation skipped: {exc}")
         sys.exit(1)
 
 # Priority #2 - rule based scan
@@ -781,12 +991,18 @@ elif results.rule_file:
     print(f"     [-] Rule Selected        : {display_rule_file!r}")
     print(f"     [-] File Types Selected  : {display_file_types!r}")
     print(f"     [-] Target Directory     : {results.target_dir}")
+    print(f"     [-] Project ID           : {project_output_id}")
+    print(f"     [-] Run ID               : {run_output_id}")
+    print(f"     [-] Report Root          : {state.reports_dirpath}")
     print(f"     [-] Analyzer Stage       : {'enabled' if analysis_enabled_for_run else 'disabled'}")
 
     result.update_scan_summary("inputs_received.rule_selected", display_rule_file)
     result.update_scan_summary("inputs_received.filetypes_selected", display_file_types)
     result.update_scan_summary("inputs_received.target_directory", results.target_dir)
     result.update_scan_summary("inputs_received.analyzer_enabled", analysis_enabled_for_run)
+    result.update_scan_summary("inputs_received.project_id", state.project_id or project_output_id)
+    result.update_scan_summary("inputs_received.run_id", state.run_id or run_output_id)
+    result.update_scan_summary("inputs_received.report_root", str(state.reports_dirpath))
 
     cutils.init_or_prompt_project_config()
     if str(results.verbosity) in ('1', '2', '3'):
@@ -832,11 +1048,32 @@ if results.review_config:
 if original_rule_file and original_rule_file.lower() == "auto":
     print("     [-] Auto-detecting applicable platform types... ", end="", flush=True)
     spinner("start")
-    detected = discover.auto_detect_rule_types(results.target_dir)
+    auto_details = discover.auto_detect_rule_types_with_details(
+        results.target_dir,
+        progress_callback=_repository_progress,
+    )
+    detected = auto_details.get("result", "")
     results.rule_file = detected
     results.file_types = detected
     spinner("stop")
-    print(f"     [-] Detected Platform(s) : {detected}")
+    print(f"     [-] Auto Candidates (Ext): {', '.join(auto_details.get('extension_detected', [])) or 'none'}")
+    print(f"     [-] Auto Candidates (Mrk): {', '.join(auto_details.get('marker_detected', [])) or 'none'}")
+    suppressed_map = auto_details.get("suppressed_by_platform", {}) or {}
+    if suppressed_map:
+        suppressed_labels = []
+        for platform, overlaps in sorted(suppressed_map.items()):
+            suppressed_labels.append(f"{platform} -> {', '.join(overlaps)}")
+        print(f"     [-] Suppressed Overlaps  : {'; '.join(suppressed_labels)}")
+    else:
+        print("     [-] Suppressed Overlaps  : none")
+    print(f"     [-] Final Auto Targets   : {detected}")
+    append_trace("auto_selection", {
+        "mode": "auto",
+        "extension_detected": auto_details.get("extension_detected", []),
+        "marker_detected": auto_details.get("marker_detected", []),
+        "suppressed": suppressed_map,
+        "selected": auto_details.get("selected", []),
+    })
 
 codebase = results.file_types
 selected_rule_platforms = [p.strip() for p in str(results.rule_file).split(",") if p.strip()]
@@ -926,6 +1163,8 @@ if results.rule_file:
         "persist_after_seconds": state_cfg["persist_after_seconds"],
         "persist_interval_seconds": state_cfg["persist_interval_seconds"],
         "rule_engine": state.ruleEngine,
+        "project_output_id": project_output_id,
+        "run_output_id": run_output_id,
     }
 
     restored = None
@@ -983,13 +1222,17 @@ else:
     scan_state_mgr.update_stage("discovery", "running")
     if results.recon:
         cli.section_print(f"[*] [Stage {sCnt}] Reconnaissance (a.k.a Software Composition Analysis)")
-        rec.recon(results.target_dir, True, strict_mode=results.recon_strict)
+        rec.recon(results.target_dir, True, strict_mode=results.recon_strict, progress_callback=_repository_progress)
         sCnt += 1
         cli.section_print(f"[*] [Stage {sCnt}] File Path Discovery")
-        master_file_paths, platform_file_paths = discover.discover_files(codebase, sourcepath, 1)
+        master_file_paths, platform_file_paths = discover.discover_files(
+            codebase, sourcepath, 1, progress_callback=_repository_progress
+        )
     else:
         cli.section_print(f"[*] [Stage {sCnt}] File Path Discovery")
-        master_file_paths, platform_file_paths = discover.discover_files(codebase, sourcepath, 1)
+        master_file_paths, platform_file_paths = discover.discover_files(
+            codebase, sourcepath, 1, progress_callback=_repository_progress
+        )
 
     scan_state_mgr.update_stage("discovery", "completed", {
         "master_file_paths": str(master_file_paths),
@@ -1002,8 +1245,11 @@ else:
         cli.section_print(f"[*] [Stage {sCnt}] Effort Estimation")
         if not results.recon:
             print("     [-] Running recon to generate file inventory for estimation...")
-            rec.recon(results.target_dir, True, strict_mode=results.recon_strict)
-        estimate.effort_estimator(str(state.reconSummary_Fpath))
+            rec.recon(results.target_dir, True, strict_mode=results.recon_strict, progress_callback=_repository_progress)
+        try:
+            estimate.effort_estimator(str(state.reconSummary_Fpath))
+        except (ValueError, OSError, KeyError) as exc:
+            print(f"     [-] Effort estimation skipped: {exc}")
 
 ###### [Stage 2 or 3] Pattern Matching & Analysis ######
 sCnt += 1
@@ -1019,6 +1265,16 @@ scan_state_mgr.update_stage("pattern_matching", "running", {
     "completed_platforms": sorted(completed_platforms),
     "common_rules_done": common_rules_done,
 })
+_update_live_progress(
+    force=True,
+    stage="pattern_matching",
+    status="running",
+    message="Pattern matching in progress",
+    current_phase="loading_rules",
+    current_file="",
+    current_index=0,
+    total_items=0,
+)
 
 
 def _source_progress(payload):
@@ -1035,6 +1291,22 @@ def _source_progress(payload):
         "suppressed_count": state.suppressedFindingsCnt,
         "parse_error_count": state.parseErrorCnt,
     })
+    _update_live_progress(
+        stage="pattern_matching",
+        status=str(payload.get("status", "running")),
+        message="Scanning source rules",
+        platform=payload.get("platform", ""),
+        category=payload.get("category", ""),
+        rule_title=payload.get("rule_title", ""),
+        current_function=str(payload.get("rule_title", "")),
+        current_phase="pattern_matching",
+        current_file=str(payload.get("filepath", "")),
+        current_index=int(payload.get("file_index", 0) or 0),
+        total_items=int(payload.get("total_items", 0) or 0),
+        rules_match_count=state.rulesMatchCnt,
+        suppressed_count=state.suppressedFindingsCnt,
+        parse_error_count=state.parseErrorCnt,
+    )
 
 # Platform-specific rules (+ framework-specific overlays)
 if results.rule_file.lower() not in ['common']:
@@ -1160,6 +1432,16 @@ sCnt += 1
 cli.section_print(f"[*] [Stage {sCnt}] Identifying Areas of Interest")
 
 scan_state_mgr.update_stage("path_analysis", "running")
+_update_live_progress(
+    force=True,
+    stage="path_analysis",
+    status="running",
+    message="Path analysis in progress",
+    current_phase="loading_path_rules",
+    current_file="",
+    current_index=0,
+    total_items=0,
+)
 if resume_paths.get("status") == "completed" and Path(state.outputAoI_Fpaths_JSON).exists():
     print("     [-] Path Analysis Stage : Resumed from checkpoint")
     matched_rules, unmatched_rules = [], []
@@ -1174,6 +1456,18 @@ else:
         scan_state_mgr.update_counters({
             "paths_match_count": state.rulesPathsMatchCnt,
         })
+        _update_live_progress(
+            stage="path_analysis",
+            status=str(payload.get("status", "running")),
+            message="Scanning path-based rules",
+            rule_title=payload.get("rule_title", ""),
+            current_function=str(payload.get("rule_title", "")),
+            current_phase="path_analysis",
+            current_file=str(payload.get("filepath", "")),
+            current_index=int(payload.get("file_index", 0) or 0),
+            total_items=int(payload.get("total_items", 0) or 0),
+            paths_match_count=state.rulesPathsMatchCnt,
+        )
 
     with open(master_file_paths, 'r', encoding=futils.detect_encoding_type(master_file_paths)) as f_targetfiles:
         rule_no = 1
@@ -1230,6 +1524,16 @@ if analysis_enabled_for_run:
     sCnt += 1
     cli.section_print(f"[*] [Stage {sCnt}] Analyzer")
     scan_state_mgr.update_stage("analysis", "running")
+    _update_live_progress(
+        force=True,
+        stage="analysis",
+        status="running",
+        message="Analyzer queued",
+        current_phase="preparing_analyzers",
+        current_file="",
+        current_index=0,
+        total_items=0,
+    )
     try:
         analysis_payload = _run_analyzer_stage(
             sourcepath,
@@ -1257,11 +1561,26 @@ else:
     result.update_scan_summary("analyzer_summary.enabled", False)
     result.update_scan_summary("analyzer_summary.taint_targets", 0)
 
+# Re-snapshot the report-facing summary so the analyzer stage's results
+# (only known after this point) reach reports/.../data/summary.json,
+# which core/reports.py reads when rendering the final report.
+parser.gen_scan_summary_text(state.scanSummary_Fpath)
+
 ###### [Stage 5] Generate Reports ######
 if results.review_config:
     _apply_review_config_to_outputs(results.review_config)
 
 scan_state_mgr.update_stage("reporting", "running")
+_update_live_progress(
+    force=True,
+    stage="reporting",
+    status="running",
+    message="Generating reports",
+    current_phase="rendering_reports",
+    current_file="",
+    current_index=0,
+    total_items=0,
+)
 valid_formats = {"html", "pdf"}
 requested_formats = results.report_format.lower().replace(" ", "").split(",")
 selected_formats = [fmt for fmt in requested_formats if fmt in valid_formats]
@@ -1273,13 +1592,27 @@ else:
     selected_formats = ["html"]
     report.gen_report(formats="html", include_multifile_pdf=False)
 scan_state_mgr.update_stage("reporting", "completed")
+_update_live_progress(force=True, stage="reporting", status="completed", message="Reports generated")
 
 if "pdf" not in selected_formats:
     print("")
     print("     [i] PDF report not generated. To generate PDF from existing JSON output:")
-    print("         dakshscra.py --pdf-from-json                    (single + multi-file PDFs)")
-    print("         dakshscra.py --pdf-from-json --pdf-single-only  (single file only)")
+    print("         dakshscra.py --pdf-from-json --json-input-dir ./reports/<project-id>/<run-id>/data")
+    print("         dakshscra.py --pdf-from-json --json-input-dir ./reports/<project-id>/<run-id>/data --pdf-single-only")
 
 cutils.update_project_config("","")     # Clean up project details in the config file
 scan_state_mgr.mark_completed()
+_update_live_progress(force=True, stage="completed", status="completed", message="Scan completed")
 scan_state_mgr.uninstall_signal_handlers()
+
+if not os.environ.get("DAKSH_RUNTIME_DIR", "").strip():
+    # Plain CLI run (not spawned by the web UI, which sweeps its own
+    # per-run diagnostics via scan_runtime.cleanup_run_runtime) - the
+    # decision-trace JSONL files have no reader once the run is done.
+    cleanup_trace_dir()
+
+if not os.environ.get("DAKSH_RUNTIME_DIR", "").strip():
+    # Plain CLI run (not spawned by the web UI, which sweeps its own
+    # per-run diagnostics via scan_runtime.cleanup_run_runtime) - the
+    # decision-trace JSONL files have no reader once the run is done.
+    cleanup_trace_dir()

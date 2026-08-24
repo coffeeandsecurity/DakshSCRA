@@ -405,7 +405,7 @@
                 <highlight_color>red</highlight_color>
             </scan_config>
             <rule_desc>Detects use of BinaryFormatter, which is insecure and produces deserialization gadget chains.</rule_desc>
-            <vuln_desc>BinaryFormatter is insecure by design — it cannot be made safe when deserializing data from untrusted sources. Attackers can craft payloads that trigger remote code execution through deserialization gadget chains. Microsoft has marked it obsolete and recommends removal.</vuln_desc>
+            <vuln_desc>BinaryFormatter is insecure by design - it cannot be made safe when deserializing data from untrusted sources. Attackers can craft payloads that trigger remote code execution through deserialization gadget chains. Microsoft has marked it obsolete and recommends removal.</vuln_desc>
             <developer>Replace BinaryFormatter with secure alternatives: System.Text.Json, XmlSerializer, DataContractSerializer with known types, or MessagePack with strict type resolution.</developer>
             <reviewer>Flag all BinaryFormatter usage as a critical finding regardless of input source. Verify migration to a safe serializer. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>

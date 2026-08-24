@@ -6,7 +6,7 @@ import {
   regenerateReports,
 } from '../api'
 
-/* ── Shared styles (defined first — referenced by all components below) ── */
+/* ── Shared styles (defined first - referenced by all components below) ── */
 const inputStyle = {
   background: '#0d1117',
   border: '1px solid #30363d',
@@ -149,7 +149,7 @@ function PromoteModal({ item, onClose, onPromoted }) {
       }}>
         <h3 style={{ margin: '0 0 4px', color: '#f8fafc', fontSize: '16px' }}>Promote to Active Finding</h3>
         <p style={{ margin: '0 0 20px', color: '#8b949e', fontSize: '13px' }}>
-          {item.rule_title} — {item.file}:{item.line}
+          {item.rule_title} - {item.file}:{item.line}
         </p>
 
         {error && (
@@ -205,7 +205,7 @@ function PromoteModal({ item, onClose, onPromoted }) {
             <textarea
               value={form.notes}
               onChange={(e) => set('notes', e.target.value)}
-              placeholder="Analyst notes — why is this a true positive?"
+              placeholder="Analyst notes - why is this a true positive?"
               rows={3}
               style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }}
             />
@@ -272,7 +272,7 @@ function SuppressedRow({ item, runUuid, onPromoted }) {
           </svg>
 
           <span style={{ fontSize: '12px', color: '#58a6ff', fontWeight: 600, fontFamily: 'monospace', flexShrink: 0 }}>
-            {item.platform || '—'}
+            {item.platform || '-'}
           </span>
           <span style={{
             fontSize: '13px', color: '#e6edf3', fontWeight: 500,
@@ -281,7 +281,7 @@ function SuppressedRow({ item, runUuid, onPromoted }) {
             {item.rule_title || '(no title)'}
           </span>
           <span style={{ fontSize: '11px', color: '#8b949e', fontFamily: 'monospace', flexShrink: 0 }}>
-            {(item.file || '').split('/').slice(-1)[0] || '—'}:{item.line ?? '?'}
+            {(item.file || '').split('/').slice(-1)[0] || '-'}:{item.line ?? '?'}
           </span>
           <StatusBadge status={item.status} />
         </div>
@@ -326,7 +326,7 @@ function SuppressedRow({ item, runUuid, onPromoted }) {
                 RDL Condition Triggered
               </div>
               <code style={{ fontSize: '12px', color: '#a5d6ff', fontFamily: 'monospace', wordBreak: 'break-all' }}>
-                {item.rdl_condition || item.rdl_text || '—'}
+                {item.rdl_condition || item.rdl_text || '-'}
               </code>
             </div>
 

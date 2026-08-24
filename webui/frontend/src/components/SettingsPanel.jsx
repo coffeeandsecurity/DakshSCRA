@@ -159,7 +159,7 @@ export default function SettingsPanel({ onToast }) {
 
       <div className="settings-body">
 
-        {/* Tool info — read only */}
+        {/* Tool info - read only */}
         <SettingGroup title="Tool">
           <ReadOnlyField label="Name" value={data.tool_info.tool_name} />
           <ReadOnlyField label="Release" value={data.tool_info.release} />

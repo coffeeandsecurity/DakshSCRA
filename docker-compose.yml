@@ -11,6 +11,12 @@ services:
       # Override which directories are browsable in the Web UI.
       # Defaults to auto-detected OS roots when unset (see .env.example).
       DAKSH_BROWSE_ROOTS: "${DAKSH_BROWSE_ROOTS:-/app,/scan-targets,/host,/host/c,/host/d,/host/source,/run/desktop/mnt/host,/mnt,/Volumes,/Users}"
+      # Web UI authentication - see .env.example for details.
+      DAKSH_ADMIN_USERNAME: "${DAKSH_ADMIN_USERNAME:-admin}"
+      DAKSH_ADMIN_PASSWORD: "${DAKSH_ADMIN_PASSWORD:-}"
+      DAKSH_COOKIE_SECURE: "${DAKSH_COOKIE_SECURE:-false}"
+      DAKSH_SESSION_TTL_HOURS: "${DAKSH_SESSION_TTL_HOURS:-168}"
+      DAKSH_CORS_ORIGINS: "${DAKSH_CORS_ORIGINS:-}"
     volumes:
       - .:/app
       # Keep runtime data (DB + logs) on a Linux named volume so SQLite works

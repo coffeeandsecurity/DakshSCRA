@@ -10,13 +10,13 @@ function StatusBadge({ status }) {
 }
 
 function niceDuration(sec) {
-  if (sec == null) return '—'
+  if (sec == null) return '-'
   if (sec < 60) return `${Math.round(sec)}s`
   return `${Math.floor(sec / 60)}m ${Math.round(sec % 60)}s`
 }
 
 function niceDate(iso) {
-  if (!iso) return '—'
+  if (!iso) return '-'
   const d = new Date(iso)
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
     + ' ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
@@ -93,7 +93,7 @@ export default function ScanTable({ runs, selected, onSelect }) {
                   >
                     <td><StatusBadge status={r.status} /></td>
                     <td style={{ fontWeight: 600, color: 'var(--text)', maxWidth: 200 }}>
-                      <div className="truncate">{r.project_name || '—'}</div>
+                      <div className="truncate">{r.project_name || '-'}</div>
                     </td>
                     <td>
                       <span className="code-inline">{r.rules}</span>

@@ -10,11 +10,11 @@ from core.analysis.report import write_reports
 CFG = get_platform_patterns("cpp")
 
 
-def analyze_cpp_flows(source_root: Path):
-    return analyze_multifile_flows(source_root, CFG, platform="cpp")
+def analyze_cpp_flows(source_root: Path, progress_callback=None):
+    return analyze_multifile_flows(source_root, CFG, platform="cpp", progress_callback=progress_callback)
 
 
-def run(source_root: Path):
-    flows = analyze_cpp_flows(source_root)
+def run(source_root: Path, progress_callback=None):
+    flows = analyze_cpp_flows(source_root, progress_callback=progress_callback)
     out_dir = Path(state.reports_dirpath) / "analysis/cpp"
     return write_reports(flows, out_dir, title="C++ Dataflow Analysis", platform="cpp")

@@ -36,17 +36,6 @@ def resolve_analysis_target(platform, alias_map, analyzers, language_hints):
     if runner:
         return canonical, runner
 
-    mobile_to_language = {
-        "reactnative": "javascript",
-        "ionic": "javascript",
-        "cordova": "javascript",
-        "nativescript": "javascript",
-        "xamarin": "dotnet",
-    }
-    fallback = mobile_to_language.get(platform_key)
-    if fallback and analyzers.get(fallback):
-        return fallback, analyzers.get(fallback)
-
     if platform_key == "android":
         kotlin_count = int(language_hints.get("kotlin", 0) or 0)
         java_count = int(language_hints.get("java", 0) or 0)

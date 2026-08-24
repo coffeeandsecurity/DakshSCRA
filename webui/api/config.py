@@ -17,6 +17,30 @@ ROOT_DIR = _find_repo_root()
 _DEFAULT_DB = f"sqlite:///{ROOT_DIR / 'runtime' / 'daksh.db'}"
 DATABASE_URL = os.getenv("DATABASE_URL", _DEFAULT_DB)
 
+# ── Authentication ────────────────────────────────────────────────────────
+SESSION_COOKIE_NAME = "daksh_session"
+ADMIN_USERNAME = os.getenv("DAKSH_ADMIN_USERNAME", "admin").strip() or "admin"
+ADMIN_PASSWORD = os.getenv("DAKSH_ADMIN_PASSWORD", "").strip()
+COOKIE_SECURE = os.getenv("DAKSH_COOKIE_SECURE", "false").strip().lower() == "true"
+try:
+    SESSION_TTL_HOURS = int(os.getenv("DAKSH_SESSION_TTL_HOURS", "168"))
+except ValueError:
+    SESSION_TTL_HOURS = 168
+
+
+def get_cors_origins() -> List[str]:
+    """Explicit allow-list for cross-origin requests with credentials.
+
+    Production traffic is same-origin (nginx proxies /api/* alongside the
+    built frontend on one origin) and needs no CORS entry at all. This is
+    only for `npm run dev` (Vite dev server on its own port hitting a
+    directly-running API), so the default only covers that.
+    """
+    raw = os.getenv("DAKSH_CORS_ORIGINS", "").strip()
+    if raw:
+        return [x.strip() for x in raw.split(",") if x.strip()]
+    return ["http://localhost:5173"]
+
 
 def _default_browse_roots() -> List[str]:
     """
@@ -45,7 +69,7 @@ def _default_browse_roots() -> List[str]:
         roots += ["/", "/Users", "/Volumes", "/tmp"]
 
     else:
-        # Linux — covers native Linux, WSL, and Docker containers
+        # Linux - covers native Linux, WSL, and Docker containers
         roots += ["/", "/home", "/srv", "/opt", "/tmp", "/mnt"]
 
         # WSL: include individual Windows drive mounts under /mnt

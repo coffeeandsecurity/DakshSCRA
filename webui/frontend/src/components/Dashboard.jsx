@@ -156,9 +156,9 @@ function ProjectsTable({ projects = [], onNavigate, onOpenProject, onDeleteProje
                   <td className="truncate" style={{ maxWidth: 200 }} title={p.target_dir}>
                     <span className="text-muted font-mono text-sm">{p.target_dir}</span>
                   </td>
-                  <td><span className="code-inline">{p.rules || '—'}</span></td>
+                  <td><span className="code-inline">{p.rules || '-'}</span></td>
                   <td className="text-muted">{p.total_scans}</td>
-                  <td className="text-muted">{p.latest_scan_at ? new Date(p.latest_scan_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '—'}</td>
+                  <td className="text-muted">{p.latest_scan_at ? new Date(p.latest_scan_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '-'}</td>
                   <td>
                     {confirming === p.project_key ? (
                       <div className="dash-del-confirm">
@@ -188,13 +188,13 @@ function ProjectsTable({ projects = [], onNavigate, onOpenProject, onDeleteProje
 }
 
 function niceDuration(sec) {
-  if (sec == null) return '—'
+  if (sec == null) return '-'
   if (sec < 60) return `${Math.round(sec)}s`
   return `${Math.floor(sec / 60)}m ${Math.round(sec % 60)}s`
 }
 
 function niceDate(iso) {
-  if (!iso) return '—'
+  if (!iso) return '-'
   return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
@@ -224,7 +224,7 @@ function VersionNotification({ versionInfo, latestRelease, githubChecked }) {
   const current = String(versionInfo.version).replace(/^v/i, '').trim()
   const repoUrl = `https://github.com/${versionInfo.github_repo || 'coffeeandsecurity/DakshSCRA'}`
 
-  /** Parse only the leading numeric portion — ignore -beta, -alpha, etc. */
+  /** Parse only the leading numeric portion - ignore -beta, -alpha, etc. */
   function numericVer(tag) {
     const m = String(tag).replace(/^v/i, '').match(/^[\d.]+/)
     return m ? m[0].split('.').map(Number) : [0]
@@ -259,7 +259,7 @@ function VersionNotification({ versionInfo, latestRelease, githubChecked }) {
           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
         </svg>
         <span className="update-banner-text">
-          New version available — <strong>{latestRelease.tag}</strong>
+          New version available - <strong>{latestRelease.tag}</strong>
           <span className="update-banner-sub"> (you are on v{current})</span>
         </span>
         <a href={latestRelease.url} target="_blank" rel="noreferrer" className="btn btn-sm update-banner-btn">
@@ -274,7 +274,7 @@ function VersionNotification({ versionInfo, latestRelease, githubChecked }) {
     )
   }
 
-  /* ── Case 2: GitHub unreachable — check if release is stale ── */
+  /* ── Case 2: GitHub unreachable - check if release is stale ── */
   if (!githubChecked) return null   // still loading
 
   const releaseDate = versionInfo.release_date ? new Date(versionInfo.release_date) : null
@@ -294,7 +294,7 @@ function VersionNotification({ versionInfo, latestRelease, githubChecked }) {
         <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
       </svg>
       <span className="update-banner-text">
-        Unable to check for updates — no internet access.
+        Unable to check for updates - no internet access.
         <span className="update-banner-sub"> Current release v{current} is {ageDays} days old. Check <a href={repoUrl + '/releases'} target="_blank" rel="noreferrer" className="update-banner-link">GitHub releases</a> manually.</span>
       </span>
       <button className="btn btn-ghost btn-sm update-banner-action"
@@ -336,7 +336,7 @@ export default function Dashboard({ metrics, projects = [], runs = [], onNavigat
             </svg>
           </div>
           <div className="stat-label">Projects</div>
-          <div className="stat-value">{metrics?.total_projects ?? '—'}</div>
+          <div className="stat-value">{metrics?.total_projects ?? '-'}</div>
           <div className="stat-meta">Total code repositories</div>
         </div>
 
@@ -347,7 +347,7 @@ export default function Dashboard({ metrics, projects = [], runs = [], onNavigat
             </svg>
           </div>
           <div className="stat-label">Total Scans</div>
-          <div className="stat-value">{metrics?.total_scans ?? '—'}</div>
+          <div className="stat-value">{metrics?.total_scans ?? '-'}</div>
           <div className="stat-meta">All-time scan runs</div>
         </div>
 
@@ -449,7 +449,7 @@ export default function Dashboard({ metrics, projects = [], runs = [], onNavigat
                       onClick={() => onNavigate('scans', r)}
                     >
                       <td><StatusBadge status={r.status} /></td>
-                      <td style={{ fontWeight: 600, color: 'var(--text)' }}>{r.project_name || '—'}</td>
+                      <td style={{ fontWeight: 600, color: 'var(--text)' }}>{r.project_name || '-'}</td>
                       <td><span className="code-inline">{r.rules}</span></td>
                       <td className="truncate" style={{ maxWidth: 260 }} title={r.target_dir}>
                         <span className="text-muted font-mono text-sm">{r.target_dir}</span>

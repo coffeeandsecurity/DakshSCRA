@@ -127,3 +127,39 @@ class FsListResponse(BaseModel):
     parent: Optional[str]
     roots: List[str]
     directories: List[FsEntry]
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class UserOut(BaseModel):
+    id: int
+    username: str
+    is_admin: bool
+    must_change_password: bool = False
+    created_at: Optional[str] = None
+    last_login_at: Optional[str] = None
+
+
+class UserCreate(BaseModel):
+    username: str
+    password: str = Field(min_length=8)
+    is_admin: bool = False
+
+
+class ChangePasswordRequest(BaseModel):
+    new_password: str = Field(min_length=8)
+
+
+class SelfChangePasswordRequest(BaseModel):
+    current_password: Optional[str] = None
+    new_password: str = Field(min_length=8)
+    new_username: Optional[str] = None
+
+
+class BootstrapInfo(BaseModel):
+    default_username: str
+    default_credentials_pending: bool
+    default_password: Optional[str] = None

@@ -11,6 +11,7 @@ from core import rdl_engine
 import state.runtime_state as state
 import utils.file_utils as futils
 import utils.suppression_utils as supp
+from utils.decision_trace import append_trace
 from utils.log_utils import get_logger
 
 logger = get_logger(__name__)
@@ -486,6 +487,8 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
 
     f_scanout = outputfile
     f_targetfiles = targetfile
+    total_target_files = sum(1 for _ in f_targetfiles)
+    f_targetfiles.seek(0)
     findings_json = []
     if findings_json_path and Path(findings_json_path).exists():
         try:
@@ -600,6 +603,7 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                     except (FileNotFoundError, PermissionError, UnicodeError, IOError) as exc:
                         print(f"Error processing {filepath}: {exc}")
                         error_count += 1
+                        state.parseErrorCnt += 1
                         if callable(progress_callback):
                             progress_callback({
                                 "scope": "source_parser",
@@ -610,8 +614,22 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                                 "filepath": filepath,
                                 "status": "read_error",
                                 "error_count": error_count,
+                                "total_items": total_target_files,
                             })
                         continue
+
+                    if callable(progress_callback):
+                        progress_callback({
+                            "scope": "source_parser",
+                            "platform": platform_name,
+                            "category": category_name,
+                            "rule_title": rule_title,
+                            "file_index": file_index,
+                            "filepath": filepath,
+                            "status": "parsing",
+                            "matched_evidence_count": 0,
+                            "total_items": total_target_files,
+                        })
 
                     file_lines = content.splitlines()
                     # candidate_evidence: list of (linecount, line, groups_dict)
@@ -661,7 +679,7 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
 
                     if use_rdl_logic:
                         if active_logic_passes:
-                            # RDL passed — add FLAG evidence not already in candidate_evidence
+                            # RDL passed - add FLAG evidence not already in candidate_evidence
                             flag_pattern_rdl = pattern_text or rdl_logic_evidence_pattern
                             rdl_evidence_added = False
                             if flag_pattern_rdl:
@@ -685,7 +703,7 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                         elif suppressed_json_path and active_logic_reason not in (
                             "FLAG pattern not found in file", "Invalid FLAG pattern in RDL"
                         ):
-                            # RDL IF() condition rejected candidates — record them as suppressed FPs.
+                            # RDL IF() condition rejected candidates - record them as suppressed FPs.
                             # Build evidence from regex matches plus any FLAG line-level matches
                             # (so RDL-only rules with no <regex> also produce suppressed entries).
                             rdl_suppressed_evidence = list(candidate_evidence)
@@ -741,6 +759,18 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                                             sup_entry["context_after"] = ctx_after
                                     suppressed_json.append(sup_entry)
                                     state.suppressedFindingsCnt += 1
+                                    append_trace("parser_suppressions", {
+                                        "parser": "source",
+                                        "platform": platform_name,
+                                        "rule_title": rule_title,
+                                        "category": category_name,
+                                        "file": rel_path,
+                                        "line": linecount,
+                                        "status": "suppressed_by_rdl",
+                                        "logic_engine": sup_entry.get("logic_engine", ""),
+                                        "logic_source": sup_entry.get("logic_source", ""),
+                                        "logic_reason": sup_entry.get("suppression_reason", ""),
+                                    })
                                 # Clear candidates so they don't appear in active findings
                                 candidate_evidence = []
 
@@ -844,6 +874,16 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                         })
                         _merge_logic_meta(findings_json[-1], active_logic_meta)
                         finding_index = len(findings_json) - 1
+                        append_trace("parser_findings", {
+                            "parser": "source",
+                            "status": "finding_created",
+                            "platform": platform_name,
+                            "rule_id": findings_json[finding_index].get("rule_id", ""),
+                            "rule_title": rule_title,
+                            "category": category_name,
+                            "logic_engine": findings_json[finding_index].get("logic_engine", ""),
+                            "logic_source": findings_json[finding_index].get("logic_source", ""),
+                        })
 
                     if do_aggregate:
                         # All matches in this file collapse into one aggregate evidence entry
@@ -878,6 +918,17 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                     )
                     findings_json[finding_index]["confidence_score"] = score
                     findings_json[finding_index]["confidence_level"] = _confidence_level(score)
+                    append_trace("parser_findings", {
+                        "parser": "source",
+                        "status": "finding_evidence_updated",
+                        "platform": platform_name,
+                        "rule_id": findings_json[finding_index].get("rule_id", ""),
+                        "rule_title": rule_title,
+                        "file": rel_path,
+                        "evidence_count": len(findings_json[finding_index].get("evidence", [])),
+                        "confidence_score": score,
+                        "confidence_level": findings_json[finding_index].get("confidence_level", ""),
+                    })
 
                     if callable(progress_callback):
                         progress_callback({
@@ -890,6 +941,7 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                             "matched_evidence_count": len(candidate_evidence),
                             "rules_match_count": state.rulesMatchCnt,
                             "suppressed_count": state.suppressedFindingsCnt,
+                            "total_items": total_target_files,
                         })
 
                 f_targetfiles.seek(0)
@@ -901,7 +953,6 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
 
     matched_rules = list(set(matched_rules))
     unmatched_rules = list(set(unmatched_rules))
-    state.parseErrorCnt += error_count
 
     if findings_json_path:
         try:
@@ -955,6 +1006,8 @@ def paths_parser(rule_path, targetfile, outputfile=None, rule_no=None, findings_
 
     f_scanout = outputfile
     f_targetfilepaths = targetfile
+    total_target_filepaths = sum(1 for _ in f_targetfilepaths)
+    f_targetfilepaths.seek(0, 0)
     pFlag = False
 
     rule_no = rule_no or 0
@@ -1000,6 +1053,7 @@ def paths_parser(rule_path, targetfile, outputfile=None, rule_no=None, findings_
                 logger.error("Invalid file path exclude regex in rule %s (%s): %s", pattern_name, rule_path, exc)
                 exclude = None
 
+        rule_has_match = False
         for file_index, eachfilepath in enumerate(f_targetfilepaths, start=1):  # Read each line (file path) in the file
             filepath = eachfilepath.rstrip()    # strip out '\r' or '\n' from the file paths
             filepath = futils.get_source_file_path(state.sourcedir, filepath)
@@ -1011,7 +1065,6 @@ def paths_parser(rule_path, targetfile, outputfile=None, rule_no=None, findings_
                     match_path = str(filepath).replace("\\", "/")
             rule_match_text = "/" + str(match_path).lstrip("/")
             if exclude and exclude.search(filepath):
-                unmatched_rules.append(pattern_name)
                 continue
 
             matched = False
@@ -1033,6 +1086,7 @@ def paths_parser(rule_path, targetfile, outputfile=None, rule_no=None, findings_
                 matched = bool(pattern.search(rule_match_text))
 
             if matched:   # If there is a match
+                rule_has_match = True
                 if pFlag == False:
                     rule_no += 1
                     state.rulesPathsMatchCnt += 1
@@ -1050,6 +1104,17 @@ def paths_parser(rule_path, targetfile, outputfile=None, rule_no=None, findings_
                         **rule_meta,
                     })
                     _merge_logic_meta(findings_json[-1], active_logic_meta)
+                    append_trace("parser_filepaths", {
+                        "parser": "paths",
+                        "status": "finding_created",
+                        "rule_title": pattern_name,
+                        "file_count": 1,
+                        "matched_path": match_path,
+                        "confidence_score": findings_json[-1].get("confidence_score", 0),
+                        "confidence_level": findings_json[-1].get("confidence_level", ""),
+                        "logic_engine": findings_json[-1].get("logic_engine", ""),
+                        "logic_source": findings_json[-1].get("logic_source", ""),
+                    })
 
                     sys.stdout.write("\033[F") #back to previous line
                     sys.stdout.write("\033[K") #clear line to prevent overlap of texts
@@ -1064,19 +1129,30 @@ def paths_parser(rule_path, targetfile, outputfile=None, rule_no=None, findings_
                     path_score = _compute_paths_confidence_score(path_count)
                     findings_json[-1]["confidence_score"] = path_score
                     findings_json[-1]["confidence_level"] = _confidence_level(path_score)
+                    append_trace("parser_filepaths", {
+                        "parser": "paths",
+                        "status": "finding_expanded",
+                        "rule_title": pattern_name,
+                        "file_count": path_count,
+                        "matched_path": match_path,
+                        "confidence_score": path_score,
+                        "confidence_level": findings_json[-1].get("confidence_level", ""),
+                    })
                 
-            else:
-                unmatched_rules.append(pattern_name)  # Add unmatched items to the list
-
             if callable(progress_callback):
                 progress_callback({
                     "scope": "paths_parser",
                     "rule_title": pattern_name,
                     "file_index": file_index,
                     "filepath": filepath,
+                    "status": "parsing",
                     "matched_rules_count": len(matched_rules),
                     "paths_match_count": state.rulesPathsMatchCnt,
+                    "total_items": total_target_filepaths,
                 })
+
+        if not rule_has_match:
+            unmatched_rules.append(pattern_name)  # Rule matched no file across the whole scan
 
         pFlag = False
         f_targetfilepaths.seek(0, 0)

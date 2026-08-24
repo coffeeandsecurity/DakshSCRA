@@ -1,0 +1,50 @@
+<root>
+    <category name="Framework-Specific Issues - Kotlin Multiplatform">
+        <rule>
+            <name>KMP Insecure HTTP Endpoint Usage</name>
+            <regex>http://</regex>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>yellow</highlight_color>
+            </scan_config>
+            <rule_desc>Detects cleartext endpoint references in Kotlin Multiplatform mobile code.</rule_desc>
+            <vuln_desc>Cleartext transport can expose shared mobile app traffic to interception and tampering.</vuln_desc>
+            <developer>Use HTTPS endpoints only and keep strict TLS validation enabled.</developer>
+            <reviewer>Audit shared networking code and environment configuration. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>KMP Certificate Validation Bypass</name>
+            <regex>hostnameVerifier\s*\{.*true|trustAll|InsecureTrustManager|X509TrustManager</regex>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>3</context_lines_before>
+                <context_lines_after>2</context_lines_after>
+                <aggregate>none</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>red</highlight_color>
+            </scan_config>
+            <rule_desc>Detects trust-bypass indicators in shared Kotlin Multiplatform networking code.</rule_desc>
+            <vuln_desc>Weak trust handling can disable certificate verification and enable MITM attacks.</vuln_desc>
+            <developer>Use strict TLS validation and avoid permissive hostname verifiers or trust managers.</developer>
+            <reviewer>Inspect shared networking setup for trust-all or hostname-verifier bypasses. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+        <rule>
+            <name>KMP Multiplatform Project Marker</name>
+            <regex>kotlin\(\"multiplatform\"\)|org\.jetbrains\.kotlin\.multiplatform|kotlin-multiplatform</regex>
+            <scan_config>
+                <match_mode>line</match_mode>
+                <context_lines_before>1</context_lines_before>
+                <aggregate>file</aggregate>
+                <highlight_enabled>true</highlight_enabled>
+                <highlight_color>cyan</highlight_color>
+            </scan_config>
+            <rule_desc>Detects Kotlin Multiplatform mobile project configuration markers.</rule_desc>
+            <vuln_desc>Project marker only. Use with semantic analysis for mobile shared-code review.</vuln_desc>
+            <developer>Review platform-specific actual implementations and shared networking/storage code.</developer>
+            <reviewer>Confirm the project is Kotlin Multiplatform and inspect shared mobile code paths. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+        </rule>
+    </category>
+</root>

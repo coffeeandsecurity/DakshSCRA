@@ -28,7 +28,7 @@
    - [Examples](#rdl-examples)
    - [How RDL Reduces False Positives](#how-rdl-reduces-false-positives)
    - [Authoring Guidance](#authoring-guidance)
-7. [scan_config — Rule-Driven Scanning & Reporting](#scan_config--rule-driven-scanning--reporting)
+7. [scan_config - Rule-Driven Scanning & Reporting](#scan_config--rule-driven-scanning--reporting)
    - [Full Schema](#full-schema)
    - [Platform Profiles](#platform-profiles)
    - [Highlighting](#highlighting)
@@ -93,8 +93,16 @@ playwright install chromium        # Required for PDF generation only
 
 ### Docker (Web UI)
 
+Normal (foreground) mode:
+
 ```bash
 docker compose up --build
+```
+
+Detached (background) mode:
+
+```bash
+docker compose up --build -d
 ```
 
 Open `http://localhost:8080`
@@ -257,6 +265,8 @@ python dakshscra.py --resume-scan -r php -t ./app
 
 After a scan, output is written to the following directories (relative to the project root, or to `DAKSH_REPORTS_DIR` / `DAKSH_RUNTIME_DIR` if set):
 
+RDL rule-evaluation decisions (matches, suppressions, fail reasons) are additionally logged as JSONL under `runtime/diagnostics/` for post-scan debugging. This is controlled by the `DAKSH_DECISION_TRACE` environment variable (default on; set to `0` to disable).
+
 ```
 reports/
   scan/
@@ -294,8 +304,16 @@ runtime/
 
 ### Starting the Web UI
 
+Normal (foreground) mode:
+
 ```bash
 docker compose up --build
+```
+
+Detached (background) mode:
+
+```bash
+docker compose up --build -d
 ```
 
 Open `http://localhost:8080` in a browser.
@@ -305,6 +323,17 @@ To change the port:
 ```bash
 DAKSH_PORT=9090 docker compose up
 ```
+
+### Logging In
+
+The Web UI requires an account. On first startup, an initial admin account
+is created from `DAKSH_ADMIN_USERNAME`/`DAKSH_ADMIN_PASSWORD` (set these in
+`.env`); if `DAKSH_ADMIN_PASSWORD` is left unset, a random password is
+generated and printed once to the API's startup log - save it, since it
+cannot be recovered afterward. An admin account can create further accounts
+via the `POST /api/v1/auth/users` API endpoint. See `.env.example` for the
+full list of authentication-related settings (session lifetime, cookie
+security, CORS for `npm run dev`).
 
 ---
 
@@ -725,15 +754,15 @@ so the reviewer can see that supporting config exists.
 - For path rules, write the regex and RDL conditions against normalized slash-separated relative paths.
 - Use `TRACE` and `OBSERVE` when reviewers benefit from extra context, but do not rely on `OBSERVE` for gating.
 
-## scan_config — Rule-Driven Scanning & Reporting
+## scan_config - Rule-Driven Scanning & Reporting
 
 `scan_config` is an optional XML block inside any `<rule>` that controls how the engine scans for that
-rule and how matches appear in reports. Rules without `<scan_config>` behave exactly as before — the
+rule and how matches appear in reports. Rules without `<scan_config>` behave exactly as before - the
 block is fully opt-in and every field has a safe default.
 
 ### Why scan_config exists
 
-The default model — regex applied line-by-line, one finding entry per match — works well for
+The default model - regex applied line-by-line, one finding entry per match - works well for
 self-contained code patterns. It falls short for:
 
 - **Structural / declarative files** (AndroidManifest, Kubernetes YAML, Terraform HCL, Dockerfile)
@@ -741,7 +770,7 @@ self-contained code patterns. It falls short for:
 - **Rules that fire many times in one file** for the same conceptual issue (e.g. five exported Android
   components → five identical-looking findings with no component identity shown).
 - **Multi-line patterns** that cannot be expressed in a single-line regex.
-- **Reviewer experience** — showing N lines of context around a match is far more useful than a naked
+- **Reviewer experience** - showing N lines of context around a match is far more useful than a naked
   matched snippet.
 
 `scan_config` solves all of these without changing any existing rules.
@@ -754,7 +783,7 @@ self-contained code patterns. It falls short for:
 <scan_config>
 
     <!-- ── MATCH MODE ──────────────────────────────────────────────── -->
-    <!-- line : regex applied per line (default — all existing rules)   -->
+    <!-- line : regex applied per line (default - all existing rules)   -->
     <!-- file : regex applied to full file content with MULTILINE|      -->
     <!--        DOTALL flags. Use for structured/declarative files.      -->
     <match_mode>line</match_mode>
@@ -775,7 +804,7 @@ self-contained code patterns. It falls short for:
     <!--         that lead into the vulnerable call.                    -->
     <!-- after : useful for seeing how a block closes, whether error    -->
     <!--         handling follows, or how a value is used downstream.   -->
-    <!-- Both are independent — set either or both.                     -->
+    <!-- Both are independent - set either or both.                     -->
     <!-- Recommended: context_lines_before + context_lines_after <= 12  -->
     <context_lines_before>0</context_lines_before>
     <context_lines_after>0</context_lines_after>
@@ -806,7 +835,7 @@ self-contained code patterns. It falls short for:
     <!-- (CSS span) output. Default: highlight full regex match in red. -->
     <highlight_enabled>true</highlight_enabled>
 
-    <!-- SIMPLE HIGHLIGHT (single target — covers most rules)          -->
+    <!-- SIMPLE HIGHLIGHT (single target - covers most rules)          -->
     <!-- highlight_target options:                                      -->
     <!--   match   : highlight the full regex match (default)           -->
     <!--   groups  : highlight named capture groups in highlight_groups  -->
@@ -817,15 +846,15 @@ self-contained code patterns. It falls short for:
 
     <!-- Colour options: red | yellow | cyan | green | magenta | bold   -->
     <!-- Semantic guide:                                                 -->
-    <!--   red     — dangerous sinks, injections, hardcoded secrets     -->
-    <!--   yellow  — weak patterns, missing flags, deprecated functions  -->
-    <!--   cyan    — structural/informational (exports, routes, config)  -->
-    <!--   green   — mitigations present (Mitigation Identified rules)   -->
-    <!--   magenta — framework-specific patterns                         -->
-    <!--   bold    — emphasis only, no colour (safe for mono terminals)  -->
+    <!--   red     - dangerous sinks, injections, hardcoded secrets     -->
+    <!--   yellow  - weak patterns, missing flags, deprecated functions  -->
+    <!--   cyan    - structural/informational (exports, routes, config)  -->
+    <!--   green   - mitigations present (Mitigation Identified rules)   -->
+    <!--   magenta - framework-specific patterns                         -->
+    <!--   bold    - emphasis only, no colour (safe for mono terminals)  -->
     <highlight_color>red</highlight_color>
 
-    <!-- MULTI HIGHLIGHT (advanced — overrides simple fields above)    -->
+    <!-- MULTI HIGHLIGHT (advanced - overrides simple fields above)    -->
     <!-- Each <mark> is one independent highlight pass over the snippet -->
     <!-- type values: match | group:<name> | pattern:<regex>           -->
     <!-- Processed in order. Max 3 marks recommended.                  -->
@@ -845,9 +874,9 @@ self-contained code patterns. It falls short for:
 Three profiles cover the vast majority of rule types. Start from the matching profile when authoring
 a new rule, then adjust fields as needed.
 
-#### Profile A — `structured` (declarative / config files)
+#### Profile A - `structured` (declarative / config files)
 
-Use for: AndroidManifest.xml, Kubernetes YAML, Terraform HCL, Dockerfile, plist, web.xml — any file
+Use for: AndroidManifest.xml, Kubernetes YAML, Terraform HCL, Dockerfile, plist, web.xml - any file
 where structure is hierarchical and predictable.
 
 ```xml
@@ -866,7 +895,7 @@ where structure is hierarchical and predictable.
 The regex must use named capture groups (`(?P<name>...)`). The engine extracts them and displays them
 as labelled columns alongside the line number.
 
-**Full example — AndroidManifest exported components:**
+**Full example - AndroidManifest exported components:**
 
 ```xml
 <rule>
@@ -905,9 +934,9 @@ which components are affected.
 
 ---
 
-#### Profile B — `code` (source code files)
+#### Profile B - `code` (source code files)
 
-Use for: Python, JavaScript, PHP, Java, Go, Kotlin, Ruby, C, C++, .NET, Bash, PowerShell — any file
+Use for: Python, JavaScript, PHP, Java, Go, Kotlin, Ruby, C, C++, .NET, Bash, PowerShell - any file
 where structure is scope-dependent and cannot be parsed by regex alone.
 
 ```xml
@@ -927,7 +956,7 @@ where structure is scope-dependent and cannot be parsed by regex alone.
 Use `context_lines_before` to show what leads into the vulnerable call (variable assignments, function
 arguments). Use `context_lines_after` to show what follows (error handling, return value usage).
 
-**Full example — PHP file inclusion:**
+**Full example - PHP file inclusion:**
 
 ```xml
 <rule>
@@ -958,7 +987,7 @@ Insecure File Inclusion                       HIGH    controllers/page.php : Lin
 
 The reviewer immediately sees the inadequate sanitisation on line 45 without opening the source file.
 
-**When to use `context_lines_after`** — use it when the match opens a block and you need to see what's
+**When to use `context_lines_after`** - use it when the match opens a block and you need to see what's
 inside:
 
 ```xml
@@ -985,7 +1014,7 @@ Exposed Transaction Without Exception Handling    Kotlin/db/UserRepo.kt : Line 3
 
 ---
 
-#### Profile C — `config` (flat configuration / secret files)
+#### Profile C - `config` (flat configuration / secret files)
 
 Use for: `.env`, `.properties`, `appsettings.json`, `*.tfvars`, `*.ini`, any flat key-value config file.
 
@@ -1026,31 +1055,31 @@ Hardcoded Credentials                         CRITICAL   .env
 | `cyan` | bright cyan | `hl-cyan` | Structural / informational (exports, routes, config) |
 | `green` | bright green | `hl-green` | Mitigations present ("Mitigation Identified" rules) |
 | `magenta` | bright magenta | `hl-magenta` | Framework-specific patterns |
-| `bold` | bold only | `hl-bold` | Emphasis with no colour — safe for monochrome terminals |
+| `bold` | bold only | `hl-bold` | Emphasis with no colour - safe for monochrome terminals |
 
 #### Simple vs. multi highlight
 
-**Simple** — one thing to highlight:
+**Simple** - one thing to highlight:
 ```xml
 <highlight_target>match</highlight_target>
 <highlight_color>red</highlight_color>
 ```
 
-**Named group** — highlight a specific captured group:
+**Named group** - highlight a specific captured group:
 ```xml
 <highlight_target>groups</highlight_target>
 <highlight_groups>name,component</highlight_groups>
 <highlight_color>cyan</highlight_color>
 ```
 
-**Pattern** — highlight a sub-pattern within the displayed snippet:
+**Pattern** - highlight a sub-pattern within the displayed snippet:
 ```xml
 <highlight_target>pattern</highlight_target>
 <highlight_pattern>android:exported\s*=\s*"true"</highlight_pattern>
 <highlight_color>red</highlight_color>
 ```
 
-**Multi** — multiple independent highlight passes, different colours:
+**Multi** - multiple independent highlight passes, different colours:
 ```xml
 <marks>
     <mark color="cyan">pattern:android:name\s*=\s*"[^"]+"</mark>
@@ -1059,7 +1088,7 @@ Hardcoded Credentials                         CRITICAL   .env
 ```
 
 Max 3 marks per rule. Beyond that, the snippet becomes visually noisy. If you need more than 3
-highlights, the rule is probably doing too much — consider splitting it.
+highlights, the rule is probably doing too much - consider splitting it.
 
 Set `<highlight_enabled>false</highlight_enabled>` for file-level structural rules where there is no
 specific substring to highlight (e.g., "no USER directive in Dockerfile").
@@ -1070,7 +1099,7 @@ specific substring to highlight (e.g., "no USER directive in Dockerfile").
 
 Answer these questions before writing `scan_config` values:
 
-**Q1 — What type of file does this rule target?**
+**Q1 - What type of file does this rule target?**
 
 | File type | Profile | `match_mode` |
 |---|---|---|
@@ -1082,25 +1111,25 @@ Answer these questions before writing `scan_config` values:
 | Bash, PowerShell | code | `line` |
 | .env, .properties, appsettings.json, config files | config | `line` |
 
-**Q2 — Does the matched line tell the full story?**
+**Q2 - Does the matched line tell the full story?**
 
 - Yes → `context_type:none`
 - Setup / source is above the match → `context_lines_before: 3–5`, `context_lines_after: 0`
 - Match opens a block, need to see what's inside → `context_lines_before: 0`, `context_lines_after: 5–8`
 - Both sides needed → set both, keep total ≤ 12 lines
 
-**Q3 — Can this rule fire many times in one file for the same conceptual issue?**
+**Q3 - Can this rule fire many times in one file for the same conceptual issue?**
 
 - Yes, all instances are the same issue → `aggregate:file`
 - Each instance is distinct → `aggregate:none`
 
-**Q4 — Which `report_format`?**
+**Q4 - Which `report_format`?**
 
 - `context_type:named_groups` → `component_list`
 - Detecting secrets / credentials → `secret_list`
 - Everything else → `default`
 
-**Q5 — What to highlight?**
+**Q5 - What to highlight?**
 
 | Situation | Config |
 |---|---|
@@ -1128,7 +1157,7 @@ Answer these questions before writing `scan_config` values:
 
 ### Complete scan_config Examples
 
-**Kubernetes — privileged container:**
+**Kubernetes - privileged container:**
 ```xml
 <scan_config>
     <match_mode>line</match_mode>
@@ -1142,7 +1171,7 @@ Answer these questions before writing `scan_config` values:
 </scan_config>
 ```
 
-**Terraform — S3 bucket missing encryption:**
+**Terraform - S3 bucket missing encryption:**
 ```xml
 <scan_config>
     <match_mode>file</match_mode>
@@ -1156,7 +1185,7 @@ Answer these questions before writing `scan_config` values:
 </scan_config>
 ```
 
-**JavaScript — hardcoded JWT secret:**
+**JavaScript - hardcoded JWT secret:**
 ```xml
 <scan_config>
     <match_mode>line</match_mode>
@@ -1169,7 +1198,7 @@ Answer these questions before writing `scan_config` values:
 </scan_config>
 ```
 
-**C — unsafe buffer write:**
+**C - unsafe buffer write:**
 ```xml
 <scan_config>
     <match_mode>line</match_mode>

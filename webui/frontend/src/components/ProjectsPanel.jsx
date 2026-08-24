@@ -96,7 +96,7 @@ export default function ProjectsPanel({ projects, selectedProject, onSelectProje
                 )}
               </button>
 
-              {/* Delete controls — outside the card button */}
+              {/* Delete controls - outside the card button */}
               <div className="project-delete-bar">
                 {isConfirming ? (
                   <div className="project-delete-confirm">

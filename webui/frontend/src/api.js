@@ -1,19 +1,47 @@
 const API_BASE = import.meta.env.VITE_API_BASE || ''
 
+// Registered by App.jsx so a session that expires mid-use (401 from any
+// call, not just the initial /auth/me check) bounces back to the login
+// screen instead of failing silently or showing a confusing error.
+let onUnauthorized = null
+export function setUnauthorizedHandler(fn) {
+  onUnauthorized = fn
+}
+
 async function request(path, options = {}) {
+  const headers = { ...(options.headers || {}) }
+  const hasBody = options.body !== undefined && options.body !== null
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData
+  if (hasBody && !isFormData && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json'
+  }
+
   const res = await fetch(`${API_BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    credentials: 'include',
+    headers,
     ...options
   })
+
+  // A 401 from /auth/login or /auth/change-password means "wrong password
+  // entered", not "your session expired" - those should show an inline
+  // error, not force a bounce back to the login screen.
+  const isCredentialCheck = path === '/api/v1/auth/login' || path === '/api/v1/auth/change-password'
+  if (res.status === 401 && !isCredentialCheck) {
+    if (typeof onUnauthorized === 'function') onUnauthorized()
+  }
 
   if (!res.ok) {
     let message = `HTTP ${res.status}`
     try {
-      const data = await res.json()
+      const data = await res.clone().json()
       if (data?.detail) message = String(data.detail)
     } catch {
-      const txt = await res.text()
-      if (txt) message = txt
+      try {
+        const txt = await res.text()
+        if (txt) message = txt
+      } catch {
+        // response body unreadable - fall back to the HTTP status message
+      }
     }
     throw new Error(message)
   }
@@ -24,6 +52,33 @@ async function request(path, options = {}) {
 
 export function getHealth() {
   return request('/api/v1/health')
+}
+
+export function getBootstrapInfo() {
+  return request('/api/v1/auth/bootstrap-info')
+}
+
+export function login(username, password) {
+  return request('/api/v1/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) })
+}
+
+export function logout() {
+  return request('/api/v1/auth/logout', { method: 'POST' })
+}
+
+export function getMe() {
+  return request('/api/v1/auth/me')
+}
+
+export function changePassword(currentPassword, newPassword, newUsername) {
+  return request('/api/v1/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify({
+      ...(currentPassword ? { current_password: currentPassword } : {}),
+      new_password: newPassword,
+      ...(newUsername ? { new_username: newUsername } : {}),
+    }),
+  })
 }
 
 export function getMetrics() {
@@ -66,24 +121,50 @@ export function stopScan(runUuid) {
 
 export function streamScanLog(runUuid, onChunk, onDone) {
   const url = `${API_BASE}/api/v1/scans/${encodeURIComponent(runUuid)}/stream`
-  const es = new EventSource(url)
-  es.onmessage = (e) => {
-    try {
-      const data = JSON.parse(e.data)
-      if (data.log) onChunk(data.log, data.status)
-      if (data.done) {
-        onDone(data.status)
-        es.close()
+  const MAX_RETRIES = 3
+  const RETRY_DELAY_MS = 1000
+  let es = null
+  let retryCount = 0
+  let retryTimer = null
+  let cancelled = false
+
+  function connect() {
+    // withCredentials so the session cookie rides along - EventSource can't
+    // set an Authorization header, which is why this endpoint relies on
+    // cookie-based auth rather than a bearer token.
+    es = new EventSource(url, { withCredentials: true })
+    es.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data)
+        retryCount = 0
+        onChunk(data.log || '', data.status, data.progress || null)
+        if (data.done) {
+          onDone(data.status)
+          es.close()
+        }
+      } catch {
+        // ignore parse errors
       }
-    } catch {
-      // ignore parse errors
+    }
+    es.onerror = () => {
+      es.close()
+      if (cancelled) return
+      if (retryCount >= MAX_RETRIES) {
+        onDone('unknown')
+        return
+      }
+      retryCount += 1
+      retryTimer = setTimeout(connect, RETRY_DELAY_MS * retryCount)
     }
   }
-  es.onerror = () => {
-    onDone('unknown')
-    es.close()
+
+  connect()
+
+  return () => {  // returns cancel fn
+    cancelled = true
+    if (retryTimer) clearTimeout(retryTimer)
+    if (es) es.close()
   }
-  return () => es.close()  // returns cancel fn
 }
 
 export function getScanFindings(runUuid) {

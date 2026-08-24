@@ -10,7 +10,7 @@ const TOGGLE_INFO = {
   analysis: {
     label: 'Inter-file Analysis',
     warn: true,
-    desc: 'Trace taint flows across file and function boundaries to detect multi-hop vulnerabilities (e.g. user input in file A reaching a sink in file C). Runs after the base scan. Can be slow on large codebases — a 300-file / 1500-function cap is applied per language.',
+    desc: 'Trace taint flows across file and function boundaries to detect multi-hop vulnerabilities (e.g. user input in file A reaching a sink in file C). Runs after the base scan. Can be slow on large codebases - a 300-file / 1500-function cap is applied per language.',
   },
   loc: {
     label: 'Count Lines of Code',
@@ -140,7 +140,7 @@ export default function ScanForm({ values, setValues, onSubmit, onBrowse, creati
             <span className="base-scan-dot" />
             <span className="base-scan-label">Pattern Scan</span>
             <span className="base-scan-tag">always on</span>
-            <InfoTooltip text="The core scan — applies security rules to each file individually using pattern matching. Detects injection points, dangerous API usage, misconfigurations, and areas of interest. Always runs regardless of other options." />
+            <InfoTooltip text="The core scan - applies security rules to each file individually using pattern matching. Detects injection points, dangerous API usage, misconfigurations, and areas of interest. Always runs regardless of other options." />
           </div>
 
           {/* Optional toggles */}

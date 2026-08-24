@@ -18,6 +18,19 @@ def _resolve_output_root(env_name, default_relative_dir):
         return Path(configured).expanduser().resolve()
     return Path(str(root_dir) + f"/{default_relative_dir}")
 
+
+def _sanitize_project_id(value):
+    raw = str(value or "").strip().strip("/\\")
+    if not raw:
+        return ""
+    cleaned = []
+    for ch in raw.lower():
+        cleaned.append(ch if ch.isalnum() else "-")
+    slug = "".join(cleaned).strip("-")
+    while "--" in slug:
+        slug = slug.replace("--", "-")
+    return slug[:96]
+
 sourcedir = ''       # To be used for storing project directory name
 
 verbosity = '1'
@@ -76,10 +89,14 @@ elif ruleEngine != "rdl":
 # Runtime/report roots can be overridden for isolated runs (for example web UI jobs).
 runtime_base_dir = _resolve_output_root("DAKSH_RUNTIME_DIR", "runtime")
 reports_base_dir = _resolve_output_root("DAKSH_REPORTS_DIR", "reports")
+project_id = _sanitize_project_id(os.environ.get("DAKSH_PROJECT_ID", ""))
+run_id = _sanitize_project_id(os.environ.get("DAKSH_RUN_ID", ""))
 
 # Log File paths
 runtime_dirpath = runtime_base_dir
-reports_dirpath = reports_base_dir
+reports_dirpath = reports_base_dir / project_id if project_id else reports_base_dir
+if run_id:
+    reports_dirpath = reports_dirpath / run_id
 discovered_Fpaths = runtime_dirpath / "filepaths.log"
 discovered_clean_Fpaths = runtime_dirpath / "filepaths.txt"
 
@@ -142,3 +159,36 @@ estimation_Fpath = reports_dirpath / "scan" / "estimate" / "estimation.html"
 reconreport_Fpath = reports_dirpath / "scan" / "recon" / "reconnaissance.html"
 
 ## ------------- </Reports> ------------- ##
+
+
+def configure_project_paths(project_hint=None, run_hint=None):
+    global project_id
+    global run_id
+    global reports_dirpath
+    global outputAoI_JSON, outputAoI_Fpaths_JSON, outputSummary_JSON
+    global outputRecSummary_JSON, outputRecSummary, outputAnalysis_JSON
+    global pdfreport_Fpath, htmlreport_Fpath, estimation_Fpath, reconreport_Fpath
+
+    project_id = _sanitize_project_id(project_hint or os.environ.get("DAKSH_PROJECT_ID", ""))
+    run_id = _sanitize_project_id(run_hint or os.environ.get("DAKSH_RUN_ID", ""))
+    reports_dirpath = reports_base_dir / project_id if project_id else reports_base_dir
+    if run_id:
+        reports_dirpath = reports_dirpath / run_id
+
+    # discovered_Fpaths, discovered_clean_Fpaths, inventory_Fpathext,
+    # scanSummary_Fpath, reconOutput_Fpath, reconSummary_Fpath, and
+    # output_Fpaths_JSON are all derived from runtime_dirpath, which this
+    # function never changes (only DAKSH_RUNTIME_DIR at process start does)
+    # - recomputing them here was always a no-op, so they're intentionally
+    # left untouched.
+    outputAoI_JSON = reports_dirpath / "data" / "areas_of_interest.json"
+    outputAoI_Fpaths_JSON = reports_dirpath / "data" / "filepaths_aoi.json"
+    outputSummary_JSON = reports_dirpath / "data" / "summary.json"
+    outputRecSummary_JSON = reports_dirpath / "data" / "recon.json"
+    outputRecSummary = outputRecSummary_JSON
+    outputAnalysis_JSON = reports_dirpath / "data" / "analysis.json"
+    pdfreport_Fpath = reports_dirpath / "scan" / "pdf" / "report.pdf"
+    htmlreport_Fpath = reports_dirpath / "scan" / "html" / "report.html"
+    estimation_Fpath = reports_dirpath / "scan" / "estimate" / "estimation.html"
+    reconreport_Fpath = reports_dirpath / "scan" / "recon" / "reconnaissance.html"
+    return project_id, run_id

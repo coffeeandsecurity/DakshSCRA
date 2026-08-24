@@ -1,4 +1,5 @@
 # Standard libraries
+import io
 import os
 import re
 import json
@@ -31,26 +32,38 @@ def detect_encoding_type(targetfile):
     return result['encoding']
 
 
-def readfile_FallbackEncoding(filepath, fallback_order=("ISO-8859-1", "utf-8")):
+def readfile_FallbackEncoding(filepath, fallback_order=("utf-8", "ISO-8859-1")):
     """
-    Opens a file with specified encodings in fallback order.
+    Reads a file's bytes and decodes them using the first encoding in
+    fallback_order that actually succeeds, returning a text stream usable
+    as a context manager (`with readfile_FallbackEncoding(path) as fo:`).
+
+    ISO-8859-1 can decode any byte sequence without raising, so it must be
+    tried last - it is the true fallback-of-last-resort, not the default.
 
     Parameters:
-        filepath (str): The path to the file to open.
+        filepath (str): The path to the file to read.
         fallback_order (tuple): Encodings to try in order.
 
     Returns:
-        file object: The file object opened with the first successful encoding.
+        io.StringIO: A text stream over the decoded file content.
 
     Raises:
-        IOError: If all encodings fail.
+        IOError: If all encodings fail to decode the content.
     """
+    with open(filepath, 'rb') as raw:
+        data = raw.read()
+
+    last_error = None
     for encoding in fallback_order:
         try:
-            return open(filepath, 'r', encoding=encoding)
-        except (UnicodeDecodeError, ValueError):
+            return io.StringIO(data.decode(encoding))
+        except (UnicodeDecodeError, LookupError) as exc:
+            last_error = exc
             continue
-    raise IOError(f"Could not open file {filepath} with any of the specified encodings: {fallback_order}")
+    raise IOError(
+        f"Could not decode file {filepath} with any of the specified encodings: {fallback_order}"
+    ) from last_error
 
 
 

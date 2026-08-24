@@ -20,11 +20,11 @@ const TOC = [
   { id: 'webui-artifacts', label: '↳ Reports & Artifacts', indent: true },
   { id: 'webui-dirbrowser', label: '↳ Directory Browser', indent: true },
   { id: 'platforms', label: 'Platforms & Rules' },
-  { id: 'rdl', label: 'RDL — Conditional Rules' },
+  { id: 'rdl', label: 'RDL - Conditional Rules' },
   { id: 'rdl-operators', label: '↳ Operators', indent: true },
   { id: 'rdl-examples', label: '↳ Examples', indent: true },
   { id: 'rdl-fp-reduction', label: '↳ How FPs Are Reduced', indent: true },
-  { id: 'scan-config', label: 'scan_config — Rule Engine' },
+  { id: 'scan-config', label: 'scan_config - Rule Engine' },
   { id: 'scan-config-schema', label: '↳ Full Schema', indent: true },
   { id: 'scan-config-profiles', label: '↳ Platform Profiles', indent: true },
   { id: 'scan-config-highlighting', label: '↳ Highlighting', indent: true },
@@ -131,7 +131,7 @@ function DistinctiveSection() {
           <div className="help-distinctive-badge">World's First</div>
           <div className="help-distinctive-title">File Path Areas of Interest</div>
           <div className="help-distinctive-body">
-            Scans file and directory names themselves — not just code — to flag suspicious paths like backup
+            Scans file and directory names themselves - not just code - to flag suspicious paths like backup
             files, debug endpoints, config dumps, and credential files that reviewers often miss.
           </div>
         </div>
@@ -141,7 +141,7 @@ function DistinctiveSection() {
           <div className="help-distinctive-title">Scientific Effort Estimation</div>
           <div className="help-distinctive-body">
             Produces a quantified, defensible estimate of how long a manual review will take based on
-            codebase size, file count, and finding volume — not a guess.
+            codebase size, file count, and finding volume - not a guess.
           </div>
         </div>
 
@@ -159,7 +159,7 @@ function DistinctiveSection() {
           <div className="help-distinctive-body">
             Detects languages, frameworks, and infrastructure from file contents and structure before
             scanning, so the right rules are applied automatically. The first open-source tool to
-            perform comprehensive technology stack recon for source code review — beyond simple
+            perform comprehensive technology stack recon for source code review - beyond simple
             software composition analysis.
           </div>
         </div>
@@ -168,7 +168,7 @@ function DistinctiveSection() {
           <div className="help-distinctive-badge">World's First (Open Source)</div>
           <div className="help-distinctive-title">RDL Conditional Rules</div>
           <div className="help-distinctive-body">
-            A first-of-its-kind concept in any open-source code scanner — conditional rule logic
+            A first-of-its-kind concept in any open-source code scanner - conditional rule logic
             (<Code>FLAG</Code>, <Code>IF</Code>, <Code>MISSING</Code>, <Code>PRESENT</Code>) beyond
             simple regex. Context-aware pattern matching previously found only in commercial scanners,
             now available in open source.
@@ -179,7 +179,7 @@ function DistinctiveSection() {
           <div className="help-distinctive-badge help-distinctive-badge-notable">Built from the Ground Up</div>
           <div className="help-distinctive-title">Cross-File Taint Analysis</div>
           <div className="help-distinctive-body">
-            Traces user-controlled data from source to sink across file boundaries — one of very few
+            Traces user-controlled data from source to sink across file boundaries - one of very few
             open-source tools to implement this capability entirely from scratch. No wrapping of
             third-party taint engines; the analysis logic is purpose-built. AST usage follows the
             same standard practice used by commercial tools and large-scale open-source scanners.
@@ -282,9 +282,9 @@ python dakshscra.py -r auto --recon -t ./app`}</CodeBlock>
         headers={['Option', 'Default', 'Description']}
         rows={[
           [<Code>-rpt FORMATS</Code>, 'html', 'Report formats to generate. Values: html, pdf, or html,pdf. PDF requires Playwright/Chromium.'],
-          [<Code>--json-input-dir PATH</Code>, './reports/json', 'JSON input directory for --pdf-from-json mode.'],
-          [<Code>--pdf-output PATH</Code>, './reports/pdf/report.pdf', 'Custom output path for the single combined PDF.'],
-          [<Code>--pdf-multi-dir PATH</Code>, './reports/pdf/multi-file', 'Custom output directory for the per-platform PDF set.'],
+          [<Code>--json-input-dir PATH</Code>, './reports/&lt;project-id&gt;/&lt;run-id&gt;/data', 'JSON input directory for --pdf-from-json mode.'],
+          [<Code>--pdf-output PATH</Code>, './reports/&lt;project-id&gt;/&lt;run-id&gt;/scan/pdf/report.pdf', 'Custom output path for the single combined PDF.'],
+          [<Code>--pdf-multi-dir PATH</Code>, './reports/&lt;project-id&gt;/&lt;run-id&gt;/scan/pdf/multi-file', 'Custom output directory for the per-platform PDF set.'],
           [<Code>--pdf-single-only</Code>, 'off', 'Generate only the combined single PDF; skip the per-platform multi-file set.'],
         ]}
       />
@@ -341,13 +341,13 @@ python dakshscra.py -r php -t ./app -rpt html,pdf
 python dakshscra.py --recon --estimate -r php -t ./app
 
 # Generate PDF from a previous scan
-python dakshscra.py --pdf-from-json
+python dakshscra.py --pdf-from-json --json-input-dir ./reports/my-project/20260329081500/data
 
 # Generate PDF from a custom JSON directory
-python dakshscra.py --pdf-from-json --json-input-dir ./custom/reports/json
+python dakshscra.py --pdf-from-json --json-input-dir ./custom/reports/my-project/20260329081500/data
 
 # Single combined PDF only (skip per-platform set)
-python dakshscra.py --pdf-from-json --pdf-single-only
+python dakshscra.py --pdf-from-json --json-input-dir ./reports/my-project/20260329081500/data --pdf-single-only
 
 # Skip taint analysis for faster scan
 python dakshscra.py -r php -t ./app --skip-analysis
@@ -518,7 +518,7 @@ function WebUISection() {
       <SubHeading id="webui-dirbrowser">Directory Browser</SubHeading>
       <P>
         The directory browser modal lets you navigate the server filesystem to pick a scan target without
-        typing a path manually. Only directories under the configured browse roots are accessible — the
+        typing a path manually. Only directories under the configured browse roots are accessible - the
         server rejects any request outside those boundaries.
       </P>
       <P><strong>Default roots by platform (auto-detected when not configured):</strong></P>
@@ -554,7 +554,7 @@ DAKSH_BROWSE_ROOTS=/home/user/projects uvicorn api.main:app`}</CodeBlock>
 function RDLSection() {
   return (
     <section className="help-section">
-      <SectionHeading id="rdl">RDL — Rule Description Language</SectionHeading>
+      <SectionHeading id="rdl">RDL - Rule Description Language</SectionHeading>
       <P>
         RDL is DakshSCRA&apos;s rule logic layer for contextual filtering, suppression, and report
         rationale. In the current engine, RDL lives in external <Code>.rdl</Code> files and is
@@ -642,7 +642,7 @@ TRACE SQLi gate: input source present and mitigation missing.`}</CodeBlock>
       </P>
 
       <SubHeading id="rdl-examples">Examples</SubHeading>
-      <P><strong>Example 1 — PHP SQL injection gating:</strong></P>
+      <P><strong>Example 1 - PHP SQL injection gating:</strong></P>
       <CodeBlock>{`<rule>
   <name>Possible SQL Injection in Query Execution</name>
   <regex><![CDATA[(?i)\\b(?:mysql_query|mysqli_query|->query)\\s*\\(]]></regex>
@@ -659,7 +659,7 @@ REASON Query execution appears to rely on direct input without parameterisation.
         only the cases where input sources are present and parameterisation appears absent.
       </P>
 
-      <P><strong>Example 2 — Android manifest rule using filename and full-file checks:</strong></P>
+      <P><strong>Example 2 - Android manifest rule using filename and full-file checks:</strong></P>
       <CodeBlock>{`<rule>
   <name>Exported Components Without Permission</name>
   <regex><![CDATA[<(?P<component>activity|service|receiver|provider)\\s[^>]*android:name="(?P<name>[^"]+)"[^>]*android:exported="true"[^>]*(?:/>|>)]]></regex>
@@ -678,7 +678,7 @@ REASON Exported component appears reachable without a permission guard.`}</CodeB
         file context before the finding survives.
       </P>
 
-      <P><strong>Example 3 — File-path area-of-interest rule:</strong></P>
+      <P><strong>Example 3 - File-path area-of-interest rule:</strong></P>
       <CodeBlock>{`<rule>
   <name>Admin Section File Path</name>
   <regex><![CDATA[(?i)(^|/)(admin|administrator|root)(/|$)]]></regex>
@@ -696,7 +696,7 @@ FAIL_REASON Path matched an excluded documentation or sample location.`}</CodeBl
         string rather than source code text.
       </P>
 
-      <P><strong>Example 4 — Project observation rule:</strong></P>
+      <P><strong>Example 4 - Project observation rule:</strong></P>
       <CodeBlock>{`VERSION 1
 WHEN FILE_NAME_IS AndroidManifest.xml
 WHEN CURRENT_FILE_MATCHES /android:usesCleartextTraffic\\s*=\\s*"true"/i
@@ -718,9 +718,9 @@ REASON Cleartext traffic is enabled; related network security config files were 
         rows={[
           ['getSharedPreferences()', 'Flags every preference access (high FP rate)', 'Only flags when sensitive keys AND no encryption are present'],
           ['loadUrl(someVar)', 'Flags every loadUrl call including hardcoded safe URLs', 'Only flags dynamic/interpolated URLs; suppresses about:blank, android_asset'],
-          ['Room.databaseBuilder()', 'Flags DB setup calls — zero injection risk (100% FP)', 'Replaced with @Query interpolation pattern — actual injection risk only'],
+          ['Room.databaseBuilder()', 'Flags DB setup calls - zero injection risk (100% FP)', 'Replaced with @Query interpolation pattern - actual injection risk only'],
           ['addJavascriptInterface()', 'Misses real calls due to wrong argument pattern', 'Simplified regex catches all calls; always flagged for review'],
-          ['System.getenv("SECRET")', 'Flags as hardcoded secret (FP — it is a safe read)', 'Suppressed by MISSING:System.getenv condition'],
+          ['System.getenv("SECRET")', 'Flags as hardcoded secret (FP - it is a safe read)', 'Suppressed by MISSING:System.getenv condition'],
         ]}
       />
       <Note type="warn">
@@ -746,15 +746,15 @@ REASON Cleartext traffic is enabled; related network security config files were 
 function ScanConfigSection() {
   return (
     <section className="help-section">
-      <SectionHeading id="scan-config">scan_config — Rule-Driven Scanning &amp; Reporting</SectionHeading>
+      <SectionHeading id="scan-config">scan_config - Rule-Driven Scanning &amp; Reporting</SectionHeading>
       <P>
         <Code>scan_config</Code> is an optional XML block inside any <Code>&lt;rule&gt;</Code> that
         controls how the engine scans for that rule and how matches appear in reports. Rules without
-        a <Code>scan_config</Code> block behave exactly as before — the block is fully opt-in and
+        a <Code>scan_config</Code> block behave exactly as before - the block is fully opt-in and
         every field has a safe default.
       </P>
       <P>
-        The default model — regex applied line-by-line, one finding entry per match — works well for
+        The default model - regex applied line-by-line, one finding entry per match - works well for
         self-contained code patterns. It falls short for structured / declarative files like
         AndroidManifest.xml and Kubernetes YAML, rules that fire many times in one file for the same
         conceptual issue, multi-line patterns, and cases where the reviewer needs surrounding context
@@ -765,7 +765,7 @@ function ScanConfigSection() {
       <CodeBlock>{`<scan_config>
 
     <!-- MATCH MODE -->
-    <!-- line : regex applied per line (default — all existing rules) -->
+    <!-- line : regex applied per line (default - all existing rules) -->
     <!-- file : regex applied to full file content with MULTILINE|    -->
     <!--        DOTALL. Use for structured/declarative files.          -->
     <match_mode>line</match_mode>
@@ -776,7 +776,7 @@ function ScanConfigSection() {
     <!--               and display them as labelled fields.            -->
     <!-- lines        : include N raw lines before/after the match.    -->
     <!-- backward     : scan backward from match for a secondary       -->
-    <!--               pattern — first capture group becomes label.    -->
+    <!--               pattern - first capture group becomes label.    -->
     <context_type>none</context_type>
 
     <!-- Used when context_type = lines                                -->
@@ -811,7 +811,7 @@ function ScanConfigSection() {
     <!-- Colours: red | yellow | cyan | green | magenta | bold         -->
     <highlight_color>red</highlight_color>
 
-    <!-- Multi highlight (advanced — overrides simple fields above)   -->
+    <!-- Multi highlight (advanced - overrides simple fields above)   -->
     <!-- type values: match | group:<name> | pattern:<regex>          -->
     <marks>
         <mark color="red">match</mark>
@@ -827,10 +827,10 @@ function ScanConfigSection() {
         file type and adjust fields from there.
       </P>
 
-      <P><strong>Profile A — <Code>structured</Code> (declarative / config files)</strong></P>
+      <P><strong>Profile A - <Code>structured</Code> (declarative / config files)</strong></P>
       <P>
         Use for: AndroidManifest.xml, Kubernetes YAML, Terraform HCL, Dockerfile, plist, web.xml.
-        The regex must use named capture groups — the engine extracts them and displays them as
+        The regex must use named capture groups - the engine extracts them and displays them as
         labelled columns alongside the line number.
       </P>
       <CodeBlock>{`<scan_config>
@@ -844,7 +844,7 @@ function ScanConfigSection() {
     </marks>
 </scan_config>`}</CodeBlock>
 
-      <P>Full example — Android exported components rule:</P>
+      <P>Full example - Android exported components rule:</P>
       <CodeBlock>{`<rule>
     <name>Exported Components Without Permission</name>
     <regex><![CDATA[<(?P<component>activity|service|receiver|provider)\\s[^>]*
@@ -863,7 +863,7 @@ android:name="(?P<name>[^"]+)"[^>]*android:exported="true"[^>]*(?:/>|>)]]></rege
     ...
 </rule>`}</CodeBlock>
 
-      <P>Report output — one clean table instead of five identical finding entries:</P>
+      <P>Report output - one clean table instead of five identical finding entries:</P>
       <CodeBlock>{`Exported Components Without Permission        HIGH    AndroidManifest.xml
 
   Line  82    activity    .MainActivity
@@ -871,7 +871,7 @@ android:name="(?P<name>[^"]+)"[^>]*android:exported="true"[^>]*(?:/>|>)]]></rege
   Line 110    receiver    .BootReceiver
   Line 125    activity    .DeepLinkActivity`}</CodeBlock>
 
-      <P><strong>Profile B — <Code>code</Code> (source code files)</strong></P>
+      <P><strong>Profile B - <Code>code</Code> (source code files)</strong></P>
       <P>
         Use for: Python, JavaScript, PHP, Java, Go, Kotlin, Ruby, C, C++, .NET, Bash, PowerShell.
         Use <Code>context_lines_before</Code> to show what leads into the vulnerable call.
@@ -889,7 +889,7 @@ android:name="(?P<name>[^"]+)"[^>]*android:exported="true"[^>]*(?:/>|>)]]></rege
     <highlight_color>red</highlight_color>
 </scan_config>`}</CodeBlock>
 
-      <P>Report output — reviewer sees the inadequate sanitisation on line 45 without opening the file:</P>
+      <P>Report output - reviewer sees the inadequate sanitisation on line 45 without opening the file:</P>
       <CodeBlock>{`Insecure File Inclusion                       HIGH    controllers/page.php : Line 47
 
   44 |  $page = $_GET['page'];
@@ -897,10 +897,10 @@ android:name="(?P<name>[^"]+)"[^>]*android:exported="true"[^>]*(?:/>|>)]]></rege
   46 |
   47 >  include($page . '.php');`}</CodeBlock>
 
-      <P><strong>Profile C — <Code>config</Code> (flat configuration / secret files)</strong></P>
+      <P><strong>Profile C - <Code>config</Code> (flat configuration / secret files)</strong></P>
       <P>
         Use for: <Code>.env</Code>, <Code>.properties</Code>, <Code>appsettings.json</Code>,{' '}
-        <Code>*.tfvars</Code>, <Code>*.ini</Code>. The matched line is self-explanatory — no
+        <Code>*.tfvars</Code>, <Code>*.ini</Code>. The matched line is self-explanatory - no
         surrounding context adds value. <Code>aggregate:file</Code> collapses multiple secrets in
         the same file into one finding entry.
       </P>
@@ -930,32 +930,32 @@ android:name="(?P<name>[^"]+)"[^>]*android:exported="true"[^>]*(?:/>|>)]]></rege
           ['cyan', 'bright cyan', 'hl-cyan', 'Structural / informational (exports, routes, config)'],
           ['green', 'bright green', 'hl-green', 'Mitigations present ("Mitigation Identified" rules)'],
           ['magenta', 'bright magenta', 'hl-magenta', 'Framework-specific patterns'],
-          ['bold', 'bold only', 'hl-bold', 'Emphasis with no colour — safe for monochrome terminals'],
+          ['bold', 'bold only', 'hl-bold', 'Emphasis with no colour - safe for monochrome terminals'],
         ]}
       />
-      <P><strong>Simple</strong> — one thing to highlight:</P>
+      <P><strong>Simple</strong> - one thing to highlight:</P>
       <CodeBlock>{`<highlight_target>match</highlight_target>
 <highlight_color>red</highlight_color>`}</CodeBlock>
 
-      <P><strong>Named group</strong> — highlight a specific captured group:</P>
+      <P><strong>Named group</strong> - highlight a specific captured group:</P>
       <CodeBlock>{`<highlight_target>groups</highlight_target>
 <highlight_groups>name,component</highlight_groups>
 <highlight_color>cyan</highlight_color>`}</CodeBlock>
 
-      <P><strong>Multi</strong> — multiple highlight passes with different colours:</P>
+      <P><strong>Multi</strong> - multiple highlight passes with different colours:</P>
       <CodeBlock>{`<marks>
     <mark color="cyan">pattern:android:name\\s*=\\s*"[^"]+"</mark>
     <mark color="red">pattern:android:exported\\s*=\\s*"true"</mark>
 </marks>`}</CodeBlock>
       <Note type="info">
         Max 3 marks per rule. Beyond that, the snippet becomes visually noisy. If you need more than
-        3 highlights, the rule is probably doing too much — consider splitting it.
+        3 highlights, the rule is probably doing too much - consider splitting it.
       </Note>
 
       <SubHeading id="scan-config-authoring">Rule Authoring Guide</SubHeading>
       <P>Answer these questions before writing <Code>scan_config</Code> values:</P>
 
-      <P><strong>Q1 — What type of file does this rule target?</strong></P>
+      <P><strong>Q1 - What type of file does this rule target?</strong></P>
       <Table
         headers={['File type', 'Profile', 'match_mode']}
         rows={[
@@ -969,27 +969,27 @@ android:name="(?P<name>[^"]+)"[^>]*android:exported="true"[^>]*(?:/>|>)]]></rege
         ]}
       />
 
-      <P><strong>Q2 — Does the matched line tell the full story?</strong></P>
+      <P><strong>Q2 - Does the matched line tell the full story?</strong></P>
       <Table
         headers={['Situation', 'Setting']}
         rows={[
           ['Match is self-explanatory', 'context_type: none'],
           ['Setup / source is above the match', 'context_lines_before: 3–5, context_lines_after: 0'],
           ['Match opens a block, need to see inside', 'context_lines_before: 0, context_lines_after: 5–8'],
-          ['Both sides needed', 'Set both — keep before + after ≤ 12'],
+          ['Both sides needed', 'Set both - keep before + after ≤ 12'],
         ]}
       />
 
-      <P><strong>Q3 — Can this rule fire many times in one file for the same issue?</strong></P>
+      <P><strong>Q3 - Can this rule fire many times in one file for the same issue?</strong></P>
       <Table
         headers={['Situation', 'Setting']}
         rows={[
-          ['Yes — all instances are the same issue', 'aggregate: file'],
-          ['No — each instance is distinct', 'aggregate: none'],
+          ['Yes - all instances are the same issue', 'aggregate: file'],
+          ['No - each instance is distinct', 'aggregate: none'],
         ]}
       />
 
-      <P><strong>Q4 — Which report_format?</strong></P>
+      <P><strong>Q4 - Which report_format?</strong></P>
       <Table
         headers={['Situation', 'Format']}
         rows={[
@@ -999,7 +999,7 @@ android:name="(?P<name>[^"]+)"[^>]*android:exported="true"[^>]*(?:/>|>)]]></rege
         ]}
       />
 
-      <P><strong>Q5 — What to highlight?</strong></P>
+      <P><strong>Q5 - What to highlight?</strong></P>
       <Table
         headers={['Situation', 'Config']}
         rows={[
@@ -1088,13 +1088,13 @@ function PdfReportsSection() {
 
       <SubHeading id="pdf-after">Generate PDF after a scan</SubHeading>
       <CodeBlock>{`# Both single and multi-file PDFs
-python dakshscra.py --pdf-from-json
+python dakshscra.py --pdf-from-json --json-input-dir ./reports/my-project/20260329081500/data
 
 # Single combined PDF only
-python dakshscra.py --pdf-from-json --pdf-single-only
+python dakshscra.py --pdf-from-json --json-input-dir ./reports/my-project/20260329081500/data --pdf-single-only
 
 # From a custom JSON directory
-python dakshscra.py --pdf-from-json --json-input-dir ./custom/reports/json`}</CodeBlock>
+python dakshscra.py --pdf-from-json --json-input-dir ./custom/reports/my-project/20260329081500/data`}</CodeBlock>
       <Note>
         PDF is not generated by default to keep scans fast. The JSON output is always saved and can be used
         to generate PDFs at any time after the scan.

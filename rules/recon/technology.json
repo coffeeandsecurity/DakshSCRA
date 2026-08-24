@@ -34,11 +34,12 @@
     {"name": "React Native", "regex": "react-native|@react-native|app\\.json", "regexFlag": "1", "fileExtensions": [".js", ".jsx", ".ts", ".tsx", ".json"]},
     {"name": "Flutter", "regex": "\\bflutter\\b|pubspec\\.yaml|MaterialApp\\(|CupertinoApp\\(", "regexFlag": "1", "fileExtensions": [".dart", ".yaml"]},
     {"name": "Ionic", "regex": "@ionic/|ionic\\.config\\.json|from\\s+['\"]ionic", "regexFlag": "1", "fileExtensions": [".js", ".ts", ".html", ".json"]},
+    {"name": "MAUI", "regex": "UseMaui|MauiProgram|Microsoft\\.Maui", "regexFlag": "1", "fileExtensions": [".cs", ".csproj", ".xaml"]},
     {"name": "Xamarin", "regex": "Xamarin\\.|monoandroid|xamarinios", "regexFlag": "1", "fileExtensions": [".cs", ".csproj"]},
     {"name": "NativeScript", "regex": "nativescript", "regexFlag": "1", "fileExtensions": [".js", ".ts", ".json"]},
     {"name": "Cordova", "regex": "cordova|config\\.xml|cordova\\.js", "regexFlag": "1", "fileExtensions": [".js", ".xml", ".json"]},
     {"name": "Capacitor", "regex": "@capacitor/|capacitor\\.config\\.(json|ts)", "regexFlag": "1", "fileExtensions": [".ts", ".json"]},
-    {"name": "Kotlin Multiplatform", "regex": "kotlin\\(\\\"multiplatform\\\"\\)|kotlin-multiplatform", "regexFlag": "1", "fileExtensions": [".kts", ".gradle"]}
+    {"name": "Kotlin Multiplatform", "regex": "kotlin\\(\\\"multiplatform\\\"\\)|org\\.jetbrains\\.kotlin\\.multiplatform|kotlin-multiplatform", "regexFlag": "1", "fileExtensions": [".kts", ".gradle"]}
   ],
   "Database": [
     {"name": "MySQL", "regex": "\\bmysql\\b|\\bpymysql\\b|\\bmysql2\\b|jdbc:mysql", "regexFlag": "1", "fileExtensions": [".sql", ".py", ".java", ".php", ".rb", ".yml", ".yaml", ".json", ".xml"]},

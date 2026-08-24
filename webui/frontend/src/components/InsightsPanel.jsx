@@ -441,7 +441,7 @@ function LoCSection({ locBreakdown, scanMeta }) {
                 {pageRows.map((r, i) => (
                   <tr key={i} className="ip-loc-row">
                     <td className="ip-loc-td ip-loc-path">{r.path}</td>
-                    <td className="ip-loc-td ip-loc-val">{r.loc?.toLocaleString() ?? '—'}</td>
+                    <td className="ip-loc-td ip-loc-val">{r.loc?.toLocaleString() ?? '-'}</td>
                   </tr>
                 ))}
               </tbody>

@@ -128,12 +128,13 @@
     <div class="cards">
       <div class="card"><div class="k">Total Minimum Days</div><div class="v">{{ total_days_min }}</div></div>
       <div class="card"><div class="k">Total Maximum Days</div><div class="v">{{ total_days_max }}</div></div>
-      <div class="card"><div class="k">Backend Technologies</div><div class="v">{{ backend_data|length }}</div></div>
-      <div class="card"><div class="k">Frontend Technologies</div><div class="v">{{ frontend_data|length }}</div></div>
+      <div class="card"><div class="k">Categories Detected</div><div class="v">{{ category_sections|length }}</div></div>
+      <div class="card"><div class="k">Efficiency / Buffer</div><div class="v" style="font-size:18px">{{ efficiency_factor }}% / {{ buffer_days }}d</div></div>
     </div>
 
+    {% for section in category_sections %}
     <div class="section">
-      <div class="section-h">Backend</div>
+      <div class="section-h">{{ section['title'] }}</div>
       <div class="section-b">
         <table>
           <thead>
@@ -145,7 +146,7 @@
             </tr>
           </thead>
           <tbody>
-            {% for info in backend_data %}
+            {% for info in section['info'] %}
             <tr>
               <td>{{ info['language'] }}</td>
               <td>{{ info['total_files'] }}</td>
@@ -153,49 +154,24 @@
               <td>{{ info['effort_days_max'] }}</td>
             </tr>
             {% endfor %}
-            {% if backend_data|length == 0 %}
-            <tr><td colspan="4">No backend technologies identified.</td></tr>
+            {% if section['info']|length == 0 %}
+            <tr><td colspan="4">No {{ section['title'].lower() }} technologies identified.</td></tr>
             {% endif %}
           </tbody>
         </table>
       </div>
     </div>
-
-    <div class="section">
-      <div class="section-h">Frontend</div>
-      <div class="section-b">
-        <table>
-          <thead>
-            <tr>
-              <th>Technology</th>
-              <th>Total Files</th>
-              <th>Estimated Days (Min)</th>
-              <th>Estimated Days (Max)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for info in frontend_data %}
-            <tr>
-              <td>{{ info['language'] }}</td>
-              <td>{{ info['total_files'] }}</td>
-              <td>{{ info['effort_days_min'] }}</td>
-              <td>{{ info['effort_days_max'] }}</td>
-            </tr>
-            {% endfor %}
-            {% if frontend_data|length == 0 %}
-            <tr><td colspan="4">No frontend technologies identified.</td></tr>
-            {% endif %}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    {% endfor %}
 
     <div class="section">
       <div class="section-h">Estimation Notes</div>
       <div class="section-b">
         <div class="note">
           The estimate represents an approximation for planning and should be calibrated with project context,
-          reviewer expertise, and scope depth.
+          reviewer expertise, and scope depth. Raw per-category totals were {{ raw_days_min }}-{{ raw_days_max }}
+          days; applying the configured {{ efficiency_factor }}% efficiency factor and a {{ buffer_days }}-day
+          contingency buffer (see <code>config/estimate.yaml</code>) produced the {{ total_days_min }}-{{ total_days_max }}
+          day range shown above.
         </div>
       </div>
     </div>

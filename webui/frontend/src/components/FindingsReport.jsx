@@ -124,7 +124,7 @@ function CodeEvidence({ evidence }) {
           <div key={i} className="fr-evidence-item">
             <div className="fr-evidence-header">
               <FileIcon />
-              <span className="fr-evidence-file">{e.file || '—'}</span>
+              <span className="fr-evidence-file">{e.file || '-'}</span>
               {!e.aggregated && e.line && <span className="fr-evidence-line">:{e.line}</span>}
             </div>
             <CodeViewer lines={lines} matchLineNums={matchLineNums} />
