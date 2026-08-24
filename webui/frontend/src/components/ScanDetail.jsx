@@ -18,7 +18,11 @@ function StatusBadge({ status }) {
 function niceDuration(sec) {
   if (sec == null) return '-'
   if (sec < 60) return `${Math.round(sec)}s`
-  return `${Math.floor(sec / 60)}m ${Math.round(sec % 60)}s`
+  if (sec < 3600) return `${Math.floor(sec / 60)}m ${Math.round(sec % 60)}s`
+  const hours = Math.floor(sec / 3600)
+  const minutes = Math.floor((sec % 3600) / 60)
+  const seconds = Math.round(sec % 60)
+  return `${hours}h ${minutes}m ${seconds}s`
 }
 
 function niceDate(iso) {
