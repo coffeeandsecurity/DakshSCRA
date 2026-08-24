@@ -9,25 +9,23 @@ Author:
 
 ## About Daksh SCRA
 
-Daksh SCRA (Source Code Review Assist) tool is built to enhance the efficiency of the source code review process, providing a well-structured and organised approach for code reviewers.
+Daksh SCRA (Source Code Review Assist) is built to enhance the efficiency of the source code review process, providing a well-structured and organised approach for code reviewers.
 
 Rather than indiscriminately flagging everything as a potential issue, Daksh SCRA promotes thoughtful analysis, urging the investigation and confirmation of potential problems. This approach mitigates the scramble to tag every potential concern as a bug, cutting back on the confusion and wasted time spent on false positives.
 
-## Debut
+### Debut
 
 Daksh SCRA was initially introduced during a source code review training session at Black Hat USA 2022 (August 6-9), where it was subtly presented to a specific audience. Its official public debut took place at Black Hat USA 2023 in Las Vegas.
 
 ## Features and Functionalities
 
-### Distinctive Features
-
-- **Identifies Areas of Interest in Source Code:** Encourage focused investigation and confirmation rather than indiscriminately labelling everything as a bug.
+- **Identifies Areas of Interest in Source Code:** Encourages focused investigation and confirmation rather than indiscriminately labelling everything as a bug.
 - **Identifies Areas of Interest in File Paths (World's First):** Recognises patterns in file paths to pinpoint relevant sections for review.
 - **Software-Level Reconnaissance to Identify Technologies Utilised:** Identifies project technologies, enabling code reviewers to conduct precise scans with appropriate rules.
-- **Automated Scientific Effort Estimation for Code Review (World's First):** Providing a measurable approach for estimating efforts required for a code review process.
+- **Automated Scientific Effort Estimation for Code Review (World's First):** Provides a measurable approach for estimating the effort required for a code review.
 - **Framework-Aware Scanning:** Automatically applies framework-specific rules when the project's framework is detected.
 - **Taint Analysis Reports:** Per-platform HTML taint flow reports with hacker-mode and professional-mode themes.
-- **RDL (Rule Description Language):** External rule logic referenced with `rdl_ref` and executed by the current `core/rdl_engine.py` pipeline - supports file-aware gates, boolean expressions, project observations, and exported logic metadata in reports.
+- **RDL (Rule Description Language):** External rule logic referenced with `rdl_ref` and executed by the `core/rdl_engine.py` pipeline - supports file-aware gates, boolean expressions, project observations, and exported logic metadata in reports.
 - **Scan State / Resume:** Checkpoint long scans and resume after interruption.
 - **Suppression Baseline:** Generate and apply a baseline of known false positives to suppress them from future reports.
 - **Web UI:** Browser-based scan launcher with real-time console feed and job artifact browser.
@@ -42,7 +40,117 @@ Detailed documentation: [https://dakshlabs.com/#docs](https://dakshlabs.com/#doc
 
 ---
 
-## Tool Setup
+## Getting Started
+
+There are two ways to run Daksh SCRA - pick whichever fits your workflow:
+
+| | Best for | Jump to |
+|---|---|---|
+| 🌐 **Web UI (Docker)** | The easiest way to get started - one command, a browser dashboard, live scan progress, and a report/artifact browser. Recommended for most users. | [Web UI (Docker)](#web-ui-docker) |
+| 💻 **CLI (Python)** | Scripting, CI pipelines, or running scans without Docker. | [CLI Setup](#cli-setup) |
+
+Both paths run the exact same scanning engine - the Web UI is a browser front end over the same CLI, so results are identical either way.
+
+---
+
+## Web UI (Docker)
+
+The fastest way to run Daksh SCRA is through its browser-based Web UI, launched with a single Docker Compose command. It gives you a scan launcher, a live console feed, and a browsable history of past reports, without needing a local Python environment.
+
+The Docker setup runs the Web UI and the CLI as independent services built from the same image, so you can use either (or both) from the same container.
+
+### Launch the Web UI
+
+Foreground mode (logs stream to your terminal):
+
+```bash
+docker compose up --build
+```
+
+Detached / background mode:
+
+```bash
+docker compose up --build -d
+```
+
+Then open [http://localhost:8080](http://localhost:8080).
+
+To use a different port:
+
+```bash
+DAKSH_PORT=9090 docker compose up
+```
+
+Stop the stack with:
+
+```bash
+docker compose down
+```
+
+### Logging in
+
+The Web UI requires an account. On first startup, an initial admin account is created from `DAKSH_ADMIN_USERNAME` / `DAKSH_ADMIN_PASSWORD` (set these in `.env`); if `DAKSH_ADMIN_PASSWORD` is left unset, a random password is generated and printed once to the API's startup log - save it, since it cannot be recovered afterward.
+
+You'll be required to set your own password (and, optionally, username) the first time you log in. An admin account can create further accounts via the `POST /api/v1/auth/users` API endpoint (no dedicated UI for this yet). See `.env.example` for the full list of authentication-related settings (session lifetime, cookie security, CORS).
+
+### What you get
+
+- Responsive command builder for scan, recon, estimate, recon+estimate, list, and PDF-from-JSON modes
+- Real-time console feed and live per-stage progress during execution
+- Per-job artifact snapshots for HTML / PDF / JSON outputs
+- Fast in-browser navigation across run form, live feed, artifacts, and recent jobs
+- Built-in directory browser for selecting target paths (OS-aware: Windows, macOS, Linux / Docker)
+
+Under the hood, the CLI remains the source of truth - it does all the scanning and generates every HTML / PDF / JSON output. The Web UI runs one active job at a time and snapshots each completed job's outputs into `runtime/webui/jobs/<job-id>/artifacts/` so past reports stay accessible.
+
+### Running the CLI in Docker
+
+You don't need a local Python environment to use the CLI either - it's available as its own Compose service, built from the same image:
+
+```bash
+docker compose run --rm cli -h
+docker compose run --rm cli -r auto -t /scan-targets/path/to/source
+```
+
+### What's in the image
+
+- FastAPI backend + Web UI frontend
+- The full Daksh SCRA CLI, as a separate service
+- Playwright Chromium, for PDF generation
+- Persistent `reports/` and `runtime/` volumes
+- Host path mounts so scans can reach source trees from inside the container
+
+**Key mount points:**
+
+| Mount | Path inside container |
+|---|---|
+| Project source | `/app` |
+| Default scan root | `/scan-targets` |
+| Host drive aliases | `/host`, `/host/c`, `/host/d` |
+| WSL mounts | `/mnt`, `/run/desktop/mnt/host` |
+
+**Environment variables** (configure in `.env`):
+
+| Variable | Description |
+|---|---|
+| `DAKSH_PORT` | Web UI port (default: `8080`) |
+| `DAKSH_SCAN_ROOT` | Default target directory inside the container |
+| `DAKSH_HOST_SOURCE` | Host path to mount as `/scan-targets` (default: `/tmp`) |
+| `DAKSH_HOST_MOUNT` | Additional host mount root |
+| `DAKSH_HOST_C` | Windows C: drive path (WSL) |
+| `DAKSH_HOST_D` | Windows D: drive path (WSL) |
+| `DAKSH_DESKTOP_MOUNT` | WSL desktop mount path |
+| `DAKSH_BROWSE_ROOTS` | Override directory browser roots (comma-separated) |
+| `DAKSH_ADMIN_USERNAME` | Initial admin username (default: `admin`) |
+| `DAKSH_ADMIN_PASSWORD` | Initial admin password - strongly recommended to set explicitly |
+
+Copy `.env.example` to `.env` and set the paths and credentials for your machine before running Docker.
+
+---
+
+## CLI Setup
+
+Prefer running Daksh SCRA directly with Python? Here's how to set it up locally.
 
 ### Pre-requisites
 
@@ -57,11 +165,11 @@ git clone https://github.com/coffeeandsecurity/DakshSCRA.git
 
 Or download the latest zip from [https://github.com/coffeeandsecurity/DakshSCRA](https://github.com/coffeeandsecurity/DakshSCRA) and unzip it.
 
-### 2. Setup a Virtual Environment
+### 2. Set Up a Virtual Environment
 
 > 💡 The virtual environment can be created in any directory - it does not need to be inside the DakshSCRA folder.
 
-#### Option A: One-Step Setup (Recommended)
+**Option A: One-step setup (recommended)**
 
 ```bash
 python setup_env.py
@@ -69,15 +177,15 @@ python setup_env.py
 
 This script creates the virtual environment, installs all dependencies, and installs Playwright's Chromium browser (required for PDF export).
 
-#### Option B: Manual Setup
+**Option B: Manual setup**
 
-**Windows:**
+Windows:
 ```bash
 python -m venv daksh-env
 .\daksh-env\Scripts\activate
 ```
 
-**macOS / Linux:**
+macOS / Linux:
 ```bash
 python3 -m venv daksh-env
 source daksh-env/bin/activate
@@ -92,7 +200,7 @@ playwright install chromium
 
 ---
 
-## Tool Usage
+## CLI Usage
 
 Use `python` inside a virtual environment, or `python3` outside one.
 
@@ -207,7 +315,7 @@ python dakshscra.py --pdf-from-json --pdf-output ./reports/scan/pdf/custom.pdf -
 python dakshscra.py --pdf-from-json --pdf-single-only
 ```
 
-### View Supported Platform Rules and Frameworks
+### Supported Platform Rules and Frameworks
 
 ```bash
 python dakshscra.py -l R    # List platform rules and framework mappings
@@ -283,11 +391,10 @@ analysis:
 
 ### RDL Rule Authoring
 
-RDL (Rule Description Language) is DakshSCRA's externalized rule-logic layer. In the current
-architecture:
+RDL (Rule Description Language) is DakshSCRA's externalized rule-logic layer. In the current architecture:
 
 - XML rules remain the rule inventory and carry metadata such as `name`, `regex`, descriptions, and optional `scan_config`.
-- RDL logic is executed by [`core/rdl_engine.py`](/mnt/c/_Source/Developement/DakshSCRA/core/rdl_engine.py).
+- RDL logic is executed by [`core/rdl_engine.py`](core/rdl_engine.py).
 - Rule logic files live under `rules/scanning/logic/...` and are referenced from XML using `<rdl_ref>`.
 - `rdl_ref` values are resolved relative to `rules/scanning/`, for example:
   `logic/php/core/some_rule.rdl` -> `rules/scanning/logic/php/core/some_rule.rdl`
@@ -520,114 +627,7 @@ reports/
 
 Runtime files (scan state, logs, inventory) are written under `runtime/`.
 
----
-
-## Web UI
-
-Daksh SCRA includes a browser-based frontend for launching scans and watching progress in real time.
-
-Run in normal (foreground) mode:
-
-```bash
-docker compose up --build
-```
-
-Or run in detached (background) mode:
-
-```bash
-docker compose up --build -d
-```
-
-Then open: [http://localhost:8080](http://localhost:8080)
-
-**Login:** The Web UI requires an account. On first startup an initial admin
-account is created from `DAKSH_ADMIN_USERNAME`/`DAKSH_ADMIN_PASSWORD` (set
-these in `.env`, or a random password is generated and printed once to the
-API's startup log). An admin account can create further accounts via the
-`POST /api/v1/auth/users` API endpoint (no dedicated UI for this yet). See
-`.env.example` for the full list of authentication-related settings
-(session lifetime, cookie security, CORS).
-
-**Web UI capabilities:**
-
-- Responsive command builder for scan, recon, estimate, recon+estimate, list, and PDF-from-JSON modes
-- Real-time console feed during execution
-- Per-job artifact snapshots for HTML / PDF / JSON outputs
-- Fast in-browser navigation across run form, live feed, artifacts, and recent jobs
-- Built-in directory browser for selecting target paths (OS-aware: Windows, macOS, Linux / Docker)
-
-**Execution model:**
-
-- The CLI remains the source of truth and generates all HTML / PDF / JSON outputs
-- The web UI supports one active job at a time (the CLI writes to shared `runtime/` and `reports/` paths)
-- Completed jobs snapshot outputs into `runtime/webui/jobs/<job-id>/artifacts/` so previous reports stay accessible
-
----
-
-## Docker
-
-The Docker setup supports web UI and CLI independently using separate Compose services built from the same image.
-
-**Launch the web UI:**
-
-Normal (foreground) mode:
-
-```bash
-docker compose up --build
-```
-
-Detached (background) mode:
-
-```bash
-docker compose up --build -d
-```
-
-Then open: [http://localhost:8080](http://localhost:8080)
-
-**Run the CLI in Docker:**
-
-```bash
-docker compose run --rm cli -h
-docker compose run --rm cli -r auto -t /scan-targets/path/to/source
-```
-
-**Stop the stack:**
-
-```bash
-docker compose down
-```
-
-**What Docker includes:**
-
-- FastAPI + web frontend
-- Full Daksh SCRA CLI as a separate service
-- Playwright Chromium for PDF generation
-- Persistent `reports/` and `runtime/` volumes
-- Host path mounts so scans can reach source trees from inside the container
-
-**Key mount points:**
-
-| Mount | Path inside container |
-|---|---|
-| Project source | `/app` |
-| Default scan root | `/scan-targets` |
-| Host drive aliases | `/host`, `/host/c`, `/host/d` |
-| WSL mounts | `/mnt`, `/run/desktop/mnt/host` |
-
-**Environment variables (configure in `.env`):**
-
-| Variable | Description |
-|---|---|
-| `DAKSH_PORT` | Web UI port (default: `8080`) |
-| `DAKSH_SCAN_ROOT` | Default target directory inside the container |
-| `DAKSH_HOST_SOURCE` | Host path to mount as `/scan-targets` (default: `/tmp`) |
-| `DAKSH_HOST_MOUNT` | Additional host mount root |
-| `DAKSH_HOST_C` | Windows C: drive path (WSL) |
-| `DAKSH_HOST_D` | Windows D: drive path (WSL) |
-| `DAKSH_DESKTOP_MOUNT` | WSL desktop mount path |
-| `DAKSH_BROWSE_ROOTS` | Override directory browser roots (comma-separated) |
-
-Copy `.env.example` to `.env` and set the paths for your machine before running Docker.
+When running via the Web UI, each job's outputs are additionally snapshotted under `runtime/webui/jobs/<job-id>/artifacts/` (see [Web UI (Docker)](#web-ui-docker)).
 
 ---
 
