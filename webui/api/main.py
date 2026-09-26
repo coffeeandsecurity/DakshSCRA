@@ -2,6 +2,7 @@ import html
 import json
 import os
 import re
+import string
 import signal
 import shutil
 import threading
@@ -33,7 +34,7 @@ from .auth import (
     set_session_cookie,
     verify_password,
 )
-from .config import ADMIN_PASSWORD, ADMIN_USERNAME, ROOT_DIR, SESSION_COOKIE_NAME, get_browse_roots, get_cors_origins
+from .config import ADMIN_PASSWORD, ADMIN_USERNAME, ROOT_DIR, SESSION_COOKIE_NAME, get_browse_roots, get_cors_origins, host_locations, browse_shortcuts
 from .database import Base, SessionLocal, engine
 from .models import Project, ScanRun, User, UserSession
 from .scan_runtime import (
@@ -78,9 +79,13 @@ async def _lifespan(app: FastAPI):
         bootstrap_admin_user(_db)
     finally:
         _db.close()
+    _start_scan_dispatcher()
     port = os.environ.get("DAKSH_PORT", "8080")
     print(f"\n  DakshSCRA Web UI  →  http://localhost:{port}\n", flush=True)
-    yield
+    try:
+        yield
+    finally:
+        _stop_scan_dispatcher()
 
 
 app = FastAPI(title="DakshSCRA API", version="2.0.0", lifespan=_lifespan)
@@ -90,6 +95,15 @@ app = FastAPI(title="DakshSCRA API", version="2.0.0", lifespan=_lifespan)
 # below is the only place this API process touches them, so a lock keeps
 # two concurrent regenerate calls from racing on that shared global state.
 _report_regen_lock = threading.Lock()
+
+# The CLI still uses process-wide runtime state while a scan is executing.
+# A single dispatcher thread claims persisted queued scans in creation order,
+# which guarantees one active subprocess per API instance and keeps the queue
+# durable across API restarts.
+_scan_dispatch_condition = threading.Condition()
+_scan_dispatch_start_lock = threading.Lock()
+_scan_dispatch_stop = threading.Event()
+_scan_dispatch_thread: Optional[threading.Thread] = None
 
 
 def _enrich_file_path_findings(items):
@@ -144,10 +158,14 @@ def _ensure_schema_compatibility() -> None:
 
     cols = {c["name"] for c in insp.get_columns("scan_runs")}
     statements = []
+    if "rdl_engine" not in cols:
+        statements.append("ALTER TABLE scan_runs ADD COLUMN rdl_engine VARCHAR(8)")
     if "project_key" not in cols:
         statements.append("ALTER TABLE scan_runs ADD COLUMN project_key VARCHAR(96)")
     if "project_name" not in cols:
         statements.append("ALTER TABLE scan_runs ADD COLUMN project_name VARCHAR(255)")
+    if "data_removed_at" not in cols:
+        statements.append("ALTER TABLE scan_runs ADD COLUMN data_removed_at DATETIME")
 
     if statements:
         with engine.begin() as conn:
@@ -194,6 +212,8 @@ def _normalize_raw_path(raw_path: str) -> str:
     if not v:
         return ""
     v = v.replace("\\", "/")
+    if os.name == "nt":
+        return v
     m = re.match(r"^([A-Za-z]):/(.*)$", v)
     if m:
         drive = m.group(1).lower()
@@ -232,22 +252,43 @@ def _project_key_from_name(name: str) -> str:
 
 
 def _remap_path_aliases(p: Path) -> Path:
-    text_v = str(p)
-    alias_pairs = [
-        ("/mnt/c", "/host/c"),
-        ("/mnt/d", "/host/d"),
-        ("/run/desktop/mnt/host/c", "/host/c"),
-        ("/run/desktop/mnt/host/d", "/host/d"),
-    ]
-    for src, dst in alias_pairs:
-        if text_v == src or text_v.startswith(src + "/"):
-            mapped = Path(text_v.replace(src, dst, 1))
+    text = str(p)
+    # Preserve paths returned by the picker. Host aliases are conveniences for
+    # pasted paths and must still pass canonical containment checks afterward.
+    locations = host_locations()
+    container_paths = [str(ROOT_DIR), "/host", "/scan-targets"] + [x["path"] for x in locations]
+    if p.exists() and any(text == root or text.startswith(root.rstrip("/") + "/") for root in container_paths):
+        return p.resolve()
+    candidates = []
+    for item in locations:
+        source = item["source"].replace("\\", "/").rstrip("/")
+        target = item["path"]
+        if re.match(r"^[A-Za-z]:$", source):
+            drive = source[0].lower()
+            aliases = [f"/host/{drive}", f"/mnt/{drive}", f"/run/desktop/mnt/host/{drive}"]
+        else:
+            aliases = [source or "/"]
+        candidates.extend((alias, target) for alias in aliases)
+    for drive in string.ascii_lowercase:
+        for source in (f"/mnt/{drive}", f"/host/{drive}", f"/run/desktop/mnt/host/{drive}"):
+            candidates.extend((source, target) for target in
+                              (f"/host/drives/{drive}", f"/host/root/mnt/{drive}", f"/host/{drive}"))
+    for source, target in sorted(candidates, key=lambda pair: len(pair[0]), reverse=True):
+        if source == "/" or text == source or text.startswith(source + "/"):
+            suffix = text.lstrip("/") if source == "/" else text[len(source):].lstrip("/")
+            mapped = Path(target) / suffix
             if mapped.exists():
-                return mapped
-    return p
+                return mapped.resolve()
+    if not p.exists() and text.startswith("/"):
+        mapped = Path("/host/root") / text.lstrip("/")
+        if mapped.exists():
+            return mapped.resolve()
+    return p.resolve()
 
 
 def _resolve_target_path(raw_path: str, roots: List[Path]) -> Path:
+    if not roots:
+        raise HTTPException(status_code=503, detail="No configured browse roots are available. Check the Docker mounts.")
     p = Path(_normalize_raw_path(raw_path)).expanduser()
     if not p.is_absolute():
         p = (roots[0] / p).resolve()
@@ -293,6 +334,21 @@ def _get_or_create_project(db: Session, payload: ScanCreate) -> Project:
     return project
 
 
+def _scan_rdl_engine(scan: ScanRun) -> str:
+    mode = getattr(scan, "rdl_engine", None)
+    if mode in {"v1", "v2", "both"}:
+        return mode
+    # Never reinterpret old scans using today's default or deployment environment.
+    runtime = run_dir(scan.run_uuid) / "runtime"
+    meta = _load_json_safe(runtime / "scan_summary.json") or {}
+    inputs = (meta.get("inputs_received") or {}) if isinstance(meta, dict) else {}
+    if not isinstance(inputs, dict):
+        inputs = {}
+    if inputs.get("rdl_v2_shadow_enabled") or (runtime / "rdl_shadow_comparisons.jsonl").exists():
+        return "both"
+    return "v1"
+
+
 def _serialize_scan(s: ScanRun) -> ScanDetails:
     artifacts: List[str] = []
     try:
@@ -308,6 +364,8 @@ def _serialize_scan(s: ScanRun) -> ScanDetails:
         target_dir=s.target_dir,
         created_at=s.created_at.isoformat() if s.created_at else None,
         duration_sec=s.duration_sec,
+        data_removed=s.data_removed_at is not None,
+        data_removed_at=s.data_removed_at.isoformat() if s.data_removed_at else None,
         file_types=s.file_types,
         report_format=s.report_format,
         verbosity=s.verbosity,
@@ -315,6 +373,7 @@ def _serialize_scan(s: ScanRun) -> ScanDetails:
         estimate=_to_bool(s.estimate),
         analysis=_to_bool(s.analysis),
         loc=_to_bool(s.loc),
+        rdl_engine=_scan_rdl_engine(s),
         command=s.command,
         return_code=s.return_code,
         task_id=s.task_id,
@@ -361,22 +420,67 @@ def _artifact_index(artifacts: List[str]) -> ArtifactIndex:
     )
 
 
-# ── Background scan runner ────────────────────────────────────────────────────
+# ── Persistent single-scan FIFO dispatcher ───────────────────────────────────
 
-def _run_scan_thread(run_uuid: str, cmd: list, log_path: Path, start_ts: float) -> None:
+def _scan_cmd_from_row(scan: ScanRun) -> list:
+    return build_cmd({
+        "rdl_engine": _scan_rdl_engine(scan),
+        "rules": scan.rules,
+        "target_dir": scan.target_dir,
+        "file_types": scan.file_types,
+        "report_format": scan.report_format,
+        "verbosity": scan.verbosity,
+        "recon": _to_bool(scan.recon),
+        "estimate": _to_bool(scan.estimate),
+        "analysis": _to_bool(scan.analysis),
+        "loc": _to_bool(scan.loc),
+    })
+
+
+def _wake_scan_dispatcher() -> None:
+    with _scan_dispatch_condition:
+        _scan_dispatch_condition.notify_all()
+
+
+def _claim_next_queued_scan() -> Optional[str]:
+    """Atomically claim the oldest queued scan for the sole dispatcher."""
     db = SessionLocal()
+    try:
+        if db.query(ScanRun).filter(ScanRun.status == "running").first():
+            return None
+        scan = (
+            db.query(ScanRun)
+            .filter(ScanRun.status == "queued")
+            .order_by(ScanRun.created_at.asc(), ScanRun.id.asc())
+            .first()
+        )
+        if not scan:
+            return None
+        scan.status = "running"
+        scan.started_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        scan.ended_at = None
+        scan.return_code = None
+        scan.duration_sec = None
+        db.commit()
+        return scan.run_uuid
+    finally:
+        db.close()
+
+
+def _execute_claimed_scan(run_uuid: str) -> None:
+    db = SessionLocal()
+    started_monotonic = time.monotonic()
     try:
         scan = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
         if not scan:
             return
         if scan.status == "stopped":
-            # /stop was called while this scan was still "queued" - honor
-            # it instead of clobbering it back to "running" and spawning
-            # the subprocess anyway.
             return
-        scan.status = "running"
-        scan.started_at = datetime.now(timezone.utc).replace(tzinfo=None)
-        db.commit()
+        if scan.status != "running":
+            return
+
+        cmd = _scan_cmd_from_row(scan)
+        log_path = Path(os.path.join(ROOT_DIR, scan.log_path))
 
         rc = execute_scan_sync(cmd, log_path, run_uuid=run_uuid, project_key=scan.project_key)
 
@@ -385,7 +489,7 @@ def _run_scan_thread(run_uuid: str, cmd: list, log_path: Path, start_ts: float) 
             ended = datetime.now(timezone.utc).replace(tzinfo=None)
             scan.ended_at = ended
             scan.return_code = rc
-            scan.duration_sec = round(time.time() - start_ts, 2)
+            scan.duration_sec = round(time.monotonic() - started_monotonic, 2)
 
             # If status was already set to "stopped" by the stop endpoint, keep it
             if scan.status == "stopped":
@@ -413,6 +517,54 @@ def _run_scan_thread(run_uuid: str, cmd: list, log_path: Path, start_ts: float) 
             db2.close()
     finally:
         db.close()
+        _wake_scan_dispatcher()
+
+
+def _scan_dispatch_loop() -> None:
+    while not _scan_dispatch_stop.is_set():
+        run_uuid = _claim_next_queued_scan()
+        if run_uuid:
+            _execute_claimed_scan(run_uuid)
+            continue
+        with _scan_dispatch_condition:
+            _scan_dispatch_condition.wait(timeout=1.0)
+
+
+def _start_scan_dispatcher() -> None:
+    global _scan_dispatch_thread
+    with _scan_dispatch_start_lock:
+        if _scan_dispatch_thread and _scan_dispatch_thread.is_alive():
+            return
+
+        # A process restart cannot retain a child-process registry. Requeue any
+        # interrupted run so FIFO execution resumes instead of displaying a
+        # permanently stale "running" state.
+        db = SessionLocal()
+        try:
+            interrupted = db.query(ScanRun).filter(ScanRun.status == "running").all()
+            for scan in interrupted:
+                scan.status = "queued"
+                scan.started_at = None
+                scan.ended_at = None
+                scan.return_code = None
+                scan.duration_sec = None
+            if interrupted:
+                db.commit()
+        finally:
+            db.close()
+
+        _scan_dispatch_stop.clear()
+        _scan_dispatch_thread = threading.Thread(
+            target=_scan_dispatch_loop,
+            name="daksh-scan-dispatcher",
+            daemon=True,
+        )
+        _scan_dispatch_thread.start()
+
+
+def _stop_scan_dispatcher() -> None:
+    _scan_dispatch_stop.set()
+    _wake_scan_dispatcher()
 
 
 # ── API Endpoints ─────────────────────────────────────────────────────────────
@@ -614,6 +766,7 @@ def create_scan(payload: ScanCreate, db: Session = Depends(db_session)):
         project_name=project.project_name,
         status="queued",
         rules=payload.rules,
+        rdl_engine=payload.rdl_engine,
         target_dir=payload.target_dir,
         file_types=payload.file_types,
         report_format=payload.report_format,
@@ -630,13 +783,7 @@ def create_scan(payload: ScanCreate, db: Session = Depends(db_session)):
     db.commit()
     db.refresh(scan)
 
-    start_ts = time.time()
-    t = threading.Thread(
-        target=_run_scan_thread,
-        args=(run_uuid, cmd, log_path, start_ts),
-        daemon=True,
-    )
-    t.start()
+    _wake_scan_dispatcher()
 
     return _serialize_scan(scan)
 
@@ -684,7 +831,7 @@ def stream_scan_log(run_uuid: str):
             try:
                 s = inner_db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
                 current_status = s.status if s else "unknown"
-                scan_started_at = (s.started_at or s.created_at) if s else None
+                scan_started_at = s.started_at if s else None
             except Exception:
                 current_status = "unknown"
                 scan_started_at = None
@@ -757,6 +904,8 @@ def list_scans(
                 target_dir=s.target_dir,
                 created_at=s.created_at.isoformat() if s.created_at else None,
                 duration_sec=s.duration_sec,
+                data_removed=s.data_removed_at is not None,
+                data_removed_at=s.data_removed_at.isoformat() if s.data_removed_at else None,
             )
         )
     return out
@@ -775,6 +924,8 @@ def get_scan_artifacts(run_uuid: str, db: Session = Depends(db_session)):
     row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
     if not row:
         raise HTTPException(status_code=404, detail="run_not_found")
+    if row.data_removed_at is not None:
+        return _artifact_index([])
     try:
         artifacts = json.loads(row.artifacts_json or "[]")
     except Exception:
@@ -797,6 +948,8 @@ def get_scan_log(run_uuid: str, db: Session = Depends(db_session)):
     row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
     if not row:
         raise HTTPException(status_code=404, detail="run_not_found")
+    if row.data_removed_at is not None:
+        return {"run_uuid": run_uuid, "status": row.status, "log_tail": "", "data_removed": True}
     log_text = read_log_tail(Path(os.path.join(ROOT_DIR, row.log_path)))
     return {"run_uuid": run_uuid, "status": row.status, "log_tail": log_text}
 
@@ -809,6 +962,11 @@ def _load_json_safe(path: Path):
     except Exception:
         pass
     return None
+
+
+def _ensure_scan_data_available(row: ScanRun) -> None:
+    if row.data_removed_at is not None:
+        raise HTTPException(status_code=410, detail="scan_data_removed")
 
 
 def _scan_reports_root(project_key: str, run_uuid: str) -> Path:
@@ -855,7 +1013,7 @@ def _scan_progress_payload(run_uuid: str, fallback_status: str = "", started_at=
 
     fallback_stage = "queued" if fallback_status == "queued" else "initialization" if fallback_status == "running" else ""
     fallback_message = (
-        "Scan queued - preparing isolated workspace"
+        "Scan queued - waiting for the active scan to finish"
         if fallback_status == "queued"
         else "Scan engine started - preparing repository"
         if fallback_status == "running"
@@ -870,6 +1028,12 @@ def _scan_progress_payload(run_uuid: str, fallback_status: str = "", started_at=
 
     current_stage = str(live.get("stage") or progress.get("current_stage") or fallback_stage).strip()
     stage_status = str((stages.get(current_stage) or {}).get("status") or live.get("status") or "").strip()
+    elapsed_seconds = 0 if fallback_status == "queued" else _safe_progress_int(
+        live.get("elapsed_seconds") or heartbeat.get("elapsed_seconds"),
+        fallback_elapsed,
+    )
+    if fallback_status == "running":
+        elapsed_seconds = max(elapsed_seconds, fallback_elapsed)
     return {
         "current_stage": current_stage,
         "stage_status": stage_status,
@@ -882,7 +1046,7 @@ def _scan_progress_payload(run_uuid: str, fallback_status: str = "", started_at=
         "current_phase": str(live.get("current_phase") or cursor.get("current_phase") or heartbeat.get("phase") or "").strip(),
         "current_index": _safe_progress_int(live.get("current_index") or cursor.get("current_index") or cursor.get("file_index")),
         "total_items": _safe_progress_int(live.get("total_items") or cursor.get("total_items")),
-        "elapsed_seconds": _safe_progress_int(live.get("elapsed_seconds") or heartbeat.get("elapsed_seconds"), fallback_elapsed),
+        "elapsed_seconds": elapsed_seconds,
         "directories_scanned": _safe_progress_int(live.get("directories_scanned")),
         "files_discovered": _safe_progress_int(live.get("files_discovered") or detection.get("total_project_files_identified")),
         "files_selected": _safe_progress_int(live.get("files_selected") or detection.get("total_files_identified")),
@@ -898,6 +1062,20 @@ def get_scan_findings(run_uuid: str, db: Session = Depends(db_session)):
     row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
     if not row:
         raise HTTPException(status_code=404, detail="run_not_found")
+    if row.data_removed_at is not None:
+        return {
+            "run_uuid": run_uuid,
+            "status": row.status,
+            "data_removed": True,
+            "findings": [],
+            "summary": None,
+            "filepaths": [],
+            "analysis": None,
+            "recon": None,
+            "scan_meta": None,
+            "progress": {},
+            "loc_breakdown": [],
+        }
 
     rdir = run_dir(run_uuid)
     json_dir = _scan_data_dir(row.project_key, run_uuid)
@@ -906,7 +1084,6 @@ def get_scan_findings(run_uuid: str, db: Session = Depends(db_session)):
     findings = _load_json_safe(json_dir / "areas_of_interest.json") or []
     summary = _load_json_safe(json_dir / "summary.json")
     filepaths = _enrich_file_path_findings(_load_json_safe(json_dir / "filepaths_aoi.json") or [])
-    analysis = _load_json_safe(json_dir / "analysis.json")
     recon = _load_json_safe(json_dir / "recon.json")
     scan_meta = _load_json_safe(runtime_dir / "scan_summary.json")
     loc_breakdown = _load_json_safe(runtime_dir / "filepaths.json") or []
@@ -917,15 +1094,63 @@ def get_scan_findings(run_uuid: str, db: Session = Depends(db_session)):
         "findings": findings,
         "summary": summary,
         "filepaths": filepaths,
-        "analysis": analysis,
         "recon": recon,
         "scan_meta": scan_meta,
         "progress": _scan_progress_payload(
             run_uuid,
             fallback_status=row.status,
-            started_at=row.started_at or row.created_at,
+            started_at=row.started_at,
         ),
         "loc_breakdown": loc_breakdown,
+    }
+
+
+@protected.get("/api/v1/scans/{run_uuid}/analysis")
+def get_scan_analysis(run_uuid: str, db: Session = Depends(db_session)):
+    """Load the large analysis dataset only when an analysis tab needs it."""
+    row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="run_not_found")
+    if row.data_removed_at is not None:
+        return {"run_uuid": run_uuid, "data_removed": True, "analysis": None}
+    return {
+        "run_uuid": run_uuid,
+        "analysis": _load_json_safe(_scan_data_dir(row.project_key, run_uuid) / "analysis.json"),
+    }
+
+
+@protected.get("/api/v1/scans/{run_uuid}/rdl-shadow")
+def get_rdl_shadow_results(
+    run_uuid: str,
+    limit: int = Query(default=500, ge=1, le=1000),
+    offset: int = Query(default=0, ge=0, le=9000),
+    view: str = Query(default='all', pattern='^(all|leads|disagreements|unresolved)$'),
+    kind: str = Query(default='all', pattern='^(all|baseline|semantic|supplemental)$'),
+    search: str = Query(default='', max_length=200),
+    db: Session = Depends(db_session),
+):
+    """Return bounded v1/v2 shadow comparisons for one scan."""
+    row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="run_not_found")
+    if row.data_removed_at is not None:
+        return {"run_uuid": run_uuid, "enabled": False, "data_removed": True, "summary": {"total": 0, "malformed": 0, "statuses": {}}, "comparisons": []}
+
+    telemetry_path = run_dir(run_uuid) / "runtime" / "rdl_shadow_comparisons.jsonl"
+    scan_meta = _load_json_safe(run_dir(run_uuid) / "runtime" / "scan_summary.json") or {}
+    inputs_received = scan_meta.get("inputs_received") if isinstance(scan_meta, dict) else {}
+    enabled_for_run = bool(
+        isinstance(inputs_received, dict) and inputs_received.get("rdl_v2_shadow_enabled")
+    )
+    from core.rdl.shadow import read_shadow_results
+    results = read_shadow_results(telemetry_path, limit=limit, offset=offset, view=view, search=search, kind=kind)
+    total = results['summary']['total']
+    return {
+        "run_uuid": run_uuid,
+        "rdl_engine": _scan_rdl_engine(row),
+        "enabled": _scan_rdl_engine(row) != "v1" or enabled_for_run or telemetry_path.exists(),
+        "applicable": total > 0,
+        **results,
     }
 
 
@@ -941,8 +1166,13 @@ def list_projects(db: Session = Depends(db_session)):
     )
     out: List[ProjectSummary] = []
     for p in projects:
-        scans = db.query(ScanRun).filter(ScanRun.project_key == p.project_key).all()
-        running = sum(1 for s in scans if s.status in ("running", "queued"))
+        scans = (
+            db.query(ScanRun)
+            .filter(ScanRun.project_key == p.project_key, ScanRun.data_removed_at.is_(None))
+            .all()
+        )
+        running = sum(1 for s in scans if s.status == "running")
+        queued = sum(1 for s in scans if s.status == "queued")
         failed = sum(1 for s in scans if s.status == "failed")
         latest_scan = max(scans, key=lambda s: s.created_at or datetime.min, default=None)
         latest = latest_scan.created_at if latest_scan and latest_scan.created_at else None
@@ -954,6 +1184,7 @@ def list_projects(db: Session = Depends(db_session)):
                 rules=p.rules,
                 total_scans=len(scans),
                 running_scans=running,
+                queued_scans=queued,
                 failed_scans=failed,
                 latest_scan_at=latest.isoformat() if latest else None,
                 latest_run_uuid=latest_scan.run_uuid if latest_scan else None,
@@ -963,11 +1194,16 @@ def list_projects(db: Session = Depends(db_session)):
     for (scan_key,) in scan_only_keys:
         if not scan_key or scan_key in known_keys:
             continue
-        scans = db.query(ScanRun).filter(ScanRun.project_key == scan_key).all()
+        scans = (
+            db.query(ScanRun)
+            .filter(ScanRun.project_key == scan_key, ScanRun.data_removed_at.is_(None))
+            .all()
+        )
         if not scans:
             continue
         latest_scan = sorted(scans, key=lambda x: x.created_at or datetime.min, reverse=True)[0]
-        running = sum(1 for s in scans if s.status in ("running", "queued"))
+        running = sum(1 for s in scans if s.status == "running")
+        queued = sum(1 for s in scans if s.status == "queued")
         failed = sum(1 for s in scans if s.status == "failed")
         latest = latest_scan.created_at if latest_scan.created_at else None
         out.append(
@@ -978,6 +1214,7 @@ def list_projects(db: Session = Depends(db_session)):
                 rules=latest_scan.rules,
                 total_scans=len(scans),
                 running_scans=running,
+                queued_scans=queued,
                 failed_scans=failed,
                 latest_scan_at=latest.isoformat() if latest else None,
                 latest_run_uuid=latest_scan.run_uuid,
@@ -988,9 +1225,9 @@ def list_projects(db: Session = Depends(db_session)):
     return out
 
 
-def _safe_remove_path(path_value: str, *, is_dir: bool) -> None:
+def _safe_remove_path(path_value: str, *, is_dir: bool) -> bool:
     if not path_value:
-        return
+        return True
     p = Path(path_value)
     if not p.is_absolute():
         p = (ROOT_DIR / p).resolve()
@@ -999,14 +1236,75 @@ def _safe_remove_path(path_value: str, *, is_dir: bool) -> None:
     try:
         p.relative_to(ROOT_DIR.resolve())
     except ValueError:
-        return
+        return False
     try:
         if is_dir:
             shutil.rmtree(p, ignore_errors=True)
         elif p.exists():
             p.unlink()
     except Exception:
-        pass
+        return False
+    return not p.exists()
+
+
+def _purge_scan_data(scan: ScanRun) -> None:
+    """Remove every scan-owned file while retaining a minimal history row."""
+    try:
+        artifact_paths = json.loads(scan.artifacts_json or "[]")
+    except Exception:
+        artifact_paths = []
+
+    directory_targets = {
+        str(project_reports_dir(scan.project_key, scan.run_uuid)),
+        str(ROOT_DIR / "reports" / scan.run_uuid),
+        str(run_dir(scan.run_uuid)),
+    }
+    file_targets = {str(scan.log_path or "")}
+    file_targets.update(str(path) for path in artifact_paths if path)
+
+    failures = []
+    for path_value in sorted(directory_targets, key=len, reverse=True):
+        if not _safe_remove_path(path_value, is_dir=True):
+            failures.append(path_value)
+    for path_value in sorted(file_targets):
+        if path_value and not _safe_remove_path(path_value, is_dir=False):
+            failures.append(path_value)
+
+    if failures:
+        raise HTTPException(
+            status_code=500,
+            detail={"code": "scan_data_cleanup_failed", "paths": failures},
+        )
+
+    scan.artifacts_json = "[]"
+    scan.log_path = ""
+    scan.command = ""
+    scan.task_id = None
+    scan.data_removed_at = datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+@protected.delete("/api/v1/scans/{run_uuid}", response_model=ScanDetails)
+def delete_scan_data(run_uuid: str, db: Session = Depends(db_session)):
+    scan = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
+    if not scan:
+        raise HTTPException(status_code=404, detail="run_not_found")
+    if scan.status in ("running", "queued"):
+        raise HTTPException(status_code=409, detail="scan_is_active")
+    _purge_scan_data(scan)
+    db.commit()
+    db.refresh(scan)
+    return _serialize_scan(scan)
+
+
+@protected.delete("/api/v1/scans/{run_uuid}/record", status_code=204)
+def delete_scan_record(run_uuid: str, db: Session = Depends(db_session)):
+    scan = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
+    if not scan:
+        raise HTTPException(status_code=404, detail="run_not_found")
+    if scan.data_removed_at is None:
+        raise HTTPException(status_code=409, detail="delete_scan_data_first")
+    db.delete(scan)
+    db.commit()
 
 
 @protected.delete("/api/v1/projects/{project_key}", status_code=204)
@@ -1019,22 +1317,17 @@ def delete_project(project_key: str, db: Session = Depends(db_session)):
     running = next((scan for scan in scans if scan.status in ("running", "queued")), None)
     if running:
         raise HTTPException(status_code=409, detail="project_has_active_scans")
-    run_ids = [scan.run_uuid for scan in scans if scan.run_uuid]
-    log_paths = [scan.log_path for scan in scans if scan.log_path]
-    db.query(ScanRun).filter(ScanRun.project_key == project_key).delete(synchronize_session=False)
+    for scan in scans:
+        _purge_scan_data(scan)
     if project:
         db.delete(project)
     db.commit()
     _safe_remove_path(str(project_reports_dir(project_key)), is_dir=True)
-    for run_id in run_ids:
-        _safe_remove_path(str(run_dir(run_id)), is_dir=True)
-    for log_path in log_paths:
-        _safe_remove_path(log_path, is_dir=False)
 
 
 @protected.get("/api/v1/dashboard/metrics", response_model=DashboardMetrics)
 def dashboard_metrics(db: Session = Depends(db_session)):
-    scans = db.query(ScanRun).all()
+    scans = db.query(ScanRun).filter(ScanRun.data_removed_at.is_(None)).all()
     total = len(scans)
     running = sum(1 for s in scans if s.status == "running")
     queued = sum(1 for s in scans if s.status == "queued")
@@ -1055,7 +1348,7 @@ def dashboard_metrics(db: Session = Depends(db_session)):
                 count += 1
         series.append({"date": d.isoformat(), "count": count})
 
-    project_count = len({s.project_key for s in scans if s.project_key}) or db.query(Project).count()
+    project_count = db.query(Project).count() or len({s.project_key for s in scans if s.project_key})
 
     return DashboardMetrics(
         total_projects=project_count,
@@ -1073,58 +1366,45 @@ def dashboard_metrics(db: Session = Depends(db_session)):
 @protected.get("/api/v1/fs/list", response_model=FsListResponse)
 def fs_list(path: str = Query(default="")):
     roots = [Path(p).resolve() for p in get_browse_roots()]
+    if not roots:
+        raise HTTPException(status_code=503, detail="No configured browse roots are available. Check the Docker mounts.")
 
     def under_roots(p: Path) -> bool:
-        rp = p.resolve()
-        for r in roots:
+        for root in roots:
             try:
-                rp.relative_to(r)
+                p.relative_to(root)
                 return True
-            except Exception:
+            except ValueError:
                 continue
         return False
 
-    if path.strip():
-        p = Path(_normalize_raw_path(path)).expanduser()
+    p = Path(_normalize_raw_path(path)).expanduser() if path.strip() else roots[0]
+    try:
         if not p.is_absolute():
-            p = (roots[0] / p).resolve()
-        else:
-            p = p.resolve()
-        p = _remap_path_aliases(p)
-    else:
-        p = roots[0]
-
-    if not under_roots(p):
-        raise HTTPException(status_code=403, detail="forbidden_path")
-    if not p.exists() or not p.is_dir():
-        raise HTTPException(status_code=404, detail="not_a_directory")
+            p = roots[0] / p
+        p = _remap_path_aliases(p.resolve())
+        if not under_roots(p):
+            raise HTTPException(status_code=403, detail="This path is outside the allowed scan folders.")
+        if not p.is_dir():
+            raise HTTPException(status_code=404, detail="Directory not found. Check that the host folder is mounted in Docker.")
+        iterable = list(p.iterdir())
+    except PermissionError:
+        raise HTTPException(status_code=403, detail="Permission denied. Allow Docker access to this host folder and try again.")
+    except (OSError, RuntimeError):
+        raise HTTPException(status_code=400, detail="This directory cannot be read. Check the host mount and filesystem permissions.")
 
     dirs = []
-    try:
-        iterable = list(p.iterdir())
-    except (PermissionError, OSError):
-        iterable = []
     for child in sorted(iterable, key=lambda x: x.name.lower()):
         try:
-            if not child.is_dir():
-                continue
-            cp = child.resolve()
-            if under_roots(cp):
+            cp = _remap_path_aliases(child.resolve())
+            if cp.is_dir() and under_roots(cp):
                 dirs.append(FsEntry(name=child.name, path=str(cp)))
-        except (PermissionError, OSError):
+        except (OSError, RuntimeError):
             continue
-
-    parent = None
-    for r in roots:
-        try:
-            p.relative_to(r)
-            if p != r:
-                parent = str(p.parent)
-            break
-        except Exception:
-            continue
-
-    return FsListResponse(current=str(p), parent=parent, roots=[str(r) for r in roots], directories=dirs)
+    parent = str(p.parent) if p.parent != p and under_roots(p.parent) else None
+    root_names = [str(r) for r in roots]
+    return FsListResponse(current=str(p), parent=parent, roots=root_names, directories=dirs,
+                          shortcuts=[FsEntry(**x) for x in browse_shortcuts(root_names)])
 
 
 @protected.get("/api/v1/settings", response_model=SettingsData)
@@ -1239,7 +1519,11 @@ def save_settings(payload: SettingsData):
 
 
 @protected.get("/api/v1/scans/{run_uuid}/suppressed")
-def get_suppressed_findings(run_uuid: str, db: Session = Depends(db_session)):
+def get_suppressed_findings(
+    run_uuid: str,
+    summary_only: bool = Query(default=False),
+    db: Session = Depends(db_session),
+):
     """Return suppressed findings (RDL-filtered FPs) for a scan."""
     row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
     if not row:
@@ -1253,15 +1537,17 @@ def get_suppressed_findings(run_uuid: str, db: Session = Depends(db_session)):
     rdl_conditions_hit = len({s["rdl_condition"] for s in suppressed if s.get("rdl_condition")})
     promoted = sum(1 for s in suppressed if s.get("status") == "confirmed_finding")
 
-    return {
+    response = {
         "run_uuid": run_uuid,
         "summary": {
             "total_suppressed": total_suppressed,
             "rdl_conditions_triggered": rdl_conditions_hit,
             "promoted_to_findings": promoted,
         },
-        "suppressed": suppressed,
     }
+    if not summary_only:
+        response["suppressed"] = suppressed
+    return response
 
 
 @protected.put("/api/v1/scans/{run_uuid}/suppressed/{item_id}")
@@ -1275,6 +1561,7 @@ def update_suppressed_item(
     row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
     if not row:
         raise HTTPException(status_code=404, detail="run_not_found")
+    _ensure_scan_data_available(row)
 
     sup_path = _scan_data_dir(row.project_key, run_uuid) / "suppressed_findings.json"
     suppressed = _load_json_safe(sup_path) or []
@@ -1310,6 +1597,7 @@ def promote_suppressed_to_finding(
     row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
     if not row:
         raise HTTPException(status_code=404, detail="run_not_found")
+    _ensure_scan_data_available(row)
 
     data_dir = _scan_data_dir(row.project_key, run_uuid)
     sup_path = data_dir / "suppressed_findings.json"
@@ -1397,6 +1685,7 @@ def get_suppressed_report(
     row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
     if not row:
         raise HTTPException(status_code=404, detail="run_not_found")
+    _ensure_scan_data_available(row)
 
     sup_path = _scan_data_dir(row.project_key, run_uuid) / "suppressed_findings.json"
     suppressed = _load_json_safe(sup_path) or []
@@ -1436,6 +1725,7 @@ def regenerate_reports(run_uuid: str, db: Session = Depends(db_session)):
     row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
     if not row:
         raise HTTPException(status_code=404, detail="run_not_found")
+    _ensure_scan_data_available(row)
 
     reports_root = _scan_reports_root(row.project_key, run_uuid)
     if not reports_root.exists():

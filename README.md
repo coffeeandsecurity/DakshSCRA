@@ -55,30 +55,63 @@ Both paths run the exact same scanning engine - the Web UI is a browser front en
 
 ## Web UI (Docker)
 
-The fastest way to run Daksh SCRA is through its browser-based Web UI, launched with a single Docker Compose command. It gives you a scan launcher, a live console feed, and a browsable history of past reports, without needing a local Python environment.
+The fastest way to run Daksh SCRA is through its browser-based Web UI, launched with the host-aware Docker startup helper. It gives you a scan launcher, a live console feed, and a browsable history of past reports. The startup helper needs Python 3 (standard library only); the application and its dependencies run in Docker.
 
 The Docker setup runs the Web UI and the CLI as independent services built from the same image, so you can use either (or both) from the same container.
 
 ### Launch the Web UI
 
-Foreground mode (logs stream to your terminal):
+After downloading Daksh SCRA from GitHub, **extract the ZIP archive first**.
+Open a terminal (PowerShell or Command Prompt on Windows) inside the extracted
+project folder containing `docker-compose.yml` and `dakshscra.py`.
+**Run all startup and Docker Compose commands below from that folder.**
 
-```bash
-docker compose up --build
+If your terminal opens elsewhere, change into the extracted folder first:
+
+```text
+cd "path/to/extracted/DakshSCRA-folder"
 ```
 
-Detached / background mode:
+Replace the example path with your actual download location and folder name.
+If you cloned the repository instead, run `cd DakshSCRA` from its parent folder.
+
+The startup helper recognizes Windows, WSL, Linux and macOS, then mounts the
+host root, available Windows drives and common folders read-only before
+starting the containers. Run it on the computer running Docker.
+
+Linux, macOS or WSL (foreground):
 
 ```bash
-docker compose up --build -d
+python3 tools/start_webui.py
 ```
+
+Windows PowerShell or Command Prompt (foreground):
+
+```powershell
+py tools/start_webui.py
+```
+
+Add `--detach` for background mode, or `--dry-run` to inspect detected paths.
+Existing `.env` path overrides are respected. Accounts, scans and the runtime
+volume are preserved when containers are recreated.
+
+Docker Desktop may require permission to share the selected host paths. If it
+rejects a mount, allow that location in Docker Desktop and rerun the helper.
+A remote browser sees the **Docker host's** folders, not its own computer's drives.
+Automatic detection requires a local Docker engine; run the helper on the engine
+host when using a remote Docker context.
+
+For manually configured mounts, `docker compose up --build -d api web` remains
+available. Its baseline mounts the repository at `/scan-targets` and
+`${DAKSH_HOST_MOUNT:-/}` at `/host/root`. Use the helper for Windows drive discovery
+and common-folder shortcuts; plain Compose cannot detect the client OS.
 
 Then open [http://localhost:8080](http://localhost:8080).
 
 To use a different port:
 
 ```bash
-DAKSH_PORT=9090 docker compose up
+DAKSH_PORT=9090 python3 tools/start_webui.py
 ```
 
 Stop the stack with:
@@ -125,26 +158,20 @@ docker compose run --rm cli -r auto -t /scan-targets/path/to/source
 | Mount | Path inside container |
 |---|---|
 | Project source | `/app` |
-| Default scan root | `/scan-targets` |
-| Host drive aliases | `/host`, `/host/c`, `/host/d` |
-| WSL mounts | `/mnt`, `/run/desktop/mnt/host` |
+| Default scan root (repository, or `DAKSH_SCAN_ROOT`) | `/scan-targets` |
+| Host filesystem (system drive on Windows) | `/host/root` |
+| Additional Windows/WSL drives | `/host/drives/<letter>` |
+| Current user's home | `/host/user` |
+| Common host folders | `/host/locations/<name>` |
+| Optional `DAKSH_HOST_SOURCE` | `/host/source` |
 
-**Environment variables** (configure in `.env`):
-
-| Variable | Description |
-|---|---|
-| `DAKSH_PORT` | Web UI port (default: `8080`) |
-| `DAKSH_SCAN_ROOT` | Default target directory inside the container |
-| `DAKSH_HOST_SOURCE` | Host path to mount as `/scan-targets` (default: `/tmp`) |
-| `DAKSH_HOST_MOUNT` | Additional host mount root |
-| `DAKSH_HOST_C` | Windows C: drive path (WSL) |
-| `DAKSH_HOST_D` | Windows D: drive path (WSL) |
-| `DAKSH_DESKTOP_MOUNT` | WSL desktop mount path |
-| `DAKSH_BROWSE_ROOTS` | Override directory browser roots (comma-separated) |
-| `DAKSH_ADMIN_USERNAME` | Initial admin username (default: `admin`) |
-| `DAKSH_ADMIN_PASSWORD` | Initial admin password - strongly recommended to set explicitly |
-
-Copy `.env.example` to `.env` and set the paths and credentials for your machine before running Docker.
+Copy `.env.example` to `.env` for optional path and authentication overrides.
+`DAKSH_BROWSE_ROOTS` is a comma-separated allow-list of **container** paths;
+leave it unset to discover the mounted locations. Obsolete `/host/c`, `/host/d`
+or `/mnt` allow-lists should be removed or updated when switching to the helper.
+Host folders are read-only; reports and runtime data remain writable in their
+existing application locations. Restart using the helper after attaching another
+drive. No Docker socket or privileged container is needed.
 
 ---
 
@@ -391,7 +418,14 @@ analysis:
 
 ### RDL Rule Authoring
 
-RDL (Rule Description Language) is DakshSCRA's externalized rule-logic layer. In the current architecture:
+RDL v1 definitions live under [`rules/scanning/logic/`](rules/scanning/logic/).
+Experimental RDL v2 definitions live under [`rules/rdl/v2/`](rules/rdl/v2/README.md),
+using `common/core/`, `<platform>/core/`, and `<platform>/framework/<framework>/`
+with bug-class subdirectories. The [v2 scope index](rules/rdl/v2/INDEX.md) links
+all registered language/framework extension points, rule IDs, and current v1-to-v2 mappings.
+Directory presence does not imply completed coverage; v1 remains supported.
+
+RDL (Rule Description Language) is DakshSCRA's externalized rule-logic layer. In the v1 architecture:
 
 - XML rules remain the rule inventory and carry metadata such as `name`, `regex`, descriptions, and optional `scan_config`.
 - RDL logic is executed by [`core/rdl_engine.py`](core/rdl_engine.py).

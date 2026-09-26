@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import json
 import platform
 import string
 from typing import List
@@ -42,70 +43,57 @@ def get_cors_origins() -> List[str]:
     return ["http://localhost:5173"]
 
 
+def host_locations() -> list:
+    """Mount metadata supplied by the host launcher, never by the browser."""
+    try:
+        items = json.loads(os.getenv("DAKSH_HOST_PATHS", "[]"))
+        return [x for x in items if isinstance(x, dict)
+                and all(isinstance(x.get(k), str) for k in ("source", "path", "label"))]
+    except (TypeError, ValueError):
+        return []
+
+
 def _default_browse_roots() -> List[str]:
-    """
-    Return sensible default browse roots for the current OS.
-
-    These are the paths shown in the Web UI directory browser when
-    DAKSH_BROWSE_ROOTS is not set. The list is built at startup so only
-    paths that actually exist on the current machine are included.
-
-    To override, set DAKSH_BROWSE_ROOTS as a comma-separated list of
-    absolute paths in your environment or .env file:
-        DAKSH_BROWSE_ROOTS=/scan-targets,/host,/mnt
-    """
-    roots = [str(ROOT_DIR), "/scan-targets"]
-    system = platform.system()
-
-    if system == "Windows":
-        # Add every drive letter that exists (C:\, D:\, etc.)
-        for letter in string.ascii_uppercase:
-            p = Path(f"{letter}:\\")
-            if p.exists():
-                roots.append(str(p))
-
-    elif system == "Darwin":
-        # macOS
-        roots += ["/", "/Users", "/Volumes", "/tmp"]
-
-    else:
-        # Linux - covers native Linux, WSL, and Docker containers
-        roots += ["/", "/home", "/srv", "/opt", "/tmp", "/mnt"]
-
-        # WSL: include individual Windows drive mounts under /mnt
-        # (single-letter directories such as /mnt/c, /mnt/d)
-        mnt = Path("/mnt")
-        if mnt.exists():
+    if os.getenv("DAKSH_CONTAINER") == "1" or Path("/.dockerenv").exists():
+        # The OS inside the image is Linux even when the host is Windows/macOS.
+        # Expose mounted host locations, not the image's /, /tmp or /home.
+        locations = host_locations()
+        roots = [x["path"] for x in locations]
+        roots += ["/host/root", "/scan-targets"]
+        for base in ("/host/drives", "/host/locations"):
             try:
-                for child in sorted(mnt.iterdir()):
-                    if child.is_dir() and len(child.name) == 1 and child.name.isalpha():
-                        roots.append(str(child))
-            except PermissionError:
+                roots += [str(p) for p in sorted(Path(base).iterdir()) if p.is_dir()]
+            except OSError:
                 pass
-
-        # Docker container mount points and Docker Desktop host bridge
-        roots += ["/host", "/host/c", "/host/d", "/host/source",
-                  "/run/desktop/mnt/host", "/Volumes", "/Users"]
-
-    return roots
+        if not locations:
+            for name in ("home", "Users", "Volumes", "mnt", "media", "srv", "opt"):
+                roots.append(f"/host/root/{name}")
+        roots.append(str(ROOT_DIR))
+        return roots
+    system = platform.system()
+    if system == "Windows":
+        return [f"{letter}:\\" for letter in string.ascii_uppercase] + [str(Path.home()), str(ROOT_DIR)]
+    if system == "Darwin":
+        return ["/", str(Path.home()), "/Users", "/Volumes", str(ROOT_DIR)]
+    return ["/", str(Path.home()), "/home", "/mnt", "/media", "/srv", str(ROOT_DIR)]
 
 
 def get_browse_roots() -> List[str]:
     raw = os.getenv("DAKSH_BROWSE_ROOTS", "").strip()
-    if raw:
-        candidates = [x.strip() for x in raw.split(",") if x.strip()]
-    else:
-        candidates = _default_browse_roots()
-
+    candidates = [x.strip() for x in raw.split(",") if x.strip()] if raw else _default_browse_roots()
     roots: List[str] = []
-    for c in candidates:
+    for candidate in candidates:
         try:
-            p = Path(c).resolve()
-            if p.exists() and p.is_dir():
+            p = Path(candidate).expanduser().resolve()
+            if p.is_dir() and str(p) not in roots:
                 roots.append(str(p))
-        except Exception:
+        except (OSError, RuntimeError):
             continue
+    # An explicit allow-list must never silently fall back to a broader root.
+    return roots if roots or raw else [str(ROOT_DIR)]
 
-    if not roots:
-        roots = [str(ROOT_DIR)]
-    return roots
+
+def browse_shortcuts(roots: List[str]) -> list:
+    labels = {str(Path(x["path"]).resolve()): x["label"] for x in host_locations()}
+    defaults = {"/host/root": "Host filesystem", "/scan-targets": "Scan targets", str(ROOT_DIR): "Application folder"}
+    return [{"path": p, "name": labels.get(p, defaults.get(p, p))} for p in roots]
