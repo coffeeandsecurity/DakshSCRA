@@ -1,9 +1,8 @@
 from pydantic import BaseModel, Field
-from typing import Any, Dict, Optional, List, Literal
+from typing import Any, Dict, Optional, List
 
 
 class ScanCreate(BaseModel):
-    rdl_engine: Literal["v1", "v2", "both"] = "both"
     rules: str = Field(default="php")
     target_dir: str
     project_name: Optional[str] = None
@@ -25,12 +24,9 @@ class ScanSummary(BaseModel):
     target_dir: str
     created_at: Optional[str] = None
     duration_sec: Optional[float] = None
-    data_removed: bool = False
-    data_removed_at: Optional[str] = None
 
 
 class ScanDetails(ScanSummary):
-    rdl_engine: Literal["v1", "v2", "both"] = "v1"
     file_types: Optional[str] = None
     report_format: str
     verbosity: int
@@ -51,7 +47,6 @@ class ProjectSummary(BaseModel):
     rules: str
     total_scans: int
     running_scans: int
-    queued_scans: int
     failed_scans: int
     latest_scan_at: Optional[str] = None
     latest_run_uuid: Optional[str] = None

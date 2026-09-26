@@ -418,14 +418,7 @@ analysis:
 
 ### RDL Rule Authoring
 
-RDL v1 definitions live under [`rules/scanning/logic/`](rules/scanning/logic/).
-Experimental RDL v2 definitions live under [`rules/rdl/v2/`](rules/rdl/v2/README.md),
-using `common/core/`, `<platform>/core/`, and `<platform>/framework/<framework>/`
-with bug-class subdirectories. The [v2 scope index](rules/rdl/v2/INDEX.md) links
-all registered language/framework extension points, rule IDs, and current v1-to-v2 mappings.
-Directory presence does not imply completed coverage; v1 remains supported.
-
-RDL (Rule Description Language) is DakshSCRA's externalized rule-logic layer. In the v1 architecture:
+RDL (Rule Description Language) is DakshSCRA's externalized rule-logic layer. In the current architecture:
 
 - XML rules remain the rule inventory and carry metadata such as `name`, `regex`, descriptions, and optional `scan_config`.
 - RDL logic is executed by [`core/rdl_engine.py`](core/rdl_engine.py).
