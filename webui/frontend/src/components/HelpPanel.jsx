@@ -202,12 +202,11 @@ function DistinctiveSection() {
         <summary className="help-p">Release history and supporting evidence</summary>
       <SubHeading id="feature-history">Feature History and Evidence</SubHeading>
       <Table headers={["Feature / milestone", "Date", "Release", "Evidence / scope"]} rows={[
-        ["Training introduction", "2022 (Black Hat USA)", "Not recorded", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/blob/fe878be/README.md">Contemporary project README; introduction milestone.</a></span>],
+        ["Private training release", "2022 (Black Hat USA)", "Private student release", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/blob/fe878be/README.md">Distributed privately to Black Hat USA 2022 training students before the public web release.</a></span>],
         ["Initial beta and file-path rules", "22 October 2022", "v0.1-beta", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.1-beta">Initial release; retained source includes the dedicated file-path rule inventory.</a></span>],
         ["PDF and HTML reports", "23 May 2023", "v0.2-beta", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.2-beta">Release notes list PDF/HTML report generation and scanning-rule updates.</a></span>],
         ["Software reconnaissance (published introduction)", "9 July 2023", "v0.3-beta", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.3-beta">Release notes introduce recon; earlier repository code is separate implementation evidence.</a></span>],
         ["Manual-review effort estimation (implementation)", "29 July 2023", "Implementation commit", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/commit/65d5c6a">Dedicated estimation module added; not the date of the later fix release.</a></span>],
-        ["Effort-estimation fix", "5 August 2023", "v0.7-beta", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.7-beta">Release notes state fixed effort estimation; this is a correction milestone, not its first introduction.</a></span>],
         ["Early Android manifest and Kotlin checks", "27 April 2024", "v0.16-beta", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.16-beta">Introduced Android manifest misconfiguration checks and Kotlin-specific checks; module described as early development, with broader coverage still in progress.</a></span>],
         ["Multi-platform scan flags (initial design)", "4 November 2024", "v0.20-beta", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.20-beta">Added comma-separated platform selection with -r; initial implementation did not yet isolate each platform rule set to its own file types.</a></span>],
         ["Platform-agnostic auto scanning", "10 November 2024 (release listing)", "v0.23-beta", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.23-beta">Automatic platform/rule selection; implementation commit dated 11 November.</a></span>],
@@ -216,15 +215,13 @@ function DistinctiveSection() {
         ["Original RDL and inter-file Advanced Analysis", "2 March 2026", "v0.31-beta", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/commit/d90ba51">Conditional rule logic and independent cross-file analysis shipped together. Release display date is 2 March; publication timestamp is 1 March 2026 at 18:39 UTC.</a></span>],
         ["Web UI and Docker rollout", "16 March 2026", "v0.33-beta", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.33-beta">Introduced browser-launched scans, live progress, findings/artifact browsing, OS-aware directory selection and built-in Help; added Docker Compose Web UI/CLI services and portable environment setup.</a></span>],
         ["External RDL architecture and reporting", "22 March 2026", "v0.37-beta", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/commit/5b17d89">External rule logic and revised advanced reports.</a></span>],
-        ["RDL v2 semantic services and integrated workflow", "Current development; no published release date", "Unreleased development", <span>Typed semantic rules, bounded cross-file evidence and custom packs.</span>],
+        ["RDL v2 semantic services and integrated workflow", "10 October 2026", "v0.39", <span>Typed semantic rules, bounded cross-file evidence and custom packs.</span>],
       ]} />
       <SubHeading>Comparative Evidence</SubHeading>
       <ul className="help-list">
         <li><strong>Recon predecessor:</strong> <a href="https://www.microsoft.com/en-us/security/blog/2020/01/16/introducing-microsoft-application-inspector/">Microsoft Application Inspector</a> — 16 January 2020. Documents an earlier source-characteristics tool; does not establish a worldwide first/second ranking.</li>
-        <li><strong>Automatic multi-language scanning:</strong> <a href="https://semgrep.dev/blog/2022/autofixing-code-with-semgrep/">Semgrep auto example</a> — 3 November 2022. Earlier automatic multi-language scanning prevents a broad first-in-open-source claim.</li>
-        <li><strong>Semantic and data-flow analysis:</strong> <a href="https://docs.joern.io/cpgql/data-flow-steps/">Joern data-flow documentation</a> — No release date established here. Documents prior open-source capabilities; no comparative benchmark establishes overall superiority.</li>
       </ul>
-      <div className="help-debut-note">Dates identify repository or release milestones. Unverified release numbers and unpublished development are explicitly marked; worldwide priority and overall superiority are not independently established.</div>
+      <div className="help-debut-note">Dates identify repository or release milestones. Release numbers and implementation milestones are distinguished; worldwide priority and overall superiority are not independently established.</div>
       <ul className="help-list"><li>Release milestones and comparative evidence are listed above.</li></ul>
 
       </details>

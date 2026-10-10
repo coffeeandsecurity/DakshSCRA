@@ -73,12 +73,11 @@ DakshSCRA brings together distinctive capabilities for manual source code review
 
 | Feature / milestone | Date | Release | Evidence / scope |
 |---|---|---|---|
-| Training introduction | 2022 (Black Hat USA) | Not recorded | [Contemporary project README; introduction milestone.](https://github.com/coffeeandsecurity/DakshSCRA/blob/fe878be/README.md) |
+| Private training release | 2022 (Black Hat USA) | Private student release | [Distributed privately to Black Hat USA 2022 training students before the public web release.](https://github.com/coffeeandsecurity/DakshSCRA/blob/fe878be/README.md) |
 | Initial beta and file-path rules | 22 October 2022 | v0.1-beta | [Initial release; retained source includes the dedicated file-path rule inventory.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.1-beta) |
 | PDF and HTML reports | 23 May 2023 | v0.2-beta | [Release notes list PDF/HTML report generation and scanning-rule updates.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.2-beta) |
 | Software reconnaissance (published introduction) | 9 July 2023 | v0.3-beta | [Release notes introduce recon; earlier repository code is separate implementation evidence.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.3-beta) |
 | Manual-review effort estimation (implementation) | 29 July 2023 | Implementation commit | [Dedicated estimation module added; not the date of the later fix release.](https://github.com/coffeeandsecurity/DakshSCRA/commit/65d5c6a) |
-| Effort-estimation fix | 5 August 2023 | v0.7-beta | [Release notes state fixed effort estimation; this is a correction milestone, not its first introduction.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.7-beta) |
 | Early Android manifest and Kotlin checks | 27 April 2024 | v0.16-beta | [Introduced Android manifest misconfiguration checks and Kotlin-specific checks; module described as early development, with broader coverage still in progress.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.16-beta) |
 | Multi-platform scan flags (initial design) | 4 November 2024 | v0.20-beta | [Added comma-separated platform selection with -r; initial implementation did not yet isolate each platform rule set to its own file types.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.20-beta) |
 | Platform-agnostic auto scanning | 10 November 2024 (release listing) | v0.23-beta | [Automatic platform/rule selection; implementation commit dated 11 November.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.23-beta) |
@@ -87,13 +86,11 @@ DakshSCRA brings together distinctive capabilities for manual source code review
 | Original RDL and inter-file Advanced Analysis | 2 March 2026 | v0.31-beta | [Conditional rule logic and independent cross-file analysis shipped together. Release display date is 2 March; publication timestamp is 1 March 2026 at 18:39 UTC.](https://github.com/coffeeandsecurity/DakshSCRA/commit/d90ba51) |
 | Web UI and Docker rollout | 16 March 2026 | v0.33-beta | [Introduced browser-launched scans, live progress, findings/artifact browsing, OS-aware directory selection and built-in Help; added Docker Compose Web UI/CLI services and portable environment setup.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.33-beta) |
 | External RDL architecture and reporting | 22 March 2026 | v0.37-beta | [External rule logic and revised advanced reports.](https://github.com/coffeeandsecurity/DakshSCRA/commit/5b17d89) |
-| RDL v2 semantic services and integrated workflow | Current development; no published release date | Unreleased development | Typed semantic rules, bounded cross-file evidence and custom packs. |
+| RDL v2 semantic services and integrated workflow | 10 October 2026 | v0.39 | Typed semantic rules, bounded cross-file evidence and custom packs. |
 
 ### Comparative evidence
 
 - **Recon predecessor:** [Microsoft Application Inspector](https://www.microsoft.com/en-us/security/blog/2020/01/16/introducing-microsoft-application-inspector/) — 16 January 2020. Documents an earlier source-characteristics tool; does not establish a worldwide first/second ranking.
-- **Automatic multi-language scanning:** [Semgrep auto example](https://semgrep.dev/blog/2022/autofixing-code-with-semgrep/) — 3 November 2022. Earlier automatic multi-language scanning prevents a broad first-in-open-source claim.
-- **Semantic and data-flow analysis:** [Joern data-flow documentation](https://docs.joern.io/cpgql/data-flow-steps/) — No release date established here. Documents prior open-source capabilities; no comparative benchmark establishes overall superiority.
 
 Dates identify repository or release milestones; they do not independently establish worldwide priority. “Not verified” means a release number has not been established from the reviewed evidence.
 
