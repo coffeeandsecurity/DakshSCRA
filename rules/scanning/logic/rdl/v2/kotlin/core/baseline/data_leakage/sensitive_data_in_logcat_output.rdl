@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.kotlin.core.sensitive_data_in_logcat_output VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "Log\\.(?:[deiwtv]|wtf|println)\\s*\\(" "im"
+WHEN TEXT_MATCHES "password|token|secret|credential|auth|session|key|pin|ssn|dob|credit|cvv|privateKey|accessToken|refreshToken" "im"
+REPORT "Sensitive Data in Logcat Output"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

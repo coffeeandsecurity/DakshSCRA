@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.terraform.core.security_group_open_to_all_traffic_0_0_0_0_0 VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "cidr_blocks\\s*=\\s*\\[\"0\\.0\\.0\\.0/0\"\\]|cidr_ipv6\\s*=\\s*\\[\"::/0\"\\]" "im"
+WHEN TEXT_MISSING "from_port\\s*=\\s*(?:443|80)\\b" "im"
+REPORT "Security Group Open to All Traffic (0.0.0.0/0)"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

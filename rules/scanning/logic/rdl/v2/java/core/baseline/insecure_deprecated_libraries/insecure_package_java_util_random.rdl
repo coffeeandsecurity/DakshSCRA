@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.java.core.insecure_package_java_util_random VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "java\\.util\\.Random" "im"
+WHEN (TEXT_MISSING "SecureRandom|new\\s+Random\\s*\\(\\s*seed|ThreadLocalRandom" "im" AND TEXT_MISSING "test|mock|dummy|example" "im")
+REPORT "Insecure Package: java.util.Random"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

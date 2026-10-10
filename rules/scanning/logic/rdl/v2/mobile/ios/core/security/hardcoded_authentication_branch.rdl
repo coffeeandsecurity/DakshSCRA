@@ -1,0 +1,8 @@
+VERSION 2
+RULE ios.hardcoded-authentication-branch VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:password|passwd|pin|authToken)\\s*==\\s*[\"\\x27][^\"\\x27\\r\\n]{1,100}[\"\\x27]" ""
+REPORT "Hardcoded Authentication Comparison"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,8 @@
+VERSION 2
+RULE flutter.storage-reset-on-error VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bAndroidOptions\\s*\\([^)]{0,240}\\bresetOnError\\s*:\\s*true" ""
+REPORT "Flutter Secure Storage Resets on Decryption Error"
+SEVERITY LOW
+CONFIDENCE LOW
+WITH TRACE

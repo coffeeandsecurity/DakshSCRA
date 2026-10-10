@@ -49,6 +49,8 @@ def run_dir(run_uuid: str) -> Path:
 
 
 def project_reports_dir(project_key: str, run_uuid: str = "") -> Path:
+    if run_uuid and (run_dir(run_uuid) / 'results').exists():
+        return run_dir(run_uuid) / 'results'
     base = (ROOT_DIR / "reports" / str(project_key or "default")).resolve()
     return (base / str(run_uuid)) if run_uuid else base
 
@@ -73,6 +75,17 @@ def cleanup_run_runtime(run_uuid: str) -> None:
 
 def build_cmd(payload: dict) -> List[str]:
     cmd = [sys.executable, "dakshscra.py", "-r", payload["rules"], "-t", payload["target_dir"]]
+    mode = payload.get("rdl_engine", "both")
+    if mode not in {"v1", "v2", "both"}:
+        raise ValueError("RDL engine must be v1, v2, or both")
+    cmd += ["--rdl-engine", mode]
+    custom = payload.get('custom_rdl') or []
+    if not isinstance(custom, list) or len(custom) > 8 or not all(isinstance(p, str) and p.strip() for p in custom):
+        raise ValueError('Custom RDL must be a list of up to 8 pack paths')
+    if custom and mode == 'v1':
+        raise ValueError('Custom RDL packs require v2 or both engines')
+    for pack in custom:
+        cmd += ['--custom-rdl', pack]
     ft = (payload.get("file_types") or "").strip()
     if ft and ft.lower() != "auto":
         cmd += ["-f", ft]
@@ -81,9 +94,6 @@ def build_cmd(payload: dict) -> List[str]:
     if v >= 1:
         cmd.append("-" + ("v" * min(v, 3)))
 
-    rpt = payload.get("report_format", "html")
-    if rpt:
-        cmd += ["-rpt", rpt]
 
     if payload.get("recon"):
         cmd.append("--recon")
@@ -93,6 +103,25 @@ def build_cmd(payload: dict) -> List[str]:
         cmd.append("--skip-analysis")
     if payload.get("loc"):
         cmd.append("--loc")
+
+    from .schemas import ScanOptions
+    options = ScanOptions.model_validate(payload)
+    for field, flag in [('exclude_checks', '--exclude-check'), ('exclude_paths', '--exclude-path'),
+                        ('exclude_types', '--exclude-type'), ('exclude_keywords', '--exclude-keyword')]:
+        for token in getattr(options, field):
+            # Equals form prevents a leading '-' in a literal/glob from
+            # being mistaken for another CLI option. No shell is involved.
+            cmd.append(flag + '=' + token)
+    if options.recon_strict:
+        cmd.append('--recon-strict')
+    if options.baseline_mode == 'disabled':
+        cmd.append('--no-baseline')
+    elif options.baseline_mode == 'custom':
+        cmd += ['--baseline-file', options.baseline_file]
+    if options.review_config:
+        cmd += ['--review-config', options.review_config]
+    if options.state_mode != 'default':
+        cmd.append('--state' if options.state_mode == 'enabled' else '--no-state')
 
     return cmd
 
@@ -108,7 +137,7 @@ def scan_artifacts(run_uuid: str, project_key: str = "") -> List[str]:
         rdir / "reports",
         rdir / "runtime",
     ]
-    allowed = {".html", ".pdf", ".json", ".txt", ".log"}
+    allowed = {".html", ".pdf", ".json", ".gz", ".txt", ".log"}
     artifacts = []
     seen_roots = set()
     for base in roots:
@@ -136,6 +165,7 @@ def execute_scan_sync(cmd: List[str], log_path: Path, run_uuid: str = "", projec
     WEB_RUNS_DIR.mkdir(parents=True, exist_ok=True)
     env = os.environ.copy()
     env["DAKSH_NON_INTERACTIVE"] = "1"
+    env["DAKSH_OUTPUT_MODE"] = "web"
 
     # Isolate each scan's output so reports/json/areas_of_interest.json etc.
     # don't get overwritten by concurrent or subsequent scans.
@@ -147,6 +177,9 @@ def execute_scan_sync(cmd: List[str], log_path: Path, run_uuid: str = "", projec
         env["DAKSH_RUNTIME_DIR"] = str(run_runtime)
         env["DAKSH_PROJECT_ID"] = str(project_key or "default")
         env["DAKSH_RUN_ID"] = str(run_uuid)
+        # Checkpoint config may otherwise resolve to the shared runtime path.
+        # Force every Web UI run (including system-default mode) to its own file.
+        cmd = [*cmd, '--state-file', str(run_runtime / 'scan_state.json')]
 
     with open(log_path, "w", encoding="utf-8") as logf:
         proc = subprocess.Popen(

@@ -1,19 +1,52 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
 from typing import Any, Dict, Optional, List, Literal
 
 
-class ScanCreate(BaseModel):
+class ScanOptions(BaseModel):
+    exclude_checks: List[str] = Field(default_factory=list, max_length=64)
+    exclude_paths: List[str] = Field(default_factory=list, max_length=100)
+    exclude_types: List[str] = Field(default_factory=list, max_length=100)
+    exclude_keywords: List[str] = Field(default_factory=list, max_length=100)
+    recon_strict: bool = False
+    baseline_mode: Literal['default', 'disabled', 'custom'] = 'default'
+    baseline_file: Optional[str] = None
+    review_config: Optional[str] = None
+    state_mode: Literal['default', 'enabled', 'disabled'] = 'default'
+
+    @field_validator('exclude_checks', 'exclude_paths', 'exclude_types', 'exclude_keywords')
+    @classmethod
+    def clean_exclusions(cls, value, info):
+        cleaned = list(dict.fromkeys(item.strip() for item in value if item.strip()))
+        if any(len(item) > 512 or '\x00' in item or '\n' in item or '\r' in item for item in cleaned):
+            raise ValueError('Each exclusion must be a single line of at most 512 characters')
+        if info.field_name == 'exclude_checks':
+            from core.scan_catalog import CHECK_IDS
+            if set(cleaned) - CHECK_IDS:
+                raise ValueError('Unknown check class')
+        return cleaned
+
+
+class ScanCreate(ScanOptions):
+    custom_rdl: List[str] = Field(default_factory=list, max_length=8)
     rdl_engine: Literal["v1", "v2", "both"] = "both"
     rules: str = Field(default="php")
     target_dir: str
     project_name: Optional[str] = None
     file_types: Optional[str] = None
-    report_format: str = Field(default="html")
+    report_format: str = Field(default="web")
     verbosity: int = Field(default=1, ge=1, le=3)
     recon: bool = False
     estimate: bool = False
     analysis: bool = True
     loc: bool = False
+
+    @model_validator(mode='after')
+    def validate_modes(self):
+        if self.recon_strict and not self.recon:
+            raise ValueError('Strict reconnaissance requires reconnaissance')
+        if self.baseline_mode == 'custom' and not (self.baseline_file or '').strip():
+            raise ValueError('Select a baseline JSON file for custom baseline mode')
+        return self
 
 
 class ScanSummary(BaseModel):
@@ -29,7 +62,8 @@ class ScanSummary(BaseModel):
     data_removed_at: Optional[str] = None
 
 
-class ScanDetails(ScanSummary):
+class ScanDetails(ScanSummary, ScanOptions):
+    custom_rdl: List[str] = Field(default_factory=list)
     rdl_engine: Literal["v1", "v2", "both"] = "v1"
     file_types: Optional[str] = None
     report_format: str
@@ -53,6 +87,10 @@ class ProjectSummary(BaseModel):
     running_scans: int
     queued_scans: int
     failed_scans: int
+    success_scans: int = 0
+    stopped_scans: int = 0
+    stopping_scans: int = 0
+    data_removed_scans: int = 0
     latest_scan_at: Optional[str] = None
     latest_run_uuid: Optional[str] = None
 
@@ -96,8 +134,8 @@ class AnalysisSettings(BaseModel):
     run_by_default: bool = True
     include_frameworks: bool = True
     report_theme: str = "hacker_mode"
-    max_files_per_platform: int = 300
-    max_functions_per_platform: int = 1500
+    max_files_per_platform: int = Field(default=0, ge=0)
+    max_functions_per_platform: int = Field(default=0, ge=0)
 
 
 class StateManagementSettings(BaseModel):

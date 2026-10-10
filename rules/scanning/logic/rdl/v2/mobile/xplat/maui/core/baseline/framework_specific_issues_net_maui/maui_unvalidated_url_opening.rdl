@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.xplat.maui.core.maui_unvalidated_url_opening VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "Launcher\\.Default\\.OpenAsync\\s*\\(|Browser\\.Default\\.OpenAsync\\s*\\(" "m"
+REPORT "MAUI Unvalidated URL Opening"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

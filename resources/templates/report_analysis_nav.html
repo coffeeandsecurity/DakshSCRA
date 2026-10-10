@@ -1,0 +1,11 @@
+{% if show_analysis %}
+<a class="nav-link" href="#analysis-overview">Advanced Analysis</a>
+<a class="nav-link" href="#vulnerabilities">Vulnerabilities &amp; Mitigations</a>
+<a class="nav-link" href="#attack-vectors">Attack Vectors</a>
+<a class="nav-link" href="#taint-flows">Taint &amp; Data Flows</a>
+<a class="nav-link" href="#cross-references">Cross References</a>
+<a class="nav-link" href="#rdl-evidence">RDL Review Evidence</a>
+<a class="nav-link" href="#source-evidence">Saved Source Evidence</a>
+{% endif %}
+{% if show_suppressed %}<a class="nav-link" href="#suppressed-findings">Suppressed Findings</a>{% endif %}
+{% if recon %}<a class="nav-link" href="#reconnaissance">Reconnaissance</a>{% endif %}

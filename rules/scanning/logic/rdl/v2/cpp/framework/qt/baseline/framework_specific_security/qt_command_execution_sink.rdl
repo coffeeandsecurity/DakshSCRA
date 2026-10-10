@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.cpp.framework.qt.qt_command_execution_sink VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(system|popen|_popen)\\s*\\(" "im"
+WHEN (TEXT_MISSING "validate|sanitize|allowlist|QStringList\\s*\\(\\s*\\{|QProcess::startDetached" "im" AND TEXT_MISSING "test|example" "im")
+REPORT "Qt Command Execution Sink"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

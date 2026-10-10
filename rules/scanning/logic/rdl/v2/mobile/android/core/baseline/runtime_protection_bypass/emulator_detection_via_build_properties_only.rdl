@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.android.core.emulator_detection_via_build_properties_only VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "Build\\.FINGERPRINT\\.contains\\s*\\(|Build\\.MODEL\\.contains\\s*\\(" "im"
+WHEN (TEXT_MATCHES "isEmulator|emulatorCheck|checkEmulator" "im" AND TEXT_MISSING "PackageManager|SystemProperties|IMEI|TelephonyManager|Build\\.HARDWARE|getSensorList" "im")
+REPORT "Emulator Detection via Build Properties Only"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

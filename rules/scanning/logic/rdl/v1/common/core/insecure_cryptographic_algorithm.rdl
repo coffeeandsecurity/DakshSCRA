@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT (?i)\b(MD2|MD4|MD5|SHA1|SHA-1|DES|RC2|RC4|RC5)\b
+REPORT AS area_of_interest
+REASON Detects the usage of insecure cryptographic algorithms in Java code.
+TRACE Externalized rule logic for Insecure Cryptographic Algorithm.

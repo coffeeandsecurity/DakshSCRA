@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.dotnet.framework.entityframework.entityframework_permissive_cors VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "AllowAnyOrigin\\(\\)|WithOrigins\\(\\s*[\\'\\\"]\\*[\\'\\\"]" "im"
+WHEN (TEXT_MATCHES "AllowAnyOrigin\\s*\\(\\s*\\)|origins.*\"\\*\"" "im" AND TEXT_MISSING "AllowCredentials\\s*\\(\\s*\\)|WithOrigins\\s*\\(\\s*\"https?://[^*]|SetIsOriginAllowed" "im")
+REPORT "Entityframework Permissive CORS"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

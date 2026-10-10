@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.kubernetes.core.clusterrolebinding_to_cluster_admin VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "roleRef\\s*:[^}]*name\\s*:\\s*cluster-admin" "im"
+WHEN (TEXT_MATCHES "cluster-admin" "im" AND TEXT_MISSING "# intentional|# required|system:|kube-system|namespace:\\s*kube" "im")
+REPORT "ClusterRoleBinding to cluster-admin"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

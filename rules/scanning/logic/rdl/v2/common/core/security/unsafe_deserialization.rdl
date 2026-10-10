@@ -1,0 +1,11 @@
+VERSION 2
+RULE deserialization.untrusted-object VERSION 1
+IN DATA_FLOW
+LET input BE VARIABLE MATCHES input.untrusted
+LET sink BE CALL MATCHES deserialization.object-construction
+WHEN input FLOWS TO sink
+REQUIRE NOT policy.type-allowlist sink
+REPORT "unsafe deserialization of untrusted data"
+SEVERITY CRITICAL
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

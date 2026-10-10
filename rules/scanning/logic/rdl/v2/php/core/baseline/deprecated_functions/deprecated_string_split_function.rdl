@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.php.core.deprecated_string_split_function VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bsplit\\s*\\(\\s*[^;]*\\s*\\)" "im"
+WHEN (TEXT_MISSING "explode|str_split|preg_split" "im" AND TEXT_MISSING "test|example" "im")
+REPORT "Deprecated String Split Function"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -19,7 +19,7 @@ function ConfBadge({ level }) {
    FILE PATHS SECTION
    filepaths_aoi: [{rule_title, filepath:[], confidence_score, confidence_level}]
 ═══════════════════════════════════════════════════════════════ */
-function FilePaths({ filepaths }) {
+export function FilePaths({ filepaths }) {
   const [openIds, setOpenIds] = useState(new Set())
   const [search, setSearch] = useState('')
 
@@ -35,8 +35,8 @@ function FilePaths({ filepaths }) {
     return [...list].sort((a, b) => (b.confidence_score || 0) - (a.confidence_score || 0))
   }, [filepaths, search])
 
-  function toggle(i) {
-    setOpenIds((prev) => { const n = new Set(prev); n.has(i) ? n.delete(i) : n.add(i); return n })
+  function toggle(item) {
+    setOpenIds((prev) => { const n = new Set(prev); n.has(item) ? n.delete(item) : n.add(item); return n })
   }
 
   if (!filepaths?.length) {
@@ -63,10 +63,10 @@ function FilePaths({ filepaths }) {
       <div className="ip-fp-list">
         {sorted.map((item, i) => {
           const paths = item.filepath || []
-          const isOpen = openIds.has(i)
+          const isOpen = openIds.has(item)
           return (
             <div key={i} className={`ip-fp-card${isOpen ? ' open' : ''}`} style={{ '--conf-color': CONF_COLOR[item.confidence_level?.toLowerCase()] || '#8b949e' }}>
-              <button className="ip-fp-header" onClick={() => toggle(i)}>
+              <button className="ip-fp-header" onClick={() => toggle(item)}>
                 <ConfBadge level={item.confidence_level} />
                 {item.confidence_score > 0 && <span className="ip-fp-score">{item.confidence_score}%</span>}
                 <span className="ip-fp-title">{item.rule_title || `Rule #${i + 1}`}</span>
@@ -79,13 +79,13 @@ function FilePaths({ filepaths }) {
                     <div className="ip-fp-summary">
                       {item.brief_desc ? (
                         <div className="ip-fp-note">
-                          <div className="ip-fp-note-label">About this match</div>
+                          <div className="ip-fp-note-label">Issue description</div>
                           <div className="ip-fp-note-text">{item.brief_desc}</div>
                         </div>
                       ) : null}
                       {item.attack_desc ? (
                         <div className="ip-fp-note">
-                          <div className="ip-fp-note-label">Potential / Typical Attacks</div>
+                          <div className="ip-fp-note-label">Security impact</div>
                           <div className="ip-fp-note-text">{item.attack_desc}</div>
                         </div>
                       ) : null}
@@ -101,7 +101,7 @@ function FilePaths({ filepaths }) {
                       ) : null}
                       {item.developer_note ? (
                         <div className="ip-fp-note developer">
-                          <div className="ip-fp-note-label">Developer Focus</div>
+                          <div className="ip-fp-note-label">Recommended correction</div>
                           <div className="ip-fp-note-text">{item.developer_note}</div>
                         </div>
                       ) : null}
@@ -466,16 +466,6 @@ function LoCSection({ locBreakdown, scanMeta }) {
 ═══════════════════════════════════════════════════════════════ */
 const SECTIONS = [
   {
-    id: 'filepaths',
-    label: 'File Paths',
-    icon: (
-      <svg viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M2 6a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1H8a3 3 0 00-3 3v1.5a1.5 1.5 0 01-3 0V6z" clipRule="evenodd" />
-        <path d="M6 12a2 2 0 012-2h8a2 2 0 012 2v2a2 2 0 01-2 2H2h2a2 2 0 002-2v-2z" />
-      </svg>
-    ),
-  },
-  {
     id: 'recon',
     label: 'Reconnaissance',
     icon: (
@@ -506,9 +496,8 @@ const SECTIONS = [
 ]
 
 export default function InsightsPanel({ findingsData, artifactIndex, run }) {
-  const [activeSection, setActiveSection] = useState('filepaths')
+  const [activeSection, setActiveSection] = useState('recon')
 
-  const filepaths = findingsData?.filepaths || []
   const recon = findingsData?.recon
   const ranEstimate = run?.estimate
   const locBreakdown = findingsData?.loc_breakdown || []
@@ -516,7 +505,6 @@ export default function InsightsPanel({ findingsData, artifactIndex, run }) {
   const hasLoc = run?.loc || (scanMeta?.detection_summary?.total_loc != null)
 
   const counts = {
-    filepaths: filepaths.length,
     recon: recon ? Object.keys(recon.categories || recon).filter((k) => k !== 'meta').length : 0,
     estimate: (artifactIndex?.other_html || []).filter((a) => a.toLowerCase().includes('estimate')).length
       + (artifactIndex?.pdf_files || []).filter((a) => a.toLowerCase().includes('estimate')).length,
@@ -552,7 +540,6 @@ export default function InsightsPanel({ findingsData, artifactIndex, run }) {
 
       {/* Content */}
       <div className="ip-content">
-        {activeSection === 'filepaths' && <FilePaths filepaths={filepaths} />}
         {activeSection === 'recon' && <Recon recon={recon} />}
         {activeSection === 'estimate' && (
           <EffortEstimate artifactIndex={artifactIndex} ranEstimate={ranEstimate} />

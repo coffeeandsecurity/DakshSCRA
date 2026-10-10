@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.c.core.improper_use_of_setrlimit_for_core_dump_prevention VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bsetrlimit\\s*\\(\\s*RLIMIT_CORE\\s*,\\s*(?:0|NULL|nullptr)\\s*\\)" "im"
+REPORT "Improper Use of `setrlimit` for Core Dump Prevention"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

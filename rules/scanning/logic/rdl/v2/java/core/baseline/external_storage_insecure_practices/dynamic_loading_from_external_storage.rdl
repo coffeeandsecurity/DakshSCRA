@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.java.core.dynamic_loading_from_external_storage VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(DexClassLoader|PathClassLoader)\\s*\\([^,]*Environment\\.getExternalStorageDirectory" "im"
+WHEN TEXT_MISSING "verif|checksum|signature|PackageManager|test|example" "im"
+REPORT "Dynamic Loading from External Storage"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

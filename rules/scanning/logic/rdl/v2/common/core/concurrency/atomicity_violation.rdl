@@ -1,0 +1,10 @@
+VERSION 2
+RULE concurrency.atomicity-violation VERSION 1
+IN PROJECT
+LET operation BE FUNCTION MATCHES concurrency.compound-operation
+WHEN interleaving.breaks_invariant operation
+REQUIRE NOT synchronization.atomic operation
+REPORT "atomicity violation"
+SEVERITY HIGH
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

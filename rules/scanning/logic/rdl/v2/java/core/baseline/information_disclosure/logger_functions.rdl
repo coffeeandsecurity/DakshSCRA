@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.java.core.logger_functions VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "logger\\.(error|warn|info|debug|trace)" "im"
+WHEN TEXT_MISSING "release|production" "im"
+REPORT "Logger Functions"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,8 @@
+VERSION 2
+RULE kotlin.weak-cipher-mode VERSION 2
+IN FILE
+WHEN TEXT_MATCHES "\\bCipher\\.getInstance\\s*\\(\\s*\"(?![Rr][Ss][Aa]/)[^\"\\n]{1,30}/ECB/" ""
+REPORT "Kotlin Symmetric ECB Cipher Review"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

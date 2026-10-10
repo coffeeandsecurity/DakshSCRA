@@ -3,7 +3,7 @@
         <rule>
             <name>Raw SQL via Raw() with String Concatenation</name>
             <regex>\.Raw\s*\(\s*["'][^"']*["']\s*\+|\.Raw\s*\(\s*fmt\.Sprintf\s*\(["'][^"']*%[sv]</regex>
-            <rdl_ref>logic/golang/framework/gorm/raw_sql_via_raw_with_string_concatenation.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/golang/framework/gorm/raw_sql_via_raw_with_string_concatenation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -12,15 +12,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>magenta</highlight_color>
             </scan_config>
-            <rule_desc>Detects GORM Raw() calls with SQL built via string concatenation or fmt.Sprintf.</rule_desc>
-            <vuln_desc>Building raw SQL strings with concatenation or Sprintf in GORM Raw() calls bypasses parameterization and introduces SQL injection, negating GORM's built-in protections.</vuln_desc>
-            <developer>Use GORM positional parameter bindings: db.Raw("SELECT * FROM users WHERE id = ?", userID). Never concatenate or format user values into SQL strings.</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Confirm all Raw() calls use positional ? or named @param bindings with no string concatenation of user input. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Unparameterized Where() Clause</name>
             <regex>\.Where\s*\(\s*["'][^"']*["']\s*\+|\.Where\s*\(\s*fmt\.Sprintf\s*\(["'][^"']*%[sv]</regex>
-            <rdl_ref>logic/golang/framework/gorm/unparameterized_where_clause.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/golang/framework/gorm/unparameterized_where_clause.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -29,15 +29,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>magenta</highlight_color>
             </scan_config>
-            <rule_desc>Detects GORM Where() calls with conditions built via string concatenation or fmt.Sprintf.</rule_desc>
-            <vuln_desc>Concatenating values into GORM Where() conditions bypasses prepared statement parameterization, enabling SQL injection via condition manipulation.</vuln_desc>
-            <developer>Use GORM's parameterized where syntax: db.Where("name = ?", name) or struct-based conditions: db.Where(&amp;User{Name: name}).</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Confirm Where() conditions use ? placeholders or struct-based filtering, not string formatting. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Exec() with Unparameterized SQL</name>
             <regex>\.Exec\s*\(\s*["'][^"']*["']\s*\+|\.Exec\s*\(\s*fmt\.Sprintf\s*\(["'][^"']*%[sv]</regex>
-            <rdl_ref>logic/golang/framework/gorm/exec_with_unparameterized_sql.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/golang/framework/gorm/exec_with_unparameterized_sql.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -46,9 +46,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>magenta</highlight_color>
             </scan_config>
-            <rule_desc>Detects GORM Exec() calls executing dynamically built SQL strings.</rule_desc>
-            <vuln_desc>Exec() with string-formatted SQL bypasses all ORM parameterization, enabling SQL injection in data manipulation operations.</vuln_desc>
-            <developer>Use Exec() with positional parameters: db.Exec("UPDATE users SET name = ? WHERE id = ?", name, id).</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Verify all Exec() calls use parameterized SQL. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

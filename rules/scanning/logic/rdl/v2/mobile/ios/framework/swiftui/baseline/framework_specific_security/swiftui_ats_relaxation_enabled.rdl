@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.ios.framework.swiftui.swiftui_ats_relaxation_enabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "NSAllowsArbitraryLoads|NSExceptionAllowsInsecureHTTPLoads" "im"
+REPORT "SwiftUI ATS Relaxation Enabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

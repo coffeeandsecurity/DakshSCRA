@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.filepaths.core.monkey_patched_code_files VERSION 1
+IN PATH
+WHEN TEXT_MATCHES "(?i)(?:monkey_patch|patched_code|custom_patch)" "im"
+WHEN TEXT_MISSING "(?i)(/tests?/|/fixtures?/|/mocks?/)" "im"
+REPORT "Monkey Patched Code Files"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

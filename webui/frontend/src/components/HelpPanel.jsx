@@ -24,13 +24,14 @@ const TOC = [
   { id: 'rdl-operators', label: '↳ Operators', indent: true },
   { id: 'rdl-examples', label: '↳ Examples', indent: true },
   { id: 'rdl-fp-reduction', label: '↳ How FPs Are Reduced', indent: true },
+  { id: 'rdl-shadow', label: '↳ RDL Engine Selection', indent: true },
   { id: 'scan-config', label: 'scan_config - Rule Engine' },
   { id: 'scan-config-schema', label: '↳ Full Schema', indent: true },
   { id: 'scan-config-profiles', label: '↳ Platform Profiles', indent: true },
   { id: 'scan-config-highlighting', label: '↳ Highlighting', indent: true },
   { id: 'scan-config-authoring', label: '↳ Rule Authoring Guide', indent: true },
   { id: 'findings-reference', label: 'Findings Reference' },
-  { id: 'pdf-reports', label: 'PDF Reports' },
+  { id: 'pdf-reports', label: 'Report Formats & PDF' },
   { id: 'tips', label: 'Tips & Patterns' },
 ]
 
@@ -110,7 +111,7 @@ function WhatIsSection() {
           ['Reconnaissance', 'Detects languages, frameworks, and technology stack from file contents and structure'],
           ['Taint analysis', 'Traces data flows from user-controlled sources to security-sensitive sinks across files'],
           ['Effort estimation', 'Estimates manual review time based on codebase size, complexity, and finding volume'],
-          ['Report generation', 'Produces HTML reports (single-file and per-platform multi-file) and optionally PDF'],
+          ['Report generation', 'CLI exports HTML, PDF, Word and JSON; Web UI generates reports on demand from saved results'],
         ]}
       />
     </section>
@@ -118,78 +119,115 @@ function WhatIsSection() {
 }
 
 function DistinctiveSection() {
+  const features = [
+  {
+    "title": "File Path Areas of Interest",
+    "tag": "World's First*",
+    "highlight": true,
+    "body": "Scans file and directory names themselves, alongside code, to flag suspicious paths such as backup files, debug endpoints, configuration dumps and credential files that reviewers often miss."
+  },
+  {
+    "title": "Scientific Effort Estimation",
+    "tag": "World's First*",
+    "highlight": true,
+    "body": "Produces a quantified estimate of manual-review effort based on codebase size and project signals. Configurable assumptions make engagement planning explicit and repeatable."
+  },
+  {
+    "title": "Areas of Interest, Not Bug Flags",
+    "tag": "Reviewer in Control",
+    "highlight": false,
+    "body": "Surfaces patterns worth investigating rather than tagging every match as a vulnerability. Contextual rules and suppression evidence reduce triage noise and keep the reviewer in control."
+  },
+  {
+    "title": "Software Reconnaissance",
+    "tag": "Integrated Software Recon",
+    "highlight": true,
+    "body": "Detects languages, frameworks and infrastructure from file contents and project structure before scanning. Connects the technology inventory to automatic rule selection, semantic analysis and review planning."
+  },
+  {
+    "title": "RDL Conditional Rules",
+    "tag": "Advanced Conditional Rules",
+    "highlight": true,
+    "body": "Goes beyond simple regex with PRESENT, MISSING, boolean expressions and file/path conditions. RDL v1 records decisions and suppression reasons; RDL v2 adds typed semantic services and bounded cross-file evidence."
+  },
+  {
+    "title": "Advanced Semantic and Cross-File Analysis",
+    "tag": "Built from the Ground Up",
+    "highlight": false,
+    "body": "Traces user-controlled data from source to sink across supported file boundaries using purpose-built analysis. Advanced Analysis shipped alongside the original RDL in March 2026; RDL v2 extends semantic rule evaluation across files."
+  },
+  {
+    "title": "Platform-Agnostic Auto Scanning",
+    "tag": "Automatic Multi-Platform",
+    "highlight": true,
+    "body": "Use -r auto to scan mixed-technology projects without choosing a single language beforehand. Recon selects supported platform and framework rules automatically. Introduced in v0.23-beta, November 2024."
+  },
+  {
+    "title": "Application-Specific Security Logic",
+    "tag": "Custom RDL Packs",
+    "highlight": true,
+    "body": "Encode application trust boundaries, authorization decisions and business invariants in optional custom RDL packs. Project-specific logic runs alongside the generic scanning rules."
+  },
+  {
+    "title": "Interactive Text and Graph Evidence",
+    "tag": "Follow the Evidence",
+    "highlight": false,
+    "body": "Follow recorded source-to-sink paths in linked Text and Graph views. Source excerpts, file lanes and handoff details make cross-file evidence easier to inspect."
+  },
+  {
+    "title": "Review Lifecycle and Portable Reports",
+    "tag": "Review, Resume and Export",
+    "highlight": false,
+    "body": "Keep scan history, review suppressions and resume interrupted scans. Export HTML, PDF, editable Word and JSON through shared CLI and Web UI reports, with offline evidence navigation where available."
+  }
+]
   return (
     <section className="help-section">
       <SectionHeading id="distinctive">Distinctive Features</SectionHeading>
-      <P>
-        DakshSCRA introduced several capabilities that were first-of-their-kind in open source code review
-        tooling at the time of release (Black Hat USA 2022/2023).
-      </P>
-
+      <P>DakshSCRA brings together distinctive capabilities for manual source code review, from file-path areas of interest and effort estimation to software reconnaissance, contextual rules and cross-file analysis.</P>
       <div className="help-distinctive-grid">
-        <div className="help-distinctive-card world-first">
-          <div className="help-distinctive-badge">World's First</div>
-          <div className="help-distinctive-title">File Path Areas of Interest</div>
-          <div className="help-distinctive-body">
-            Scans file and directory names themselves - not just code - to flag suspicious paths like backup
-            files, debug endpoints, config dumps, and credential files that reviewers often miss.
+        {features.map(({ title, tag, highlight, body }) => (
+          <div className={`help-distinctive-card${highlight ? ' feature-highlight' : ''}`} key={title}>
+            <div className={`help-distinctive-badge${highlight ? '' : ' help-distinctive-badge-notable'}`}>{tag}</div>
+            <div className="help-distinctive-title">{title}</div>
+            <div className="help-distinctive-body">{body}</div>
           </div>
-        </div>
-
-        <div className="help-distinctive-card world-first">
-          <div className="help-distinctive-badge">World's First</div>
-          <div className="help-distinctive-title">Scientific Effort Estimation</div>
-          <div className="help-distinctive-body">
-            Produces a quantified, defensible estimate of how long a manual review will take based on
-            codebase size, file count, and finding volume - not a guess.
-          </div>
-        </div>
-
-        <div className="help-distinctive-card">
-          <div className="help-distinctive-title">Areas of Interest, Not Bug Flags</div>
-          <div className="help-distinctive-body">
-            Surfaces patterns worth investigating rather than tagging everything as a vulnerability.
-            Reduces false-positive noise and keeps the reviewer in control.
-          </div>
-        </div>
-
-        <div className="help-distinctive-card world-first">
-          <div className="help-distinctive-badge">World's First (Open Source)</div>
-          <div className="help-distinctive-title">Software Reconnaissance</div>
-          <div className="help-distinctive-body">
-            Detects languages, frameworks, and infrastructure from file contents and structure before
-            scanning, so the right rules are applied automatically. The first open-source tool to
-            perform comprehensive technology stack recon for source code review - beyond simple
-            software composition analysis.
-          </div>
-        </div>
-
-        <div className="help-distinctive-card world-first">
-          <div className="help-distinctive-badge">World's First (Open Source)</div>
-          <div className="help-distinctive-title">RDL Conditional Rules</div>
-          <div className="help-distinctive-body">
-            A first-of-its-kind concept in any open-source code scanner - conditional rule logic
-            (<Code>FLAG</Code>, <Code>IF</Code>, <Code>MISSING</Code>, <Code>PRESENT</Code>) beyond
-            simple regex. Context-aware pattern matching previously found only in commercial scanners,
-            now available in open source.
-          </div>
-        </div>
-
-        <div className="help-distinctive-card">
-          <div className="help-distinctive-badge help-distinctive-badge-notable">Built from the Ground Up</div>
-          <div className="help-distinctive-title">Cross-File Taint Analysis</div>
-          <div className="help-distinctive-body">
-            Traces user-controlled data from source to sink across file boundaries - one of very few
-            open-source tools to implement this capability entirely from scratch. No wrapping of
-            third-party taint engines; the analysis logic is purpose-built. AST usage follows the
-            same standard practice used by commercial tools and large-scale open-source scanners.
-          </div>
-        </div>
+        ))}
       </div>
-
+      <div className="help-debut-note">* World's First badges reflect the project's original claims; worldwide priority has not been independently verified.</div>
       <div className="help-debut-note">
         First introduced at <strong>Black Hat USA 2022</strong> and publicly debuted at <strong>Black Hat USA 2023</strong>, Las Vegas.
       </div>
+      <details>
+        <summary className="help-p">Release history and supporting evidence</summary>
+      <SubHeading id="feature-history">Feature History and Evidence</SubHeading>
+      <Table headers={["Feature / milestone", "Date", "Release", "Evidence / scope"]} rows={[
+        ["Training introduction", "2022 (Black Hat USA)", "Not recorded", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/blob/fe878be/README.md">Contemporary project README; introduction milestone.</a></span>],
+        ["Initial beta and file-path rules", "22 October 2022", "v0.1-beta", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.1-beta">Initial release; retained source includes the dedicated file-path rule inventory.</a></span>],
+        ["PDF and HTML reports", "23 May 2023", "v0.2-beta", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.2-beta">Release notes list PDF/HTML report generation and scanning-rule updates.</a></span>],
+        ["Software reconnaissance (published introduction)", "9 July 2023", "v0.3-beta", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.3-beta">Release notes introduce recon; earlier repository code is separate implementation evidence.</a></span>],
+        ["Manual-review effort estimation (implementation)", "29 July 2023", "Implementation commit", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/commit/65d5c6a">Dedicated estimation module added; not the date of the later fix release.</a></span>],
+        ["Effort-estimation fix", "5 August 2023", "v0.7-beta", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.7-beta">Release notes state fixed effort estimation; this is a correction milestone, not its first introduction.</a></span>],
+        ["Early Android manifest and Kotlin checks", "27 April 2024", "v0.16-beta", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.16-beta">Introduced Android manifest misconfiguration checks and Kotlin-specific checks; module described as early development, with broader coverage still in progress.</a></span>],
+        ["Multi-platform scan flags (initial design)", "4 November 2024", "v0.20-beta", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.20-beta">Added comma-separated platform selection with -r; initial implementation did not yet isolate each platform rule set to its own file types.</a></span>],
+        ["Platform-agnostic auto scanning", "10 November 2024 (release listing)", "v0.23-beta", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.23-beta">Automatic platform/rule selection; implementation commit dated 11 November.</a></span>],
+        ["PDF rendering upgrade", "21 July 2025", "v0.29-beta", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.29-beta">Migrated PDF export from WeasyPrint to Playwright and Chromium; added HTML-size-based timeouts for large reports and cross-platform setup instructions.</a></span>],
+        ["Initial iOS scanning support", "2 March 2026", "v0.31-beta", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.31-beta">Added iOS rules and Swift/Objective-C/configuration file selection; later releases expanded coverage.</a></span>],
+        ["Original RDL and inter-file Advanced Analysis", "2 March 2026", "v0.31-beta", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/commit/d90ba51">Conditional rule logic and independent cross-file analysis shipped together. Release display date is 2 March; publication timestamp is 1 March 2026 at 18:39 UTC.</a></span>],
+        ["Web UI and Docker rollout", "16 March 2026", "v0.33-beta", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.33-beta">Introduced browser-launched scans, live progress, findings/artifact browsing, OS-aware directory selection and built-in Help; added Docker Compose Web UI/CLI services and portable environment setup.</a></span>],
+        ["External RDL architecture and reporting", "22 March 2026", "v0.37-beta", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/commit/5b17d89">External rule logic and revised advanced reports.</a></span>],
+        ["RDL v2 semantic services and integrated workflow", "Current development; no published release date", "Unreleased development", <span>Typed semantic rules, bounded cross-file evidence and custom packs.</span>],
+      ]} />
+      <SubHeading>Comparative Evidence</SubHeading>
+      <ul className="help-list">
+        <li><strong>Recon predecessor:</strong> <a href="https://www.microsoft.com/en-us/security/blog/2020/01/16/introducing-microsoft-application-inspector/">Microsoft Application Inspector</a> — 16 January 2020. Documents an earlier source-characteristics tool; does not establish a worldwide first/second ranking.</li>
+        <li><strong>Automatic multi-language scanning:</strong> <a href="https://semgrep.dev/blog/2022/autofixing-code-with-semgrep/">Semgrep auto example</a> — 3 November 2022. Earlier automatic multi-language scanning prevents a broad first-in-open-source claim.</li>
+        <li><strong>Semantic and data-flow analysis:</strong> <a href="https://docs.joern.io/cpgql/data-flow-steps/">Joern data-flow documentation</a> — No release date established here. Documents prior open-source capabilities; no comparative benchmark establishes overall superiority.</li>
+      </ul>
+      <div className="help-debut-note">Dates identify repository or release milestones. Unverified release numbers and unpublished development are explicitly marked; worldwide priority and overall superiority are not independently established.</div>
+      <ul className="help-list"><li>Release milestones and comparative evidence are listed above.</li></ul>
+
+      </details>
     </section>
   )
 }
@@ -206,18 +244,30 @@ function InstallationSection() {
       </ul>
 
       <SubHeading id="install-setup">Setup</SubHeading>
-      <CodeBlock>{`git clone <repo>
+      <CodeBlock>{`git clone https://github.com/coffeeandsecurity/DakshSCRA.git
 cd DakshSCRA
-python3.9 -m venv venv
+python3 -m venv venv
 source venv/bin/activate          # Windows: venv\\Scripts\\activate
 pip install -r requirements.txt
-playwright install chromium        # Required for PDF generation only`}</CodeBlock>
+python -m playwright install chromium # Required for native PDF generation`}</CodeBlock>
 
       <SubHeading id="install-docker">Docker (Web UI)</SubHeading>
-      <CodeBlock>{`docker compose up --build`}</CodeBlock>
+      <P>Run from the repository root with Docker running. The host-aware launcher configures source mounts:</P>
+      <CodeBlock>{`# Foreground
+python3 tools/start_webui.py
+# Background
+python3 tools/start_webui.py --detach
+# Windows: use py instead of python3`}</CodeBlock>
       <P>Open <Code>http://localhost:8080</Code> in a browser.</P>
       <P>To change the port:</P>
-      <CodeBlock>{`DAKSH_PORT=9090 docker compose up`}</CodeBlock>
+      <P>Set <Code>DAKSH_PORT=9090</Code> in <Code>.env</Code>, then restart with the launcher.</P>
+      <CodeBlock>{`# Reuse an existing host mount configuration:
+docker compose -f docker-compose.yml -f runtime/docker-host.compose.json up -d --build api web
+# Baseline Compose without automatic host mounts:
+docker compose up -d --build api web
+# Docker CLI (target must be mounted in the container):
+docker compose -f docker-compose.yml -f runtime/docker-host.compose.json run --rm cli -r auto -t /scan-targets -rpt html,pdf,docx,json`}</CodeBlock>
+      <P>Keep the runtime volume to retain accounts and scan history. Stop services with <Code>docker compose stop</Code>. Avoid concurrent Web UI and CLI scans because they share runtime paths.</P>
     </section>
   )
 }
@@ -281,7 +331,7 @@ python dakshscra.py -r auto --recon -t ./app`}</CodeBlock>
       <Table
         headers={['Option', 'Default', 'Description']}
         rows={[
-          [<Code>-rpt FORMATS</Code>, 'html', 'Report formats to generate. Values: html, pdf, or html,pdf. PDF requires Playwright/Chromium.'],
+          [<Code>-rpt FORMATS</Code>, 'html', 'CLI report formats: html, pdf, docx, json, or a comma-separated combination. Native PDF requires Playwright/Chromium.'],
           [<Code>--json-input-dir PATH</Code>, './reports/&lt;project-id&gt;/&lt;run-id&gt;/data', 'JSON input directory for --pdf-from-json mode.'],
           [<Code>--pdf-output PATH</Code>, './reports/&lt;project-id&gt;/&lt;run-id&gt;/scan/pdf/report.pdf', 'Custom output path for the single combined PDF.'],
           [<Code>--pdf-multi-dir PATH</Code>, './reports/&lt;project-id&gt;/&lt;run-id&gt;/scan/pdf/multi-file', 'Custom output directory for the per-platform PDF set.'],
@@ -298,7 +348,8 @@ python dakshscra.py -r auto --recon -t ./app`}</CodeBlock>
       <Table
         headers={['Option', 'Description']}
         rows={[
-          [<Code>--skip-analysis</Code>, 'Disable the taint analysis stage for this run. Scanning and recon still run normally.'],
+          [<Code>--rdl-engine v1|v2|both</Code>, 'Select RDL engines (default: both). V2 is experimental and records coverage limits separately from the optional analyzer.'],
+          [<Code>--skip-analysis</Code>, 'Disable the optional taint analyzer. Selected RDL engines and source/path scanning still run.'],
           [<Code>--loc</Code>, 'Count effective lines of code (may add scan time). Included in effort estimation.'],
           [<Code>--baseline-file PATH</Code>, 'Path to a suppression baseline JSON file.'],
           [<Code>--baseline-generate</Code>, 'Generate a new suppression baseline from current findings.'],
@@ -331,11 +382,8 @@ python dakshscra.py --recon --rs -t ./mobile_app
 # Recon + scan
 python dakshscra.py --recon -r java -t ./javaapp
 
-# Scan with specific file types
-python dakshscra.py -r dotnet -f dotnet -t ./dotnetapp
-
-# Full scan with HTML + PDF output
-python dakshscra.py -r php -t ./app -rpt html,pdf
+# Full scan with all four report formats
+python dakshscra.py -r php -t ./app -rpt html,pdf,docx,json
 
 # Scan with effort estimation
 python dakshscra.py --recon --estimate -r php -t ./app
@@ -363,17 +411,22 @@ python dakshscra.py --resume-scan -r php -t ./app`}</CodeBlock>
 
       {/* Output structure */}
       <SubHeading id="cli-output-structure">Output Structure</SubHeading>
-      <P>After a scan, output is written to the following directories:</P>
-      <CodeBlock>{`reports/
+      <P>CLI reports are isolated by project and run. Web scans retain results under runtime and create exports only on request from Reports. Open the CLI HTML summary first and keep its linked folder alongside it.</P>
+      <CodeBlock>{`reports/<project-id>/<run-id>/
   scan/
     html/
-      report.html            <- Single-file HTML report (all platforms)
+      report.html            <- Summary and report index (open first)
+      report-files/          <- Linked detail pages and saved JSON
       multi-file/
         index.html           <- Multi-file report index
         <platform>/          <- Per-platform HTML pages
     pdf/
       report.pdf             <- Single combined PDF (if pdf requested)
       multi-file/            <- Per-platform PDFs (if pdf requested)
+    word/
+      report.docx            <- Editable Word report (if requested)
+    json/
+      report.json            <- Shared report document (if requested)
     recon/
       reconnaissance.html    <- Recon report (if --recon was used)
     estimate/
@@ -389,6 +442,7 @@ python dakshscra.py --resume-scan -r php -t ./app`}</CodeBlock>
     summary.json             <- Scan summary metadata
     recon.json               <- Recon results
     analysis.json            <- Taint analysis summary
+    estimation.json          <- Effort estimate (when enabled)
 runtime/
   scan_summary.json          <- Live scan state (updated during run)
   filepaths.json             <- Discovered file inventory`}</CodeBlock>
@@ -401,8 +455,9 @@ function WebUISection() {
     <section className="help-section">
       <SectionHeading id="webui-usage">Web UI Usage</SectionHeading>
       <P>The Web UI provides a browser-based interface for running scans, viewing findings, and accessing reports.</P>
-      <CodeBlock>{`docker compose up --build
+      <CodeBlock>{`python3 tools/start_webui.py --detach
 # Open http://localhost:8080`}</CodeBlock>
+      <P>Sign in with your configured account. Assigned/bootstrap passwords require a password change before using the application. The account menu offers Change password and Log out; Settings controls tool, display, analysis and estimation preferences.</P>
 
       <SubHeading id="webui-dashboard">Dashboard</SubHeading>
       <P>The Dashboard is the landing page. It shows:</P>
@@ -429,12 +484,12 @@ function WebUISection() {
           ['Last Scanned', 'Timestamp of the most recent scan'],
         ]}
       />
-      <P>Click a project row to jump to its scan history in the Scans view.</P>
+      <P>Projects uses compact searchable rows. Filter by scan status or removed data and sort by latest scan, name or scan count. Open a project for its complete paginated scan history, with search and status filters including retained removed-data records. View results opens completed scans at Summary; active, queued and stopping scans open telemetry. Project scans returns to the selected history.</P>
 
       <SubHeading id="webui-scans">Scans &amp; Findings</SubHeading>
-      <P>This is the primary working area. It has three panels:</P>
+      <P>New Scan is a separate page with Setup, Check Classes, Exclusions, Analysis &amp; Output and Custom RDL tabs. Recon and LOC are enabled by default and can be deselected. Active Scans shows queued and running jobs. Jobs run one at a time; queued time is separate from execution duration. Stop a running job or cancel a queued one using its controls.</P>
 
-      <p className="help-p"><strong>Scan Form (left)</strong>: Configure and launch a new scan:</p>
+      <p className="help-p"><strong>New Scan</strong>: Configure and launch a scan:</p>
       <Table
         headers={['Field', 'Description']}
         rows={[
@@ -442,24 +497,29 @@ function WebUISection() {
           ['Target Directory', 'Path to the source code. Use the browse button to navigate the filesystem.'],
           ['Platform Rules', 'Which rule set to apply. auto detects the platform automatically.'],
           ['File Types', 'Override the default extensions. auto uses platform defaults.'],
-          ['Report Format', 'html (default) or html,pdf. PDF requires Playwright/Chromium.'],
+          ['Review mode', 'Comprehensive Review (recommended), Finding Analysis Only, or Areas of Interest Review Only. Results retain the underlying engine selection.'],
           ['Verbosity', 'Output detail level (1–3).'],
           ['Recon', 'Enable technology stack detection.'],
           ['Effort Estimate', 'Generate a review effort estimation report.'],
           ['LOC Count', 'Include effective lines of code in the scan summary.'],
-          ['Skip Analysis', 'Skip the taint analysis stage (faster for large codebases).'],
+          ['Inter-file Analysis', 'Enable the optional native taint analyzer. Its initial value follows Settings. Can be slow on large codebases; independent of RDL engine selection.'],
         ]}
       />
 
-      <p className="help-p"><strong>Scan Table (top right)</strong>: Lists all scans for the selected project, most recent first. Each row shows status, UUID, timestamp, duration, and platform rules. Click a row to load details.</p>
+      <P>Open an active job to see Live Scan Telemetry and Log. Telemetry shows stages, elapsed execution time, repository counters, current operation and progress. Completed runs open in the results workspace.</P>
 
-      <p className="help-p"><strong>Scan Detail (bottom right)</strong>: Shows full detail across four tabs:</p>
+      <p className="help-p"><strong>Completed scan details</strong> include:</p>
       <ul className="help-list">
         <li><strong>Log</strong>: Live streaming output from the scan process.</li>
-        <li><strong>Findings</strong>: Scanner (rule-based) and Path findings with file locations and code context.</li>
-        <li><strong>Taint Analysis</strong>: Dataflow findings showing source-to-sink traces with confidence levels.</li>
-        <li><strong>Insights</strong>: File inventory, recon results, and effort estimation link.</li>
+        <li><strong>Areas of Interest</strong>: RDL v1 rule findings, locations and source context.</li>
+        <li><strong>Vulnerability Analysis</strong>: Recorded v2 confirmed rule matches, suppressed false positives, manual-review needs and coverage limits. A rule match does not prove exploitability.</li>
+        <li><strong>Advanced Analysis</strong>: Recorded v2 source-to-sink paths, input entry points and symbol cross references, with Text and Graph evidence views where available.</li>
+        <li><strong>Insights</strong>: File/path inventory, recon and effort estimation.</li>
+        <li><strong>Summary</strong>: Scan configuration and saved execution metrics.</li>
+        <li><strong>Suppressed Findings</strong>: Suppressing rule, recorded RDL version, reason, decision trace and source evidence. Inspect an entry or promote it back to findings with review notes.</li>
+        <li><strong>Reports</strong>: On-demand exports and available saved artifacts.</li>
       </ul>
+      <P>Completed scan data removal deletes saved evidence and reports but keeps a history record. Clear record removes that remaining entry after data removal. Active jobs are protected from deletion.</P>
 
       <SubHeading id="webui-findings">Understanding Findings</SubHeading>
       <p className="help-p"><strong>Scanner Findings</strong></p>
@@ -480,16 +540,18 @@ function WebUISection() {
       />
 
       <p className="help-p"><strong>Taint Analysis Findings</strong></p>
+      <P>Use Text / Graph on a trace story, vulnerability path, attack vector or cross-reference to switch displays. Graph mode provides file lanes, recorded handoffs, a minimap, drag-to-pan, Ctrl + scroll zoom, Overview and Focus step. Select a block for its saved source evidence; use Up/Down, Home/End or Go to step to navigate. Expand workspace gives a larger view. Long traces use 120-step segments; every step stays accessible. SVG export saves the current segment. Graph arrows represent recorded evidence order, rather than proving runtime reachability or inventing missing branches. New HTML report packages include the same explorer for offline use.</P>
       <P>
-        Taint findings trace actual data flow, which makes them higher-signal than scanner findings. They show
-        how user-controlled data travels from a source (request parameter, env var) to a security-sensitive sink.
+        Taint findings describe statically inferred paths from sources such as request parameters or environment
+        variables to sensitive sinks. Inspect the source evidence, mitigations, assumptions and coverage limits;
+        a trace does not by itself prove runtime exploitability.
       </P>
       <Table
         headers={['Confidence', 'Meaning']}
         rows={[
-          ['high', 'Cross-file flows with assignment steps. Review these first.'],
-          ['medium', 'Same-file flows with partial tracing. Worth reviewing.'],
-          ['low', 'File-scope fallback or single-step match. May be noise; verify manually.'],
+          ['high', 'Stronger recorded tracing evidence; still verify reachability and mitigations.'],
+          ['medium', 'Partial tracing or uncertainty requiring additional review.'],
+          ['low', 'Limited evidence or fallback inference; verify before treating as a vulnerability.'],
         ]}
       />
 
@@ -497,23 +559,23 @@ function WebUISection() {
       <P>
         Recon output is grouped by technology type (Framework, Language, Frontend, Backend, etc.). Each
         detection shows the technology name, confidence level, and which files were used as evidence.
-        Use <Code>--recon --rs</Code> to filter to high/medium confidence only when the output is too noisy.
+        Use <Code>--recon --rs</Code> for high-confidence detections when the output is too noisy.
       </P>
 
       <SubHeading id="webui-artifacts">Reports &amp; Artifacts</SubHeading>
       <P>
-        After a scan completes, all generated files are accessible from the Scan Detail view under the
-        Insights tab. Available artifacts include:
+        Open Completed, choose a saved run and select Reports. Use the project and scan selectors to
+        browse other retained runs. Web scans save review data without automatically generating report files.
       </P>
       <ul className="help-list">
-        <li>HTML report (single file)</li>
-        <li>HTML multi-file report set</li>
-        <li>Taint analysis cross-reference report</li>
-        <li>Effort estimation report</li>
-        <li>JSON data files</li>
-        <li>Scan log</li>
+        <li>Select Full scan, Areas of interest, Advanced analysis or Suppressed findings.</li>
+        <li>Select HTML package (.zip), PDF, Word (.docx) or JSON, then click Generate report.</li>
+        <li>Follow the animated generation status and Building/Packaging stages, then use Download when ready. Generating from saved results does not rescan source code.</li>
+        <li>Full scan includes available findings, recon, estimation, analysis, suppressions, RDL evidence and cross-references.</li>
       </ul>
-      <P>Click <strong>Open Report</strong> to view in a new browser tab, or <strong>Download</strong> to save locally.</P>
+      <P>Extract the complete HTML ZIP, then open <Code>index.html</Code>. Keep its linked detail pages together for offline navigation. PDF has linked contents and bookmarks; Word is editable; JSON retains saved fields. Existing artifacts below the generator offer Open and Download where available. Large full exports can take time; use a narrower report type when appropriate.</P>
+
+      <P>Open System → Disk info to review storage by project and scan, inspect file sizes and modification dates, and remove generated reports or temporary diagnostics. Select multiple storage items for cleanup, or delete all saved data for a scan or project while retaining history and project configuration. Review the deletion confirmation; removed results cannot be recovered. Cleanup is blocked while a scan or report job is active. Source directories, accounts and settings are preserved.</P>
 
       <SubHeading id="webui-dirbrowser">Directory Browser</SubHeading>
       <P>
@@ -521,27 +583,43 @@ function WebUISection() {
         typing a path manually. Only directories under the configured browse roots are accessible - the
         server rejects any request outside those boundaries.
       </P>
-      <P><strong>Default roots by platform (auto-detected when not configured):</strong></P>
+      <P>
+        Click a folder once to open it, then choose <strong>Select This Folder</strong>.
+        Use Up, Quick Access or enter a path and press Enter. Empty folders remain selectable;
+        permission failures display an error.
+      </P>
+      <P>
+        For automatic Docker host mounts, start from the repository with the host-aware helper:
+      </P>
+      <CodeBlock>{`# Linux, macOS or WSL:
+python3 tools/start_webui.py --detach
+# Windows PowerShell / Command Prompt:
+py tools/start_webui.py --detach`}</CodeBlock>
+      <P>
+        It detects the computer running Docker and mounts its root, available drives and common
+        folders read-only. Docker Desktop may ask for file-sharing permission. A browser on another
+        computer sees the Docker host's folders, not its own drives. Restart with the helper after
+        attaching another drive. Existing accounts and runtime data are preserved.
+      </P>
       <Table
-        headers={['Platform', 'Auto-detected roots']}
+        headers={['Host location', 'Container path']}
         rows={[
-          ['Linux / Docker', '/, /home, /srv, /opt, /mnt, /tmp, /scan-targets, /host'],
-          ['Windows / WSL', '/, /mnt, /mnt/c, /mnt/d (any single-letter drives under /mnt), /host/c, /host/d'],
-          ['macOS', '/, /Users, /Volumes, /tmp'],
+          ['Filesystem root / Windows system drive', '/host/root'],
+          ['Additional Windows / WSL drives', '/host/drives/<letter>'],
+          ['Your home folder', '/host/user'],
+          ['Common folders', '/host/locations/<name>'],
+          ['Repository or DAKSH_SCAN_ROOT', '/scan-targets'],
         ]}
       />
-      <P><strong>Customising the browser roots:</strong></P>
-      <P>Set the <Code>DAKSH_BROWSE_ROOTS</Code> environment variable to a comma-separated list of allowed paths:</P>
-      <CodeBlock>{`# In your .env file:
-DAKSH_BROWSE_ROOTS=/scan-targets,/host,/mnt
-
-# Or on the command line before starting the API:
-DAKSH_BROWSE_ROOTS=/home/user/projects uvicorn api.main:app`}</CodeBlock>
       <P>
-        When running via Docker Compose, set <Code>DAKSH_SCAN_ROOT</Code>, <Code>DAKSH_HOST_MOUNT</Code>,
-        and (on Windows) <Code>DAKSH_HOST_C</Code> / <Code>DAKSH_HOST_D</Code> in your <Code>.env</Code> file.
-        These control which host directories are mounted into the container and made browsable.
-        See <Code>.env.example</Code> for per-platform examples.
+        Leave <Code>DAKSH_BROWSE_ROOTS</Code> unset for discovered shortcuts, or restrict it to
+        comma-separated container paths. This allow-list does not create mounts.
+      </P>
+      <CodeBlock>{`DAKSH_BROWSE_ROOTS=/scan-targets,/host/drives/c`}</CodeBlock>
+      <P>
+        Optional host path overrides in <Code>.env</Code> include <Code>DAKSH_SCAN_ROOT</Code>,
+        <Code>DAKSH_HOST_MOUNT</Code>, <Code>DAKSH_HOST_SOURCE</Code> and
+        <Code>DAKSH_HOST_&lt;drive letter&gt;</Code>. See <Code>.env.example</Code> for details.
       </P>
       <Note type="tip">
         Only set browse roots to directories you intend to scan. The server enforces the boundary at the
@@ -567,8 +645,45 @@ function RDLSection() {
         should be stored with that decision.
       </Note>
 
+      <SubHeading id="rdl-shadow">Review Modes</SubHeading>
+      <P>
+        Comprehensive Review (recommended) combines code and path Areas of Interest with
+        Areas of Interest Filtering (RDL v1) and Finding Analysis (RDL v2). Finding Analysis Only runs
+        v2 findings. Areas of Interest Review Only retains the Areas of Interest and v1 filtering workflow.
+      </P>
+      <P>
+        Areas of Interest Filtering applies conditions to regex-discovered security areas of interest. Finding Analysis runs
+        text, source, semantic and supported flow checks. These paths serve different roles;
+        the version numbers do not mean one directly replaces the other.
+      </P>
+      <P>
+        RDL v2 adds coverage beyond the regex areas of interest. Semantic rules inspect relevant
+        calls and arguments to reduce misleading matches where a protective control is modeled.
+        Supported flow checks connect inputs to sensitive operations within a file or across files.
+        Recorded locations and handoffs give you evidence to inspect. Rule limits help identify
+        what still needs manual review. These benefits depend on the selected rules and language support.
+        A rule match does not establish exploitability.
+      </P>
+      <P>
+        Areas of Interest help reviewers read broadly before marking candidates as false positives,
+        including security areas of interest that v2 may miss or leave unresolved. Existing filters and exclusions
+        still apply; no mode guarantees complete coverage. The optional inter-file analyzer remains
+        a separate setting. Historical scans retain their recorded selection.
+      </P>
+      <CodeBlock>{`# Docker: select engines later in the scan form
+python3 tools/start_webui.py --detach
+
+# CLI: both is the default; select v1 or v2 to run just one
+python3 dakshscra.py -r auto -t /path/to/source --rdl-engine both
+python3 dakshscra.py -r php -t /path/to/source --rdl-engine v1
+python3 dakshscra.py -r php -t /path/to/source --rdl-engine v2`}</CodeBlock>
+      <Note type="warn">
+        A disagreement is a review item, not an automatic vulnerability or engine defect. Inspect
+        both outcomes and the v2 evidence. Choose Areas of Interest Review Only for future scans when you need the areas of interest filtering workflow; historical results keep their original selection.
+      </Note>
+
       <SubHeading id="rdl-sequence">Rule Evaluation Sequence</SubHeading>
-      <P>DakshSCRA evaluates scanner rules in this order:</P>
+      <P>RDL v1 evaluates scanner rules in this order. RDL v2 uses its own versioned definitions and records separate evidence and coverage limits:</P>
       <ol className="help-list">
         <li>Recon or explicit CLI selection chooses the active platform/framework rule sets.</li>
         <li>The XML rule is loaded from <Code>rules/scanning/platform/...</Code>.</li>
@@ -589,7 +704,7 @@ function RDLSection() {
       <CodeBlock>{`<rule>
   <name>Rule Name</name>
   <regex><![CDATA[regex_to_match]]></regex>
-  <rdl_ref>logic/common/core/insecure_sql_query_unsafe_string_concatenation.rdl</rdl_ref>
+  <rdl_ref>logic/rdl/v1/common/core/insecure_sql_query_unsafe_string_concatenation.rdl</rdl_ref>
   <exclude><![CDATA[pattern_to_exclude_lines]]></exclude>  <!-- optional -->
   <scan_config>...</scan_config>                           <!-- optional -->
   <rule_desc>Short description of what the rule detects.</rule_desc>
@@ -618,7 +733,7 @@ TRACE SQLi gate: input source present and mitigation missing.`}</CodeBlock>
         line. For file-path analysis, the current file text is the normalized relative path string.
       </P>
 
-      <SubHeading id="rdl-commands">RDL Commands</SubHeading>
+      <SubHeading id="rdl-operators">RDL Commands &amp; Operators</SubHeading>
       <Table
         headers={['Command', 'Behaviour', 'When to use']}
         rows={[
@@ -646,7 +761,7 @@ TRACE SQLi gate: input source present and mitigation missing.`}</CodeBlock>
       <CodeBlock>{`<rule>
   <name>Possible SQL Injection in Query Execution</name>
   <regex><![CDATA[(?i)\\b(?:mysql_query|mysqli_query|->query)\\s*\\(]]></regex>
-  <rdl_ref>logic/common/core/insecure_sql_query_unsafe_string_concatenation.rdl</rdl_ref>
+  <rdl_ref>logic/rdl/v1/common/core/insecure_sql_query_unsafe_string_concatenation.rdl</rdl_ref>
 </rule>
 
 VERSION 1
@@ -663,7 +778,7 @@ REASON Query execution appears to rely on direct input without parameterisation.
       <CodeBlock>{`<rule>
   <name>Exported Components Without Permission</name>
   <regex><![CDATA[<(?P<component>activity|service|receiver|provider)\\s[^>]*android:name="(?P<name>[^"]+)"[^>]*android:exported="true"[^>]*(?:/>|>)]]></regex>
-  <rdl_ref>logic/mobile/android/core/exported_components.rdl</rdl_ref>
+  <rdl_ref>logic/rdl/v1/mobile/android/core/exported_components.rdl</rdl_ref>
 </rule>
 
 VERSION 1
@@ -682,7 +797,7 @@ REASON Exported component appears reachable without a permission guard.`}</CodeB
       <CodeBlock>{`<rule>
   <name>Admin Section File Path</name>
   <regex><![CDATA[(?i)(^|/)(admin|administrator|root)(/|$)]]></regex>
-  <rdl_ref>logic/filepaths/core/admin_section.rdl</rdl_ref>
+  <rdl_ref>logic/rdl/v1/filepaths/core/admin_section.rdl</rdl_ref>
 </rule>
 
 VERSION 1
@@ -849,7 +964,7 @@ function ScanConfigSection() {
     <name>Exported Components Without Permission</name>
     <regex><![CDATA[<(?P<component>activity|service|receiver|provider)\\s[^>]*
 android:name="(?P<name>[^"]+)"[^>]*android:exported="true"[^>]*(?:/>|>)]]></regex>
-    <rdl_ref>logic/mobile/android/core/exported_components.rdl</rdl_ref>
+    <rdl_ref>logic/rdl/v1/mobile/android/core/exported_components.rdl</rdl_ref>
     <scan_config>
         <match_mode>file</match_mode>
         <context_type>named_groups</context_type>
@@ -1039,16 +1154,33 @@ function PlatformsSection() {
           ['.NET / C#', 'dotnet', '.cs, .aspx, .cshtml'],
           ['Python', 'python', '.py'],
           ['JavaScript / Node', 'javascript', '.js, .ts, .jsx, .tsx'],
-          ['Go', 'golang', '.go'],
+          ['Go', 'go', '.go'],
           ['Ruby / Rails', 'ruby', '.rb'],
           ['Kotlin', 'kotlin', '.kt, .kts'],
           ['C', 'c', '.c, .h'],
           ['C++', 'cpp', '.cpp, .cc, .cxx, .hpp'],
+          ['Rust', 'rust', '.rs'],
+          ['Android', 'android', '.java, .kt, AndroidManifest.xml, Gradle and XML'],
+          ['iOS', 'ios', '.swift, .m, .mm, plist and entitlements'],
+          ['React Native', 'reactnative', '.js, .jsx, .ts, .tsx and native mobile files'],
+          ['Flutter', 'flutter', '.dart, pubspec.yaml and native mobile files'],
+          ['Xamarin', 'xamarin', '.cs, .csproj and mobile configuration'],
+          ['.NET MAUI', 'maui', '.cs, .csproj, .xaml and mobile configuration'],
+          ['Kotlin Multiplatform', 'kmp', '.kt, .kts, Gradle and native mobile files'],
+          ['Ionic / Capacitor', 'ionic', '.ts, .js, .html and mobile configuration'],
+          ['NativeScript', 'nativescript', '.js, .ts and native mobile files'],
+          ['Cordova', 'cordova', 'config.xml, .js, .ts, .html and native mobile files'],
+          ['Bash', 'bash', '.sh, .bash, .bsh'],
+          ['PowerShell', 'powershell', '.ps1, .psm1, .psd1, .ps1xml'],
+          ['Dockerfile', 'dockerfile', 'Dockerfile, Dockerfile.*, .dockerfile'],
+          ['Terraform', 'terraform', '.tf, .tfvars, .tf.json'],
+          ['Kubernetes', 'kubernetes', '.yaml, .yml'],
+          ['Common patterns', 'common', 'Shared source/configuration patterns across platforms'],
         ]}
       />
       <P>Combine multiple platforms with commas:</P>
       <CodeBlock>{`python dakshscra.py -r php,java,javascript -t ./app`}</CodeBlock>
-      <P>To list all available rules for a platform:</P>
+      <P>The extensions above are representative. Automatic detection also selects applicable framework packs. Use the live registry for the complete platform/framework and file-type list:</P>
       <CodeBlock>{`python dakshscra.py -l RF`}</CodeBlock>
     </section>
   )
@@ -1079,9 +1211,11 @@ function FindingsReferenceSection() {
 function PdfReportsSection() {
   return (
     <section className="help-section">
-      <SectionHeading id="pdf-reports">PDF Reports</SectionHeading>
-      <P>PDF generation requires Playwright's Chromium browser:</P>
-      <CodeBlock>{`playwright install chromium`}</CodeBlock>
+      <SectionHeading id="pdf-reports">Report Formats &amp; PDF</SectionHeading>
+      <P>CLI and Web UI share report content and four export formats. HTML provides a summary with linked detail pages, PDF a consolidated printable report, Word an editable document, and JSON saved structured evidence. Choose reports on demand in the Web UI Reports tab; CLI formats are selected with <Code>-rpt</Code>.</P>
+      <CodeBlock>{`python dakshscra.py -r auto -t ./app -rpt html,pdf,docx,json`}</CodeBlock>
+      <P>Native PDF generation requires Playwright's Chromium browser. The Docker application image already includes Chromium and its system dependencies:</P>
+      <CodeBlock>{`python -m playwright install chromium`}</CodeBlock>
 
       <SubHeading id="pdf-during">Generate PDF during a scan</SubHeading>
       <CodeBlock>{`python dakshscra.py -r php -t ./app -rpt html,pdf`}</CodeBlock>
@@ -1117,15 +1251,15 @@ function TipsSection() {
       <SubHeading id="tips-large">Faster pass on large codebases</SubHeading>
       <CodeBlock>{`python dakshscra.py -r auto --skip-analysis -t ./large_app`}</CodeBlock>
       <P>
-        Skipping taint analysis cuts down scan time significantly. Run it as a separate step once you have
-        the recon and scanner results.
+        Skipping the optional native analyzer reduces work while preserving the selected RDL engines.
+        To include native analysis later, run a new scan with analysis enabled. Report generation uses only saved results.
       </P>
 
       <SubHeading id="tips-resume">Resuming an interrupted scan</SubHeading>
       <CodeBlock>{`python dakshscra.py --resume-scan -r php -t ./app`}</CodeBlock>
       <P>
-        Scan state is saved by default. An interrupted scan can pick up from its last checkpoint rather than
-        restarting from scratch.
+        Checkpointing can be controlled with <Code>--state</Code>, <Code>--no-state</Code> and <Code>--state-file</Code>.
+        Resume using the same target, rules and checkpoint; inspect the configured state settings before relying on recovery.
       </P>
 
       <SubHeading id="tips-baseline">Suppressing known false positives</SubHeading>
@@ -1208,7 +1342,7 @@ export default function HelpPanel() {
           <div className="help-header">
             <h1 className="help-title">DakshSCRA Usage Guide</h1>
             <p className="help-subtitle">
-              Comprehensive reference for CLI and Web UI usage, platforms, findings, and PDF reports.
+              Reference for CLI and Web UI usage, RDL engines, review workflows, platforms, and HTML/PDF/Word/JSON reports.
             </p>
           </div>
           <WhatIsSection />

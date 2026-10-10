@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.c.core.unsafe_string_manipulation_strcpy_strcat_sprintf_etc VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(strcpy|strcat|sprintf|gets|scanf)\\s*\\(" "im"
+WHEN TEXT_MISSING "strlcpy|strlcat|snprintf|strncpy|strncat|_s\\b|StringCchCopy|StringCchCat" "im"
+REPORT "Unsafe String Manipulation: strcpy(), strcat(), sprintf(), etc."
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

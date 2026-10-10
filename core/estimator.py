@@ -132,6 +132,13 @@ def generate_report(report_data):
         None: Writes the rendered HTML report to a predefined file path.
     """
 
+    from utils.output_mode import web_scan
+    destination = Path(state.reports_dirpath) / 'data' / 'estimation.json'
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(json.dumps(report_data), encoding='utf-8')
+    if web_scan():
+        return
+
     # Load the template HTML content from the file
     with open(state.estimation_template, 'r') as template_file:
         template_html = template_file.read()
@@ -245,4 +252,3 @@ def _load_estimation_adjustments():
 
 # Backward-compatible alias for legacy callers.
 effortEstimator = effort_estimator
-

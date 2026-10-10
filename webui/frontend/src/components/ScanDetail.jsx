@@ -1,10 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { artifactUrl, getScanArtifacts, getScanFindings, getSuppressedFindings, listProjects, listScans, stopScan, streamScanLog } from '../api'
-import FindingsReport from './FindingsReport'
-import AdvancedAnalysis from './AdvancedAnalysis'
+import ScanSummary from './ScanSummary'
+import ReportGenerator from './ReportGenerator'
+import { formatDuration as niceDuration } from '../lib/duration'
+import RetainedTab from './RetainedTab'
+import { createQueryCache, queryKey } from '../lib/queryCache'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { artifactUrl, getRdlShadowResults, getScanArtifacts, getScanFindings, getSuppressedFindings, listProjects, listScans, stopScan, streamScanLog } from '../api'
+import AreasOfInterest from './AreasOfInterest'
+import RdlAdvancedAnalysis from './RdlAdvancedAnalysis'
 import InsightsPanel from './InsightsPanel'
 import SuppressedPanel from './SuppressedPanel'
-import VulnerabilitiesPanel from './VulnerabilitiesPanel'
+const VulnerabilityAnalysis = lazy(() => import('./RdlShadowPanel'))
 
 function StatusBadge({ status }) {
   return (
@@ -15,15 +20,7 @@ function StatusBadge({ status }) {
   )
 }
 
-function niceDuration(sec) {
-  if (sec == null) return '-'
-  if (sec < 60) return `${Math.round(sec)}s`
-  if (sec < 3600) return `${Math.floor(sec / 60)}m ${Math.round(sec % 60)}s`
-  const hours = Math.floor(sec / 3600)
-  const minutes = Math.floor((sec % 3600) / 60)
-  const seconds = Math.round(sec % 60)
-  return `${hours}h ${minutes}m ${seconds}s`
-}
+
 
 function niceDate(iso) {
   if (!iso) return '-'
@@ -54,6 +51,10 @@ function ArtifactIcon({ name }) {
 
 function shortName(path) {
   return (path || '').split('/').slice(-1)[0] || path
+}
+
+function isRdlV2Artifact(path) {
+  return /^(?:rdl[-_]v2|rdl_shadow|rdl_xref)[-_.]/i.test(shortName(String(path).replace(/\\/g, '/')))
 }
 
 function pathToFileUrl(path) {
@@ -90,12 +91,12 @@ function compactNumber(value) {
 }
 
 function initialProgressForRun(run) {
-  if (!run || (run.status !== 'running' && run.status !== 'queued')) return null
+  if (!run || !['running', 'queued', 'stopping'].includes(run.status)) return null
   return {
     current_stage: run.status === 'queued' ? 'queued' : 'initialization',
     stage_status: run.status,
     message: run.status === 'queued'
-      ? 'Scan queued - preparing isolated workspace'
+      ? 'Scan queued - waiting for the active scan to finish'
       : 'Scan engine started - preparing repository',
     current_phase: run.status === 'queued' ? 'queued' : 'preparing_workspace',
     current_file: run.target_dir || '',
@@ -131,8 +132,12 @@ function ProgressCard({ progress, startedAt }) {
   const percent = total > 0 ? Math.min(100, Math.max(0, Math.round((current / total) * 100))) : null
   const startedMs = startedAt ? new Date(startedAt).getTime() : 0
   const clientElapsed = Number.isFinite(startedMs) && startedMs > 0 ? Math.max(0, Math.floor((clock - startedMs) / 1000)) : 0
-  const elapsed = Math.max(Number(progress.elapsed_seconds || 0), clientElapsed)
-  const rate = elapsed > 0 && progress.files_discovered > 0
+  const elapsed = progress.current_stage === 'queued' ? 0 : Math.max(Number(progress.elapsed_seconds || 0), clientElapsed)
+  const operationElapsed = progress.operation_started_at > 0
+    ? Math.max(0, Math.floor(clock / 1000 - Number(progress.operation_started_at))) : 0
+  const updateAge = progress.updated_at > 0
+    ? Math.max(0, Math.floor(clock / 1000 - Number(progress.updated_at))) : null
+  const rate = stageId === 'discovery' && elapsed > 0 && progress.files_discovered > 0
     ? Math.round(Number(progress.files_discovered) / elapsed)
     : 0
   const details = [
@@ -140,7 +145,7 @@ function ProgressCard({ progress, startedAt }) {
     ['Phase', displayLabel(progress.current_phase)],
     ['Rule', progress.rule_title],
     ['Category', progress.category],
-    ['Function', progress.current_function],
+    [progress.current_phase === 'semantic_review' || progress.current_phase === 'rule_logic' ? 'Check' : 'Function', progress.current_function],
   ].filter(([, value]) => value)
   const metrics = [
     ['Files mapped', progress.files_discovered, 'files'],
@@ -204,16 +209,24 @@ function ProgressCard({ progress, startedAt }) {
       {details.length > 0 ? (
         <div className="live-detail-chips">
           {details.map(([label, value]) => (
-            <span key={label}><small>{label}</small>{value}</span>
+            <span key={label} title={String(value)}><small>{label}</small>{value}</span>
           ))}
         </div>
+      ) : null}
+
+      {progress.operation_started_at > 0 ? (
+        <p className="live-operation-status" role="status">
+          Current operation: {niceDuration(operationElapsed)}
+          {updateAge != null ? ` · Last engine update ${updateAge}s ago` : ''}
+          {updateAge > 10 ? ' · Waiting for the current operation to report progress.' : ''}
+        </p>
       ) : null}
 
       <footer className="live-scan-footer">
         <span><b>{compactNumber(progress.suppressed_count)}</b> suppressed</span>
         <span><b>{compactNumber(progress.paths_match_count)}</b> path signals</span>
         <span className={progress.parse_error_count > 0 ? 'has-errors' : ''}><b>{compactNumber(progress.parse_error_count)}</b> parse errors</span>
-        {total > 0 ? <span>{compactNumber(current)} of {compactNumber(total)} processed</span> : <span>Repository size is being measured</span>}
+        {total > 0 ? <span>{compactNumber(current)} of {compactNumber(total)} {stageId === 'pattern_matching' ? 'files in current rule pass' : 'processed'}</span> : <span>Repository size is being measured</span>}
       </footer>
     </section>
   )
@@ -231,6 +244,7 @@ function artifactLabel(path) {
   const filename = shortName(normalized)
   const labels = {
     'report.html': 'Main consolidated report',
+    'rdl-v2.jsonl.gz': 'Complete RDL evaluations and evidence',
     'analysis.html': 'Taint analysis report',
     'analysis_xref.html': 'Cross-reference report',
     'analysis.json': 'Analysis data',
@@ -255,6 +269,7 @@ function artifactKind(path) {
   const filename = shortName(path).toLowerCase()
   if (filename === 'analysis.html') return 'Analyzer report'
   if (filename === 'analysis_xref.html') return 'Cross-references'
+  if (filename.endsWith('.jsonl.gz')) return 'Compressed JSONL archive'
   if (filename.endsWith('.json')) return 'Structured data'
   if (filename.endsWith('.pdf')) return 'PDF report'
   if (filename.endsWith('.log')) return 'Diagnostic inventory'
@@ -473,12 +488,60 @@ function DownloadScopePicker({ projects, scans, projectKey, runUuid, loading, on
 }
 
 export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped }) {
-  const [tab, setTab] = useState('findings')
+  const isActive = ['running', 'queued', 'stopping'].includes(run?.status)
+  const [tab, setTab] = useState(() => isActive ? 'telemetry' : 'summary')
+  const [aoiRequest, setAoiRequest] = useState(null)
   const [liveLog, setLiveLog] = useState('')
   const [liveProgress, setLiveProgress] = useState(null)
   const [stopping, setStopping] = useState(false)
   const [findingsData, setFindingsData] = useState(null)
   const [findingsLoading, setFindingsLoading] = useState(false)
+  const [rdlShadowData, setRdlShadowData] = useState(null)
+  const [rdlShadowLoading, setRdlShadowLoading] = useState(false)
+  const rdlRequest = useRef(0)
+  const rdlCache = useRef(createQueryCache())
+  const downloadsVisited = useRef(null)
+  const [refreshVersion, setRefreshVersion] = useState(0)
+  const [advancedRdlCount, setAdvancedRdlCount] = useState(null)
+  const [rdlFocusItem, setRdlFocusItem] = useState(null)
+
+  async function loadRdlResults(options = {}) {
+    const requestId = ++rdlRequest.current
+    const normalized = { view: 'all', search: '', offset: 0, kind: 'all', section: 'all', ...options }
+    const key = queryKey({ run: run.run_uuid, ...normalized })
+    const cached = rdlCache.current.peek(key)
+    if (cached) {
+      setRdlShadowData({ ...cached, query: normalized })
+      setRdlShadowLoading(false)
+      return { ...cached, query: normalized }
+    }
+    setRdlShadowLoading(true)
+    try {
+      const data = await rdlCache.current.get(key, () => getRdlShadowResults(run.run_uuid, 50, normalized))
+      if (requestId === rdlRequest.current) {
+        setRdlShadowData({ ...data, query: normalized })
+        return { ...data, query: normalized }
+      }
+    } catch (error) {
+      if (requestId === rdlRequest.current) setRdlShadowData(previous => ({ ...previous, error: error.message || 'Unable to load comparisons' }))
+    } finally {
+      if (requestId === rdlRequest.current) setRdlShadowLoading(false)
+    }
+  }
+  async function openRdlFinding(item) {
+    setRdlFocusItem(item)
+    setTab('rdl-shadow')
+    const selectedRun = run.run_uuid
+    const options = { section: 'confirmed', search: item.record.context?.file_path || '', kind: item.record.comparison_kind || 'all' }
+    let page = await loadRdlResults(options)
+    while (page?.truncated && !page.comparisons?.some(record => (record.v2_rule_id || record.v2_rule) === (item.record.v2_rule_id || item.record.v2_rule))) {
+      const generation = rdlRequest.current
+      page = await loadRdlResults({ ...options, offset: (page.offset || 0) + (page.limit || 50), after: page.next_cursor })
+      if (selectedRun !== run.run_uuid || rdlRequest.current !== generation + 1) break
+    }
+  }
+  const [findingsError, setFindingsError] = useState('')
+  const [findingsReload, setFindingsReload] = useState(0)
   const [suppressedCount, setSuppressedCount] = useState(null)
   const [downloadProjects, setDownloadProjects] = useState([])
   const [downloadRuns, setDownloadRuns] = useState([])
@@ -490,8 +553,6 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
   const cancelSseRef = useRef(null)
   const logPaneRef = useRef(null)
   const downloadRequestRef = useRef(0)
-
-  const isActive = run?.status === 'running' || run?.status === 'queued'
 
   // SSE live log - start when scan becomes active
   useEffect(() => {
@@ -535,7 +596,9 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
   }, [artifactIndex, downloadRunUuid, run?.run_uuid])
 
   useEffect(() => {
-    if (tab !== 'downloads' || !run?.run_uuid) return
+    if (isActive || tab !== 'downloads' || !run?.run_uuid) return
+    if (downloadsVisited.current === run.run_uuid) return
+    downloadsVisited.current = run.run_uuid
     const requestId = ++downloadRequestRef.current
     setDownloadProjectKey(run.project_key || '')
     setDownloadRunUuid(run.run_uuid)
@@ -555,7 +618,7 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
     }).finally(() => {
       if (requestId === downloadRequestRef.current) setDownloadsLoading(false)
     })
-  }, [tab, run?.run_uuid, run?.project_key])
+  }, [tab, run?.run_uuid, run?.project_key, isActive, refreshVersion])
 
   async function selectDownloadRun(scan) {
     const requestId = ++downloadRequestRef.current
@@ -597,39 +660,45 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
     }
   }
 
-  // Reset state when selected scan changes, and (if it's already done) fetch
-  // its findings/suppressed count immediately in the same commit - a
-  // separate effect gating on a `findingsData`/`suppressedCount !== null`
-  // check would still see the *previous* scan's non-null cached value here,
-  // since those setters above haven't re-rendered yet, and would skip the
-  // fetch entirely.
+  // Each scan owns its data. Ignore late responses from a previously selected run.
   useEffect(() => {
-    setTab('findings')
+    setTab(isActive ? 'telemetry' : 'summary')
+    setAoiRequest(null)
     setStopping(false)
-    setFindingsData(null)
-    setSuppressedCount(null)
     setLiveProgress(initialProgressForRun(run))
+    rdlCache.current.clear()
+    downloadsVisited.current = null
+    downloadRequestRef.current += 1
+    setRdlShadowData(null)
+    setAdvancedRdlCount(null)
+    setRdlFocusItem(null)
+    setRdlShadowLoading(false)
+    rdlRequest.current += 1
+    return () => { rdlRequest.current += 1 }
+  }, [run?.run_uuid, isActive])
 
+  useEffect(() => {
+    let cancelled = false
+    setFindingsData(null)
+    setFindingsError('')
+    setSuppressedCount(null)
+    setFindingsLoading(false)
     if (!run?.run_uuid || isActive) return
-
     setFindingsLoading(true)
     getScanFindings(run.run_uuid)
-      .then((d) => setFindingsData(d))
-      .catch(() => setFindingsData({}))
-      .finally(() => setFindingsLoading(false))
-
-    getSuppressedFindings(run.run_uuid)
-      .then((d) => setSuppressedCount(d?.summary?.total_suppressed ?? 0))
+      .then(data => { if (!cancelled) setFindingsData(data) })
+      .catch(error => { if (!cancelled) setFindingsError(error.message || 'Unable to load scan results') })
+      .finally(() => { if (!cancelled) setFindingsLoading(false) })
+    getSuppressedFindings(run.run_uuid, true)
+      .then(data => { if (!cancelled) setSuppressedCount(data?.summary?.total_suppressed ?? 0) })
       .catch(() => {})
-  }, [run?.run_uuid])
+    return () => { cancelled = true }
+  }, [run?.run_uuid, isActive, findingsReload])
 
-  // Reload findings when scan transitions from running → done
   useEffect(() => {
-    if (!run?.run_uuid || isActive) return
-    getScanFindings(run.run_uuid)
-      .then((d) => setFindingsData(d))
-      .catch(() => {})
-  }, [isActive])
+    if (!run?.run_uuid || isActive || tab !== 'rdl-shadow' || rdlShadowData || rdlShadowLoading) return
+    loadRdlResults()
+  }, [tab, run?.run_uuid, isActive, rdlShadowData, rdlShadowLoading])
 
   async function handleStop() {
     if (!run?.run_uuid) return
@@ -654,12 +723,19 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
       ...(downloadArtifacts.json_files || []),
       ...(downloadArtifacts.pdf_files || []),
       ...(downloadArtifacts.logs || []),
-    ]
+    ].filter(path => !isRdlV2Artifact(path))
   }, [downloadArtifacts])
+
+  const rdlArtifacts = useMemo(() => [...new Set([
+    ...(artifactIndex?.all_artifacts || []),
+    ...(artifactIndex?.other_html || []),
+    ...(artifactIndex?.json_files || []),
+    ...(artifactIndex?.logs || []),
+  ])].filter(isRdlV2Artifact), [artifactIndex])
 
   const artifactCatalog = useMemo(() => buildArtifactCatalog(allArtifacts), [allArtifacts])
 
-  const findingsCount = findingsData?.findings?.length ?? 0
+  const findingsCount = (findingsData?.findings?.length ?? 0) + (findingsData?.filepaths?.length ?? 0)
   const inputMeta = findingsData?.scan_meta?.inputs_received || {}
   const resolvedProjectId = inputMeta?.project_id || ''
   const resolvedRunId = inputMeta?.run_id || run?.run_uuid || ''
@@ -724,6 +800,20 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
 
       {/* Tabs */}
       <div className="detail-tabs">
+        {isActive ? (
+          <button
+            className={`detail-tab${tab === 'telemetry' ? ' active' : ''}`}
+            onClick={() => setTab('telemetry')}
+          >
+            Live Scan Telemetry
+          </button>
+        ) : null}
+        <button
+          className={`detail-tab${tab === 'summary' ? ' active' : ''}`}
+          onClick={() => setTab('summary')}
+        >
+          Summary
+        </button>
         <button
           className={`detail-tab${tab === 'findings' ? ' active' : ''}`}
           onClick={() => setTab('findings')}
@@ -734,46 +824,25 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
           className={`detail-tab${tab === 'advanced-analysis' ? ' active' : ''}`}
           onClick={() => setTab('advanced-analysis')}
         >
-          {(() => {
-            const taintCount = findingsData?.analysis?.results
-              ?.filter((r) => r.engine === 'dataflow_controlflow')
-              ?.flatMap((r) => (r.findings || []).filter((f) => f.analysis_kind === 'taint_flow'))
-              ?.length ?? 0
-            return `Advanced Analysis${!isActive && taintCount > 0 ? ` (${taintCount})` : ''}`
-          })()}
+          Advanced Analysis{!isActive && advancedRdlCount > 0 ? ` (${advancedRdlCount})` : ''}
         </button>
         <button
-          className={`detail-tab${tab === 'vulnerabilities' ? ' active' : ''}`}
-          onClick={() => setTab('vulnerabilities')}
+          className={`detail-tab${tab === 'rdl-shadow' ? ' active' : ''}`}
+          onClick={() => setTab('rdl-shadow')}
         >
-          {(() => {
-            const vulnCount = findingsData?.analysis?.summary?.confirmed_vulnerabilities ?? 0
-            return `Vulnerabilities${!isActive && vulnCount > 0 ? ` (${vulnCount})` : ''}`
-          })()}
+          Vulnerability Analysis{rdlShadowData?.enabled ? ` (${rdlShadowData.global_confirmed_finding_count ?? rdlShadowData.confirmed_finding_count ?? rdlShadowData.section_counts?.findings ?? 0})` : ''}
         </button>
         <button
           className={`detail-tab${tab === 'insights' ? ' active' : ''}`}
           onClick={() => setTab('insights')}
         >
-          {(() => {
-            const fpCount = findingsData?.filepaths?.length ?? 0
-            const hasRecon = !!findingsData?.recon
-            const hasEstimate = run?.estimate
-            const total = fpCount + (hasRecon ? 1 : 0) + (hasEstimate ? 1 : 0)
-            return `Insights${!isActive && total > 0 ? ` (${fpCount > 0 ? fpCount + ' paths' : hasRecon ? 'recon' : 'estimate'})` : ''}`
-          })()}
+          Insights
         </button>
         <button
           className={`detail-tab${tab === 'downloads' ? ' active' : ''}`}
           onClick={() => setTab('downloads')}
         >
-          Downloads{allArtifacts.length > 0 ? ` (${allArtifacts.length})` : ''}
-        </button>
-        <button
-          className={`detail-tab${tab === 'summary' ? ' active' : ''}`}
-          onClick={() => setTab('summary')}
-        >
-          Summary
+          Reports
         </button>
         <button
           className={`detail-tab${tab === 'log' ? ' active' : ''}`}
@@ -785,100 +854,94 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
           className={`detail-tab${tab === 'suppressed' ? ' active' : ''}`}
           onClick={() => setTab('suppressed')}
         >
-          {`Suppressed FPs${!isActive && suppressedCount != null && suppressedCount > 0 ? ` (${suppressedCount})` : ''}`}
+          {`Suppressed Findings${!isActive && suppressedCount != null && suppressedCount > 0 ? ` (${suppressedCount})` : ''}`}
         </button>
       </div>
 
-      {isActive ? (
-        <div className="live-scan-shell">
-          <ProgressCard progress={liveProgress} startedAt={run.started_at || run.created_at} />
+      {findingsError && ['findings', 'advanced-analysis', 'insights'].includes(tab) ? (
+        <div className="rdl-shadow-callout warning" role="alert">
+          {findingsError} <button onClick={() => setFindingsReload(value => value + 1)}>Retry</button>
         </div>
       ) : null}
 
-      {/* Tab: Areas of Interest */}
-      {tab === 'findings' && (
+      {isActive && tab === 'telemetry' ? (
+        <div className="live-scan-shell">
+          <ProgressCard progress={liveProgress} startedAt={run.status === 'running' ? run.started_at : null} />
+        </div>
+      ) : null}
+
+      {isActive && !['telemetry', 'log'].includes(tab) ? (
         <div className="detail-tab-content findings-tab-content">
-          {isActive ? (
-            <div className="empty-state" style={{ padding: '40px 20px' }}>
-              <svg className="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-              </svg>
-              <div className="empty-title">Scan in progress…</div>
-              <div className="empty-msg">Areas of interest will appear here once the scan completes. Check the Log tab for live output.</div>
-            </div>
-          ) : findingsLoading ? (
+          <div className="empty-state" style={{ padding: '40px 20px' }}>
+            <svg className="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+            </svg>
+            <div className="empty-title">Scan in progress…</div>
+            <div className="empty-msg">Results will appear here once the scan completes. Open Live Scan Telemetry for progress or Log for live output.</div>
+          </div>
+        </div>
+      ) : null}
+
+      {!isActive ? <div className="scan-results-refresh"><button type="button" className="btn btn-ghost" onClick={() => {
+        rdlRequest.current += 1
+        rdlCache.current.clear()
+        setRdlShadowData(null)
+        setAdvancedRdlCount(null)
+        setRdlFocusItem(null)
+        setRdlShadowLoading(false)
+        downloadsVisited.current = null
+        downloadRequestRef.current += 1
+        setRefreshVersion(value => value + 1)
+        setFindingsReload(value => value + 1)
+      }}>Refresh scan results</button></div> : null}
+
+      {/* Tab: Areas of Interest */}
+      {!isActive && !findingsError && (
+        <RetainedTab key={`findings:${run.run_uuid}:${refreshVersion}`} active={tab === 'findings'} className="detail-tab-content findings-tab-content">
+          {findingsLoading ? (
             <div className="fr-loading">
               <div className="fr-spinner" />
               <span>Loading areas of interest…</span>
             </div>
           ) : (
-            <FindingsReport
+            <AreasOfInterest
               data={findingsData}
+              requestedSection={aoiRequest}
               status={run.status}
-              onViewAnalysis={() => setTab('vulnerabilities')}
+              rdlEngine={run.rdl_engine}
+              onViewAnalysis={() => setTab('rdl-shadow')}
             />
           )}
-        </div>
+        </RetainedTab>
       )}
 
-      {tab === 'advanced-analysis' && (
-        <div className="detail-tab-content findings-tab-content">
-          {isActive ? (
-            <div className="empty-state" style={{ padding: '40px 20px' }}>
-              <svg className="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-              </svg>
-              <div className="empty-title">Scan in progress…</div>
-              <div className="empty-msg">Advanced Analysis will appear here once the scan completes.</div>
-            </div>
-          ) : findingsLoading ? (
+      {!isActive && !findingsError && (
+        <RetainedTab key={`advanced-analysis:${run.run_uuid}:${refreshVersion}`} active={tab === 'advanced-analysis'} className="detail-tab-content findings-tab-content">
+          {findingsLoading ? (
             <div className="fr-loading">
               <div className="fr-spinner" />
               <span>Loading advanced analysis…</span>
             </div>
           ) : (
-            <AdvancedAnalysis analysis={findingsData?.analysis} artifactIndex={artifactIndex} />
+            <RdlAdvancedAnalysis runUuid={run.run_uuid} onCount={setAdvancedRdlCount} onFinding={openRdlFinding} />
           )}
-        </div>
-      )}
-
-      {tab === 'vulnerabilities' && (
-        <div className="detail-tab-content findings-tab-content">
-          {isActive ? (
-            <div className="empty-state" style={{ padding: '40px 20px' }}>
-              <div className="empty-title">Scan in progress…</div>
-              <div className="empty-msg">Confirmed vulnerabilities and mitigated implementations will appear here once the scan completes.</div>
-            </div>
-          ) : findingsLoading ? (
-            <div className="fr-loading">
-              <div className="fr-spinner" />
-              <span>Loading vulnerability confirmation…</span>
-            </div>
-          ) : (
-            <VulnerabilitiesPanel analysis={findingsData?.analysis} />
-          )}
-        </div>
+        </RetainedTab>
       )}
 
       {/* Tab: Insights */}
-      {tab === 'insights' && (
-        <div className="detail-tab-content findings-tab-content">
-          {isActive ? (
-            <div className="empty-state" style={{ padding: '40px 20px' }}>
-              <div className="empty-title">Scan in progress…</div>
-              <div className="empty-msg">Insights will appear once the scan completes.</div>
-            </div>
-          ) : findingsLoading ? (
+      {!isActive && !findingsError && (
+        <RetainedTab key={`insights:${run.run_uuid}:${refreshVersion}`} active={tab === 'insights'} className="detail-tab-content findings-tab-content">
+          {findingsLoading ? (
             <div className="fr-loading"><div className="fr-spinner" /><span>Loading insights…</span></div>
           ) : (
             <InsightsPanel findingsData={findingsData} artifactIndex={artifactIndex} run={run} />
           )}
-        </div>
+        </RetainedTab>
       )}
 
       {/* Tab: Downloads */}
-      {tab === 'downloads' && (
-        <div className="detail-tab-content">
+      {!isActive && (
+        <RetainedTab key={`downloads:${run.run_uuid}:${refreshVersion}`} active={tab === 'downloads'} className="detail-tab-content">
           <DownloadScopePicker
             projects={downloadProjects}
             scans={downloadRuns}
@@ -888,6 +951,8 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
             onProjectSelect={selectDownloadProject}
             onRunSelect={selectDownloadRun}
           />
+          <ReportGenerator key={downloadRunUuid} runUuid={downloadRunUuid} />
+          <h3>Saved scan data</h3>
           {downloadsError ? <div className="error-banner dl-error">{downloadsError}</div> : null}
           {selectedArtifactRoot && (
             <div className="info-item" style={{ marginBottom: 14 }}>
@@ -900,7 +965,7 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
           )}
           {allArtifacts.length === 0 ? (
             <div className="empty-state" style={{ padding: '30px 20px' }}>
-              <div className="empty-title">{downloadsLoading ? 'Loading reports…' : 'No downloads available'}</div>
+              <div className="empty-title">{downloadsLoading ? 'Loading reports…' : 'No saved scan data'}</div>
               <div className="empty-msg">
                 {downloadsLoading
                   ? 'Retrieving the selected scan artifact index.'
@@ -991,105 +1056,14 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
               />
             </div>
           )}
-        </div>
+        </RetainedTab>
       )}
 
       {/* Tab: Summary */}
-      {tab === 'summary' && (
-        <div className="detail-tab-content">
-          <div className="info-grid">
-            <div className="info-item">
-              <div className="info-label">Project</div>
-              <div className="info-value">{run.project_name || '-'}</div>
-            </div>
-            <div className="info-item">
-              <div className="info-label">Project ID</div>
-              <div className="info-value">{resolvedProjectId || '-'}</div>
-            </div>
-            <div className="info-item">
-              <div className="info-label">Run ID</div>
-              <div className="info-value">{resolvedRunId || '-'}</div>
-            </div>
-            <div className="info-item">
-              <div className="info-label">Status</div>
-              <div className="info-value">{run.status}</div>
-            </div>
-            <div className="info-item">
-              <div className="info-label">Rules</div>
-              <div className="info-value">{run.rules || '-'}</div>
-            </div>
-            <div className="info-item">
-              <div className="info-label">Report Format</div>
-              <div className="info-value">{run.report_format || '-'}</div>
-            </div>
-            <div className="info-item" style={{ gridColumn: '1 / -1' }}>
-              <div className="info-label">Target Directory</div>
-              <div className="info-value">{run.target_dir}</div>
-            </div>
-            <div className="info-item" style={{ gridColumn: '1 / -1' }}>
-              <div className="info-label">Report Root</div>
-              <div className="info-value" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-                <span style={{ wordBreak: 'break-all' }}>{resolvedReportRoot || '-'}</span>
-                {resolvedReportRoot && (
-                  <a className="link-btn" href={pathToFileUrl(resolvedReportRoot)} target="_blank" rel="noreferrer">Open Folder</a>
-                )}
-              </div>
-            </div>
-            {run.file_types && (
-              <div className="info-item">
-                <div className="info-label">File Types</div>
-                <div className="info-value">{run.file_types}</div>
-              </div>
-            )}
-            <div className="info-item">
-              <div className="info-label">Duration</div>
-              <div className="info-value">{niceDuration(run.duration_sec)}</div>
-            </div>
-            {(() => {
-              const det = findingsData?.scan_meta?.detection_summary
-              const totalFiles = det?.total_files_scanned ?? det?.total_files_identified
-              const totalLoc = det?.total_loc
-              return (
-                <>
-                  {totalFiles != null && (
-                    <div className="info-item">
-                      <div className="info-label">Total Files Scanned</div>
-                      <div className="info-value">{Number(totalFiles).toLocaleString()}</div>
-                    </div>
-                  )}
-                  {totalLoc != null && (
-                    <div className="info-item">
-                      <div className="info-label">Total Lines of Code</div>
-                      <div className="info-value">{Number(totalLoc).toLocaleString()}</div>
-                    </div>
-                  )}
-                </>
-              )
-            })()}
-          </div>
-
-          <div className="info-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-            {[
-              { label: 'Recon', val: run.recon },
-              { label: 'Estimate', val: run.estimate },
-              { label: 'Analysis', val: run.analysis },
-              { label: 'Count LoC', val: run.loc },
-            ].map(({ label, val }) => (
-              <div key={label} className="info-item" style={{ textAlign: 'center' }}>
-                <div className="info-label" style={{ textAlign: 'center' }}>{label}</div>
-                <div style={{ fontSize: 18, marginTop: 4 }}>{val ? '✓' : '-'}</div>
-              </div>
-            ))}
-          </div>
-
-          {run.command && (
-            <>
-              <div className="divider" />
-              <div className="info-label" style={{ marginBottom: 8 }}>Command</div>
-              <pre className="log-pane" style={{ minHeight: 'unset', maxHeight: 80 }}>{run.command}</pre>
-            </>
-          )}
-        </div>
+      {(
+        <RetainedTab key={`summary:${run.run_uuid}:${refreshVersion}`} active={tab === 'summary'} className="detail-tab-content">
+          <ScanSummary run={run} data={findingsData} loading={findingsLoading} error={findingsError} suppressedCount={suppressedCount} reportRoot={resolvedReportRoot} reportFolderUrl={pathToFileUrl(resolvedReportRoot)} onNavigate={destination => { if (destination === 'code-aoi' || destination === 'path-aoi') { setAoiRequest({ section: destination === 'path-aoi' ? 'paths' : 'code' }); setTab('findings') } else setTab(destination) }} />
+        </RetainedTab>
       )}
 
       {/* Tab: Log */}
@@ -1110,18 +1084,23 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
         </div>
       )}
 
-      {/* Tab: Suppressed FPs */}
-      {tab === 'suppressed' && (
-        <div className="detail-tab-content findings-tab-content">
-          {isActive ? (
-            <div className="empty-state" style={{ padding: '40px 20px' }}>
-              <div className="empty-title">Scan in progress…</div>
-              <div className="empty-msg">Suppressed areas of interest will appear once the scan completes.</div>
-            </div>
-          ) : (
-            <SuppressedPanel runUuid={run.run_uuid} onLoaded={setSuppressedCount} />
-          )}
-        </div>
+      {/* RDL v2 evidence is independent of the original scan results. */}
+      {!isActive && (
+        <RetainedTab key={`rdl-shadow:${run.run_uuid}:${refreshVersion}`} active={tab === 'rdl-shadow'} className="detail-tab-content findings-tab-content">
+          <Suspense fallback={<div className="fr-loading"><div className="fr-spinner" /><span>Loading RDL review...</span></div>}>
+            <VulnerabilityAnalysis key={`${run.run_uuid}:${rdlFocusItem?.id || 'overview'}`} initialSection={rdlFocusItem ? 'confirmed' : 'summary'} focusItem={rdlFocusItem} runUuid={run.run_uuid} data={rdlShadowData} loading={rdlShadowLoading || !rdlShadowData} onQuery={loadRdlResults} onRefresh={() => { rdlCache.current.clear(); loadRdlResults(rdlShadowData?.query || {}) }} />
+          </Suspense>
+          <ArtifactGroup title="RDL v2 Downloads" description="Experimental reports and recorded evidence for this scan" paths={rdlArtifacts} />
+        </RetainedTab>
+      )}
+
+      {/* Tab: Suppressed Findings */}
+      {!isActive && (
+        <RetainedTab key={`suppressed:${run.run_uuid}:${refreshVersion}`} active={tab === 'suppressed'} className="detail-tab-content findings-tab-content">
+          {run.rdl_engine === 'v2' ? <div className="empty-state"><div className="empty-title">RDL v1 was not run for this scan</div><p>RDL v1 suppressions require a scan with Both or RDL v1 selected.</p></div> :
+              <SuppressedPanel runUuid={run.run_uuid} onLoaded={setSuppressedCount} />
+          }
+        </RetainedTab>
       )}
     </div>
   )

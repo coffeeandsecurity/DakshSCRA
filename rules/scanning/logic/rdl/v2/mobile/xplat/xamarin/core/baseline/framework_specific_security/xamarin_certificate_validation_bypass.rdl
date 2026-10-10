@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.xplat.xamarin.core.xamarin_certificate_validation_bypass VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "ServerCertificateCustomValidationCallback\\s*=\\s*\\(.*=>\\s*true|ServicePointManager\\.ServerCertificateValidationCallback" "im"
+REPORT "Xamarin Certificate Validation Bypass"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

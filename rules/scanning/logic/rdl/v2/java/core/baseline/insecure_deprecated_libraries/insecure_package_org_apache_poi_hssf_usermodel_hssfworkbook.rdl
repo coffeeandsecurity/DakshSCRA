@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.java.core.insecure_package_org_apache_poi_hssf_usermodel_hssfworkbook VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "org\\.apache\\.poi\\.hssf\\.usermodel\\.HSSFWorkbook" "im"
+WHEN (TEXT_MISSING "XSSFWorkbook|validate|allowlist" "im" AND TEXT_MISSING "test|example" "im")
+REPORT "Insecure Package: org.apache.poi.hssf.usermodel.HSSFWorkbook"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,10 @@
+VERSION 2
+RULE concurrency.deadlock-cycle VERSION 1
+IN PROJECT
+LET lock BE RESOURCE MATCHES concurrency.lock
+WHEN lock_graph.cycle lock
+REQUIRE paths.concurrently_reachable lock
+REPORT "potential deadlock cycle"
+SEVERITY HIGH
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

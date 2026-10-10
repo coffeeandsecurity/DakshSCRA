@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.python.core.insecure_use_of_django_login_required_decorator VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)@login_required" "im"
+WHEN TEXT_MISSING "@permission_required|has_perm|user\\.is_authenticated|user\\.is_staff" "im"
+REPORT "Insecure Use of Django @login_required Decorator"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

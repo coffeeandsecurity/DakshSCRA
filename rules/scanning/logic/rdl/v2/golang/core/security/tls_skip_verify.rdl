@@ -1,0 +1,8 @@
+VERSION 2
+RULE go.tls-skip-verify VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bInsecureSkipVerify\\s*:\\s*true\\b" ""
+REPORT "Go TLS Certificate Verification Disabled"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

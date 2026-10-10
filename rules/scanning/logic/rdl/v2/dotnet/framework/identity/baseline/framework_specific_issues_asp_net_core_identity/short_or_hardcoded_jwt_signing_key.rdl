@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.dotnet.framework.identity.short_or_hardcoded_jwt_signing_key VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "IssuerSigningKey\\s*=\\s*new\\s+SymmetricSecurityKey\\s*\\(\\s*Encoding\\.[^.]+\\.GetBytes\\s*\\(\\s*[\"'][^\"']{1,31}[\"']\\s*\\)\\s*\\)" "im"
+WHEN TEXT_MISSING "Configuration\\[|GetEnvironmentVariable|_secretsManager" "im"
+REPORT "Short or Hardcoded JWT Signing Key"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

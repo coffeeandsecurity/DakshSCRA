@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.terraform.core.vpc_flow_logs_disabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "resource\\s+\"aws_vpc\"\\b" "im"
+WHEN TEXT_MISSING "aws_flow_log|enable_flow_logs|flow_log" "im"
+REPORT "VPC Flow Logs Disabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

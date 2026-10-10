@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.filepaths.core.presenter VERSION 1
+IN PATH
+WHEN TEXT_MATCHES "(?i)/(Presenter)/" "im"
+WHEN TEXT_MATCHES "(?i)(/|\\\\\\\\).*(presenter|presentation)" "im"
+REPORT "Presenter"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

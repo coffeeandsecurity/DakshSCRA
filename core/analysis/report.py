@@ -3,6 +3,7 @@ import json
 import re
 from collections import Counter
 from pathlib import Path
+from utils.scan_scope import glob_source, allows_file, allows_check
 from typing import List, Dict, Tuple
 
 import yaml
@@ -10,6 +11,8 @@ import yaml
 import state.runtime_state as state
 from core.analysis.common import load_analysis_config
 from utils.decision_trace import append_trace
+from utils.output_mode import web_scan
+from .presentation import flow_finding
 
 
 DEFAULT_RANKING = {
@@ -167,9 +170,9 @@ def _ensure_source_step(flow: Dict) -> Dict:
 
     if path:
         first = path[0]
-        inferred_code = "[inferred] Upstream tainted input reaches this flow boundary."
+        inferred_code = "[inferred] Upstream origin is unresolved; no external-input evidence is recorded at this boundary."
         if str(first.get("role", "")).lower() == "param":
-            inferred_code = f"[inferred] Upstream tainted input reaches parameter `{first.get('code', 'param')}`."
+            inferred_code = f"[inferred] Origin of parameter `{first.get('code', 'param')}` is unresolved; review callers before treating it as external input."
         inferred_source = {
             "file": first.get("file", normalized.get("file", "")),
             "line": first.get("line", normalized.get("line", "")),
@@ -245,18 +248,59 @@ def _severity_from_score(score: int, profile: Dict) -> str:
     return "Low"
 
 
+def _known_callable_timer_flow(flow, source_cache):
+    """Exclude only source-verified Promise resolver timers, retaining unknowns."""
+    sink = str(flow.get('sink', ''))
+    if sink not in {'setTimeout (string)', 'setInterval (string)'}:
+        return False
+    path = str(flow.get('file', ''))
+    if path not in source_cache:
+        try:
+            from core.rdl.literal_review import promise_resolver_timers
+            text = Path(path).read_text(encoding='utf-8')
+            source_cache[path] = (text.splitlines(), promise_resolver_timers(text).splitlines())
+        except (OSError, UnicodeError):
+            source_cache[path] = None
+    lines = source_cache[path]
+    line = flow.get('line')
+    if not lines or not isinstance(line, int) or not 1 <= line <= len(lines[0]):
+        return False
+    original, masked = lines[0][line - 1], lines[1][line - 1]
+    timer = sink.split()[0]
+    pattern = re.compile(r'\b' + timer + r'\s*\(')
+    return bool(pattern.search(original)) and not pattern.search(masked)
+
+
 def rank_and_dedupe_flows(flows: List[Dict], platform: str = None) -> List[Dict]:
     best_by_key: Dict[Tuple, Dict] = {}
     profile = _load_ranking_profile(platform=platform)
+    timer_sources = {}
 
     for flow in flows:
         if not isinstance(flow, dict):
             continue
+        if _known_callable_timer_flow(flow, timer_sources):
+            continue
         normalized = _ensure_source_step(flow)
+        mobile_client = str(platform or normalized.get('platform', '')).lower() in {'reactnative', 'ionic', 'cordova', 'nativescript'}
+        if mobile_client and normalized.get('sink') == 'fetch (SSRF)':
+            normalized['sink'] = 'fetch (Client Network Request)'
+            normalized['description'] = 'Client network request receives a derived URL; inspect destination and query construction.'
+            normalized['explanation'] = 'A client request does not establish server-side request forgery. Trace destination control and sensitive query values separately.'
+        unresolved_origin = any(step.get('role') == 'source' and str(step.get('code', '')).lower().startswith('[inferred]')
+                                for step in normalized.get('path', []))
         score, cross_file = _compute_risk(normalized, profile)
+        if unresolved_origin:
+            score = min(score, 49)
+            normalized['source_resolution'] = 'unresolved'
+            normalized['risk_basis'] = 'Upstream input origin is inferred; external attacker control is not established.'
+        if _trace_status(normalized) == "partial":
+            # An unresolved call boundary is not a confirmed security sink.
+            score = min(score, 49)
+            normalized["risk_basis"] = "Unresolved trace boundary; no complete source-to-security-sink flow established."
         normalized["risk_score"] = score
         normalized["cross_file"] = cross_file
-        normalized["severity"] = _severity_from_score(score, profile)
+        normalized["severity"] = "Low" if _trace_status(normalized) == "partial" or unresolved_origin else _severity_from_score(score, profile)
         key = _flow_key(normalized)
         prev = best_by_key.get(key)
         if prev is None or normalized["risk_score"] > prev["risk_score"]:
@@ -548,17 +592,8 @@ def _inject_modern_style(html_text: str, variant: str = "main", theme: str = "ha
 
 
 def render_html_modern(flows: List[Dict], output_path: Path, title: str = "Advanced Analysis", theme: str = "hacker_mode"):
-    temp_path = output_path.parent / f"{output_path.stem}.legacy.tmp"
-    render_html(flows, temp_path, title=title)
-    html_text = temp_path.read_text(encoding="utf-8")
-    modern_text = _inject_modern_style(html_text, variant="main", theme=theme)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(modern_text, encoding="utf-8")
-    try:
-        temp_path.unlink()
-    except OSError:
-        pass
-    return output_path
+    from .offline_report import render_analysis
+    return render_analysis(flows, output_path, title=title, section='summary')
 
 
 TOKEN_RE = re.compile(r"[$@]?[A-Za-z_][A-Za-z0-9_]{2,}")
@@ -1024,8 +1059,7 @@ MITIGATION_RULES = {
     ],
     "kotlin": [
         _mit_rule("sql_injection", "Prepared statement or parameter binding", r"\b(?:prepareStatement|namedParameterJdbcTemplate|jdbcTemplate)\b", [r"\bset(?:String|Int|Long|Object)\s*\(|:\w+"], "Kotlin SQL execution uses placeholders or bound parameters."),
-        _mit_rule("javascript_injection", "WebView JavaScript guard", r"\b(?:shouldOverrideUrlLoading|setJavaScriptEnabled\s*\(\s*false\s*\)|Uri\.parse)\b", [], "WebView input is gated or JavaScript execution is disabled before navigation."),
-        _mit_rule("ssrf", "Validated outbound URL", r"\b(?:URI\s*\(|URL\s*\(|HttpUrl\.parse)\b", [], "Outbound URLs are parsed or validated before request execution."),
+        _mit_rule("javascript_injection", "WebView JavaScript disabled", r"\b(?:setJavaScriptEnabled\s*\(\s*false\s*\)|javaScriptEnabled\s*=\s*false\b)", [], "A setting explicitly disables WebView JavaScript. Its scope and alternate navigation paths still require review."),
         _mit_rule("insecure_deserialization", "Object input filtering", r"\bObjectInputFilter\b|\bsetObjectInputFilter\s*\(", [], "Deserialization is protected with explicit filtering."),
     ],
     "dotnet": [
@@ -2222,12 +2256,19 @@ def validate_source_findings(
 
 
 def _confirm_vulnerability_from_flow(flow: Dict, platform: str) -> Dict:
+    if flow.get('source_resolution') == 'unresolved' or any(
+        step.get('role') == 'source' and str(step.get('code', '')).lower().startswith('[inferred]')
+        for step in flow.get('path', [])
+    ):
+        return {}
     platform_rules = VULNERABILITY_RULES.get(str(platform or "").lower(), [])
     if not platform_rules:
         return {}
 
     sink_name = str(flow.get("sink", "")).strip().lower()
     for rule in platform_rules:
+        if not allows_check(rule["title"], rule_id=rule["kind"]):
+            continue
         if sink_name not in rule.get("sink_names", set()):
             continue
         if not _flow_sink_consistent(flow):
@@ -2304,14 +2345,19 @@ def _discover_mitigations(scan_root: Path, platform: str) -> List[Dict]:
     raw_globs = FILE_GLOBS.get(platform_key, "*")
     globs = raw_globs if isinstance(raw_globs, (list, tuple, set)) else (raw_globs,)
     for glob in globs:
-        for file_path in Path(scan_root).rglob(glob):
+        for file_path in glob_source(Path(scan_root), glob):
             if not file_path.is_file():
                 continue
             try:
                 text = file_path.read_text(encoding="utf-8", errors="replace")
             except OSError:
                 continue
+            if platform_key == 'kotlin':
+                from core.rdl.source_review import source_views
+                text = source_views(file_path, text)[0]
             for rule in rules:
+                if not allows_check(rule["title"], rule_id=rule["kind"]):
+                    continue
                 if not _text_contains_all(text, [rule["primary"], *rule.get("required", [])]):
                     continue
                 for match in rule["primary"].finditer(text):
@@ -2401,7 +2447,7 @@ def build_security_inventory(flows: List[Dict], scan_root: Path = None, platform
     ]
 
     finding_validation = validate_source_findings(
-        source_findings=source_findings or [],
+        source_findings=[item for item in (source_findings or []) if allows_check(item.get("rule_name", item.get("rule_title", "")), item.get("category", ""), item.get("rule_id", ""))],
         flows=ranked_flows,
         vulnerabilities=vulnerabilities,
         mitigations=mitigations,
@@ -2410,6 +2456,9 @@ def build_security_inventory(flows: List[Dict], scan_root: Path = None, platform
     )
     for item in finding_validation.get("synthetic_vulnerabilities", []):
         vulnerabilities.append(item)
+
+    from core.rdl.narratives import enrich_vulnerability
+    vulnerabilities = [enrich_vulnerability(item) for item in vulnerabilities if allows_check(item.get("title", ""), rule_id=item.get("kind", ""))]
 
     mitigation_counts = Counter(item["kind"] for item in mitigations)
     for item in vulnerabilities:
@@ -2822,17 +2871,8 @@ def render_xref_html(flows: List[Dict], output_path: Path, title: str = "Advance
 
 
 def render_xref_html_modern(flows: List[Dict], output_path: Path, title: str = "Advanced Analysis XREF", theme: str = "hacker_mode"):
-    temp_path = output_path.parent / f"{output_path.stem}.legacy.tmp"
-    render_xref_html(flows, temp_path, title=title)
-    html_text = temp_path.read_text(encoding="utf-8")
-    modern_text = _inject_modern_style(html_text, variant="xref", theme=theme)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(modern_text, encoding="utf-8")
-    try:
-        temp_path.unlink()
-    except OSError:
-        pass
-    return output_path
+    from .offline_report import render_analysis
+    return render_analysis(flows, output_path, title=title, section='xref')
 
 
 def write_reports(flows: List[Dict], output_dir: Path, title: str, platform: str = None):
@@ -2850,6 +2890,9 @@ def write_reports(flows: List[Dict], output_dir: Path, title: str, platform: str
     print(f"     [-] Writing JSON       : {len(ranked_flows)} ranked flow(s) for Advanced Analysis", flush=True)
     json_path.write_text(json.dumps(ranked_flows, indent=2), encoding="utf-8")
 
+    if web_scan():
+        return json_path, None
+
     # Write themed HTML output directly into output_dir.
     # For theme=both, the default (hacker) uses the standard filenames and
     # the professional variant gets a _professional suffix.
@@ -2863,7 +2906,7 @@ def write_reports(flows: List[Dict], output_dir: Path, title: str, platform: str
         else:
             themed_html_path = html_path
             themed_xref_path = xref_html_path
-        print(f"     [-] Rendering report   : {title_suffix} legacy Taint Flows HTML", flush=True)
+        print(f"     [-] Rendering report   : {title_suffix} structured Advanced Analysis HTML", flush=True)
         render_html_modern(ranked_flows, themed_html_path, title=f"{title} - Advanced Analysis {title_suffix}", theme=theme)
         print(f"     [-] Rendering xref     : {title_suffix} Advanced Analysis XREF HTML", flush=True)
         render_xref_html_modern(ranked_flows, themed_xref_path, title=f"{title} - Advanced Analysis XREF {title_suffix}", theme=theme)

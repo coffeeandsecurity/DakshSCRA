@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.c.core.insecure_file_permissions VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bopen\\s*\\(.*\\bO_CREAT\\b.*\\)" "im"
+WHEN TEXT_MISSING "0600|0644|0660|0640|S_IRUSR|S_IWUSR|umask" "im"
+REPORT "Insecure File Permissions"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

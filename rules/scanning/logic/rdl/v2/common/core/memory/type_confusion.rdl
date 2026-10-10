@@ -1,0 +1,10 @@
+VERSION 2
+RULE memory.type-confusion VERSION 1
+IN FUNCTION
+LET object BE OBJECT MATCHES type.dynamic-object
+WHEN assumed_type.incompatible object AND sensitive_operation object
+REQUIRE REACHABLE PATH
+REPORT "type confusion"
+SEVERITY CRITICAL
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

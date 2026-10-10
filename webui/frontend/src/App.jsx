@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   createScan,
+  deleteScanData,
+  deleteScanRecord,
   deleteProject,
   getHealth,
   getLatestGithubRelease,
@@ -21,6 +23,7 @@ import DirectoryBrowserModal from './components/DirectoryBrowserModal'
 import AboutPanel from './components/AboutPanel'
 import HelpPanel from './components/HelpPanel'
 import ChangePasswordGate from './components/ChangePasswordGate'
+import CompletedScans from './components/CompletedScans'
 import LoginPage from './components/LoginPage'
 import SettingsPanel from './components/SettingsPanel'
 import ProjectsPanel from './components/ProjectsPanel'
@@ -29,17 +32,32 @@ import ScanForm from './components/ScanForm'
 import ScanTable from './components/ScanTable'
 import Sidebar from './components/Sidebar'
 
+const SystemPanel = lazy(() => import('./components/SystemPanel'))
+
+const ACTIVE_SCAN_STATUSES = new Set(['running', 'queued', 'stopping'])
+
 const EMPTY_FORM = {
+  rdl_engine: 'both',
+  custom_rdl: [],
+  exclude_checks: [],
+  exclude_paths: [],
+  exclude_types: [],
+  exclude_keywords: [],
+  recon_strict: false,
+  baseline_mode: 'default',
+  baseline_file: '',
+  review_config: '',
+  state_mode: 'default',
   project_name: '',
   rules: 'auto',
   target_dir: '',
   file_types: 'auto',
-  report_format: 'html',
+  report_format: 'web',
   verbosity: 1,
-  recon: false,
+  recon: true,
   estimate: false,
   analysis: false,
-  loc: false,
+  loc: true,
 }
 
 /* ─── Toast ──────────────────────────────────────────────────── */
@@ -131,7 +149,7 @@ function AccountMenu({ user, version, onChangePassword, onLogout }) {
             <span className="account-menu-icon">↪</span>
             Log out
           </button>
-          <div className="account-dropdown-version">Daksh SCRA v{version || '0.38'}</div>
+          <div className="account-dropdown-version">Daksh SCRA{version ? ` v${version}` : ''}</div>
         </div>
       ) : null}
     </div>
@@ -151,6 +169,7 @@ export default function App() {
   const [metrics, setMetrics] = useState(null)
   const [projects, setProjects] = useState([])
   const [selectedProject, setSelectedProject] = useState('')
+  const [viewedProject, setViewedProject] = useState('')
 
   const [runs, setRuns] = useState([])
   const [selected, setSelected] = useState(null)
@@ -179,12 +198,12 @@ export default function App() {
   }, [])
 
   const runningCount = useMemo(
-    () => runs.filter((r) => r.status === 'running' || r.status === 'queued').length,
+    () => runs.filter((r) => ACTIVE_SCAN_STATUSES.has(r.status)).length,
     [runs]
   )
 
   const hasActiveRun = useMemo(
-    () => runs.some((r) => r.status === 'running' || r.status === 'queued') || selectedDetail?.status === 'running',
+    () => runs.some((r) => ACTIVE_SCAN_STATUSES.has(r.status)) || ACTIVE_SCAN_STATUSES.has(selectedDetail?.status),
     [runs, selectedDetail?.status]
   )
 
@@ -196,15 +215,45 @@ export default function App() {
   const overviewFailedRef = useRef(false)
   const runsFailedRef = useRef(false)
   const selectedFailedRef = useRef(false)
+  const sessionGeneration = useRef(0)
+  const selectedRequest = useRef(0)
+
+  function clearSelectedScan() {
+    selectedRequest.current++
+    setSelected(null)
+    setSelectedDetail(null)
+    setSelectedArtifacts(null)
+    setSelectedLog('')
+  }
+
+  function endSession() {
+    sessionGeneration.current++
+    clearSelectedScan()
+    setUser(null)
+    setMetrics(null)
+    setProjects([])
+    setRuns([])
+    setSelectedProject('')
+    setViewedProject('')
+    setSection('dashboard')
+    setError('')
+    setToasts([])
+    setPasswordDialogOpen(false)
+    setForm(EMPTY_FORM)
+    overviewFailedRef.current = runsFailedRef.current = selectedFailedRef.current = false
+  }
 
   async function refreshOverview() {
+    const generation = sessionGeneration.current
     try {
       const [m, p] = await Promise.all([getMetrics(), listProjects()])
+      if (generation !== sessionGeneration.current) return
       setMetrics(m)
       setProjects(p)
       if (!selectedProject && p.length > 0) setSelectedProject(p[0].project_key)
       overviewFailedRef.current = false
     } catch {
+      if (generation !== sessionGeneration.current) return
       if (!overviewFailedRef.current) {
         overviewFailedRef.current = true
         addToast('Unable to refresh dashboard data - check your connection.', 'error', 'Refresh Failed')
@@ -213,11 +262,14 @@ export default function App() {
   }
 
   async function refreshRuns() {
+    const generation = sessionGeneration.current
     try {
-      const data = await listScans(80, selectedProject || undefined)
+      const data = await listScans(200)
+      if (generation !== sessionGeneration.current) return
       setRuns(data)
       runsFailedRef.current = false
     } catch {
+      if (generation !== sessionGeneration.current) return
       if (!runsFailedRef.current) {
         runsFailedRef.current = true
         addToast('Unable to refresh scan list - check your connection.', 'error', 'Refresh Failed')
@@ -227,22 +279,29 @@ export default function App() {
 
   async function refreshSelected(runUuid) {
     if (!runUuid) return
-    try {
-      const [detail, artifacts, logRes] = await Promise.all([
-        getScan(runUuid),
-        getScanArtifacts(runUuid),
-        getScanLog(runUuid),
-      ])
-      setSelectedDetail(detail)
-      setSelectedArtifacts(artifacts)
-      setSelectedLog(logRes.log_tail || '')
-      selectedFailedRef.current = false
-    } catch {
-      if (!selectedFailedRef.current) {
+    const requestId = ++selectedRequest.current
+    const generation = sessionGeneration.current
+    const [detailResult, artifactsResult, logResult] = await Promise.allSettled([
+      getScan(runUuid), getScanArtifacts(runUuid), getScanLog(runUuid),
+    ])
+    if (generation !== sessionGeneration.current || requestId !== selectedRequest.current) return
+    if (detailResult.status === 'rejected') {
+      if (detailResult.reason?.message === 'run_not_found') {
+        clearSelectedScan()
+        setSection('completed')
+        refreshRuns()
+        refreshOverview()
+        addToast('This scan is no longer in the current scan history. The scan list has been refreshed.', 'warning', 'Scan unavailable')
+      } else if (!selectedFailedRef.current) {
         selectedFailedRef.current = true
         addToast('Unable to refresh scan details - check your connection.', 'error', 'Refresh Failed')
       }
+      return
     }
+    setSelectedDetail(detailResult.value)
+    selectedFailedRef.current = false
+    setSelectedArtifacts(artifactsResult.status === 'fulfilled' ? artifactsResult.value : null)
+    setSelectedLog(logResult.status === 'fulfilled' ? logResult.value.log_tail || '' : '')
   }
 
   async function submitScan() {
@@ -254,7 +313,7 @@ export default function App() {
     setCreating(true)
     setError('')
     try {
-      const created = await createScan(form)
+      const created = await createScan({ ...form, custom_rdl: (form.custom_rdl || []).map((p) => p.trim()).filter(Boolean) })
       await Promise.all([refreshOverview(), refreshRuns()])
       setSection('scans')
       setSelected(created)
@@ -275,57 +334,67 @@ export default function App() {
     try {
       await deleteProject(projectKey)
       if (selectedProject === projectKey) setSelectedProject('')
-      await refreshOverview()
-      addToast('Project deleted', 'success')
+      await Promise.all([refreshOverview(), refreshRuns()])
+      addToast('Project and scan data deleted. Scan history records remain in Recent Scans.', 'success', 'Data Deleted')
     } catch (e) {
       addToast(e.message === 'project_has_active_scans' ? 'Cannot delete - scan is running' : e.message, 'error', 'Delete Failed')
     }
   }
 
-  async function handleOpenProject(project) {
-    setSelectedProject(project.project_key)
-    setSection('scans')
-    setError('')
-    setSelected(null)
-    setSelectedDetail(null)
-    setSelectedArtifacts(null)
-    setSelectedLog('')
-
-    if (!project.latest_run_uuid) {
-      return
-    }
-
+  async function handleDeleteScanData(run) {
     try {
-      const [detail, artifacts, logRes] = await Promise.all([
-        getScan(project.latest_run_uuid),
-        getScanArtifacts(project.latest_run_uuid),
-        getScanLog(project.latest_run_uuid),
-      ])
-      setSelected(detail)
-      setSelectedDetail(detail)
-      setSelectedArtifacts(artifacts)
-      setSelectedLog(logRes.log_tail || '')
+      await deleteScanData(run.run_uuid)
+      if (selected?.run_uuid === run.run_uuid) handleBackToScans()
+      await Promise.all([refreshOverview(), refreshRuns()])
+      addToast('Reports, findings, logs, and runtime data were deleted. The Recent Scans record was retained.', 'success', 'Scan Data Deleted')
     } catch (e) {
-      setSelected(null)
-      setSelectedDetail(null)
-      setSelectedArtifacts(null)
-      setSelectedLog('')
-      addToast(`Failed to open latest scan for ${project.project_name}: ${e.message}`, 'error', 'Open Project Failed')
+      addToast(e.message === 'scan_is_active' ? 'Stop the scan before deleting its data.' : e.message, 'error', 'Delete Failed')
+      throw e
     }
+  }
+
+  async function handleDeleteScanRecord(run) {
+    try {
+      await deleteScanRecord(run.run_uuid)
+      if (selected?.run_uuid === run.run_uuid) handleBackToScans()
+      await Promise.all([refreshOverview(), refreshRuns()])
+      addToast('The scan history record was permanently removed.', 'success', 'Record Cleared')
+    } catch (e) {
+      addToast(e.message, 'error', 'Clear Failed')
+      throw e
+    }
+  }
+
+  function handleOpenProject(project) {
+    const key = typeof project === 'string' ? project : project.project_key
+    clearSelectedScan()
+    setSelectedProject(key)
+    setViewedProject(key)
+    setSection('projects')
+    setError('')
+  }
+
+  function handleOpenProjectScan(run) {
+    clearSelectedScan()
+    setSelectedProject(run.project_key)
+    setViewedProject(run.project_key)
+    setSection(ACTIVE_SCAN_STATUSES.has(run.status) ? 'scans' : 'completed')
+    setSelected(run)
+    setError('')
   }
 
   /* ── Navigation handler (from child components) ── */
   function handleNavigate(dest, run = null) {
-    setSection(dest)
-    if (run) setSelected(run)
+    if (dest === 'scans' && run) handleOpenProjectScan(run)
+    else { setSection(dest); if (run) setSelected(run) }
   }
 
   /* ── Auth check (runs once, before anything else) ── */
   useEffect(() => {
-    setUnauthorizedHandler(() => setUser(null))
+    setUnauthorizedHandler(endSession)
     getMe()
       .then((me) => setUser(me))
-      .catch(() => setUser(null))
+      .catch(endSession)
       .finally(() => setAuthChecked(true))
     return () => setUnauthorizedHandler(null)
   }, [])
@@ -336,7 +405,7 @@ export default function App() {
     } catch {
       // clear local state regardless of whether the network call succeeded
     }
-    setUser(null)
+    endSession()
   }
 
   /* ── Initial load (only once authenticated) ── */
@@ -385,6 +454,19 @@ export default function App() {
     }
   }, [user, section])
 
+  const previousSelectedStatusRef = useRef(null)
+  useEffect(() => {
+    const currentStatus = selectedDetail?.status || null
+    const previousStatus = previousSelectedStatusRef.current
+    previousSelectedStatusRef.current = currentStatus
+    if (ACTIVE_SCAN_STATUSES.has(previousStatus) && currentStatus && !ACTIVE_SCAN_STATUSES.has(currentStatus)) {
+      setSection('completed')
+      refreshRuns()
+      refreshOverview()
+      addToast('Scan completed. Full results are now available under Completed.', 'success', 'Scan Complete')
+    }
+  }, [selectedDetail?.status])
+
   /* ── Auto-refresh polling ── */
   useEffect(() => {
     if (!user || user.must_change_password) return
@@ -401,28 +483,31 @@ export default function App() {
   const pageTitles = {
     dashboard: 'Dashboard',
     projects: 'Projects',
-    scans: 'Scans',
+    newScan: 'New scan',
+    scans: 'Active scans',
+    completed: 'Completed scans',
+    system: 'System',
     settings: 'Settings',
     help: 'Help & Documentation',
     about: 'About DakshSCRA',
   }
 
-  const showingScanWorkspace = section === 'scans' && !!selectedDetail?.run_uuid
+  const showingScanWorkspace = (section === 'scans' || section === 'completed') && !!selectedDetail?.run_uuid
+  const activeRuns = useMemo(() => runs.filter((run) => ACTIVE_SCAN_STATUSES.has(run.status)), [runs])
+  const completedRuns = useMemo(() => runs.filter((run) => !ACTIVE_SCAN_STATUSES.has(run.status)), [runs])
 
   function handleNewScan() {
-    setSection('scans')
-    setSelected(null)
-    setSelectedDetail(null)
-    setSelectedArtifacts(null)
-    setSelectedLog('')
+    setSection('newScan')
+    clearSelectedScan()
     setError('')
   }
 
   function handleBackToScans() {
-    setSelected(null)
-    setSelectedDetail(null)
-    setSelectedArtifacts(null)
-    setSelectedLog('')
+    clearSelectedScan()
+  }
+
+  function handleOpenCompleted(run) {
+    handleOpenProjectScan(run)
   }
 
   if (!authChecked) {
@@ -442,9 +527,15 @@ export default function App() {
       {/* Sidebar */}
       <Sidebar
         active={section}
-        onChange={(s) => { setSection(s); setError('') }}
+        onChange={(s) => {
+          if (s === 'scans' || s === 'completed' || s === 'newScan' || s === 'projects') handleBackToScans()
+          if (s === 'projects') setViewedProject('')
+          setSection(s)
+          setError('')
+        }}
         health={health}
         runningCount={runningCount}
+        completedCount={completedRuns.length}
         user={user}
         version={versionInfo?.version}
         onLogout={handleLogout}
@@ -468,11 +559,12 @@ export default function App() {
                 </button>
               </>
             )}
-            {section === 'scans' && selectedProject && (
+            {(section === 'scans' || section === 'completed') && selectedProject && (
               <>
+                {showingScanWorkspace && viewedProject && <button className="btn btn-ghost btn-sm" onClick={() => handleOpenProject(viewedProject)}>Project scans</button>}
                 {showingScanWorkspace && (
                   <button className="btn btn-ghost btn-sm" onClick={handleBackToScans}>
-                    View Scans
+                    {section === 'completed' ? 'Completed scans' : 'Active scans'}
                   </button>
                 )}
                 {showingScanWorkspace && (
@@ -515,6 +607,8 @@ export default function App() {
               onNavigate={handleNavigate}
               onOpenProject={handleOpenProject}
               onDeleteProject={handleDeleteProject}
+              onDeleteScanData={handleDeleteScanData}
+              onDeleteScanRecord={handleDeleteScanRecord}
               versionInfo={versionInfo}
               latestRelease={latestRelease}
               githubChecked={githubChecked}
@@ -525,43 +619,52 @@ export default function App() {
           {section === 'projects' && (
             <ProjectsPanel
               projects={projects}
-              selectedProject={selectedProject}
-              onSelectProject={(key) => {
-                setSelectedProject(key)
-                setSection('scans')
-              }}
+              projectKey={viewedProject}
+              onSelectProject={handleOpenProject}
+              onBack={() => setViewedProject('')}
+              onOpenScan={handleOpenProjectScan}
+              onDeleteData={handleDeleteScanData}
+              onDeleteRecord={handleDeleteScanRecord}
               onNewScan={handleNewScan}
               onDeleteProject={handleDeleteProject}
             />
           )}
 
           {/* ── Scans ── */}
+          {section === 'newScan' && (
+            <div className="new-scan-page">
+              <ScanForm
+                values={form}
+                setValues={setForm}
+                creating={creating}
+                onSubmit={submitScan}
+                onBrowse={() => setBrowserOpen(true)}
+              />
+            </div>
+          )}
           {section === 'scans' && (
-            <div className={`scans-layout ${showingScanWorkspace ? 'workspace' : 'setup'}`}>
+            <div className="scans-layout workspace">
               {!showingScanWorkspace ? (
                 <>
-                  <div className="scans-side">
-                    <ScanForm
-                      values={form}
-                      setValues={setForm}
-                      creating={creating}
-                      onSubmit={submitScan}
-                      onBrowse={() => setBrowserOpen(true)}
-                    />
-                  </div>
                   <div className="scans-main">
                     <div className="scans-panel-head">
                       <div>
-                        <div className="scans-panel-title">Recent Scans</div>
-                        <div className="scans-panel-copy">Browse current and saved runs, then open one into the workspace.</div>
+                        <div className="scans-panel-title">Active scan queue</div>
+                        <div className="scans-panel-copy">Only the running scan and scans waiting in the queue appear here.</div>
                       </div>
+                      <button className="btn btn-primary btn-sm" onClick={handleNewScan}>+ New Scan</button>
                     </div>
                     <ScanTable
-                      runs={runs}
+                      runs={activeRuns}
                       selected={selected}
                       onSelect={(r) => {
+                        setSelectedDetail(null)
+                        setSelectedArtifacts(null)
+                        setSelectedLog('')
                         setSelected(r)
                       }}
+                      onDeleteData={handleDeleteScanData}
+                      onDeleteRecord={handleDeleteScanRecord}
                     />
                   </div>
                 </>
@@ -569,6 +672,7 @@ export default function App() {
                 <>
                   <div className="scans-main scans-main-detail scans-main-detail-full">
                     <ScanDetail
+                      key={selectedDetail.run_uuid}
                       run={selectedDetail}
                       log={selectedLog}
                       artifactIndex={selectedArtifacts}
@@ -579,6 +683,31 @@ export default function App() {
               )}
             </div>
           )}
+          {/* ── Completed scans ── */}
+          {section === 'completed' && (
+            <div className={`scans-layout ${showingScanWorkspace ? 'workspace' : ''}`}>
+              <div className="scans-main scans-main-detail scans-main-detail-full">
+                {showingScanWorkspace ? (
+                  <ScanDetail
+                    key={selectedDetail.run_uuid}
+                      run={selectedDetail}
+                    log={selectedLog}
+                    artifactIndex={selectedArtifacts}
+                    onStopped={refreshSelected}
+                  />
+                ) : (
+                  <CompletedScans
+                    runs={completedRuns}
+                    selected={selected}
+                    onView={handleOpenCompleted}
+                    onDeleteData={handleDeleteScanData}
+                    onDeleteRecord={handleDeleteScanRecord}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+          {section === 'system' && <Suspense fallback={<p role="status">Loading System…</p>}><SystemPanel health={health} version={versionInfo?.version} onStorageChange={() => { refreshOverview(); refreshRuns(); if (selected?.run_uuid) refreshSelected(selected.run_uuid) }} /></Suspense>}
           {/* ── Settings ── */}
           {section === 'settings' && (
             <SettingsPanel onToast={addToast} />

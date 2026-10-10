@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.php.framework.codeigniter.codeigniter_permissive_cors_configuration VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "Access-Control-Allow-Origin\\s*[:=]\\s*[\\'\\\"]\\*[\\'\\\"]|allowed_origins\\s*=\\s*\\[?\\s*[\\'\\\"]\\*[\\'\\\"]" "im"
+WHEN TEXT_MISSING "allowlist|whitelist|trusted" "im"
+REPORT "Codeigniter Permissive CORS Configuration"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

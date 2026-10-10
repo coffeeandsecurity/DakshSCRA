@@ -3,7 +3,7 @@
         <rule>
             <name>Fiber Debug Mode Enabled</name>
             <regex>GIN_MODE\s*=\s*debug|SetMode\(\s*gin\.DebugMode\s*\)|\.Debug\s*=\s*true</regex>
-            <rdl_ref>logic/golang/framework/fiber/fiber_debug_mode_enabled.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/golang/framework/fiber/fiber_debug_mode_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -12,15 +12,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects debug mode settings in Go web frameworks.</rule_desc>
-            <vuln_desc>Debug mode can expose internals and verbose diagnostics.</vuln_desc>
-            <developer>Use release/production mode in deployment.</developer>
+            <rule_desc>A configuration or API enables development diagnostics, process inspection, or debugging. Verify whether it applies to a deployed production artifact.</rule_desc>
+            <vuln_desc>An actor with access to an enabled debugging interface may inspect private state or influence application execution; exposed development endpoints may disclose internal implementation details.</vuln_desc>
+            <developer>Disable debugging and development endpoints in production, bind necessary diagnostic services to restricted interfaces, and verify the final deployed artifact and access policy.</developer>
             <reviewer>Verify framework mode defaults in production runtime. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Fiber TLS Validation Bypass</name>
             <regex>InsecureSkipVerify\s*:\s*true</regex>
-            <rdl_ref>logic/golang/framework/fiber/fiber_tls_validation_bypass.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/golang/framework/fiber/fiber_tls_validation_bypass.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -29,15 +29,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects TLS certificate verification bypass in HTTP/TLS clients.</rule_desc>
-            <vuln_desc>Skipping cert validation enables MITM attacks.</vuln_desc>
-            <developer>Keep certificate validation enabled and implement proper trust chains.</developer>
+            <rule_desc>The checked source contains a transport-security exception, insecure endpoint, or certificate-validation configuration. Resolve the effective policy and the connections it governs.</rule_desc>
+            <vuln_desc>An attacker on the network may read or alter affected traffic if sensitive data travels over cleartext or the connection accepts an untrusted server. Normal HTTPS endpoints and correctly implemented validation do not establish exposure.</vuln_desc>
+            <developer>Use HTTPS with normal certificate-chain and hostname verification. Remove permissive production callbacks and broad transport exceptions; restrict any justified exception to a documented, non-sensitive endpoint.</developer>
             <reviewer>Inspect all transport/client configs for bypass settings. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Fiber SQL Query Concatenation Sink</name>
             <regex>Query\(\s*fmt\.Sprintf|Exec\(\s*fmt\.Sprintf|Raw\(\s*fmt\.Sprintf</regex>
-            <rdl_ref>logic/golang/framework/fiber/fiber_sql_query_concatenation_sink.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/golang/framework/fiber/fiber_sql_query_concatenation_sink.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -46,15 +46,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>magenta</highlight_color>
             </scan_config>
-            <rule_desc>Detects dynamic SQL construction via string formatting.</rule_desc>
-            <vuln_desc>Formatted SQL may introduce SQL injection vulnerabilities.</vuln_desc>
-            <developer>Use parameterized query APIs and strict input validation.</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Trace user input into query format strings. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Fiber Permissive CORS</name>
             <regex>AllowOrigins\s*:\s*\[\]\s*string\{\s*"\*"\s*\}|AllowOrigins\s*:\s*"\*"</regex>
-            <rdl_ref>logic/golang/framework/fiber/fiber_permissive_cors.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/golang/framework/fiber/fiber_permissive_cors.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -63,15 +63,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects wildcard CORS policies in Go services.</rule_desc>
-            <vuln_desc>Wildcard origins can expose APIs to arbitrary websites.</vuln_desc>
-            <developer>Limit CORS to explicit trusted origins.</developer>
+            <rule_desc>A browser-origin or navigation policy permits a broad set of external origins or destinations. Identify the resources and privileged interfaces covered by the effective policy.</rule_desc>
+            <vuln_desc>An untrusted site may read protected responses or invoke privileged interfaces if a permissive policy admits it and independent authentication or authorization does not prevent the operation.</vuln_desc>
+            <developer>Allow only required trusted origins and destinations. Validate origin and message schemas, handle credentials deliberately, and enforce access controls independently of the origin policy.</developer>
             <reviewer>Validate CORS policy builders and middleware config. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Fiber Hardcoded Secret Material</name>
             <regex>(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"</regex>
-            <rdl_ref>logic/golang/framework/fiber/fiber_hardcoded_secret_material.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/golang/framework/fiber/fiber_hardcoded_secret_material.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -80,9 +80,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects likely hardcoded secrets in Go source/config.</rule_desc>
-            <vuln_desc>Hardcoded secrets can be extracted from code or binaries.</vuln_desc>
-            <developer>Use environment/config secret providers and rotate keys.</developer>
+            <rule_desc>The checked source or build configuration embeds potentially sensitive credential or key material. Determine whether it is active and whether it reaches distributed artifacts or logs.</rule_desc>
+            <vuln_desc>A party who can read exposed source, artifacts, configuration, or logs may recover active secrets and access the protected service or decrypt data with the secret owner’s privileges.</vuln_desc>
+            <developer>Remove active secrets from source and build layers, rotate exposed values, and load replacements through a restricted secret-management facility. Use narrowly privileged, short-lived credentials.</developer>
             <reviewer>Confirm no production secrets are committed. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

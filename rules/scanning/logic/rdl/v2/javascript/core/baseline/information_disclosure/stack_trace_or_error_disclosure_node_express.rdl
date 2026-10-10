@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.javascript.core.stack_trace_or_error_disclosure_node_express VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "res\\.(?:send|json|end)\\s*\\(\\s*err(?:or)?(?:\\.stack|\\.message)?\\s*\\)" "im"
+WHEN TEXT_MISSING "statusCode|status\\s*\\(\\s*[45]|genericMessage|sanitize|message\\s*:\\s*[\"']" "im"
+REPORT "Stack Trace or Error Disclosure (Node/Express)"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

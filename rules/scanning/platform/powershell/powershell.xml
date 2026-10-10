@@ -3,7 +3,7 @@
         <rule>
             <name>Invoke-Expression with Variable Input</name>
             <regex>Invoke-Expression\s+["']?.*\$\w|iex\s+["']?.*\$\w</regex>
-            <rdl_ref>logic/powershell/core/invoke_expression_with_variable_input.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/powershell/core/invoke_expression_with_variable_input.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -12,15 +12,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects Invoke-Expression (iex) calls that include variable interpolation.</rule_desc>
-            <vuln_desc>Invoke-Expression with unsanitized variables enables arbitrary PowerShell code execution, which can be exploited for privilege escalation or lateral movement.</vuln_desc>
-            <developer>Avoid Invoke-Expression entirely. Use structured calls, cmdlets, and parameter validation attributes ([ValidateSet], [ValidatePattern]) instead.</developer>
+            <rule_desc>The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.</rule_desc>
+            <vuln_desc>If an attacker controls interpreted syntax or the operation selected, code or commands may run with the application’s privileges, allowing data theft, state changes, or service disruption.</vuln_desc>
+            <developer>Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates or expressions.</developer>
             <reviewer>Trace the origin of the string passed to Invoke-Expression and confirm no attacker-controlled path reaches it. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Start-Process or cmd.exe with Variable Arguments</name>
             <regex>(?:Start-Process|&amp;\s+cmd(?:\.exe)?|Invoke-Command)\s+[^`\n]*\$(?:args|input|params|\w+URL|\w+Path|\w+Cmd)</regex>
-            <rdl_ref>logic/powershell/core/start_process_or_cmd_exe_with_variable_arguments.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/powershell/core/start_process_or_cmd_exe_with_variable_arguments.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -29,9 +29,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects process invocation with variable arguments that may contain unsanitized input.</rule_desc>
-            <vuln_desc>Injecting attacker-controlled arguments into process invocations can lead to argument injection, command execution, or path traversal.</vuln_desc>
-            <developer>Validate and escape all arguments using structured parameter passing. Avoid building command strings through concatenation.</developer>
+            <rule_desc>The code invokes a process or shell execution API. Trace the executable, arguments, shell use, and source of externally supplied values.</rule_desc>
+            <vuln_desc>If attacker-controlled data changes command syntax or executable selection, an attacker may execute commands with application privileges, read or modify files, or disrupt service.</vuln_desc>
+            <developer>Use a fixed executable with a separate argument array and avoid a shell where possible. Validate arguments for the selected program and allowlist permitted operations.</developer>
             <reviewer>Verify argument sources and confirm no user-supplied data reaches process invocations unescaped. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -39,7 +39,7 @@
         <rule>
             <name>Hardcoded Credential in PowerShell Script</name>
             <regex>(?i)(?:password|passwd|secret|apikey|api_key|token|accesskey)\s*=\s*["'][A-Za-z0-9@#$%^&amp;*!_\-]{8,}["']</regex>
-            <rdl_ref>logic/powershell/core/hardcoded_credential_in_powershell_script.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/powershell/core/hardcoded_credential_in_powershell_script.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -48,15 +48,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects hardcoded credentials or secrets assigned as plaintext string variables.</rule_desc>
-            <vuln_desc>Plaintext secrets in PowerShell scripts are exposed through source control, script block logging, and transcript files.</vuln_desc>
-            <developer>Use SecureString, Windows Credential Manager, PSCredential, or secrets management tools (e.g., Get-Secret from SecretManagement module). Never store secrets as plaintext strings.</developer>
+            <rule_desc>The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.</rule_desc>
+            <vuln_desc>If an attacker controls interpreted syntax or the operation selected, code or commands may run with the application’s privileges, allowing data theft, state changes, or service disruption.</vuln_desc>
+            <developer>Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates or expressions.</developer>
             <reviewer>Confirm no credential assignments use plaintext string literals. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>ConvertTo-SecureString with PlainText</name>
             <regex>ConvertTo-SecureString\s+.*-AsPlainText\s+-Force|ConvertTo-SecureString\s+.*-Force\s+.*-AsPlainText</regex>
-            <rdl_ref>logic/powershell/core/convertto_securestring_with_plaintext.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/powershell/core/convertto_securestring_with_plaintext.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -65,9 +65,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects ConvertTo-SecureString usage with -AsPlainText -Force flags indicating a plaintext credential workflow.</rule_desc>
-            <vuln_desc>Using -AsPlainText with a hardcoded or logged string defeats the purpose of SecureString, as the plaintext is visible in script block logs and memory.</vuln_desc>
-            <developer>Retrieve credentials from secure storage (SecretManagement, Credential Manager) rather than converting plaintext strings.</developer>
+            <rule_desc>The script converts plaintext into SecureString. Determine whether the original value is embedded, logged, or accessible through process arguments.</rule_desc>
+            <vuln_desc>The original plaintext may disclose an active credential to script readers or diagnostic recipients; conversion does not remove copies already exposed.</vuln_desc>
+            <developer>Obtain credentials from a restricted secret store or a secure input mechanism, keep plaintext out of scripts and logs, and rotate active values that were exposed.</developer>
             <reviewer>Verify that the source string is not hardcoded or logged. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -75,7 +75,7 @@
         <rule>
             <name>Download Cradle Pattern</name>
             <regex>(?:IEX|Invoke-Expression)\s*\(\s*(?:New-Object\s+Net\.WebClient|Invoke-WebRequest|iwr|curl|wget)\s*[^)]*\)</regex>
-            <rdl_ref>logic/powershell/core/download_cradle_pattern.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/powershell/core/download_cradle_pattern.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -84,15 +84,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects download-and-execute cradle patterns commonly used in living-off-the-land attacks.</rule_desc>
-            <vuln_desc>Download cradles fetch and immediately execute remote code, bypassing code signing controls and enabling supply chain attacks or post-exploitation persistence.</vuln_desc>
-            <developer>Use signed scripts from trusted repositories. Validate content hashes before execution. Enforce code signing policies.</developer>
+            <rule_desc>The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.</rule_desc>
+            <vuln_desc>If an attacker controls interpreted syntax or the operation selected, code or commands may run with the application’s privileges, allowing data theft, state changes, or service disruption.</vuln_desc>
+            <developer>Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates or expressions.</developer>
             <reviewer>This pattern is a high-confidence indicator of malicious activity in most production environments. Verify the remote source and confirm a legitimate use case exists. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>WebClient DownloadString Execution</name>
             <regex>(?:New-Object\s+(?:System\.)?Net\.WebClient|Net\.WebClient\b)[^|;\n]*\.\s*DownloadString</regex>
-            <rdl_ref>logic/powershell/core/webclient_downloadstring_execution.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/powershell/core/webclient_downloadstring_execution.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -101,9 +101,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects WebClient.DownloadString without content verification, often used to fetch and execute remote scripts.</rule_desc>
-            <vuln_desc>Downloading and executing remote scripts without signature or hash verification exposes systems to tampered or malicious code substitution.</vuln_desc>
-            <developer>Use Invoke-WebRequest with hash validation. Enforce AllSigned or RemoteSigned execution policies and verify content authenticity before execution.</developer>
+            <rule_desc>The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.</rule_desc>
+            <vuln_desc>If an attacker controls interpreted syntax or the operation selected, code or commands may run with the application’s privileges, allowing data theft, state changes, or service disruption.</vuln_desc>
+            <developer>Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates or expressions.</developer>
             <reviewer>Confirm the download source is trusted and content integrity is validated before use. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -111,7 +111,7 @@
         <rule>
             <name>Bypass Execution Policy</name>
             <regex>(?i)-ExecutionPolicy\s+(?:Bypass|Unrestricted)|Set-ExecutionPolicy\s+(?:Bypass|Unrestricted)</regex>
-            <rdl_ref>logic/powershell/core/bypass_execution_policy.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/powershell/core/bypass_execution_policy.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -120,15 +120,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects PowerShell execution policy bypass or unrestricted policy settings.</rule_desc>
-            <vuln_desc>Bypassing or disabling execution policy removes a defense-in-depth control that prevents unsigned scripts from running, enabling attackers to execute arbitrary PowerShell.</vuln_desc>
-            <developer>Use AllSigned or RemoteSigned policies in production. If bypass is required for automation, use a scoped policy with signed scripts.</developer>
+            <rule_desc>The script contains an attempt to bypass an execution-policy or anti-malware inspection mechanism. Determine actual effectiveness and deployment context.</rule_desc>
+            <vuln_desc>If the bypass is effective, unauthorized or malicious script behavior may evade a configured inspection or execution restriction. A textual marker alone does not prove that protection was bypassed.</vuln_desc>
+            <developer>Remove unnecessary bypass behavior, retain applicable inspection controls, and enforce signing, application control, and least privilege independently of execution-policy settings.</developer>
             <reviewer>Verify whether the bypass is used in authorized automation or represents a security control bypass. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>AMSI Bypass Attempt</name>
             <regex>amsiInitFailed|AmsiScanBuffer|amsi\.dll|amsiContext|Disable.*AMSI|AMSI.*bypass</regex>
-            <rdl_ref>logic/powershell/core/amsi_bypass_attempt.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/powershell/core/amsi_bypass_attempt.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -137,9 +137,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects known patterns associated with Antimalware Scan Interface (AMSI) bypass techniques.</rule_desc>
-            <vuln_desc>AMSI bypass patterns are used to evade PowerShell-based malware detection, allowing execution of malicious payloads without antivirus scanning.</vuln_desc>
-            <developer>These patterns have no legitimate use in production code. Remove any code that modifies AMSI behavior.</developer>
+            <rule_desc>The script contains an attempt to bypass an execution-policy or anti-malware inspection mechanism. Determine actual effectiveness and deployment context.</rule_desc>
+            <vuln_desc>If the bypass is effective, unauthorized or malicious script behavior may evade a configured inspection or execution restriction. A textual marker alone does not prove that protection was bypassed.</vuln_desc>
+            <developer>Remove unnecessary bypass behavior, retain applicable inspection controls, and enforce signing, application control, and least privilege independently of execution-policy settings.</developer>
             <reviewer>Any occurrence of these patterns in production code should be treated as a high-severity indicator of compromise or intentional security bypass. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -147,7 +147,7 @@
         <rule>
             <name>TLS Validation Disabled via Callback</name>
             <regex>ServerCertificateValidationCallback\s*=\s*\{[^}]*\$true\}|ServerCertificateValidationCallback\s*=\s*\{\s*\$true\s*\}|IgnoreSSL|DisableCertCheck|CertificatePolicy.*Accept</regex>
-            <rdl_ref>logic/powershell/core/tls_validation_disabled_via_callback.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/powershell/core/tls_validation_disabled_via_callback.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -156,9 +156,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects TLS certificate validation disabled via ServerCertificateValidationCallback returning true for all certificates.</rule_desc>
-            <vuln_desc>Disabling certificate validation makes HTTPS connections vulnerable to MITM attacks by accepting any certificate including forged or expired ones.</vuln_desc>
-            <developer>Remove certificate validation overrides. Use proper certificate management and trusted CA bundles.</developer>
+            <rule_desc>The checked source contains a transport-security exception, insecure endpoint, or certificate-validation configuration. Resolve the effective policy and the connections it governs.</rule_desc>
+            <vuln_desc>An attacker on the network may read or alter affected traffic if sensitive data travels over cleartext or the connection accepts an untrusted server. Normal HTTPS endpoints and correctly implemented validation do not establish exposure.</vuln_desc>
+            <developer>Use HTTPS with normal certificate-chain and hostname verification. Remove permissive production callbacks and broad transport exceptions; restrict any justified exception to a documented, non-sensitive endpoint.</developer>
             <reviewer>Confirm no production code accepts all TLS certificates unconditionally. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

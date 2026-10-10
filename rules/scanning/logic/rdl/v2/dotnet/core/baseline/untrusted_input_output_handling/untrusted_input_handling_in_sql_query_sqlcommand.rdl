@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.dotnet.core.untrusted_input_handling_in_sql_query_sqlcommand VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "new SqlCommand\\(.*\\)" "im"
+WHEN (TEXT_MATCHES "(\\+|String\\.Format|Request\\.|QueryString|Form)" "im" AND TEXT_MISSING "(SqlParameter|AddWithValue|Parameters\\.Add|Parameters\\.AddWithValue)" "im")
+REPORT "Untrusted Input Handling in SQL Query: SqlCommand"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.xplat.cordova.core.cordova_webview_javascript_bridge_marker VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "addJavascriptInterface\\(|cordova\\.exec\\(" "im"
+WHEN TEXT_MISSING "allow-navigation\\s+href=\\\"https://" "im"
+REPORT "Cordova WebView JavaScript Bridge Marker"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

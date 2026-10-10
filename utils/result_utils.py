@@ -25,6 +25,7 @@ def _default_summary():
             "project_id": "",
             "run_id": "",
             "report_root": "",
+            "rdl_v2_shadow_enabled": False,
         },
         "detection_summary": {
             "total_project_files_identified": 0,

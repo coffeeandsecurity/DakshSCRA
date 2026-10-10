@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.php.framework.laravel.laravel_debug_mode_enabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "APP_DEBUG\\s*=\\s*true|kernel\\.debug\\s*=\\s*true|WP_DEBUG\\s*,\\s*true|ENVIRONMENT\\s*=\\s*[\\'\\\"]development[\\'\\\"]" "im"
+WHEN TEXT_MISSING "release|production" "im"
+REPORT "Laravel Debug Mode Enabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

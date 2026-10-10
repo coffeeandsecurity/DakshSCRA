@@ -1,0 +1,11 @@
+VERSION 2
+RULE memory.invalid-free VERSION 1
+IN FUNCTION
+LET object BE RESOURCE MATCHES memory.object
+STATE object STARTS unallocated
+TRANSITION memory.allocate(object) FROM unallocated TO allocated
+VIOLATION memory.free(object) WHILE unallocated
+REPORT "invalid free"
+SEVERITY HIGH
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

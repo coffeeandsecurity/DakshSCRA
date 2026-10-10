@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.java.core.sql_query_unrestricted_select VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bSELECT\\s+\\*\\s+FROM\\b" "im"
+WHEN TEXT_MISSING "LIMIT\\s+[0-9]+" "im"
+REPORT "SQL Query: Unrestricted SELECT *"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

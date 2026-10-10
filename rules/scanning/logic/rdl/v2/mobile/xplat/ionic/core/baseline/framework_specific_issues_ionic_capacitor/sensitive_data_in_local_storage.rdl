@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.xplat.ionic.core.sensitive_data_in_local_storage VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:localStorage\\.setItem|sessionStorage\\.setItem|Storage\\.set)\\s*\\(" "im"
+WHEN TEXT_MATCHES "localStorage\\.setItem.*(?:password|token|secret|key|auth|credential)|sessionStorage\\.setItem.*(?:password|token|secret|key|auth|credential)|Storage\\.set.*(?:password|token|secret|key|auth|credential)" "im"
+REPORT "Sensitive Data in Local Storage"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

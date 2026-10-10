@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.dotnet.framework.entityframework.entityframework_insecure_certificate_validation_callback VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "ServerCertificateCustomValidationCallback\\s*=\\s*\\(.*=>\\s*true" "im"
+WHEN TEXT_MISSING "test|development|localhost|staging" "im"
+REPORT "Entityframework Insecure Certificate Validation Callback"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

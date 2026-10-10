@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.kotlin.core.insecure_method_call_webview_loadurl_with_dynamic_content VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\.loadUrl\\s*\\(" "im"
+WHEN (TEXT_MISSING "loadUrl\\s*\\(\\s*\"(?:about:|javascript:window\\.|file:///android_asset)" "im" AND TEXT_MISSING "loadUrl\\s*\\(\\s*\"https://[a-zA-Z0-9]" "im")
+REPORT "Insecure Method Call: WebView.loadUrl() with Dynamic Content"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

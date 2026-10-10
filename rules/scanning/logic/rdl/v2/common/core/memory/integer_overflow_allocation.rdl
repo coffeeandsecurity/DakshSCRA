@@ -1,0 +1,10 @@
+VERSION 2
+RULE memory.integer-overflow-allocation VERSION 1
+IN FUNCTION
+LET size BE EXPRESSION MATCHES memory.allocation-size
+WHEN arithmetic.overflow_possible size
+REQUIRE size FLOWS TO memory.allocation
+REPORT "integer overflow affecting allocation size"
+SEVERITY CRITICAL
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

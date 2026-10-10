@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.kubernetes.core.privileged_container_enabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "privileged\\s*:\\s*true" "im"
+WHEN (TEXT_MATCHES "privileged:\\s*true" "im" AND TEXT_MISSING "# intentional|# required|# system" "im")
+REPORT "Privileged Container Enabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

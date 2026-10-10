@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.java.core.stack_trace_or_error_disclosure VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)(e\\.printStackTrace\\(\\)|e\\.getCause\\(\\)\\.printStackTrace\\(\\)|System\\.out\\.print\\(.*Exception.*\\)|throw new \\w+Exception\\(.+\\))" "im"
+WHEN (TEXT_MISSING "log\\.error|logger\\.error|LogManager|SLF4J" "im" AND TEXT_MISSING "production|release" "im")
+REPORT "Stack Trace or Error Disclosure"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

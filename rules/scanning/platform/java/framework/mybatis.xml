@@ -3,7 +3,7 @@
         <rule>
             <name>String Substitution in MyBatis Mapper (${} Syntax)</name>
             <regex>\$\{(?!__frch_|index|item|foreach)[^}]+\}</regex>
-            <rdl_ref>logic/java/framework/mybatis/string_substitution_in_mybatis_mapper_syntax.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/framework/mybatis/string_substitution_in_mybatis_mapper_syntax.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -12,15 +12,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>magenta</highlight_color>
             </scan_config>
-            <rule_desc>Detects use of MyBatis ${} string substitution syntax in mapper XML files.</rule_desc>
-            <vuln_desc>${} performs direct string substitution without parameterization, equivalent to string concatenation in raw JDBC. Any user-controlled value passed through ${} is directly injected into the SQL statement, enabling SQL injection.</vuln_desc>
-            <developer>Use #{} syntax for all user-supplied values. #{} uses prepared statement parameterization. Reserve ${} only for structural SQL elements like column names or table names that cannot be parameterized, and validate them against a strict allowlist.</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Replace all ${} occurrences with #{} unless there is a documented justification. For any remaining ${} usage, confirm the value comes from a controlled allowlist, not user input. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>OrderBy Clause with Dynamic Substitution</name>
             <regex>ORDER\s+BY\s+\$\{|order\s+by\s+\$\{</regex>
-            <rdl_ref>logic/java/framework/mybatis/orderby_clause_with_dynamic_substitution.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/framework/mybatis/orderby_clause_with_dynamic_substitution.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -29,15 +29,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>magenta</highlight_color>
             </scan_config>
-            <rule_desc>Detects dynamic ORDER BY clauses using MyBatis string substitution.</rule_desc>
-            <vuln_desc>ORDER BY clauses cannot use prepared statement parameters (column names cannot be parameterized), so ${} is commonly used. If the column name originates from user input without allowlist validation, this enables SQL injection via ORDER BY manipulation.</vuln_desc>
-            <developer>Validate column names and sort directions against an explicit allowlist of permitted values before constructing ORDER BY clauses. Use a mapping table to translate user-friendly names to actual column identifiers.</developer>
+            <rule_desc>The code constructs a query, selection, or ordering clause with values that may be externally controlled. Resolve whether those values enter syntax or bound data.</rule_desc>
+            <vuln_desc>Attacker-controlled query syntax may change selected records, bypass intended filters, or modify stored data with the connection or provider’s privileges.</vuln_desc>
+            <developer>Bind data values using the query API’s parameter mechanism. Choose ordering columns and other identifiers from a fixed allowlist, and enforce record-level authorization.</developer>
             <reviewer>Confirm ORDER BY ${} values are validated against a strict allowlist and cannot be directly supplied by end users. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>selectKey or Provider with Dynamic SQL Building</name>
             <regex>@SelectProvider\s*\(|@UpdateProvider\s*\(|@InsertProvider\s*\(|@DeleteProvider\s*\(</regex>
-            <rdl_ref>logic/java/framework/mybatis/selectkey_or_provider_with_dynamic_sql_building.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/framework/mybatis/selectkey_or_provider_with_dynamic_sql_building.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -46,9 +46,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>magenta</highlight_color>
             </scan_config>
-            <rule_desc>Detects MyBatis Provider annotations that dynamically build SQL queries.</rule_desc>
-            <vuln_desc>SQL Provider classes that build SQL via string concatenation using method parameters can introduce SQL injection if inputs are not validated before inclusion in the dynamic query.</vuln_desc>
-            <developer>Within Provider classes, validate all dynamic SQL fragments (column names, table names) against allowlists. Use MyBatis SQL builder API (new SQL().SELECT().FROM()) rather than raw string concatenation.</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Review Provider implementations for unsafe string concatenation of user-controlled values into SQL. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

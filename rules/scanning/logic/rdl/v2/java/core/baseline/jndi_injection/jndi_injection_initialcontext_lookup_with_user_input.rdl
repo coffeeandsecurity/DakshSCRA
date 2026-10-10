@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.java.core.jndi_injection_initialcontext_lookup_with_user_input VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "context\\.lookup\\s*\\(|jndiContext\\.lookup\\s*\\(" "im"
+WHEN (TEXT_MATCHES "request|getParameter|getHeader|input|\\+" "im" AND TEXT_MISSING "allowlist|whitelist|validateJndiName" "im")
+REPORT "JNDI Injection: InitialContext Lookup with User Input"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

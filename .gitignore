@@ -44,3 +44,21 @@ Thumbs.db
 # Local-only paths
 # -----------------------------
 /exclude/
+
+# Public documentation allowlist; retain all other docs locally.
+/docs/*
+!/docs/usage-guide.html
+!/docs/usage-guide.md
+
+# Local validation files.
+/tests/
+/examples/
+
+# Public utilities; other tools remain local.
+/tools/*
+!/tools/start_webui.py
+!/tools/rdl_lint.py
+!/tools/rdl_migrate.py
+!/tools/supported_platforms.py
+!/tools/rdl_shadow_report.py
+!/tools/prune_rdl_comparisons.py

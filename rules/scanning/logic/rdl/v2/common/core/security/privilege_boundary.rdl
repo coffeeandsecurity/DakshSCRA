@@ -1,0 +1,11 @@
+VERSION 2
+RULE authorization.privilege-boundary VERSION 1
+IN DATA_FLOW
+LET principal BE VARIABLE MATCHES identity.principal
+LET operation BE CALL MATCHES privilege.sensitive-operation
+WHEN principal FLOWS TO operation
+REQUIRE NOT authorization.proven operation
+REPORT "privilege boundary violation"
+SEVERITY CRITICAL
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

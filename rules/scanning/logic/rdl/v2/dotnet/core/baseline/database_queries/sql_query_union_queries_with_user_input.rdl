@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.dotnet.core.sql_query_union_queries_with_user_input VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)\\bUNION\\s+SELECT\\s+.*\\$.*" "im"
+WHEN TEXT_MISSING "(SqlParameter|AddWithValue|Parameters\\.Add|Parameters\\.AddWithValue)" "im"
+REPORT "SQL Query: UNION Queries with User Input"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

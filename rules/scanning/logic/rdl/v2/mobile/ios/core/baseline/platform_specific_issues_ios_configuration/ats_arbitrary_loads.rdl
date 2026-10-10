@@ -1,0 +1,10 @@
+VERSION 2
+RULE baseline.mobile.ios.core.ats_arbitrary_loads VERSION 1
+IN FILE
+WHEN FILE_NAME_IS "Info.plist"
+WHEN TEXT_MATCHES "NSAllowsArbitraryLoads\\s*<\\/key>\\s*<true\\s*\\/>" "i"
+WHEN PROJECT_OBSERVATION "**/*.plist"
+REPORT "App Transport Security Allows Arbitrary Loads"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

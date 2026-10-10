@@ -1,5 +1,6 @@
 # Standard libraries
 from pathlib import Path
+from utils.scan_scope import glob_source, allows_file, allows_check
 from typing import Any, Dict, List
 import re
 import xml.etree.ElementTree as ET
@@ -77,14 +78,14 @@ def _load_plist(plist_path: Path) -> Dict[str, Any]:
 
 
 def _plist_files(source_root: Path) -> List[Path]:
-    matches = sorted({*source_root.rglob("Info.plist"), *source_root.rglob("*.entitlements")})
+    matches = sorted({*glob_source(source_root, "Info.plist"), *glob_source(source_root, "*.entitlements")})
     return [path for path in matches if path.is_file()]
 
 
 def _swift_files(source_root: Path) -> List[Path]:
     files: List[Path] = []
     for glob in ("*.swift", "*.m", "*.mm"):
-        files.extend(list(source_root.rglob(glob)))
+        files.extend(list(glob_source(source_root, glob)))
     return sorted({path for path in files if path.is_file()})
 
 

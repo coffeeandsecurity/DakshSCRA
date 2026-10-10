@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.xplat.cordova.core.sensitive_data_stored_in_web_storage VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:localStorage\\.setItem|sessionStorage\\.setItem)\\s*\\(" "im"
+WHEN TEXT_MATCHES "localStorage\\.setItem.*(?:password|token|secret|key|auth|credential)|sessionStorage\\.setItem.*(?:password|token|secret|key|auth|credential)" "im"
+REPORT "Sensitive Data Stored in Web Storage"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

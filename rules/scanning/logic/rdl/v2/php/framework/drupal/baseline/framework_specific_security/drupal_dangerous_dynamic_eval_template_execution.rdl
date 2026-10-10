@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.php.framework.drupal.drupal_dangerous_dynamic_eval_template_execution VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\beval\\s*\\(|assert\\s*\\(\\s*\\$|create_function\\s*\\(" "im"
+WHEN TEXT_MISSING "validate|allowlist|trusted|\\Drupal::service|check_plain|test|example" "im"
+REPORT "Drupal Dangerous Dynamic Eval/Template Execution"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

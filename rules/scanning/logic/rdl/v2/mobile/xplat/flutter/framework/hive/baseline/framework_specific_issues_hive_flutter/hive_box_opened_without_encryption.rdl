@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.xplat.flutter.framework.hive.hive_box_opened_without_encryption VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "Hive\\.openBox\\s*\\(|Hive\\.openLazyBox\\s*\\(" "im"
+WHEN TEXT_MISSING "encryptionCipher|HiveAesCipher|encryptionKey" "im"
+REPORT "Hive Box Opened Without Encryption"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

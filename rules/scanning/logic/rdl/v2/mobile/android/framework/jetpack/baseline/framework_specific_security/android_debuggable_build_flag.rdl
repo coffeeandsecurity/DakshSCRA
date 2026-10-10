@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.android.framework.jetpack.android_debuggable_build_flag VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "android:debuggable\\s*=\\s*\"true\"|debuggable\\s+true" "im"
+REPORT "Android Debuggable Build Flag"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

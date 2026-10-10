@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.cpp.core.insecure_handling_of_privileged_operations VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(setuid|setgid|initgroups)\\s*\\(" "im"
+WHEN TEXT_MISSING "if\\s*\\(|==\\s*-1|!=\\s*0|perror|strerror|errno" "im"
+REPORT "Insecure Handling of Privileged Operations"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

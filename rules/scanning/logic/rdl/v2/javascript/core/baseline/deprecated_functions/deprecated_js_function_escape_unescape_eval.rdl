@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.javascript.core.deprecated_js_function_escape_unescape_eval VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(escape|unescape|eval)\\b" "im"
+REPORT "Deprecated JS Function: escape|unescape|eval"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

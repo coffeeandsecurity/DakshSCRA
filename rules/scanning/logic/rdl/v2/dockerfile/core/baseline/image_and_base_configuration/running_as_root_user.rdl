@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.dockerfile.core.running_as_root_user VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "^USER\\s+(?:root|0)\\s*$" "im"
+WHEN TEXT_MISSING "USER\\s+(?!0|root)[a-zA-Z]|useradd|adduser|gosu|su-exec" "im"
+REPORT "Running as Root User"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

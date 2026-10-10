@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.cpp.framework.qt.qt_tls_validation_bypass_marker VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "ignoreSslErrors\\(\\)|setPeerVerifyMode\\(\\s*QSslSocket::VerifyNone" "im"
+WHEN TEXT_MISSING "test|development|localhost|staging" "im"
+REPORT "Qt TLS Validation Bypass Marker"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

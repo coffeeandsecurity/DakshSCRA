@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.python.core.yaml_loading_use_safe_load VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "yaml\\.load\\((?!.*Loader=yaml\\.FullLoader)(.*?)\\)" "im"
+WHEN TEXT_MISSING "yaml\\.safe_load|Loader=yaml\\.SafeLoader" "im"
+REPORT "YAML Loading: Use safe_load"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

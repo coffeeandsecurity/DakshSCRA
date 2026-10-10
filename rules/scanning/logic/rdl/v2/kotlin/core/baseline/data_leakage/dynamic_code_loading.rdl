@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.kotlin.core.dynamic_code_loading VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "DexClassLoader\\s*\\(|PathClassLoader\\s*\\(|URLClassLoader\\s*\\(" "im"
+WHEN TEXT_MISSING "android_asset|getFilesDir\\(\\)|getCodeCacheDir\\(\\)|getCacheDir\\(\\)|Context\\.getDir\\(" "im"
+REPORT "Dynamic Code Loading"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

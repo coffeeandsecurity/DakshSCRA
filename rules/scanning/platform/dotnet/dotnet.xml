@@ -3,7 +3,7 @@
         <rule>
             <name>Untrusted Input: Request.Form</name>
             <regex>Request\.Form</regex>
-            <rdl_ref>logic/dotnet/core/untrusted_input_request_form.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/untrusted_input_request_form.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -12,15 +12,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of Request.Form, which can introduce untrusted inputs into the code.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using user input from the Request.Form collection without proper validation and sanitization. Attackers can manipulate form data to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks (SQL, OS, or LDAP), cross-site scripting (XSS), or remote code execution.</vuln_desc>
-            <developer>Validate and sanitize user input received from the Request. Form collection before using it in any sensitive operations. Implement strong input validation, ensuring that only expected and sanitized values are accepted from form submissions. Additionally, developers should be cautious about the potential risks associated with using user-supplied data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
+            <rule_desc>The code accepts or reads externally influenced data. Trace it to security-sensitive operations and identify the validation and authorization required by each destination.</rule_desc>
+            <vuln_desc>External input may cause injection, incorrect decisions, or unauthorized data access if it reaches a sensitive operation without the controls required by that operation. Reading input alone does not establish a vulnerability.</vuln_desc>
+            <developer>Validate type, size, and allowed values at trust boundaries, and apply destination-specific parameter binding or output encoding. Enforce authorization independently of input validation.</developer>
             <reviewer>Ensure that proper input handling is in place for the Request. Form collection. Verify that developers have implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. Also assess the sensitivity of the data handled through form submissions and confirm that relevant security measures, such as output encoding and protection against injection attacks, are implemented correctly. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted Input: Request.QueryString</name>
             <regex>Request\.QueryString</regex>
-            <rdl_ref>logic/dotnet/core/untrusted_input_request_querystring.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/untrusted_input_request_querystring.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -29,15 +29,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Identifies the usage of Request.QueryString, which may lead to untrusted inputs being used in the code.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using user input from the Request.QueryString collection without proper validation and sanitization. Attackers can manipulate URL query parameters to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks (SQL, OS, or LDAP), cross-site scripting (XSS), or unauthorized access to sensitive information.</vuln_desc>
-            <developer>Carefully validate and sanitize user input received from the Request. QueryString collection before using it in any sensitive operations. Implement strong input validation, ensuring that only expected and sanitized values are accepted from URL query parameters. Additionally, developers should be aware of the risks associated with using user-supplied data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
+            <rule_desc>The code accepts or reads externally influenced data. Trace it to security-sensitive operations and identify the validation and authorization required by each destination.</rule_desc>
+            <vuln_desc>External input may cause injection, incorrect decisions, or unauthorized data access if it reaches a sensitive operation without the controls required by that operation. Reading input alone does not establish a vulnerability.</vuln_desc>
+            <developer>Validate type, size, and allowed values at trust boundaries, and apply destination-specific parameter binding or output encoding. Enforce authorization independently of input validation.</developer>
             <reviewer>Check for appropriate input handling for the Request. QueryString collection. Assess whether developers have implemented proper input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. Also verify the usage of output encoding and protection against injection attacks to ensure the secure handling of user input received through URL query parameters. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted Input Handling in HTLM Output: Response.Write</name>
             <regex>Response\.Write\(.*\)</regex>
-            <rdl_ref>logic/dotnet/core/untrusted_input_handling_in_htlm_output_response_write.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/untrusted_input_handling_in_htlm_output_response_write.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -46,15 +46,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of Response.Write without output encoding, which can lead to cross-site scripting vulnerabilities.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using Response.Write without proper output encoding. Attackers can inject malicious scripts or HTML code, which may be executed by the victim's browser, leading to cross-site scripting attacks and potential theft of sensitive information.</vuln_desc>
-            <developer>Use output encoding techniques, such as HTML encoding, when displaying user-generated or dynamic content in the web application. Avoid directly outputting untrusted data without proper sanitization to prevent cross-site scripting vulnerabilities. Additionally, developers should implement content security policies and follow secure coding practices to ensure the proper handling of user input and protection against XSS attacks.</developer>
+            <rule_desc>Application data is inserted into an HTML or script rendering context, or marked safe in a way that may bypass automatic encoding.</rule_desc>
+            <vuln_desc>If attacker-controlled content reaches an executable browser context, it may run under the application’s origin, read accessible session data, or perform actions with the victim’s permissions.</vuln_desc>
+            <developer>Use automatic context-aware output encoding and data-only DOM APIs. Sanitize deliberately accepted rich HTML with a maintained allowlist sanitizer and avoid marking untrusted content as safe.</developer>
             <reviewer>Inspect the usage of Response. Write and verify if appropriate output encoding is applied to mitigate XSS vulnerabilities. assess the output handling and ensure that user-generated content or dynamic data is properly sanitized and displayed in a secure manner, preventing the execution of malicious scripts or HTML code. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted Input Handling in SQL Query: SqlCommand</name>
             <regex>new SqlCommand\(.*\)</regex>
-            <rdl_ref>logic/dotnet/core/untrusted_input_handling_in_sql_query_sqlcommand.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/untrusted_input_handling_in_sql_query_sqlcommand.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -63,15 +63,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of SqlCommand without parameterized queries, which can lead to SQL injection vulnerabilities.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using SqlCommand with string concatenation instead of parameterized queries. Attackers can exploit SQL injection vulnerabilities by manipulating input values, potentially executing arbitrary SQL queries and gaining unauthorized access to the database.</vuln_desc>
-            <developer>Use parameterized queries or stored procedures with bound parameters when constructing SQL queries. Avoid string concatenation of user-supplied values in SQL statements to prevent SQL injection attacks. Additionally, developers should enforce strict input validation and implement appropriate security measures, such as input sanitization and output encoding, to ensure the integrity and security of database operations.</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Carefully examine the usage of SqlCommand and verify if proper parameterization techniques are employed to mitigate SQL injection vulnerabilities. assess the input handling and SQL query construction to ensure that user input is properly validated, sanitized, and used in a secure manner. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted Input Handling in XML Query</name>
             <regex>(?i)(XmlDocument\.Load|XmlDocument\.LoadXml|XmlTextReader\.Create|XmlReader\.Create|XmlSerializer\.Deserialize|XDocument\.Load|XDocument\.Parse|XElement\.Load|XElement\.Parse|XPathDocument\.Create|XPathDocument\.Load|XPathDocument\.LoadXml|XPathNavigator\.Create|XPathNavigator\.Load|XPathNavigator\.LoadXml|XslCompiledTransform\.Load|XslCompiledTransform\.LoadXml|XslTransform\.Load|XslTransform\.LoadXml|XmlSchema\.Read|XmlSchemaSet\.Add|XmlSchemaSet\.Read)</regex>
-            <rdl_ref>logic/dotnet/core/untrusted_input_handling_in_xml_query.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/untrusted_input_handling_in_xml_query.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -80,15 +80,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of XML processing methods in .NET that can introduce XML External Entity (XXE) vulnerabilities.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using XML processing methods without proper input validation and sanitization. Attackers can exploit XML External Entity (XXE) vulnerabilities to read arbitrary files, perform server-side request forgery (SSRF), or launch denial-of-service attacks.</vuln_desc>
-            <developer>Validate and sanitize any user-provided XML data before processing it with the mentioned methods in. NET. consider disabling external entity resolution or implementing secure XML parsers with strict settings to prevent XXE vulnerabilities. Additionally, developers should follow secure coding practices and avoid dynamically constructing XML documents using untrusted data.</developer>
+            <rule_desc>The code parses or transforms XML. Resolve external entity, DTD, and resource-loading settings for the actual parser instance.</rule_desc>
+            <vuln_desc>If external resources or entity expansion are permitted for untrusted XML, an attacker may read local files, make requests to internal services, or exhaust parser resources.</vuln_desc>
+            <developer>Disable external entities and DTD loading for untrusted XML, use a restrictive resolver, and enforce input-size and expansion limits on the effective parser.</developer>
             <reviewer>Ensure that proper input validation and sanitization techniques are implemented for XML processing methods in. NET. Verify that developers have taken appropriate measures to prevent XXE vulnerabilities, such as disabling external entity resolution or using secure XML parsers. Also assess the sensitivity of the XML data processed and confirm that relevant security controls are in place. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted URL Concatenation: Append Method</name>
             <regex>\.Append\(.*HttpContext\.Current\.Request\.Url</regex>
-            <rdl_ref>logic/dotnet/core/untrusted_url_concatenation_append_method.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/untrusted_url_concatenation_append_method.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -97,15 +97,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of untrusted URL concatenation using the Append method, which may lead to security vulnerabilities.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using untrusted URL concatenation with the Append method. Attackers can manipulate the URL concatenation process to inject malicious or unexpected content, leading to security vulnerabilities such as open redirect, cross-site scripting (XSS), or other injection attacks.</vuln_desc>
-            <developer>Avoid directly concatenating untrusted user input or URL components using the Append method. Instead, Use appropriate URL encoding and validation techniques, such as the Uri. EscapeDataString method, to ensure that the resulting URL is properly formed and secure. Also implement input validation and output encoding to prevent injection attacks and other security vulnerabilities.</developer>
+            <rule_desc>The code handles a link, redirect, or externally selected navigation target. Validate the effective destination and any action triggered by the receiving handler.</rule_desc>
+            <vuln_desc>A crafted destination or link may direct users to a phishing site, leak URL-carried secrets, or trigger unauthorized operations if routing trusts external parameters without the required access checks.</vuln_desc>
+            <developer>Allowlist schemes, hosts, paths, and operations. Validate parsed link parameters, avoid credentials in URLs, and require authentication and authorization before sensitive actions.</developer>
             <reviewer>Check for the presence of untrusted URL concatenation using the Append method. Verify if developers have implemented proper URL encoding, validation, and input/output handling techniques to prevent security vulnerabilities. Also assess the sensitivity of the URLs being concatenated and confirm the presence of appropriate security controls. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted Data Output: HttpContext.Current.Request</name>
             <regex>\.(Append|WriteLine)\([^\)]*?HttpContext\.Current\.Request\.(Url|Form|QueryString)</regex>
-            <rdl_ref>logic/dotnet/core/untrusted_data_output_httpcontext_current_request.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/untrusted_data_output_httpcontext_current_request.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -114,15 +114,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of untrusted data output with HttpContext.Current.Request, which may lead to security vulnerabilities.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using untrusted data output with HttpContext.Current.Request. Attackers can manipulate the data output to inject malicious or unexpected content, leading to security vulnerabilities such as cross-site scripting (XSS), injection attacks, or sensitive information exposure.</vuln_desc>
-            <developer>Any data output involving HttpContext. Current. Request is properly validated, sanitized, and encoded. Avoid directly outputting untrusted data without appropriate measures in place to mitigate security risks. Developers should implement input validation, output encoding, and secure data handling practices to prevent vulnerabilities.</developer>
+            <rule_desc>The code accepts or reads externally influenced data. Trace it to security-sensitive operations and identify the validation and authorization required by each destination.</rule_desc>
+            <vuln_desc>External input may cause injection, incorrect decisions, or unauthorized data access if it reaches a sensitive operation without the controls required by that operation. Reading input alone does not establish a vulnerability.</vuln_desc>
+            <developer>Validate type, size, and allowed values at trust boundaries, and apply destination-specific parameter binding or output encoding. Enforce authorization independently of input validation.</developer>
             <reviewer>Check for the presence of untrusted data output involving HttpContext. Current. Request. Verify if developers have implemented proper input validation, output encoding, and secure data handling techniques to prevent security vulnerabilities. Also assess the sensitivity of the output data and confirm the presence of appropriate security controls. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted Data Output: HttpContext.Current.Request.Form</name>
             <regex>\.Append\(.*HttpContext\.Current\.Request\.Form</regex>
-            <rdl_ref>logic/dotnet/core/untrusted_data_output_httpcontext_current_request_form.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/untrusted_data_output_httpcontext_current_request_form.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -131,15 +131,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of untrusted data output with HttpContext.Current.Request.Form, which may lead to security vulnerabilities.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using untrusted data output with HttpContext.Current.Request.Form. Attackers can manipulate the data output to inject malicious or unexpected content, leading to security vulnerabilities such as cross-site scripting (XSS), injection attacks, or sensitive information exposure.</vuln_desc>
-            <developer>Any data output involving HttpContext. Current. Request. Form is properly validated, sanitized, and encoded. Avoid directly outputting untrusted data without appropriate measures in place to mitigate security risks. Developers should implement input validation, output encoding, and secure data handling practices to prevent vulnerabilities.</developer>
+            <rule_desc>The code accepts or reads externally influenced data. Trace it to security-sensitive operations and identify the validation and authorization required by each destination.</rule_desc>
+            <vuln_desc>External input may cause injection, incorrect decisions, or unauthorized data access if it reaches a sensitive operation without the controls required by that operation. Reading input alone does not establish a vulnerability.</vuln_desc>
+            <developer>Validate type, size, and allowed values at trust boundaries, and apply destination-specific parameter binding or output encoding. Enforce authorization independently of input validation.</developer>
             <reviewer>Check for the presence of untrusted data output involving HttpContext. Current. Request. Form. Verify if developers have implemented proper input validation, output encoding, and secure data handling techniques to prevent security vulnerabilities. Also assess the sensitivity of the output data and confirm the presence of appropriate security controls. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted Data Output: HttpContext.Current.Request.QueryString</name>
             <regex>\.Append\(.*HttpContext\.Current\.Request\.QueryString</regex>
-            <rdl_ref>logic/dotnet/core/untrusted_data_output_httpcontext_current_request_querystring.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/untrusted_data_output_httpcontext_current_request_querystring.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -148,9 +148,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of untrusted data output with HttpContext.Current.Request.QueryString, which may lead to security vulnerabilities.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using untrusted data output with HttpContext.Current.Request.QueryString. Attackers can manipulate the data output to inject malicious or unexpected content, leading to security vulnerabilities such as cross-site scripting (XSS), injection attacks, or sensitive information exposure.</vuln_desc>
-            <developer>Any data output involving HttpContext. Current. Request. QueryString is properly validated, sanitized, and encoded. Avoid directly outputting untrusted data without appropriate measures in place to mitigate security risks. Developers should implement input validation, output encoding, and secure data handling practices to prevent vulnerabilities.</developer>
+            <rule_desc>The code accepts or reads externally influenced data. Trace it to security-sensitive operations and identify the validation and authorization required by each destination.</rule_desc>
+            <vuln_desc>External input may cause injection, incorrect decisions, or unauthorized data access if it reaches a sensitive operation without the controls required by that operation. Reading input alone does not establish a vulnerability.</vuln_desc>
+            <developer>Validate type, size, and allowed values at trust boundaries, and apply destination-specific parameter binding or output encoding. Enforce authorization independently of input validation.</developer>
             <reviewer>Check for the presence of untrusted data output involving HttpContext. Current. Request. QueryString. Verify if developers have implemented proper input validation, output encoding, and secure data handling techniques to prevent security vulnerabilities. Also assess the sensitivity of the output data and confirm the presence of appropriate security controls. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -158,7 +158,7 @@
         <rule>
             <name>Path Traversal: Directory.GetFiles</name>
             <regex>Directory\.GetFiles\(.*\)</regex>
-            <rdl_ref>logic/dotnet/core/path_traversal_directory_getfiles.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/path_traversal_directory_getfiles.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -167,9 +167,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of Directory.GetFiles without proper input validation, which can lead to path traversal vulnerabilities.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using Directory.GetFiles without validating user-supplied input. Attackers can manipulate file path inputs to traverse directories and access unauthorized files on the system, potentially exposing sensitive information or executing arbitrary code.</vuln_desc>
-            <developer>Carefully validate and sanitize user input used in file path operations. Implement input validation techniques to restrict file access to authorized directories and prevent path traversal attacks. Additionally, developers should enforce proper authorization and access control mechanisms to ensure the security and integrity of file system operations.</developer>
+            <rule_desc>The code accesses, creates, deletes, or shares filesystem data. Resolve path provenance, destination containment, permission modes, and any concurrent access.</rule_desc>
+            <vuln_desc>An attacker controlling a path or shared file may read or replace private files, delete data, or redirect an operation outside its intended directory if containment and access controls are ineffective.</vuln_desc>
+            <developer>Resolve paths beneath a fixed permitted root and verify containment and effective permissions. Use safe exclusive temporary-file creation, restrict sharing, and account for symlinks and concurrent changes.</developer>
             <reviewer>Examine the usage of Directory. GetFiles and verify if proper input validation is performed to prevent path traversal vulnerabilities. assess the file path handling and confirm that user-supplied input is restricted to authorized directories, preventing unauthorized access to sensitive files. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -177,7 +177,7 @@
         <rule>
             <name>Unsafe Method: Command Execution</name>
             <regex>(?i)execute\s(\@|\()</regex>
-            <rdl_ref>logic/dotnet/core/unsafe_method_command_execution.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/unsafe_method_command_execution.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -186,9 +186,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of command execution methods that can introduce security vulnerabilities.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using command execution methods without proper input validation and sanitization. Attackers can exploit command execution vulnerabilities to execute arbitrary commands on the underlying system, leading to unauthorized access, data leakage, or system compromise.</vuln_desc>
-            <developer>Carefully validate and sanitize any user-supplied input before using it in command execution methods. consider using safer alternatives, such as parameterized queries or prepared statements, to prevent command injection vulnerabilities. Additionally, developers should follow secure coding practices and avoid executing commands with user-controlled input directly.</developer>
+            <rule_desc>The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.</rule_desc>
+            <vuln_desc>If an attacker controls interpreted syntax or the operation selected, code or commands may run with the application’s privileges, allowing data theft, state changes, or service disruption.</vuln_desc>
+            <developer>Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates or expressions.</developer>
             <reviewer>Ensure that proper input validation and sanitization techniques are implemented for command execution methods. Verify that developers have taken appropriate measures to prevent command injection vulnerabilities, such as using parameterized queries or prepared statements. Also assess the sensitivity of the commands executed and confirm that relevant security controls are in place. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -196,7 +196,7 @@
         <rule>
             <name>Unvalidated Redirects and Forwards</name>
             <regex>(?i)Response\.Redirect</regex>
-            <rdl_ref>logic/dotnet/core/unvalidated_redirects_and_forwards.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/unvalidated_redirects_and_forwards.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -205,9 +205,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of open redirect methods that can introduce security vulnerabilities.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using open redirect methods without proper validation and sanitization. Attackers can abuse open redirect vulnerabilities to trick users into visiting malicious websites or perform phishing attacks.</vuln_desc>
-            <developer>Validate and sanitize any redirect URLs before using them in open redirect methods. Ensure that the target URLs are trusted and belong to the same domain or a whitelist of allowed domains. Additionally, developers should follow secure coding practices and avoid constructing redirect URLs using untrusted or user-controlled input.</developer>
+            <rule_desc>The code handles a link, redirect, or externally selected navigation target. Validate the effective destination and any action triggered by the receiving handler.</rule_desc>
+            <vuln_desc>A crafted destination or link may direct users to a phishing site, leak URL-carried secrets, or trigger unauthorized operations if routing trusts external parameters without the required access checks.</vuln_desc>
+            <developer>Allowlist schemes, hosts, paths, and operations. Validate parsed link parameters, avoid credentials in URLs, and require authentication and authorization before sensitive actions.</developer>
             <reviewer>Ensure that proper input validation and sanitization techniques are implemented for open redirect methods. Verify that developers have taken appropriate measures to prevent open redirect vulnerabilities, such as validating and constraining redirect URLs to trusted domains. Also assess the sensitivity of the redirect destinations and confirm that relevant security controls are in place. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -215,7 +215,7 @@
         <rule>
             <name>SQL Query: SELECT Statements with WHERE or ORDER BY</name>
             <regex>(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*</regex>
-            <rdl_ref>logic/dotnet/core/sql_query_select_statements_with_where_or_order_by.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/sql_query_select_statements_with_where_or_order_by.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -224,15 +224,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects instances of SELECT statements with WHERE or ORDER BY clauses in SQL queries, which may be vulnerable to SQL injection if user input is not handled securely.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the use of potentially vulnerable SELECT statements with WHERE or ORDER BY clauses. Improper handling of user input in these clauses can lead to SQL injection, allowing attackers to manipulate query behavior and gain unauthorized access to data.</vuln_desc>
-            <developer>Validate and implement secure alternatives, such as using parameterized queries with `SqlParameter` objects to prevent SQL injection vulnerabilities.</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Check whether parameterized queries with `SqlParameter` are used in SELECT statements to mitigate SQL injection risks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>SQL Query: Unrestricted SELECT *</name>
             <regex>\bSELECT\s+\*\s+FROM\b</regex>
-            <rdl_ref>logic/dotnet/core/sql_query_unrestricted_select.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/sql_query_unrestricted_select.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -241,15 +241,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects "SELECT * FROM" in SQL queries, which can expose unnecessary or sensitive data.</rule_desc>
-            <vuln_desc>If this rule matches, it suggests that the query retrieves more data than necessary, potentially exposing sensitive information and increasing the attack surface.</vuln_desc>
-            <developer>Validate and specify only necessary columns in SQL queries rather than using "SELECT *" to reduce data exposure risks.</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Check if "SELECT *" is avoided in favor of selecting specific columns to limit data exposure. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>SQL Query: Non-parameterized INSERT Statements</name>
             <regex>(?i)\bINSERT INTO\s+[^\s]+\s+\(.*=.*\$.*</regex>
-            <rdl_ref>logic/dotnet/core/sql_query_non_parameterized_insert_statements.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/sql_query_non_parameterized_insert_statements.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -258,15 +258,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects INSERT statements with direct use of user input, which can lead to SQL injection.</rule_desc>
-            <vuln_desc>If this rule matches, it suggests an unparameterized INSERT query that may allow SQL injection attacks.</vuln_desc>
-            <developer>Always use parameterized queries or prepared statements in INSERT queries to prevent SQL injection.</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Examine if INSERT statements use parameterized queries to prevent injection risks from user input. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>SQL Query: UNION Queries with User Input</name>
             <regex>(?i)\bUNION\s+SELECT\s+.*\$.*</regex>
-            <rdl_ref>logic/dotnet/core/sql_query_union_queries_with_user_input.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/sql_query_union_queries_with_user_input.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -275,9 +275,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects UNION queries that incorporate user input, which could allow SQL injection if not parameterized securely.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates a UNION query that may allow SQL injection if user input is included without proper handling.</vuln_desc>
-            <developer>Use parameterized queries for UNION statements to prevent SQL injection vulnerabilities.</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Check UNION queries for direct user input and confirm if secure parameterization is implemented to avoid injection risks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -285,7 +285,7 @@
         <rule>
             <name>Stack Trace or Error Disclosure</name>
             <regex>(?i)(Response\.Write\s*\([^)]{0,200}StackTrace|ex\.ToString\(\)|Console\.WriteLine\([^)]{0,200}Exception[^)]*\)|throw new \w*Exception\([^)]{0,200}\))</regex>
-            <rdl_ref>logic/dotnet/core/stack_trace_or_error_disclosure.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/stack_trace_or_error_disclosure.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -294,9 +294,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects unsafe error handling and stack trace exposure in .NET applications.</rule_desc>
-            <vuln_desc>Using `Response.Write`, `ex.ToString()`, or similar methods to output exception details can expose sensitive stack trace information, aiding attackers in identifying vulnerabilities.</vuln_desc>
-            <developer>Avoid exposing stack traces or detailed exceptions directly to users. Use secure logging frameworks (e.g., Serilog, NLog) and custom error pages in web applications.</developer>
+            <rule_desc>The code writes diagnostic data or exposes detailed errors. Establish the values emitted, production configuration, and recipients of the output.</rule_desc>
+            <vuln_desc>Readers of exposed diagnostics may obtain credentials, private records, internal paths, or implementation details that enable account misuse or targeted attacks.</vuln_desc>
+            <developer>Keep sensitive values and detailed errors out of user-facing responses and routine logs. Redact before emission, restrict diagnostic access, and verify production logging configuration.</developer>
             <reviewer>Ensure that stack traces and exceptions are not exposed to users and are logged securely. Verify proper error handling mechanisms in both web and non-web contexts. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -304,7 +304,7 @@
         <rule>
             <name>API Route Prefix: Improper Usage</name>
             <regex>\[RoutePrefix\("</regex>
-            <rdl_ref>logic/dotnet/core/api_route_prefix_improper_usage.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/api_route_prefix_improper_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -313,9 +313,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of [RoutePrefix] attribute in an API controller, potentially indicating improper route prefix configuration.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using [RoutePrefix] attribute in an API controller without proper configuration. Improper usage of route prefixes can lead to incorrect or insecure routing, potentially exposing sensitive APIs or introducing functional errors.</vuln_desc>
-            <developer>Carefully configure [RoutePrefix] attribute in API controllers to ensure proper route prefixing. Follow established routing conventions and ensure that route prefixes are correctly applied, avoiding conflicts and potential security risks. Additionally, developers should thoroughly test the routing configuration to ensure expected behavior and avoid functional errors.</developer>
+            <rule_desc>The code declares an entry point, model, destination, or configuration value that may cross a trust boundary. Identify callers, recipients, and the required data-access policy.</rule_desc>
+            <vuln_desc>A boundary that trusts unauthorized callers or exposes private output may permit data disclosure or state changes. A declaration, address, or architectural marker alone does not establish such a failure.</vuln_desc>
+            <developer>Trace the actual boundary, restrict accepted inputs and recipients, and enforce authentication and object-level authorization where required. Verify both authorized and denied use cases.</developer>
             <reviewer>Check for the presence of [RoutePrefix] attribute in API controllers and assess the configuration for proper route prefixing. Verify that developers have followed established routing conventions and consider any potential conflicts or security risks. Also ensure that the routing configuration has been thoroughly tested to avoid functional errors. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -323,7 +323,7 @@
         <rule>
             <name>Request Validation: Disabled Configuration</name>
             <regex>%@\s?Page\s?.*\s?ValidateRequest\s?=\s?(\'|\")false(\'|\")</regex>
-            <rdl_ref>logic/dotnet/core/request_validation_disabled_configuration.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/request_validation_disabled_configuration.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -332,15 +332,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects the disabled configuration of request validation in ASP.NET Web Forms, which may lead to security vulnerabilities.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of having request validation disabled in ASP.NET Web Forms. Disabling request validation can allow attackers to inject malicious content, such as HTML, JavaScript, or SQL, leading to cross-site scripting (XSS) or other security vulnerabilities.</vuln_desc>
-            <developer>Request validation is enabled in ASP. NET Web Forms to protect against common web application vulnerabilities. Avoid disabling request validation unless there is a specific requirement, in which case, proper input validation and output encoding must be implemented to mitigate the associated risks.</developer>
+            <rule_desc>The code accepts or reads externally influenced data. Trace it to security-sensitive operations and identify the validation and authorization required by each destination.</rule_desc>
+            <vuln_desc>External input may cause injection, incorrect decisions, or unauthorized data access if it reaches a sensitive operation without the controls required by that operation. Reading input alone does not establish a vulnerability.</vuln_desc>
+            <developer>Validate type, size, and allowed values at trust boundaries, and apply destination-specific parameter binding or output encoding. Enforce authorization independently of input validation.</developer>
             <reviewer>Check for the presence of disabled request validation in ASP. NET Web Forms pages. Verify if developers have provided a valid reason for disabling request validation and have implemented appropriate input validation and output encoding techniques to prevent security vulnerabilities related to user input. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Server Certificate Validation: Insecure Configuration</name>
             <regex>ServerCertificateValidationCallback\s*?\(.*?(\=|false|true)</regex>
-            <rdl_ref>logic/dotnet/core/server_certificate_validation_insecure_configuration.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/server_certificate_validation_insecure_configuration.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -349,9 +349,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects insecure configuration of the ServerCertificateValidationCallback, which may lead to improper validation of server certificates.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of insecurely configuring the ServerCertificateValidationCallback, which can result in improper validation of server certificates. Attackers can exploit this to perform man-in-the-middle attacks or bypass security measures that rely on proper certificate validation.</vuln_desc>
-            <developer>The ServerCertificateValidationCallback is securely configured to properly validate server certificates. Follow best practices for certificate validation, including verifying the certificate's chain of trust, checking for revocation status, and validating the server's hostname. Additionally, developers should consider using well-established libraries and frameworks that provide robust certificate validation mechanisms.</developer>
+            <rule_desc>The checked source contains a transport-security exception, insecure endpoint, or certificate-validation configuration. Resolve the effective policy and the connections it governs.</rule_desc>
+            <vuln_desc>An attacker on the network may read or alter affected traffic if sensitive data travels over cleartext or the connection accepts an untrusted server. Normal HTTPS endpoints and correctly implemented validation do not establish exposure.</vuln_desc>
+            <developer>Use HTTPS with normal certificate-chain and hostname verification. Remove permissive production callbacks and broad transport exceptions; restrict any justified exception to a documented, non-sensitive endpoint.</developer>
             <reviewer>Check for the presence of insecure configuration of the ServerCertificateValidationCallback. Assess whether developers have followed best practices for certificate validation, such as verifying the certificate's chain of trust, checking for revocation status, and validating the server's hostname. Also verify the usage of well-established libraries or frameworks that provide robust certificate validation mechanisms. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -359,7 +359,7 @@
         <rule>
             <name>XSS Mitigation: HTML Encoding using Razor</name>
             <regex>Html\.Encode\s*\(|HttpUtility\.HtmlEncode\s*\(|AntiXssEncoder\.HtmlEncode\s*\(|HtmlEncoder\.Default\.Encode\s*\(</regex>
-            <rdl_ref>logic/dotnet/core/xss_mitigation_html_encoding_using_razor.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/xss_mitigation_html_encoding_using_razor.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -368,15 +368,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>green</highlight_color>
             </scan_config>
-            <rule_desc>Detects .NET HTML encoding helpers that act as XSS mitigations in Razor and related rendering paths.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates that server-side output encoding is being applied before rendering untrusted data into HTML. Helpers such as `Html.Encode`, `HttpUtility.HtmlEncode`, `AntiXssEncoder.HtmlEncode`, and `HtmlEncoder.Default.Encode` are defensive signals that reduce XSS risk by encoding dangerous characters before output.</vuln_desc>
-            <developer>Use context-appropriate output encoding before rendering untrusted data into HTML. Prefer built-in .NET encoders and avoid treating raw HTML rendering helpers such as `Html.Raw` as mitigations.</developer>
+            <rule_desc>The code contains a security-control marker. Its presence is a review surface rather than evidence that the control is defective or consistently enforced.</rule_desc>
+            <vuln_desc>No adverse security consequence follows from the presence of a protection alone. If it is bypassed or applied outside the correct context, the protected operation may still permit injection or unauthorized access.</vuln_desc>
+            <developer>Verify that the control applies to every relevant entry point and uses the required context and policy. Retain effective protections; test bypass cases before recommending a change.</developer>
             <reviewer>Check that user-controlled content is passed through an appropriate .NET HTML encoder before rendering, and confirm that raw rendering helpers are not being mistaken for XSS defenses. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>CORS Mitigation: Allow Specific Origins</name>
             <regex>\[EnableCors\s*\(\s*\"AllowSpecificOrigins\"\s*\)\]</regex>
-            <rdl_ref>logic/dotnet/core/cors_mitigation_allow_specific_origins.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/cors_mitigation_allow_specific_origins.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -385,9 +385,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>green</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of specific origin-based CORS configuration.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using a specific origin-based CORS configuration. Allowing specific origins without careful consideration can lead to insecure Cross-Origin Resource Sharing (CORS) settings and potential security vulnerabilities.</vuln_desc>
-            <developer>Review and validate the specific origins allowed in CORS configurations. Ensure that only trusted origins are explicitly permitted to access resources, and consider using other CORS-related security measures such as handling preflight requests, setting appropriate response headers, and implementing access controls based on authentication and authorization.</developer>
+            <rule_desc>The code contains a security-control marker. Its presence is a review surface rather than evidence that the control is defective or consistently enforced.</rule_desc>
+            <vuln_desc>No adverse security consequence follows from the presence of a protection alone. If it is bypassed or applied outside the correct context, the protected operation may still permit injection or unauthorized access.</vuln_desc>
+            <developer>Verify that the control applies to every relevant entry point and uses the required context and policy. Retain effective protections; test bypass cases before recommending a change.</developer>
             <reviewer>The CORS configuration restricts resource access to specific origins in a secure and controlled manner. Ensure that the list of allowed origins is reviewed and approved, and that additional CORS-related security measures are in place to prevent unauthorized cross-origin requests and protect sensitive data. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -395,7 +395,7 @@
         <rule>
             <name>Insecure Deserialization: BinaryFormatter</name>
             <regex>BinaryFormatter\s*\(\s*\)|new\s+BinaryFormatter|BinaryFormatter\.Deserialize\s*\(</regex>
-            <rdl_ref>logic/dotnet/core/insecure_deserialization_binaryformatter.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/insecure_deserialization_binaryformatter.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -404,15 +404,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects use of BinaryFormatter, which is insecure and produces deserialization gadget chains.</rule_desc>
-            <vuln_desc>BinaryFormatter is insecure by design - it cannot be made safe when deserializing data from untrusted sources. Attackers can craft payloads that trigger remote code execution through deserialization gadget chains. Microsoft has marked it obsolete and recommends removal.</vuln_desc>
-            <developer>Replace BinaryFormatter with secure alternatives: System.Text.Json, XmlSerializer, DataContractSerializer with known types, or MessagePack with strict type resolution.</developer>
+            <rule_desc>The application reads serialized objects or uses a parser that may construct runtime types. Identify the input’s trust and the effective parser and type restrictions.</rule_desc>
+            <vuln_desc>A crafted untrusted payload may instantiate dangerous types or trigger object behavior that executes code, modifies state, or exhausts resources when the parser permits those operations.</vuln_desc>
+            <developer>Use a data-only format and a safe loader for untrusted input. Disable automatic object or type construction, allowlist required types, and bound parsing size and complexity.</developer>
             <reviewer>Flag all BinaryFormatter usage as a critical finding regardless of input source. Verify migration to a safe serializer. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure Deserialization: ObjectStateFormatter and LosFormatter</name>
             <regex>ObjectStateFormatter\.Deserialize\s*\(|LosFormatter\.Deserialize\s*\(|NetDataContractSerializer\s*\(</regex>
-            <rdl_ref>logic/dotnet/core/insecure_deserialization_objectstateformatter_and_losformatter.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/insecure_deserialization_objectstateformatter_and_losformatter.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -421,9 +421,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects additional insecure .NET serialization formatters susceptible to gadget-chain attacks.</rule_desc>
-            <vuln_desc>ObjectStateFormatter, LosFormatter, and NetDataContractSerializer all allow arbitrary type deserialization and have known gadget chains enabling RCE.</vuln_desc>
-            <developer>Migrate to safe serializers (System.Text.Json, XmlSerializer with known types). Never deserialize data from untrusted sources using these formatters.</developer>
+            <rule_desc>The application reads serialized objects or uses a parser that may construct runtime types. Identify the input’s trust and the effective parser and type restrictions.</rule_desc>
+            <vuln_desc>A crafted untrusted payload may instantiate dangerous types or trigger object behavior that executes code, modifies state, or exhausts resources when the parser permits those operations.</vuln_desc>
+            <developer>Use a data-only format and a safe loader for untrusted input. Disable automatic object or type construction, allowlist required types, and bound parsing size and complexity.</developer>
             <reviewer>Identify all deserialization calls with these formatters and confirm they are being replaced with safe alternatives. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -431,7 +431,7 @@
         <rule>
             <name>SSRF: HttpClient with User-Controlled URL</name>
             <regex>httpClient\.(GetAsync|PostAsync|PutAsync|DeleteAsync|SendAsync|GetStringAsync|GetByteArrayAsync)\s*\(|new\s+HttpClient\s*\(\s*\)</regex>
-            <rdl_ref>logic/dotnet/core/ssrf_httpclient_with_user_controlled_url.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/ssrf_httpclient_with_user_controlled_url.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -440,15 +440,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects HttpClient requests that may use user-controlled URLs, enabling SSRF.</rule_desc>
-            <vuln_desc>Allowing user input to control HttpClient request URLs can enable SSRF attacks targeting internal services, cloud metadata APIs (169.254.169.254), or internal DNS.</vuln_desc>
-            <developer>Validate request URLs against an allowlist of approved hosts and schemes. Block private IP ranges. Use Uri.Host comparison against approved destinations.</developer>
+            <rule_desc>The application makes an outbound request whose destination may be influenced by external data. Resolve URL construction, redirects, DNS results, and network reachability.</rule_desc>
+            <vuln_desc>If an attacker can select a reachable destination, the application may expose internal services or metadata credentials, or send protected data to an unauthorized recipient.</vuln_desc>
+            <developer>Allowlist required destinations and protocols, validate resolved addresses and every redirect, and restrict outbound access to internal and metadata services.</developer>
             <reviewer>Inspect HttpClient usage for user-controlled URL parameters and verify destination validation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>SSRF: WebRequest/WebClient with User-Controlled URL</name>
             <regex>WebRequest\.Create\s*\(|new\s+WebClient\s*\(\s*\)|new\s+HttpWebRequest\s*\(</regex>
-            <rdl_ref>logic/dotnet/core/ssrf_webrequest_webclient_with_user_controlled_url.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/ssrf_webrequest_webclient_with_user_controlled_url.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -457,9 +457,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects legacy outbound HTTP requests potentially driven by user-supplied URLs.</rule_desc>
-            <vuln_desc>WebRequest/WebClient usage with user-controlled URLs can enable SSRF in .NET applications.</vuln_desc>
-            <developer>Validate URL destination before creating the request. Prefer HttpClient with a handler that validates DNS resolution results.</developer>
+            <rule_desc>The application makes an outbound request whose destination may be influenced by external data. Resolve URL construction, redirects, DNS results, and network reachability.</rule_desc>
+            <vuln_desc>If an attacker can select a reachable destination, the application may expose internal services or metadata credentials, or send protected data to an unauthorized recipient.</vuln_desc>
+            <developer>Allowlist required destinations and protocols, validate resolved addresses and every redirect, and restrict outbound access to internal and metadata services.</developer>
             <reviewer>Trace URL origin to WebRequest/WebClient calls and verify allowlist-based validation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -467,7 +467,7 @@
         <rule>
             <name>LDAP Injection: DirectorySearcher Filter with User Input</name>
             <regex>new\s+DirectorySearcher\s*\(|DirectorySearcher\.Filter\s*=|new\s+DirectoryEntry\s*\(</regex>
-            <rdl_ref>logic/dotnet/core/ldap_injection_directorysearcher_filter_with_user_input.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/ldap_injection_directorysearcher_filter_with_user_input.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -476,15 +476,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects DirectorySearcher usage with filter strings that may incorporate unescaped user input.</rule_desc>
-            <vuln_desc>Injecting unsanitized user values into LDAP filter strings allows attackers to bypass authentication or enumerate directory objects.</vuln_desc>
-            <developer>Escape all user input using AntiXssEncoder.LdapFilterEncode() or equivalent before inserting into LDAP filter strings.</developer>
+            <rule_desc>The code constructs a directory query, XPath expression, or naming-service lookup. Review which input controls query syntax or the lookup target.</rule_desc>
+            <vuln_desc>Attacker-controlled query syntax may bypass intended selection or authorization and expose protected records. An attacker-selected naming-service target may also invoke unsafe remote resolution, depending on runtime behavior.</vuln_desc>
+            <developer>Keep untrusted values out of expression structure and remote naming targets. Use context-appropriate parameter binding or escaping, fixed trusted lookup destinations, and least-privileged service credentials.</developer>
             <reviewer>Verify LDAP filter construction escapes all user-supplied components. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>LDAP Injection: LdapConnection Bind or Search</name>
             <regex>LdapConnection\s*\(|new\s+LdapConnection|LdapConnection\.Bind\s*\(</regex>
-            <rdl_ref>logic/dotnet/core/ldap_injection_ldapconnection_bind_or_search.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dotnet/core/ldap_injection_ldapconnection_bind_or_search.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -493,9 +493,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects LdapConnection usage in .NET where search queries may use unvalidated user input.</rule_desc>
-            <vuln_desc>Unescaped input in LDAP searches over LdapConnection can enable injection attacks against directory services.</vuln_desc>
-            <developer>Use parameterized LDAP query construction and escape all user-controlled values before embedding in queries.</developer>
+            <rule_desc>The code constructs a directory query, XPath expression, or naming-service lookup. Review which input controls query syntax or the lookup target.</rule_desc>
+            <vuln_desc>Attacker-controlled query syntax may bypass intended selection or authorization and expose protected records. An attacker-selected naming-service target may also invoke unsafe remote resolution, depending on runtime behavior.</vuln_desc>
+            <developer>Keep untrusted values out of expression structure and remote naming targets. Use context-appropriate parameter binding or escaping, fixed trusted lookup destinations, and least-privileged service credentials.</developer>
             <reviewer>Inspect LdapConnection query construction for user-controlled values. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

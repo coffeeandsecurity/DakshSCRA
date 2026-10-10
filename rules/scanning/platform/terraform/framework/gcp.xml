@@ -3,7 +3,7 @@
         <rule>
             <name>GCP VM Instance with Public IP</name>
             <regex>resource\s+"google_compute_instance"[^}]*access_config\s*\{</regex>
-            <rdl_ref>logic/terraform/framework/gcp/gcp_vm_instance_with_public_ip.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/terraform/framework/gcp/gcp_vm_instance_with_public_ip.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -12,15 +12,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects GCP Compute Engine instances configured with external IP addresses via access_config blocks.</rule_desc>
-            <vuln_desc>Public IP assignment exposes VM instances directly to internet scanning and exploitation. GCP best practice is to use Cloud NAT for outbound and load balancers for inbound access.</vuln_desc>
-            <developer>Remove access_config blocks from VM network interfaces to use private IPs only. Configure Cloud NAT for outbound internet access.</developer>
+            <rule_desc>The deployment declares a public address, exposed ports, or broad inbound access. Resolve effective routes, firewall rules, listening services, and authentication.</rule_desc>
+            <vuln_desc>If a sensitive service is reachable from an untrusted network, remote actors may attempt credential attacks or exploit reachable service defects. A public address or image EXPOSE declaration alone does not establish internet reachability.</vuln_desc>
+            <developer>Restrict inbound access to required services and trusted networks. Keep management and database endpoints private where possible, and verify actual listening ports, firewall rules, and access controls.</developer>
             <reviewer>Confirm public IP assignment is justified and security groups restrict access appropriately. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>GCP VM with OS Login Disabled</name>
             <regex>enable-oslogin\s*=\s*"FALSE"|enable-oslogin\s*=\s*"false"</regex>
-            <rdl_ref>logic/terraform/framework/gcp/gcp_vm_with_os_login_disabled.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/terraform/framework/gcp/gcp_vm_with_os_login_disabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -29,9 +29,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects GCP instances with OS Login disabled, falling back to SSH key management.</rule_desc>
-            <vuln_desc>Disabling OS Login removes centralized IAM-based SSH access control, requiring manual SSH key distribution and making key revocation complex and error-prone.</vuln_desc>
-            <developer>Enable OS Login via metadata enable-oslogin = "TRUE" for centralized IAM-based SSH access management and audit logging.</developer>
+            <rule_desc>VM configuration does not enable centralized OS Login. Other SSH authentication controls may still apply.</rule_desc>
+            <vuln_desc>Stale or overly broad manually managed SSH keys may retain unauthorized host access when revocation and account lifecycle controls are ineffective.</vuln_desc>
+            <developer>Use centralized identity-based login where appropriate, or enforce an equivalent audited SSH-key lifecycle. Restrict login principals and verify revocation and privilege boundaries.</developer>
             <reviewer>Confirm OS Login is enabled for all instances that allow SSH access. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -39,7 +39,7 @@
         <rule>
             <name>GCP Storage Bucket Publicly Accessible</name>
             <regex>resource\s+"google_storage_bucket_iam_(?:binding|member)"[^}]*allUsers|resource\s+"google_storage_bucket_iam_(?:binding|member)"[^}]*allAuthenticatedUsers</regex>
-            <rdl_ref>logic/terraform/framework/gcp/gcp_storage_bucket_publicly_accessible.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/terraform/framework/gcp/gcp_storage_bucket_publicly_accessible.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -48,15 +48,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects GCS bucket IAM bindings that grant access to allUsers or allAuthenticatedUsers.</rule_desc>
-            <vuln_desc>Granting storage access to allUsers makes bucket contents publicly readable or writable without authentication, directly causing data exposure incidents.</vuln_desc>
-            <developer>Remove allUsers and allAuthenticatedUsers bindings. Use service accounts or specific user identities for controlled access.</developer>
+            <rule_desc>Storage configuration may permit public object access. Resolve bucket or container policies, object ACLs, and provider-level public-access controls.</rule_desc>
+            <vuln_desc>Unauthenticated users may read private objects or modify publicly writable content if effective access rules grant those operations. A permissive account-level option alone does not establish that every object is public.</vuln_desc>
+            <developer>Disable unnecessary public access, enforce narrow identity-based permissions, and verify effective object access from an unauthenticated client. Separate intentionally public content from private storage.</developer>
             <reviewer>Confirm public bucket access is intentional and contents are appropriate for public access. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>GCP Storage Bucket Without Uniform Access</name>
             <regex>resource\s+"google_storage_bucket"[^}]*uniform_bucket_level_access\s*=\s*false</regex>
-            <rdl_ref>logic/terraform/framework/gcp/gcp_storage_bucket_without_uniform_access.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/terraform/framework/gcp/gcp_storage_bucket_without_uniform_access.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -65,9 +65,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects GCS buckets with fine-grained ACLs instead of uniform bucket-level access control.</rule_desc>
-            <vuln_desc>Fine-grained ACLs are more complex to manage and audit, and legacy ACL configurations can inadvertently grant unintended access to bucket objects.</vuln_desc>
-            <developer>Enable uniform_bucket_level_access = true to simplify access control and rely solely on IAM policies for authorization.</developer>
+            <rule_desc>The bucket permits access control through object-level ACLs in addition to identity policies.</rule_desc>
+            <vuln_desc>Inconsistent or overlooked ACLs may grant unintended access to private objects and make effective permission changes harder to audit.</vuln_desc>
+            <developer>Prefer uniform bucket-level access when compatible. Otherwise inventory and constrain object ACLs and test effective access after policy changes.</developer>
             <reviewer>Confirm uniform bucket-level access is enabled for all non-legacy buckets. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -75,7 +75,7 @@
         <rule>
             <name>Cloud SQL Instance Publicly Exposed</name>
             <regex>resource\s+"google_sql_database_instance"[^}]*ipv4_enabled\s*=\s*true|authorized_networks\s*\{[^}]*value\s*=\s*"0\.0\.0\.0/0"</regex>
-            <rdl_ref>logic/terraform/framework/gcp/cloud_sql_instance_publicly_exposed.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/terraform/framework/gcp/cloud_sql_instance_publicly_exposed.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -84,9 +84,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects Cloud SQL instances authorized to accept connections from all IP addresses.</rule_desc>
-            <vuln_desc>Cloud SQL instances with 0.0.0.0/0 authorized networks accept database connections from the entire internet, enabling brute-force attacks and exploitation of database vulnerabilities.</vuln_desc>
-            <developer>Use Private Service Connect or Cloud SQL Auth Proxy for database connectivity. Set ipv4_enabled = false and remove 0.0.0.0/0 from authorized_networks.</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Confirm Cloud SQL is not publicly accessible via authorized_networks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -94,7 +94,7 @@
         <rule>
             <name>Primitive IAM Role (Owner/Editor) Assigned</name>
             <regex>role\s*=\s*"roles/(?:owner|editor)"</regex>
-            <rdl_ref>logic/terraform/framework/gcp/primitive_iam_role_owner_editor_assigned.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/terraform/framework/gcp/primitive_iam_role_owner_editor_assigned.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -103,9 +103,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects assignment of primitive IAM roles (Owner or Editor) that grant broad permissions.</rule_desc>
-            <vuln_desc>Primitive roles grant broad permissions across all GCP services, violating least-privilege. Owner role allows IAM policy modification and complete resource control.</vuln_desc>
-            <developer>Replace primitive roles with predefined or custom IAM roles that grant only the specific permissions required for the workload.</developer>
+            <rule_desc>The code or deployment configuration requests privileges or grants access beyond an explicitly resolved minimum. Determine the effective permissions and the operation’s requirements.</rule_desc>
+            <vuln_desc>A compromised actor may access additional data, modify protected resources, or extend compromise beyond the intended application boundary when excessive privileges remain available.</vuln_desc>
+            <developer>Run with the least privileges required, remove unnecessary grants, and scope each permission to its intended resource and operation. Verify effective inherited permissions and test denied access.</developer>
             <reviewer>Confirm no service accounts or users are granted Owner or Editor primitive roles. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

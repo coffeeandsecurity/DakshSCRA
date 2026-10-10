@@ -1,0 +1,8 @@
+VERSION 2
+RULE flutter.dio.all-status-accepted VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bvalidateStatus\\s*:\\s*\\([^)]{0,80}\\)\\s*=>\\s*true\\b" ""
+REPORT "Dio Accepts Every HTTP Response Status"
+SEVERITY LOW
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,403 @@
+{
+  "schema_version": 1,
+  "secret_literal_min_length": 12,
+  "secret_name_markers": [
+    "password",
+    "passwd",
+    "secret",
+    "token",
+    "api_key",
+    "apikey",
+    "private_key"
+  ],
+  "languages": {
+    "python": {
+      "calls": {
+        "eval": [
+          "dynamic.evaluation"
+        ],
+        "exec": [
+          "dynamic.evaluation",
+          "command.execution"
+        ],
+        "os.system": [
+          "command.execution"
+        ],
+        "subprocess.run": [
+          "command.execution"
+        ],
+        "subprocess.call": [
+          "command.execution"
+        ],
+        "subprocess.Popen": [
+          "command.execution"
+        ],
+        "subprocess.check_call": [
+          "command.execution"
+        ],
+        "subprocess.check_output": [
+          "command.execution"
+        ],
+        "os.popen": [
+          "command.execution"
+        ],
+        "pickle.loads": [
+          "deserialization.object-construction"
+        ],
+        "yaml.load": [
+          "deserialization.object-construction"
+        ],
+        "urllib.request.urlopen": [
+          "network.outbound-request"
+        ],
+        "requests.get": [
+          "network.outbound-request"
+        ],
+        "requests.post": [
+          "network.outbound-request"
+        ],
+        "open": [
+          "filesystem.access"
+        ],
+        "hashlib.md5": [
+          "crypto.weak-operation"
+        ],
+        "hashlib.sha1": [
+          "crypto.weak-operation"
+        ]
+      },
+      "symbol_patterns": {
+        "authorization.check": [
+          "(?:require|check|enforce|verify).*(?:permission|authoriz|access)"
+        ],
+        "business.sensitive-operation": [
+          "(?:refund|payment|transfer).*(?:execute|approve|commit|issue)"
+        ],
+        "sanitizer.command-approved": [
+          "(?:allowlist|validate|sanitize).*(?:command|argument|filename)"
+        ],
+        "policy.destination-allowlist": [
+          "(?:allowlist|validate).*(?:destination|url|host)"
+        ],
+        "sanitizer.path-containment": [
+          "(?:contain|canonical|validate|resolve).*?(?:^|[._])(?:path|file|export)(?:$|[._])"
+        ],
+        "policy.type-allowlist": [
+          "(?:allowlist|validate|restrict).*(?:serial|type|object|payload)"
+        ]
+      }
+    },
+    "dakshscript": {
+      "calls": {
+        "auth.require": [
+          "authorization.check"
+        ],
+        "refund.execute": [
+          "business.sensitive-operation"
+        ],
+        "shell.run": [
+          "command.execution"
+        ],
+        "db.query": [
+          "sql.execution"
+        ]
+      }
+    },
+    "javascript": {
+      "calls": {
+        "eval": [
+          "dynamic.evaluation"
+        ],
+        "child_process.exec": [
+          "command.execution"
+        ],
+        "shell.exec": [
+          "command.execution"
+        ],
+        "database.query": [
+          "sql.execution"
+        ],
+        "crypto.createhash": [
+          "crypto.operation"
+        ]
+      }
+    },
+    "go": {
+      "calls": {
+        "exec.command": [
+          "command.execution"
+        ],
+        "db.query": [
+          "sql.execution"
+        ],
+        "db.exec": [
+          "sql.execution"
+        ],
+        "md5.new": [
+          "crypto.weak-operation"
+        ],
+        "sha1.new": [
+          "crypto.weak-operation"
+        ]
+      }
+    },
+    "cpp": {
+      "calls": {
+        "system": [
+          "command.execution"
+        ],
+        "std::system": [
+          "command.execution"
+        ],
+        "popen": [
+          "command.execution"
+        ],
+        "std::malloc": [
+          "memory.allocation"
+        ],
+        "std::free": [
+          "memory.free"
+        ]
+      }
+    },
+    "php": {
+      "calls": {
+        "eval": [
+          "dynamic.evaluation"
+        ],
+        "exec": [
+          "command.execution"
+        ],
+        "shell_exec": [
+          "command.execution"
+        ],
+        "system": [
+          "command.execution"
+        ],
+        "passthru": [
+          "command.execution"
+        ],
+        "popen": [
+          "command.execution"
+        ],
+        "mysqli_query": [
+          "sql.execution"
+        ],
+        "unserialize": [
+          "deserialization.object-construction"
+        ],
+        "file_get_contents": [
+          "filesystem.access",
+          "network.outbound-request"
+        ],
+        "md5": [
+          "crypto.weak-operation"
+        ],
+        "sha1": [
+          "crypto.weak-operation"
+        ],
+        "proc_open": [
+          "command.execution"
+        ],
+        "pcntl_exec": [
+          "command.execution"
+        ],
+        "mysql_query": [
+          "sql.execution",
+          "api.deprecated"
+        ],
+        "mysql_unbuffered_query": [
+          "sql.execution"
+        ],
+        "mysqli_multi_query": [
+          "sql.execution"
+        ],
+        "mysqli_prepare": [
+          "sql.execution"
+        ],
+        "pg_query": [
+          "sql.execution"
+        ],
+        "pg_query_params": [
+          "sql.execution"
+        ],
+        "sqlite_query": [
+          "sql.execution"
+        ],
+        "sqlite_exec": [
+          "sql.execution"
+        ],
+        "db_query": [
+          "sql.execution"
+        ],
+        "curl_exec": [
+          "network.outbound-request"
+        ],
+        "fopen": [
+          "network.outbound-request",
+          "filesystem.access"
+        ],
+        "fsockopen": [
+          "network.outbound-request"
+        ],
+        "wp_remote_get": [
+          "network.outbound-request"
+        ],
+        "wp_remote_post": [
+          "network.outbound-request"
+        ],
+        "wp_remote_request": [
+          "network.outbound-request"
+        ],
+        "file_put_contents": [
+          "filesystem.access"
+        ],
+        "readfile": [
+          "filesystem.access"
+        ],
+        "unlink": [
+          "filesystem.access"
+        ],
+        "file": [
+          "filesystem.access"
+        ],
+        "copy": [
+          "filesystem.access"
+        ],
+        "rename": [
+          "filesystem.access"
+        ],
+        "move_uploaded_file": [
+          "filesystem.access"
+        ],
+        "assert": [
+          "dynamic.evaluation"
+        ],
+        "create_function": [
+          "dynamic.evaluation",
+          "api.deprecated"
+        ],
+        "include": [
+          "code.inclusion"
+        ],
+        "include_once": [
+          "code.inclusion"
+        ],
+        "require": [
+          "code.inclusion"
+        ],
+        "require_once": [
+          "code.inclusion"
+        ],
+        "echo": [
+          "output.html"
+        ],
+        "print": [
+          "output.html"
+        ],
+        "printf": [
+          "output.html"
+        ],
+        "vprintf": [
+          "output.html"
+        ],
+        "header": [
+          "redirect.destination"
+        ],
+        "wp_redirect": [
+          "redirect.destination"
+        ],
+        "extract": [
+          "variable.extraction"
+        ],
+        "parse_str": [
+          "variable.extraction"
+        ],
+        "preg_match": [
+          "regex.execution"
+        ],
+        "preg_match_all": [
+          "regex.execution"
+        ],
+        "preg_replace": [
+          "regex.execution"
+        ],
+        "preg_filter": [
+          "regex.execution"
+        ],
+        "md5_file": [
+          "crypto.weak-operation"
+        ],
+        "sha1_file": [
+          "crypto.weak-operation"
+        ],
+        "crypt": [
+          "crypto.weak-operation"
+        ],
+        "mt_rand": [
+          "crypto.weak-operation"
+        ],
+        "rand": [
+          "crypto.weak-operation"
+        ],
+        "mysql_connect": [
+          "api.deprecated"
+        ],
+        "mysql_fetch_array": [
+          "api.deprecated"
+        ],
+        "mysql_fetch_assoc": [
+          "api.deprecated"
+        ],
+        "mysql_num_rows": [
+          "api.deprecated"
+        ],
+        "mysql_real_escape_string": [
+          "api.deprecated"
+        ],
+        "ereg": [
+          "api.deprecated"
+        ],
+        "eregi": [
+          "api.deprecated"
+        ],
+        "ereg_replace": [
+          "api.deprecated"
+        ],
+        "eregi_replace": [
+          "api.deprecated"
+        ],
+        "split": [
+          "api.deprecated"
+        ],
+        "spliti": [
+          "api.deprecated"
+        ],
+        "session_register": [
+          "api.deprecated"
+        ],
+        "phpinfo": [
+          "error.disclosure"
+        ],
+        "var_dump": [
+          "error.disclosure"
+        ],
+        "print_r": [
+          "error.disclosure"
+        ],
+        "debug_print_backtrace": [
+          "error.disclosure"
+        ],
+        "get_query_var": [
+          "input.untrusted"
+        ],
+        "getallheaders": [
+          "input.untrusted"
+        ],
+        "filter_input": [
+          "input.untrusted"
+        ]
+      }
+    }
+  }
+}

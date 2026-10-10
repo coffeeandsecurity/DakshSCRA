@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.android.core.aidl_stub_without_caller_identity_validation VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "extends\\s+\\w+\\.Stub\\b" "im"
+WHEN TEXT_MISSING "Binder\\.getCallingUid\\s*\\(\\)|getCallingPid\\s*\\(\\)|checkCallingPermission|enforceCallingPermission|enforceCallingOrSelfPermission" "im"
+REPORT "AIDL Stub Without Caller Identity Validation"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

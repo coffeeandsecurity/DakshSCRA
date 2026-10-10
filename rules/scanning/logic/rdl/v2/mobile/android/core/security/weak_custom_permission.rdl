@@ -1,0 +1,8 @@
+VERSION 2
+RULE android.weak-custom-permission VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "<permission\\b[^>]{0,500}\\bandroid:protectionLevel\\s*=\\s*[\"\\x27](?:normal|dangerous|0|1)[\"\\x27]" ""
+REPORT "Custom Permission Uses Weak Protection Level"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.rust.core.unsafe_block_usage VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bunsafe\\s*\\{" "im"
+WHEN TEXT_MISSING "// SAFETY:|// Safety:|// UNSAFE:" "im"
+REPORT "Unsafe Block Usage"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

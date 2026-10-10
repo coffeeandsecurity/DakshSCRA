@@ -1,5 +1,6 @@
 # Standard libraries
 from pathlib import Path
+from utils.scan_scope import glob_source, allows_file, allows_check
 from typing import Dict, List
 import re
 
@@ -22,7 +23,7 @@ SPAWN_URI_RE = re.compile(r"\bIsolate\.spawnUri\s*\(")
 
 
 def _dart_files(source_root: Path) -> List[Path]:
-    return sorted({path for path in source_root.rglob("*.dart") if path.is_file()})
+    return sorted({path for path in glob_source(source_root, "*.dart") if path.is_file()})
 
 
 def _method_channel_flows(source_root: Path, dart_files: List[Path], progress_callback=None, total_items=0) -> List[Dict]:

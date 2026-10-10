@@ -3,7 +3,7 @@
         <rule>
             <name>exec() with String Template SQL</name>
             <regex>exec\s*\(\s*["'][^"']*["']\s*\+|exec\s*\(\s*"""[^"]*"""\s*\+|exec\s*\(\s*"[^"]*\$\{</regex>
-            <rdl_ref>logic/kotlin/framework/exposed/exec_with_string_template_sql.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kotlin/framework/exposed/exec_with_string_template_sql.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -12,15 +12,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>magenta</highlight_color>
             </scan_config>
-            <rule_desc>Detects Kotlin Exposed exec() calls with SQL built via string templates or concatenation.</rule_desc>
-            <vuln_desc>Using Kotlin string templates (${variable}) or concatenation to build SQL strings passed to exec() bypasses Exposed's parameterization, introducing SQL injection vulnerabilities.</vuln_desc>
-            <developer>Use Exposed's DSL query builders (selectAll(), select { ... }, insert { ... }) for type-safe parameterized queries. If raw SQL is necessary, use exec() with a PreparedStatement and bound parameters.</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Confirm exec() calls do not use string templates or concatenation to insert user values. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>addLogger in Production Code Path</name>
             <regex>addLogger\s*\(\s*StdOutSqlLogger\s*\)|addLogger\s*\(\s*Slf4jSqlDebugLogger\s*\)</regex>
-            <rdl_ref>logic/kotlin/framework/exposed/addlogger_in_production_code_path.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kotlin/framework/exposed/addlogger_in_production_code_path.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -29,15 +29,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects Kotlin Exposed SQL loggers enabled without debug/development build gating.</rule_desc>
-            <vuln_desc>SQL debug loggers output full query strings including parameterized values to stdout or application logs, potentially exposing sensitive data such as user credentials, tokens, or PII in production log aggregation systems.</vuln_desc>
-            <developer>Gate SQL loggers behind environment or build mode checks: if (isDevelopment) { addLogger(StdOutSqlLogger) }. Remove all SQL loggers from production code paths.</developer>
+            <rule_desc>The code writes diagnostic data or exposes detailed errors. Establish the values emitted, production configuration, and recipients of the output.</rule_desc>
+            <vuln_desc>Readers of exposed diagnostics may obtain credentials, private records, internal paths, or implementation details that enable account misuse or targeted attacks.</vuln_desc>
+            <developer>Keep sensitive values and detailed errors out of user-facing responses and routine logs. Redact before emission, restrict diagnostic access, and verify production logging configuration.</developer>
             <reviewer>Confirm SQL loggers are not active in production builds or configurations. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Exposed Transaction Without Exception Handling</name>
             <regex>transaction\s*\{</regex>
-            <rdl_ref>logic/kotlin/framework/exposed/exposed_transaction_without_exception_handling.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kotlin/framework/exposed/exposed_transaction_without_exception_handling.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -46,9 +46,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>magenta</highlight_color>
             </scan_config>
-            <rule_desc>Detects Exposed transaction blocks that perform mutations without exception handling for rollback.</rule_desc>
-            <vuln_desc>Transactions without proper exception handling may partially commit data on unexpected errors, leading to data integrity violations and inconsistent application state that could be exploited.</vuln_desc>
-            <developer>Wrap transaction bodies in try/catch or use Kotlin's runCatching. Exposed automatically rolls back transactions on exceptions, but calling code should handle and log failures appropriately.</developer>
+            <rule_desc>The code configures failure handling or resource consumption. Determine whether failure paths preserve security invariants and whether work is bounded.</rule_desc>
+            <vuln_desc>Unhandled failures or unbounded work may disrupt availability or leave security-relevant state inconsistent. The presence or absence of a named handler alone does not establish a reachable security defect.</vuln_desc>
+            <developer>Bound resource use, handle failures at the correct ownership boundary, and fail safely before updating trusted state. Test exceptional paths, cancellation, timeouts, and recovery behavior.</developer>
             <reviewer>Verify mutating transactions have appropriate error handling and that partial failures are detected and handled. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

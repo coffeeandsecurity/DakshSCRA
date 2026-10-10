@@ -3,7 +3,7 @@
         <rule>
             <name>OkHttpClient Without Certificate Pinning</name>
             <regex>OkHttpClient\.Builder\s*\(\s*\)|OkHttpClient\s*\(\s*\)</regex>
-            <rdl_ref>logic/mobile/android/framework/retrofit/okhttpclient_without_certificate_pinning.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/android/framework/retrofit/okhttpclient_without_certificate_pinning.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -15,15 +15,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects OkHttpClient instances created without certificate pinning configuration.</rule_desc>
-            <vuln_desc>Without certificate pinning, the app trusts any certificate signed by a system-trusted CA. Attackers using corporate proxies, rogue CAs, or user-installed certificates can intercept HTTPS traffic via MITM.</vuln_desc>
-            <developer>Add a CertificatePinner to the OkHttpClient builder pinning the server's public key hash. Use certificate transparency logs to detect unauthorized certificate issuance.</developer>
+            <rule_desc>The code configures an additional server or update authenticity mechanism. Confirm the intended trust boundary and effective verification policy.</rule_desc>
+            <vuln_desc>If the intended authenticity check is absent or can be bypassed, a party controlling an otherwise accepted certificate or update source may impersonate a trusted endpoint or supply unauthorized code. Pinning absence alone does not prove broken TLS.</vuln_desc>
+            <developer>Document the required authenticity policy, verify signatures or the intended certificate or public-key pins, and test key rotation and failure behavior without disabling normal platform validation.</developer>
             <reviewer>Confirm OkHttpClient configurations include certificate pinning for all sensitive API endpoints. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>OkHttp Body-Level Logging in Production</name>
             <regex>HttpLoggingInterceptor\s*\(\s*\)[^;)]*level\s*=\s*HttpLoggingInterceptor\.Level\.BODY|setLevel\s*\(\s*HttpLoggingInterceptor\.Level\.BODY\s*\)</regex>
-            <rdl_ref>logic/mobile/android/framework/retrofit/okhttp_body_level_logging_in_production.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/android/framework/retrofit/okhttp_body_level_logging_in_production.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -35,15 +35,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects OkHttp logging interceptor configured at BODY level potentially in production builds.</rule_desc>
-            <vuln_desc>BODY-level logging captures full request and response bodies including authentication tokens, API keys, and sensitive user data to Logcat, which is accessible to other apps on rooted devices.</vuln_desc>
-            <developer>Gate BODY-level logging behind BuildConfig.DEBUG checks. Use NONE or BASIC level for release builds.</developer>
+            <rule_desc>The code writes diagnostic data or exposes detailed errors. Establish the values emitted, production configuration, and recipients of the output.</rule_desc>
+            <vuln_desc>Readers of exposed diagnostics may obtain credentials, private records, internal paths, or implementation details that enable account misuse or targeted attacks.</vuln_desc>
+            <developer>Keep sensitive values and detailed errors out of user-facing responses and routine logs. Redact before emission, restrict diagnostic access, and verify production logging configuration.</developer>
             <reviewer>Confirm BODY-level logging is restricted to debug builds and does not exist in release build paths. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>TrustManager Accepting All Certificates</name>
             <regex>override\s+fun\s+checkServerTrusted|override\s+fun\s+checkClientTrusted|X509TrustManager[^}]*\{\s*\}|getAcceptedIssuers\s*\(\s*\)\s*=\s*(?:null|arrayOf\s*\(\s*\))</regex>
-            <rdl_ref>logic/mobile/android/framework/retrofit/trustmanager_accepting_all_certificates.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/android/framework/retrofit/trustmanager_accepting_all_certificates.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -55,9 +55,9 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects custom TrustManager implementations that perform no certificate validation.</rule_desc>
-            <vuln_desc>Empty or no-op checkServerTrusted() implementations accept any TLS certificate, completely disabling TLS authentication and enabling trivial MITM attacks against all HTTPS connections from the app.</vuln_desc>
-            <developer>Remove custom TrustManagers entirely and rely on the Android default trust store. If custom trust is required (e.g., private CA), implement full certificate chain validation using CertPathValidator.</developer>
+            <rule_desc>The checked source contains a transport-security exception, insecure endpoint, or certificate-validation configuration. Resolve the effective policy and the connections it governs.</rule_desc>
+            <vuln_desc>An attacker on the network may read or alter affected traffic if sensitive data travels over cleartext or the connection accepts an untrusted server. Normal HTTPS endpoints and correctly implemented validation do not establish exposure.</vuln_desc>
+            <developer>Use HTTPS with normal certificate-chain and hostname verification. Remove permissive production callbacks and broad transport exceptions; restrict any justified exception to a documented, non-sensitive endpoint.</developer>
             <reviewer>Any no-op TrustManager is a critical finding. Confirm removal and verify all TLS connections use default or properly validated trust anchors. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

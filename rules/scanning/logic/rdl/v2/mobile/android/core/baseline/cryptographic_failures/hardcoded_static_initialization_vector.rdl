@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.android.core.hardcoded_static_initialization_vector VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "new\\s+IvParameterSpec\\s*\\(" "im"
+WHEN (TEXT_MATCHES "static.*byte\\s*\\[\\]|final.*byte\\s*\\[\\].*\\{|new\\s+byte\\s*\\[.*\\]\\s*\\{.*0x" "im" AND TEXT_MISSING "SecureRandom|generateIV|randomIV|randomBytes" "im")
+REPORT "Hardcoded Static Initialization Vector"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.xplat.flutter.core.flutter_debug_mode_marker VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "kDebugMode|assert\\(|debugShowCheckedModeBanner\\s*:\\s*true" "im"
+WHEN TEXT_MISSING "kReleaseMode" "im"
+REPORT "Flutter Debug Mode Marker"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

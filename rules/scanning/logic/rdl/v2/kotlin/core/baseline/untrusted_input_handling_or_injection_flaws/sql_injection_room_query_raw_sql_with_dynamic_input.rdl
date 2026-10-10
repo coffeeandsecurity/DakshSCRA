@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.kotlin.core.sql_injection_room_query_raw_sql_with_dynamic_input VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "@Query\\s*\\(\\s*\"[^\"]*\\$[^\"]*\"|\\brawQuery\\s*\\(|\\.execSQL\\s*\\(" "im"
+WHEN TEXT_MISSING "prepare\\s*\\(|bindString\\s*\\(|bindParam\\s*\\(|\\?,\\s*arrayOf" "im"
+REPORT "SQL Injection: Room @Query / Raw SQL with Dynamic Input"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

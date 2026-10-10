@@ -1,0 +1,8 @@
+VERSION 2
+RULE terraform.metadata-v1 VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bhttp_tokens\\s*=\\s*\"optional\"" ""
+REPORT "Cloud Instance Allows IMDSv1"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

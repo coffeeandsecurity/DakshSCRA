@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.rust.core.weak_randomness_source VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\brand::random\\s*\\(\\)|\\bthread_rng\\s*\\(\\)" "im"
+WHEN (TEXT_MISSING "OsRng|rand_core::OsRng|getrandom|os_rng" "im" AND TEXT_MISSING "simulation|game|test|example" "im")
+REPORT "Weak Randomness Source"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

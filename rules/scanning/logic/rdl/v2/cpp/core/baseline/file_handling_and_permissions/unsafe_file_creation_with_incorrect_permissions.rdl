@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.cpp.core.unsafe_file_creation_with_incorrect_permissions VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bstd::ofstream\\s*\\(" "im"
+WHEN TEXT_MISSING "umask|S_IRUSR|S_IWUSR|0600|0640|0644" "im"
+REPORT "Unsafe File Creation with Incorrect Permissions"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

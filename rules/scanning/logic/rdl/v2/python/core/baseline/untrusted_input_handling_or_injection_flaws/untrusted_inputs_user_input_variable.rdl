@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.python.core.untrusted_inputs_user_input_variable VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "user_input_variable" "im"
+WHEN (TEXT_MATCHES "(execute|raw\\(|extra\\(|eval\\(|subprocess|os\\.system|redirect|HttpResponse)" "im" AND TEXT_MISSING "(escape|sanitize|validate|allowlist|whitelist)" "im")
+REPORT "Untrusted Inputs: user_input_variable"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

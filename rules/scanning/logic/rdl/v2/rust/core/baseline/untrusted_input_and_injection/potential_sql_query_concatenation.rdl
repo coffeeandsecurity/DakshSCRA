@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.rust.core.potential_sql_query_concatenation VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:query|execute|prepare)\\s*!?\\s*\\(\\s*[\"'][^\"']*(?:\\{\\}|\\+)" "im"
+WHEN (TEXT_MISSING "query!\\s*\\(|sqlx::query!|prepare\\s*\\(|bind\\s*\\(|QueryBuilder|params|bindParams" "im" AND TEXT_MISSING "test|example" "im")
+REPORT "Potential SQL Query Concatenation"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

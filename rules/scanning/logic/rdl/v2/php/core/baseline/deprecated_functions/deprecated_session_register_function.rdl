@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.php.core.deprecated_session_register_function VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bsession_register\\s*\\(\\s*['\"]?[\\w\\s]*['\"]?\\s*\\)" "im"
+WHEN (TEXT_MISSING "$_SESSION|session_start|session_regenerate_id" "im" AND TEXT_MISSING "test|example" "im")
+REPORT "Deprecated Session Register Function"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

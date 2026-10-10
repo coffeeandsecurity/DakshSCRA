@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.ios.core.openurl_with_unvalidated_input_scheme VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bUIApplication\\.shared\\.open\\s*\\(|\\bUIApplication\\.sharedApplication\\(\\)\\.openURL\\s*\\(" "im"
+WHEN TEXT_MISSING "scheme|canOpenURL|allowedSchemes|guard|whitelist|allowlist" "im"
+REPORT "openURL with Unvalidated Input Scheme"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

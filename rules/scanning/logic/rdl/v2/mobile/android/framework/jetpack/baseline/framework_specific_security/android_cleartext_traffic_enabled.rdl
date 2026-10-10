@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.android.framework.jetpack.android_cleartext_traffic_enabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "android:usesCleartextTraffic\\s*=\\s*\"true\"|cleartextTrafficPermitted\\s*=\\s*true" "im"
+REPORT "Android Cleartext Traffic Enabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

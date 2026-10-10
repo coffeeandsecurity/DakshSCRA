@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.cpp.core.race_condition_std_thread_without_mutex VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bstd::thread\\b\\s*\\(" "im"
+WHEN TEXT_MISSING "std::mutex|std::atomic|std::lock_guard|std::unique_lock|std::shared_mutex|std::condition_variable" "im"
+REPORT "Race Condition: std::thread without mutex"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

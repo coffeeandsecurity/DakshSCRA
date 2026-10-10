@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.bash.core.backtick_command_substitution_with_variable VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "`[^`]*\\$\\w[^`]*`" "im"
+WHEN TEXT_MISSING "sanitize|validate|allowlist" "im"
+REPORT "Backtick Command Substitution with Variable"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

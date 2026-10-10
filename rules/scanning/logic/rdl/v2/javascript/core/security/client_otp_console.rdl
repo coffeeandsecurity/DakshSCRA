@@ -1,0 +1,8 @@
+VERSION 2
+RULE javascript.client.otp-console VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "console\\s*\\.\\s*(?:log|debug|info|warn|error)\\s*\\(\\s*(?:otp|otpCode|verificationCode|oneTimePassword)\\b" ""
+REPORT "Verification Code Written To Console"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

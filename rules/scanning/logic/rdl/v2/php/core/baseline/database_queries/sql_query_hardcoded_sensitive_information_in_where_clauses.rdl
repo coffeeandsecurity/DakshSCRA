@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.php.core.sql_query_hardcoded_sensitive_information_in_where_clauses VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)\\bSELECT\\s+[^\\s]+\\s+FROM\\s+[^\\s]+\\s+WHERE\\s+(username|password|apikey|token)=['\"][^'\"]+['\"]" "im"
+WHEN TEXT_MISSING "example|sample|dummy|test|placeholder" "im"
+REPORT "SQL Query: Hardcoded Sensitive Information in WHERE Clauses"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

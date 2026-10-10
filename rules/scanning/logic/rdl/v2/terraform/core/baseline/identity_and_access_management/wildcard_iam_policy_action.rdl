@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.terraform.core.wildcard_iam_policy_action VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "actions\\s*=\\s*\\[\\s*\"\\*\"\\s*\\]" "im"
+WHEN (TEXT_MATCHES "\"Action\":\\s*\"\\*\"|actions\\s*=\\s*\\[\"\\*\"\\]|action\\s*=\\s*\"\\*\"" "im" AND TEXT_MISSING "effect\\s*=\\s*\"Deny\"|NotAction|# intentional|# required" "im")
+REPORT "Wildcard IAM Policy Action"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

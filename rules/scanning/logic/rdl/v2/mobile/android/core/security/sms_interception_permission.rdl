@@ -1,0 +1,8 @@
+VERSION 2
+RULE android.sms-interception-permission VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "<uses-permission(?:-sdk-23)?\\b[^>]{0,500}\\bandroid:name\\s*=\\s*[\"\\x27](?:android\\.permission\\.READ_SMS|android\\.permission\\.RECEIVE_SMS|android\\.permission\\.RECEIVE_MMS|android\\.permission\\.RECEIVE_WAP_PUSH)[\"\\x27]" ""
+REPORT "SMS Interception Capability Declaration"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

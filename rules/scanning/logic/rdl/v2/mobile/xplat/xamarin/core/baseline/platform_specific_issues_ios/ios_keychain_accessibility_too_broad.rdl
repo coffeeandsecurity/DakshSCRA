@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.xplat.xamarin.core.ios_keychain_accessibility_too_broad VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "kSecAttrAccessibleAlways" "im"
+REPORT "iOS Keychain Accessibility Too Broad"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

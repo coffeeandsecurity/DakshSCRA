@@ -1,0 +1,12 @@
+VERSION 2
+RULE business.workflow-bypass VERSION 1
+IN PROJECT
+LET workflow BE RESOURCE MATCHES business.workflow
+STATE workflow STARTS initiated
+TRANSITION business.approve(workflow) FROM initiated TO approved
+TRANSITION business.execute(workflow) FROM approved TO completed
+VIOLATION business.execute(workflow) WHILE initiated
+REPORT "workflow operation bypasses required approval"
+SEVERITY HIGH
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

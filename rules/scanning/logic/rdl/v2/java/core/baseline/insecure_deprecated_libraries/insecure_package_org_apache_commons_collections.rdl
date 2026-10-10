@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.java.core.insecure_package_org_apache_commons_collections VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "org\\.apache\\.commons\\.collections" "im"
+WHEN (TEXT_MISSING "SerializationBinder|AllowType|ValidatingObjectInputStream|trusted" "im" AND TEXT_MISSING "test|example" "im")
+REPORT "Insecure Package: org.apache.commons.collections"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

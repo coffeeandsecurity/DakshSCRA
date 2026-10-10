@@ -1,0 +1,8 @@
+VERSION 2
+RULE flutter.hive.constant-encryption-key VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bHiveAesCipher\\s*\\(\\s*(?:List(?:<int>)?\\.filled\\s*\\(|\\[\\s*\\d)" ""
+REPORT "Hive Uses a Constant Encryption Key"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

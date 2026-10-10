@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.php.core.ssrf_file_get_contents_with_user_controlled_url VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "file_get_contents\\s*\\(\\s*\\$_(GET|POST|REQUEST|COOKIE)|\\$\\w+\\s*=\\s*file_get_contents\\s*\\(\\s*\\$" "im"
+WHEN TEXT_MISSING "allowlist|whitelist|parse_url|filter_var|stream_context_create" "im"
+REPORT "SSRF: file_get_contents with User-Controlled URL"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

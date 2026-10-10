@@ -3,7 +3,7 @@
         <rule>
             <name>EC2 Instance Metadata Service v1 Enabled</name>
             <regex>resource\s+"aws_instance"[^}]*http_tokens\s*=\s*"optional"</regex>
-            <rdl_ref>logic/terraform/framework/aws/ec2_instance_metadata_service_v1_enabled.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/terraform/framework/aws/ec2_instance_metadata_service_v1_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -12,15 +12,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects EC2 instances that allow IMDSv1 (unauthenticated metadata service access).</rule_desc>
-            <vuln_desc>IMDSv1 allows any process with network access to the metadata endpoint to retrieve credentials and user data, enabling SSRF-to-credential-theft attacks (as demonstrated in the Capital One breach).</vuln_desc>
-            <developer>Set metadata_options { http_tokens = "required" } on all EC2 instances to enforce IMDSv2 with session-oriented requests.</developer>
+            <rule_desc>The instance permits sessionless metadata requests through the legacy metadata protocol.</rule_desc>
+            <vuln_desc>A reachable server-side request forgery or local process may obtain instance metadata and role credentials without the additional session-token requirement.</vuln_desc>
+            <developer>Require token-based metadata access, restrict metadata reachability to required processes, and scope instance-role permissions to the workload’s needs.</developer>
             <reviewer>Confirm http_tokens is set to "required" on all EC2 instances. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>EC2 Instance with Public IP</name>
             <regex>associate_public_ip_address\s*=\s*true</regex>
-            <rdl_ref>logic/terraform/framework/aws/ec2_instance_with_public_ip.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/terraform/framework/aws/ec2_instance_with_public_ip.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -29,9 +29,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects EC2 instances configured to receive a public IP address.</rule_desc>
-            <vuln_desc>Assigning public IPs to EC2 instances directly exposes them to internet scanning and exploitation without requiring a load balancer or NAT gateway as a protective intermediary.</vuln_desc>
-            <developer>Place EC2 instances in private subnets. Use a NAT gateway for outbound internet access and load balancers for inbound traffic.</developer>
+            <rule_desc>The deployment declares a public address, exposed ports, or broad inbound access. Resolve effective routes, firewall rules, listening services, and authentication.</rule_desc>
+            <vuln_desc>If a sensitive service is reachable from an untrusted network, remote actors may attempt credential attacks or exploit reachable service defects. A public address or image EXPOSE declaration alone does not establish internet reachability.</vuln_desc>
+            <developer>Restrict inbound access to required services and trusted networks. Keep management and database endpoints private where possible, and verify actual listening ports, firewall rules, and access controls.</developer>
             <reviewer>Verify public IP assignment is intentional and that the instance has appropriate security group restrictions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -39,7 +39,7 @@
         <rule>
             <name>RDS Instance Publicly Accessible</name>
             <regex>resource\s+"aws_db_instance"[^}]*publicly_accessible\s*=\s*true</regex>
-            <rdl_ref>logic/terraform/framework/aws/rds_instance_publicly_accessible.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/terraform/framework/aws/rds_instance_publicly_accessible.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -48,15 +48,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects RDS instances configured to be publicly accessible from the internet.</rule_desc>
-            <vuln_desc>Publicly accessible RDS instances expose database endpoints to internet-wide scanning, credential brute-force, and exploitation of database vulnerabilities.</vuln_desc>
-            <developer>Set publicly_accessible = false and place RDS instances in private subnets. Use bastion hosts or SSM for administrative access.</developer>
+            <rule_desc>The deployment declares a public address, exposed ports, or broad inbound access. Resolve effective routes, firewall rules, listening services, and authentication.</rule_desc>
+            <vuln_desc>If a sensitive service is reachable from an untrusted network, remote actors may attempt credential attacks or exploit reachable service defects. A public address or image EXPOSE declaration alone does not establish internet reachability.</vuln_desc>
+            <developer>Restrict inbound access to required services and trusted networks. Keep management and database endpoints private where possible, and verify actual listening ports, firewall rules, and access controls.</developer>
             <reviewer>RDS public accessibility is a high-severity finding. Verify this is not required. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>RDS Storage Not Encrypted</name>
             <regex>resource\s+"aws_db_instance"[^}]*storage_encrypted\s*=\s*false</regex>
-            <rdl_ref>logic/terraform/framework/aws/rds_storage_not_encrypted.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/terraform/framework/aws/rds_storage_not_encrypted.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -65,15 +65,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects RDS instances without storage encryption enabled.</rule_desc>
-            <vuln_desc>Unencrypted RDS storage leaves data at risk from unauthorized volume access, snapshot sharing, and regulatory compliance violations.</vuln_desc>
-            <developer>Set storage_encrypted = true and specify a KMS key via kms_key_id for customer-managed encryption.</developer>
+            <rule_desc>Storage encryption is disabled or not established by the checked configuration. Resolve provider defaults and the effective deployed encryption policy.</rule_desc>
+            <vuln_desc>Someone who obtains unauthorized access to underlying storage or snapshots may recover private records without the intended encryption-at-rest boundary.</vuln_desc>
+            <developer>Enable appropriate storage and snapshot encryption with controlled key access. Verify the effective deployed state and plan migration of existing unencrypted data.</developer>
             <reviewer>Confirm all RDS instances have storage encryption enabled. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>RDS Multi-AZ Disabled</name>
             <regex>resource\s+"aws_db_instance"[^}]*multi_az\s*=\s*false</regex>
-            <rdl_ref>logic/terraform/framework/aws/rds_multi_az_disabled.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/terraform/framework/aws/rds_multi_az_disabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -82,9 +82,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects production RDS instances with Multi-AZ failover disabled.</rule_desc>
-            <vuln_desc>Single-AZ RDS instances have no automatic failover, creating availability risk from AZ failures that can cause extended outages for data-dependent applications.</vuln_desc>
-            <developer>Enable multi_az = true for production workloads to ensure automatic failover across availability zones.</developer>
+            <rule_desc>The database configuration does not enable the multi-zone availability option.</rule_desc>
+            <vuln_desc>A zone outage or instance failure may cause a longer interruption of database-dependent services when no equivalent failover or recovery mechanism exists.</vuln_desc>
+            <developer>Choose redundancy and tested recovery appropriate to availability requirements. Verify backup restoration and failover behavior before relying on a single-zone deployment.</developer>
             <reviewer>Verify single-AZ configurations are limited to development or non-critical environments. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -92,7 +92,7 @@
         <rule>
             <name>Lambda Function with Broad IAM Role</name>
             <regex>resource\s+"aws_iam_role_policy"[^}]*lambda[^}]*Action\s*":\s*"\*"</regex>
-            <rdl_ref>logic/terraform/framework/aws/lambda_function_with_broad_iam_role.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/terraform/framework/aws/lambda_function_with_broad_iam_role.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -101,15 +101,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects Lambda execution roles with wildcard Action policies.</rule_desc>
-            <vuln_desc>Lambda functions with overly broad IAM roles can perform unintended actions across AWS services if the function is exploited or has logic flaws.</vuln_desc>
-            <developer>Apply least-privilege IAM policies to Lambda execution roles. Enumerate only the specific API actions the function must perform.</developer>
+            <rule_desc>The code or deployment configuration requests privileges or grants access beyond an explicitly resolved minimum. Determine the effective permissions and the operation’s requirements.</rule_desc>
+            <vuln_desc>A compromised actor may access additional data, modify protected resources, or extend compromise beyond the intended application boundary when excessive privileges remain available.</vuln_desc>
+            <developer>Run with the least privileges required, remove unnecessary grants, and scope each permission to its intended resource and operation. Verify effective inherited permissions and test denied access.</developer>
             <reviewer>Confirm Lambda IAM roles follow least-privilege. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Lambda Environment Variable Contains Secret</name>
             <regex>resource\s+"aws_lambda_function"[^}]*environment\s*\{[^}]*variables\s*=\s*\{[^}]*(?i)(?:password|secret|api_key|token)\s*=\s*"[^"]{8,}"</regex>
-            <rdl_ref>logic/terraform/framework/aws/lambda_environment_variable_contains_secret.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/terraform/framework/aws/lambda_environment_variable_contains_secret.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -118,9 +118,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects hardcoded secrets in Lambda environment variable definitions.</rule_desc>
-            <vuln_desc>Lambda environment variables are visible in the AWS console, CloudTrail, and Terraform state files, exposing secrets to any operator with read access.</vuln_desc>
-            <developer>Reference secrets from AWS Secrets Manager or SSM Parameter Store at runtime using the AWS SDK. Use var references with sensitive = true for non-static values.</developer>
+            <rule_desc>The code declares an entry point, model, destination, or configuration value that may cross a trust boundary. Identify callers, recipients, and the required data-access policy.</rule_desc>
+            <vuln_desc>A boundary that trusts unauthorized callers or exposes private output may permit data disclosure or state changes. A declaration, address, or architectural marker alone does not establish such a failure.</vuln_desc>
+            <developer>Trace the actual boundary, restrict accepted inputs and recipients, and enforce authentication and object-level authorization where required. Verify both authorized and denied use cases.</developer>
             <reviewer>Confirm Lambda environment variables do not contain literal secret values. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -128,7 +128,7 @@
         <rule>
             <name>S3 Access Logging Disabled</name>
             <regex>resource\s+"aws_s3_bucket"[^}]*\}(?![^}]*logging)</regex>
-            <rdl_ref>logic/terraform/framework/aws/s3_access_logging_disabled.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/terraform/framework/aws/s3_access_logging_disabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -137,9 +137,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects S3 buckets without access logging configured.</rule_desc>
-            <vuln_desc>S3 buckets without access logging cannot be audited for unauthorized data access, exfiltration, or configuration changes, limiting incident detection and forensic capability.</vuln_desc>
-            <developer>Enable S3 server access logging via aws_s3_bucket_logging and direct logs to a dedicated centralized logging bucket.</developer>
+            <rule_desc>The code writes diagnostic data or exposes detailed errors. Establish the values emitted, production configuration, and recipients of the output.</rule_desc>
+            <vuln_desc>Readers of exposed diagnostics may obtain credentials, private records, internal paths, or implementation details that enable account misuse or targeted attacks.</vuln_desc>
+            <developer>Keep sensitive values and detailed errors out of user-facing responses and routine logs. Redact before emission, restrict diagnostic access, and verify production logging configuration.</developer>
             <reviewer>Confirm all production S3 buckets have access logging enabled. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

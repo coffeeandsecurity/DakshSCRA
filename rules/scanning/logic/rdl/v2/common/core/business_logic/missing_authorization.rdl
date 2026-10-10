@@ -1,0 +1,10 @@
+VERSION 2
+RULE business.missing-authorization VERSION 1
+IN FUNCTION
+LET operation BE CALL MATCHES business.sensitive-operation
+WHEN reachable operation
+REQUIRE NOT authorization.dominates operation
+REPORT "sensitive operation without required authorization"
+SEVERITY HIGH
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

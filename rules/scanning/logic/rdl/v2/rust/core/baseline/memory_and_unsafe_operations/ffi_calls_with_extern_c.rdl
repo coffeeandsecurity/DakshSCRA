@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.rust.core.ffi_calls_with_extern_c VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bextern\\s+\"C\"\\b" "im"
+WHEN (TEXT_MISSING "// SAFETY:|// Safety:|#\\[no_mangle\\]|unsafe fn" "im" AND TEXT_MISSING "test|example" "im")
+REPORT "FFI Calls with extern \"C\""
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

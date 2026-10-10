@@ -3,7 +3,7 @@
         <rule>
             <name>Overly Permissive Cordova Whitelist</name>
             <regex>&lt;allow-navigation\s+href="\*"\s*/&gt;|&lt;access\s+origin="\*"\s*/&gt;</regex>
-            <rdl_ref>logic/mobile/xplat/cordova/core/overly_permissive_cordova_whitelist.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/cordova/core/overly_permissive_cordova_whitelist.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -12,15 +12,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects wildcard navigation/network whitelist entries in Cordova config.</rule_desc>
-            <vuln_desc>Wildcard allowlists can expose the app to untrusted content, data leakage, and code abuse.</vuln_desc>
-            <developer>Use strict origin allowlists and remove wildcard entries from production config.xml.</developer>
+            <rule_desc>A browser-origin or navigation policy permits a broad set of external origins or destinations. Identify the resources and privileged interfaces covered by the effective policy.</rule_desc>
+            <vuln_desc>An untrusted site may read protected responses or invoke privileged interfaces if a permissive policy admits it and independent authentication or authorization does not prevent the operation.</vuln_desc>
+            <developer>Allow only required trusted origins and destinations. Validate origin and message schemas, handle credentials deliberately, and enforce access controls independently of the origin policy.</developer>
             <reviewer>Verify whitelist rules are limited to approved domains and protocols. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure External URL Handling</name>
             <regex>\b(?:window\.open|cordova\.InAppBrowser\.open)\s*\(</regex>
-            <rdl_ref>logic/mobile/xplat/cordova/core/insecure_external_url_handling.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/cordova/core/insecure_external_url_handling.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -29,15 +29,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>magenta</highlight_color>
             </scan_config>
-            <rule_desc>Detects browser launch calls that require URL validation and allowlist checks.</rule_desc>
-            <vuln_desc>Unvalidated URL launches can enable phishing and malicious redirection.</vuln_desc>
-            <developer>Validate target URLs against approved schemes/domains before opening.</developer>
+            <rule_desc>The code handles a link, redirect, or externally selected navigation target. Validate the effective destination and any action triggered by the receiving handler.</rule_desc>
+            <vuln_desc>A crafted destination or link may direct users to a phishing site, leak URL-carried secrets, or trigger unauthorized operations if routing trusts external parameters without the required access checks.</vuln_desc>
+            <developer>Allowlist schemes, hosts, paths, and operations. Validate parsed link parameters, avoid credentials in URLs, and require authentication and authorization before sensitive actions.</developer>
             <reviewer>Check URL construction and ensure strict allowlist validation exists. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Sensitive Data Stored in Web Storage</name>
             <regex>\b(?:localStorage\.setItem|sessionStorage\.setItem)\s*\(</regex>
-            <rdl_ref>logic/mobile/xplat/cordova/core/sensitive_data_stored_in_web_storage.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/cordova/core/sensitive_data_stored_in_web_storage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -46,9 +46,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects web storage writes that may include sensitive values.</rule_desc>
-            <vuln_desc>Web storage is not suitable for high-value secrets and may leak data on compromised devices.</vuln_desc>
-            <developer>Use secure native storage plugins for credentials and tokens.</developer>
+            <rule_desc>The application stores sensitive values or configures protection for persistent data. Determine the actual storage location, backup policy, and lock-state access restrictions.</rule_desc>
+            <vuln_desc>An actor with access to unprotected application files, backups, or overly broad keychain access may recover credentials or private records and use them outside the intended trust boundary.</vuln_desc>
+            <developer>Use the platform credential or key store for secrets and appropriate authenticated encryption and file protection for private records. Minimize stored data, backup exposure, and lock-state accessibility.</developer>
             <reviewer>Verify sensitive data classes are excluded from web storage usage. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -56,7 +56,7 @@
         <rule>
             <name>Cordova Wildcard Access Origin</name>
             <regex>&lt;access\s+origin=\"\*\"</regex>
-            <rdl_ref>logic/mobile/xplat/cordova/core/cordova_wildcard_access_origin.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/cordova/core/cordova_wildcard_access_origin.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -65,15 +65,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects wildcard access origin in Cordova config.</rule_desc>
-            <vuln_desc>Wildcard origin allows broad network access and expands attack surface.</vuln_desc>
-            <developer>Restrict access origins to explicit trusted domains.</developer>
+            <rule_desc>The application network allowlist permits requests to any origin.</rule_desc>
+            <vuln_desc>A compromised web context may send application data to an attacker-controlled endpoint if unrestricted outbound requests and access to sensitive data are both available.</vuln_desc>
+            <developer>Limit outbound origins to required trusted services. Keep sensitive values out of untrusted web contexts and apply a restrictive content-security policy and independent native access checks.</developer>
             <reviewer>Review config.xml access policy entries. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Cordova Wildcard Allow Navigation</name>
             <regex>&lt;allow-navigation\s+href=\"\*\"</regex>
-            <rdl_ref>logic/mobile/xplat/cordova/core/cordova_wildcard_allow_navigation.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/cordova/core/cordova_wildcard_allow_navigation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -82,15 +82,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects wildcard navigation policy in Cordova config.</rule_desc>
-            <vuln_desc>Wildcard navigation permits untrusted content navigation.</vuln_desc>
-            <developer>Restrict navigation destinations and enforce CSP.</developer>
+            <rule_desc>A browser-origin or navigation policy permits a broad set of external origins or destinations. Identify the resources and privileged interfaces covered by the effective policy.</rule_desc>
+            <vuln_desc>An untrusted site may read protected responses or invoke privileged interfaces if a permissive policy admits it and independent authentication or authorization does not prevent the operation.</vuln_desc>
+            <developer>Allow only required trusted origins and destinations. Validate origin and message schemas, handle credentials deliberately, and enforce access controls independently of the origin policy.</developer>
             <reviewer>Validate navigation allowlist for least privilege. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Cordova Unsafe CSP Directives</name>
             <regex>unsafe-inline|unsafe-eval</regex>
-            <rdl_ref>logic/mobile/xplat/cordova/core/cordova_unsafe_csp_directives.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/cordova/core/cordova_unsafe_csp_directives.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -99,15 +99,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects weak CSP directives in Cordova web assets/config.</rule_desc>
-            <vuln_desc>Unsafe directives increase XSS/script injection risk.</vuln_desc>
-            <developer>Harden CSP and avoid unsafe directives where feasible.</developer>
+            <rule_desc>Browser or embedded-renderer configuration relaxes an isolation or content-execution control. Determine which external content can reach the affected context.</rule_desc>
+            <vuln_desc>Untrusted page content may cross an intended browser or renderer boundary, execute privileged operations, or access protected data when the relaxed control exposes those capabilities.</vuln_desc>
+            <developer>Restore origin and process isolation, keep privileged APIs out of untrusted renderers, and use a restrictive content-security policy without unnecessary unsafe execution directives.</developer>
             <reviewer>Audit CSP config in HTML/meta headers and templates. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Cordova Insecure HTTP Endpoint Usage</name>
             <regex>http://</regex>
-            <rdl_ref>logic/mobile/xplat/cordova/core/cordova_insecure_http_endpoint_usage.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/cordova/core/cordova_insecure_http_endpoint_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -115,15 +115,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects cleartext endpoint references in Cordova code/config.</rule_desc>
-            <vuln_desc>Cleartext traffic can expose user and session data.</vuln_desc>
-            <developer>Use HTTPS endpoints and strict transport controls.</developer>
+            <rule_desc>The checked source contains a transport-security exception, insecure endpoint, or certificate-validation configuration. Resolve the effective policy and the connections it governs.</rule_desc>
+            <vuln_desc>An attacker on the network may read or alter affected traffic if sensitive data travels over cleartext or the connection accepts an untrusted server. Normal HTTPS endpoints and correctly implemented validation do not establish exposure.</vuln_desc>
+            <developer>Use HTTPS with normal certificate-chain and hostname verification. Remove permissive production callbacks and broad transport exceptions; restrict any justified exception to a documented, non-sensitive endpoint.</developer>
             <reviewer>Audit endpoint constants and plugin config values. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Cordova WebView JavaScript Bridge Marker</name>
             <regex>addJavascriptInterface\(|cordova\.exec\(</regex>
-            <rdl_ref>logic/mobile/xplat/cordova/core/cordova_webview_javascript_bridge_marker.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/cordova/core/cordova_webview_javascript_bridge_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -132,15 +132,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>magenta</highlight_color>
             </scan_config>
-            <rule_desc>Detects JavaScript-native bridge usage requiring trust-boundary review.</rule_desc>
-            <vuln_desc>Unsafe bridge handling can expose native capabilities to untrusted content.</vuln_desc>
-            <developer>Constrain bridge usage and validate inbound arguments.</developer>
+            <rule_desc>The application renders web content, executes scripts, or exposes a native messaging interface. Resolve navigation trust, origin isolation, and validation at the native boundary.</rule_desc>
+            <vuln_desc>Attacker-controlled web content may execute in a trusted context or invoke native operations, exposing session data or application privileges when isolation and per-operation checks are insufficient.</vuln_desc>
+            <developer>Restrict navigation and message origins to required trusted sources. Avoid dynamic script construction, minimize native bridge methods, validate message inputs, and authorize sensitive native operations.</developer>
             <reviewer>Review plugin bridge interfaces and content trust assumptions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Cordova Hardcoded Secret Marker</name>
             <regex>(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]</regex>
-            <rdl_ref>logic/mobile/xplat/cordova/core/cordova_hardcoded_secret_marker.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/cordova/core/cordova_hardcoded_secret_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -149,9 +149,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects likely hardcoded secrets in Cordova projects.</rule_desc>
-            <vuln_desc>Embedded secrets can be recovered from packaged app assets.</vuln_desc>
-            <developer>Use backend-managed secrets and rotate exposed values.</developer>
+            <rule_desc>The checked source or build configuration embeds potentially sensitive credential or key material. Determine whether it is active and whether it reaches distributed artifacts or logs.</rule_desc>
+            <vuln_desc>A party who can read exposed source, artifacts, configuration, or logs may recover active secrets and access the protected service or decrypt data with the secret owner’s privileges.</vuln_desc>
+            <developer>Remove active secrets from source and build layers, rotate exposed values, and load replacements through a restricted secret-management facility. Use narrowly privileged, short-lived credentials.</developer>
             <reviewer>Validate no static production secrets are shipped. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -159,7 +159,7 @@
         <rule>
             <name>Android Cleartext Traffic Allowed</name>
             <regex>usesCleartextTraffic\s*=\s*"?(?:true|TRUE)"?</regex>
-            <rdl_ref>logic/mobile/xplat/cordova/core/android_cleartext_traffic_allowed.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/cordova/core/android_cleartext_traffic_allowed.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -168,9 +168,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects insecure cleartext traffic settings in Android-specific Cordova builds.</rule_desc>
-            <vuln_desc>Allowing cleartext transport weakens confidentiality and integrity.</vuln_desc>
-            <developer>Disable cleartext traffic and use HTTPS for all endpoints.</developer>
+            <rule_desc>The checked source contains a transport-security exception, insecure endpoint, or certificate-validation configuration. Resolve the effective policy and the connections it governs.</rule_desc>
+            <vuln_desc>An attacker on the network may read or alter affected traffic if sensitive data travels over cleartext or the connection accepts an untrusted server. Normal HTTPS endpoints and correctly implemented validation do not establish exposure.</vuln_desc>
+            <developer>Use HTTPS with normal certificate-chain and hostname verification. Remove permissive production callbacks and broad transport exceptions; restrict any justified exception to a documented, non-sensitive endpoint.</developer>
             <reviewer>Validate Android network policy enforces secure transport. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -178,7 +178,7 @@
         <rule>
             <name>iOS ATS Disabled</name>
             <regex>NSAllowsArbitraryLoads\s*&lt;/key&gt;\s*&lt;true\s*/&gt;</regex>
-            <rdl_ref>logic/mobile/xplat/cordova/core/ios_ats_disabled.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/cordova/core/ios_ats_disabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -187,9 +187,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects App Transport Security disablement in iOS Cordova builds.</rule_desc>
-            <vuln_desc>Disabling ATS increases risk of network interception and tampering.</vuln_desc>
-            <developer>Retain ATS defaults and define narrow exceptions only when strictly required.</developer>
+            <rule_desc>The checked source contains a transport-security exception, insecure endpoint, or certificate-validation configuration. Resolve the effective policy and the connections it governs.</rule_desc>
+            <vuln_desc>An attacker on the network may read or alter affected traffic if sensitive data travels over cleartext or the connection accepts an untrusted server. Normal HTTPS endpoints and correctly implemented validation do not establish exposure.</vuln_desc>
+            <developer>Use HTTPS with normal certificate-chain and hostname verification. Remove permissive production callbacks and broad transport exceptions; restrict any justified exception to a documented, non-sensitive endpoint.</developer>
             <reviewer>Check Info.plist transport policy and exception domain scope. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

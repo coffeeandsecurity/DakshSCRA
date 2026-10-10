@@ -1,2 +1,26 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Keep local context, scan outputs and hidden workspace data out of releases.
+/exclude export-ignore
+/runtime export-ignore
+/reports export-ignore
+/.* export-ignore
+/.dockerignore -export-ignore
+/.gitignore -export-ignore
+/.gitattributes -export-ignore
+/.env.example -export-ignore
+
+# Include only the public usage guides in source archives.
+/docs/** export-ignore
+/docs/usage-guide.html -export-ignore
+/docs/usage-guide.md -export-ignore
+/tests export-ignore
+/examples export-ignore
+/tools/** export-ignore
+/tools/start_webui.py -export-ignore
+/tools/rdl_lint.py -export-ignore
+/tools/rdl_migrate.py -export-ignore
+/tools/supported_platforms.py -export-ignore
+/tools/rdl_shadow_report.py -export-ignore
+/tools/prune_rdl_comparisons.py -export-ignore

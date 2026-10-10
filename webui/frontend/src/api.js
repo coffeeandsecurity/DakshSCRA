@@ -54,6 +54,10 @@ export function getHealth() {
   return request('/api/v1/health')
 }
 
+export function getCheckCatalog() {
+  return request('/api/v1/check-catalog')
+}
+
 export function getBootstrapInfo() {
   return request('/api/v1/auth/bootstrap-info')
 }
@@ -93,9 +97,12 @@ export function createScan(payload) {
   return request('/api/v1/scans', { method: 'POST', body: JSON.stringify(payload) })
 }
 
-export function listScans(limit = 50, projectKey = '') {
+export function listScans(limit = 50, projectKey = '', options = {}) {
   const qp = new URLSearchParams({ limit: String(limit) })
   if (projectKey) qp.set('project_key', projectKey)
+  for (const key of ['offset', 'status', 'search']) {
+    if (options[key] != null && options[key] !== '') qp.set(key, String(options[key]))
+  }
   return request(`/api/v1/scans?${qp.toString()}`)
 }
 
@@ -117,6 +124,14 @@ export function listDirectories(path = '') {
 
 export function stopScan(runUuid) {
   return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/stop`, { method: 'POST' })
+}
+
+export function deleteScanData(runUuid) {
+  return request(`/api/v1/scans/${encodeURIComponent(runUuid)}`, { method: 'DELETE' })
+}
+
+export function deleteScanRecord(runUuid) {
+  return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/record`, { method: 'DELETE' })
 }
 
 export function streamScanLog(runUuid, onChunk, onDone) {
@@ -171,6 +186,15 @@ export function getScanFindings(runUuid) {
   return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/findings`)
 }
 
+export function getScanAnalysis(runUuid) {
+  return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/analysis`)
+}
+
+export function getRdlShadowResults(runUuid, limit = 50, options = {}) {
+  const query = new URLSearchParams({ limit, ...options })
+  return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/rdl-shadow?${query}`)
+}
+
 export function deleteProject(projectKey) {
   return request(`/api/v1/projects/${encodeURIComponent(projectKey)}`, { method: 'DELETE' })
 }
@@ -191,8 +215,9 @@ export function getVersion() {
   return request('/api/v1/version')
 }
 
-export function getSuppressedFindings(runUuid) {
-  return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/suppressed`)
+export function getSuppressedFindings(runUuid, summaryOnly = false) {
+  const suffix = summaryOnly ? '?summary_only=true' : ''
+  return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/suppressed${suffix}`)
 }
 
 export function updateSuppressedItem(runUuid, itemId, payload) {
@@ -236,3 +261,20 @@ export async function getLatestGithubRelease(repo) {
     return null
   }
 }
+
+export function getRdlXref(runUuid, options = {}) {
+  return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/rdl-xref?${new URLSearchParams(options)}`)
+}
+
+export function buildRdlXref(runUuid) {
+  return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/rdl-xref`, { method: 'POST' })
+}
+
+export const listReports = runUuid => request(`/api/v1/scans/${encodeURIComponent(runUuid)}/reports`)
+export const generateReport = (runUuid, options) => request(`/api/v1/scans/${encodeURIComponent(runUuid)}/reports`, { method: 'POST', body: JSON.stringify(options) })
+export const reportDownloadUrl = (runUuid, reportId) => `${API_BASE}/api/v1/scans/${encodeURIComponent(runUuid)}/reports/${encodeURIComponent(reportId)}/download`
+
+export const getDiskInfo = () => request('/api/v1/system/disk')
+export const getDiskFiles = (runUuid, unitId, offset = 0) => request(`/api/v1/system/disk/scans/${encodeURIComponent(runUuid)}/units/${encodeURIComponent(unitId)}/files?offset=${offset}&limit=100`)
+export const deleteDiskUnit = (runUuid, unitId) => request(`/api/v1/system/disk/scans/${encodeURIComponent(runUuid)}/units/${encodeURIComponent(unitId)}`, { method: 'DELETE' })
+export const deleteDiskScan = runUuid => request(`/api/v1/system/disk/scans/${encodeURIComponent(runUuid)}`, { method: 'DELETE' })

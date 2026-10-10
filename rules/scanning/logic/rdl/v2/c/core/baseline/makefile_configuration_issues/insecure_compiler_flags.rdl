@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.c.core.insecure_compiler_flags VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "CFLAGS\\s*=.*\\b(-fno-stack-protector|-z execstack)\\b" "im"
+WHEN TEXT_MATCHES "-fno-stack-protector|-D_FORTIFY_SOURCE=0|-z\\s+execstack|--no-pie|-fno-pie|-fno-aslr" "im"
+REPORT "Insecure Compiler Flags"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.kotlin.core.mitigation_identified_sql_injection_room_database VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "@Query\\s*\\(\\s*\"[^\"]*(?::\\w+|\\?)[^\"]*\"\\s*\\)|SupportSQLiteDatabase.*compileStatement" "im"
+WHEN (TEXT_MATCHES "@Query\\s*\\(\\s*\"[^\"]*(?::\\w+|\\?)[^\"]*\"\\s*\\)|SupportSQLiteDatabase.*compileStatement" "im" AND TEXT_MISSING "test|example" "im")
+REPORT "Mitigation Identified: SQL Injection (Room Database)"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

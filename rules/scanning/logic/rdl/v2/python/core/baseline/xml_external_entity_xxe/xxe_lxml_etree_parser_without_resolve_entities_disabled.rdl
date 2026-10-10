@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.python.core.xxe_lxml_etree_parser_without_resolve_entities_disabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "lxml\\.etree\\.parse\\s*\\(|etree\\.fromstring\\s*\\(|etree\\.XMLParser\\s*\\(" "im"
+WHEN TEXT_MISSING "resolve_entities\\s*=\\s*False|no_network\\s*=\\s*True|XMLParser\\s*\\(.*resolve_entities\\s*=\\s*False" "im"
+REPORT "XXE: lxml etree Parser Without Resolve Entities Disabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -36,6 +36,10 @@ class ScanRun(Base):
     analysis = Column(String(5), nullable=False, default="true")
     loc = Column(String(5), nullable=False, default="false")
 
+    # NULL identifies historical scans whose mode is recovered from saved telemetry.
+    rdl_engine = Column(String(8), nullable=True)
+    custom_rdl_json = Column(Text, nullable=False, default="[]")
+    scan_options_json = Column(Text, nullable=False, default="{}")
     command = Column(Text, nullable=False)
     return_code = Column(Integer, nullable=True)
     duration_sec = Column(Float, nullable=True)
@@ -45,6 +49,7 @@ class ScanRun(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     started_at = Column(DateTime(timezone=True), nullable=True)
     ended_at = Column(DateTime(timezone=True), nullable=True)
+    data_removed_at = Column(DateTime(timezone=True), nullable=True, index=True)
 
 
 class User(Base):

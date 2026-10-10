@@ -3,7 +3,7 @@
         <rule>
             <name>Capacitor/Cordova Insecure HTTP Endpoint Usage</name>
             <regex>(?i)\b(?:fetch|XMLHttpRequest|HttpClient|axios\.(?:get|post|put|delete|request)|\$.ajax|url\s*[:=]|baseUrl\s*[:=]|serverUrl\s*[:=]|endpoint\s*[:=]|api(?:[_-]?(?:url|endpoint))?\s*[:=]|src\s*[:=]|href\s*[:=]|window\.open|Browser\.open|InAppBrowser|allow-navigation|access\s+origin)[^\n]{0,220}http://</regex>
-            <rdl_ref>logic/mobile/xplat/ionic/core/capacitor_cordova_insecure_http_endpoint_usage.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/ionic/core/capacitor_cordova_insecure_http_endpoint_usage.rdl</rdl_ref>
             <exclude>(?i)apache\.org/licenses|opensource\.org/licenses|w3\.org|^\s*(//|/\*|\*|#|&lt;!--|~)</exclude>
             <scan_config>
                 <match_mode>line</match_mode>
@@ -12,15 +12,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects cleartext endpoint references in hybrid mobile application code/configuration.</rule_desc>
-            <vuln_desc>Using HTTP can expose traffic to interception and tampering.</vuln_desc>
-            <developer>Use HTTPS for all production APIs and enforce certificate validation.</developer>
+            <rule_desc>The checked source contains a transport-security exception, insecure endpoint, or certificate-validation configuration. Resolve the effective policy and the connections it governs.</rule_desc>
+            <vuln_desc>An attacker on the network may read or alter affected traffic if sensitive data travels over cleartext or the connection accepts an untrusted server. Normal HTTPS endpoints and correctly implemented validation do not establish exposure.</vuln_desc>
+            <developer>Use HTTPS with normal certificate-chain and hostname verification. Remove permissive production callbacks and broad transport exceptions; restrict any justified exception to a documented, non-sensitive endpoint.</developer>
             <reviewer>Review endpoint configurations and block cleartext transport in production. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure Browser Plugin Usage</name>
             <regex>\b(?:InAppBrowser|cordova\.InAppBrowser|Browser\.open)\s*\(</regex>
-            <rdl_ref>logic/mobile/xplat/ionic/core/insecure_browser_plugin_usage.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/ionic/core/insecure_browser_plugin_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -29,15 +29,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>magenta</highlight_color>
             </scan_config>
-            <rule_desc>Detects embedded browser opening flows that need URL allowlist validation.</rule_desc>
-            <vuln_desc>Opening attacker-controlled URLs can lead to phishing and token leakage.</vuln_desc>
-            <developer>Allowlist destinations and validate any dynamic URL input.</developer>
+            <rule_desc>The application opens an external browser or embedded-browser target. Determine how the destination and any URL-carried data are selected.</rule_desc>
+            <vuln_desc>An attacker-selected destination may support phishing or receive sensitive URL values if the application trusts unvalidated external navigation parameters.</vuln_desc>
+            <developer>Allowlist required destinations and schemes, keep credentials out of URLs, and use platform browser flows with verified callback handling for authentication.</developer>
             <reviewer>Confirm URL validation and navigation restrictions are enforced. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Sensitive Data in Local Storage</name>
             <regex>\b(?:localStorage\.setItem|sessionStorage\.setItem|Storage\.set)\s*\(</regex>
-            <rdl_ref>logic/mobile/xplat/ionic/core/sensitive_data_in_local_storage.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/ionic/core/sensitive_data_in_local_storage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -46,9 +46,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects local storage write paths that may include sensitive data.</rule_desc>
-            <vuln_desc>Persisting secrets in web storage can expose tokens/credentials on device compromise.</vuln_desc>
-            <developer>Store secrets in secure native storage plugins, not plain web storage.</developer>
+            <rule_desc>The application stores sensitive values or configures protection for persistent data. Determine the actual storage location, backup policy, and lock-state access restrictions.</rule_desc>
+            <vuln_desc>An actor with access to unprotected application files, backups, or overly broad keychain access may recover credentials or private records and use them outside the intended trust boundary.</vuln_desc>
+            <developer>Use the platform credential or key store for secrets and appropriate authenticated encryption and file protection for private records. Minimize stored data, backup exposure, and lock-state accessibility.</developer>
             <reviewer>Review storage key/value usage and verify sensitive data handling. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -56,7 +56,7 @@
         <rule>
             <name>Ionic/Cordova Allow Navigation Wildcard</name>
             <regex>&lt;allow-navigation\s+href=\"\*\"|&lt;access\s+origin=\"\*\"</regex>
-            <rdl_ref>logic/mobile/xplat/ionic/core/ionic_cordova_allow_navigation_wildcard.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/ionic/core/ionic_cordova_allow_navigation_wildcard.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -65,15 +65,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects wildcard navigation/origin allowlist settings.</rule_desc>
-            <vuln_desc>Wildcard allowlists can expose app web context to untrusted content.</vuln_desc>
-            <developer>Restrict navigation/access allowlists to trusted origins.</developer>
+            <rule_desc>A browser-origin or navigation policy permits a broad set of external origins or destinations. Identify the resources and privileged interfaces covered by the effective policy.</rule_desc>
+            <vuln_desc>An untrusted site may read protected responses or invoke privileged interfaces if a permissive policy admits it and independent authentication or authorization does not prevent the operation.</vuln_desc>
+            <developer>Allow only required trusted origins and destinations. Validate origin and message schemas, handle credentials deliberately, and enforce access controls independently of the origin policy.</developer>
             <reviewer>Review config.xml allowlist entries and CSP alignment. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Ionic Insecure HTTP Endpoint Usage</name>
             <regex>http://</regex>
-            <rdl_ref>logic/mobile/xplat/ionic/core/ionic_insecure_http_endpoint_usage.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/ionic/core/ionic_insecure_http_endpoint_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -81,15 +81,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects cleartext endpoint references in Ionic/Capacitor apps.</rule_desc>
-            <vuln_desc>Cleartext transport can leak sensitive traffic.</vuln_desc>
-            <developer>Use HTTPS and secure transport configuration.</developer>
+            <rule_desc>The checked source contains a transport-security exception, insecure endpoint, or certificate-validation configuration. Resolve the effective policy and the connections it governs.</rule_desc>
+            <vuln_desc>An attacker on the network may read or alter affected traffic if sensitive data travels over cleartext or the connection accepts an untrusted server. Normal HTTPS endpoints and correctly implemented validation do not establish exposure.</vuln_desc>
+            <developer>Use HTTPS with normal certificate-chain and hostname verification. Remove permissive production callbacks and broad transport exceptions; restrict any justified exception to a documented, non-sensitive endpoint.</developer>
             <reviewer>Audit endpoint constants and environment config files. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Ionic/CSP Unsafe Directives</name>
             <regex>unsafe-inline|unsafe-eval</regex>
-            <rdl_ref>logic/mobile/xplat/ionic/core/ionic_csp_unsafe_directives.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/ionic/core/ionic_csp_unsafe_directives.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -98,15 +98,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects weak CSP directives often used in webview apps.</rule_desc>
-            <vuln_desc>Unsafe CSP directives increase XSS/script injection exploitability.</vuln_desc>
-            <developer>Harden CSP and avoid unsafe directives whenever possible.</developer>
+            <rule_desc>Browser or embedded-renderer configuration relaxes an isolation or content-execution control. Determine which external content can reach the affected context.</rule_desc>
+            <vuln_desc>Untrusted page content may cross an intended browser or renderer boundary, execute privileged operations, or access protected data when the relaxed control exposes those capabilities.</vuln_desc>
+            <developer>Restore origin and process isolation, keep privileged APIs out of untrusted renderers, and use a restrictive content-security policy without unnecessary unsafe execution directives.</developer>
             <reviewer>Review index.html/meta headers/CSP configuration files. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Ionic Capacitor Cleartext Permitted</name>
             <regex>cleartextTrafficPermitted\s*[:=]\s*true|NSAllowsArbitraryLoads</regex>
-            <rdl_ref>logic/mobile/xplat/ionic/core/ionic_capacitor_cleartext_permitted.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/ionic/core/ionic_capacitor_cleartext_permitted.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -115,15 +115,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects platform transport relaxations in hybrid config.</rule_desc>
-            <vuln_desc>Transport relaxations can permit insecure network communication.</vuln_desc>
-            <developer>Disable cleartext/ATS relaxations for production.</developer>
+            <rule_desc>The checked source contains a transport-security exception, insecure endpoint, or certificate-validation configuration. Resolve the effective policy and the connections it governs.</rule_desc>
+            <vuln_desc>An attacker on the network may read or alter affected traffic if sensitive data travels over cleartext or the connection accepts an untrusted server. Normal HTTPS endpoints and correctly implemented validation do not establish exposure.</vuln_desc>
+            <developer>Use HTTPS with normal certificate-chain and hostname verification. Remove permissive production callbacks and broad transport exceptions; restrict any justified exception to a documented, non-sensitive endpoint.</developer>
             <reviewer>Validate Android/iOS transport security configurations. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Ionic Storage Secret Marker</name>
             <regex>(localStorage|sessionStorage)\.(setItem|set)\(.*(token|secret|password|apikey)</regex>
-            <rdl_ref>logic/mobile/xplat/ionic/core/ionic_storage_secret_marker.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/ionic/core/ionic_storage_secret_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -131,15 +131,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects potentially sensitive values stored in web storage.</rule_desc>
-            <vuln_desc>Web storage is not suitable for long-lived secrets.</vuln_desc>
-            <developer>Use secure storage plugins and minimize client secret persistence.</developer>
+            <rule_desc>The application stores sensitive values or configures protection for persistent data. Determine the actual storage location, backup policy, and lock-state access restrictions.</rule_desc>
+            <vuln_desc>An actor with access to unprotected application files, backups, or overly broad keychain access may recover credentials or private records and use them outside the intended trust boundary.</vuln_desc>
+            <developer>Use the platform credential or key store for secrets and appropriate authenticated encryption and file protection for private records. Minimize stored data, backup exposure, and lock-state accessibility.</developer>
             <reviewer>Review client storage keys and data sensitivity. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Ionic Hardcoded Secret Marker</name>
             <regex>(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]</regex>
-            <rdl_ref>logic/mobile/xplat/ionic/core/ionic_hardcoded_secret_marker.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/ionic/core/ionic_hardcoded_secret_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -148,9 +148,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects likely hardcoded secrets in Ionic/Capacitor code.</rule_desc>
-            <vuln_desc>Embedded secrets can be extracted from bundles/artifacts.</vuln_desc>
-            <developer>Move secrets server-side and rotate exposed credentials.</developer>
+            <rule_desc>The checked source or build configuration embeds potentially sensitive credential or key material. Determine whether it is active and whether it reaches distributed artifacts or logs.</rule_desc>
+            <vuln_desc>A party who can read exposed source, artifacts, configuration, or logs may recover active secrets and access the protected service or decrypt data with the secret owner’s privileges.</vuln_desc>
+            <developer>Remove active secrets from source and build layers, rotate exposed values, and load replacements through a restricted secret-management facility. Use narrowly privileged, short-lived credentials.</developer>
             <reviewer>Verify no production secrets are committed. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -158,7 +158,7 @@
         <rule>
             <name>Android Cleartext Traffic Allowed</name>
             <regex>usesCleartextTraffic\s*=\s*"?(?:true|TRUE)"?</regex>
-            <rdl_ref>logic/mobile/xplat/ionic/core/android_cleartext_traffic_allowed.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/ionic/core/android_cleartext_traffic_allowed.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -167,9 +167,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects Android cleartext traffic configuration in hybrid builds.</rule_desc>
-            <vuln_desc>Cleartext transport weakens confidentiality and integrity guarantees.</vuln_desc>
-            <developer>Disable cleartext traffic and use secure network security config exceptions only when needed.</developer>
+            <rule_desc>The checked source contains a transport-security exception, insecure endpoint, or certificate-validation configuration. Resolve the effective policy and the connections it governs.</rule_desc>
+            <vuln_desc>An attacker on the network may read or alter affected traffic if sensitive data travels over cleartext or the connection accepts an untrusted server. Normal HTTPS endpoints and correctly implemented validation do not establish exposure.</vuln_desc>
+            <developer>Use HTTPS with normal certificate-chain and hostname verification. Remove permissive production callbacks and broad transport exceptions; restrict any justified exception to a documented, non-sensitive endpoint.</developer>
             <reviewer>Check Android network policy for strict transport protection. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -177,7 +177,7 @@
         <rule>
             <name>iOS ATS Disabled</name>
             <regex>NSAllowsArbitraryLoads\s*&lt;/key&gt;\s*&lt;true\s*/&gt;</regex>
-            <rdl_ref>logic/mobile/xplat/ionic/core/ios_ats_disabled.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/ionic/core/ios_ats_disabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -186,9 +186,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects ATS disablement in hybrid iOS builds.</rule_desc>
-            <vuln_desc>Disabling ATS can permit insecure transport and increase MITM risk.</vuln_desc>
-            <developer>Keep ATS enabled with narrow exceptions for approved domains only.</developer>
+            <rule_desc>The checked source contains a transport-security exception, insecure endpoint, or certificate-validation configuration. Resolve the effective policy and the connections it governs.</rule_desc>
+            <vuln_desc>An attacker on the network may read or alter affected traffic if sensitive data travels over cleartext or the connection accepts an untrusted server. Normal HTTPS endpoints and correctly implemented validation do not establish exposure.</vuln_desc>
+            <developer>Use HTTPS with normal certificate-chain and hostname verification. Remove permissive production callbacks and broad transport exceptions; restrict any justified exception to a documented, non-sensitive endpoint.</developer>
             <reviewer>Review ATS keys in Info.plist and verify minimal exception scope. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

@@ -1,0 +1,10 @@
+VERSION 2
+RULE concurrency.toctou VERSION 1
+IN FUNCTION
+LET resource BE RESOURCE MATCHES filesystem.resource
+WHEN check resource AND later_use resource
+REQUIRE externally_mutable resource AND NOT atomic.operation resource
+REPORT "time of check to time of use race"
+SEVERITY HIGH
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

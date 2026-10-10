@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.bash.core.wget_with_certificate_check_disabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "wget\\s+(?:[^\\n]*\\s)?(?:--no-check-certificate)" "im"
+WHEN TEXT_MISSING "test|development|localhost|staging|# intentional|# nosec" "im"
+REPORT "wget with Certificate Check Disabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.kotlin.core.executable_file_storage_on_external_storage VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(Environment\\.getExternalStorageDirectory|Context\\.getExternalFilesDir)\\s*\\(\\)\\s*.*\\.(dex|so|jar|apk)" "im"
+WHEN (TEXT_MISSING "verify|signature|checksum|MessageDigest" "im" AND TEXT_MISSING "test|example|sample" "im")
+REPORT "Executable File Storage on External Storage"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

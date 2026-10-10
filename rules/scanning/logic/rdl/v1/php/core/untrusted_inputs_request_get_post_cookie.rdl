@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT \$_(REQUEST|GET|POST|COOKIE)
+REPORT AS area_of_interest
+REASON Detects the use of common PHP superglobals that can introduce untrusted input into the code.
+TRACE Externalized rule logic for Untrusted Inputs: $_REQUEST, $_GET, $_POST, $_COOKIE.

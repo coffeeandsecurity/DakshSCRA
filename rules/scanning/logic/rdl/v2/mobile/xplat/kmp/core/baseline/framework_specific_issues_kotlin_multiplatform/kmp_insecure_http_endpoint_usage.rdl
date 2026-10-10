@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.xplat.kmp.core.kmp_insecure_http_endpoint_usage VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "http://" "m"
+REPORT "KMP Insecure HTTP Endpoint Usage"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

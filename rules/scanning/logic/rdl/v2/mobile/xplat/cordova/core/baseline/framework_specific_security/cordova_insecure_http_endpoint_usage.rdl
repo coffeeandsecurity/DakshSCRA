@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.xplat.cordova.core.cordova_insecure_http_endpoint_usage VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "http://" "im"
+REPORT "Cordova Insecure HTTP Endpoint Usage"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

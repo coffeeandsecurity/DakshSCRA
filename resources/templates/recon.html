@@ -31,7 +31,7 @@
 
     .layout {
       display: grid;
-      grid-template-columns: 300px 1fr;
+      grid-template-columns: 300px minmax(0, 1fr);
       min-height: 100vh;
     }
 
@@ -103,6 +103,7 @@
     .nav-link:hover { background: #e7f2ff; color: var(--primary-2); }
 
     .main {
+      min-width: 0;
       padding: 26px;
       max-width: 1400px;
       width: 100%;
@@ -281,6 +282,8 @@
       .grid { grid-template-columns: 1fr; }
       .hero h2 { font-size: 24px; }
     }
+    .hero { overflow-wrap: anywhere; }
+    {% include 'report_analysis.css' %}
   </style>
 </head>
 <body>
@@ -301,8 +304,8 @@
 
       <div class="nav-group">
         <p class="nav-title">Recon Categories</p>
-        {% for section in sections %}
-        <a class="nav-link" href="#cat-{{ loop.index }}">{{ section.category }}</a>
+        {% for category in recon_report.categories %}
+        <a class="nav-link" href="#{{ category.anchor }}">{{ category.name }}</a>
         {% endfor %}
       </div>
     </aside>
@@ -317,51 +320,7 @@
         <p><strong>Strict Mode:</strong> {{ recon_strict_mode }}</p>
       </section>
 
-      <section class="grid">
-        <div class="card"><div class="k">Categories</div><div class="v">{{ total_categories }}</div></div>
-        <div class="card"><div class="k">Technologies</div><div class="v">{{ total_technologies }}</div></div>
-        <div class="card"><div class="k">Matched Files</div><div class="v">{{ total_files }}</div></div>
-        <div class="card"><div class="k">Matched Directories</div><div class="v">{{ total_directories }}</div></div>
-      </section>
-
-      {% for section in sections %}
-      <details class="section" id="cat-{{ loop.index }}" open>
-        <summary>{{ section.category }} <span class="meta">({{ section.tech_rows|length }} technologies)</span></summary>
-        <div class="section-body">
-          {% for tech in section.tech_rows %}
-          <details class="tech">
-            <summary>
-              <span>{{ tech.name }}</span>
-              <span class="meta">
-                <span class="badge badge-{{ tech.confidence }}">{{ tech.confidence }}</span>
-                {{ tech.total_files }} files | {{ tech.total_dirs }} directories
-              </span>
-            </summary>
-            <div class="dirs">
-              <div class="dir-row">
-                <span>Confidence Breakdown</span>
-                <strong>H:{{ tech.confidence_counts.high }} M:{{ tech.confidence_counts.medium }} L:{{ tech.confidence_counts.low }}</strong>
-              </div>
-              {% for d in tech.directories %}
-              <div class="dir-row">
-                <span>{{ d.directory }}</span>
-                <strong>{{ d.fileCount }}</strong>
-              </div>
-              {% endfor %}
-              {% if tech.sample_files %}
-              <div class="samples">
-                <div class="samples-title">Sample Files</div>
-                {% for sample in tech.sample_files %}
-                <div class="sample-path">{{ sample }}</div>
-                {% endfor %}
-              </div>
-              {% endif %}
-            </div>
-          </details>
-          {% endfor %}
-        </div>
-      </details>
-      {% endfor %}
+      {% include 'report_recon.html' %}
 
       <div class="footer">Generated at {{ generated_at }}</div>
     </main>

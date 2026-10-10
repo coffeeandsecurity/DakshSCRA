@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.ios.framework.coredata.nsfetchrequest_predicate_from_user_input VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "NSPredicate\\s*\\(\\s*format\\s*:\\s*[\"'][^\"']*%@" "im"
+WHEN TEXT_MISSING "argumentArray|CVarArg|predicateWithValue" "im"
+REPORT "NSFetchRequest Predicate from User Input"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

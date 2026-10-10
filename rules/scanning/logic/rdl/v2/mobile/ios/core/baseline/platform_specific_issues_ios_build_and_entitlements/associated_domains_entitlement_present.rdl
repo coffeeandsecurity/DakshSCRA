@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.ios.core.associated_domains_entitlement_present VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "com\\.apple\\.developer\\.associated-domains" "im"
+WHEN (TEXT_MATCHES "com\\.apple\\.developer\\.associated-domains" "im" AND TEXT_MISSING "# intentional|# required" "im")
+REPORT "Associated Domains Entitlement Present"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

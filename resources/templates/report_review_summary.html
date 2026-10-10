@@ -1,0 +1,17 @@
+<div class="review-summary">
+  <p class="review-note">Review priorities from the saved scan. Native analyzer assessments and RDL rule findings are separate populations; their counts should not be added together. Confirm exploitability against the recorded evidence and coverage limits.</p>
+  <div class="report-stats">
+    <div class="report-stat"><strong>{{ review_summary.native_assessments }}</strong><span>Confirmed RDL findings</span></div>
+    <div class="report-stat"><strong>{{ review_summary.rdl_groups }}</strong><span>Grouped RDL review findings · {{ review_summary.rdl_locations }} locations</span></div>
+    <div class="report-stat"><strong>{{ review_summary.native_flows }} / {{ review_summary.semantic_flows }}</strong><span>Native analysis records / RDL flow paths</span></div>
+    <div class="report-stat"><strong>{{ review_summary.coverage_limits }}</strong><span>Inconclusive RDL checks &amp; coverage limits</span></div>
+  </div>
+  <div class="severity-panels">
+    {% for label, rows in [('Confirmed RDL severity', review_summary.native_severities), ('Grouped RDL finding severity', review_summary.rdl_severities)] %}
+    <div class="severity-panel"><h3>{{ label }}</h3>
+      {% for row in rows %}<div class="severity-row"><span>{{ row.label }}</span><div class="severity-track"><span class="severity-fill severity-{{ row.label|lower|replace(' ','-') }}" style="width:{{ row.percent }}%"></span></div><b>{{ row.count }}</b></div>{% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+  <p class="muted">{{ review_summary.symbols }} indexed symbols · {{ review_summary.calls }} call sites · {{ review_summary.suppressed }} suppressed findings. Detailed reports retain recorded locations, source excerpts, decision reasons and unresolved results.</p>
+</div>

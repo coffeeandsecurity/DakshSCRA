@@ -1,0 +1,8 @@
+VERSION 2
+RULE javascript.client.placeholder-session VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:SignIn|signIn|setAuthToken|setAccessToken)\\s*\\(\\s*[\\\"\\x27](?:token_of_user|dummy_token|placeholder_token|fake_token|test_token)[\\\"\\x27]\\s*\\)" ""
+REPORT "Placeholder Token Enters Authenticated UI"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

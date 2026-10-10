@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.xplat.flutter.framework.dio.bad_certificate_callback_accepting_all_certificates VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "badCertificateCallback\\s*:\\s*\\([^)]*\\)\\s*(?:=>|\\{)[^}]*(?:=>|return)\\s*true" "im"
+WHEN TEXT_MISSING "test|development|localhost|staging|certificate pinning" "im"
+REPORT "Bad Certificate Callback Accepting All Certificates"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

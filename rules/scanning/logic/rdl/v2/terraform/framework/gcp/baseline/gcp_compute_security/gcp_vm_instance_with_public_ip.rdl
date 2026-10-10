@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.terraform.framework.gcp.gcp_vm_instance_with_public_ip VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "resource\\s+\"google_compute_instance\"[^}]*access_config\\s*\\{" "im"
+WHEN TEXT_MISSING "nat_ip\\s*=\\s*\"\"" "im"
+REPORT "GCP VM Instance with Public IP"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

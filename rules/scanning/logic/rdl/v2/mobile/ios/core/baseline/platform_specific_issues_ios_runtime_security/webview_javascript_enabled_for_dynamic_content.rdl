@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.ios.core.webview_javascript_enabled_for_dynamic_content VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "WKPreferences\\(\\)\\.javaScriptEnabled\\s*=\\s*true|setJavaScriptEnabled\\s*:\\s*YES" "im"
+WHEN TEXT_MISSING "shouldStartLoadWithRequest|decidePolicyForNavigationAction|navigationDelegate|allowList|trustedOrigins" "im"
+REPORT "WebView JavaScript Enabled for Dynamic Content"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

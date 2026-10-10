@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.ios.core.certificate_pinning_using_leaf_certificate_hash_only VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bSecCertificateCopyData\\s*\\(" "im"
+WHEN TEXT_MISSING "SecCertificateCopyPublicKey|SecCertificateCopyKey|SecKeyRef|publicKeyHash|spki|SubjectPublicKeyInfo" "im"
+REPORT "Certificate Pinning Using Leaf Certificate Hash Only"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

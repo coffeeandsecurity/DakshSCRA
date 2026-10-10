@@ -1,0 +1,10 @@
+VERSION 2
+RULE memory.null-dereference VERSION 1
+IN FUNCTION
+LET pointer BE VARIABLE MATCHES memory.pointer
+WHEN dereferenced pointer AND possibly_null pointer
+REQUIRE REACHABLE PATH
+REPORT "null pointer dereference"
+SEVERITY HIGH
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

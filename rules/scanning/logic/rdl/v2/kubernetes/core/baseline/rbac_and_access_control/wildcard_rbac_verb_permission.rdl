@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.kubernetes.core.wildcard_rbac_verb_permission VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "verbs\\s*:\\s*\\[?\\s*[\"']?\\*[\"']?\\s*\\]?" "im"
+REPORT "Wildcard RBAC Verb Permission"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -3,7 +3,7 @@
         <rule>
             <name>Freertos Unsafe String Copy API</name>
             <regex>\b(strcpy|strcat|sprintf|gets)\s*\(</regex>
-            <rdl_ref>logic/c/framework/freertos/freertos_unsafe_string_copy_api.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/c/framework/freertos/freertos_unsafe_string_copy_api.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -12,15 +12,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>magenta</highlight_color>
             </scan_config>
-            <rule_desc>Detects unsafe string APIs common in memory-corruption vulnerabilities.</rule_desc>
-            <vuln_desc>Unsafe string handling may lead to buffer overflows and memory corruption.</vuln_desc>
-            <developer>Use bounded alternatives (snprintf/strlcpy) and explicit length checks.</developer>
+            <rule_desc>Application data is inserted into an HTML or script rendering context, or marked safe in a way that may bypass automatic encoding.</rule_desc>
+            <vuln_desc>If attacker-controlled content reaches an executable browser context, it may run under the application’s origin, read accessible session data, or perform actions with the victim’s permissions.</vuln_desc>
+            <developer>Use automatic context-aware output encoding and data-only DOM APIs. Sanitize deliberately accepted rich HTML with a maintained allowlist sanitizer and avoid marking untrusted content as safe.</developer>
             <reviewer>Review bounds checks around unsafe C string APIs. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Freertos Command Execution Sink</name>
             <regex>\b(system|popen|execv|execl)\s*\(</regex>
-            <rdl_ref>logic/c/framework/freertos/freertos_command_execution_sink.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/c/framework/freertos/freertos_command_execution_sink.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -29,15 +29,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>magenta</highlight_color>
             </scan_config>
-            <rule_desc>Detects command execution APIs requiring strict input control review.</rule_desc>
-            <vuln_desc>User-influenced command execution can lead to OS command injection.</vuln_desc>
-            <developer>Avoid shell invocation or enforce strict allow-lists and escaping.</developer>
+            <rule_desc>The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.</rule_desc>
+            <vuln_desc>If an attacker controls interpreted syntax or the operation selected, code or commands may run with the application’s privileges, allowing data theft, state changes, or service disruption.</vuln_desc>
+            <developer>Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates or expressions.</developer>
             <reviewer>Trace untrusted data flow into command execution calls. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Freertos Insecure Transport/Cert Bypass Marker</name>
             <regex>CURLOPT_SSL_VERIFYPEER\s*,\s*0|CURLOPT_SSL_VERIFYHOST\s*,\s*0</regex>
-            <rdl_ref>logic/c/framework/freertos/freertos_insecure_transport_cert_bypass_marker.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/c/framework/freertos/freertos_insecure_transport_cert_bypass_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -46,15 +46,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects TLS verification disablement in C HTTP clients.</rule_desc>
-            <vuln_desc>Disabling TLS verification allows MITM attacks.</vuln_desc>
-            <developer>Enable strict certificate and hostname verification.</developer>
+            <rule_desc>The checked source contains a transport-security exception, insecure endpoint, or certificate-validation configuration. Resolve the effective policy and the connections it governs.</rule_desc>
+            <vuln_desc>An attacker on the network may read or alter affected traffic if sensitive data travels over cleartext or the connection accepts an untrusted server. Normal HTTPS endpoints and correctly implemented validation do not establish exposure.</vuln_desc>
+            <developer>Use HTTPS with normal certificate-chain and hostname verification. Remove permissive production callbacks and broad transport exceptions; restrict any justified exception to a documented, non-sensitive endpoint.</developer>
             <reviewer>Audit transport settings in network code. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Freertos Hardcoded Secret Material</name>
             <regex>(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"</regex>
-            <rdl_ref>logic/c/framework/freertos/freertos_hardcoded_secret_material.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/c/framework/freertos/freertos_hardcoded_secret_material.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -63,15 +63,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects likely hardcoded secret values in C source.</rule_desc>
-            <vuln_desc>Hardcoded credentials can be extracted from firmware/binaries.</vuln_desc>
-            <developer>Provision secrets securely at runtime.</developer>
+            <rule_desc>The checked source or build configuration embeds potentially sensitive credential or key material. Determine whether it is active and whether it reaches distributed artifacts or logs.</rule_desc>
+            <vuln_desc>A party who can read exposed source, artifacts, configuration, or logs may recover active secrets and access the protected service or decrypt data with the secret owner’s privileges.</vuln_desc>
+            <developer>Remove active secrets from source and build layers, rotate exposed values, and load replacements through a restricted secret-management facility. Use narrowly privileged, short-lived credentials.</developer>
             <reviewer>Review credential handling strategy and key rotation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Freertos FreeRTOS Privileged API Review Marker</name>
             <regex>vTaskPrioritySet\(|xTaskCreate\(|xQueueReceive\(</regex>
-            <rdl_ref>logic/c/framework/freertos/freertos_freertos_privileged_api_review_marker.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/c/framework/freertos/freertos_freertos_privileged_api_review_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -80,9 +80,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects privileged task/queue operations that require security review context.</rule_desc>
-            <vuln_desc>Improper task privilege and IPC handling can create reliability and security risks.</vuln_desc>
-            <developer>Apply least privilege and validate message boundary checks.</developer>
+            <rule_desc>The code or deployment configuration requests privileges or grants access beyond an explicitly resolved minimum. Determine the effective permissions and the operation’s requirements.</rule_desc>
+            <vuln_desc>A compromised actor may access additional data, modify protected resources, or extend compromise beyond the intended application boundary when excessive privileges remain available.</vuln_desc>
+            <developer>Run with the least privileges required, remove unnecessary grants, and scope each permission to its intended resource and operation. Verify effective inherited permissions and test denied access.</developer>
             <reviewer>Review task privilege and queue data validation boundaries. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

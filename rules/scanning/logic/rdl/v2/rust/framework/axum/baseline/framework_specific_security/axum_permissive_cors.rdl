@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.rust.framework.axum.axum_permissive_cors VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "allow_any_origin\\(\\)|Any\\s*,\\s*allow_origin|allow_origin\\(Any\\)" "im"
+WHEN (TEXT_MATCHES "allow_any_origin\\(\\)|AllowOrigin::any\\(\\)|CorsLayer::permissive" "im" AND TEXT_MISSING "AllowOrigin::exact|allow_origin.*https?://[^*]" "im" AND TEXT_MISSING "test|example" "im")
+REPORT "Axum Permissive CORS"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.ios.framework.alamofire.alamofire_request_without_tls_pinning VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "AF\\.request\\s*\\(|Session\\.default\\s*\\." "im"
+WHEN TEXT_MISSING "ServerTrustManager|PinnedCertificatesTrustEvaluator|PublicKeysTrustEvaluator" "im"
+REPORT "Alamofire Request Without TLS Pinning"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,5 +1,6 @@
 # Standard libraries
 from pathlib import Path
+from utils.scan_scope import glob_source, allows_file, allows_check
 from typing import Dict, Iterable, List
 import re
 
@@ -44,7 +45,7 @@ def line_text(lines: List[str], line_no: int, fallback: str) -> str:
 def collect_files(source_root: Path, globs: Iterable[str]) -> List[Path]:
     files = set()
     for glob in globs or []:
-        files.update(path for path in source_root.rglob(glob) if path.is_file())
+        files.update(path for path in glob_source(source_root, glob) if path.is_file())
     return sorted(files)
 
 

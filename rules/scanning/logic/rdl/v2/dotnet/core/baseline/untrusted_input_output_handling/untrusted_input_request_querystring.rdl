@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.dotnet.core.untrusted_input_request_querystring VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "Request\\.QueryString" "im"
+WHEN (TEXT_MATCHES "(SqlCommand|Execute|Response\\.Write|Redirect|File|Path|Process|Xml)" "im" AND TEXT_MISSING "(ValidateInput|HtmlEncode|UrlEncode|Sanitize|TryParse|Regex\\.IsMatch)" "im")
+REPORT "Untrusted Input: Request.QueryString"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.python.core.path_traversal_open_with_user_controlled_path VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bopen\\s*\\(" "im"
+WHEN (TEXT_MATCHES "request\\.|input\\(|argv|os\\.path\\.join" "im" AND TEXT_MISSING "os\\.path\\.realpath|os\\.path\\.abspath|startswith|allowlist|whitelist" "im")
+REPORT "Path Traversal: open() with User-Controlled Path"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

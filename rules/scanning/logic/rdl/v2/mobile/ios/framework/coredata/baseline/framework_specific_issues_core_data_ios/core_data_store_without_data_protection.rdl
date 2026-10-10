@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.ios.framework.coredata.core_data_store_without_data_protection VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "NSPersistentStoreCoordinator|NSPersistentContainer\\s*\\(" "im"
+WHEN TEXT_MISSING "NSFileProtectionComplete|NSFileProtectionCompleteUnlessOpen|fileProtection|NSPersistentStoreFileProtectionKey" "im"
+REPORT "Core Data Store Without Data Protection"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

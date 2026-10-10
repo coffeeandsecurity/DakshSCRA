@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.python.core.ssti_mako_chameleon_template_rendering_with_user_input VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "mako\\.template\\.Template\\s*\\(|chameleon\\.PageTemplate\\s*\\(" "im"
+WHEN (TEXT_MATCHES "request\\.|input\\(|argv|\\+" "im" AND TEXT_MISSING "strict_undefined|escape" "im")
+REPORT "SSTI: Mako/Chameleon Template Rendering with User Input"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

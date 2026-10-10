@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 const CONF_ORDER = ['critical', 'high', 'medium', 'low', 'info', 'unknown']
 
 function confLevel(finding) {
-  return (finding.confidence_level || '').toLowerCase() || 'unknown'
+  return (finding.confidence_level || '').trim().toLowerCase() || 'unknown'
 }
 
 function confScore(finding) {
@@ -212,7 +212,10 @@ function FindingCard({ finding, index, open, onToggle, review, onViewAnalysis })
           ) : null}
 
           {finding.issue_desc && (
-            <p className="fr-issue-desc">{finding.issue_desc}</p>
+            <div className="fr-note"><div className="fr-note-label">Issue description</div><p className="fr-issue-desc">{finding.issue_desc}</p></div>
+          )}
+          {finding.security_impact && (
+            <div className="fr-note"><div className="fr-note-label">Security impact</div><p className="fr-issue-desc">{finding.security_impact}</p></div>
           )}
 
           {(finding.logic_reason || logicTrace.length || consultedFiles.length) ? (
@@ -236,7 +239,7 @@ function FindingCard({ finding, index, open, onToggle, review, onViewAnalysis })
             <div className="fr-notes-row">
               {finding.developer_note && (
                 <div className="fr-note dev">
-                  <div className="fr-note-label">Developer Note</div>
+                  <div className="fr-note-label">Recommended correction</div>
                   <div className="fr-note-text">{finding.developer_note}</div>
                 </div>
               )}
@@ -250,50 +253,6 @@ function FindingCard({ finding, index, open, onToggle, review, onViewAnalysis })
           )}
         </div>
       )}
-    </div>
-  )
-}
-
-/* ─── File heatmap section ───────────────────────────────────── */
-function FileHeatmap({ findings }) {
-  const fileMap = useMemo(() => {
-    const m = {}
-    for (const f of findings) {
-      for (const e of (f.evidence || [])) {
-        if (e.file) {
-          m[e.file] = (m[e.file] || 0) + 1
-        }
-      }
-    }
-    return Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, 15)
-  }, [findings])
-
-  if (!fileMap.length) return null
-  const maxCount = fileMap[0]?.[1] || 1
-
-  return (
-    <div className="fr-section">
-      <div className="fr-section-title" style={{ padding: '0 0 10px' }}>
-        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" style={{ color: 'var(--primary)' }}>
-          <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
-        </svg>
-        Top Files by Areas of Interest
-      </div>
-      <div className="fr-heatmap">
-        {fileMap.map(([file, count]) => {
-          const pct = (count / maxCount) * 100
-          const shortFile = file.split('/').slice(-2).join('/')
-          return (
-            <div key={file} className="fr-heatmap-row" title={file}>
-              <div className="fr-heatmap-file">{shortFile}</div>
-              <div className="fr-heatmap-bar-wrap">
-                <div className="fr-heatmap-bar" style={{ width: `${pct}%` }} />
-              </div>
-              <div className="fr-heatmap-count">{count}</div>
-            </div>
-          )
-        })}
-      </div>
     </div>
   )
 }
@@ -392,6 +351,12 @@ export default function FindingsReport({ data, status, onViewAnalysis }) {
         if (!haystack.includes(q)) return false
       }
       return true
+    }).sort((a, b) => {
+      const rank = finding => {
+        const index = CONF_ORDER.indexOf(confLevel(finding))
+        return index < 0 ? CONF_ORDER.length : index
+      }
+      return rank(a) - rank(b) || confScore(b) - confScore(a)
     })
   }, [findings, filterLevel, filterCategory, search])
 
@@ -460,9 +425,6 @@ export default function FindingsReport({ data, status, onViewAnalysis }) {
 
       {/* ── Scan meta ── */}
       <ScanMeta summary={summary} scanMeta={scanMeta} />
-
-      {/* ── File heatmap ── */}
-      <FileHeatmap findings={findings} />
 
       {/* ── Areas of Interest header ── */}
       <div className="fr-findings-header">

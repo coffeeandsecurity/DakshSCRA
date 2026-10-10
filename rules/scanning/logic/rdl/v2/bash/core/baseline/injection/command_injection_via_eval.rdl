@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.bash.core.command_injection_via_eval VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "eval\\s+[\"']?\\$\\{?\\w" "im"
+WHEN TEXT_MISSING "printf\\s+%q|sanitize|validate|allowlist" "im"
+REPORT "Command Injection via eval"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.terraform.framework.azure.azure_sql_transparent_data_encryption_disabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "resource\\s+\"azurerm_mssql_database\"\\b" "im"
+WHEN TEXT_MISSING "transparent_data_encryption|azurerm_mssql_server_transparent_data_encryption" "im"
+REPORT "Azure SQL Transparent Data Encryption Disabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

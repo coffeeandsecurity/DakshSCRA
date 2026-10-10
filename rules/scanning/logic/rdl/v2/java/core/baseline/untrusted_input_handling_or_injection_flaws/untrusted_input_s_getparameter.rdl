@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.java.core.untrusted_input_s_getparameter VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "getParameter\\(" "im"
+WHEN (TEXT_MATCHES "(execute|query|print|write|redirect|Runtime|ProcessBuilder|File|URL|Http)" "im" AND TEXT_MISSING "(validate|sanitize|escape|encode|PreparedStatement|allowlist|whitelist)" "im")
+REPORT "Untrusted Input(s): getParameter"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

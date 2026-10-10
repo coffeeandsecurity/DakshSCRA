@@ -16,12 +16,12 @@
                 </h3>
                 {% if filepath["brief_desc"] %}
                     <div class="source-file-block">
-                        <span class="source-ht">About this match</span> : {{filepath["brief_desc"]}}
+                        <span class="source-ht">Issue Description</span> : {{filepath["brief_desc"]}}
                     </div>
                 {% endif %}
                 {% if filepath["attack_desc"] %}
                     <div class="source-file-block">
-                        <span class="source-ht">Potential / Typical Attacks</span> : {{filepath["attack_desc"]}}
+                        <span class="source-ht">Security Impact</span> : {{filepath["attack_desc"]}}
                     </div>
                 {% endif %}
                 {% if filepath["reviewer_note"] %}
@@ -31,7 +31,7 @@
                 {% endif %}
                 {% if filepath["developer_note"] %}
                     <div class="source-file-block">
-                        <span class="source-ht">Developer Focus</span> : {{filepath["developer_note"]}}
+                        <span class="source-ht">Recommended Correction</span> : {{filepath["developer_note"]}}
                     </div>
                 {% endif %}
                 {% for path in filepath["paths"] %}

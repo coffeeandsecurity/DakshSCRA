@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.cpp.core.unsafe_use_of_command_execution_functions VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:system|popen|exec|execp|CreateProcess)\\b\\s*\\(" "im"
+WHEN TEXT_MISSING "validate|sanitize|allowlist|whitelist|escapeShellArg" "im"
+REPORT "Unsafe Use of Command Execution Functions"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

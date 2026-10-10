@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.xplat.reactnative.core.metro_bundler_devsettings_accessed_outside_debug_guard VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bNativeModules\\.DevSettings\\b|\\bDevSettings\\b" "im"
+WHEN TEXT_MISSING "__DEV__|if.*__DEV__|kDebugMode|// development only" "im"
+REPORT "Metro Bundler DevSettings Accessed Outside Debug Guard"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,8 @@
+VERSION 2
+RULE android.shell-execution-surface VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:Runtime\\s*\\.\\s*getRuntime\\s*\\(\\s*\\)\\s*\\.\\s*exec|(?:new\\s+)?ProcessBuilder)\\s*\\(" ""
+REPORT "Android Shell Execution Review"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

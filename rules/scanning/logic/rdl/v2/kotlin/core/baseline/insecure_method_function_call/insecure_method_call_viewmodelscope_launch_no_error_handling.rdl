@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.kotlin.core.insecure_method_call_viewmodelscope_launch_no_error_handling VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "viewModelScope\\.launch\\s*\\{[^}]*(?:query|rawQuery|execSQL|getPassword|getToken|decrypt|encrypt|credential|authToken)[^}]*\\}" "im"
+WHEN TEXT_MISSING "try\\s*\\{|catch\\s*\\(|runCatching|CoroutineExceptionHandler" "im"
+REPORT "Insecure Method Call: viewModelScope.launch (No Error Handling)"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

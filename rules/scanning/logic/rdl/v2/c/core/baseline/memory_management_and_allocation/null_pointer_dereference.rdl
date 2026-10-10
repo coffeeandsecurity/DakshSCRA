@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.c.core.null_pointer_dereference VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(\\w+)\\s*=\\s*NULL\\s*;\\s*\\w+\\s*\\(.*\\1.*\\)" "im"
+WHEN TEXT_MISSING "if\\s*\\(.*!=\\s*NULL\\)|if\\s*\\(.*!=\\s*nullptr\\)|assert\\s*\\(|NULL\\s*!=|nullptr\\s*!=" "im"
+REPORT "Null Pointer Dereference"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

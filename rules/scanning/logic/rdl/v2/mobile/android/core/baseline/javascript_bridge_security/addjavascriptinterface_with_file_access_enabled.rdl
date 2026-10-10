@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.android.core.addjavascriptinterface_with_file_access_enabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "addJavascriptInterface\\s*\\(" "im"
+WHEN (TEXT_MATCHES "addJavascriptInterface" "im" AND TEXT_MATCHES "setAllowFileAccessFromFileURLs\\s*\\(\\s*true|setAllowUniversalAccessFromFileURLs\\s*\\(\\s*true" "im")
+REPORT "addJavascriptInterface with File Access Enabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

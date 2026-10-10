@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.ios.framework.swiftui.swiftui_insecure_certificate_handling_marker VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "didReceive\\s+challenge.*useCredential|allowInvalidCertificates" "im"
+WHEN TEXT_MISSING "SecTrustEvaluate|SecTrustEvaluateWithError" "im"
+REPORT "SwiftUI Insecure Certificate Handling Marker"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

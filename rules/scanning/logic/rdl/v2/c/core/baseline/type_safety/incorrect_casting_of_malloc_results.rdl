@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.c.core.incorrect_casting_of_malloc_results VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\(\\s*\\w+\\s*\\*\\)\\s*malloc\\s*" "im"
+WHEN (TEXT_MISSING "// intentional|// cast required|static_cast|reinterpret_cast" "im" AND TEXT_MISSING "test|example" "im")
+REPORT "Incorrect Casting of malloc() Results"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

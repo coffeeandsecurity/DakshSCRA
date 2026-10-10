@@ -1,0 +1,11 @@
+VERSION 2
+RULE memory.lifetime-violation VERSION 1
+IN FUNCTION
+LET reference BE RESOURCE MATCHES memory.reference
+STATE reference STARTS valid
+TRANSITION lifetime.end(reference) FROM valid TO expired
+VIOLATION memory.use(reference) WHILE expired
+REPORT "object lifetime violation"
+SEVERITY HIGH
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

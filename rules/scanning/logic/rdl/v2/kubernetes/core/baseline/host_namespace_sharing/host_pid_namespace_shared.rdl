@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.kubernetes.core.host_pid_namespace_shared VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "hostPID\\s*:\\s*true" "im"
+WHEN (TEXT_MATCHES "hostPID:\\s*true" "im" AND TEXT_MISSING "# intentional|# required" "im")
+REPORT "Host PID Namespace Shared"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

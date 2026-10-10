@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.javascript.framework.express.express_injection_sink_eval_function VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\beval\\s*\\(|new\\s+Function\\s*\\(|vm\\.runIn" "im"
+WHEN (TEXT_MISSING "trusted|allowlist" "im" AND TEXT_MISSING "test|spec|mock|example" "im")
+REPORT "Express Injection Sink (Eval/Function)"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -3,7 +3,7 @@
         <rule>
             <name>Raw SQL via text() with String Concatenation</name>
             <regex>text\s*\(\s*["'][^"']*["']\s*\+|text\s*\(\s*f["']|text\s*\(\s*["'][^"']*%\s*(?:\(|\w)</regex>
-            <rdl_ref>logic/python/framework/sqlalchemy/raw_sql_via_text_with_string_concatenation.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/python/framework/sqlalchemy/raw_sql_via_text_with_string_concatenation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -12,15 +12,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>magenta</highlight_color>
             </scan_config>
-            <rule_desc>Detects SQLAlchemy text() calls constructed via string concatenation or f-strings.</rule_desc>
-            <vuln_desc>Building raw SQL with text() and string formatting bypasses SQLAlchemy's parameterization, reintroducing SQL injection vulnerabilities that the ORM is designed to prevent.</vuln_desc>
-            <developer>Use bindparams() or colon-prefixed named parameters in text() strings: text("SELECT * FROM users WHERE id = :id").bindparams(id=user_id).</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Confirm all text() calls use bound parameters and no user input is concatenated into the SQL string. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>filter() with Raw String Condition</name>
             <regex>\.filter\s*\(\s*["']|\.filter\s*\(\s*f["']|\.filter\s*\(\s*["'][^"']*["']\s*%</regex>
-            <rdl_ref>logic/python/framework/sqlalchemy/filter_with_raw_string_condition.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/python/framework/sqlalchemy/filter_with_raw_string_condition.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -29,15 +29,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>magenta</highlight_color>
             </scan_config>
-            <rule_desc>Detects SQLAlchemy filter() calls using raw string conditions instead of ORM column expressions.</rule_desc>
-            <vuln_desc>Passing raw strings to filter() bypasses ORM parameterization and can introduce SQL injection if the string includes user-controlled data.</vuln_desc>
-            <developer>Use ORM column expressions: session.query(User).filter(User.email == email) instead of filter("email = '%s'" % email).</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Verify filter() arguments are ORM column expressions, not raw strings with user input. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Hardcoded Database Connection String</name>
             <regex>create_engine\s*\(\s*["'](?:postgresql|mysql|sqlite|mssql|oracle)[^"']*://[^"']*:[^"'@]{6,}@</regex>
-            <rdl_ref>logic/python/framework/sqlalchemy/hardcoded_database_connection_string.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/python/framework/sqlalchemy/hardcoded_database_connection_string.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -47,15 +47,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects hardcoded database credentials in SQLAlchemy connection strings.</rule_desc>
-            <vuln_desc>Hardcoded database credentials in source code are exposed via version control, error messages, and process listings, enabling unauthorized database access.</vuln_desc>
-            <developer>Read connection strings from environment variables or a secrets manager: create_engine(os.environ["DATABASE_URL"]).</developer>
+            <rule_desc>The checked source or build configuration embeds potentially sensitive credential or key material. Determine whether it is active and whether it reaches distributed artifacts or logs.</rule_desc>
+            <vuln_desc>A party who can read exposed source, artifacts, configuration, or logs may recover active secrets and access the protected service or decrypt data with the secret owner’s privileges.</vuln_desc>
+            <developer>Remove active secrets from source and build layers, rotate exposed values, and load replacements through a restricted secret-management facility. Use narrowly privileged, short-lived credentials.</developer>
             <reviewer>Confirm no connection strings contain literal credentials. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>execute() with String Formatting</name>
             <regex>\.execute\s*\(\s*["'][^"']*["']\s*\+|\.execute\s*\(\s*f["']|\.execute\s*\(\s*["'][^"']*%\s*(?:\(|\w)</regex>
-            <rdl_ref>logic/python/framework/sqlalchemy/execute_with_string_formatting.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/python/framework/sqlalchemy/execute_with_string_formatting.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -64,9 +64,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>magenta</highlight_color>
             </scan_config>
-            <rule_desc>Detects direct execute() calls with dynamically constructed SQL strings.</rule_desc>
-            <vuln_desc>Using execute() with concatenated or formatted strings bypasses parameterization, directly reintroducing SQL injection risk even within an ORM context.</vuln_desc>
-            <developer>Always pass a text() object with bound parameters to execute(). Never concatenate user input into SQL strings.</developer>
+            <rule_desc>The code constructs a query, selection, or ordering clause with values that may be externally controlled. Resolve whether those values enter syntax or bound data.</rule_desc>
+            <vuln_desc>Attacker-controlled query syntax may change selected records, bypass intended filters, or modify stored data with the connection or provider’s privileges.</vuln_desc>
+            <developer>Bind data values using the query API’s parameter mechanism. Choose ordering columns and other identifiers from a fixed allowlist, and enforce record-level authorization.</developer>
             <reviewer>Verify all execute() calls use parameterized queries. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

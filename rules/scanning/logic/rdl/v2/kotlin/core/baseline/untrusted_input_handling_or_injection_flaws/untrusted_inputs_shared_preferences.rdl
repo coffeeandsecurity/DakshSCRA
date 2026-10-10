@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.kotlin.core.untrusted_inputs_shared_preferences VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "SharedPreferences\\.get.*\\(\".*\"" "im"
+WHEN (TEXT_MATCHES "(execute|query|rawQuery|execSQL|Runtime|ProcessBuilder|File\\s*\\(|URL\\s*\\()" "im" AND TEXT_MISSING "(validate|sanitize|escape|encode)" "im")
+REPORT "Untrusted Inputs: Shared Preferences"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

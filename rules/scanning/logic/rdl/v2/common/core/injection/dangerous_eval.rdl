@@ -1,0 +1,7 @@
+VERSION 2
+RULE dynamic.dangerous-eval VERSION 1
+IN FILE
+WHEN PRESENT /\beval\s*\(/
+REPORT "dangerous dynamic evaluation"
+SEVERITY HIGH
+CONFIDENCE MEDIUM

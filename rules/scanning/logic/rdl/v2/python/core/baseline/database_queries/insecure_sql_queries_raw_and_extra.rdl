@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.python.core.insecure_sql_queries_raw_and_extra VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)^[^#]*\\.\\s*(raw|extra)\\s*\\(\\s*" "im"
+WHEN (TEXT_MATCHES "(request|params|query|format\\(|f\\\"|f'|\\+)" "im" AND TEXT_MISSING "(params=|placeholders|bindparam)" "im")
+REPORT "Insecure SQL Queries: raw and extra"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

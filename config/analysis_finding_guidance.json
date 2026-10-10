@@ -1,0 +1,180 @@
+{
+  "schema_version": 1,
+  "entries": {
+    "sql_injection": {
+      "description": "Untrusted data reaches SQL statement text and may alter the query structure.",
+      "impact": "If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection\u2019s privileges. Fixed queries and correctly bound parameters do not establish this condition.",
+      "remediation": "Bind data as parameters. Choose table and column identifiers from a fixed allowlist; placeholders cannot bind identifiers."
+    },
+    "command_injection": {
+      "description": "Untrusted input can change the command interpreted by a shell or command interpreter.",
+      "impact": "If an attacker controls interpreted syntax or the operation selected, code or commands may run with the application\u2019s privileges, allowing data theft, state changes, or service disruption.",
+      "remediation": "Use a fixed executable and argument array without a shell. Validate arguments for the executable being called."
+    },
+    "xss": {
+      "description": "Untrusted data reaches HTML output without a modeled encoding step.",
+      "impact": "If attacker-controlled content reaches an executable browser context, it may run under the application\u2019s origin, read accessible session data, or perform actions with the victim\u2019s permissions.",
+      "remediation": "Encode for the precise output context; use HTML encoding for text and quoted attributes, and dedicated encoders for JavaScript and URLs."
+    },
+    "ssrf": {
+      "description": "Untrusted input controls the destination of a server-side request.",
+      "impact": "If an attacker can select a reachable destination, the application may expose internal services or metadata credentials, or send protected data to an unauthorized recipient.",
+      "remediation": "Allowlist destinations and protocols, reject internal addresses, and validate redirect targets and resolved addresses."
+    },
+    "path_traversal": {
+      "description": "External input controls the path used by a filesystem operation. Resolve the intended root and effective containment checks.",
+      "impact": "An attacker controlling a path or shared file may read or replace private files, delete data, or redirect an operation outside its intended directory if containment and access controls are ineffective.",
+      "remediation": "Resolve paths beneath a fixed root and verify containment before access. Account for symlinks and concurrent filesystem changes."
+    },
+    "arbitrary_file_write": {
+      "description": "External input controls the destination of a file-write operation. Resolve whether it can escape the intended writable directory.",
+      "impact": "An attacker who selects a destination outside the permitted directory may overwrite application code or configuration, corrupt data, or establish persistence with the application\u2019s write privileges.",
+      "remediation": "Resolve paths beneath a fixed root and verify containment before access. Account for symlinks and concurrent filesystem changes."
+    },
+    "insecure_deserialization": {
+      "description": "Attacker-controlled serialized data reaches object construction.",
+      "impact": "A crafted untrusted payload may instantiate dangerous types or trigger object behavior that executes code, modifies state, or exhausts resources when the parser permits those operations.",
+      "remediation": "Prefer a data-only format such as JSON. Do not trust a type or signature flag supplied inside the same untrusted payload."
+    },
+    "file_inclusion": {
+      "description": "Untrusted data reaches a PHP include or require operation.",
+      "impact": "An attacker controlling a path or shared file may read or replace private files, delete data, or redirect an operation outside its intended directory if containment and access controls are ineffective.",
+      "remediation": "Select include targets from a fixed allowlist of application files."
+    },
+    "xxe": {
+      "description": "Untrusted XML reaches parsing with entity expansion or external DTD loading enabled.",
+      "impact": "If external resources or entity expansion are permitted for untrusted XML, an attacker may read local files, make requests to internal services, or exhaust parser resources.",
+      "remediation": "Disable external entity and DTD loading; use safe parser flags and a restrictive resolver."
+    },
+    "code_injection": {
+      "description": "Externally influenced data reaches an operation that interprets a string as executable code. Determine the value actually supplied to the interpreter or timer and whether it is a string or a callable.",
+      "impact": "If an attacker controls interpreted syntax or the operation selected, code or commands may run with the application\u2019s privileges, allowing data theft, state changes, or service disruption.",
+      "remediation": "Replace runtime code evaluation with fixed operations and data-only inputs."
+    },
+    "open_redirect": {
+      "description": "Untrusted data reaches a redirect or response header.",
+      "impact": "A crafted destination or link may direct users to a phishing site, leak URL-carried secrets, or trigger unauthorized operations if routing trusts external parameters without the required access checks.",
+      "remediation": "Allowlist redirect destinations and reject response-header control characters."
+    },
+    "weak_hash": {
+      "description": "A weak cryptographic or non-cryptographic random primitive is used; confirm its security purpose.",
+      "impact": "Predictable secrets or unsuitable cryptographic parameters may enable credential guessing, reveal plaintext, or weaken integrity when used to protect security-sensitive data. Non-security hashes and identifiers do not establish this condition.",
+      "remediation": "Use a modern purpose-appropriate primitive and a cryptographically secure random generator for secrets."
+    },
+    "buffer_overflow": {
+      "description": "An indexed or pointer-based write may exceed its allocation bounds.",
+      "impact": "An attacker may corrupt memory, alter control flow, or execute code if they can influence the violating write.",
+      "remediation": "Validate offsets and lengths against the allocation before writing and use bounded APIs."
+    },
+    "format_string": {
+      "description": "Externally influenced text reaches a formatting operation where it may control the format specification.",
+      "impact": "An attacker-controlled format string may disclose process memory, write to unintended memory, or crash the process, depending on the formatting API.",
+      "remediation": "Keep format specifications constant and pass external text only as data arguments. Use type-safe formatting and validate lengths and argument types."
+    },
+    "expression_injection": {
+      "description": "A reachable dynamic evaluation operation interprets externally influenced content as code.",
+      "impact": "Attacker-controlled code may run in the application\u2019s security context, exposing protected data or modifying trusted state.",
+      "remediation": "Replace dynamic evaluation with fixed operations and data-only inputs; do not rely on ad hoc filtering of executable syntax."
+    },
+    "ssti": {
+      "description": "A reachable dynamic evaluation operation interprets externally influenced content as code.",
+      "impact": "Attacker-controlled code may run in the application\u2019s security context, exposing protected data or modifying trusted state.",
+      "remediation": "Replace dynamic evaluation with fixed operations and data-only inputs; do not rely on ad hoc filtering of executable syntax."
+    },
+    "template_injection": {
+      "description": "A reachable dynamic evaluation operation interprets externally influenced content as code.",
+      "impact": "Attacker-controlled code may run in the application\u2019s security context, exposing protected data or modifying trusted state.",
+      "remediation": "Replace dynamic evaluation with fixed operations and data-only inputs; do not rely on ad hoc filtering of executable syntax."
+    },
+    "sandbox_escape": {
+      "description": "A reachable dynamic evaluation operation interprets externally influenced content as code.",
+      "impact": "Attacker-controlled code may run in the application\u2019s security context, exposing protected data or modifying trusted state.",
+      "remediation": "Replace dynamic evaluation with fixed operations and data-only inputs; do not rely on ad hoc filtering of executable syntax."
+    },
+    "component_exposure": {
+      "description": "An Android component or receiver exposes an entry point with a weak or unresolved caller permission boundary. Manifest merging and runtime authorization may affect the effective policy.",
+      "impact": "An unauthorized application may invoke exposed operations, read protected data, or change application state if no effective caller check protects the entry point.",
+      "remediation": "Disable external access when it is unnecessary. Otherwise use suitable signature permissions or explicit caller authorization, validate all incoming data, and test access from an untrusted application."
+    },
+    "content_provider_exposure": {
+      "description": "An Android component or receiver exposes an entry point with a weak or unresolved caller permission boundary. Manifest merging and runtime authorization may affect the effective policy.",
+      "impact": "An unauthorized application may invoke exposed operations, read protected data, or change application state if no effective caller check protects the entry point.",
+      "remediation": "Disable external access when it is unnecessary. Otherwise use suitable signature permissions or explicit caller authorization, validate all incoming data, and test access from an untrusted application."
+    },
+    "binder_exposure": {
+      "description": "An Android component or receiver exposes an entry point with a weak or unresolved caller permission boundary. Manifest merging and runtime authorization may affect the effective policy.",
+      "impact": "An unauthorized application may invoke exposed operations, read protected data, or change application state if no effective caller check protects the entry point.",
+      "remediation": "Disable external access when it is unnecessary. Otherwise use suitable signature permissions or explicit caller authorization, validate all incoming data, and test access from an untrusted application."
+    },
+    "deep_link_exposure": {
+      "description": "The application registers or parses an externally supplied URI or link. Registration alone does not establish unsafe routing or authorization.",
+      "impact": "A crafted link may trigger unauthorized actions, redirect navigation, or expose private data if the receiving handler trusts URI fields or bypasses authentication and object-level authorization.",
+      "remediation": "Allowlist accepted schemes, hosts, paths, and operations. Validate link parameters, require authorization before sensitive actions, and verify domain association when relying on trusted web links."
+    },
+    "insecure_transport": {
+      "description": "The effective transport policy may permit insecure HTTP content or relax transport protections for a WebView, media request, domain, or application.",
+      "impact": "A network attacker may read or modify affected cleartext traffic. Modified executable web content may also compromise the containing WebView session or exposed native interfaces.",
+      "remediation": "Use HTTPS with normal certificate validation. Remove unnecessary transport exceptions, keep any unavoidable exception narrowly scoped, and avoid sending credentials or loading executable content over cleartext connections."
+    },
+    "javascript_injection": {
+      "description": "The application exposes a native bridge or message handler to web content.",
+      "impact": "Untrusted web content may invoke native operations with the application\u2019s privileges if origin restrictions, message validation, or per-operation authorization are missing.",
+      "remediation": "Expose only narrowly required native methods. Restrict loaded origins and message senders, validate message schemas, and authorize every sensitive native action."
+    },
+    "pendingintent_injection": {
+      "description": "Intent or PendingIntent configuration permits mutation, unsafe implicit delivery, or bypass of intent-redirection protection. Resolve the intended recipient and effective flags.",
+      "impact": "An untrusted recipient or input may redirect execution or alter an operation performed under the application\u2019s identity if mutable fields or an implicit target cross a trust boundary.",
+      "remediation": "Prefer explicit destinations and immutable PendingIntents. Where mutation is required, tightly constrain recipients and fill-in fields, validate nested intents, and retain platform redirection protections."
+    },
+    "certificate_validation_bypass": {
+      "description": "The checked code or configuration bypasses a certificate, hostname, or server-trust decision. Resolve the effective callback and build configuration before confirming a production bypass.",
+      "impact": "A network attacker may impersonate the intended server and read or modify traffic if the bypass accepts an untrusted certificate or mismatched hostname on a reachable connection.",
+      "remediation": "Restore platform certificate-chain and hostname validation. Reject invalid server trust, remove permissive callbacks and environment overrides from production, and use properly configured test trust stores for development."
+    },
+    "bridge_exposure": {
+      "description": "The application exposes a native bridge or message handler to web content.",
+      "impact": "Untrusted web content may invoke native operations with the application\u2019s privileges if origin restrictions, message validation, or per-operation authorization are missing.",
+      "remediation": "Expose only narrowly required native methods. Restrict loaded origins and message senders, validate message schemas, and authorize every sensitive native action."
+    },
+    "nosql_injection": {
+      "description": "Externally influenced data reaches a document-database query or operator structure.",
+      "impact": "An attacker may alter filtering, bypass authentication predicates, or obtain or modify records outside the intended selection if they control query operators or expression syntax.",
+      "remediation": "Construct queries with a fixed schema, validate values and types, reject externally supplied operator keys, and enforce record-level authorization."
+    },
+    "ldap_injection": {
+      "description": "External data reaches a directory query, XPath expression, or naming-service lookup. Resolve whether it controls expression syntax or a remote lookup target.",
+      "impact": "An attacker may change intended record selection or access a protected directory or naming destination; unsafe remote resolution may also execute code depending on the runtime and reachable providers.",
+      "remediation": "Keep lookup targets fixed and trusted. Use context-appropriate binding or escaping for values, reject externally controlled expression structure, and restrict service permissions."
+    },
+    "xpath_injection": {
+      "description": "External data reaches a directory query, XPath expression, or naming-service lookup. Resolve whether it controls expression syntax or a remote lookup target.",
+      "impact": "An attacker may change intended record selection or access a protected directory or naming destination; unsafe remote resolution may also execute code depending on the runtime and reachable providers.",
+      "remediation": "Keep lookup targets fixed and trusted. Use context-appropriate binding or escaping for values, reject externally controlled expression structure, and restrict service permissions."
+    },
+    "jndi_injection": {
+      "description": "External data reaches a directory query, XPath expression, or naming-service lookup. Resolve whether it controls expression syntax or a remote lookup target.",
+      "impact": "An attacker may change intended record selection or access a protected directory or naming destination; unsafe remote resolution may also execute code depending on the runtime and reachable providers.",
+      "remediation": "Keep lookup targets fixed and trusted. Use context-appropriate binding or escaping for values, reject externally controlled expression structure, and restrict service permissions."
+    },
+    "email_header_injection": {
+      "description": "Externally influenced values reach email header construction.",
+      "impact": "An attacker may add recipients or alter message routing and headers, disclosing message content or using the application to send unauthorized mail.",
+      "remediation": "Reject CR and LF in header values, use a structured mail API, validate intended recipients, and keep message-body data separate from headers."
+    },
+    "unrestricted_file_upload": {
+      "description": "Externally supplied upload content reaches a storage or processing operation without an established content boundary.",
+      "impact": "A crafted upload may execute as application code, overwrite files, expose data through processing, or exhaust storage if the destination and processing controls allow it.",
+      "remediation": "Allowlist required content types, validate actual content, limit size, generate server-side filenames, and store uploads outside executable paths with access controls."
+    },
+    "log_injection": {
+      "description": "Externally influenced values reach log output without an established record-integrity boundary.",
+      "impact": "An attacker may forge or obscure log entries and mislead investigation or monitoring; sensitive values included in the output may also be disclosed to log readers.",
+      "remediation": "Use structured logging, encode control characters, redact secrets before emission, and protect log access and integrity."
+    },
+    "project_marker": {
+      "description": "The source contains a project or framework marker. This identifies review scope rather than a security defect.",
+      "impact": "No adverse security consequence follows from the marker alone; no confidentiality, integrity, or availability failure has been established.",
+      "remediation": "Use the marker to select the applicable review and analysis scope. Require concrete evidence of a failed security control before recommending a corrective change."
+    }
+  }
+}

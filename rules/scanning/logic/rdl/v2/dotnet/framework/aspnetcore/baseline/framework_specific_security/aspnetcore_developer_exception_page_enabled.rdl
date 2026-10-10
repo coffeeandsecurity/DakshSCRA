@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.dotnet.framework.aspnetcore.aspnetcore_developer_exception_page_enabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "UseDeveloperExceptionPage\\(\\)" "im"
+WHEN (TEXT_MISSING "app\\.Environment\\.IsProduction\\(\\)|ASPNETCORE_ENVIRONMENT.*Production|IsDevelopment\\(\\).*false" "im" AND TEXT_MATCHES "UseDeveloperExceptionPage\\s*\\(\\s*\\)" "im")
+REPORT "Aspnetcore Developer Exception Page Enabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

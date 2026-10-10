@@ -1,0 +1,8 @@
+VERSION 2
+RULE android.minification-disabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:minifyEnabled\\s+(?:=\\s*)?false|isMinifyEnabled\\s*=\\s*false)\\b" ""
+REPORT "Release Code Shrinking Explicitly Disabled"
+SEVERITY LOW
+CONFIDENCE LOW
+WITH TRACE

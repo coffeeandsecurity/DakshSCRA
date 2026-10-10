@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.dotnet.framework.entityframework.entityframework_raw_sql_execution_sink VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "FromSqlRaw\\(|ExecuteSqlRaw\\(|SqlQueryRaw\\(" "im"
+WHEN TEXT_MISSING "FromSqlInterpolated|SqlParameter|parameterized|\\?\\s*,|\\{[0-9]\\}.*params" "im"
+REPORT "Entityframework Raw SQL Execution Sink"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

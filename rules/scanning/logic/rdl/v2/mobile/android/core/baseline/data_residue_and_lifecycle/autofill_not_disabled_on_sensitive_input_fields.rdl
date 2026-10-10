@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.android.core.autofill_not_disabled_on_sensitive_input_fields VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "android:inputType.*(?:textPassword|textVisiblePassword|numberPassword)" "im"
+WHEN TEXT_MISSING "android:importantForAutofill\\s*=\\s*\"(?:no|noExcludeDescendants)\"" "im"
+REPORT "Autofill Not Disabled on Sensitive Input Fields"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -19,16 +19,54 @@ Daksh SCRA was initially introduced during a source code review training session
 
 ## Features and Functionalities
 
-- **Identifies Areas of Interest in Source Code:** Encourages focused investigation and confirmation rather than indiscriminately labelling everything as a bug.
-- **Identifies Areas of Interest in File Paths (World's First):** Recognises patterns in file paths to pinpoint relevant sections for review.
-- **Software-Level Reconnaissance to Identify Technologies Utilised:** Identifies project technologies, enabling code reviewers to conduct precise scans with appropriate rules.
-- **Automated Scientific Effort Estimation for Code Review (World's First):** Provides a measurable approach for estimating the effort required for a code review.
-- **Framework-Aware Scanning:** Automatically applies framework-specific rules when the project's framework is detected.
-- **Taint Analysis Reports:** Per-platform HTML taint flow reports with hacker-mode and professional-mode themes.
-- **RDL (Rule Description Language):** External rule logic referenced with `rdl_ref` and executed by the `core/rdl_engine.py` pipeline - supports file-aware gates, boolean expressions, project observations, and exported logic metadata in reports.
-- **Scan State / Resume:** Checkpoint long scans and resume after interruption.
-- **Suppression Baseline:** Generate and apply a baseline of known false positives to suppress them from future reports.
-- **Web UI:** Browser-based scan launcher with real-time console feed and job artifact browser.
+DakshSCRA brings together distinctive capabilities for manual source code review, from file-path areas of interest and effort estimation to software reconnaissance, contextual rules and cross-file analysis.
+
+| Feature | Tag | Why it matters |
+|---|---|---|
+| **File Path Areas of Interest** | World's First* | Scans file and directory names themselves, alongside code, to flag suspicious paths such as backup files, debug endpoints, configuration dumps and credential files that reviewers often miss. |
+| **Scientific Effort Estimation** | World's First* | Produces a quantified estimate of manual-review effort based on codebase size and project signals. Configurable assumptions make engagement planning explicit and repeatable. |
+| **Areas of Interest, Not Bug Flags** | Reviewer in Control | Surfaces patterns worth investigating rather than tagging every match as a vulnerability. Contextual rules and suppression evidence reduce triage noise and keep the reviewer in control. |
+| **Software Reconnaissance** | Integrated Software Recon | Detects languages, frameworks and infrastructure from file contents and project structure before scanning. Connects the technology inventory to automatic rule selection, semantic analysis and review planning. |
+| **RDL Conditional Rules** | Advanced Conditional Rules | Goes beyond simple regex with PRESENT, MISSING, boolean expressions and file/path conditions. RDL v1 records decisions and suppression reasons; RDL v2 adds typed semantic services and bounded cross-file evidence. |
+| **Advanced Semantic and Cross-File Analysis** | Built from the Ground Up | Traces user-controlled data from source to sink across supported file boundaries using purpose-built analysis. Advanced Analysis shipped alongside the original RDL in March 2026; RDL v2 extends semantic rule evaluation across files. |
+| **Platform-Agnostic Auto Scanning** | Automatic Multi-Platform | Use `-r auto` to scan mixed-technology projects without choosing a single language beforehand. Recon selects supported platform and framework rules automatically. Introduced in v0.23-beta, November 2024. |
+| **Application-Specific Security Logic** | Custom RDL Packs | Encode application trust boundaries, authorization decisions and business invariants in optional custom RDL packs. Project-specific logic runs alongside the generic scanning rules. |
+| **Interactive Text and Graph Evidence** | Follow the Evidence | Follow recorded source-to-sink paths in linked Text and Graph views. Source excerpts, file lanes and handoff details make cross-file evidence easier to inspect. |
+| **Review Lifecycle and Portable Reports** | Review, Resume and Export | Keep scan history, review suppressions and resume interrupted scans. Export HTML, PDF, editable Word and JSON through shared CLI and Web UI reports, with offline evidence navigation where available. |
+
+* World's First badges reflect the project's original claims; worldwide priority has not been independently verified.
+
+### Feature History and Evidence
+
+| Feature / milestone | Date | Release | Evidence / scope |
+|---|---|---|---|
+| Training introduction | 2022 (Black Hat USA) | Not recorded | [Contemporary project README; introduction milestone.](https://github.com/coffeeandsecurity/DakshSCRA/blob/fe878be/README.md) |
+| Initial beta and file-path rules | 22 October 2022 | v0.1-beta | [Initial release; retained source includes the dedicated file-path rule inventory.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.1-beta) |
+| PDF and HTML reports | 23 May 2023 | v0.2-beta | [Release notes list PDF/HTML report generation and scanning-rule updates.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.2-beta) |
+| Software reconnaissance (published introduction) | 9 July 2023 | v0.3-beta | [Release notes introduce recon; earlier repository code is separate implementation evidence.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.3-beta) |
+| Manual-review effort estimation (implementation) | 29 July 2023 | Implementation commit | [Dedicated estimation module added; not the date of the later fix release.](https://github.com/coffeeandsecurity/DakshSCRA/commit/65d5c6a) |
+| Effort-estimation fix | 5 August 2023 | v0.7-beta | [Release notes state fixed effort estimation; this is a correction milestone, not its first introduction.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.7-beta) |
+| Early Android manifest and Kotlin checks | 27 April 2024 | v0.16-beta | [Introduced Android manifest misconfiguration checks and Kotlin-specific checks; module described as early development, with broader coverage still in progress.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.16-beta) |
+| Multi-platform scan flags (initial design) | 4 November 2024 | v0.20-beta | [Added comma-separated platform selection with -r; initial implementation did not yet isolate each platform rule set to its own file types.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.20-beta) |
+| Platform-agnostic auto scanning | 10 November 2024 (release listing) | v0.23-beta | [Automatic platform/rule selection; implementation commit dated 11 November.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.23-beta) |
+| PDF rendering upgrade | 21 July 2025 | v0.29-beta | [Migrated PDF export from WeasyPrint to Playwright and Chromium; added HTML-size-based timeouts for large reports and cross-platform setup instructions.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.29-beta) |
+| Initial iOS scanning support | 2 March 2026 | v0.31-beta | [Added iOS rules and Swift/Objective-C/configuration file selection; later releases expanded coverage.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.31-beta) |
+| Original RDL and inter-file Advanced Analysis | 2 March 2026 | v0.31-beta | [Conditional rule logic and independent cross-file analysis shipped together. Release display date is 2 March; publication timestamp is 1 March 2026 at 18:39 UTC.](https://github.com/coffeeandsecurity/DakshSCRA/commit/d90ba51) |
+| Web UI and Docker rollout | 16 March 2026 | v0.33-beta | [Introduced browser-launched scans, live progress, findings/artifact browsing, OS-aware directory selection and built-in Help; added Docker Compose Web UI/CLI services and portable environment setup.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.33-beta) |
+| External RDL architecture and reporting | 22 March 2026 | v0.37-beta | [External rule logic and revised advanced reports.](https://github.com/coffeeandsecurity/DakshSCRA/commit/5b17d89) |
+| RDL v2 semantic services and integrated workflow | Current development; no published release date | Unreleased development | Typed semantic rules, bounded cross-file evidence and custom packs. |
+
+### Comparative evidence
+
+- **Recon predecessor:** [Microsoft Application Inspector](https://www.microsoft.com/en-us/security/blog/2020/01/16/introducing-microsoft-application-inspector/) — 16 January 2020. Documents an earlier source-characteristics tool; does not establish a worldwide first/second ranking.
+- **Automatic multi-language scanning:** [Semgrep auto example](https://semgrep.dev/blog/2022/autofixing-code-with-semgrep/) — 3 November 2022. Earlier automatic multi-language scanning prevents a broad first-in-open-source claim.
+- **Semantic and data-flow analysis:** [Joern data-flow documentation](https://docs.joern.io/cpgql/data-flow-steps/) — No release date established here. Documents prior open-source capabilities; no comparative benchmark establishes overall superiority.
+
+Dates identify repository or release milestones; they do not independently establish worldwide priority. “Not verified” means a release number has not been established from the reviewed evidence.
+
+Release milestones and comparative evidence are listed above.
+
+DakshSCRA was introduced during **Black Hat USA 2022** training and publicly debuted at **Black Hat USA 2023**. Those dates describe the project's introduction, not every current feature.
 
 > Active enhancements are ongoing. Multiple new features and improvements are planned for upcoming releases.
 
@@ -255,7 +293,7 @@ usage: dakshscra.py [-h] [-r RULES] [-f FILE_TYPES] [-v] [-t TARGET_DIR]
 | `--recon` | Run reconnaissance (platform / framework / language detection) |
 | `--rs`, `--recon-strict` | Strict recon: high-confidence detections only (use with `--recon`) |
 | `--estimate` | Estimate code review effort based on codebase size |
-| `-rpt`, `--report FORMATS` | Report formats: `html`, `pdf`, or `html,pdf` (default: `html`) |
+| `-rpt`, `--report FORMATS` | Report formats: `html`, `pdf`, `docx`, `json`, or a comma-separated combination (default: `html`) |
 | `--pdf-from-json` | Generate PDF report(s) from existing JSON outputs without re-scanning |
 | `--json-input-dir PATH` | JSON report directory (default: `./reports/data`) |
 | `--pdf-output PATH` | Single PDF output path (default: `./reports/scan/pdf/report.pdf`) |
@@ -351,28 +389,46 @@ python dakshscra.py -l RF   # List platform rules, framework mappings, and filet
 
 Current supported platforms and framework mappings:
 
+<!-- supported-platforms:start -->
 | Platform | Frameworks |
 |---|---|
-| dotnet | aspnetcore, entityframework |
-| php | codeigniter, drupal, laravel, symfony, wordpress |
-| java | hibernate, spring, springboot |
-| javascript | angular, express, nestjs, nextjs, react, vue |
-| kotlin | ktor, springkotlin |
-| python | django, fastapi, flask |
-| go | echo, fiber, gin |
+| dotnet | aspnetcore, blazor, entityframework, identity |
+| php | codeigniter, drupal, laravel, symfony, wordpress, yii |
+| java | hibernate, mybatis, spring, springboot, struts |
+| javascript | angular, electron, express, nestjs, nextjs, react, vue |
+| kotlin | exposed, ktor, springkotlin |
+| python | django, fastapi, flask, sqlalchemy |
+| go | echo, fiber, gin, gorilla, gorm |
 | c | freertos |
 | cpp | boost, qt |
-| android | cordova-android, flutter-android, ionic-android, jetpack, nativescript-android, reactnative-android, xamarin-android |
-| ios | cordova-ios, flutter-ios, ionic-ios, nativescript-ios, reactnative-ios, swiftui, uikit, xamarin-ios |
-| reactnative | reactnative |
-| flutter | flutter |
+| android | cordova-android, flutter-android, ionic-android, jetpack, nativescript-android, reactnative-android, retrofit, room, xamarin-android |
+| ios | alamofire, cordova-ios, coredata, flutter-ios, ionic-ios, nativescript-ios, reactnative-ios, swiftui, uikit, xamarin-ios |
+| reactnative | expo, reactnative |
+| flutter | flutter, flutter-dio, flutter-hive |
 | xamarin | xamarin |
+| maui | - |
+| kmp | - |
 | ionic | ionic |
 | nativescript | nativescript |
 | cordova | cordova |
+| bash | - |
+| powershell | - |
+| dockerfile | - |
+| terraform | terraform-aws, terraform-azure, terraform-gcp |
+| kubernetes | - |
 | ruby | rails, sinatra |
 | rust | actix, axum, rocket |
 | common | - |
+<!-- supported-platforms:end -->
+
+This table lists registered rule packs. A dash means no separate framework pack is registered. Analysis coverage varies by language and rule.
+
+After changing the platform or framework registries, refresh this table and check it before submitting changes:
+
+```bash
+python3 tools/supported_platforms.py
+python3 tools/supported_platforms.py --check
+```
 
 To get the latest supported platforms and frameworks, always run:
 
@@ -418,10 +474,10 @@ analysis:
 
 ### RDL Rule Authoring
 
-RDL v1 definitions live under [`rules/scanning/logic/`](rules/scanning/logic/).
-Experimental RDL v2 definitions live under [`rules/rdl/v2/`](rules/rdl/v2/README.md),
+RDL v1 definitions live under [`rules/scanning/logic/rdl/v1/`](rules/scanning/logic/rdl/v1/).
+Experimental RDL v2 definitions live under [`rules/scanning/logic/rdl/v2/`](rules/scanning/logic/rdl/v2/README.md),
 using `common/core/`, `<platform>/core/`, and `<platform>/framework/<framework>/`
-with bug-class subdirectories. The [v2 scope index](rules/rdl/v2/INDEX.md) links
+with bug-class subdirectories. The [v2 scope index](rules/scanning/logic/rdl/v2/INDEX.md) links
 all registered language/framework extension points, rule IDs, and current v1-to-v2 mappings.
 Directory presence does not imply completed coverage; v1 remains supported.
 
@@ -429,9 +485,9 @@ RDL (Rule Description Language) is DakshSCRA's externalized rule-logic layer. In
 
 - XML rules remain the rule inventory and carry metadata such as `name`, `regex`, descriptions, and optional `scan_config`.
 - RDL logic is executed by [`core/rdl_engine.py`](core/rdl_engine.py).
-- Rule logic files live under `rules/scanning/logic/...` and are referenced from XML using `<rdl_ref>`.
+- Rule logic files live under `rules/scanning/logic/rdl/v1/...` and are referenced from XML using `<rdl_ref>`.
 - `rdl_ref` values are resolved relative to `rules/scanning/`, for example:
-  `logic/php/core/some_rule.rdl` -> `rules/scanning/logic/php/core/some_rule.rdl`
+  `logic/rdl/v1/php/core/some_rule.rdl` -> `rules/scanning/logic/rdl/v1/php/core/some_rule.rdl`
 - Logic outcomes are exported into report JSON as metadata such as `logic_engine`, `logic_source`,
   `logic_reason`, `logic_trace`, `logic_consulted_files`, and `logic_outcome`.
 
@@ -443,7 +499,7 @@ The older inline `<rdl>` form is no longer the active architecture and should no
 XML rule
   -> regex / exclude / scan_config / descriptions
   -> rdl_ref
-       -> rules/scanning/logic/<platform>/<scope>/<rule>.rdl
+       -> rules/scanning/logic/rdl/v1/<platform>/<scope>/<rule>.rdl
            -> core/rdl_engine.py
                -> pass / fail
                -> reason / fail_reason
@@ -472,7 +528,7 @@ string as the current-file text and path context.
 <rule>
   <name>Rule Name</name>
   <regex><![CDATA[regex_to_match]]></regex>
-  <rdl_ref>logic/common/core/insecure_sql_query_unsafe_string_concatenation.rdl</rdl_ref>
+  <rdl_ref>logic/rdl/v1/common/core/insecure_sql_query_unsafe_string_concatenation.rdl</rdl_ref>
   <exclude><![CDATA[pattern_to_exclude_lines]]></exclude>  <!-- optional -->
   <scan_config>...</scan_config>                           <!-- optional -->
   <rule_desc>Short description of what the rule detects.</rule_desc>
@@ -503,13 +559,16 @@ rules/
     │   ├── php/php.xml
     │   ├── java/java.xml
     │   └── ...
-    └── logic/
-        ├── common/core/
-        ├── php/core/
-        ├── php/framework/laravel/
-        ├── mobile/android/core/
-        ├── filepaths/core/
-        └── ...
+    └── rdl/
+        └── logic/
+            ├── v1/
+            │   ├── common/core/
+            │   ├── php/core/
+            │   └── ...
+            └── v2/
+                ├── common/core/
+                ├── php/core/
+                └── ...
 ```
 
 #### Execution semantics
@@ -552,7 +611,7 @@ XML rule:
 <rule>
   <name>Possible SQL Injection in Query Execution</name>
   <regex><![CDATA[(?i)\b(?:mysql_query|mysqli_query|->query)\s*\(]]></regex>
-  <rdl_ref>logic/common/core/insecure_sql_query_unsafe_string_concatenation.rdl</rdl_ref>
+  <rdl_ref>logic/rdl/v1/common/core/insecure_sql_query_unsafe_string_concatenation.rdl</rdl_ref>
   <rule_desc>...</rule_desc>
 </rule>
 ```
@@ -576,7 +635,7 @@ XML rule:
 <rule>
   <name>Exported Components Without Permission</name>
   <regex><![CDATA[<(?P<component>activity|service|receiver|provider)\s[^>]*android:name="(?P<name>[^"]+)"[^>]*android:exported="true"[^>]*(?:/>|>)]]></regex>
-  <rdl_ref>logic/mobile/android/core/exported_components.rdl</rdl_ref>
+  <rdl_ref>logic/rdl/v1/mobile/android/core/exported_components.rdl</rdl_ref>
   <scan_config>...</scan_config>
 </rule>
 ```
@@ -600,7 +659,7 @@ XML rule:
 <rule>
   <name>Admin Section File Path</name>
   <regex><![CDATA[(?i)(^|/)(admin|administrator|root)(/|$)]]></regex>
-  <rdl_ref>logic/filepaths/core/admin_section.rdl</rdl_ref>
+  <rdl_ref>logic/rdl/v1/filepaths/core/admin_section.rdl</rdl_ref>
 </rule>
 ```
 
@@ -624,23 +683,28 @@ FAIL_REASON Path matched an excluded documentation or sample location.
 - Put reviewer-facing reasoning in `REASON` and suppression explanations in `FAIL_REASON`.
 - Treat `PRESENT` and `MISSING` as whole-file checks. A mitigation anywhere in the file can suppress every match from that file.
 - Use `OBSERVE PROJECT_HAS_GLOB` to enrich findings with project context, not as a pass/fail gate.
-- Keep `logic/...` paths stable and platform-scoped so XML rules remain thin and the logic layer stays reusable.
+- Keep `logic/rdl/v1/...` paths stable and platform-scoped so XML rules remain thin and the logic layer stays reusable.
 
 ---
 
 ## Report Output Structure
 
-All outputs are written under the `reports/` directory:
+CLI outputs are retained per scan under `reports/<project>/<scan>/`. CLI and Web UI exports share saved-data collection and renderers for HTML, PDF, Word, and JSON. Full HTML opens a lightweight summary/index with linked, paginated detail pages. In the Web UI, generate an export in **Reports**; extract the HTML ZIP and open `index.html` first.
 
 ```
-reports/
+reports/<project>/<scan>/
 ├── scan/
 │   ├── html/
-│   │   ├── report.html                 # Single-file HTML scan report
+│   │   ├── report.html                 # Summary and report index (open first)
+│   │   ├── report-files/               # Linked detail pages and saved-results.json
 │   │   └── multi-file/                 # Per-platform HTML report set
 │   ├── pdf/
 │   │   ├── report.pdf                  # Single-file PDF scan report
 │   │   └── multi-file/                 # Per-platform PDF report set
+│   ├── word/
+│   │   └── report.docx                 # Editable Word report when requested
+│   ├── json/
+│   │   └── report.json                 # Complete structured report document
 │   ├── recon/
 │   │   └── reconnaissance.html         # Reconnaissance HTML report
 │   └── estimate/

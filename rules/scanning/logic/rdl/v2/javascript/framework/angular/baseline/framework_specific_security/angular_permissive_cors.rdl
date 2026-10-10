@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.javascript.framework.angular.angular_permissive_cors VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "origin\\s*:\\s*[\\'\\\"]\\*[\\'\\\"]|Access-Control-Allow-Origin\\s*[:=]\\s*[\\'\\\"]\\*[\\'\\\"]" "im"
+WHEN TEXT_MISSING "allowlist|whitelist|trusted" "im"
+REPORT "Angular Permissive CORS"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

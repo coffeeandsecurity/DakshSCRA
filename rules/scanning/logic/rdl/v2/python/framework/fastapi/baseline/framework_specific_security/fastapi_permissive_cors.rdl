@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.python.framework.fastapi.fastapi_permissive_cors VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "allow_origins\\s*=\\s*\\[\\s*[\\'\\\"]\\*[\\'\\\"]\\s*\\]|CORS\\(.*origins\\s*=\\s*[\\'\\\"]\\*[\\'\\\"]" "im"
+WHEN TEXT_MISSING "allowlist|trusted_origins|configuration\\.allowed_origins" "im"
+REPORT "Fastapi Permissive CORS"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

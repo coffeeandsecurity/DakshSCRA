@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.php.core.xxe_domdocument_loadxml_without_entity_disablement VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\$dom\\s*=\\s*new\\s+DOMDocument|simplexml_load_string\\s*\\(|simplexml_load_file\\s*\\(" "im"
+WHEN TEXT_MISSING "LIBXML_NOENT\\s*=\\s*0|libxml_disable_entity_loader\\s*\\(\\s*true\\s*\\)|LIBXML_DTDLOAD" "im"
+REPORT "XXE: DOMDocument loadXML Without Entity Disablement"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

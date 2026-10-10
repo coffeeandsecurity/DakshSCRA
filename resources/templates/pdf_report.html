@@ -409,13 +409,15 @@
       font-family: "Consolas", "Courier New", monospace;
       font-size: 10px;
       color: #e6edf3;
-      white-space: pre;
+      min-width: 0;
+      white-space: pre-wrap;
       overflow-x: visible;
-      word-break: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
     .paths {
-      max-height: 420px;
-      overflow: auto;
+      max-height: none;
+      overflow: visible;
       border: 1px solid #d7e5f5;
       border-radius: 10px;
       padding: 8px;
@@ -446,6 +448,7 @@
       .page { max-width: none; margin: 0; padding: 0; }
       .panel { box-shadow: none; }
     }
+    {% include "report_analysis.css" %}
   </style>
 </head>
 <body>
@@ -458,6 +461,8 @@
         <div class="brand-content">
           <h1 class="title">{{ reportTitle }}</h1>
           {% if reportSubTitle %}<p class="subtitle">{{ reportSubTitle }}</p>{% endif %}
+          <p class="subtitle">{{ report_scope }}{% if report_scan.get('project') %} · {{ report_scan.project }}{% endif %}</p>
+          {% if report_scan.get('run_uuid') %}<div class="meta">Scan: {{ report_scan.run_uuid }}</div>{% endif %}
           <div class="meta">
             Generated: {{ generated_at }} | Report Date: {{ report_date }}
             {% if platform_filter %}| Platform Focus: {{ platform_filter|upper }}{% endif %}
@@ -466,21 +471,7 @@
       </div>
     </section>
 
-    <span id="toc" class="section-anchor"></span>
-    <section class="panel">
-      <h2>Table of Contents</h2>
-      <ol class="toc">
-        <li><a href="#executive-summary">Executive Summary</a></li>
-        <li><a href="#scan-inputs">Scan Inputs</a></li>
-        <li><a href="#metrics-charts">Metrics & Graphs</a></li>
-        <li><a href="#areas-of-interest">Areas of Interest</a></li>
-        <li><a href="#paths-aoi">Parsed Paths - Areas of Interest</a></li>
-        <li><a href="#paths-all">All Identified File Paths</a></li>
-        <li><a href="#rule-index">Rule Index</a></li>
-        <li><a href="#timeline">Scanning Timeline</a></li>
-      </ol>
-    </section>
-
+    {% if page_sections is not defined or 'overview' in page_sections %}
     <span id="executive-summary" class="section-anchor"></span>
     <section class="panel">
       <h2>Executive Summary</h2>
@@ -492,8 +483,30 @@
         </div>
         {% endfor %}
       </div>
+      {% if show_analysis %}{% include "report_review_summary.html" %}{% endif %}
     </section>
 
+    {% endif %}
+    {% if page_sections is not defined or 'overview' in page_sections %}
+    <span id="toc" class="section-anchor"></span>
+    <section class="panel">
+      <h2>Table of Contents</h2>
+      <ol class="toc">
+        <li><a href="#executive-summary">Executive Summary</a></li>
+        <li><a href="#scan-inputs">Scan Inputs</a></li>
+        <li><a href="#metrics-charts">Metrics & Graphs</a></li>
+        {% if show_findings %}
+        <li><a href="#areas-of-interest">Areas of Interest</a></li>
+        <li><a href="#paths-aoi">Parsed Paths - Areas of Interest</a></li>
+        <li><a href="#paths-all">All Identified File Paths</a></li>
+        <li><a href="#rule-index">Rule Index</a></li>
+        {% endif %}
+        <li><a href="#timeline">Scanning Timeline</a></li>
+      </ol>
+      <div class="pdf-analysis-toc">{% include "report_analysis_nav.html" %}</div>
+    </section>
+    {% endif %}
+    {% if page_sections is not defined or 'overview' in page_sections %}
     <span id="scan-inputs" class="section-anchor"></span>
     <section class="panel">
       <h2>Scan Inputs</h2>
@@ -674,6 +687,9 @@
       {% endif %}
     </section>
 
+    {% endif %}
+    {% if show_findings %}
+    {% if page_sections is not defined or 'areas-of-interest' in page_sections %}
     <span id="areas-of-interest" class="section-anchor"></span>
     <section class="panel panel-flow page-break">
       <h2>Areas of Interest</h2>
@@ -702,7 +718,12 @@
               {% if finding.category %}<div class="detail-row"><b>Issue Category:</b> {{ finding.category }}</div>{% endif %}
               {% if finding.issue_scope %}<div class="detail-row"><b>Issue Scope:</b> {{ finding.issue_scope }}</div>{% endif %}
               {% if finding.issue_desc %}<div class="detail-row"><b>Issue Description:</b> {{ finding.issue_desc }}</div>{% endif %}
-              {% if finding.developer_note %}<div class="detail-row"><b>Developer Note:</b> {{ finding.developer_note }}</div>{% endif %}
+              {% if finding.security_impact %}<div class="detail-row"><b>Security Impact:</b> {{ finding.security_impact }}</div>{% endif %}
+              {% if finding.developer_note %}<div class="detail-row"><b>Recommended Correction:</b> {{ finding.developer_note }}</div>{% endif %}
+              {% if finding.logic_reason %}<div class="detail-row"><b>Rule logic ({{ finding.logic_engine }}):</b> {{ finding.logic_reason }}</div>{% endif %}
+              {% if finding.logic_source %}<div class="detail-row"><b>Rule source:</b> {{ finding.logic_source }}</div>{% endif %}
+              {% if finding.logic_trace %}<ul>{% for line in finding.logic_trace %}<li>{{ line }}</li>{% endfor %}</ul>{% endif %}
+              {% if finding.logic_consulted_files %}<div class="detail-row"><b>Consulted files:</b> {{ finding.logic_consulted_files|join(', ') }}</div>{% endif %}
               {% if finding.reviewer_note %}<div class="detail-row"><b>Reviewer Note:</b> {{ finding.reviewer_note }}</div>{% endif %}
             </div>
             {% if finding.files %}
@@ -730,7 +751,8 @@
         <div class="muted">No findings available for report rendering.</div>
       {% endif %}
     </section>
-
+    {% endif %}
+    {% if page_sections is not defined or 'paths-aoi' in page_sections %}
     <span id="paths-aoi" class="section-anchor"></span>
     <section class="panel page-break">
       <h2>Parsed Paths - Areas of Interest</h2>
@@ -755,7 +777,8 @@
       <div class="muted">No file-path findings were recorded for this run.</div>
       {% endif %}
     </section>
-
+    {% endif %}
+    {% if page_sections is not defined or 'paths-all' in page_sections %}
     <span id="paths-all" class="section-anchor"></span>
     <section class="panel page-break">
       <h2>All Identified File Paths</h2>
@@ -769,7 +792,8 @@
       <div class="muted">No identified file paths were recorded for this run.</div>
       {% endif %}
     </section>
-
+    {% endif %}
+    {% if page_sections is not defined or 'rule-index' in page_sections %}
     <span id="rule-index" class="section-anchor"></span>
     <section class="panel page-break">
       <h2>Rule Index</h2>
@@ -792,7 +816,10 @@
         </table>
       </div>
     </section>
-
+    {% endif %}
+    {% endif %}
+    {% include "report_analysis.html" %}
+    {% if page_sections is not defined or 'overview' in page_sections %}
     <span id="timeline" class="section-anchor"></span>
     <section class="panel">
       <h2>Scanning Timeline</h2>
@@ -805,6 +832,7 @@
         <div><b>Total LOC (effective):</b> {{ detection.get("total_loc", "-") }}</div>
       </div>
     </section>
+    {% endif %}
   </div>
 </body>
 </html>

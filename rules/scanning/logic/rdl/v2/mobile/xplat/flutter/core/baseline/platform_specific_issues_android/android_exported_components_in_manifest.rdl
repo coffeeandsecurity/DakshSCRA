@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.xplat.flutter.core.android_exported_components_in_manifest VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "android:exported\\s*=\\s*\"?(?:true|TRUE)\"?" "im"
+REPORT "Android Exported Components in Manifest"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

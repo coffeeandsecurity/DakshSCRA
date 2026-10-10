@@ -7,6 +7,9 @@ import shutil
 from pathlib import Path  # Resolve the Windows / macOS / Linux path issue
 
 # Third-party libraries
+from functools import lru_cache
+from utils.source_cache import read_source_bytes, current_snapshot
+
 import chardet
 import ruamel.yaml
 
@@ -24,12 +27,20 @@ def save_yaml(file_path, data):
 
 
 
+@lru_cache(maxsize=1024)
+def _prefix_encoding(prefix):
+    return chardet.detect(prefix)['encoding']
+
+
 def detect_encoding_type(targetfile):
     # Open the file in binary mode and read the first 1000 bytes to detect the encoding type
-    with open(targetfile, 'rb') as f:
-        result = chardet.detect(f.read(1000))
-        
-    return result['encoding']
+    snapshot = current_snapshot()
+    if snapshot is not None and snapshot.key(targetfile) is not None:
+        prefix = read_source_bytes(targetfile)[:1000]
+    else:
+        with open(targetfile, 'rb') as source:
+            prefix = source.read(1000)
+    return _prefix_encoding(prefix)
 
 
 def readfile_FallbackEncoding(filepath, fallback_order=("utf-8", "ISO-8859-1")):
@@ -51,8 +62,7 @@ def readfile_FallbackEncoding(filepath, fallback_order=("utf-8", "ISO-8859-1")):
     Raises:
         IOError: If all encodings fail to decode the content.
     """
-    with open(filepath, 'rb') as raw:
-        data = raw.read()
+    data = read_source_bytes(filepath)
 
     last_error = None
     for encoding in fallback_order:

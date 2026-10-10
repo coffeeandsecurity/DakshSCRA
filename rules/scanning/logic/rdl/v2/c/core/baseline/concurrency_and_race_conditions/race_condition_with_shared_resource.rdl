@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.c.core.race_condition_with_shared_resource VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bpthread_create\\s*\\(.*\\);\\s*.*\\s*=.*shared_var" "im"
+WHEN TEXT_MISSING "mutex|lock|atomic|std::mutex|pthread_mutex|synchronized|volatile\\s+std::atomic" "im"
+REPORT "Race Condition with Shared Resource"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

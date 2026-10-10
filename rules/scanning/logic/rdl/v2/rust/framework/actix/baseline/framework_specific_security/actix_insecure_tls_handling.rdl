@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.rust.framework.actix.actix_insecure_tls_handling VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "danger_accept_invalid_certs\\(\\s*true\\s*\\)|danger_accept_invalid_hostnames\\(\\s*true\\s*\\)" "im"
+WHEN TEXT_MISSING "test|development|localhost|staging" "im"
+REPORT "Actix Insecure TLS Handling"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

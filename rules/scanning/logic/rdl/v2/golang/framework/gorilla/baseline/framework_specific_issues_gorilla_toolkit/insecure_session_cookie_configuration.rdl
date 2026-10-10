@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.golang.framework.gorilla.insecure_session_cookie_configuration VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "sessions\\.NewCookieStore|sessions\\.NewFilesystemStore" "im"
+WHEN TEXT_MISSING "Secure\\s*:\\s*true|HttpOnly\\s*:\\s*true" "im"
+REPORT "Insecure Session Cookie Configuration"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

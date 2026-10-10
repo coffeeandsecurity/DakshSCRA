@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.xplat.nativescript.core.android_debuggable_build_enabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "debuggable\\s*[:=]\\s*true" "im"
+REPORT "Android Debuggable Build Enabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

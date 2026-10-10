@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.common.core.insecure_http_communication VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)http://" "im"
+WHEN TEXT_MATCHES "(?i)\\b(url|uri|endpoint|fetch|axios|request|httpclient|redirect|href|src)\\b" "im"
+REPORT "Insecure HTTP Communication"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

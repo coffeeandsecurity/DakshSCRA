@@ -1,0 +1,8 @@
+VERSION 2
+RULE php.insecure-setting VERSION 1
+IN FILE
+WHEN EXISTS CALL MATCHES php.insecure-setting AS operation
+REPORT "insecure PHP setting"
+SEVERITY MEDIUM
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

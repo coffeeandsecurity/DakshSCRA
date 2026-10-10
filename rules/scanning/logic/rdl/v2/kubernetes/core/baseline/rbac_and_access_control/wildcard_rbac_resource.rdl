@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.kubernetes.core.wildcard_rbac_resource VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "resources\\s*:\\s*\\[?\\s*[\"']?\\*[\"']?\\s*\\]?" "im"
+REPORT "Wildcard RBAC Resource"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

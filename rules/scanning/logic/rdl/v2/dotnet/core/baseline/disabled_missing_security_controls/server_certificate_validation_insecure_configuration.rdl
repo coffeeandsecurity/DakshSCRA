@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.dotnet.core.server_certificate_validation_insecure_configuration VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "ServerCertificateValidationCallback\\s*?\\(.*?(\\=|false|true)" "im"
+WHEN TEXT_MISSING "test|development|localhost|staging|// intentional" "im"
+REPORT "Server Certificate Validation: Insecure Configuration"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

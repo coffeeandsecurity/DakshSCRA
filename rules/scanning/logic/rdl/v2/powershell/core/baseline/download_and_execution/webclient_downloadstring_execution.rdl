@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.powershell.core.webclient_downloadstring_execution VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?:New-Object\\s+(?:System\\.)?Net\\.WebClient|Net\\.WebClient\\b)[^|;\\n]*\\.\\s*DownloadString" "im"
+WHEN TEXT_MISSING "checksum|hash|signature|verify" "im"
+REPORT "WebClient DownloadString Execution"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,519 @@
+{
+  "schema_version": 1,
+  "enabled": false,
+  "authoritative_engine": "v1",
+  "mappings": {
+    "logic/rdl/v1/python/core/command_injection_subprocess.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/injection/command_injection.rdl",
+      "language": "python",
+      "extensions": [
+        ".py"
+      ]
+    },
+    "logic/rdl/v1/python/framework/flask/flask_hardcoded_secret_material.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/security/hardcoded_secret.rdl",
+      "language": "python",
+      "extensions": [
+        ".py"
+      ]
+    },
+    "logic/rdl/v1/php/framework/codeigniter/codeigniter_hardcoded_secret_material.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/security/hardcoded_secret.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/python/core/subprocess_modules_os_system_os_spawn_os_popen_popen2_os_kill_commands.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/injection/command_injection.rdl",
+      "language": "python",
+      "extensions": [
+        ".py"
+      ]
+    },
+    "logic/rdl/v1/python/core/command_injection_eval.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/injection/command_injection.rdl",
+      "language": "python",
+      "extensions": [
+        ".py"
+      ]
+    },
+    "logic/rdl/v1/python/core/ssrf_requests_library_with_user_controlled_url.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/security/server_side_request_forgery.rdl",
+      "language": "python",
+      "extensions": [
+        ".py"
+      ]
+    },
+    "logic/rdl/v1/python/core/ssrf_urllib_with_user_controlled_url.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/security/server_side_request_forgery.rdl",
+      "language": "python",
+      "extensions": [
+        ".py"
+      ]
+    },
+    "logic/rdl/v1/python/core/path_traversal_open_with_user_controlled_path.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/security/path_traversal.rdl",
+      "language": "python",
+      "extensions": [
+        ".py"
+      ]
+    },
+    "logic/rdl/v1/python/framework/flask/flask_sql_injection_sink.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/injection/sql_injection.rdl",
+      "language": "python",
+      "extensions": [
+        ".py"
+      ]
+    },
+    "logic/rdl/v1/python/framework/flask/flask_unsafe_deserialization.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/security/unsafe_deserialization.rdl",
+      "language": "python",
+      "extensions": [
+        ".py"
+      ]
+    },
+    "logic/rdl/v1/python/framework/flask/flask_debug_mode_enabled.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/security/insecure_configuration.rdl",
+      "language": "python",
+      "extensions": [
+        ".py"
+      ]
+    },
+    "logic/rdl/v1/python/framework/django/django_hardcoded_secret_material.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/security/hardcoded_secret.rdl",
+      "language": "python",
+      "extensions": [
+        ".py"
+      ]
+    },
+    "logic/rdl/v1/python/framework/django/django_sql_injection_sink.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/injection/sql_injection.rdl",
+      "language": "python",
+      "extensions": [
+        ".py"
+      ]
+    },
+    "logic/rdl/v1/python/framework/django/django_unsafe_deserialization.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/security/unsafe_deserialization.rdl",
+      "language": "python",
+      "extensions": [
+        ".py"
+      ]
+    },
+    "logic/rdl/v1/python/framework/django/django_debug_mode_enabled.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/security/insecure_configuration.rdl",
+      "language": "python",
+      "extensions": [
+        ".py"
+      ]
+    },
+    "logic/rdl/v1/python/framework/fastapi/fastapi_hardcoded_secret_material.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/security/hardcoded_secret.rdl",
+      "language": "python",
+      "extensions": [
+        ".py"
+      ]
+    },
+    "logic/rdl/v1/python/framework/fastapi/fastapi_sql_injection_sink.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/injection/sql_injection.rdl",
+      "language": "python",
+      "extensions": [
+        ".py"
+      ]
+    },
+    "logic/rdl/v1/python/framework/fastapi/fastapi_unsafe_deserialization.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/security/unsafe_deserialization.rdl",
+      "language": "python",
+      "extensions": [
+        ".py"
+      ]
+    },
+    "logic/rdl/v1/python/framework/fastapi/fastapi_debug_mode_enabled.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/security/insecure_configuration.rdl",
+      "language": "python",
+      "extensions": [
+        ".py"
+      ]
+    },
+    "logic/rdl/v1/php/framework/codeigniter/codeigniter_raw_sql_query_construction.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/injection/sql_injection.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/laravel/laravel_hardcoded_secret_material.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/security/hardcoded_secret.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/laravel/laravel_raw_sql_query_construction.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/injection/sql_injection.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/symfony/symfony_hardcoded_secret_material.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/security/hardcoded_secret.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/symfony/symfony_raw_sql_query_construction.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/injection/sql_injection.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/wordpress/wordpress_hardcoded_secret_material.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/security/hardcoded_secret.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/wordpress/wordpress_raw_sql_query_construction.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/injection/sql_injection.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/drupal/drupal_hardcoded_secret_material.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/security/hardcoded_secret.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/drupal/drupal_raw_sql_query_construction.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/injection/sql_injection.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/command_injection_shell_exec_exec_passthru_system_popen_backtick.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/injection/command_injection.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/ssrf_file_get_contents_with_user_controlled_url.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/security/server_side_request_forgery.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/object_injection_via_serialization.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/security/unsafe_deserialization.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/arbitrary_code_execution_eval_and_exec.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/injection/code_injection.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/insecure_code_execution_assert_and_eval.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/injection/code_injection.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/deprecated_create_function_usage.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/injection/code_injection.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/regular_expression_injection_preg_replace_with_e_modifier_or_untrusted_input.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/injection/regex_injection.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/insecure_method_call_preg_replace_with_code_execution.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/injection/code_injection.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/cross_site_scripting_xss_via_php_self.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/injection/cross_site_scripting.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/insecure_redirect_header_with_location.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/security/open_redirect.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/insecure_file_inclusion_include_require.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/injection/file_inclusion.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/insecure_variable_injection_extract.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/injection/variable_injection.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/insecure_file_operations_fopen_file_get_contents_file_put_contents.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/security/path_traversal.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/stack_trace_or_error_disclosure.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/security/error_disclosure.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/deprecated_and_potentially_insecure_sql_functions.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/security/deprecated_api.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/deprecated_regular_expression_functions.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/security/deprecated_api.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/deprecated_string_split_function.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/security/deprecated_api.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/deprecated_session_register_function.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/security/deprecated_api.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/deprecated_register_globals_directive.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/security/insecure_settings.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/rdl_conditional_sql_query_with_untrusted_input_and_missing_parameterization.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/injection/sql_injection.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/sql_query_non_parameterized_select_statements_with_where_or_order_by.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/injection/sql_injection.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/sql_query_non_parameterized_insert_update_statements.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/injection/sql_injection.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/sql_query_non_parameterized_delete_statements.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/injection/sql_injection.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/xxe_domdocument_loadxml_without_entity_disablement.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/injection/xxe.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/xxe_xmlreader_or_xmlparser_without_external_entity_protection.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/injection/xxe.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/core/ssrf_curl_exec_with_user_controlled_url.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/security/server_side_request_forgery.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/common/core/insecure_cryptographic_algorithm.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/security/weak_cryptography.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/codeigniter/codeigniter_dangerous_dynamic_eval_template_execution.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/injection/code_injection.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/codeigniter/codeigniter_debug_mode_enabled.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/security/insecure_settings.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/codeigniter/codeigniter_permissive_cors_configuration.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/security/permissive_cors.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/drupal/drupal_dangerous_dynamic_eval_template_execution.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/injection/code_injection.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/drupal/drupal_debug_mode_enabled.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/security/insecure_settings.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/drupal/drupal_permissive_cors_configuration.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/security/permissive_cors.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/laravel/laravel_dangerous_dynamic_eval_template_execution.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/injection/code_injection.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/laravel/laravel_debug_mode_enabled.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/security/insecure_settings.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/laravel/laravel_permissive_cors_configuration.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/security/permissive_cors.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/symfony/symfony_dangerous_dynamic_eval_template_execution.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/injection/code_injection.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/symfony/symfony_debug_mode_enabled.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/security/insecure_settings.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/symfony/symfony_permissive_cors_configuration.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/security/permissive_cors.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/wordpress/wordpress_dangerous_dynamic_eval_template_execution.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/injection/code_injection.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/wordpress/wordpress_debug_mode_enabled.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/security/insecure_settings.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/wordpress/wordpress_permissive_cors_configuration.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/security/permissive_cors.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/yii/activerecord_query_with_raw_condition_string.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/injection/sql_injection.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/yii/createcommand_with_raw_sql_string.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/common/core/injection/sql_injection.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    },
+    "logic/rdl/v1/php/framework/yii/unsafe_mass_assignment_via_load_or_setattributes.rdl": {
+      "v2_rule": "rules/scanning/logic/rdl/v2/php/core/security/mass_assignment.rdl",
+      "language": "php",
+      "extensions": [
+        ".php"
+      ]
+    }
+  },
+  "project_flow": true
+}

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.powershell.core.download_cradle_pattern VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?:IEX|Invoke-Expression)\\s*\\(\\s*(?:New-Object\\s+Net\\.WebClient|Invoke-WebRequest|iwr|curl|wget)\\s*[^)]*\\)" "im"
+WHEN TEXT_MISSING "test|CI|pipeline|AllowList|InternalSource|development|example|-WhatIf" "im"
+REPORT "Download Cradle Pattern"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

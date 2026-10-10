@@ -1,0 +1,8 @@
+VERSION 2
+RULE flutter.sensitive-debug-print VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)\\b(?:debugPrint|print)\\s*\\([^\\n;]{0,200}\\b(?:password|token|secret|credential)\\b" ""
+REPORT "Flutter Sensitive Diagnostic Output"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

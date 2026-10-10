@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.terraform.framework.azure.azure_storage_account_allows_public_blob_access VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "allow_nested_items_to_be_public\\s*=\\s*true|allow_blob_public_access\\s*=\\s*true" "im"
+WHEN (TEXT_MATCHES "allow_blob_public_access\\s*=\\s*true|allow_nested_items_to_be_public\\s*=\\s*true" "im" AND TEXT_MISSING "# intentional|# static-website|static_website" "im")
+REPORT "Azure Storage Account Allows Public Blob Access"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

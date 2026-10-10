@@ -2,12 +2,16 @@
 import json
 import re
 import sys
+import time
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from timeit import default_timer as timer
 
 # Local application imports
+from utils.scan_scope import allows_check, allows_file
 from core import rdl_engine
+from core.rdl.selection import v1_enabled
+from core.rdl.shadow import append_shadow_record, default_shadow_runner
 import state.runtime_state as state
 import utils.file_utils as futils
 import utils.suppression_utils as supp
@@ -24,6 +28,11 @@ def _resolve_logic_file(rule_path, logic_ref):
     if ref_path.is_absolute():
         return ref_path
     base = Path(state.root_dir) / "rules" / "scanning"
+    # Resolve pre-versioned custom XML references against the canonical v1 tree.
+    if ref_path.parts[:3] == ("rdl", "logic", "v1") and not (base / ref_path).is_file():
+        ref_path = Path("logic/rdl/v1").joinpath(*ref_path.parts[3:])
+    elif ref_path.parts and ref_path.parts[0] == "logic" and ref_path.parts[:2] != ("logic", "rdl") and not (base / ref_path).is_file():
+        ref_path = Path("logic/rdl/v1").joinpath(*ref_path.parts[1:])
     candidate = (base / ref_path).resolve()
     return candidate
 
@@ -359,92 +368,18 @@ def _compute_paths_confidence_score(path_count):
     return _clamp_score(score, low=35, high=96)
 
 
-FILEPATH_RULE_GUIDANCE = {
-    "Authentication": {
-        "brief_desc": "Marks file paths likely involved in login, sign-in, token issuance, or identity verification flows.",
-        "attack_desc": "If accurate, these areas are commonly tied to authentication bypass, weak credential handling, insecure token issuance, brute-force exposure, or account takeover paths.",
-        "developer_note": "Check that strong authentication controls are in place: secure password handling, MFA where required, lockout or throttling, secure token/session issuance, and no trust in client-side identity assertions.",
-        "reviewer_note": "Review how identities are established, challenged, and persisted. Focus on login bypass, credential stuffing resistance, token tampering, password reset abuse, and trust-boundary mistakes around identity state.",
-    },
-    "Authorization": {
-        "brief_desc": "Marks paths likely responsible for permission checks, policy enforcement, role mapping, or access control decisions.",
-        "attack_desc": "If accurate, these areas are often linked to privilege escalation, IDOR/BOLA, missing server-side authorization, role confusion, or policy bypass vulnerabilities.",
-        "developer_note": "Verify that authorization is enforced server-side on every sensitive action and object reference, with deny-by-default behavior and consistent policy evaluation.",
-        "reviewer_note": "Check whether access decisions can be bypassed through alternate routes, direct object references, stale role state, hidden endpoints, or client-controlled privilege indicators.",
-    },
-    "Session Management": {
-        "brief_desc": "Marks files related to session creation, cookies, tokens, or persistence of authenticated state.",
-        "attack_desc": "If accurate, these areas may expose session fixation, token replay, insecure cookie settings, weak expiry logic, or stolen-session reuse opportunities.",
-        "developer_note": "Confirm secure cookie flags, rotation on privilege change, bounded lifetime, logout invalidation, CSRF protections where relevant, and secure storage of session identifiers.",
-        "reviewer_note": "Inspect how session IDs or tokens are issued, renewed, invalidated, and bound to the user context. Look for fixation, replay, insecure transport, and weak revocation paths.",
-    },
-    "Admin Section": {
-        "brief_desc": "Marks paths that likely expose administrative panels, routes, or elevated-management functionality.",
-        "attack_desc": "If accurate, these areas may lead to admin-panel exposure, privilege escalation, weak segregation of duties, or high-impact post-auth compromise paths.",
-        "developer_note": "Ensure admin functions are isolated, strongly authorized, audited, and not merely hidden by routing or UI controls.",
-        "reviewer_note": "Check whether admin endpoints are discoverable, weakly protected, or reachable through alternate routes. Look for missing role checks, unsafe defaults, and sensitive bulk actions.",
-    },
-    "User Section": {
-        "brief_desc": "Marks user-facing account, profile, or account-management paths.",
-        "attack_desc": "If accurate, these areas often intersect with IDOR, profile tampering, insecure account updates, broken ownership checks, or account-enumeration issues.",
-        "developer_note": "Verify ownership checks, input validation, anti-automation controls for sensitive account actions, and safe handling of user-controlled profile data.",
-        "reviewer_note": "Inspect whether one user can act on another user’s records, profiles, or settings by changing identifiers, routes, or hidden form parameters.",
-    },
-    "Input Validation": {
-        "brief_desc": "Marks validator, sanitizer, or input-handling paths that likely mediate untrusted data before sensitive use.",
-        "attack_desc": "If accurate, these areas may be tied to injection flaws, business-logic abuse, parser confusion, canonicalization bugs, or inconsistent validation across entry points.",
-        "developer_note": "Check that validation is server-side, context-aware, centralized where possible, and paired with output encoding or parameterization rather than used as the only defense.",
-        "reviewer_note": "Compare validation across endpoints and input channels. Look for mismatches, weak normalization, allowlist gaps, and alternate routes that bypass the validator.",
-    },
-    "API": {
-        "brief_desc": "Marks routes, handlers, controllers, or endpoint code likely implementing an API surface.",
-        "attack_desc": "If accurate, these areas often relate to authn/authz gaps, mass assignment, BOLA/IDOR, excessive data exposure, rate-limit abuse, and unsafe object parsing.",
-        "developer_note": "Verify endpoint authentication, authorization, schema validation, output filtering, error handling, and abuse controls such as pagination and rate limiting.",
-        "reviewer_note": "Review API trust boundaries end to end. Look for broken object-level authorization, insecure defaults, hidden endpoints, weak rate limits, and overexposed response data.",
-    },
-    "Libraries | Extensions | Plugins": {
-        "brief_desc": "Marks extension, plugin, addon, or library paths that may introduce third-party or modular attack surface.",
-        "attack_desc": "If accurate, these areas may bring supply-chain risk, unsafe extension loading, vulnerable dependencies, privilege extension abuse, or weak trust boundaries around plugins.",
-        "developer_note": "Check plugin loading rules, extension trust boundaries, dependency provenance, update hygiene, and whether optional modules inherit excessive privileges.",
-        "reviewer_note": "Review how third-party components are loaded, configured, and isolated. Focus on unsafe defaults, inherited privileges, stale components, and unreviewed extension hooks.",
-    },
-    "CAPTCHA": {
-        "brief_desc": "Marks files related to CAPTCHA or anti-automation controls.",
-        "attack_desc": "If accurate, these areas may be relevant to automation bypass, weak challenge validation, replay of challenge tokens, or ineffective bot resistance.",
-        "developer_note": "Verify server-side verification, challenge freshness, correct binding to the intended action, and fallback handling that does not silently disable anti-automation checks.",
-        "reviewer_note": "Check whether the CAPTCHA decision is enforced server-side, whether tokens are reusable, and whether alternate flows avoid or downgrade the challenge.",
-    },
-    "File Upload": {
-        "brief_desc": "Marks upload, attachment, or file-ingestion paths where user-controlled content enters the system.",
-        "attack_desc": "If accurate, these areas often relate to unrestricted upload, malicious file execution, path traversal, content-type confusion, storage poisoning, or parser exploit chains.",
-        "developer_note": "Ensure size/type checks, content validation, path hardening, random storage names, access restrictions, and non-executable storage locations are consistently enforced.",
-        "reviewer_note": "Review upload validation, storage paths, post-upload processing, and whether uploaded files can be executed, rendered unsafely, or used to traverse internal paths.",
-    },
-    "Payment Functionality": {
-        "brief_desc": "Marks paths related to billing, checkout, invoices, payments, or transaction workflows.",
-        "attack_desc": "If accurate, these areas may expose amount tampering, replay, trust in client-side totals, payment-state confusion, or abuse of callbacks and settlement flows.",
-        "developer_note": "Check server-side recalculation of sensitive values, callback verification, idempotency, fraud controls, and strict separation between display data and settlement decisions.",
-        "reviewer_note": "Inspect trust boundaries around totals, discounts, callbacks, settlement state, and order/payment reconciliation. Look for replay, race conditions, and client-side trust.",
-    },
-    "Logging": {
-        "brief_desc": "Marks logging, audit, or trace-related paths that may record user actions, failures, or sensitive system events.",
-        "attack_desc": "If accurate, these areas may lead to sensitive-data logging, log injection/forgery, weak audit trails, or incident-response blind spots.",
-        "developer_note": "Check that logs avoid secrets, normalize attacker-controlled fields, preserve security-relevant audit events, and protect log integrity and retention.",
-        "reviewer_note": "Review whether untrusted input can forge log entries, whether secrets or tokens are recorded, and whether critical events are missing, inconsistent, or easily bypassed.",
-    },
-    "Exception Handling": {
-        "brief_desc": "Marks error, exception, or fault-handling paths that shape failures and diagnostics.",
-        "attack_desc": "If accurate, these areas may expose stack traces, internal paths, sensitive state, inconsistent fail-open behavior, or bypass of normal security flows during error handling.",
-        "developer_note": "Verify exceptions fail closed, sensitive errors are sanitized, security checks are not skipped on error paths, and logging remains useful without leaking secrets.",
-        "reviewer_note": "Inspect what users, clients, and logs receive on failure. Look for information disclosure, swallowed auth errors, fallback behavior, and inconsistent transaction rollback.",
-    },
-    "Database Interaction": {
-        "brief_desc": "Marks data-access or query-layer paths likely responsible for reading, writing, or shaping database operations.",
-        "attack_desc": "If accurate, these areas may expose SQL/NoSQL injection, weak transaction boundaries, unsafe dynamic queries, mass assignment, or sensitive data over-fetching.",
-        "developer_note": "Check parameterization, ORM-safe APIs, transaction handling, least-privilege database access, and controlled selection or update of sensitive fields.",
-        "reviewer_note": "Review query construction and persistence behavior for untrusted input influence, unsafe dynamic clauses, weak ownership checks, and overbroad record exposure.",
-    },
-}
+def _file_path_guidance():
+    import xml.etree.ElementTree as ET
+    path = Path(__file__).resolve().parents[1] / 'rules/scanning/platform/filepaths.xml'
+    return {rule.findtext('name'): {
+        'brief_desc': rule.findtext('rule_desc') or '',
+        'attack_desc': rule.findtext('vuln_desc') or '',
+        'developer_note': rule.findtext('developer') or '',
+        'reviewer_note': rule.findtext('reviewer') or '',
+    } for rule in ET.parse(path).getroot().iter('rule')}
+
+
+FILEPATH_RULE_GUIDANCE = _file_path_guidance()
 
 
 def _file_path_rule_meta(rule_elem):
@@ -455,9 +390,9 @@ def _file_path_rule_meta(rule_elem):
     developer = (rule_elem.findtext("developer") or "").strip()
     reviewer = (rule_elem.findtext("reviewer") or "").strip()
     return {
-        "brief_desc": guidance.get("brief_desc", rule_desc),
-        "attack_desc": guidance.get("attack_desc", vuln_desc),
-        "developer_note": guidance.get("developer_note", developer),
+        "brief_desc": rule_desc,
+        "attack_desc": vuln_desc,
+        "developer_note": developer,
         "reviewer_note": guidance.get("reviewer_note", reviewer),
         "rule_desc": rule_desc,
         "vuln_desc": vuln_desc,
@@ -477,6 +412,31 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
     Returns:
         tuple: (matched_rules, unmatched_rules) - Lists of rule titles for matched and unmatched patterns.
     """
+
+    runner = default_shadow_runner(state.root_dir)
+    if runner.enabled:
+        pack_files = [line.strip() for line in targetfile if line.strip() and allows_file(line.strip())]
+        targetfile.seek(0)
+        packs = rule_input.values() if isinstance(rule_input, dict) else [rule_input]
+        for pack in packs:
+            runner.review_pack_once(pack, pack_files, state.source_root or state.sourcedir,
+                                    Path(state.runtime_dirpath) / 'rdl_shadow_comparisons.jsonl', progress_callback)
+    if not v1_enabled():
+        files = [line.strip() for line in targetfile if line.strip() and allows_file(line.strip())]
+        runner = default_shadow_runner(state.root_dir)
+        for index, filepath in enumerate(files, 1):
+            if callable(progress_callback):
+                progress_callback(dict(scope="source_parser", platform="RDL v2", category="Semantic review",
+                                       rule_title="Experimental RDL v2", file_index=index, filepath=filepath,
+                                       status="parsing", total_items=len(files), matched_evidence_count=0))
+            runner.review_file_once(filepath, state.source_root or state.sourcedir,
+                                    Path(state.runtime_dirpath) / "rdl_shadow_comparisons.jsonl",
+                                    progress_callback=(lambda details: progress_callback(dict(
+                                        scope="source_parser", platform="RDL v2", category="Semantic review",
+                                        rule_title="Experimental RDL v2", file_index=index, filepath=filepath,
+                                        status="parsing", total_items=len(files), **details
+                                    ))) if callable(progress_callback) else None)
+        return [], []
 
     if isinstance(rule_input, dict):
         rule_paths = rule_input.values()
@@ -534,6 +494,8 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
 
             for rule in category:
                 rule_title = (rule.findtext("name") or "").strip()
+                if not allows_check(rule_title, category_name, (rule.findtext("rdl_ref") or "")):
+                    continue
                 pattern_text = (rule.findtext("regex") or "").strip()
                 rdl_text = (rule.findtext("rdl") or "").strip()
                 rdl_ref = (rule.findtext("rdl_ref") or "").strip()
@@ -585,6 +547,8 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
 
                 for file_index, eachfilepath in enumerate(f_targetfiles, start=1):
                     filepath = eachfilepath.rstrip()
+                    if not allows_file(filepath):
+                        continue
                     iCnt += 1
 
                     if str(state.verbosity) == '1':
@@ -631,6 +595,23 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                             "total_items": total_target_files,
                         })
 
+                    work = dict(scope='source_parser', platform=platform_name,
+                                category=category_name, rule_title=rule_title,
+                                file_index=file_index, filepath=filepath,
+                                total_items=total_target_files, status='parsing')
+
+                    def report_operation(details):
+                        if callable(progress_callback):
+                            progress_callback(dict(work, **details))
+
+                    default_shadow_runner(state.root_dir).review_file_once(
+                        filepath, state.source_root or state.sourcedir,
+                        Path(state.runtime_dirpath) / 'rdl_shadow_comparisons.jsonl',
+                        progress_callback=report_operation if callable(progress_callback) else None,
+                    )
+                    report_operation(dict(phase='pattern_matching', message='Matching source patterns',
+                                          current_function=rule_title, operation_started_at=time.time(),
+                                          updated_at=time.time()))
                     file_lines = content.splitlines()
                     # candidate_evidence: list of (linecount, line, groups_dict)
                     candidate_evidence = []
@@ -645,21 +626,26 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                             for linecount, line in enumerate(file_lines, start=1):
                                 if len(line) > 500:
                                     continue
-                                if not pattern.search(line):
+                                m = pattern.search(line)
+                                if not m:
                                     continue
                                 if exclude and exclude.search(line):
                                     continue
-                                m = pattern.search(line)
                                 groups = m.groupdict() if m else {}
                                 groups = {k: v for k, v in groups.items() if v is not None}
                                 candidate_evidence.append((linecount, line, groups))
 
+                    from core.rdl.v1_source import review_text
+                    review_content = review_text(rdl_ref, filepath, content) if candidate_evidence or pattern is None else content
                     rdl_result = None
                     use_rdl_logic = bool(rdl_logic_text)
                     if use_rdl_logic:
+                        report_operation(dict(phase='rule_logic', message='Evaluating rule conditions',
+                                              current_function=rdl_ref, operation_started_at=time.time(),
+                                              updated_at=time.time()))
                         rdl_result = rdl_engine.evaluate_rdl_with_reason(
                             rdl_logic_text,
-                            file_text=content,
+                            file_text=review_content,
                             file_path=filepath,
                             project_root=state.sourcedir,
                         )
@@ -671,10 +657,18 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                     if use_rdl_logic and rdl_result is not None:
                         active_logic_passes = bool(rdl_result.get("passes"))
                         active_logic_reason = rdl_result.get("fail_reason", "")
+                        shadow_comparison = default_shadow_runner(state.root_dir).comparison_for_review(
+                            rdl_result,
+                            rdl_ref,
+                            filepath,
+                            state.source_root or state.sourcedir,
+                            Path(state.runtime_dirpath) / 'rdl_shadow_comparisons.jsonl',
+                        )
                         active_logic_meta = _build_logic_meta(
                             "rdl",
                             rdl_ref,
                             logic_result=rdl_result,
+                            comparison=shadow_comparison,
                         )
 
                     if use_rdl_logic:
@@ -774,6 +768,39 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                                 # Clear candidates so they don't appear in active findings
                                 candidate_evidence = []
 
+                    if candidate_evidence and review_content != content:
+                        reviewed_lines = review_content.splitlines()
+                        evidence_regex = pattern
+                        if evidence_regex is None and rdl_logic_evidence_pattern:
+                            evidence_regex = re.compile(rdl_logic_evidence_pattern, re.I)
+                        reviewed_match_lines = None
+                        if use_file_mode and evidence_regex is not None:
+                            reviewed_match_lines = {item[0] for item in _match_full_file(
+                                evidence_regex, review_content, reviewed_lines, exclude)}
+                        retained = []
+                        for linecount, line, groups in candidate_evidence:
+                            reviewed_line = reviewed_lines[linecount - 1] if linecount <= len(reviewed_lines) else ''
+                            # Replay multiline matches on the offset-preserving view.
+                            # Other code on a line does not validate a comment match.
+                            valid = linecount in reviewed_match_lines if reviewed_match_lines is not None else evidence_regex is None or bool(evidence_regex.search(reviewed_line))
+                            if valid:
+                                retained.append((linecount, line, groups))
+                                continue
+                            state.suppressedFindingsCnt += 1
+                            if suppressed_json_path:
+                                rejection = {
+                                    'id': f'sup_{len(suppressed_json) + 1}', 'platform': platform_name,
+                                    'rule_title': rule_title, 'category': category_name,
+                                    'file': futils.get_source_file_path(state.sourcedir, filepath),
+                                    'line': linecount, 'code': line.strip(),
+                                    'rdl_text': rdl_logic_text, 'rdl_condition': f'RDL:{rdl_ref}',
+                                    'suppression_reason': 'Source evidence is a comment, document identifier or supported non-executable/safe call form.',
+                                    'suppressed_at': None, 'status': 'suppressed',
+                                }
+                                _merge_logic_meta(rejection, active_logic_meta)
+                                suppressed_json.append(rejection)
+                        candidate_evidence = retained
+
                     if not candidate_evidence:
                         continue
 
@@ -852,7 +879,8 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                             f_scanout.write(
                                 f"\n{platform_name}-{rule_no}. Rule Title: {rule_title}\n"
                                 f"\n\t Rule Description  : {rule_desc}"
-                                f"\n\t Issue Description : {vuln_desc}"
+                                f"\n\t Issue Description : {rule_desc}"
+                                f"\n\t Security Impact   : {vuln_desc}"
                                 f"\n\t Developer Note    : {dev_note}"
                                 f"\n\t Reviewer Note     : {rev_note}\n"
                             )
@@ -864,7 +892,8 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                             "category": category_name,
                             "issue_scope": _derive_issue_scope(category_name, platform_name),
                             "rule_desc": rule_desc,
-                            "issue_desc": vuln_desc,
+                            "issue_desc": rule_desc,
+                            "security_impact": vuln_desc,
                             "developer_note": dev_note,
                             "reviewer_note": rev_note,
                             "confidence_score": 0,
@@ -993,6 +1022,15 @@ def paths_parser(rule_path, targetfile, outputfile=None, rule_no=None, findings_
         tuple: A list of matched rules and a list of unmatched rules.
     """
 
+    runner = default_shadow_runner(state.root_dir)
+    if runner.enabled:
+        files = [line.strip() for line in targetfile if line.strip() and allows_file(line.strip())]
+        targetfile.seek(0)
+        runner.review_pack_once(rule_path, files, state.source_root or state.sourcedir,
+                                Path(state.runtime_dirpath) / 'rdl_shadow_comparisons.jsonl', progress_callback)
+    if not v1_enabled():
+        return [], []
+
     matched_rules = []       # List to store matched patterns
     unmatched_rules = []     # List to store unmatched patterns
 
@@ -1023,6 +1061,8 @@ def paths_parser(rule_path, targetfile, outputfile=None, rule_no=None, findings_
         #f_scanout.write(f"{rule_no}. Rule Title: {r.find('name').text}\n")
 
         pattern_name = (r.findtext("name") or "").strip()
+        if not allows_check(pattern_name, "", (r.findtext("rdl_ref") or "")):
+            continue
         pattern_text = (r.findtext("regex") or "").strip()
         rdl_ref = (r.findtext("rdl_ref") or "").strip()
         exclude_text = (r.findtext("exclude") or "").strip()
@@ -1056,6 +1096,8 @@ def paths_parser(rule_path, targetfile, outputfile=None, rule_no=None, findings_
         rule_has_match = False
         for file_index, eachfilepath in enumerate(f_targetfilepaths, start=1):  # Read each line (file path) in the file
             filepath = eachfilepath.rstrip()    # strip out '\r' or '\n' from the file paths
+            if not allows_file(filepath):
+                continue
             filepath = futils.get_source_file_path(state.sourcedir, filepath)
             match_path = filepath
             if state.sourcedir:
@@ -1077,10 +1119,23 @@ def paths_parser(rule_path, targetfile, outputfile=None, rule_no=None, findings_
                     project_root=state.sourcedir,
                 )
                 matched = bool(rdl_result.get("passes"))
+                shadow_comparison = default_shadow_runner(state.root_dir).compare(
+                    rdl_result,
+                    rdl_ref,
+                    rule_match_text,
+                    state.source_root or state.sourcedir,
+                )
+                append_shadow_record(
+                    Path(state.runtime_dirpath) / "rdl_shadow_comparisons.jsonl",
+                    shadow_comparison,
+                    {"logic_ref": rdl_ref, "rule_title": pattern_name, "file_path": rule_match_text},
+                    default_shadow_runner(state.root_dir).config.get("maximum_telemetry_bytes", 64 * 1024 * 1024),
+                )
                 active_logic_meta = _build_logic_meta(
                     "rdl",
                     rdl_ref,
                     logic_result=rdl_result,
+                    comparison=shadow_comparison,
                 )
             elif pattern is not None:
                 matched = bool(pattern.search(rule_match_text))

@@ -26,7 +26,7 @@
         <rule_file>symfony.xml</rule_file>
         <markers>
             <dep file="composer.json">symfony/framework-bundle</dep>
-            <regex file="composer.json">symfony</regex>
+            <regex file="composer.json">"name"\s*:\s*"symfony/(?:framework-standard-edition|skeleton|website-skeleton)"</regex>
         </markers>
     </framework>
     <framework>
@@ -44,7 +44,11 @@
         <rule_file>wordpress.xml</rule_file>
         <markers>
             <file>wp-config.php</file>
-            <regex file="*">wp-content|wordpress</regex>
+            <file>wp-load.php</file>
+            <file>wp-settings.php</file>
+            <dep file="composer.json">johnpbloch/wordpress-core</dep>
+            <dep file="composer.json">roots/wordpress</dep>
+            <regex file="*.php">\b(?:add_action|add_filter|register_post_type|wp_enqueue_script)\s*\(</regex>
         </markers>
     </framework>
     <framework>
@@ -125,6 +129,8 @@
             <regex file="pom.xml">springframework</regex>
             <regex file="build.gradle">org\.springframework</regex>
             <regex file="build.gradle.kts">org\.springframework</regex>
+            <regex file="*.java">(?m)^\s*import\s+org\.springframework\.(?:web|context|jdbc|security)\.</regex>
+            <regex file="*.xml">&lt;(?:servlet-class|bean)\b[^&gt;]*&gt;\s*org\.springframework\.|&lt;bean\b[^&gt;]*\bclass\s*=\s*["']org\.springframework\.</regex>
         </markers>
     </framework>
     <framework>
@@ -631,7 +637,7 @@
         <markers>
             <dep file="package.json">expo-updates</dep>
             <dep file="package.json">expo</dep>
-            <file>app.json</file>
+            <regex file="app.json">"expo"\s*:</regex>
         </markers>
     </framework>
     <!-- Android -->

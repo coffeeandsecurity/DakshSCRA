@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.php.core.deprecated_create_function_usage VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bcreate_function\\(\\s*" "im"
+WHEN (TEXT_MISSING "anonymous\\s+function|fn\\s*\\(|Closure" "im" AND TEXT_MISSING "test|example" "im")
+REPORT "Deprecated create_function() Usage"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.python.core.using_django_s_safe_filter VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)\\.safe_filter\\s*\\(\\s*" "im"
+WHEN (TEXT_MISSING "escape|bleach\\.clean|html\\.escape|strip_tags|validate" "im" AND TEXT_MISSING "test|example" "im")
+REPORT "Using Django's Safe Filter"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

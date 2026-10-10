@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.c.core.risky_memory_allocation_malloc_and_related_functions VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "^[^*/]*\\b(malloc|calloc|realloc)\\s*\\(" "im"
+WHEN TEXT_MATCHES "user_input|argv|getenv|scanf|fgets|recv\\s*\\(|read\\s*\\(|atoi|atol|strtol|strtoul|input|request|len\\s*\\*|size\\s*\\*" "im"
+REPORT "Risky Memory Allocation: malloc() and Related Functions"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

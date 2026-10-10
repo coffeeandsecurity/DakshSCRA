@@ -1,0 +1,10 @@
+VERSION 2
+RULE baseline.mobile.android.core.exported_components VERSION 1
+IN FILE
+WHEN FILE_NAME_IS "AndroidManifest.xml"
+WHEN TEXT_MATCHES "android:exported\\s*=\\s*\"(true|TRUE)\"" "i"
+WHEN PROJECT_OBSERVATION "**/AndroidManifest.xml"
+REPORT "Exported Components"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

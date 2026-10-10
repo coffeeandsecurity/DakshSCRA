@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.filepaths.core.models VERSION 1
+IN PATH
+WHEN TEXT_MATCHES "(?i)/(Models)/" "im"
+WHEN TEXT_MATCHES "(?i)(/|\\\\\\\\).*(models?|entities?)" "im"
+REPORT "Models"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.filepaths.core.admin_section VERSION 1
+IN PATH
+WHEN TEXT_MATCHES "(?i)(Admin|Administrator)" "im"
+WHEN (TEXT_MATCHES "(?i)(/|\\\\\\\\).*(admin|administrator)" "im" AND TEXT_MISSING "(?i)(/docs?/|/examples?/|/samples?/|/tests?/)" "im")
+REPORT "Admin Section"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

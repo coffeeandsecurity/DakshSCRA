@@ -3,7 +3,7 @@
         <rule>
             <name>Privileged Container Enabled</name>
             <regex>privileged\s*:\s*true</regex>
-            <rdl_ref>logic/kubernetes/core/privileged_container_enabled.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kubernetes/core/privileged_container_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -12,15 +12,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects containers configured to run in privileged mode.</rule_desc>
-            <vuln_desc>Privileged containers have near-complete access to the host kernel, bypassing namespace isolation and enabling container escape, kernel module loading, and full host takeover.</vuln_desc>
-            <developer>Remove privileged: true. Grant only the specific Linux capabilities required using securityContext.capabilities.add. Use Pod Security Admission to enforce non-privileged constraints cluster-wide.</developer>
+            <rule_desc>The code or deployment configuration requests privileges or grants access beyond an explicitly resolved minimum. Determine the effective permissions and the operation’s requirements.</rule_desc>
+            <vuln_desc>A compromised actor may access additional data, modify protected resources, or extend compromise beyond the intended application boundary when excessive privileges remain available.</vuln_desc>
+            <developer>Run with the least privileges required, remove unnecessary grants, and scope each permission to its intended resource and operation. Verify effective inherited permissions and test denied access.</developer>
             <reviewer>Privileged containers are a critical finding. Verify any exceptions are justified by a specific operational need (e.g., node-level DaemonSets). This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>allowPrivilegeEscalation Not Disabled</name>
             <regex>allowPrivilegeEscalation\s*:\s*true</regex>
-            <rdl_ref>logic/kubernetes/core/allowprivilegeescalation_not_disabled.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kubernetes/core/allowprivilegeescalation_not_disabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -29,15 +29,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects containers with privilege escalation explicitly enabled.</rule_desc>
-            <vuln_desc>Allowing privilege escalation permits container processes to gain more privileges than the parent process, enabling setuid binary abuse and namespace escapes.</vuln_desc>
-            <developer>Set allowPrivilegeEscalation: false in all container securityContexts as part of a hardened baseline.</developer>
+            <rule_desc>The code or deployment configuration requests privileges or grants access beyond an explicitly resolved minimum. Determine the effective permissions and the operation’s requirements.</rule_desc>
+            <vuln_desc>A compromised actor may access additional data, modify protected resources, or extend compromise beyond the intended application boundary when excessive privileges remain available.</vuln_desc>
+            <developer>Run with the least privileges required, remove unnecessary grants, and scope each permission to its intended resource and operation. Verify effective inherited permissions and test denied access.</developer>
             <reviewer>Confirm allowPrivilegeEscalation is false or absent (default should be false in restricted PSA). This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Container Running as Root User</name>
             <regex>runAsUser\s*:\s*0\b|runAsNonRoot\s*:\s*false</regex>
-            <rdl_ref>logic/kubernetes/core/container_running_as_root_user.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kubernetes/core/container_running_as_root_user.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -46,15 +46,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects containers explicitly configured to run as root (UID 0) or with runAsNonRoot disabled.</rule_desc>
-            <vuln_desc>Running as root increases the impact of any container compromise and is counter to container security hardening guidelines (NSA/CISA, CIS Benchmarks).</vuln_desc>
-            <developer>Set runAsNonRoot: true and specify a non-zero runAsUser UID. Ensure the container image supports running as non-root.</developer>
+            <rule_desc>The code or deployment configuration requests privileges or grants access beyond an explicitly resolved minimum. Determine the effective permissions and the operation’s requirements.</rule_desc>
+            <vuln_desc>A compromised actor may access additional data, modify protected resources, or extend compromise beyond the intended application boundary when excessive privileges remain available.</vuln_desc>
+            <developer>Run with the least privileges required, remove unnecessary grants, and scope each permission to its intended resource and operation. Verify effective inherited permissions and test denied access.</developer>
             <reviewer>Verify all workloads run as non-root UIDs. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Read-Only Root Filesystem Not Enforced</name>
             <regex>readOnlyRootFilesystem\s*:\s*false</regex>
-            <rdl_ref>logic/kubernetes/core/read_only_root_filesystem_not_enforced.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kubernetes/core/read_only_root_filesystem_not_enforced.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -63,9 +63,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects containers with a writable root filesystem.</rule_desc>
-            <vuln_desc>A writable root filesystem allows attackers to modify application binaries, drop backdoors, or alter configurations post-exploitation, enabling persistence inside the container.</vuln_desc>
-            <developer>Set readOnlyRootFilesystem: true and mount writable volumes only for specific paths that require write access.</developer>
+            <rule_desc>The workload does not enforce a read-only root filesystem. Determine whether writing to image paths is necessary and which volumes remain writable.</rule_desc>
+            <vuln_desc>A compromised workload may modify image files or configuration and retain unwanted changes within its writable layer; this can aid persistence but does not by itself grant host access.</vuln_desc>
+            <developer>Use a read-only root filesystem where compatible and mount only required writable directories. Restrict volume permissions and keep executable and configuration paths immutable.</developer>
             <reviewer>Confirm containers use read-only root filesystems wherever possible. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -73,7 +73,7 @@
         <rule>
             <name>Host PID Namespace Shared</name>
             <regex>hostPID\s*:\s*true</regex>
-            <rdl_ref>logic/kubernetes/core/host_pid_namespace_shared.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kubernetes/core/host_pid_namespace_shared.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -82,15 +82,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects pods configured to share the host's PID namespace.</rule_desc>
-            <vuln_desc>Sharing the host PID namespace allows containers to see and interact with all host processes, enabling process injection, secret extraction from memory, and privilege escalation via setuid binaries.</vuln_desc>
-            <developer>Remove hostPID: true unless specifically required by a host monitoring DaemonSet. Limit to node-level observability tools.</developer>
+            <rule_desc>The workload shares the host process namespace.</rule_desc>
+            <vuln_desc>A compromised container may observe host process information and, when additional permissions permit it, signal or interfere with host processes, expanding the impact beyond normal container isolation.</vuln_desc>
+            <developer>Disable host PID sharing unless a documented operational requirement needs it. Minimize process capabilities and restrict the workload to an appropriately isolated node.</developer>
             <reviewer>Confirm hostPID usage is justified by a node-level operational requirement. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Host Network Namespace Shared</name>
             <regex>hostNetwork\s*:\s*true</regex>
-            <rdl_ref>logic/kubernetes/core/host_network_namespace_shared.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kubernetes/core/host_network_namespace_shared.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -99,15 +99,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects pods configured to share the host's network namespace.</rule_desc>
-            <vuln_desc>Host network access allows pods to bind to any host port, sniff host network traffic, and interact with node-level network services, enabling lateral movement and eavesdropping.</vuln_desc>
-            <developer>Use hostNetwork: true only for specific node-level networking components (e.g., CNI plugins). All other workloads should use pod-level networking.</developer>
+            <rule_desc>The code declares an entry point, model, destination, or configuration value that may cross a trust boundary. Identify callers, recipients, and the required data-access policy.</rule_desc>
+            <vuln_desc>A boundary that trusts unauthorized callers or exposes private output may permit data disclosure or state changes. A declaration, address, or architectural marker alone does not establish such a failure.</vuln_desc>
+            <developer>Trace the actual boundary, restrict accepted inputs and recipients, and enforce authentication and object-level authorization where required. Verify both authorized and denied use cases.</developer>
             <reviewer>Verify hostNetwork usage is limited to justified infrastructure components. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Host IPC Namespace Shared</name>
             <regex>hostIPC\s*:\s*true</regex>
-            <rdl_ref>logic/kubernetes/core/host_ipc_namespace_shared.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kubernetes/core/host_ipc_namespace_shared.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -116,9 +116,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects pods configured to share the host IPC namespace.</rule_desc>
-            <vuln_desc>Host IPC sharing allows a container to read and write to shared memory segments used by host processes, enabling information disclosure and inter-process attacks.</vuln_desc>
-            <developer>Remove hostIPC: true unless required by a specific high-performance workload that uses shared memory. Document and limit scope.</developer>
+            <rule_desc>The workload shares the host inter-process communication namespace.</rule_desc>
+            <vuln_desc>A process with the necessary permissions may access host IPC resources or shared-memory content, exposing data or interfering with host applications.</vuln_desc>
+            <developer>Disable host IPC sharing unless it is essential. Isolate required host-integrated workloads and restrict IPC resource permissions and process privileges.</developer>
             <reviewer>Confirm hostIPC is restricted to justified low-level infrastructure workloads. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -126,7 +126,7 @@
         <rule>
             <name>Wildcard RBAC Verb Permission</name>
             <regex>verbs\s*:\s*\[?\s*["']?\*["']?\s*\]?</regex>
-            <rdl_ref>logic/kubernetes/core/wildcard_rbac_verb_permission.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kubernetes/core/wildcard_rbac_verb_permission.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -135,15 +135,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects RBAC roles or cluster roles granting all verbs (*) on resources.</rule_desc>
-            <vuln_desc>Wildcard verb permissions grant full control over the matched resources, including destructive operations and escalation paths (e.g., update secrets, exec into pods).</vuln_desc>
-            <developer>Enumerate only the required verbs per resource (get, list, watch for read-only). Avoid wildcards in production RBAC policies.</developer>
+            <rule_desc>The code or deployment configuration requests privileges or grants access beyond an explicitly resolved minimum. Determine the effective permissions and the operation’s requirements.</rule_desc>
+            <vuln_desc>A compromised actor may access additional data, modify protected resources, or extend compromise beyond the intended application boundary when excessive privileges remain available.</vuln_desc>
+            <developer>Run with the least privileges required, remove unnecessary grants, and scope each permission to its intended resource and operation. Verify effective inherited permissions and test denied access.</developer>
             <reviewer>Wildcard verbs in RBAC are high-risk and should be individually justified. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Wildcard RBAC Resource</name>
             <regex>resources\s*:\s*\[?\s*["']?\*["']?\s*\]?</regex>
-            <rdl_ref>logic/kubernetes/core/wildcard_rbac_resource.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kubernetes/core/wildcard_rbac_resource.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -152,15 +152,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects RBAC policies granting permissions over all resource types.</rule_desc>
-            <vuln_desc>Wildcard resource permissions grant access to all Kubernetes resource types, including secrets, configmaps, and service accounts, enabling broad privilege escalation.</vuln_desc>
-            <developer>Specify the exact resource types required. Avoid wildcards, especially when combined with broad verbs or cluster-wide scope.</developer>
+            <rule_desc>The code or deployment configuration requests privileges or grants access beyond an explicitly resolved minimum. Determine the effective permissions and the operation’s requirements.</rule_desc>
+            <vuln_desc>A compromised actor may access additional data, modify protected resources, or extend compromise beyond the intended application boundary when excessive privileges remain available.</vuln_desc>
+            <developer>Run with the least privileges required, remove unnecessary grants, and scope each permission to its intended resource and operation. Verify effective inherited permissions and test denied access.</developer>
             <reviewer>Confirm wildcard resource permissions are not used in any non-admin roles. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>ClusterRoleBinding to cluster-admin</name>
             <regex>roleRef\s*:[^}]*name\s*:\s*cluster-admin</regex>
-            <rdl_ref>logic/kubernetes/core/clusterrolebinding_to_cluster_admin.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kubernetes/core/clusterrolebinding_to_cluster_admin.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -169,9 +169,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects ClusterRoleBindings that grant the cluster-admin role to subjects.</rule_desc>
-            <vuln_desc>cluster-admin bindings grant unrestricted access to all cluster operations, representing the highest privilege level and maximum blast radius in a Kubernetes cluster.</vuln_desc>
-            <developer>Replace cluster-admin bindings with scoped roles that grant only the minimum permissions required. Audit all existing cluster-admin bindings.</developer>
+            <rule_desc>The code or deployment configuration requests privileges or grants access beyond an explicitly resolved minimum. Determine the effective permissions and the operation’s requirements.</rule_desc>
+            <vuln_desc>A compromised actor may access additional data, modify protected resources, or extend compromise beyond the intended application boundary when excessive privileges remain available.</vuln_desc>
+            <developer>Run with the least privileges required, remove unnecessary grants, and scope each permission to its intended resource and operation. Verify effective inherited permissions and test denied access.</developer>
             <reviewer>cluster-admin bindings are critical findings. Each one requires explicit justification. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -179,7 +179,7 @@
         <rule>
             <name>Secret Exposed as Environment Variable</name>
             <regex>secretKeyRef\s*:|valueFrom\s*:[^}]*secretKeyRef</regex>
-            <rdl_ref>logic/kubernetes/core/secret_exposed_as_environment_variable.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kubernetes/core/secret_exposed_as_environment_variable.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -188,9 +188,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects Kubernetes Secrets mounted as environment variables rather than projected volumes.</rule_desc>
-            <vuln_desc>Secrets injected as environment variables are visible in process listings (/proc/*/environ), crash dumps, and logging output, and cannot be rotated without pod restart.</vuln_desc>
-            <developer>Mount secrets as projected volumes with fine-grained path control. Use external secret stores (Vault, AWS Secrets Manager) with the Secrets Store CSI Driver for rotation support.</developer>
+            <rule_desc>The code declares an entry point, model, destination, or configuration value that may cross a trust boundary. Identify callers, recipients, and the required data-access policy.</rule_desc>
+            <vuln_desc>A boundary that trusts unauthorized callers or exposes private output may permit data disclosure or state changes. A declaration, address, or architectural marker alone does not establish such a failure.</vuln_desc>
+            <developer>Trace the actual boundary, restrict accepted inputs and recipients, and enforce authentication and object-level authorization where required. Verify both authorized and denied use cases.</developer>
             <reviewer>Verify secrets are mounted as volumes rather than environment variables where possible. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -198,7 +198,7 @@
         <rule>
             <name>No Resource Limits Defined</name>
             <regex>containers\s*:</regex>
-            <rdl_ref>logic/kubernetes/core/no_resource_limits_defined.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kubernetes/core/no_resource_limits_defined.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -207,15 +207,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects container specifications missing resource limits and requests.</rule_desc>
-            <vuln_desc>Containers without resource limits can consume unbounded CPU and memory, enabling denial-of-service conditions that affect co-located workloads and cluster stability.</vuln_desc>
-            <developer>Define both resources.limits and resources.requests for CPU and memory on every container. Use LimitRange objects to enforce defaults namespace-wide.</developer>
+            <rule_desc>The code configures failure handling or resource consumption. Determine whether failure paths preserve security invariants and whether work is bounded.</rule_desc>
+            <vuln_desc>Unhandled failures or unbounded work may disrupt availability or leave security-relevant state inconsistent. The presence or absence of a named handler alone does not establish a reachable security defect.</vuln_desc>
+            <developer>Bound resource use, handle failures at the correct ownership boundary, and fail safely before updating trusted state. Test exceptional paths, cancellation, timeouts, and recovery behavior.</developer>
             <reviewer>Confirm all containers have defined resource limits. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Default Service Account Token Auto-Mounted</name>
             <regex>automountServiceAccountToken\s*:\s*true</regex>
-            <rdl_ref>logic/kubernetes/core/default_service_account_token_auto_mounted.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kubernetes/core/default_service_account_token_auto_mounted.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -224,9 +224,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects pods or service accounts with automatic service account token mounting enabled.</rule_desc>
-            <vuln_desc>Auto-mounted service account tokens are available to any process inside the pod. If a container is compromised, the attacker can use the token to access the Kubernetes API with the service account's permissions.</vuln_desc>
-            <developer>Set automountServiceAccountToken: false on pods and service accounts that do not need API access. Mount tokens explicitly only in pods that require it.</developer>
+            <rule_desc>The workload may receive an automatically mounted Kubernetes service-account token.</rule_desc>
+            <vuln_desc>A compromised process may use the token to call the cluster API with the service account’s granted permissions, extending access beyond the application’s intended resources.</vuln_desc>
+            <developer>Disable token automount when cluster API access is unnecessary. Otherwise use a dedicated, narrowly privileged service account and short-lived projected tokens.</developer>
             <reviewer>Confirm automountServiceAccountToken is false for all workloads that do not explicitly require Kubernetes API access. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

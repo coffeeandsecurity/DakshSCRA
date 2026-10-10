@@ -1,0 +1,8 @@
+VERSION 2
+RULE reactnative.mixed-content VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bmixedContentMode\\s*=\\s*(?:[\"\\x27]always[\"\\x27]|\\{\\s*[\"\\x27]always[\"\\x27]\\s*\\})" ""
+REPORT "React Native WebView Allows Mixed Content"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

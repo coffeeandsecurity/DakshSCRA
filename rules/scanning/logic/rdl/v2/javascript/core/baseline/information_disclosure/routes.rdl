@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.javascript.core.routes VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)route:\\s+'.*(\\s?)" "im"
+WHEN (TEXT_MATCHES "app\\.(get|post|put|delete|patch)\\s*\\(\\s*[\"']/|router\\.(get|post|put|delete|patch)\\s*\\(\\s*[\"']/[^\"']*:\\w" "im" AND TEXT_MISSING "authenticate|authorize|auth|middleware|passport|jwt|session" "im")
+REPORT "Routes"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

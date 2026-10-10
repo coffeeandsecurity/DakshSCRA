@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.php.core.command_injection_shell_exec_exec_passthru_system_popen_backtick VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:shell_exec|exec|passthru|system|popen)\\s*\\(|`[^`\\r\\n]*\\$[^`\\r\\n]*`" "im"
+REPORT "Command Injection: shell_exec, exec, passthru, system, popen, backtick"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

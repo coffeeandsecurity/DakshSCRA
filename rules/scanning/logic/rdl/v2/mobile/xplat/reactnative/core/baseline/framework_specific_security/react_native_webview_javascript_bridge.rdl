@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.xplat.reactnative.core.react_native_webview_javascript_bridge VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "onMessage\\s*=|injectedJavaScript\\s*=|javaScriptEnabled\\s*=\\s*\\{?true\\}?" "im"
+REPORT "React Native WebView JavaScript Bridge"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

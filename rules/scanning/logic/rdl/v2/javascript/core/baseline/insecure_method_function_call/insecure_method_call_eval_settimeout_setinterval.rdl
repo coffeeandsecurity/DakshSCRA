@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.javascript.core.insecure_method_call_eval_settimeout_setinterval VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(eval|setTimeout|setInterval)\\(.+\\)" "im"
+REPORT "Insecure Method Call: eval|setTimeout|setInterval"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

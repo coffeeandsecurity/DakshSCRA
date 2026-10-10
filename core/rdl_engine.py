@@ -1,6 +1,7 @@
 import fnmatch
 import re
 from pathlib import Path
+from utils.scan_scope import glob_source, allows_file, allows_check
 
 
 def _strip_comment(line):
@@ -178,14 +179,15 @@ def _evaluate_expression(expr, text):
 
 def load_rdl(path):
     rdl_path = Path(path)
-    return rdl_path.read_text(encoding="utf-8")
+    from utils.source_cache import read_source_text
+    return read_source_text(rdl_path, encoding="utf-8")
 
 
 def _project_glob(project_root, pattern):
     root = Path(project_root or ".").resolve()
     matches = []
     try:
-        for item in root.rglob("*"):
+        for item in glob_source(root, "*"):
             try:
                 rel = item.relative_to(root).as_posix()
             except ValueError:
@@ -198,6 +200,19 @@ def _project_glob(project_root, pattern):
 
 
 def evaluate_rdl_with_reason(rdl_script, *, file_text="", file_path="", project_root=""):
+    from utils.source_cache import current_snapshot
+    import hashlib
+    snapshot = current_snapshot()
+    # Project observations depend on directory state, not only inspected content.
+    if snapshot is None or 'OBSERVE' in (rdl_script or '').upper():
+        return _evaluate_rdl_with_reason(rdl_script, file_text=file_text, file_path=file_path, project_root=project_root)
+    # Without project observations, the project-root spelling cannot affect the gate.
+    parts = ('v1', rdl_script, hashlib.sha256((file_text or '').encode('utf-8', errors='surrogatepass')).hexdigest(), str(file_path))
+    return snapshot.memo(parts, lambda: _evaluate_rdl_with_reason(
+        rdl_script, file_text=file_text, file_path=file_path, project_root=project_root))
+
+
+def _evaluate_rdl_with_reason(rdl_script, *, file_text="", file_path="", project_root=""):
     commands = []
     for raw_line in (rdl_script or "").splitlines():
         line = _strip_comment(raw_line)

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.bash.core.unquoted_variable_in_command_context VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?:exec|system|run|sh\\s+-c)\\s+[^\"'][^;|\\n]*\\$\\w" "im"
+WHEN (TEXT_MISSING "\"\\\"$|'$|shellcheck\\s+disable|# shellcheck" "im" AND TEXT_MISSING "test\\s+-z|test\\s+-n|\\[\\s*-z|\\[\\s*-n" "im")
+REPORT "Unquoted Variable in Command Context"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

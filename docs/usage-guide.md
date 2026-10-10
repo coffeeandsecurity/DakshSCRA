@@ -3,6 +3,7 @@
 ## Contents
 
 1. [What is DakshSCRA?](#what-is-dakshscra)
+   - [Distinctive Features](#distinctive-features)
 2. [Installation](#installation)
 3. [CLI Usage](#cli-usage)
    - [Syntax](#syntax)
@@ -21,12 +22,15 @@
    - [Reports & Artifacts](#reports--artifacts)
 5. [Platforms & Rules](#platforms--rules)
 6. [RDL - Rule Description Language](#rdl---rule-description-language)
+   - [Current Status and Architecture](#current-status-and-architecture)
    - [Rule Evaluation Sequence](#rule-evaluation-sequence)
    - [Rule XML Structure](#rule-xml-structure)
    - [External RDL File Structure](#external-rdl-file-structure)
    - [RDL Commands](#rdl-commands)
    - [Examples](#rdl-examples)
    - [How RDL Reduces False Positives](#how-rdl-reduces-false-positives)
+   - [Validating and Linting Rules](#validating-and-linting-rules)
+   - [RDL v2 Direction](#rdl-v2-direction)
    - [Authoring Guidance](#authoring-guidance)
 7. [scan_config - Rule-Driven Scanning & Reporting](#scan_config--rule-driven-scanning--reporting)
    - [Full Schema](#full-schema)
@@ -48,18 +52,54 @@ It is a tool for reviewers, not a replacement for one. The goal is to cut down o
 
 ### Distinctive Features
 
-DakshSCRA introduced several capabilities that were first-of-their-kind in open source code review tooling at the time of release (Black Hat USA 2022/2023).
+DakshSCRA brings together distinctive capabilities for manual source code review, from file-path areas of interest and effort estimation to software reconnaissance, contextual rules and cross-file analysis.
 
-| Feature | Why it matters |
-|---|---|
-| **File path areas of interest** *(World's First)* | Scans file and directory names themselves - not just code - to flag suspicious paths like backup files, debug endpoints, config dumps, and credential files that reviewers often miss |
-| **Scientific effort estimation** *(World's First)* | Produces a quantified, defensible estimate of how long a manual review will take based on codebase size, file count, and finding volume - not a guess |
-| **Areas of interest, not bug flags** | Surfaces patterns worth investigating rather than tagging everything as a vulnerability. Reduces false-positive noise and keeps the reviewer in control |
-| **Software reconnaissance** | Detects languages, frameworks, and infrastructure from file contents and structure before scanning, so the right rules get applied automatically |
-| **Cross-file taint analysis** | Traces user-controlled data from source to sink across file boundaries, not just within a single file |
-| **RDL conditional rules** | Rules can include conditional logic (`FLAG`, `IF`, `MISSING`, `PRESENT`) beyond simple regex, allowing context-aware pattern matching |
+| Feature | Tag | Why it matters |
+|---|---|---|
+| **File Path Areas of Interest** | World's First* | Scans file and directory names themselves, alongside code, to flag suspicious paths such as backup files, debug endpoints, configuration dumps and credential files that reviewers often miss. |
+| **Scientific Effort Estimation** | World's First* | Produces a quantified estimate of manual-review effort based on codebase size and project signals. Configurable assumptions make engagement planning explicit and repeatable. |
+| **Areas of Interest, Not Bug Flags** | Reviewer in Control | Surfaces patterns worth investigating rather than tagging every match as a vulnerability. Contextual rules and suppression evidence reduce triage noise and keep the reviewer in control. |
+| **Software Reconnaissance** | Integrated Software Recon | Detects languages, frameworks and infrastructure from file contents and project structure before scanning. Connects the technology inventory to automatic rule selection, semantic analysis and review planning. |
+| **RDL Conditional Rules** | Advanced Conditional Rules | Goes beyond simple regex with PRESENT, MISSING, boolean expressions and file/path conditions. RDL v1 records decisions and suppression reasons; RDL v2 adds typed semantic services and bounded cross-file evidence. |
+| **Advanced Semantic and Cross-File Analysis** | Built from the Ground Up | Traces user-controlled data from source to sink across supported file boundaries using purpose-built analysis. Advanced Analysis shipped alongside the original RDL in March 2026; RDL v2 extends semantic rule evaluation across files. |
+| **Platform-Agnostic Auto Scanning** | Automatic Multi-Platform | Use `-r auto` to scan mixed-technology projects without choosing a single language beforehand. Recon selects supported platform and framework rules automatically. Introduced in v0.23-beta, November 2024. |
+| **Application-Specific Security Logic** | Custom RDL Packs | Encode application trust boundaries, authorization decisions and business invariants in optional custom RDL packs. Project-specific logic runs alongside the generic scanning rules. |
+| **Interactive Text and Graph Evidence** | Follow the Evidence | Follow recorded source-to-sink paths in linked Text and Graph views. Source excerpts, file lanes and handoff details make cross-file evidence easier to inspect. |
+| **Review Lifecycle and Portable Reports** | Review, Resume and Export | Keep scan history, review suppressions and resume interrupted scans. Export HTML, PDF, editable Word and JSON through shared CLI and Web UI reports, with offline evidence navigation where available. |
 
-DakshSCRA was first introduced at **Black Hat USA 2022** and publicly debuted at **Black Hat USA 2023** in Las Vegas.
+* World's First badges reflect the project's original claims; worldwide priority has not been independently verified.
+
+### Feature History and Evidence
+
+| Feature / milestone | Date | Release | Evidence / scope |
+|---|---|---|---|
+| Training introduction | 2022 (Black Hat USA) | Not recorded | [Contemporary project README; introduction milestone.](https://github.com/coffeeandsecurity/DakshSCRA/blob/fe878be/README.md) |
+| Initial beta and file-path rules | 22 October 2022 | v0.1-beta | [Initial release; retained source includes the dedicated file-path rule inventory.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.1-beta) |
+| PDF and HTML reports | 23 May 2023 | v0.2-beta | [Release notes list PDF/HTML report generation and scanning-rule updates.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.2-beta) |
+| Software reconnaissance (published introduction) | 9 July 2023 | v0.3-beta | [Release notes introduce recon; earlier repository code is separate implementation evidence.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.3-beta) |
+| Manual-review effort estimation (implementation) | 29 July 2023 | Implementation commit | [Dedicated estimation module added; not the date of the later fix release.](https://github.com/coffeeandsecurity/DakshSCRA/commit/65d5c6a) |
+| Effort-estimation fix | 5 August 2023 | v0.7-beta | [Release notes state fixed effort estimation; this is a correction milestone, not its first introduction.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.7-beta) |
+| Early Android manifest and Kotlin checks | 27 April 2024 | v0.16-beta | [Introduced Android manifest misconfiguration checks and Kotlin-specific checks; module described as early development, with broader coverage still in progress.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.16-beta) |
+| Multi-platform scan flags (initial design) | 4 November 2024 | v0.20-beta | [Added comma-separated platform selection with -r; initial implementation did not yet isolate each platform rule set to its own file types.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.20-beta) |
+| Platform-agnostic auto scanning | 10 November 2024 (release listing) | v0.23-beta | [Automatic platform/rule selection; implementation commit dated 11 November.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.23-beta) |
+| PDF rendering upgrade | 21 July 2025 | v0.29-beta | [Migrated PDF export from WeasyPrint to Playwright and Chromium; added HTML-size-based timeouts for large reports and cross-platform setup instructions.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.29-beta) |
+| Initial iOS scanning support | 2 March 2026 | v0.31-beta | [Added iOS rules and Swift/Objective-C/configuration file selection; later releases expanded coverage.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.31-beta) |
+| Original RDL and inter-file Advanced Analysis | 2 March 2026 | v0.31-beta | [Conditional rule logic and independent cross-file analysis shipped together. Release display date is 2 March; publication timestamp is 1 March 2026 at 18:39 UTC.](https://github.com/coffeeandsecurity/DakshSCRA/commit/d90ba51) |
+| Web UI and Docker rollout | 16 March 2026 | v0.33-beta | [Introduced browser-launched scans, live progress, findings/artifact browsing, OS-aware directory selection and built-in Help; added Docker Compose Web UI/CLI services and portable environment setup.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.33-beta) |
+| External RDL architecture and reporting | 22 March 2026 | v0.37-beta | [External rule logic and revised advanced reports.](https://github.com/coffeeandsecurity/DakshSCRA/commit/5b17d89) |
+| RDL v2 semantic services and integrated workflow | Current development; no published release date | Unreleased development | Typed semantic rules, bounded cross-file evidence and custom packs. |
+
+### Comparative evidence
+
+- **Recon predecessor:** [Microsoft Application Inspector](https://www.microsoft.com/en-us/security/blog/2020/01/16/introducing-microsoft-application-inspector/) — 16 January 2020. Documents an earlier source-characteristics tool; does not establish a worldwide first/second ranking.
+- **Automatic multi-language scanning:** [Semgrep auto example](https://semgrep.dev/blog/2022/autofixing-code-with-semgrep/) — 3 November 2022. Earlier automatic multi-language scanning prevents a broad first-in-open-source claim.
+- **Semantic and data-flow analysis:** [Joern data-flow documentation](https://docs.joern.io/cpgql/data-flow-steps/) — No release date established here. Documents prior open-source capabilities; no comparative benchmark establishes overall superiority.
+
+Dates identify repository or release milestones; they do not independently establish worldwide priority. “Not verified” means a release number has not been established from the reviewed evidence.
+
+Release milestones and comparative evidence are listed above.
+
+DakshSCRA was introduced during **Black Hat USA 2022** training and publicly debuted at **Black Hat USA 2023**. Those dates describe the project's introduction, not every current feature.
 
 ### What it does
 
@@ -69,7 +109,7 @@ DakshSCRA was first introduced at **Black Hat USA 2022** and publicly debuted at
 | **Reconnaissance** | Detects languages, frameworks, and technology stack from file contents and structure |
 | **Taint analysis** | Traces data flows from user-controlled sources to security-sensitive sinks across files |
 | **Effort estimation** | Estimates manual review time based on codebase size, complexity, and finding volume |
-| **Report generation** | Produces HTML reports (single-file and per-platform multi-file) and optionally PDF |
+| **Report generation** | Produces indexed HTML bundles, PDF, editable Word, and JSON using shared CLI/web renderers |
 
 ---
 
@@ -96,13 +136,15 @@ playwright install chromium        # Required for PDF generation only
 Normal (foreground) mode:
 
 ```bash
-docker compose up --build
+python3 tools/start_webui.py
+# Windows: py tools/start_webui.py
 ```
 
 Detached (background) mode:
 
 ```bash
-docker compose up --build -d
+python3 tools/start_webui.py --detach
+# Windows: py tools/start_webui.py --detach
 ```
 
 Open `http://localhost:8080`
@@ -180,7 +222,7 @@ python dakshscra.py -r auto --recon -t ./app
 
 | Option | Default | Description |
 |---|---|---|
-| `-rpt FORMATS` | `html` | Report formats to generate. Values: `html`, `pdf`, or `html,pdf`. PDF requires Playwright/Chromium. |
+| `-rpt FORMATS` | `html` | Report formats to generate. Values: `html`, `pdf`, `docx`, `json`, or a comma-separated combination. PDF requires Playwright/Chromium. |
 | `--json-input-dir PATH` | `./reports/data` | JSON input directory for `--pdf-from-json` mode. |
 | `--pdf-output PATH` | `./reports/scan/pdf/report.pdf` | Custom output path for the single combined PDF. |
 | `--pdf-multi-dir PATH` | `./reports/scan/pdf/multi-file` | Custom output directory for the per-platform PDF set. |
@@ -268,16 +310,21 @@ After a scan, output is written to the following directories (relative to the pr
 RDL rule-evaluation decisions (matches, suppressions, fail reasons) are additionally logged as JSONL under `runtime/diagnostics/` for post-scan debugging. This is controlled by the `DAKSH_DECISION_TRACE` environment variable (default on; set to `0` to disable).
 
 ```
-reports/
+reports/<project>/<scan>/
   scan/
     html/
-      report.html            <- Single-file HTML report (all platforms)
+      report.html            <- Summary and report index (open first)
+      report-files/          <- Linked paginated sections and saved-results.json
       multi-file/
         index.html           <- Multi-file report index
         <platform>/          <- Per-platform HTML pages
     pdf/
-      report.pdf             <- Single combined PDF (if pdf requested)
+      report.pdf             <- Consolidated PDF (if pdf requested)
       multi-file/            <- Per-platform PDFs (if pdf requested)
+    word/
+      report.docx            <- Editable Word report (if docx requested)
+    json/
+      report.json            <- Shared report document (if json requested)
     recon/
       reconnaissance.html    <- Recon report (if --recon was used)
     estimate/
@@ -307,13 +354,15 @@ runtime/
 Normal (foreground) mode:
 
 ```bash
-docker compose up --build
+python3 tools/start_webui.py
+# Windows: py tools/start_webui.py
 ```
 
 Detached (background) mode:
 
 ```bash
-docker compose up --build -d
+python3 tools/start_webui.py --detach
+# Windows: py tools/start_webui.py --detach
 ```
 
 Open `http://localhost:8080` in a browser.
@@ -321,7 +370,7 @@ Open `http://localhost:8080` in a browser.
 To change the port:
 
 ```bash
-DAKSH_PORT=9090 docker compose up
+DAKSH_PORT=9090 python3 tools/start_webui.py
 ```
 
 ### Logging In
@@ -350,76 +399,62 @@ The Dashboard is the landing page. It shows:
 
 ### Projects
 
-The Projects section organises scans into named groups. A project is created automatically the first time you run a scan with a given project name.
+Projects uses compact rows with project name, target, status counts and latest scan.
+Search by project name, ID or target; filter by active, completed, failed, stopped
+or removed-data scans; sort by latest scan, name or scan count.
 
-| Column | Description |
-|---|---|
-| Project Name | The name you assigned when creating the scan |
-| Rules | Platform rules used |
-| Target | The scanned source directory |
-| Total Scans | Number of scans run under this project |
-| Running | Scans currently in progress |
-| Last Scanned | Timestamp of the most recent scan |
-
-Click a project row to jump to its scan history in the Scans view.
-
----
+Open a project to see its complete paginated scan history. Search and status
+filters include retained records whose scan data was removed. **View results**
+opens a completed scan at Summary; active, queued or stopping scans open live
+telemetry. **Project scans** returns from scan details to that project's history.
 
 ### Scans & Findings
 
-This is the primary working area. It has three panels:
+#### New Scan
 
-#### Scan Form (left)
+New Scan is a separate page with five configuration tabs:
 
-Configure and launch a new scan:
-
-| Field | Description |
+| Tab | Controls |
 |---|---|
-| **Project Name** | Groups this scan with previous runs. Leave blank for an unnamed scan. |
-| **Target Directory** | Path to the source code. Use the browse button to navigate the filesystem. |
-| **Platform Rules** | Which rule set to apply. `auto` detects the platform automatically. |
-| **File Types** | Override the default extensions. `auto` uses platform defaults. |
-| **Report Format** | `html` (default) or `html,pdf`. PDF requires Playwright/Chromium. |
-| **Verbosity** | Output detail level (1-3). |
-| **Recon** | Enable technology stack detection. |
-| **Effort Estimate** | Generate a review effort estimation report. |
-| **LOC Count** | Include effective lines of code in the scan summary. |
-| **Skip Analysis** | Skip the taint analysis stage (faster for large codebases). |
+| **Setup** | Project, target browser, auto/manual platform rules, file types and review mode |
+| **Check Classes** | Enabled bug classes and optional per-scan exclusions |
+| **Exclusions** | File/directory exclusions and scan scope |
+| **Analysis & Output** | Recon, LOC, effort estimate, optional inter-file analyzer, verbosity and output settings |
+| **Custom RDL** | Optional application-specific rule packs |
 
-Click **Run Scan** to start. The scan runs as a background process; you can navigate away and return.
+Reconnaissance and lines of code are selected by default; either can be deselected.
+The optional inter-file analyzer follows Settings and is independent of RDL engine
+selection. Comprehensive Review uses both engines; Finding Analysis Only uses v2;
+Areas of Interest Review Only uses v1. See Scan configuration
+for all controls, defaults and CLI equivalents.
 
-#### Scan Table (top right)
+#### Active Scans
 
-Lists all scans for the selected project, most recent first. Each row shows:
+Jobs run one at a time in queue order. Active Scans shows queued and running jobs;
+queued time is separate from execution duration. Open a job for persistent Live
+Scan Telemetry and Log. Stop a running job or cancel a queued job using its controls.
 
-- Status badge (running / success / failed / stopped)
-- Scan UUID and timestamp
-- Duration
-- Platform rules used
+#### Completed scan details
 
-Click a row to load its details below.
+Completed Scans and project history open saved results at **Summary**, with recorded
+scan configuration, review metrics and links into the evidence views.
 
-#### Scan Detail (bottom right)
+- **Areas of Interest:** contextual v1 source and file-path review leads.
+- **Vulnerability Analysis:** v2 Summary, Confirmed Findings, Suppressed False
+  Positives, Needs Manual Review and coverage limitations. A confirmed rule match
+  establishes the named security property, not exploitability.
+- **Advanced Analysis:** recorded v2 source-to-sink paths, input entry points and
+  symbol cross references, with Text and Graph views where evidence is available.
+- **Insights:** file inventory, recon and review effort.
+- **Suppressed Findings:** recorded rule, version, rationale and trace; review an
+  entry or promote it back to findings with notes.
+- **Reports:** generate Full, Findings, Analysis or Suppressed scope as HTML, PDF,
+  Word or JSON from saved results. Extract the HTML ZIP and open index.html.
+- **Log:** retained scan output.
 
-Shows the full detail of the selected scan across four tabs:
-
-**Log**: Live streaming output from the scan process. Shows each stage as it runs.
-
-**Findings**: Organised into sub-tabs:
-- *Scanner*: Rule-based source code findings. Each finding shows the rule name, file path, matched line, and surrounding context.
-- *Paths*: File path findings (suspicious filenames, backup files, config files).
-
-**Taint Analysis**: Dataflow findings showing source-to-sink traces. Each finding includes:
-- Confidence level (high / medium / low)
-- Source location (where user-controlled data enters)
-- Sink location (where it reaches a security-sensitive call)
-- Full trace path with intermediate steps
-- Cross-references to related flows
-
-**Insights**: Three sub-sections:
-- *File Paths*: Full inventory of discovered source files
-- *Recon*: Technology stack detection results (if `--recon` was enabled)
-- *Effort Estimate*: Link to the estimation report (if `--estimate` was enabled)
+Historical scans retain their original evidence. Unavailable v2 analysis is shown
+explicitly. Removing completed scan data deletes its evidence/reports while retaining
+a history record; clearing that record is a separate action. Active jobs are protected.
 
 ---
 
@@ -466,16 +501,11 @@ Use `--recon --rs` to filter to high/medium confidence only when the output is t
 
 ### Reports & Artifacts
 
-After a scan completes, generated files are accessible from the Scan Detail view. The **Artifacts** section (within the Insights tab or directly from the scan row) provides links to:
+Open the completed scan's **Reports** tab to generate HTML, PDF, Word (`.docx`), or JSON from saved results. Choose Full Scan, Areas of Interest, Advanced Analysis, or Suppressed Findings, then download the completed background job. Web scans retain data without automatically creating report files.
 
-- HTML report (single file)
-- HTML multi-file report set
-- Taint analysis cross-reference report
-- Effort estimation report
-- JSON data files
-- Scan log
+Extract an HTML ZIP and open `index.html` first. Its lightweight summary links to indexed, paginated detail pages; keep the files together for offline navigation. PDF provides linked contents and bookmarks, Word provides editable sections and linked contents, and JSON retains the original saved fields. Saved data and the scan log remain available alongside the report generator. See [On-demand reports](#on-demand-reports) for format details.
 
-All artifacts are served directly from the API. Click **Open Report** to view in a new browser tab, or **Download** to save locally.
+Software Reconnaissance starts with a technology overview and groups evidence by category and technology. Each detection shows recorded file/directory counts, detection confidence, a directory table and saved sample files. Paths inside the target are shown relative to it; original paths remain in JSON. Totals include overlapping technology matches and are not unique file counts. Generate a new Full scan report to apply the current layout to a saved scan; existing downloads remain unchanged.
 
 ---
 
@@ -483,47 +513,52 @@ All artifacts are served directly from the API. Click **Open Report** to view in
 
 The Web UI includes a directory browser that lets you navigate the server filesystem to pick a scan target. Only directories under the configured browse roots are accessible. The API enforces this boundary at the server level.
 
-**Default roots (auto-detected at startup):**
+For Docker, run the host-aware launcher from the repository folder:
 
-| Platform | Default browse roots |
+```bash
+python3 tools/start_webui.py --detach
+# Windows PowerShell / Command Prompt:
+py tools/start_webui.py --detach
+```
+
+It detects the machine running Docker, mounts its filesystem root, available
+Windows drives and common directories read-only, and supplies labeled shortcuts.
+The browser's operating system does not determine mounts. Docker Desktop may
+require file-sharing permission; denied or missing mounts produce an explicit
+error instead of silently creating empty directories. WSL discovery excludes
+unmounted drive-letter placeholders.
+
+| Host location | Container path |
 |---|---|
-| Linux / Docker | `/`, `/home`, `/srv`, `/opt`, `/mnt`, `/tmp`, `/scan-targets`, `/host` |
-| Windows / WSL | `/`, `/mnt`, `/mnt/c`, `/mnt/d` (any single-letter drives under `/mnt`), `/host/c`, `/host/d` |
-| macOS | `/`, `/Users`, `/Volumes`, `/tmp` |
+| Filesystem root (system drive on Windows) | `/host/root` |
+| Additional Windows / WSL drives | `/host/drives/<letter>` |
+| Current user's home | `/host/user` |
+| Common folders | `/host/locations/<name>` |
+| Repository or `DAKSH_SCAN_ROOT` | `/scan-targets` |
 
-**Customising the browser roots:**
+Click a folder once to open it. **Up** navigates to its allowed parent. You can
+also enter a path and press Enter, filter the folder list, or use Quick Access.
+**Select This Folder** selects the successfully loaded directory. An empty
+folder remains selectable; an unreadable folder displays an error.
 
-Set `DAKSH_BROWSE_ROOTS` as a comma-separated list of allowed absolute paths:
+Optional `.env` overrides include `DAKSH_SCAN_ROOT`, `DAKSH_HOST_MOUNT`,
+`DAKSH_HOST_SOURCE`, and `DAKSH_HOST_<drive letter>`. The helper respects these.
+Plain `docker compose up --build -d api web` uses only the baseline scan/root
+mounts; use the helper for automatic host detection. Restart with the helper
+after attaching a drive. Existing runtime volumes and accounts are preserved.
+
+`DAKSH_BROWSE_ROOTS` optionally restricts browsing and scan creation to a
+comma-separated list of **container** paths, for example:
 
 ```bash
-# In .env (Docker Compose picks this up automatically):
-DAKSH_BROWSE_ROOTS=/scan-targets,/host,/mnt
-
-# Or inline before starting the API directly:
-DAKSH_BROWSE_ROOTS=/home/user/projects uvicorn api.main:app
+DAKSH_BROWSE_ROOTS=/scan-targets,/host/drives/c
 ```
 
-When using Docker Compose, the volume mounts determine what is actually accessible. Configure them in `.env` before starting the stack:
-
-```bash
-# Windows / WSL
-DAKSH_SCAN_ROOT=/mnt/c
-DAKSH_HOST_MOUNT=/mnt
-DAKSH_HOST_C=/mnt/c
-DAKSH_HOST_D=/mnt/d
-
-# Linux
-DAKSH_SCAN_ROOT=/home
-DAKSH_HOST_MOUNT=/
-
-# macOS
-DAKSH_SCAN_ROOT=/Users
-DAKSH_HOST_MOUNT=/
-```
-
-See `.env.example` in the repository root for the full list of variables and per-platform examples.
-
-> **Note:** Only include paths you actually intend to scan. Setting `DAKSH_BROWSE_ROOTS` tightly limits accidental exposure when the Web UI is reachable on a shared network.
+Leave this unset to use discovered roots. An allow-list does not create mounts.
+An invalid explicit list does not fall back to broader filesystem access.
+Native API installations continue to detect the server OS's filesystem roots.
+Automatic Docker mount discovery requires a local engine; for a remote engine,
+run the helper on that host. See `.env.example` for path overrides.
 
 ---
 
@@ -538,6 +573,147 @@ In the current engine, RDL lives in external `.rdl` files and is attached to XML
 > **Current model:** XML supplies the candidate match pattern and reporting metadata. The external
 > `.rdl` file decides whether that candidate stays visible, gets suppressed, or records extra trace
 > information.
+
+### Current status and architecture
+
+RDL v1 evaluates contextual file/path rules; RDL v2 executes typed rules through the CLI
+and Web UI. Both engines run by default. Semantic analysis remains experimental and
+depends on rules, adapter capabilities and analysis budgets:
+
+- External v1 rules use `VERSION 1` and execute through `core/rdl_engine.py`;
+  v2 definitions have their own typed compiler and executor.
+- `core/rdl/` provides a side-effect-free typed compiler and linter for v1 source. It identifies
+  malformed regexes, unknown instructions, missing/unsupported versions, empty operands, and
+  implicit whole-file scope before a scan is run.
+- The complete shipped v1 rule collection is compiled as a compatibility corpus by
+  `tests/rdl/test_legacy_corpus.py`.
+- V2 parsing, typed AST, semantic validation and capability-aware execution plans
+  support scan-time native text/path rules and configured semantic checks.
+  Bounded cross-file analysis preserves parameter/return evidence and explicit limits.
+  See the feature history table above for the original March 2026 RDL and
+  independent inter-file analyzer milestone, followed by current v2 development.
+
+The long-term execution model separates the security property from the analysis needed to prove it:
+
+```text
+RDL source
+    |
+    v
+parser and semantic validation
+    |
+    v
+typed execution plan
+    |
+    +--> text/path index
+    +--> language-neutral semantic IR
+    +--> data-flow, control-flow, call-graph and state services
+    |
+    v
+MATCH / NO_MATCH / RULE_ERROR / INDETERMINATE
+    |
+    v
+machine-readable evidence graph and reports
+```
+
+Simple text rules use the text/path layer. Advanced rules request AST,
+semantic, flow, path, or state capabilities only when needed. This keeps simple rules readable and
+inexpensive while allowing complex analysis to be expressed without embedding language-specific
+implementation logic in every rule.
+
+V2 rule definitions use the versioned [`rules/scanning/logic/rdl/v2/`](../rules/scanning/logic/rdl/v2/README.md)
+tree. Shared properties live in `common/core/<bug-class>/`, language-specific
+rules in `<platform>/core/<bug-class>/`, and framework-specific rules in
+`<platform>/framework/<framework>/<bug-class>/`. The
+[scope index](../rules/scanning/logic/rdl/v2/INDEX.md) traces rule IDs and current v1 mappings;
+README-only scopes are extension points, not implemented coverage.
+
+Choose **RDL v1**, **RDL v2 (Experimental)**, or **Both** in the Web UI's New
+Scan form. **Both is the default** in the Web UI and CLI. Docker startup is simply
+`python3 tools/start_webui.py --detach`; no RDL environment variable is required.
+
+- **V1:** the established source/path rule engine and existing language/framework rules.
+- **V2 (Experimental):** native text/path baseline rules, additional source/configuration
+  checks and configured semantic definitions. Consult the versioned coverage audit
+  for current registrations; development samples do not imply enabled detectors.
+  Android/iOS security review documents mobile coverage,
+  source/configuration precision checks, suspicious behavior review and runtime limits.
+  The coverage audit separates verified legacy predicate
+  parity from incomplete semantic coverage and lists mobile review areas.
+- **Both:** run both engines with separate result tabs. V2 does not change v1 decisions.
+
+V2 is intended to replace v1 only after repeated tests and iterations establish
+coverage of all existing bug classes across every supported language and framework.
+V1 remains supported until then. New v2 reports preserve original source evidence,
+including credential values, in the UI and exports. Existing saved evidence is not
+reconstructed; rescan to replace previously masked snippets. Mobile v2 scans also
+apply relevant language and Android/iOS native-bridge checks.
+The optional inter-file analyzer is independent
+of this selection and retains its own results.
+
+```bash
+python3 dakshscra.py -r auto -t /path/to/source --rdl-engine both
+python3 dakshscra.py -r php -t /path/to/source --rdl-engine v1
+python3 dakshscra.py -r php -t /path/to/source --rdl-engine v2
+```
+
+For app-specific trust boundaries or business logic, select an optional pack with
+`--custom-rdl /path/to/pack.json`, or enter its mounted path in the New Scan form's
+**Custom RDL** tab’s **App-specific RDL packs** field. Packs are saved per scan and require v2 or both
+engines. See Custom RDL packs for the manifest format,
+file scopes, limits, semantic checks and the SchoolHub example.
+
+New Scan uses Setup, Check Classes, Exclusions, Analysis & Output, and Custom RDL tabs. See Scan configuration for bug-class selection, file exclusions, per-scan CLI options and their defaults.
+
+Select `--rdl-engine v1` to run only the established engine. The CLI choice takes
+precedence over the legacy `DAKSH_RDL_V2_SHADOW` setting. New scans save their
+selection; changing defaults does not reinterpret historical results. Checkpoint
+resume requires the same engine choice.
+
+**Vulnerability Analysis** is the sole vulnerability decision view and uses RDL v2
+outcomes. Its subsections are Summary, Confirmed Findings, Suppressed False
+Positives, Manual Inspection Recommended, and Mitigated Implementations. The
+separate legacy Vulnerabilities tab and analyzer sink-name classification are
+retired. Advanced Analysis uses the RDL v2 source-to-sink path, symbol cross-reference and
+input entry-point views. Its counts and filters come from recorded RDL evidence.
+The separate analyzer-ranked flow presentation is no longer used in the portal.
+
+An RDL `MATCH` is an engine-confirmed finding: the named rule property matched
+recorded evidence. It is not proof of exploitability or human confirmation.
+Source-code matches appear under Confirmed Findings. Manual Inspection requires located
+partial security evidence of a recorded flow or state violation and a specific investigation step. Analyzer errors without
+such evidence are recorded separately as coverage limits. A recorded false-positive review can suppress a
+match. A `NO_MATCH` is not automatically a mitigation: positive control evidence
+is required. The main tab counts distinct matched finding locations; category
+lists count grouped rule/file evaluations. Unresolved checks do not inflate the
+main findings badge. Filename-only matches remain Areas of Interest and RDL
+coverage observations; they do not count as vulnerability findings.
+
+Historical scans keep their original evidence. The new view classifies their RDL
+outcomes conservatively; it does not import old analyzer confirmation labels.
+Scans without RDL v2 display an explicit unavailable state. Regenerated reports
+use RDL classifications; existing downloaded artifacts retain their original text.
+
+V2-only scans record v1 as `NOT_RUN`; agreement/disagreement comparisons apply
+only when both engines ran. Unmapped languages or files do not imply safety.
+
+V2 results include source locations, flow steps, excerpts, impact, remediation,
+and confidence limits. Reports includes `scan/html/rdl-v2.html` for download when mapped
+properties were evaluated. See the accuracy review
+for historical validation evidence and limits.
+
+The checked real-codebase baseline scanned 119 first-party DakshSCRA Python
+files: 116 comparisons agreed, three disagreed, and none failed or became
+indeterminate. Manual review classified all three disagreements as v1
+presence-based false positives where v2 correctly found no untrusted flow.
+These results validate this codebase and mapping set; they are not a claim of
+perfect accuracy on arbitrary software.
+
+The expanded iAcademy validation covers 712 PHP files and five properties:
+9,256 mapped evaluations, three distinct credential leads, and zero execution
+errors. Relevant PHP flows requiring unsupported control-flow reasoning remain
+explicitly indeterminate. Disagreements are retained as review evidence and do
+not alter v1 findings. The earlier single-mapping baseline is historical.
+
 
 ### Rule evaluation sequence
 
@@ -561,7 +737,7 @@ This is the current XML layout for scanner rules:
 <rule>
   <name>Rule Name</name>
   <regex><![CDATA[regex_to_match]]></regex>
-  <rdl_ref>logic/common/core/insecure_sql_query_unsafe_string_concatenation.rdl</rdl_ref>
+  <rdl_ref>logic/rdl/v1/common/core/insecure_sql_query_unsafe_string_concatenation.rdl</rdl_ref>
   <exclude><![CDATA[pattern_to_exclude_lines]]></exclude>  <!-- optional -->
   <scan_config>...</scan_config>                           <!-- optional -->
   <rule_desc>Short description of what the rule detects.</rule_desc>
@@ -609,7 +785,6 @@ observations can also be recorded from the repository root.
 | `WHEN CURRENT_FILE_MATCHES <regex>` | Match against the entire current file content | Whole-file config or structure checks |
 | `WHEN FILE_NAME_IS <name>` | Require an exact filename | `AndroidManifest.xml`, `Info.plist`, `web.xml` |
 | `WHEN FILE_PATH_MATCHES <glob>` | Require the current path to match a glob | Path-specific or framework-specific rules |
-| `UNLESS PRESENT <regex>` | Fail if a safe pattern is present | Early mitigation exclusion |
 | `UNLESS CURRENT_FILE_MATCHES <regex>` | Fail if the full file matches an exclusion pattern | Skip known-safe structural cases |
 | `OBSERVE PROJECT_HAS_GLOB <glob> AS <label>` | Record related files from the project root in the trace | Supporting config visibility |
 | `REPORT AS <outcome>` | Set the rule outcome | Usually `area_of_interest` |
@@ -635,7 +810,7 @@ XML rule:
 <rule>
   <name>Possible SQL Injection in Query Execution</name>
   <regex><![CDATA[(?i)\b(?:mysql_query|mysqli_query|->query)\s*\(]]></regex>
-  <rdl_ref>logic/common/core/insecure_sql_query_unsafe_string_concatenation.rdl</rdl_ref>
+  <rdl_ref>logic/rdl/v1/common/core/insecure_sql_query_unsafe_string_concatenation.rdl</rdl_ref>
   <rule_desc>Detects unsafe SQL query execution patterns.</rule_desc>
 </rule>
 ```
@@ -662,7 +837,7 @@ XML rule:
 <rule>
   <name>Exported Components Without Permission</name>
   <regex><![CDATA[<(?P<component>activity|service|receiver|provider)\s[^>]*android:name="(?P<name>[^"]+)"[^>]*android:exported="true"[^>]*(?:/>|>)]]></regex>
-  <rdl_ref>logic/mobile/android/core/exported_components.rdl</rdl_ref>
+  <rdl_ref>logic/rdl/v1/mobile/android/core/exported_components.rdl</rdl_ref>
   <scan_config>
     <match_mode>file</match_mode>
     <context_type>named_groups</context_type>
@@ -698,7 +873,7 @@ XML rule:
 <rule>
   <name>Admin Section File Path</name>
   <regex><![CDATA[(?i)(^|/)(admin|administrator|root)(/|$)]]></regex>
-  <rdl_ref>logic/filepaths/core/admin_section.rdl</rdl_ref>
+  <rdl_ref>logic/rdl/v1/filepaths/core/admin_section.rdl</rdl_ref>
 </rule>
 ```
 
@@ -745,6 +920,85 @@ so the reviewer can see that supporting config exists.
 > matches for that file can be suppressed. This is deliberate: lower noise at the cost of potentially
 > hiding an issue in an otherwise-safe file. Reviewer guidance should always reflect that trade-off.
 
+### Validating and linting rules
+
+Lint RDL before running a scan or submitting a new rule:
+
+```bash
+# Validate one rule
+python3 tools/rdl_lint.py rules/scanning/logic/rdl/v1/python/core/command_injection_eval.rdl
+
+# Validate every shipped external rule
+python3 tools/rdl_lint.py rules/scanning/logic/rdl/v1
+
+# Produce machine-readable diagnostics for automation
+python3 tools/rdl_lint.py rules/scanning/logic/rdl/v1 --json
+```
+
+The command exits with status `0` when there are no rule errors and `1` when at least one error is
+present. Human-readable diagnostics include the file, line, severity, stable diagnostic code,
+message, and a remediation hint when available. JSON output contains the same fields plus the total
+error count.
+
+Important diagnostic categories include:
+
+| Code | Meaning |
+|---|---|
+| `RDL001` | Missing `VERSION` declaration |
+| `RDL003` / `RDL004` | Invalid or unsupported language version |
+| `RDL101` | Unknown instruction that the v1 runtime would otherwise ignore |
+| `RDL102` | Empty command or regex operand |
+| `RDL103` | Malformed regex |
+| `RDL106` | Boolean expression has no recognized predicate |
+| `RDL201` | Rule has no gating predicate and therefore always passes |
+| `RDL301` | Informational warning that a v1 text predicate uses whole-file scope |
+
+`NO_MATCH` and `RULE_ERROR` are different security-analysis outcomes. The current production v1
+evaluator preserves its established runtime behavior for compatibility, but the linter must pass
+before a rule is considered valid. V2 execution carries rule errors and analysis-budget
+exhaustion as explicit outcomes rather than negative matches.
+
+Run the compiler and full legacy-corpus tests with:
+
+```bash
+python3 -m unittest tests.rdl.test_compiler tests.rdl.test_legacy_corpus
+```
+
+Every newly discovered parser, semantic, or evasion defect should gain a permanent regression test.
+
+### RDL v2 direction
+
+RDL v2 runs through the Web UI and CLI alongside v1 by default. Its native text/path
+baseline covers the existing rule inventory; deeper analysis remains capability-dependent
+and experimental. Its implemented language model and analysis levels are:
+
+1. Simple text and path predicates such as `PRESENT`, `MISSING`, `MATCHES`, `PROJECT_HAS`, and
+   `PATH_MATCHES`.
+2. Typed entities and relationships such as functions, variables, calls, assignments, parameters,
+   return values, resources, sources, sinks, and sanitizers.
+3. Source-to-sink data flow with propagation, aliases, transformations, sanitizers, fields, and
+   bounded interprocedural analysis.
+4. Control-flow and path reasoning including reachability, branches, loops, dominance, and
+   exceptional paths where an adapter supports them.
+5. Generic state transitions for memory lifetime, resources, locks, authentication, authorization,
+   workflows, and business invariants.
+
+Language adapters map supported native syntax and APIs into a normalized semantic representation. Generic
+rules target concepts such as `command.execution` or `sql.execution`; catalog packs map
+Python, Java, Go, proprietary languages, and other platforms to those concepts without adding new
+RDL keywords for each language.
+
+Severity and confidence are separate in the v2 model. Severity describes impact; confidence describes
+evidence strength. Findings also record whether their evidence came from a heuristic text match,
+semantic match, verified data flow, feasible control-flow path, or state violation.
+
+The parser/scopes/entities, semantic IR/adapters, intraprocedural data-flow, control-flow/path
+analysis, generic state-machine, bounded interprocedural, and broader-adapter phases are complete.
+The current executor runs configured v2 checks in scans. Coverage expansion, performance
+hardening and fuzzing remain ongoing. Dual-run comparisons and safe/unsafe regressions
+validate migration; implemented services do not imply complete semantic coverage
+for every registered platform or framework.
+
 ### Authoring guidance
 
 - Keep `<regex>` broad enough to catch candidate matches. Let RDL remove safe contexts.
@@ -753,6 +1007,13 @@ so the reviewer can see that supporting config exists.
 - Put report-facing intent in `REASON` and suppression-facing intent in `FAIL_REASON`.
 - For path rules, write the regex and RDL conditions against normalized slash-separated relative paths.
 - Use `TRACE` and `OBSERVE` when reviewers benefit from extra context, but do not rely on `OBSERVE` for gating.
+- Run `python3 tools/rdl_lint.py <path>` before testing a rule against source code.
+- Treat every v1 text predicate as file-scoped. Do not assume a mitigation is tied to the same
+  function, variable, call, or data-flow path as the candidate.
+- Do not use draft v2 syntax in active rules until the v2 parser and execution plan are enabled.
+- If a rule requires variable identity, data flow, control flow, type information, call graphs, or
+  state tracking, do not approximate the property by continually adding regexes. Record it as a
+  semantic-analysis requirement for the appropriate RDL phase.
 
 ## scan_config - Rule-Driven Scanning & Reporting
 
@@ -901,7 +1162,7 @@ as labelled columns alongside the line number.
 <rule>
     <name>Exported Components Without Permission</name>
     <regex><![CDATA[<(?P<component>activity|service|receiver|provider)\s[^>]*android:name="(?P<name>[^"]+)"[^>]*android:exported="true"[^>]*(?:/>|>)]]></regex>
-    <rdl_ref>logic/mobile/android/core/exported_components.rdl</rdl_ref>
+    <rdl_ref>logic/rdl/v1/mobile/android/core/exported_components.rdl</rdl_ref>
     <scan_config>
         <match_mode>file</match_mode>
         <context_type>named_groups</context_type>
@@ -962,7 +1223,7 @@ arguments). Use `context_lines_after` to show what follows (error handling, retu
 <rule>
     <name>Insecure File Inclusion</name>
     <regex><![CDATA[\b(?:include|require)(?:_once)?\s*\(\s*\$\w+]]></regex>
-    <rdl_ref>logic/php/core/insecure_file_inclusion_include_require.rdl</rdl_ref>
+    <rdl_ref>logic/rdl/v1/php/core/insecure_file_inclusion_include_require.rdl</rdl_ref>
     <scan_config>
         <match_mode>line</match_mode>
         <context_type>lines</context_type>
@@ -1214,28 +1475,42 @@ Answer these questions before writing `scan_config` values:
 
 ## Platforms & Rules
 
-DakshSCRA includes built-in rules for the following platforms:
+Current registries contain 27 platform packs and 73 framework mappings:
 
-| Platform | `-r` value | Default extensions |
-|---|---|---|
-| PHP | `php` | `.php` |
-| Java | `java` | `.java` |
-| .NET / C# | `dotnet` | `.cs`, `.aspx`, `.cshtml` |
-| Python | `python` | `.py` |
-| JavaScript / Node | `javascript` | `.js`, `.ts`, `.jsx`, `.tsx` |
-| Go | `golang` | `.go` |
-| Ruby / Rails | `ruby` | `.rb` |
-| Kotlin | `kotlin` | `.kt`, `.kts` |
-| C | `c` | `.c`, `.h` |
-| C++ | `cpp` | `.cpp`, `.cc`, `.cxx`, `.hpp` |
+| Platform | Frameworks |
+|---|---|
+| dotnet | aspnetcore, blazor, entityframework, identity |
+| php | codeigniter, drupal, laravel, symfony, wordpress, yii |
+| java | hibernate, mybatis, spring, springboot, struts |
+| javascript | angular, electron, express, nestjs, nextjs, react, vue |
+| kotlin | exposed, ktor, springkotlin |
+| python | django, fastapi, flask, sqlalchemy |
+| go | echo, fiber, gin, gorilla, gorm |
+| c | freertos |
+| cpp | boost, qt |
+| android | cordova-android, flutter-android, ionic-android, jetpack, nativescript-android, reactnative-android, retrofit, room, xamarin-android |
+| ios | alamofire, cordova-ios, coredata, flutter-ios, ionic-ios, nativescript-ios, reactnative-ios, swiftui, uikit, xamarin-ios |
+| reactnative | expo, reactnative |
+| flutter | flutter, flutter-dio, flutter-hive |
+| xamarin | xamarin |
+| maui | - |
+| kmp | - |
+| ionic | ionic |
+| nativescript | nativescript |
+| cordova | cordova |
+| bash | - |
+| powershell | - |
+| dockerfile | - |
+| terraform | terraform-aws, terraform-azure, terraform-gcp |
+| kubernetes | - |
+| ruby | rails, sinatra |
+| rust | actix, axum, rocket |
+| common | - |
 
-Combine multiple platforms with commas: `-r php,java,javascript`
-
-To list all available rules for a platform:
-
-```bash
-python dakshscra.py -l RF
-```
+Registered rule packs and semantic coverage are separate; coverage varies by rule
+and adapter. Use `-r auto` or select several packs with `-r php,java,javascript`.
+Run `python3 dakshscra.py -l RF` for current registrations and file types. The
+README support table documents its registry refresh and freshness-check command.
 
 ---
 
@@ -1377,3 +1652,48 @@ The broader objective is straightforward: provide a serious open-source code rev
 If DakshSCRA has helped your team save significant time, effort, or cost, reduced dependence on expensive commercial tools, improved review coverage, or made code review more structured and effective, feel free to reach out and share your experience. I am always open to thoughtful feedback and interesting conversations.
 
 Found a bug or want to contribute? Open an issue or pull request on GitHub.
+
+
+## Web results and CLI reports
+
+Web scans save findings, source evidence, cross-references, native analysis and
+review state inside the scan runtime directory. They do not generate HTML/PDF
+reports or populate the repository's `reports/` directory. The browser reads
+these saved results directly. Promoting a suppressed finding updates the saved
+results; report regeneration is not required. Explicit download actions may
+return data to the browser without creating a report on the server.
+
+CLI scans generate a summary/index HTML with a linked detail subfolder: sidebar navigation,
+platform groups, collapsible findings and line-numbered source evidence in HTML;
+cover, contents, executive metrics, charts and paginated finding cards in PDF.
+HTML, PDF and Word include saved vulnerability assessments, mitigations, attack vectors,
+taint paths, cross references, RDL review evidence and coverage limitations. Native
+`analysis.html` and `analysis_xref.html` use the same document templates. Reports
+work offline without an API or CDN; no frontend build is required to render them.
+
+HTML and PDF templates are in `resources/templates/report_modern.html` and
+`resources/templates/pdf_report.html`, with shared analysis sections alongside
+them. Repeated baseline predicate evidence and source lines are consolidated,
+with every finding location retained and linked to its saved source excerpt.
+PDF uses Playwright/Chromium to preserve the print layout; the Docker API/CLI
+image includes Chromium and its system dependencies. JSON remains the complete
+machine-readable export of saved fields.
+
+
+### On-demand reports
+
+Open a completed scan’s **Reports** tab, select its project and scan, then choose a report type and HTML, PDF, Word (`.docx`), or JSON. Select **Generate report**; the background job appears below with a download link when ready. Generation uses saved results and does not rerun scanning. Full scan exports include available RDL review evidence and cross-references; these remain review evidence rather than automatically confirmed vulnerabilities. HTML and PDF use the same structured document templates as CLI reports, including the additional analysis evidence shown in the Web UI. HTML downloads as a ZIP containing `index.html` and an `index-files/` subfolder. Extract the entire ZIP and open `index.html`; its summary links to paginated vulnerabilities, attack vectors, flows, cross references, areas of interest, suppressed findings and source evidence. Each detail page links back to the summary and other report sections. Keep the files together when moving the report. PDF and Word are consolidated, paginated documents with contents and section headings. Word includes a contents field that can be refreshed in the word processor. Existing downloaded files remain unchanged; generate a new report to use the current templates.
+
+Recorded traces offer **Text / Graph** views. The graph uses file lanes, source/evidence/sink blocks, recorded handoff connections, a minimap, pan/zoom and a selected-step code inspector. Use Overview, Focus step, Up/Down, Home/End or Go to step to navigate; Expand workspace opens a larger view. Both text and graphical stories use bounded segments for long traces, and every step remains accessible. SVG exports contain the displayed segment. Arrows reflect the recorded order, not invented branches or proof of runtime execution. Newly generated HTML packages include the same offline explorer; extract all files together. PDF and Word preserve static evidence.
+
+System → Disk info groups application storage by project and scan, including generated reports, saved results, runtime files, logs and temporary diagnostics. Inspect individual file sizes and modification dates, select generated reports or diagnostics for cleanup, or delete all data for a finished scan or project. Review the confirmation before deletion: scan history and project configuration remain, but removed results cannot be recovered or exported. Cleanup is blocked while related scans or report jobs are active. Source directories, account data and settings are preserved. Unassigned files are listed for inspection without automatic deletion.
+
+Web scans do not automatically write report files. Explicitly requested exports are retained privately with that scan under `runtime/web_runs_v2/<run>/exports/` and are removed when its scan data is deleted. Opening the Reports tab only lists existing exports. Saved scan data remains available below the generator.
+
+CLI report selection supports the same four formats as web exports, for example `-rpt html,pdf,docx,json`. HTML opens at the scan's `scan/html/report.html` with linked files in `scan/html/report-files/`; PDF is saved to `scan/pdf/report.pdf`, Word to `scan/word/report.docx`, and the complete JSON document to `scan/json/report.json`. Every scan retains its own report directory. Both entry points use one saved-data collector and the same renderers. Complete original saved fields are included in the JSON export and the HTML package's `saved-results.json`; readable documents consolidate repeated RDL evidence while retaining all finding locations and source excerpts. Cross-reference tables show every saved symbol and call site, with unresolved relationships labelled explicitly; raw graph metadata remains available in JSON.
+
+The summary presents native assessments and RDL findings separately, including severity distributions and recorded coverage limits. These populations may overlap and their counts should not be added together. PDF rendering processes bounded sections before assembling one document with linked contents, bookmarks and a global page sequence; long source lines wrap and full file inventories remain printable. Word opens with cached, linked contents; update the contents field explicitly if page numbers are needed. It includes readable cross-reference tables, a catalogue of shared flow references, and linked catalogues of source excerpts and repeated review text/diagnostics. All original diagnostic text is retained; long paragraphs are split for word processor compatibility. For very large scans, HTML offers the quickest way to open the summary and browse specific evidence without loading the entire report into one page.
+
+When effort estimation is requested, CLI and web scans retain `data/estimation.json`. Full exports include that saved estimate; HTML places it on a separate indexed page.
+
+Manual Inspection Recommended contains located partial security evidence with a recorded input-to-operation flow, or a recorded security-state violation. Each item states the unresolved question and investigation steps. Analyzer errors, missing capabilities and timeouts without such evidence are coverage limits, retained separately and excluded from vulnerability-category counts.

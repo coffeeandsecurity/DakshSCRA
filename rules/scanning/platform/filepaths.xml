@@ -2,7 +2,7 @@
     <rule>
         <name>Authentication</name>
         <regex><![CDATA[(?i)(Login|Signin|Authentication|Authenticated|Oauth|JWT)]]></regex>
-        <rdl_ref>logic/filepaths/core/authentication.rdl</rdl_ref>
+        <rdl_ref>logic/rdl/v1/filepaths/core/authentication.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -11,15 +11,15 @@
             <highlight_enabled>true</highlight_enabled>
             <highlight_color>yellow</highlight_color>
         </scan_config>
-        <rule_desc>Detects file paths related to authentication functionality.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of authentication-related code files in the project.</vuln_desc>
-        <developer>Review and document authentication-related code, ensuring they are correctly implemented.</developer>
+        <rule_desc>A file or directory name matches the authentication review area. This check inspects paths, not the implementation or a reachable execution path.</rule_desc>
+        <vuln_desc>If identity or resource authorization can be bypassed, an attacker may impersonate a user, access another user’s data, or perform restricted operations. A control’s presence alone does not establish a weakness. A filename match alone does not establish this consequence.</vuln_desc>
+        <developer>Enforce authentication and object-level authorization on the trusted server or privileged boundary. Use strong verifier material, appropriate rate limits and recovery controls, and test access by unauthenticated and insufficiently privileged callers.</developer>
         <reviewer>Verify the presence and correctness of authentication-related code. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Authorization</name>
         <regex><![CDATA[(?i)(authorization|authz|access_control)]]></regex>
-        <rdl_ref>logic/filepaths/core/authorization.rdl</rdl_ref>
+        <rdl_ref>logic/rdl/v1/filepaths/core/authorization.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -28,15 +28,15 @@
             <highlight_enabled>true</highlight_enabled>
             <highlight_color>yellow</highlight_color>
         </scan_config>
-        <rule_desc>Detects file paths related to authorization functionality.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of code paths related to authorization in the project.</vuln_desc>
-        <developer>Review and document authorization-related code, ensuring they are correctly implemented.</developer>
+        <rule_desc>A file or directory name matches the authorization review area. This check inspects paths, not the implementation or a reachable execution path.</rule_desc>
+        <vuln_desc>If identity or resource authorization can be bypassed, an attacker may impersonate a user, access another user’s data, or perform restricted operations. A control’s presence alone does not establish a weakness. A filename match alone does not establish this consequence.</vuln_desc>
+        <developer>Enforce authentication and object-level authorization on the trusted server or privileged boundary. Use strong verifier material, appropriate rate limits and recovery controls, and test access by unauthenticated and insufficiently privileged callers.</developer>
         <reviewer>Verify the presence and secure implementation of authorization-related code. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Session Management</name>
         <regex><![CDATA[(?i)(session|cookie|token)]]></regex>
-        <rdl_ref>logic/filepaths/core/session_management.rdl</rdl_ref>
+        <rdl_ref>logic/rdl/v1/filepaths/core/session_management.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -45,15 +45,15 @@
             <highlight_enabled>true</highlight_enabled>
             <highlight_color>yellow</highlight_color>
         </scan_config>
-        <rule_desc>Detects file paths related to session management functionality.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of code paths related to session management in the project.</vuln_desc>
-        <developer>Review and document session management-related code, ensuring they are correctly implemented.</developer>
+        <rule_desc>A file or directory name matches the session management review area. This check inspects paths, not the implementation or a reachable execution path.</rule_desc>
+        <vuln_desc>Weak session secrets, exposed cookies, or inadequate expiry may allow session theft, token forgery, or continued access after the user’s intended authorization ends. A filename match alone does not establish this consequence.</vuln_desc>
+        <developer>Use strong unpredictable session secrets, rotate tokens on privilege changes, and enforce expiry and revocation. Set Secure, HttpOnly, and appropriate SameSite attributes for sensitive browser cookies.</developer>
         <reviewer>Verify the presence and correctness of session management-related code. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Permission Management or Handling</name>
         <regex><![CDATA[(?i)Permission]]></regex>
-        <rdl_ref>logic/filepaths/core/permission_management_or_handling.rdl</rdl_ref>
+        <rdl_ref>logic/rdl/v1/filepaths/core/permission_management_or_handling.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -62,15 +62,15 @@
             <highlight_enabled>true</highlight_enabled>
             <highlight_color>yellow</highlight_color>
         </scan_config>
-        <rule_desc>Detects file paths related to permission management or handling functionality.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of permission management or handling-related code paths in the project.</vuln_desc>
-        <developer>Review and document permission management or handling-related code paths, ensuring they are correctly implemented.</developer>
+        <rule_desc>A file or directory name matches the permission management or handling review area. This check inspects paths, not the implementation or a reachable execution path.</rule_desc>
+        <vuln_desc>A compromised actor may access additional data, modify protected resources, or extend compromise beyond the intended application boundary when excessive privileges remain available. A filename match alone does not establish this consequence.</vuln_desc>
+        <developer>Run with the least privileges required, remove unnecessary grants, and scope each permission to its intended resource and operation. Verify effective inherited permissions and test denied access.</developer>
         <reviewer>Verify the presence and correctness of permission management or handling-related code paths. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Multi-Factor Validation</name>
-        <regex><![CDATA[(?i)(mfa|multi_factor|2fa|otp)]]></regex>
-        <rdl_ref>logic/filepaths/core/multi_factor_validation.rdl</rdl_ref>
+        <regex><![CDATA[(?-i:(?:(?<![A-Za-z0-9])(?i:mfa|multi[-_]?factor|two[-_]?factor|2fa|totp|hotp|otp)(?=[A-Z_. /\\-]|$)|(?<=[a-z0-9])(?:Mfa|MFA|MultiFactor|Multi_factor|Multifactor|TwoFactor|Two_factor|Twofactor|2fa|2FA|Totp|TOTP|Hotp|HOTP|Otp|OTP)(?=[A-Z_. /\\-]|$)))]]></regex>
+        <rdl_ref>logic/rdl/v1/filepaths/core/multi_factor_validation.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -79,15 +79,15 @@
             <highlight_enabled>true</highlight_enabled>
             <highlight_color>yellow</highlight_color>
         </scan_config>
-        <rule_desc>Detects file paths that may indicate the implementation or handling of Multi-Factor Validation.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of code paths related to Multi-Factor Validation in the project.</vuln_desc>
-        <developer>Thoroughly review and document code paths related to Multi-Factor Validation, ensuring they are correctly implemented.</developer>
+        <rule_desc>A file or directory name matches the multi-factor validation review area. This check inspects paths, not the implementation or a reachable execution path.</rule_desc>
+        <vuln_desc>If identity or resource authorization can be bypassed, an attacker may impersonate a user, access another user’s data, or perform restricted operations. A control’s presence alone does not establish a weakness. A filename match alone does not establish this consequence.</vuln_desc>
+        <developer>Enforce authentication and object-level authorization on the trusted server or privileged boundary. Use strong verifier material, appropriate rate limits and recovery controls, and test access by unauthenticated and insufficiently privileged callers.</developer>
         <reviewer>Verify the presence and secure implementation related to Multi-Factor Validation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Admin Section</name>
         <regex><![CDATA[(?i)(Admin|Administrator)]]></regex>
-        <rdl_ref>logic/filepaths/core/admin_section.rdl</rdl_ref>
+        <rdl_ref>logic/rdl/v1/filepaths/core/admin_section.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -96,15 +96,15 @@
             <highlight_enabled>true</highlight_enabled>
             <highlight_color>yellow</highlight_color>
         </scan_config>
-        <rule_desc>Detects file paths related to admin section functionality.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of admin section-related code paths in the project.</vuln_desc>
-        <developer>Review and document admin section-related code paths, ensuring they are correctly implemented.</developer>
+        <rule_desc>A file or directory name matches the admin section review area. This check inspects paths, not the implementation or a reachable execution path.</rule_desc>
+        <vuln_desc>If identity or resource authorization can be bypassed, an attacker may impersonate a user, access another user’s data, or perform restricted operations. A control’s presence alone does not establish a weakness. A filename match alone does not establish this consequence.</vuln_desc>
+        <developer>Enforce authentication and object-level authorization on the trusted server or privileged boundary. Use strong verifier material, appropriate rate limits and recovery controls, and test access by unauthenticated and insufficiently privileged callers.</developer>
         <reviewer>Verify the presence and correctness of admin section-related code paths. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>User Section</name>
         <regex><![CDATA[(?i)(user)]]></regex>
-        <rdl_ref>logic/filepaths/core/user_section.rdl</rdl_ref>
+        <rdl_ref>logic/rdl/v1/filepaths/core/user_section.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -113,15 +113,15 @@
             <highlight_enabled>true</highlight_enabled>
             <highlight_color>yellow</highlight_color>
         </scan_config>
-        <rule_desc>Detects file paths related to user section functionality.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of user section-related code paths in the project.</vuln_desc>
-        <developer>Review and document user section-related code paths, ensuring they are correctly implemented.</developer>
+        <rule_desc>A file or directory name matches the user section review area. This check inspects paths, not the implementation or a reachable execution path.</rule_desc>
+        <vuln_desc>If identity or resource authorization can be bypassed, an attacker may impersonate a user, access another user’s data, or perform restricted operations. A control’s presence alone does not establish a weakness. A filename match alone does not establish this consequence.</vuln_desc>
+        <developer>Enforce authentication and object-level authorization on the trusted server or privileged boundary. Use strong verifier material, appropriate rate limits and recovery controls, and test access by unauthenticated and insufficiently privileged callers.</developer>
         <reviewer>Verify the presence and correctness of user section-related code paths. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Password Related Functionality</name>
         <regex><![CDATA[(?i)(Password|password|pwd|passwd|credential|forgotpassword)]]></regex>
-        <rdl_ref>logic/filepaths/core/password_related_functionality.rdl</rdl_ref>
+        <rdl_ref>logic/rdl/v1/filepaths/core/password_related_functionality.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -130,15 +130,15 @@
             <highlight_enabled>true</highlight_enabled>
             <highlight_color>yellow</highlight_color>
         </scan_config>
-        <rule_desc>Detects file paths related to password-related functionality.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of password-related code paths in the project.</vuln_desc>
-        <developer>Review and document password-related code paths, ensuring they are correctly implemented.</developer>
+        <rule_desc>A file or directory name matches the password related functionality review area. This check inspects paths, not the implementation or a reachable execution path.</rule_desc>
+        <vuln_desc>If identity or resource authorization can be bypassed, an attacker may impersonate a user, access another user’s data, or perform restricted operations. A control’s presence alone does not establish a weakness. A filename match alone does not establish this consequence.</vuln_desc>
+        <developer>Enforce authentication and object-level authorization on the trusted server or privileged boundary. Use strong verifier material, appropriate rate limits and recovery controls, and test access by unauthenticated and insufficiently privileged callers.</developer>
         <reviewer>Verify the presence and correctness of password-related code paths. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Sensitive Data Handling</name>
         <regex><![CDATA[(?i)(sensitive|secret|private_key)]]></regex>
-        <rdl_ref>logic/filepaths/core/sensitive_data_handling.rdl</rdl_ref>
+        <rdl_ref>logic/rdl/v1/filepaths/core/sensitive_data_handling.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -147,15 +147,15 @@
             <highlight_enabled>true</highlight_enabled>
             <highlight_color>yellow</highlight_color>
         </scan_config>
-        <rule_desc>Detects file paths related to sensitive data handling functionality.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of code paths related to sensitive data handling in the project.</vuln_desc>
-        <developer>Review and document code paths related to sensitive data handling, ensuring they are correctly implemented.</developer>
+        <rule_desc>A file or directory name matches the sensitive data handling review area. This check inspects paths, not the implementation or a reachable execution path.</rule_desc>
+        <vuln_desc>Insufficient memory, diagnostic, or build protections may make private values easier to recover or increase the consequences of another defect. Their absence alone does not establish an exploit path. A filename match alone does not establish this consequence.</vuln_desc>
+        <developer>Minimize private data lifetimes and diagnostic exposure, apply the platform’s appropriate hardening controls, and verify the final binary rather than inferring protection from source markers alone.</developer>
         <reviewer>Verify the presence and correctness of code paths related to sensitive data handling. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Security Functionality</name>
         <regex><![CDATA[(?i)security]]></regex>
-        <rdl_ref>logic/filepaths/core/security_functionality.rdl</rdl_ref>
+        <rdl_ref>logic/rdl/v1/filepaths/core/security_functionality.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -164,15 +164,15 @@
             <highlight_enabled>true</highlight_enabled>
             <highlight_color>yellow</highlight_color>
         </scan_config>
-        <rule_desc>Detects file paths related to security functionality.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of security-related code paths in the project.</vuln_desc>
-        <developer>Review and document security-related code paths, ensuring they are correctly implemented.</developer>
+        <rule_desc>A file or directory name matches the security functionality review area. This check inspects paths, not the implementation or a reachable execution path.</rule_desc>
+        <vuln_desc>If identity or resource authorization can be bypassed, an attacker may impersonate a user, access another user’s data, or perform restricted operations. A control’s presence alone does not establish a weakness. A filename match alone does not establish this consequence.</vuln_desc>
+        <developer>Enforce authentication and object-level authorization on the trusted server or privileged boundary. Use strong verifier material, appropriate rate limits and recovery controls, and test access by unauthenticated and insufficiently privileged callers.</developer>
         <reviewer>Verify the presence and correctness of security-related code paths. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Input Validation</name>
         <regex><![CDATA[(?i)(validation|sanitize|input)]]></regex>
-        <rdl_ref>logic/filepaths/core/input_validation.rdl</rdl_ref>
+        <rdl_ref>logic/rdl/v1/filepaths/core/input_validation.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -181,15 +181,15 @@
             <highlight_enabled>true</highlight_enabled>
             <highlight_color>yellow</highlight_color>
         </scan_config>
-        <rule_desc>Detects file paths related to input validation functionality.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of code paths related to input validation in the project.</vuln_desc>
-        <developer>Review and document input validation-related code, ensuring they are correctly implemented.</developer>
+        <rule_desc>A file or directory name matches the input validation review area. This check inspects paths, not the implementation or a reachable execution path.</rule_desc>
+        <vuln_desc>External input may cause injection, incorrect decisions, or unauthorized data access if it reaches a sensitive operation without the controls required by that operation. Reading input alone does not establish a vulnerability. A filename match alone does not establish this consequence.</vuln_desc>
+        <developer>Validate type, size, and allowed values at trust boundaries, and apply destination-specific parameter binding or output encoding. Enforce authorization independently of input validation.</developer>
         <reviewer>Verify the presence and correctness of input validation-related code. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>API</name>
         <regex><![CDATA[(?i)(api)]]></regex>
-        <rdl_ref>logic/filepaths/core/api.rdl</rdl_ref>
+        <rdl_ref>logic/rdl/v1/filepaths/core/api.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -198,15 +198,15 @@
             <highlight_enabled>true</highlight_enabled>
             <highlight_color>yellow</highlight_color>
         </scan_config>
-        <rule_desc>Detects file paths related to API functionality.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of API-related code paths in the project.</vuln_desc>
-        <developer>Review and document API-related code paths, ensuring they are correctly implemented.</developer>
+        <rule_desc>A file or directory name matches the api review area. This check inspects paths, not the implementation or a reachable execution path.</rule_desc>
+        <vuln_desc>A boundary that trusts unauthorized callers or exposes private output may permit data disclosure or state changes. A declaration, address, or architectural marker alone does not establish such a failure. A filename match alone does not establish this consequence.</vuln_desc>
+        <developer>Trace the actual boundary, restrict accepted inputs and recipients, and enforce authentication and object-level authorization where required. Verify both authorized and denied use cases.</developer>
         <reviewer>Verify the presence and correctness of API-related code paths. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Libraries | Extensions | Plugins</name>
         <regex><![CDATA[(?i)(Libraries|Extension|Plugin)]]></regex>
-        <rdl_ref>logic/filepaths/core/libraries_extensions_plugins.rdl</rdl_ref>
+        <rdl_ref>logic/rdl/v1/filepaths/core/libraries_extensions_plugins.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -215,15 +215,15 @@
             <highlight_enabled>true</highlight_enabled>
             <highlight_color>yellow</highlight_color>
         </scan_config>
-        <rule_desc>Detects file paths related to libraries, extensions, or plugins.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of code paths related to libraries, extensions, or plugins in the project.</vuln_desc>
-        <developer>Review and document code paths related to libraries, extensions, or plugins, ensuring they are correctly implemented.</developer>
+        <rule_desc>A file or directory name matches the libraries | extensions | plugins review area. This check inspects paths, not the implementation or a reachable execution path.</rule_desc>
+        <vuln_desc>A reachable vulnerability in an unsupported or affected dependency may compromise the application with its privileges. A version declaration or deprecated API alone does not establish that such a vulnerability is present. A filename match alone does not establish this consequence.</vuln_desc>
+        <developer>Inventory resolved dependencies and runtime versions, compare them with authoritative advisories and support policy, and migrate affected or unsupported components to tested supported replacements.</developer>
         <reviewer>Verify the presence and correctness of code paths related to libraries, extensions, or plugins. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Monkey Patched Code Files</name>
         <regex><![CDATA[(?i)(?:monkey_patch|patched_code|custom_patch)]]></regex>
-        <rdl_ref>logic/filepaths/core/monkey_patched_code_files.rdl</rdl_ref>
+        <rdl_ref>logic/rdl/v1/filepaths/core/monkey_patched_code_files.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -232,15 +232,15 @@
             <highlight_enabled>true</highlight_enabled>
             <highlight_color>yellow</highlight_color>
         </scan_config>
-        <rule_desc>Detects the presence of monkey patched code in a project.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of monkey patched code in the project. While monkey patches themselves may not inherently contain security issues, they introduce potential maintenance challenges and risks. Ensure that these patches are well-documented, periodically reviewed for necessity, and that they do not introduce security vulnerabilities or regressions.</vuln_desc>
-        <developer>Carefully review and document any monkey patched code in the project. Ensure that the patches are correctly applied and do not introduce compatibility issues or security vulnerabilities. Consider alternatives to monkey patching when possible to maintain code stability and security.</developer>
+        <rule_desc>A file or directory name matches the monkey patched code files review area. This check inspects paths, not the implementation or a reachable execution path.</rule_desc>
+        <vuln_desc>A party able to substitute executable material or a runtime hook may run code with application privileges, inspect protected data, or alter security checks. A filename match alone does not establish this consequence.</vuln_desc>
+        <developer>Load only approved code from trusted locations, verify signatures or integrity before execution, and restrict runtime replacement to documented, authorized behavior.</developer>
         <reviewer>Verify the presence of monkey patched code in the project and assess its impact on code stability and security. Particular attention should be paid to patches affecting security-critical components like authentication, authorization, or database queries. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>CAPTCHA</name>
         <regex><![CDATA[(?i)(CAPTCHA)]]></regex>
-        <rdl_ref>logic/filepaths/core/captcha.rdl</rdl_ref>
+        <rdl_ref>logic/rdl/v1/filepaths/core/captcha.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -249,15 +249,15 @@
             <highlight_enabled>true</highlight_enabled>
             <highlight_color>yellow</highlight_color>
         </scan_config>
-        <rule_desc>Detects file paths related to CAPTCHA functionality.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of code paths related to CAPTCHA functionality in the project.</vuln_desc>
-        <developer>Review and document code paths related to CAPTCHA functionality, ensuring they are correctly implemented.</developer>
+        <rule_desc>A file or directory name matches the captcha review area. This check inspects paths, not the implementation or a reachable execution path.</rule_desc>
+        <vuln_desc>If identity or resource authorization can be bypassed, an attacker may impersonate a user, access another user’s data, or perform restricted operations. A control’s presence alone does not establish a weakness. A filename match alone does not establish this consequence.</vuln_desc>
+        <developer>Enforce authentication and object-level authorization on the trusted server or privileged boundary. Use strong verifier material, appropriate rate limits and recovery controls, and test access by unauthenticated and insufficiently privileged callers.</developer>
         <reviewer>Verify the presence and correctness of code paths related to CAPTCHA functionality. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>File Upload</name>
         <regex><![CDATA[(?i)Upload]]></regex>
-        <rdl_ref>logic/filepaths/core/file_upload.rdl</rdl_ref>
+        <rdl_ref>logic/rdl/v1/filepaths/core/file_upload.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -266,15 +266,15 @@
             <highlight_enabled>true</highlight_enabled>
             <highlight_color>yellow</highlight_color>
         </scan_config>
-        <rule_desc>Detects file paths related to file upload functionality.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of code paths related to file upload functionality in the project.</vuln_desc>
-        <developer>Review and document code paths related to file upload functionality, ensuring they are correctly implemented.</developer>
+        <rule_desc>A file or directory name matches the file upload review area. This check inspects paths, not the implementation or a reachable execution path.</rule_desc>
+        <vuln_desc>A crafted upload may execute as application code, overwrite files, disclose data through later processing, or exhaust storage if the upload crosses the intended content and filesystem boundaries. A filename match alone does not establish this consequence.</vuln_desc>
+        <developer>Allowlist required file types, inspect content rather than trusting extensions, bound sizes, generate server-side names, and store uploads outside executable paths with appropriate access controls.</developer>
         <reviewer>Verify the presence and correctness of code paths related to file upload functionality. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Payment Functionality</name>
         <regex><![CDATA[(?i)(payment|pay)]]></regex>
-        <rdl_ref>logic/filepaths/core/payment_functionality.rdl</rdl_ref>
+        <rdl_ref>logic/rdl/v1/filepaths/core/payment_functionality.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -283,15 +283,15 @@
             <highlight_enabled>true</highlight_enabled>
             <highlight_color>yellow</highlight_color>
         </scan_config>
-        <rule_desc>Detects file paths related to payment functionality.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of code paths related to payment functionality in the project.</vuln_desc>
-        <developer>Review and document code paths related to payment functionality, ensuring they are correctly implemented.</developer>
+        <rule_desc>A file or directory name identifies a payment or ordering review area; this path check does not inspect transaction implementation.</rule_desc>
+        <vuln_desc>If the actual transaction workflow trusts client-supplied prices, ownership, or payment status, an attacker may manipulate charges, obtain goods without payment, or expose financial data. A filename match does not establish these failures.</vuln_desc>
+        <developer>Trace price calculation, order ownership, payment confirmation, and idempotency on the trusted server. Authenticate payment notifications and test tampered values and repeated submissions.</developer>
         <reviewer>Verify the presence and correctness of code paths related to payment functionality. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Purchases | Ordering</name>
-        <regex><![CDATA[(?i)(purchase|order|cart)]]></regex>
-        <rdl_ref>logic/filepaths/core/purchases_ordering.rdl</rdl_ref>
+        <regex><![CDATA[(?-i:(?:(?<![A-Za-z0-9])(?i:purchases?|purchasing|orders?|ordering|cart|checkout)(?=[A-Z_. /\\-]|$)|(?<=[a-z0-9])(?:Purchases?|Purchasing|Orders?|Ordering|Cart|Checkout)(?=[A-Z_. /\\-]|$)))]]></regex>
+        <rdl_ref>logic/rdl/v1/filepaths/core/purchases_ordering.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -300,15 +300,15 @@
             <highlight_enabled>true</highlight_enabled>
             <highlight_color>yellow</highlight_color>
         </scan_config>
-        <rule_desc>Detects file paths related to purchasing or ordering functionality.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of code paths related to purchasing or ordering functionality in the project.</vuln_desc>
-        <developer>Review and document code paths related to purchasing or ordering functionality, ensuring they are correctly implemented.</developer>
+        <rule_desc>A file or directory name identifies a payment or ordering review area; this path check does not inspect transaction implementation.</rule_desc>
+        <vuln_desc>If the actual transaction workflow trusts client-supplied prices, ownership, or payment status, an attacker may manipulate charges, obtain goods without payment, or expose financial data. A filename match does not establish these failures.</vuln_desc>
+        <developer>Trace price calculation, order ownership, payment confirmation, and idempotency on the trusted server. Authenticate payment notifications and test tampered values and repeated submissions.</developer>
         <reviewer>Verify the presence and correctness of code paths related to purchasing or ordering functionality. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Models</name>
         <regex><![CDATA[(?i)\/(Models)\/]]></regex>
-        <rdl_ref>logic/filepaths/core/models.rdl</rdl_ref>
+        <rdl_ref>logic/rdl/v1/filepaths/core/models.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -317,15 +317,15 @@
             <highlight_enabled>true</highlight_enabled>
             <highlight_color>yellow</highlight_color>
         </scan_config>
-        <rule_desc>Detects file paths related to models.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of code paths related to models in the project.</vuln_desc>
-        <developer>Review and document code paths related to models, ensuring they are correctly implemented.</developer>
+        <rule_desc>A file or directory name matches the models review area. This check inspects paths, not the implementation or a reachable execution path.</rule_desc>
+        <vuln_desc>A boundary that trusts unauthorized callers or exposes private output may permit data disclosure or state changes. A declaration, address, or architectural marker alone does not establish such a failure. A filename match alone does not establish this consequence.</vuln_desc>
+        <developer>Trace the actual boundary, restrict accepted inputs and recipients, and enforce authentication and object-level authorization where required. Verify both authorized and denied use cases.</developer>
         <reviewer>Verify the presence and correctness of code paths related to models. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Views</name>
         <regex><![CDATA[(?i)\/(Views|View)\/]]></regex>
-        <rdl_ref>logic/filepaths/core/views.rdl</rdl_ref>
+        <rdl_ref>logic/rdl/v1/filepaths/core/views.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -334,15 +334,15 @@
             <highlight_enabled>true</highlight_enabled>
             <highlight_color>yellow</highlight_color>
         </scan_config>
-        <rule_desc>Detects file paths related to views.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of code paths related to views in the project.</vuln_desc>
-        <developer>Review and document code paths related to views, ensuring they are correctly implemented.</developer>
+        <rule_desc>A file or directory name matches the views review area. This check inspects paths, not the implementation or a reachable execution path.</rule_desc>
+        <vuln_desc>A boundary that trusts unauthorized callers or exposes private output may permit data disclosure or state changes. A declaration, address, or architectural marker alone does not establish such a failure. A filename match alone does not establish this consequence.</vuln_desc>
+        <developer>Trace the actual boundary, restrict accepted inputs and recipients, and enforce authentication and object-level authorization where required. Verify both authorized and denied use cases.</developer>
         <reviewer>Verify the presence and correctness of code paths related to views. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>ViewModel</name>
         <regex><![CDATA[(?i)\/(ViewModel)\/]]></regex>
-        <rdl_ref>logic/filepaths/core/viewmodel.rdl</rdl_ref>
+        <rdl_ref>logic/rdl/v1/filepaths/core/viewmodel.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -351,15 +351,15 @@
             <highlight_enabled>true</highlight_enabled>
             <highlight_color>yellow</highlight_color>
         </scan_config>
-        <rule_desc>Detects file paths related to view models.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of code paths related to view models in the project.</vuln_desc>
-        <developer>Review and document code paths related to view models, ensuring they are correctly implemented.</developer>
+        <rule_desc>A file or directory name matches the viewmodel review area. This check inspects paths, not the implementation or a reachable execution path.</rule_desc>
+        <vuln_desc>A boundary that trusts unauthorized callers or exposes private output may permit data disclosure or state changes. A declaration, address, or architectural marker alone does not establish such a failure. A filename match alone does not establish this consequence.</vuln_desc>
+        <developer>Trace the actual boundary, restrict accepted inputs and recipients, and enforce authentication and object-level authorization where required. Verify both authorized and denied use cases.</developer>
         <reviewer>Verify the presence and correctness of code paths related to view models. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Controllers</name>
         <regex><![CDATA[(?i)\/(Controllers|Controller)\/]]></regex>
-        <rdl_ref>logic/filepaths/core/controllers.rdl</rdl_ref>
+        <rdl_ref>logic/rdl/v1/filepaths/core/controllers.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -368,15 +368,15 @@
             <highlight_enabled>true</highlight_enabled>
             <highlight_color>yellow</highlight_color>
         </scan_config>
-        <rule_desc>Detects file paths related to controllers.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of code paths related to controllers in the project.</vuln_desc>
-        <developer>Review and document code paths related to controllers, ensuring they are correctly implemented.</developer>
+        <rule_desc>A file or directory name matches the controllers review area. This check inspects paths, not the implementation or a reachable execution path.</rule_desc>
+        <vuln_desc>A boundary that trusts unauthorized callers or exposes private output may permit data disclosure or state changes. A declaration, address, or architectural marker alone does not establish such a failure. A filename match alone does not establish this consequence.</vuln_desc>
+        <developer>Trace the actual boundary, restrict accepted inputs and recipients, and enforce authentication and object-level authorization where required. Verify both authorized and denied use cases.</developer>
         <reviewer>Verify the presence and correctness of code paths related to controllers. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Presenter</name>
         <regex><![CDATA[(?i)\/(Presenter)\/]]></regex>
-        <rdl_ref>logic/filepaths/core/presenter.rdl</rdl_ref>
+        <rdl_ref>logic/rdl/v1/filepaths/core/presenter.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -385,15 +385,15 @@
             <highlight_enabled>true</highlight_enabled>
             <highlight_color>yellow</highlight_color>
         </scan_config>
-        <rule_desc>Detects file paths related to presenters.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of code paths related to presenters in the project.</vuln_desc>
-        <developer>Review and document code paths related to presenters, ensuring they are correctly implemented.</developer>
+        <rule_desc>A file or directory name matches the presenter review area. This check inspects paths, not the implementation or a reachable execution path.</rule_desc>
+        <vuln_desc>A boundary that trusts unauthorized callers or exposes private output may permit data disclosure or state changes. A declaration, address, or architectural marker alone does not establish such a failure. A filename match alone does not establish this consequence.</vuln_desc>
+        <developer>Trace the actual boundary, restrict accepted inputs and recipients, and enforce authentication and object-level authorization where required. Verify both authorized and denied use cases.</developer>
         <reviewer>Verify the presence and correctness of code paths related to presenters. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Logging</name>
-        <regex><![CDATA[(?i)(log|logging|logger)]]></regex>
-        <rdl_ref>logic/filepaths/core/logging.rdl</rdl_ref>
+        <regex><![CDATA[(?-i:(?:(?<![A-Za-z])(?i:logs?|logging|logger)(?=[A-Z_. /\\-]|$)|(?<=[a-z])(?:Log|Logging|Logger)(?=[A-Z_. /\\-]|$)))]]></regex>
+        <rdl_ref>logic/rdl/v1/filepaths/core/logging.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -403,15 +403,15 @@
             <highlight_color>yellow</highlight_color>
         </scan_config>
         <exclude>(?i)(blog|blogging)</exclude>
-        <rule_desc>Detects file paths related to logging functionality.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of code paths related to logging in the project.</vuln_desc>
-        <developer>Review logging functionality, ensuring it is correctly implemented.</developer>
+        <rule_desc>A file or directory name matches the logging review area. This check inspects paths, not the implementation or a reachable execution path.</rule_desc>
+        <vuln_desc>Readers of exposed diagnostics may obtain credentials, private records, internal paths, or implementation details that enable account misuse or targeted attacks. A filename match alone does not establish this consequence.</vuln_desc>
+        <developer>Keep sensitive values and detailed errors out of user-facing responses and routine logs. Redact before emission, restrict diagnostic access, and verify production logging configuration.</developer>
         <reviewer>Verify the presence and secure implementation of logging functionality. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Exception Handling</name>
         <regex><![CDATA[(?i)(exception|error_handling)]]></regex>
-        <rdl_ref>logic/filepaths/core/exception_handling.rdl</rdl_ref>
+        <rdl_ref>logic/rdl/v1/filepaths/core/exception_handling.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -420,15 +420,15 @@
             <highlight_enabled>true</highlight_enabled>
             <highlight_color>yellow</highlight_color>
         </scan_config>
-        <rule_desc>Detects file paths related to exception handling functionality.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of code paths related to exception handling in the project.</vuln_desc>
-        <developer>Review exception handling functionality, ensuring it is correctly implemented.</developer>
+        <rule_desc>A file or directory name matches the exception handling review area. This check inspects paths, not the implementation or a reachable execution path.</rule_desc>
+        <vuln_desc>Unhandled failures or unbounded work may disrupt availability or leave security-relevant state inconsistent. The presence or absence of a named handler alone does not establish a reachable security defect. A filename match alone does not establish this consequence.</vuln_desc>
+        <developer>Bound resource use, handle failures at the correct ownership boundary, and fail safely before updating trusted state. Test exceptional paths, cancellation, timeouts, and recovery behavior.</developer>
         <reviewer>Verify the presence and secure implementation of exception handling functionality. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
     <rule>
         <name>Database Interaction</name>
-        <regex><![CDATA[(?i)(database|db|sql)]]></regex>
-        <rdl_ref>logic/filepaths/core/database_interaction.rdl</rdl_ref>
+        <regex><![CDATA[(?-i:(?:(?<![A-Za-z])(?i:database|db|sql)(?=[A-Z_. /\\-]|ite|$)|(?<=[a-z])(?:Database|DB|Sql|SQL)(?=[A-Z_. /\\-]|ite|$)))]]></regex>
+        <rdl_ref>logic/rdl/v1/filepaths/core/database_interaction.rdl</rdl_ref>
         <scan_config>
             <match_mode>line</match_mode>
             <context_lines_before>1</context_lines_before>
@@ -437,9 +437,9 @@
             <highlight_enabled>true</highlight_enabled>
             <highlight_color>yellow</highlight_color>
         </scan_config>
-        <rule_desc>Detects file paths related to database interaction functionality.</rule_desc>
-        <vuln_desc>If this rule matches, it indicates the presence of code paths related to database interaction in the project.</vuln_desc>
-        <developer>Review database interaction functionality, ensuring it is correctly implemented.</developer>
+        <rule_desc>A file or directory name matches the database interaction review area. This check inspects paths, not the implementation or a reachable execution path.</rule_desc>
+        <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition. A filename match alone does not establish this consequence.</vuln_desc>
+        <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
         <reviewer>Verify the presence and secure implementation of database interaction functionality. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
     </rule>
 </root>

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.terraform.framework.azure.azure_storage_account_without_secure_transfer_required VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "enable_https_traffic_only\\s*=\\s*false" "im"
+WHEN (TEXT_MATCHES "enable_https_traffic_only\\s*=\\s*false|min_tls_version\\s*=\\s*\"TLS1_0\"" "im" AND TEXT_MISSING "# intentional|# legacy" "im")
+REPORT "Azure Storage Account Without Secure Transfer Required"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

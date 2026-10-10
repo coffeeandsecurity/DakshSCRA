@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.common.core.sql_query_select_statement_with_order_by_clause VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)\\bSELECT\\b.*\\bORDER BY\\b" "im"
+WHEN (TEXT_MATCHES "(?i)(\\+|\\$\\{|format\\(|sprintf\\(|f\\\"|f'|request|params|query|input)" "im" AND TEXT_MISSING "(?i)(prepare|bind|parameterized|replacements|sqlparameter)" "im")
+REPORT "SQL Query: SELECT Statement with ORDER BY Clause"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

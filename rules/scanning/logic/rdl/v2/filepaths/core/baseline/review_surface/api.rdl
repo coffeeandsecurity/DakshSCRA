@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.filepaths.core.api VERSION 1
+IN PATH
+WHEN TEXT_MATCHES "(?i)\\bapi\\b" "im"
+WHEN (TEXT_MATCHES "(?i)(/|\\\\\\\\).*(api|endpoint|route|controller|handler)" "im" AND TEXT_MISSING "(?i)(/docs?/|/examples?/|/samples?/|/tests?/)" "im")
+REPORT "API"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

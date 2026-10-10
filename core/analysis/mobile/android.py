@@ -1,7 +1,9 @@
 # Standard libraries
 from pathlib import Path
+from utils.scan_scope import glob_source, allows_file, allows_check
 from typing import Dict, List
 import xml.etree.ElementTree as ET
+from xml.parsers import expat
 import re
 
 import state.runtime_state as state
@@ -89,6 +91,25 @@ def _android_attr(element: ET.Element, name: str) -> str:
     return str(element.get(f"{ANDROID_NS}{name}") or "").strip()
 
 
+def _declaration_lines(root: ET.Element, lines: List[str]) -> Dict[ET.Element, int]:
+    """Associate parsed declarations with their exact opening-tag lines.
+
+    XML parsing excludes comments and handles multiline attributes and repeated
+    names. A text search can borrow another component's action or export flag.
+    Reject mismatched trees rather than inventing a source location.
+    """
+    parser = expat.ParserCreate(namespace_separator="}")
+    starts = []
+    parser.StartElementHandler = lambda name, attrs: starts.append((name, parser.CurrentLineNumber))
+    parser.Parse("\n".join(lines), True)
+    nodes = list(root.iter())
+    if len(nodes) != len(starts) or any(
+        str(node.tag).lstrip("{") != name for node, (name, _) in zip(nodes, starts)
+    ):
+        raise ValueError("Manifest tree does not match source declarations")
+    return {node: line for node, (_, line) in zip(nodes, starts)}
+
+
 def _bool_attr(element: ET.Element, name: str, default: bool = False) -> bool:
     raw = _android_attr(element, name).lower()
     if raw == "true":
@@ -142,10 +163,18 @@ def _resolve_component_name(component_name: str, manifest_package: str) -> str:
     return token
 
 
-def _source_index(source_root: Path) -> Dict[str, Path]:
+def _source_index(source_root: Path, source_cache=None) -> Dict[str, Path]:
     index: Dict[str, Path] = {}
+    if source_cache is not None:
+        for file_path, lines in source_cache.items():
+            package_name = _package_from_text('\n'.join(lines))
+            stem = file_path.stem
+            fqcn = f"{package_name}.{stem}" if package_name else stem
+            for key in {stem, fqcn, f".{stem}"}:
+                index.setdefault(key, file_path)
+        return index
     for glob in ("*.kt", "*.java"):
-        for file_path in source_root.rglob(glob):
+        for file_path in glob_source(source_root, glob):
             try:
                 text = file_path.read_text(encoding="utf-8", errors="ignore")
             except OSError:
@@ -161,7 +190,7 @@ def _source_index(source_root: Path) -> Dict[str, Path]:
 def _source_cache(source_root: Path) -> Dict[Path, List[str]]:
     cache: Dict[Path, List[str]] = {}
     for glob in ("*.kt", "*.java"):
-        for file_path in source_root.rglob(glob):
+        for file_path in glob_source(source_root, glob):
             try:
                 cache[file_path] = file_path.read_text(encoding="utf-8", errors="ignore").splitlines()
             except OSError:
@@ -605,6 +634,7 @@ def _exported_component_flows(manifest_path: Path, source_root: Path, root: ET.E
     if app is None:
         return flows
 
+    declarations = _declaration_lines(root, lines)
     for component in app:
         tag = _component_kind(component.tag)
         if tag not in COMPONENT_TAGS:
@@ -614,8 +644,8 @@ def _exported_component_flows(manifest_path: Path, source_root: Path, root: ET.E
 
         permission = _permission_guard(component)
         component_name = _android_attr(component, "name") or tag
-        source_line = _line_no(lines, component_name)
-        exported_line = _line_no(lines, component_name, "android:exported")
+        source_line = declarations[component]
+        exported_line = source_line
 
         # Exported provider with no permission is handled separately.
         if tag == "provider" and not permission:
@@ -717,6 +747,7 @@ def _provider_flows(manifest_path: Path, source_root: Path, root: ET.Element, li
     if app is None:
         return flows
 
+    declarations = _declaration_lines(root, lines)
     for component in app.findall("provider"):
         authorities = _android_attr(component, "authorities")
         component_name = _android_attr(component, "name") or authorities or "provider"
@@ -725,8 +756,8 @@ def _provider_flows(manifest_path: Path, source_root: Path, root: ET.Element, li
         if _permission_guard(component):
             continue
 
-        source_line = _line_no(lines, component_name or authorities or "<provider")
-        sink_line = _line_no(lines, component_name or authorities or "<provider", "authorities")
+        source_line = declarations[component]
+        sink_line = source_line
         sink_name = "content provider exposure"
         description = f"Exported content provider `{component_name}` exposes authority `{authorities or 'unknown'}` without read/write permissions."
         explanation = (
@@ -807,6 +838,7 @@ def _deep_link_flows(manifest_path: Path, source_root: Path, root: ET.Element, l
     if app is None:
         return flows
 
+    declarations = _declaration_lines(root, lines)
     for component in app:
         tag = _component_kind(component.tag)
         if tag not in {"activity", "activity-alias"}:
@@ -825,8 +857,8 @@ def _deep_link_flows(manifest_path: Path, source_root: Path, root: ET.Element, l
             if _bool_attr(intent_filter, "autoVerify", default=False):
                 continue
 
-            source_line = _line_no(lines, component_name, "android.intent.action.VIEW")
-            sink_line = _line_no(lines, component_name, "android.intent.action.VIEW")
+            source_line = declarations[component]
+            sink_line = declarations[intent_filter]
             sink_name = "deep link exposure"
             host_summary = ", ".join(hosts[:3]) or "any host"
             scheme_summary = ", ".join(schemes[:3]) or "custom/unrestricted scheme"
@@ -915,7 +947,7 @@ def _cleartext_flows(manifest_path: Path, source_root: Path, root: ET.Element, l
     if not _bool_attr(app, "usesCleartextTraffic", default=False):
         return flows
 
-    line = _line_no(lines, "usesCleartextTraffic")
+    line = _declaration_lines(root, lines)[app]
     sink_name = "cleartext transport"
     description = "The application manifest enables cleartext traffic, allowing network attackers to tamper with or observe app traffic."
     explanation = (
@@ -959,18 +991,23 @@ def _cleartext_flows(manifest_path: Path, source_root: Path, root: ET.Element, l
     return flows
 
 
-def _parse_manifest(manifest_path: Path, source_root: Path) -> List[Dict]:
+def _parse_manifest(manifest_path: Path, source_root: Path, *, source_map=None, method_index=None) -> List[Dict]:
     try:
         raw = manifest_path.read_text(encoding="utf-8", errors="ignore")
         root = ET.fromstring(raw)
     except ET.ParseError:
         return []
+    if root.find('application') is None:
+        return []
 
     lines = raw.splitlines()
     manifest_package = _manifest_package(root)
-    source_map = _source_index(source_root)
-    source_cache = _source_cache(source_root)
-    method_index = _method_index(source_cache)
+    if source_map is None or method_index is None:
+        source_cache = _source_cache(source_root)
+        if source_map is None:
+            source_map = _source_index(source_root, source_cache)
+        if method_index is None:
+            method_index = _method_index(source_cache)
     flows: List[Dict] = []
     flows.extend(_exported_component_flows(manifest_path, source_root, root, lines, source_map, manifest_package, method_index))
     flows.extend(_provider_flows(manifest_path, source_root, root, lines, source_map, manifest_package, method_index))
@@ -984,8 +1021,16 @@ def analyze_android_flows(source_root: Path, progress_callback=None):
     flows.extend(annotate_flows(analyze_java_flows(source_root, progress_callback=progress_callback), platform="android", variant="java"))
     flows.extend(annotate_flows(analyze_kotlin_flows(source_root, progress_callback=progress_callback), platform="android", variant="kotlin"))
 
-    for manifest_path in source_root.rglob("AndroidManifest.xml"):
-        flows.extend(_parse_manifest(manifest_path, source_root))
+    # Scope shared indexes to this invocation, never to a global source-root cache.
+    # Overlay/library manifests must not reread the entire project individually.
+    source_cache = None
+    for manifest_path in glob_source(source_root, "AndroidManifest.xml"):
+        if source_cache is None:
+            source_cache = _source_cache(source_root)
+            source_map = _source_index(source_root, source_cache)
+            method_index = _method_index(source_cache)
+        flows.extend(_parse_manifest(manifest_path, source_root,
+                                     source_map=source_map, method_index=method_index))
     return flows
 
 

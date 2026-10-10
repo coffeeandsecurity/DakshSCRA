@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.ios.framework.uikit.ios_pasteboard_usage VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "UIPasteboard\\.general|setValue\\(.*forPasteboardType" "im"
+WHEN (TEXT_MISSING "expirationDate" "im" AND TEXT_MISSING "localOnly" "im")
+REPORT "iOS Pasteboard Usage"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

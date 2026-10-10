@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.ios.core.keychain_accessibility_too_permissive VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "kSecAttrAccessible\\s*:\\s*kSecAttrAccessibleAlways" "im"
+REPORT "Keychain Accessibility Too Permissive"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

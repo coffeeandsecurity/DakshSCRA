@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.terraform.framework.aws.s3_access_logging_disabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "resource\\s+\"aws_s3_bucket\"\\b" "im"
+WHEN TEXT_MISSING "logging\\s*\\{|aws_s3_bucket_logging" "im"
+REPORT "S3 Access Logging Disabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

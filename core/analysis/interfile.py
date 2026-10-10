@@ -4,6 +4,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
+from utils.scan_scope import glob_source, allows_file, allows_check
+from utils.source_cache import read_source_text
 from typing import Dict, List, Optional, Set, Tuple
 
 from core.analysis.common import load_analysis_config
@@ -69,7 +71,7 @@ JS_OBJECT_METHOD_RE = re.compile(
 )
 JS_EXCLUDED_METHODS = {"if", "for", "while", "switch", "catch", "constructor"}
 JS_ROUTE_CALL_RE = re.compile(r"\.(get|post|put|patch|delete|use|all)\s*\(")
-JS_INLINE_ARROW_CB_RE = re.compile(r"(?:async\s*)?\(([^)]*)\)\s*=>|(?:async\s+)?([A-Za-z_$][A-Za-z0-9_$]*)\s*=>")
+JS_INLINE_ARROW_CB_RE = re.compile(r"(?:async\s*)?\(([^()]*)\)\s*=>|(?:async\s+)?([A-Za-z_$][A-Za-z0-9_$]*)\s*=>")
 JS_INLINE_FUNCTION_CB_RE = re.compile(r"function\s*(?:[A-Za-z_$][A-Za-z0-9_$]*)?\s*\(([^)]*)\)")
 JAVA_SPRING_PARAM_ANN_RE = re.compile(r"@(RequestParam|PathVariable|RequestBody|RequestHeader|CookieValue|ModelAttribute)\b", re.IGNORECASE)
 DOTNET_BINDING_ATTR_RE = re.compile(r"\[(FromBody|FromQuery|FromRoute|FromHeader|FromForm)\b[^\]]*\]", re.IGNORECASE)
@@ -329,6 +331,16 @@ def _get_platform_spec(platform: str, cfg: Dict) -> Dict:
         "function_def_re": fn_re,
         "mode": mode,
     }
+
+
+def _sink_argument_text(line, sink_name, platform):
+    """JdbcTemplate binding values do not alter the query's SQL structure."""
+    if platform != 'java' or sink_name != 'SQL (JdbcTemplate)':
+        return line
+    queries = [args[0] for name, args, symbol in _extract_calls(line)
+               if args and re.search(r'\b(?:jdbcTemplate|namedParameterJdbcTemplate)\.', symbol)
+               and name in {'query', 'queryForList', 'queryForMap', 'queryForObject', 'update', 'execute', 'batchUpdate'}]
+    return '\n'.join(queries) if queries else line
 
 
 def _source_in_sink_args(line: str, sink_name: str, source_patterns: List) -> bool:
@@ -592,7 +604,7 @@ def _parse_javascript_functions(file_path: Path, lines: List[str]) -> List[Funct
                 if inline_match:
                     route_kind_match = JS_ROUTE_CALL_RE.search(line)
                     route_kind = route_kind_match.group(1).lower() if route_kind_match else "route"
-                    raw_params = inline_match.group(1) or inline_match.group(2) or ""
+                    raw_params = next((value for value in inline_match.groups() if value), "")
                     params = _extract_params(raw_params)
                     name = f"route_{route_kind}_{idx + 1}"
 
@@ -743,6 +755,13 @@ def _extract_assignment(line: str, platform: str) -> Optional[Tuple[str, str]]:
 def _line_has_var(line: str, var: str, platform: str) -> bool:
     if platform == "php":
         return re.search(rf"\${re.escape(var)}\b", line) is not None
+    if platform == 'java':
+        # A fixed servlet-context path is server configuration rather than data
+        # read from the request. Dynamic path arguments remain traceable.
+        line = re.sub(r'\b\w+\s*\.\s*getSession\s*\(\s*\)\s*\.\s*getServletContext\s*\(\s*\)\s*\.\s*getRealPath\s*\(\s*"(?:\\.|[^"\\])*"\s*\)', ' ', line)
+        # Java literals do not interpolate local identifiers. Column names in
+        # a fixed SQL string must not acquire taint from same-named parameters.
+        line = re.sub(r'''"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*' ''', ' ', line, flags=re.X)
     return re.search(rf"\b{re.escape(var)}\b", line) is not None
 
 
@@ -1439,12 +1458,13 @@ def _scan_scope_for_summary(
                 "code": _line_source(lines, idx),
                 "function": fn.name,
             }
+            argument_text = _sink_argument_text(stripped, sink_name, platform)
             for var, origins in tainted.items():
-                if _line_has_var(stripped, var, platform):
+                if _line_has_var(argument_text, var, platform):
                     for origin_idx in origins:
                         summary.param_to_sink.setdefault(origin_idx, []).append(sink_obj)
             for var in source_tainted:
-                if _line_has_var(stripped, var, platform):
+                if _line_has_var(argument_text, var, platform):
                     summary.source_to_sink.append(sink_obj)
             if platform == "php":
                 for var, buckets in session_var_buckets.items():
@@ -1569,9 +1589,9 @@ def _load_analyzer_limits():
     try:
         import utils.config_utils as _cu
         acfg = _cu.get_analysis_config()
-        return acfg.get("max_files_per_platform", 300), acfg.get("max_functions_per_platform", 1500)
+        return acfg.get("max_files_per_platform", 0), acfg.get("max_functions_per_platform", 0)
     except Exception:
-        return 300, 1500
+        return 0, 0
 
 
 def analyze_multifile_flows(
@@ -1594,9 +1614,9 @@ def analyze_multifile_flows(
 
     files: List[Path] = []
     for pat in globs:
-        files.extend(source_root.rglob(pat))
+        files.extend(glob_source(source_root, pat))
 
-    if len(files) > max_files:
+    if max_files and len(files) > max_files:
         print(
             f"     [!] Analyzer limit: {len(files)} {platform} files found; "
             f"capping at {max_files}. Use --no-analysis to skip or raise "
@@ -1637,7 +1657,13 @@ def analyze_multifile_flows(
                     "current_file": str(file_path),
                 })
         try:
-            lines = file_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+            content = read_source_text(file_path, encoding="utf-8", errors="ignore")
+            if platform == "php":
+                from core.rdl.source_review import source_views
+                # Comments cannot introduce functions, calls, sources or sinks.
+                # Keep string values and original line offsets for PHP/HTML.
+                content, _ = source_views(file_path, content)
+            lines = content.splitlines()
         except OSError:
             continue
         file_lines[file_path] = lines
@@ -1678,7 +1704,7 @@ def analyze_multifile_flows(
                 for alias in _call_aliases(full_symbol, call_name):
                     call_index.setdefault(alias, []).append(call_obj)
 
-    if len(functions) > max_functions:
+    if max_functions and len(functions) > max_functions:
         print(
             f"     [!] Analyzer limit: {len(functions)} {platform} functions parsed; "
             f"capping at {max_functions}. Raise max_functions_per_platform in "
@@ -2489,9 +2515,10 @@ def analyze_multifile_flows(
             for sink_name, (sink_re, sink_desc) in cfg.get("sinks", {}).items():
                 if not sink_re.search(stripped):
                     continue
-                line_has_source = any(r.search(stripped) for r in cfg.get("sources", []))
+                argument_text = _sink_argument_text(stripped, sink_name, platform)
+                line_has_source = any(r.search(argument_text) for r in cfg.get("sources", []))
                 for var, path_steps in tainted_paths.items():
-                    if _line_has_var(stripped, var, platform):
+                    if _line_has_var(argument_text, var, platform):
                         full_path = path_steps + [_make_path_step(
                             fn.file,
                             idx + 1,
@@ -2518,7 +2545,7 @@ def analyze_multifile_flows(
                             }
                         )
                 for var, path_steps in source_tainted_paths.items():
-                    if _line_has_var(stripped, var, platform):
+                    if _line_has_var(argument_text, var, platform):
                         full_path = path_steps + [_make_path_step(
                             fn.file,
                             idx + 1,

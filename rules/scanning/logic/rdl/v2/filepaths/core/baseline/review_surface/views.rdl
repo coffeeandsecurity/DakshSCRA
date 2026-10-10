@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.filepaths.core.views VERSION 1
+IN PATH
+WHEN TEXT_MATCHES "(?i)/(Views|View)/" "im"
+WHEN TEXT_MATCHES "(?i)(/|\\\\\\\\).*(views?|templates?)" "im"
+REPORT "Views"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

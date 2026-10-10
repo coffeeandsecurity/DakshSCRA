@@ -3,7 +3,7 @@
         <rule>
             <name>Unsafe Shell Command Execution</name>
             <regex>\b(?:system|exec|spawn|popen|Open3\.(?:capture2e?|pipeline|popen2e?))\s*\(</regex>
-            <rdl_ref>logic/ruby/core/unsafe_shell_command_execution.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/ruby/core/unsafe_shell_command_execution.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -12,15 +12,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects shell command execution APIs in Ruby that can be dangerous when fed untrusted input.</rule_desc>
-            <vuln_desc>Command execution with untrusted input can lead to command injection and unauthorized code execution.</vuln_desc>
-            <developer>Avoid shelling out with user-supplied data. Prefer native APIs and strict allowlists for command parameters.</developer>
+            <rule_desc>The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.</rule_desc>
+            <vuln_desc>If an attacker controls interpreted syntax or the operation selected, code or commands may run with the application’s privileges, allowing data theft, state changes, or service disruption.</vuln_desc>
+            <developer>Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates or expressions.</developer>
             <reviewer>Verify command arguments are not derived from untrusted input and are validated/escaped safely. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Potential SQL Injection via String Interpolation</name>
             <regex>\b(?:where|find_by_sql|execute|order|joins)\s*\(\s*["'][^"']*#\{</regex>
-            <rdl_ref>logic/ruby/core/potential_sql_injection_via_string_interpolation.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/ruby/core/potential_sql_injection_via_string_interpolation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -29,9 +29,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects SQL query construction using string interpolation in ActiveRecord or raw SQL calls.</rule_desc>
-            <vuln_desc>Interpolating user-controlled values into SQL can enable SQL injection and unauthorized data access.</vuln_desc>
-            <developer>Use parameterized query APIs and bind variables instead of interpolation.</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Check all dynamic query fragments for parameterization and robust input validation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -39,7 +39,7 @@
         <rule>
             <name>Unsafe YAML Deserialization</name>
             <regex>\bYAML\.load\s*\(</regex>
-            <rdl_ref>logic/ruby/core/unsafe_yaml_deserialization.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/ruby/core/unsafe_yaml_deserialization.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -48,15 +48,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects use of YAML.load which can deserialize arbitrary objects.</rule_desc>
-            <vuln_desc>Unsafe deserialization may allow object injection, leading to code execution or data tampering.</vuln_desc>
-            <developer>Use safe loaders such as YAML. safe_load and enforce permitted classes if needed.</developer>
+            <rule_desc>The application reads serialized objects or uses a parser that may construct runtime types. Identify the input’s trust and the effective parser and type restrictions.</rule_desc>
+            <vuln_desc>A crafted untrusted payload may instantiate dangerous types or trigger object behavior that executes code, modifies state, or exhausts resources when the parser permits those operations.</vuln_desc>
+            <developer>Use a data-only format and a safe loader for untrusted input. Disable automatic object or type construction, allowlist required types, and bound parsing size and complexity.</developer>
             <reviewer>Confirm untrusted YAML is processed only through safe deserialization methods. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Dynamic Code Evaluation</name>
             <regex>\b(?:eval|instance_eval|class_eval|module_eval)\s*\(</regex>
-            <rdl_ref>logic/ruby/core/dynamic_code_evaluation.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/ruby/core/dynamic_code_evaluation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -65,9 +65,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects dynamic code evaluation methods.</rule_desc>
-            <vuln_desc>Evaluating dynamic strings can allow remote code execution if inputs are attacker-controlled.</vuln_desc>
-            <developer>Avoid runtime code evaluation; refactor to explicit logic paths and whitelisted behavior.</developer>
+            <rule_desc>The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.</rule_desc>
+            <vuln_desc>If an attacker controls interpreted syntax or the operation selected, code or commands may run with the application’s privileges, allowing data theft, state changes, or service disruption.</vuln_desc>
+            <developer>Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates or expressions.</developer>
             <reviewer>Assess whether any evaluated content can be influenced by external inputs. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -75,7 +75,7 @@
         <rule>
             <name>Weak Session Secret Configuration</name>
             <regex>(?i)secret_key_base\s*[:=]\s*["'](?:changeme|secret|test|default)["']</regex>
-            <rdl_ref>logic/ruby/core/weak_session_secret_configuration.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/ruby/core/weak_session_secret_configuration.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -84,15 +84,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects likely weak or default session secret values.</rule_desc>
-            <vuln_desc>Weak secrets may let attackers forge session cookies and impersonate users.</vuln_desc>
-            <developer>Use high-entropy secrets from secure secret managers and rotate when exposed.</developer>
+            <rule_desc>The code handles session state or configures cookies and session secrets. Resolve cookie attributes, token generation, lifetime, and server-side validation.</rule_desc>
+            <vuln_desc>Weak session secrets, exposed cookies, or inadequate expiry may allow session theft, token forgery, or continued access after the user’s intended authorization ends.</vuln_desc>
+            <developer>Use strong unpredictable session secrets, rotate tokens on privilege changes, and enforce expiry and revocation. Set Secure, HttpOnly, and appropriate SameSite attributes for sensitive browser cookies.</developer>
             <reviewer>Ensure session secrets are not defaults and are securely provisioned per environment. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Cookies Missing Secure or HttpOnly Flags</name>
             <regex>\bcookies\[[^\]]+\]\s*=\s*\{(?![^\}]*\b(?:secure|httponly)\b)</regex>
-            <rdl_ref>logic/ruby/core/cookies_missing_secure_or_httponly_flags.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/ruby/core/cookies_missing_secure_or_httponly_flags.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -101,15 +101,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects cookie assignments without explicit secure and HttpOnly attributes.</rule_desc>
-            <vuln_desc>Missing secure flags can expose cookies to theft over insecure channels or client-side scripts.</vuln_desc>
-            <developer>Set `secure: true`, `httponly: true`, and `same_site` appropriately for sensitive cookies.</developer>
+            <rule_desc>The code handles session state or configures cookies and session secrets. Resolve cookie attributes, token generation, lifetime, and server-side validation.</rule_desc>
+            <vuln_desc>Weak session secrets, exposed cookies, or inadequate expiry may allow session theft, token forgery, or continued access after the user’s intended authorization ends.</vuln_desc>
+            <developer>Use strong unpredictable session secrets, rotate tokens on privilege changes, and enforce expiry and revocation. Set Secure, HttpOnly, and appropriate SameSite attributes for sensitive browser cookies.</developer>
             <reviewer>Review cookie-setting code to verify transport and script access protections are enforced. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>CSRF Protection Disabled or Relaxed</name>
             <regex>(?i)\b(?:skip_before_action\s*:verify_authenticity_token|protect_from_forgery\s+with:\s*:null_session|protect_from_forgery\s+except:)</regex>
-            <rdl_ref>logic/ruby/core/csrf_protection_disabled_or_relaxed.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/ruby/core/csrf_protection_disabled_or_relaxed.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -118,9 +118,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects Rails patterns that disable or weaken default CSRF protections.</rule_desc>
-            <vuln_desc>Disabling CSRF verification can allow forged state-changing requests from attacker-controlled origins.</vuln_desc>
-            <developer>Keep CSRF protection enabled for state-changing endpoints and use targeted, justified exceptions only when required.</developer>
+            <rule_desc>The code disables, exempts, or configures request-forgery protection. Verify whether a reachable state-changing operation authenticates through automatically sent browser credentials.</rule_desc>
+            <vuln_desc>An attacker may cause a victim’s browser to perform unwanted authenticated actions if the endpoint relies on ambient credentials and lacks an effective anti-forgery check.</vuln_desc>
+            <developer>Enforce anti-forgery protection on cookie-authenticated state changes, validate origins where appropriate, and justify exemptions only for independently authenticated non-browser flows.</developer>
             <reviewer>Verify each exception has a strong trust boundary and compensating controls (authn, origin checks, tokens, API design). This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -128,7 +128,7 @@
         <rule>
             <name>Stack Trace or Sensitive Exception Disclosure</name>
             <regex>\b(?:puts|print|logger\.(?:debug|info|error)|Rails\.logger\.(?:debug|info|error))\s*\(?.*(?:exception|backtrace)</regex>
-            <rdl_ref>logic/ruby/core/stack_trace_or_sensitive_exception_disclosure.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/ruby/core/stack_trace_or_sensitive_exception_disclosure.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -138,9 +138,9 @@
                 <highlight_color>yellow</highlight_color>
             </scan_config>
             <exclude>(?i)^\s*(#|//|/\*|\*)|apache\.org/licenses|opensource\.org/licenses</exclude>
-            <rule_desc>Detects logging or printing of exception/backtrace details.</rule_desc>
-            <vuln_desc>Exposing stack traces can leak internals such as file paths, secrets, and implementation details.</vuln_desc>
-            <developer>Log exceptions securely with redaction policies and avoid returning internal errors to clients.</developer>
+            <rule_desc>The code writes diagnostic data or exposes detailed errors. Establish the values emitted, production configuration, and recipients of the output.</rule_desc>
+            <vuln_desc>Readers of exposed diagnostics may obtain credentials, private records, internal paths, or implementation details that enable account misuse or targeted attacks.</vuln_desc>
+            <developer>Keep sensitive values and detailed errors out of user-facing responses and routine logs. Redact before emission, restrict diagnostic access, and verify production logging configuration.</developer>
             <reviewer>Verify sensitive internals are not exposed in logs or user-facing responses. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

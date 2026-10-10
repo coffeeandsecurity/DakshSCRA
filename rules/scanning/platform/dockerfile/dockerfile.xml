@@ -3,7 +3,7 @@
         <rule>
             <name>Running as Root User</name>
             <regex>^USER\s+(?:root|0)\s*$</regex>
-            <rdl_ref>logic/dockerfile/core/running_as_root_user.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dockerfile/core/running_as_root_user.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -12,15 +12,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects Dockerfiles that explicitly set or retain root as the container runtime user.</rule_desc>
-            <vuln_desc>Running containers as root means any process escape or container breakout yields full host root privileges, dramatically increasing the impact of exploitation.</vuln_desc>
-            <developer>Add a non-root USER instruction before the final CMD/ENTRYPOINT. Create a dedicated application user with RUN useradd -r -u 1001 appuser and reference it with USER appuser.</developer>
+            <rule_desc>The code or deployment configuration requests privileges or grants access beyond an explicitly resolved minimum. Determine the effective permissions and the operation’s requirements.</rule_desc>
+            <vuln_desc>A compromised actor may access additional data, modify protected resources, or extend compromise beyond the intended application boundary when excessive privileges remain available.</vuln_desc>
+            <developer>Run with the least privileges required, remove unnecessary grants, and scope each permission to its intended resource and operation. Verify effective inherited permissions and test denied access.</developer>
             <reviewer>Confirm the final USER directive before CMD or ENTRYPOINT is a non-root identity. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>No USER Directive Present</name>
             <regex>^(?:ENTRYPOINT|CMD)\s</regex>
-            <rdl_ref>logic/dockerfile/core/no_user_directive_present.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dockerfile/core/no_user_directive_present.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -29,15 +29,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects Dockerfiles that do not specify a USER directive, defaulting to root at runtime.</rule_desc>
-            <vuln_desc>Without a USER directive the container process defaults to root, unnecessarily expanding the attack surface.</vuln_desc>
-            <developer>Add a non-root USER directive before the ENTRYPOINT or CMD instruction.</developer>
+            <rule_desc>The code or deployment configuration requests privileges or grants access beyond an explicitly resolved minimum. Determine the effective permissions and the operation’s requirements.</rule_desc>
+            <vuln_desc>A compromised actor may access additional data, modify protected resources, or extend compromise beyond the intended application boundary when excessive privileges remain available.</vuln_desc>
+            <developer>Run with the least privileges required, remove unnecessary grants, and scope each permission to its intended resource and operation. Verify effective inherited permissions and test denied access.</developer>
             <reviewer>Verify an explicit non-root USER is defined before container startup. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Using latest Tag for Base Image</name>
             <regex>^FROM\s+\S+:latest\b|^FROM\s+(?!scratch\b)\S+\s*$</regex>
-            <rdl_ref>logic/dockerfile/core/using_latest_tag_for_base_image.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dockerfile/core/using_latest_tag_for_base_image.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -46,9 +46,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects use of the latest tag or untagged image references in FROM instructions.</rule_desc>
-            <vuln_desc>Using latest or no tag causes unpredictable image resolution, can silently introduce vulnerable base image versions, and makes builds non-reproducible.</vuln_desc>
-            <developer>Pin base images to specific immutable digest hashes (FROM ubuntu@sha256:...) or fixed version tags (FROM ubuntu:22.04).</developer>
+            <rule_desc>The source references a dependency, version, or deprecated API. Resolve the actual deployed version and supported behavior before deciding whether it needs replacement.</rule_desc>
+            <vuln_desc>A reachable vulnerability in an unsupported or affected dependency may compromise the application with its privileges. A version declaration or deprecated API alone does not establish that such a vulnerability is present.</vuln_desc>
+            <developer>Inventory resolved dependencies and runtime versions, compare them with authoritative advisories and support policy, and migrate affected or unsupported components to tested supported replacements.</developer>
             <reviewer>Confirm all base image references include pinned version tags or digest hashes. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -56,7 +56,7 @@
         <rule>
             <name>Secret Passed via ENV Instruction</name>
             <regex>(?i)^ENV\s+(?:PASSWORD|SECRET|API_KEY|APIKEY|TOKEN|ACCESS_KEY|PRIVATE_KEY|AUTH_TOKEN)\s*=?\s*\S</regex>
-            <rdl_ref>logic/dockerfile/core/secret_passed_via_env_instruction.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dockerfile/core/secret_passed_via_env_instruction.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -65,15 +65,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects secrets or credentials embedded as ENV instructions in Dockerfiles.</rule_desc>
-            <vuln_desc>ENV values are baked into image layers and visible via docker inspect, image history, and any container spawned from the image, permanently exposing secrets.</vuln_desc>
-            <developer>Use Docker secrets (--secret), BuildKit secret mounts (--mount=type=secret), or runtime environment injection via orchestrators (Kubernetes Secrets, ECS task definitions). Never embed secrets in ENV.</developer>
+            <rule_desc>The checked source or build configuration embeds potentially sensitive credential or key material. Determine whether it is active and whether it reaches distributed artifacts or logs.</rule_desc>
+            <vuln_desc>A party who can read exposed source, artifacts, configuration, or logs may recover active secrets and access the protected service or decrypt data with the secret owner’s privileges.</vuln_desc>
+            <developer>Remove active secrets from source and build layers, rotate exposed values, and load replacements through a restricted secret-management facility. Use narrowly privileged, short-lived credentials.</developer>
             <reviewer>Confirm no sensitive values are present in ENV instructions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Secret Passed via ARG Instruction</name>
             <regex>(?i)^ARG\s+(?:PASSWORD|SECRET|API_KEY|APIKEY|TOKEN|ACCESS_KEY|PRIVATE_KEY|AUTH_TOKEN)</regex>
-            <rdl_ref>logic/dockerfile/core/secret_passed_via_arg_instruction.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dockerfile/core/secret_passed_via_arg_instruction.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -82,15 +82,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects build-time ARG instructions used to pass secrets during image construction.</rule_desc>
-            <vuln_desc>ARG values are captured in build cache and visible in docker history, leaking secrets to anyone with registry pull access or host access to the build cache.</vuln_desc>
-            <developer>Use BuildKit --mount=type=secret for sensitive build-time values instead of ARG. If ARG is unavoidable, ensure the value is never echoed or baked into a layer.</developer>
+            <rule_desc>The checked source or build configuration embeds potentially sensitive credential or key material. Determine whether it is active and whether it reaches distributed artifacts or logs.</rule_desc>
+            <vuln_desc>A party who can read exposed source, artifacts, configuration, or logs may recover active secrets and access the protected service or decrypt data with the secret owner’s privileges.</vuln_desc>
+            <developer>Remove active secrets from source and build layers, rotate exposed values, and load replacements through a restricted secret-management facility. Use narrowly privileged, short-lived credentials.</developer>
             <reviewer>Verify that secrets are not passed as build ARG values that persist in image metadata. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Private Key or Certificate Copied into Image</name>
             <regex>^(?:COPY|ADD)\s+[^\n]*(?:\.pem|\.key|\.p12|\.pfx|\.jks|id_rsa|id_dsa|id_ecdsa|\.ppk)\b</regex>
-            <rdl_ref>logic/dockerfile/core/private_key_or_certificate_copied_into_image.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dockerfile/core/private_key_or_certificate_copied_into_image.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -99,9 +99,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects COPY or ADD instructions that embed private keys or certificate files into the image.</rule_desc>
-            <vuln_desc>Private keys embedded in image layers are accessible to any user who can pull or run the image, leading to credential compromise and impersonation.</vuln_desc>
-            <developer>Mount private keys at runtime using Docker secrets or Kubernetes Secrets. Never bake cryptographic material into image layers.</developer>
+            <rule_desc>The checked source contains a transport-security exception, insecure endpoint, or certificate-validation configuration. Resolve the effective policy and the connections it governs.</rule_desc>
+            <vuln_desc>An attacker on the network may read or alter affected traffic if sensitive data travels over cleartext or the connection accepts an untrusted server. Normal HTTPS endpoints and correctly implemented validation do not establish exposure.</vuln_desc>
+            <developer>Use HTTPS with normal certificate-chain and hostname verification. Remove permissive production callbacks and broad transport exceptions; restrict any justified exception to a documented, non-sensitive endpoint.</developer>
             <reviewer>Confirm no private keys or sensitive certificates are included in COPY or ADD instructions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -109,7 +109,7 @@
         <rule>
             <name>ADD Used to Fetch Remote Content</name>
             <regex>^ADD\s+https?://</regex>
-            <rdl_ref>logic/dockerfile/core/add_used_to_fetch_remote_content.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dockerfile/core/add_used_to_fetch_remote_content.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -118,15 +118,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects ADD instructions fetching content from remote URLs without integrity verification.</rule_desc>
-            <vuln_desc>ADD with remote URLs fetches content at build time without hash verification, making builds vulnerable to supply chain attacks via URL content substitution.</vuln_desc>
-            <developer>Use RUN curl with an explicit --output path followed by a hash verification step (sha256sum). Prefer COPY from verified local sources or use BuildKit cache mounts.</developer>
+            <rule_desc>The code obtains executable material or replaces application behavior at runtime. Determine the origin, integrity checks, and intended deployment scope.</rule_desc>
+            <vuln_desc>A party able to substitute executable material or a runtime hook may run code with application privileges, inspect protected data, or alter security checks.</vuln_desc>
+            <developer>Load only approved code from trusted locations, verify signatures or integrity before execution, and restrict runtime replacement to documented, authorized behavior.</developer>
             <reviewer>Confirm remote content fetched via ADD or curl is verified against a published checksum. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Package Manager Cache Not Cleared</name>
             <regex>^RUN\s+(?:apt-get\s+install|yum\s+install|apk\s+add|dnf\s+install)(?![^\n]*&amp;&amp;[^\n]*(?:rm\s+-rf\s+/var/(?:cache|lib)/apt|yum\s+clean\s+all|apk\s+--no-cache|dnf\s+clean\s+all))</regex>
-            <rdl_ref>logic/dockerfile/core/package_manager_cache_not_cleared.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dockerfile/core/package_manager_cache_not_cleared.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -135,15 +135,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects package installation without clearing the package manager cache in the same layer.</rule_desc>
-            <vuln_desc>Leaving package manager caches in image layers increases image size and retains potentially sensitive metadata from the build environment.</vuln_desc>
-            <developer>Chain cache cleanup in the same RUN instruction: RUN apt-get update &amp;&amp; apt-get install -y pkg &amp;&amp; rm -rf /var/lib/apt/lists/*.</developer>
+            <rule_desc>The code contains a maintainability, accessibility, or build-configuration review marker. Establish a concrete affected behavior before assigning security severity.</rule_desc>
+            <vuln_desc>No direct confidentiality or integrity consequence is established by this marker alone. A related implementation defect could affect availability or prevent users from using essential controls, depending on the actual behavior.</vuln_desc>
+            <developer>Resolve the specific unfinished behavior, accessibility requirement, or build hygiene concern. Confirm its real operational effect and test the corrected behavior before classifying it as a security defect.</developer>
             <reviewer>Verify package install RUN commands clean the cache in the same layer. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>sudo or su Installed in Container</name>
             <regex>(?:apt-get|yum|apk|dnf)\s+install\s+[^\n]*\bsudo\b</regex>
-            <rdl_ref>logic/dockerfile/core/sudo_or_su_installed_in_container.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dockerfile/core/sudo_or_su_installed_in_container.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -152,9 +152,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects installation of sudo or privilege escalation tools inside container images.</rule_desc>
-            <vuln_desc>Installing sudo in a container enables privilege escalation paths for any exploited process within the container, undermining non-root user controls.</vuln_desc>
-            <developer>Do not install sudo or su in production container images. Structure the Dockerfile to grant only necessary capabilities via Docker security options.</developer>
+            <rule_desc>The code or deployment configuration requests privileges or grants access beyond an explicitly resolved minimum. Determine the effective permissions and the operation’s requirements.</rule_desc>
+            <vuln_desc>A compromised actor may access additional data, modify protected resources, or extend compromise beyond the intended application boundary when excessive privileges remain available.</vuln_desc>
+            <developer>Run with the least privileges required, remove unnecessary grants, and scope each permission to its intended resource and operation. Verify effective inherited permissions and test denied access.</developer>
             <reviewer>Confirm privilege escalation tools are not present in the final image. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -162,7 +162,7 @@
         <rule>
             <name>Broad Port Range Exposed</name>
             <regex>^EXPOSE\s+\d+-\d{4,}|^EXPOSE\s+0\.0\.0\.0</regex>
-            <rdl_ref>logic/dockerfile/core/broad_port_range_exposed.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/dockerfile/core/broad_port_range_exposed.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -171,9 +171,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects EXPOSE instructions declaring broad port ranges or binding to all interfaces.</rule_desc>
-            <vuln_desc>Exposing broad port ranges increases the attack surface and may inadvertently open administrative or debug interfaces to the network.</vuln_desc>
-            <developer>EXPOSE only the specific ports required for application functionality. Document each exposed port's purpose.</developer>
+            <rule_desc>The deployment declares a public address, exposed ports, or broad inbound access. Resolve effective routes, firewall rules, listening services, and authentication.</rule_desc>
+            <vuln_desc>If a sensitive service is reachable from an untrusted network, remote actors may attempt credential attacks or exploit reachable service defects. A public address or image EXPOSE declaration alone does not establish internet reachability.</vuln_desc>
+            <developer>Restrict inbound access to required services and trusted networks. Keep management and database endpoints private where possible, and verify actual listening ports, firewall rules, and access controls.</developer>
             <reviewer>Verify exposed ports are minimal and all exposed services are intentional. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

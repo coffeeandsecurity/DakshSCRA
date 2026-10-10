@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.kubernetes.core.allowprivilegeescalation_not_disabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "allowPrivilegeEscalation\\s*:\\s*true" "im"
+WHEN (TEXT_MATCHES "allowPrivilegeEscalation:\\s*true" "im" AND TEXT_MISSING "# intentional|# required|capabilities\\.drop" "im")
+REPORT "allowPrivilegeEscalation Not Disabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

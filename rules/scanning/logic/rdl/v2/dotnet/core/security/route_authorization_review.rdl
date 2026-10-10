@@ -1,0 +1,9 @@
+VERSION 2
+RULE dotnet.route-authorization-review VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\[RoutePrefix\\(" "im"
+WHEN TEXT_MISSING "\\b(?:Authorize|RequireAuthorization|ApiKeyRequired)\\b" "im"
+REPORT "Route Prefix Without File-Level Authorization Marker"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

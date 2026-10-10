@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.python.core.ssti_jinja2_template_from_user_input VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "jinja2\\.Template\\s*\\(|Environment\\s*\\(.*\\)\\.from_string\\s*\\(|render_template_string\\s*\\(" "im"
+WHEN (TEXT_MATCHES "request\\.|input\\(|argv|query|\\+" "im" AND TEXT_MISSING "autoescape\\s*=\\s*True|sandbox" "im")
+REPORT "SSTI: Jinja2 Template from User Input"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.php.core.insecure_redirect_header_with_location VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "header\\s*\\(\\s*['\\\"]\\s*Location\\s*:\\s*['\\\"]\\s*\\.\\s*\\$([a-zA-Z_\\x7f-\\xff][a-zA-Z0-9_\\x7f-\\xff]*)" "im"
+WHEN TEXT_MISSING "parse_url|filter_var\\s*\\(.*FILTER_VALIDATE_URL|allowlist|whitelist" "im"
+REPORT "Insecure Redirect: header() with Location"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

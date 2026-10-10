@@ -1,0 +1,10 @@
+VERSION 2
+RULE concurrency.lock-order-violation VERSION 1
+IN PROJECT
+LET first BE RESOURCE MATCHES concurrency.lock
+LET second BE RESOURCE MATCHES concurrency.lock
+WHEN lock_order first second AND lock_order second first
+REPORT "inconsistent lock ordering"
+SEVERITY HIGH
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

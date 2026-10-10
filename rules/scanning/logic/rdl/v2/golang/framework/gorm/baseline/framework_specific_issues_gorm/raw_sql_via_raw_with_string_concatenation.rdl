@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.golang.framework.gorm.raw_sql_via_raw_with_string_concatenation VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\.Raw\\s*\\(\\s*[\"'][^\"']*[\"']\\s*\\+|\\.Raw\\s*\\(\\s*fmt\\.Sprintf\\s*\\([\"'][^\"']*%[sv]" "im"
+WHEN TEXT_MISSING "\\.Raw\\s*\\(\\s*\"[^\"]*\\?|\\.Raw\\s*\\(\\s*\"[^\"]*@|db\\.Where\\s*\\(\\s*\"[^\"]*\\?|gorm\\.Expr" "im"
+REPORT "Raw SQL via Raw() with String Concatenation"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

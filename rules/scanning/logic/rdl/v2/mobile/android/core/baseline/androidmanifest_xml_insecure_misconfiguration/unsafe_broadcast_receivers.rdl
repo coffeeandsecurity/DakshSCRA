@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.android.core.unsafe_broadcast_receivers VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "android.intent.action.BOOT_COMPLETED" "im"
+REPORT "Unsafe Broadcast Receivers"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

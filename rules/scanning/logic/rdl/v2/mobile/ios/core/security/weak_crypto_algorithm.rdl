@@ -1,0 +1,8 @@
+VERSION 2
+RULE ios.weak-crypto-algorithm VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:kCCAlgorithmDES|kCCAlgorithm3DES|kCCAlgorithmRC4|CC_MD5|CC_SHA1)\\b" ""
+REPORT "Legacy iOS Cryptographic Algorithm"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

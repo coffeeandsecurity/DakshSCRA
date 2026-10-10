@@ -3,7 +3,7 @@
         <rule>
             <name>Azure VM with Password Authentication Enabled</name>
             <regex>resource\s+"azurerm_linux_virtual_machine"[^}]*disable_password_authentication\s*=\s*false|resource\s+"azurerm_virtual_machine"[^}]*password_authentication\s*=\s*true</regex>
-            <rdl_ref>logic/terraform/framework/azure/azure_vm_with_password_authentication_enabled.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/terraform/framework/azure/azure_vm_with_password_authentication_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -12,9 +12,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects Azure Linux VMs with password authentication enabled instead of SSH keys.</rule_desc>
-            <vuln_desc>Password authentication exposes VMs to brute-force attacks. SSH key-based authentication is significantly more resistant to credential stuffing and brute-force attempts.</vuln_desc>
-            <developer>Set disable_password_authentication = true and use admin_ssh_key blocks with RSA 4096-bit or Ed25519 keys.</developer>
+            <rule_desc>The checked code implements an identity, access-control, or abuse-prevention decision. Determine the trusted verifier, protected resources, and whether the control is enforced on every relevant path.</rule_desc>
+            <vuln_desc>If identity or resource authorization can be bypassed, an attacker may impersonate a user, access another user’s data, or perform restricted operations. A control’s presence alone does not establish a weakness.</vuln_desc>
+            <developer>Enforce authentication and object-level authorization on the trusted server or privileged boundary. Use strong verifier material, appropriate rate limits and recovery controls, and test access by unauthenticated and insufficiently privileged callers.</developer>
             <reviewer>Confirm all Linux VMs use SSH key authentication exclusively. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -22,7 +22,7 @@
         <rule>
             <name>Azure Storage Account Allows Public Blob Access</name>
             <regex>resource\s+"azurerm_storage_account"[^}]*allow_nested_items_to_be_public\s*=\s*true|blob_properties\s*\{[^}]*allow_blob_public_access\s*=\s*true</regex>
-            <rdl_ref>logic/terraform/framework/azure/azure_storage_account_allows_public_blob_access.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/terraform/framework/azure/azure_storage_account_allows_public_blob_access.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -31,15 +31,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects Azure Storage Accounts configured to allow public blob access.</rule_desc>
-            <vuln_desc>Public blob access allows unauthenticated read of container contents, leading to data exposure of sensitive files, backups, and configuration data.</vuln_desc>
-            <developer>Set allow_nested_items_to_be_public = false at the storage account level. Use SAS tokens or Azure AD authentication for controlled access.</developer>
+            <rule_desc>Storage configuration may permit public object access. Resolve bucket or container policies, object ACLs, and provider-level public-access controls.</rule_desc>
+            <vuln_desc>Unauthenticated users may read private objects or modify publicly writable content if effective access rules grant those operations. A permissive account-level option alone does not establish that every object is public.</vuln_desc>
+            <developer>Disable unnecessary public access, enforce narrow identity-based permissions, and verify effective object access from an unauthenticated client. Separate intentionally public content from private storage.</developer>
             <reviewer>Confirm no storage accounts allow public blob access unless explicitly serving public-facing content. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Azure Storage Account Without Secure Transfer Required</name>
             <regex>resource\s+"azurerm_storage_account"[^}]*enable_https_traffic_only\s*=\s*false</regex>
-            <rdl_ref>logic/terraform/framework/azure/azure_storage_account_without_secure_transfer_required.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/terraform/framework/azure/azure_storage_account_without_secure_transfer_required.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -48,9 +48,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects storage accounts that allow unencrypted HTTP access.</rule_desc>
-            <vuln_desc>Allowing HTTP traffic to Azure Storage enables data interception via MITM attacks on storage API calls, including credential exfiltration from SAS token traffic.</vuln_desc>
-            <developer>Set enable_https_traffic_only = true (default) or min_tls_version = "TLS1_2" to enforce encrypted connections.</developer>
+            <rule_desc>Storage configuration does not require authenticated encrypted transport for client access.</rule_desc>
+            <vuln_desc>A network attacker may intercept storage data or URL-carried access tokens if clients use permitted cleartext requests.</vuln_desc>
+            <developer>Require secure transfer and verify HTTPS on all storage clients, redirects, and shared-access URLs. Remove cleartext exceptions for private data.</developer>
             <reviewer>Confirm all storage accounts enforce HTTPS. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -58,7 +58,7 @@
         <rule>
             <name>Azure NSG Rule Allows All Inbound Traffic</name>
             <regex>resource\s+"azurerm_network_security_rule"[^}]*access\s*=\s*"Allow"[^}]*source_address_prefix\s*=\s*"\*"[^}]*direction\s*=\s*"Inbound"</regex>
-            <rdl_ref>logic/terraform/framework/azure/azure_nsg_rule_allows_all_inbound_traffic.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/terraform/framework/azure/azure_nsg_rule_allows_all_inbound_traffic.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -67,9 +67,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects Azure NSG rules that allow all inbound traffic from any source.</rule_desc>
-            <vuln_desc>Open inbound NSG rules expose Azure resources to internet-wide scanning and exploitation across all ports from any IP address.</vuln_desc>
-            <developer>Restrict source_address_prefix to known IP ranges or service tags. Define explicit port ranges and protocol restrictions.</developer>
+            <rule_desc>The code uses a low-level memory, formatting, allocation, or type-conversion operation whose safety depends on bounds, types, initialization, and caller invariants.</rule_desc>
+            <vuln_desc>A violated memory or formatting invariant may expose process memory, corrupt application state, crash the process, or permit code execution when an attacker can influence the relevant inputs.</vuln_desc>
+            <developer>Validate sizes and types before use, use bounded and type-safe APIs, and keep format strings fixed. Prefer checked conversions and safe ownership abstractions; document and test every remaining unsafe invariant.</developer>
             <reviewer>Confirm open inbound rules are intentional and that resources have application-layer controls. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -77,7 +77,7 @@
         <rule>
             <name>Azure SQL Server Allows All Azure Services</name>
             <regex>resource\s+"azurerm_sql_firewall_rule"[^}]*start_ip_address\s*=\s*"0\.0\.0\.0"[^}]*end_ip_address\s*=\s*"0\.0\.0\.0"</regex>
-            <rdl_ref>logic/terraform/framework/azure/azure_sql_server_allows_all_azure_services.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/terraform/framework/azure/azure_sql_server_allows_all_azure_services.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -86,15 +86,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects Azure SQL firewall rules using the 0.0.0.0/0.0.0.0 pattern that allows all Azure services to connect.</rule_desc>
-            <vuln_desc>The "Allow access to Azure services" firewall rule allows any Azure-hosted service (including from other tenants) to connect to the SQL server, not just services in your own tenant.</vuln_desc>
-            <developer>Use Private Endpoints for SQL connectivity instead of firewall rules. If firewall rules are necessary, restrict to explicit IP ranges.</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Confirm the 0.0.0.0/0.0.0.0 firewall rule is not used for production SQL servers. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Azure SQL Transparent Data Encryption Disabled</name>
             <regex>resource\s+"azurerm_mssql_server_transparent_data_encryption"[^}]*key_vault_key_id\s*=</regex>
-            <rdl_ref>logic/terraform/framework/azure/azure_sql_transparent_data_encryption_disabled.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/terraform/framework/azure/azure_sql_transparent_data_encryption_disabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -103,9 +103,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects Azure SQL databases without Transparent Data Encryption configured.</rule_desc>
-            <vuln_desc>Without TDE, Azure SQL database files, backups, and transaction logs are stored unencrypted, exposing data if storage-level access is gained.</vuln_desc>
-            <developer>Enable TDE using azurerm_mssql_server_transparent_data_encryption. Use customer-managed keys in Azure Key Vault for additional control.</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Verify all SQL databases have TDE enabled. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

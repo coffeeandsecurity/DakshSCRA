@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.rust.core.debug_output_of_sensitive_values VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:println!|eprintln!|dbg!)\\s*\\(.*(?:token|secret|password|key)" "im"
+WHEN TEXT_MISSING "example|sample|dummy|test|placeholder" "im"
+REPORT "Debug Output of Sensitive Values"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

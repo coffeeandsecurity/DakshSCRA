@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.javascript.framework.express.express_debug_verbose_mode_enabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "NODE_ENV\\s*=\\s*[\\'\\\"]development[\\'\\\"]|debug\\s*:\\s*true|logger\\(\\s*[\\'\\\"]dev[\\'\\\"]" "im"
+WHEN TEXT_MISSING "release|production" "im"
+REPORT "Express Debug/Verbose Mode Enabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

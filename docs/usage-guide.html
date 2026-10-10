@@ -66,7 +66,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font); font
 .nav-sub { padding-left: 34px; font-size: 12px; }
 
 /* ── Main ── */
-#main { margin-left: var(--sidebar-w); flex: 1; padding: 48px 56px 80px; max-width: 900px; }
+#main { margin-left: var(--sidebar-w); flex: 1; min-width: 0; padding: 48px 56px 80px; max-width: 900px; overflow-wrap: anywhere; }
 
 /* ── Typography ── */
 h1 { font-size: 30px; font-weight: 700; color: var(--text-strong); margin-bottom: 8px; }
@@ -105,6 +105,15 @@ th { background: var(--surface2); color: var(--text-muted); font-weight: 600; fo
 td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
 tr:last-child td { border-bottom: none; }
 td code { font-size: 12px; }
+#what-is td:first-child { width: 38%; overflow-wrap: normal; }
+.distinctive-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+.distinctive-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; background: var(--surface); }
+.distinctive-card.feature-highlight { border-color: var(--primary); background: rgba(79,142,247,.12); }
+.distinctive-card h3 { margin: 0 0 6px; font-size: 14px; }
+.distinctive-card p { margin: 0; font-size: 13px; line-height: 1.7; }
+.distinctive-badge { display: inline-block; border: 1px solid rgba(79,142,247,.35); border-radius: 999px; padding: 2px 8px; margin-bottom: 8px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--tag-blue-text); background: rgba(79,142,247,.15); }
+.distinctive-badge.notable { color: var(--tag-green-text); background: rgba(106,207,138,.12); border-color: rgba(106,207,138,.3); }
+#distinctive summary { cursor: pointer; color: var(--primary); }
 
 /* ── Callouts ── */
 .note { background: rgba(79,142,247,.08); border-left: 3px solid var(--primary); border-radius: 0 var(--radius) var(--radius) 0; padding: 12px 16px; margin: 16px 0; font-size: 14px; }
@@ -139,6 +148,7 @@ td code { font-size: 12px; }
 
 /* ── Responsive ── */
 @media (max-width: 800px) {
+  .distinctive-grid { grid-template-columns: 1fr; }
   #sidebar { display: none; }
   #main { margin-left: 0; padding: 24px 20px 60px; }
 }
@@ -193,6 +203,7 @@ td code { font-size: 12px; }
 
   <div class="nav-section">Overview</div>
   <a class="nav-link" href="#what-is">What is DakshSCRA?</a>
+  <a class="nav-link" href="#distinctive">Distinctive Features</a>
   <a class="nav-link" href="#installation">Installation</a>
 
   <div class="nav-section">CLI</div>
@@ -217,9 +228,12 @@ td code { font-size: 12px; }
   <div class="nav-section">Reference</div>
   <a class="nav-link" href="#findings-ref">Understanding Findings</a>
   <a class="nav-link" href="#rdl">RDL - Conditional Rules</a>
-  <a class="nav-link nav-sub" href="#rdl-operators">Operators</a>
+  <a class="nav-link nav-sub" href="#rdl-architecture">Architecture &amp; Status</a>
+  <a class="nav-link nav-sub" href="#rdl-commands">Commands</a>
   <a class="nav-link nav-sub" href="#rdl-examples">Examples</a>
   <a class="nav-link nav-sub" href="#rdl-fp">How FPs Are Reduced</a>
+  <a class="nav-link nav-sub" href="#rdl-lint">Validation &amp; Linting</a>
+  <a class="nav-link nav-sub" href="#rdl-v2">RDL v2 Direction</a>
   <a class="nav-link" href="#scan-config">scan_config &mdash; Rule Engine</a>
   <a class="nav-link nav-sub" href="#scan-config-schema">Full Schema</a>
   <a class="nav-link nav-sub" href="#scan-config-profiles">Platform Profiles</a>
@@ -256,9 +270,74 @@ td code { font-size: 12px; }
         <tr><td><strong>Reconnaissance</strong></td><td>Detects languages, frameworks, and technology stack from file contents and structure</td></tr>
         <tr><td><strong>Taint analysis</strong></td><td>Traces data flows from user-controlled sources to security-sensitive sinks across files and functions</td></tr>
         <tr><td><strong>Effort estimation</strong></td><td>Estimates manual review time based on codebase size, complexity, and finding volume</td></tr>
-        <tr><td><strong>Report generation</strong></td><td>Produces single-file and per-platform HTML reports and optionally PDF</td></tr>
+        <tr><td><strong>Report generation</strong></td><td>Produces indexed HTML bundles, PDF, editable Word, and JSON using shared CLI/web renderers</td></tr>
       </tbody>
     </table></div>
+  </section>
+
+  <section id="distinctive">
+    <h2>Distinctive Features</h2>
+    <p>DakshSCRA brings together distinctive capabilities for manual source code review, from file-path areas of interest and effort estimation to software reconnaissance, contextual rules and cross-file analysis.</p>
+    <div class="distinctive-grid">
+      <article class="distinctive-card feature-highlight">
+        <span class="distinctive-badge">World's First*</span>
+        <h3>File Path Areas of Interest</h3>
+        <p>Scans file and directory names themselves, alongside code, to flag suspicious paths such as backup files, debug endpoints, configuration dumps and credential files that reviewers often miss.</p>
+      </article>
+      <article class="distinctive-card feature-highlight">
+        <span class="distinctive-badge">World's First*</span>
+        <h3>Scientific Effort Estimation</h3>
+        <p>Produces a quantified estimate of manual-review effort based on codebase size and project signals. Configurable assumptions make engagement planning explicit and repeatable.</p>
+      </article>
+      <article class="distinctive-card">
+        <span class="distinctive-badge notable">Reviewer in Control</span>
+        <h3>Areas of Interest, Not Bug Flags</h3>
+        <p>Surfaces patterns worth investigating rather than tagging every match as a vulnerability. Contextual rules and suppression evidence reduce triage noise and keep the reviewer in control.</p>
+      </article>
+      <article class="distinctive-card feature-highlight">
+        <span class="distinctive-badge">Integrated Software Recon</span>
+        <h3>Software Reconnaissance</h3>
+        <p>Detects languages, frameworks and infrastructure from file contents and project structure before scanning. Connects the technology inventory to automatic rule selection, semantic analysis and review planning.</p>
+      </article>
+      <article class="distinctive-card feature-highlight">
+        <span class="distinctive-badge">Advanced Conditional Rules</span>
+        <h3>RDL Conditional Rules</h3>
+        <p>Goes beyond simple regex with PRESENT, MISSING, boolean expressions and file/path conditions. RDL v1 records decisions and suppression reasons; RDL v2 adds typed semantic services and bounded cross-file evidence.</p>
+      </article>
+      <article class="distinctive-card">
+        <span class="distinctive-badge notable">Built from the Ground Up</span>
+        <h3>Advanced Semantic and Cross-File Analysis</h3>
+        <p>Traces user-controlled data from source to sink across supported file boundaries using purpose-built analysis. Advanced Analysis shipped alongside the original RDL in March 2026; RDL v2 extends semantic rule evaluation across files.</p>
+      </article>
+      <article class="distinctive-card feature-highlight">
+        <span class="distinctive-badge">Automatic Multi-Platform</span>
+        <h3>Platform-Agnostic Auto Scanning</h3>
+        <p>Use -r auto to scan mixed-technology projects without choosing a single language beforehand. Recon selects supported platform and framework rules automatically. Introduced in v0.23-beta, November 2024.</p>
+      </article>
+      <article class="distinctive-card feature-highlight">
+        <span class="distinctive-badge">Custom RDL Packs</span>
+        <h3>Application-Specific Security Logic</h3>
+        <p>Encode application trust boundaries, authorization decisions and business invariants in optional custom RDL packs. Project-specific logic runs alongside the generic scanning rules.</p>
+      </article>
+      <article class="distinctive-card">
+        <span class="distinctive-badge notable">Follow the Evidence</span>
+        <h3>Interactive Text and Graph Evidence</h3>
+        <p>Follow recorded source-to-sink paths in linked Text and Graph views. Source excerpts, file lanes and handoff details make cross-file evidence easier to inspect.</p>
+      </article>
+      <article class="distinctive-card">
+        <span class="distinctive-badge notable">Review, Resume and Export</span>
+        <h3>Review Lifecycle and Portable Reports</h3>
+        <p>Keep scan history, review suppressions and resume interrupted scans. Export HTML, PDF, editable Word and JSON through shared CLI and Web UI reports, with offline evidence navigation where available.</p>
+      </article>
+    </div>
+    <div class="note">* World's First badges reflect the project's original claims; worldwide priority has not been independently verified.</div>
+    <div class="note">First introduced at <strong>Black Hat USA 2022</strong> and publicly debuted at <strong>Black Hat USA 2023</strong>, Las Vegas.</div>
+    <details>
+      <summary>Release history and supporting evidence</summary>
+    <h3>Feature History and Evidence</h3>
+<div class="table-wrap"><table><thead><tr><th>Feature / milestone</th><th>Date</th><th>Release</th><th>Evidence / scope</th></tr></thead><tbody><tr><td>Training introduction</td><td>2022 (Black Hat USA)</td><td>Not recorded</td><td><a href="https://github.com/coffeeandsecurity/DakshSCRA/blob/fe878be/README.md">Contemporary project README; introduction milestone.</a></td></tr><tr><td>Initial beta and file-path rules</td><td>22 October 2022</td><td>v0.1-beta</td><td><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.1-beta">Initial release; retained source includes the dedicated file-path rule inventory.</a></td></tr><tr><td>PDF and HTML reports</td><td>23 May 2023</td><td>v0.2-beta</td><td><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.2-beta">Release notes list PDF/HTML report generation and scanning-rule updates.</a></td></tr><tr><td>Software reconnaissance (published introduction)</td><td>9 July 2023</td><td>v0.3-beta</td><td><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.3-beta">Release notes introduce recon; earlier repository code is separate implementation evidence.</a></td></tr><tr><td>Manual-review effort estimation (implementation)</td><td>29 July 2023</td><td>Implementation commit</td><td><a href="https://github.com/coffeeandsecurity/DakshSCRA/commit/65d5c6a">Dedicated estimation module added; not the date of the later fix release.</a></td></tr><tr><td>Effort-estimation fix</td><td>5 August 2023</td><td>v0.7-beta</td><td><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.7-beta">Release notes state fixed effort estimation; this is a correction milestone, not its first introduction.</a></td></tr><tr><td>Early Android manifest and Kotlin checks</td><td>27 April 2024</td><td>v0.16-beta</td><td><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.16-beta">Introduced Android manifest misconfiguration checks and Kotlin-specific checks; module described as early development, with broader coverage still in progress.</a></td></tr><tr><td>Multi-platform scan flags (initial design)</td><td>4 November 2024</td><td>v0.20-beta</td><td><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.20-beta">Added comma-separated platform selection with -r; initial implementation did not yet isolate each platform rule set to its own file types.</a></td></tr><tr><td>Platform-agnostic auto scanning</td><td>10 November 2024 (release listing)</td><td>v0.23-beta</td><td><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.23-beta">Automatic platform/rule selection; implementation commit dated 11 November.</a></td></tr><tr><td>PDF rendering upgrade</td><td>21 July 2025</td><td>v0.29-beta</td><td><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.29-beta">Migrated PDF export from WeasyPrint to Playwright and Chromium; added HTML-size-based timeouts for large reports and cross-platform setup instructions.</a></td></tr><tr><td>Initial iOS scanning support</td><td>2 March 2026</td><td>v0.31-beta</td><td><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.31-beta">Added iOS rules and Swift/Objective-C/configuration file selection; later releases expanded coverage.</a></td></tr><tr><td>Original RDL and inter-file Advanced Analysis</td><td>2 March 2026</td><td>v0.31-beta</td><td><a href="https://github.com/coffeeandsecurity/DakshSCRA/commit/d90ba51">Conditional rule logic and independent cross-file analysis shipped together. Release display date is 2 March; publication timestamp is 1 March 2026 at 18:39 UTC.</a></td></tr><tr><td>Web UI and Docker rollout</td><td>16 March 2026</td><td>v0.33-beta</td><td><a href="https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.33-beta">Introduced browser-launched scans, live progress, findings/artifact browsing, OS-aware directory selection and built-in Help; added Docker Compose Web UI/CLI services and portable environment setup.</a></td></tr><tr><td>External RDL architecture and reporting</td><td>22 March 2026</td><td>v0.37-beta</td><td><a href="https://github.com/coffeeandsecurity/DakshSCRA/commit/5b17d89">External rule logic and revised advanced reports.</a></td></tr><tr><td>RDL v2 semantic services and integrated workflow</td><td>Current development; no published release date</td><td>Unreleased development</td><td>Typed semantic rules, bounded cross-file evidence and custom packs.</td></tr></tbody></table></div>
+<h3>Comparative Evidence</h3><ul><li><strong>Recon predecessor:</strong> <a href="https://www.microsoft.com/en-us/security/blog/2020/01/16/introducing-microsoft-application-inspector/">Microsoft Application Inspector</a> — 16 January 2020. Documents an earlier source-characteristics tool; does not establish a worldwide first/second ranking.</li><li><strong>Automatic multi-language scanning:</strong> <a href="https://semgrep.dev/blog/2022/autofixing-code-with-semgrep/">Semgrep auto example</a> — 3 November 2022. Earlier automatic multi-language scanning prevents a broad first-in-open-source claim.</li><li><strong>Semantic and data-flow analysis:</strong> <a href="https://docs.joern.io/cpgql/data-flow-steps/">Joern data-flow documentation</a> — No release date established here. Documents prior open-source capabilities; no comparative benchmark establishes overall superiority.</li></ul><div class="note">Dates identify repository or release milestones; unverified release numbers and unpublished development are explicitly marked. Worldwide priority and overall superiority are not independently established.</div><ul><li>Release milestones and comparative evidence are listed above.</li></ul>
+    </details>
   </section>
 
   <!-- ════════════════ INSTALLATION ════════════════ -->
@@ -284,7 +363,7 @@ td code { font-size: 12px; }
 <span class="cmd">playwright install chromium</span></code></pre>
 
     <h3>Docker - Web UI</h3>
-    <pre><code><span class="cmd">docker compose up --build</span></code></pre>
+    <pre><code><span class="cmd">python3 tools/start_webui.py --detach</span></code></pre>
     <p>Open <code>http://localhost:8080</code> - change port with <code>DAKSH_PORT=9090 docker compose up</code>.</p>
   </section>
 
@@ -344,7 +423,7 @@ td code { font-size: 12px; }
     <div class="table-wrap"><table>
       <thead><tr><th>Option</th><th>Default</th><th>Description</th></tr></thead>
       <tbody>
-        <tr><td><code>-rpt FORMATS</code></td><td><code>html</code></td><td>Report formats: <code>html</code>, <code>pdf</code>, or <code>html,pdf</code>.</td></tr>
+        <tr><td><code>-rpt FORMATS</code></td><td><code>html</code></td><td>Report formats: <code>html</code>, <code>pdf</code>, <code>docx</code>, <code>json</code>, or a comma-separated combination.</td></tr>
         <tr><td><code>--json-input-dir PATH</code></td><td><code>./reports/json</code></td><td>JSON input directory for <code>--pdf-from-json</code>.</td></tr>
         <tr><td><code>--pdf-output PATH</code></td><td><code>./reports/pdf/report.pdf</code></td><td>Custom path for the single combined PDF.</td></tr>
         <tr><td><code>--pdf-multi-dir PATH</code></td><td><code>./reports/pdf/multi-file</code></td><td>Custom directory for the per-platform PDF set.</td></tr>
@@ -412,26 +491,22 @@ td code { font-size: 12px; }
 
   <section id="output-structure">
     <h3>Output Structure</h3>
-    <pre><code>reports/
-  html/
-    report.html                <span class="comment">← Single-file HTML report (all platforms)</span>
-    multi-file/
-      index.html               <span class="comment">← Multi-file report index</span>
-      &lt;platform&gt;/              <span class="comment">← Per-platform HTML report</span>
-    reconnaissance.html        <span class="comment">← Recon report (if --recon used)</span>
-    estimation.html            <span class="comment">← Effort estimate (if --estimate used)</span>
-  pdf/
-    report.pdf                 <span class="comment">← Single combined PDF</span>
-    multi-file/                <span class="comment">← Per-platform PDFs</span>
-  json/
-    areas_of_interest.json     <span class="comment">← Scanner findings</span>
-    filepaths_aoi.json         <span class="comment">← Path findings</span>
-    analysis.json              <span class="comment">← Taint analysis findings</span>
-    summary.json               <span class="comment">← Scan summary metadata</span>
-    recon.json                 <span class="comment">← Recon results</span>
+    <pre><code>reports/&lt;project&gt;/&lt;scan&gt;/
+  scan/
+    html/
+      report.html             <span class="comment">← Summary and report index (open first)</span>
+      report-files/           <span class="comment">← Linked detail pages and saved-results.json</span>
+      multi-file/             <span class="comment">← Per-platform report indexes</span>
+    pdf/report.pdf            <span class="comment">← Consolidated PDF when requested</span>
+    word/report.docx          <span class="comment">← Editable Word when requested</span>
+    json/report.json          <span class="comment">← Complete report document when requested</span>
+    recon/reconnaissance.html
+    estimate/estimation.html
+  analysis/&lt;platform&gt;/       <span class="comment">← Native analysis and cross-reference reports</span>
+  data/                       <span class="comment">← Saved findings, summary, recon, and analysis JSON</span>
 runtime/
-  scan_summary.json            <span class="comment">← Live scan state</span>
-  filepaths.json               <span class="comment">← Discovered file inventory</span></code></pre>
+  scan_summary.json           <span class="comment">← Live scan state</span>
+  filepaths.json              <span class="comment">← Discovered file inventory</span></code></pre>
   </section>
 
   <hr class="divider">
@@ -441,14 +516,16 @@ runtime/
     <h2>Web UI Usage</h2>
 
     <h3>Starting the Web UI</h3>
-    <pre><code><span class="cmd">docker compose up --build</span></code></pre>
+    <pre><code><span class="cmd">python3 tools/start_webui.py --detach</span></code></pre>
     <p>Open <code>http://localhost:8080</code>. The UI auto-refreshes as scans run.</p>
 
-    <p>The sidebar on the left provides navigation between three main areas:</p>
+    <p>The sidebar provides navigation through the review workflow:</p>
     <ul style="margin: 0 0 16px 20px; line-height: 2;">
       <li><strong>Dashboard</strong> - overview, metrics, and quick navigation</li>
       <li><strong>Projects</strong> - organise and browse scan history by project</li>
-      <li><strong>Scans</strong> - run new scans and review findings</li>
+      <li><strong>Scan</strong> - configure a new scan; Active Scans shows the execution queue</li>
+      <li><strong>Completed</strong> - open saved results at Summary</li>
+      <li><strong>System, Settings and Help</strong> - inspect storage, configure defaults and read this guide</li>
     </ul>
   </section>
 
@@ -465,97 +542,48 @@ runtime/
 
   <section id="webui-projects">
     <h3>Projects</h3>
-    <p>Scans are grouped into projects. A project is created automatically the first time a scan is submitted with a given project name.</p>
-    <div class="table-wrap"><table>
-      <thead><tr><th>Column</th><th>Description</th></tr></thead>
-      <tbody>
-        <tr><td>Project Name</td><td>The name assigned when creating the scan</td></tr>
-        <tr><td>Rules</td><td>Platform rules used</td></tr>
-        <tr><td>Target</td><td>The scanned source directory</td></tr>
-        <tr><td>Total Scans</td><td>Number of scans run under this project</td></tr>
-        <tr><td>Running</td><td>Scans currently in progress</td></tr>
-        <tr><td>Last Scanned</td><td>Timestamp of the most recent scan</td></tr>
-      </tbody>
-    </table></div>
-    <p>Click any project row to jump directly to its scan history in the Scans view.</p>
+    <p>Compact project rows show names, targets, status counts and latest scans. Search by name, ID or target; filter by active, completed, failed, stopped or removed-data scans; sort by latest scan, name or scan count.</p>
+    <p>Open a project for its complete paginated scan history with search and status filters, including retained removed-data records. View results opens completed scans at Summary; active, queued and stopping scans open telemetry. Project scans returns to that project's history.</p>
   </section>
-
   <section id="webui-scans">
     <h3>Scans &amp; Findings</h3>
-    <p>The primary working area, divided into three panels.</p>
-
     <section id="scan-form">
-      <h4>Scan Form</h4>
-      <div class="table-wrap"><table>
-        <thead><tr><th>Field</th><th>Description</th></tr></thead>
-        <tbody>
-          <tr><td><strong>Project Name</strong></td><td>Groups this scan with previous runs. Leave blank for an unnamed scan.</td></tr>
-          <tr><td><strong>Target Directory</strong></td><td>Path to the source code. Use the <strong>Browse</strong> button to navigate the filesystem safely.</td></tr>
-          <tr><td><strong>Platform Rules</strong></td><td>Which rule set to apply. <code>auto</code> detects the platform automatically.</td></tr>
-          <tr><td><strong>File Types</strong></td><td>Override default file extensions. <code>auto</code> uses platform defaults.</td></tr>
-          <tr><td><strong>Report Format</strong></td><td><code>html</code> (default) or <code>html,pdf</code>. PDF requires Playwright/Chromium.</td></tr>
-          <tr><td><strong>Verbosity</strong></td><td>Output detail level 1–3.</td></tr>
-          <tr><td><strong>Recon</strong></td><td>Enable technology stack detection alongside scanning.</td></tr>
-          <tr><td><strong>Effort Estimate</strong></td><td>Generate a review effort estimation report.</td></tr>
-          <tr><td><strong>LOC Count</strong></td><td>Include effective lines of code in the scan summary.</td></tr>
-          <tr><td><strong>Skip Analysis</strong></td><td>Skip the taint analysis stage (faster for very large codebases).</td></tr>
-        </tbody>
-      </table></div>
+      <h4>New Scan</h4>
+      <p>New Scan is a separate page with Setup, Check Classes, Exclusions, Analysis &amp; Output and Custom RDL tabs. Configure target, review mode, platform rules, enabled bug classes, exclusions, optional analysis and application packs. Recon and LOC are selected by default and can be deselected. Optional inter-file analysis follows Settings.</p>
+      <p>Comprehensive Review uses both engines; Finding Analysis Only uses v2; Areas of Interest Review Only uses v1. See scan configuration for defaults and CLI equivalents.</p>
     </section>
-
     <section id="scan-table">
-      <h4>Scan Table</h4>
-      <p>Lists all scans for the selected project, most recent first. Each row shows:</p>
-      <ul style="margin: 0 0 16px 20px; line-height: 2;">
-        <li>Status badge - <span class="tag tag-blue">running</span> <span class="tag tag-green">success</span> <span class="tag tag-orange">failed</span></li>
-        <li>Scan timestamp and UUID</li>
-        <li>Duration</li>
-        <li>Platform rules used</li>
-      </ul>
-      <p>Click a row to load its full detail in the panel below.</p>
+      <h4>Active Scans</h4>
+      <p>Jobs execute one at a time in queue order. Queued time and execution duration are distinct. Open a job for persistent Live Scan Telemetry and Log; stop running jobs or cancel queued jobs.</p>
     </section>
-
     <section id="scan-detail">
-      <h4>Scan Detail Tabs</h4>
-
-      <p><strong>Log</strong> - Live streaming output from the scan process. Shows each stage (file discovery, scanning, analysis, reporting) as it progresses.</p>
-
-      <p><strong>Findings</strong> - Two sub-tabs:</p>
-      <ul style="margin: 0 0 12px 20px; line-height: 2;">
-        <li><em>Scanner</em> - Rule-based source code findings. Each shows rule name, file path, matched line, and code context.</li>
-        <li><em>Paths</em> - Suspicious filenames, backup files, and configuration files.</li>
+      <h4>Completed Scan Details</h4>
+      <p>Completed Scans and project history open results at Summary. Its recorded configuration, metrics and navigation lead into the evidence views.</p>
+      <ul>
+        <li><strong>Areas of Interest:</strong> contextual v1 source and path review leads.</li>
+        <li><strong>Vulnerability Analysis:</strong> v2 confirmed rule matches, suppressed false positives, manual-review needs and limitations. A rule match is not proof of exploitability.</li>
+        <li><strong>Advanced Analysis:</strong> recorded v2 source-to-sink paths, entry points and symbol cross references; Text and Graph views where available.</li>
+        <li><strong>Insights:</strong> file inventory, recon and effort estimation.</li>
+        <li><strong>Suppressed Findings:</strong> rule/version, rationale and trace; review or promote with notes.</li>
+        <li><strong>Reports:</strong> Full, Findings, Analysis and Suppressed scopes exported as HTML, PDF, Word or JSON from saved data.</li>
+        <li><strong>Log:</strong> retained scan output.</li>
       </ul>
-
-      <p><strong>Taint Analysis</strong> - Dataflow findings showing source-to-sink traces. Each finding includes:</p>
-      <ul style="margin: 0 0 12px 20px; line-height: 2;">
-        <li>Confidence level (high / medium / low)</li>
-        <li>Source location - where user-controlled data enters the application</li>
-        <li>Sink location - where it reaches a security-sensitive call</li>
-        <li>Full trace path with intermediate assignment and call steps</li>
-        <li>Cross-file indicator - whether the flow spans multiple files</li>
-      </ul>
-
-      <p><strong>Insights</strong> - Three sub-sections:</p>
-      <ul style="margin: 0 0 12px 20px; line-height: 2;">
-        <li><em>File Paths</em> - Full inventory of discovered source files</li>
-        <li><em>Recon</em> - Technology stack detection results (requires <code>--recon</code>)</li>
-        <li><em>Effort Estimate</em> - Link to the estimation report (requires <code>--estimate</code>)</li>
-      </ul>
+      <p>Historical evidence remains unchanged. Unavailable v2 analysis is explicit. Removing completed data retains a history record; clearing it is separate. Active jobs are protected.</p>
     </section>
   </section>
 
   <section id="webui-artifacts">
     <h3>Reports &amp; Artifacts</h3>
-    <p>After a scan completes, all generated files are accessible from the Scan Detail view. Available artifacts include:</p>
+    <p>Open <strong>Reports</strong> in Scan Detail, choose Full Scan, Areas of Interest, Advanced Analysis, or Suppressed Findings, then generate HTML, PDF, Word (.docx), or JSON from the saved results. Generation runs in the background; download the completed export from its report entry.</p>
+    <p>CLI and web scans retain the same estimate JSON when estimation is enabled. Full exports include this saved estimate; HTML keeps it on a separate indexed detail page.</p>
+    <p>Software Reconnaissance starts with a technology overview and groups evidence by category and technology. Each detection shows recorded file/directory counts, detection confidence, a directory table and saved sample files. Paths inside the target are shown relative to it; original paths remain in JSON. Totals include overlapping technology matches and are not unique file counts. Generate a new Full scan report to apply the current layout to a saved scan; existing downloads remain unchanged.</p>
     <ul style="margin: 0 0 16px 20px; line-height: 2;">
-      <li>HTML report - single combined file</li>
-      <li>HTML multi-file report set - per-platform pages with an index</li>
-      <li>Taint analysis cross-reference report</li>
-      <li>Effort estimation report</li>
-      <li>JSON data files (raw findings, summary, recon)</li>
-      <li>Scan log</li>
+      <li><strong>HTML:</strong> extract the ZIP and open <code>index.html</code> first. The lightweight summary links to indexed, paginated evidence pages. Keep the extracted files together for offline navigation.</li>
+      <li><strong>PDF:</strong> complete printable evidence with linked contents, section bookmarks, and continuous page numbering.</li>
+      <li><strong>Word:</strong> editable sections, cached linked contents (refresh manually after editing), cross-reference tables, and linked catalogues for source excerpts, flow references, and repeated review text/diagnostics.</li>
+      <li><strong>JSON:</strong> the structured saved report document for further processing.</li>
     </ul>
-    <p>Click <strong>Open Report</strong> to view in a new browser tab, or <strong>Download</strong> to save locally.</p>
+    <p>CLI and Web UI exports use the same saved-data collector and report renderers. For CLI scans, use <code>-rpt html,pdf,docx,json</code>. Native assessments and RDL findings remain separate in the summary because their populations overlap. Coverage limitations and suppressed findings remain available for review.</p>
   </section>
 
   <hr class="divider">
@@ -610,6 +638,49 @@ runtime/
     <p>RDL is DakshSCRA&apos;s rule logic layer for contextual filtering, suppression, and report rationale. In the current engine, RDL lives in external <code>.rdl</code> files and is attached to XML rules through <code>&lt;rdl_ref&gt;</code>. The older inline <code>&lt;rdl&gt;</code> form is retired.</p>
     <div class="tip"><div class="callout-label">Current Model</div>XML defines candidate matches and presentation. The external <code>.rdl</code> script decides whether a candidate stays visible, gets suppressed, and what reason/trace metadata is stored with that decision.</div>
 
+    <section id="rdl-architecture">
+      <h3>Current Status and Architecture</h3>
+      <p>RDL v1 evaluates contextual file/path rules through <code>core/rdl_engine.py</code>. RDL v2 executes typed rules through the CLI and Web UI. Both engines run by default; semantic coverage remains experimental and adapter-dependent.</p>
+      <ul>
+        <li>V1 XML candidates reference external VERSION 1 definitions. The compiler/linter validates syntax and compatibility.</li>
+        <li>V2 native text/path rules cover the baseline inventory; semantic rules request supported flow, control-flow, call and state services.</li>
+        <li>Bounded cross-file analysis retains parameter/return evidence, unresolved calls, capability gaps and budget limits.</li>
+        <li>Original RDL and independent inter-file Advanced Analysis shipped together in March 2026; current v2 development extends the rule language.</li>
+      </ul>
+
+      <pre><code>RDL source
+    |
+    v
+parser and semantic validation
+    |
+    v
+typed execution plan
+    |
+    +--&gt; text/path index
+    +--&gt; language-neutral semantic IR
+    +--&gt; data-flow, control-flow, call-graph and state services
+    |
+    v
+MATCH / NO_MATCH / RULE_ERROR / INDETERMINATE
+    |
+    v
+machine-readable evidence graph and reports</code></pre>
+
+      <p>Simple rules use the text/path layer. Advanced rules request supported semantic, flow, path or state capabilities only when needed. The rule describes the security property; the engine performs the computation.</p>
+      <p>V2 definitions live under <a href="../rules/scanning/logic/rdl/v2/README.md">rules/scanning/logic/rdl/v2/</a>, with shared common/core, platform/core, and platform/framework ownership plus bug-class subdirectories. The <a href="../rules/scanning/logic/rdl/v2/INDEX.md">scope index</a> traces stable rule IDs and v1 mappings. README-only scopes reserve extension space and do not imply implemented coverage.</p>
+      <p>Select <strong>RDL v1</strong>, <strong>RDL v2 (Experimental)</strong>, or <strong>Both</strong>; Both is the default. V2 executes native baseline and additional checks plus configured semantic definitions. Inventory breadth is separate from semantic coverage; consult the coverage audit.</p>
+      <pre><code>python3 dakshscra.py -r auto -t /path/to/source --rdl-engine both
+python3 dakshscra.py -r php -t /path/to/source --rdl-engine v1
+python3 dakshscra.py -r php -t /path/to/source --rdl-engine v2</code></pre>
+      <p>New Scan uses Setup, Check Classes, Exclusions, Analysis &amp; Output and Custom RDL tabs. Optional packs use <code>--custom-rdl /path/to/pack.json</code> or the Custom RDL tab. See scan configuration and custom packs.</p>
+      <p>Vulnerability Analysis uses recorded v2 evidence. Advanced Analysis exposes source-to-sink paths, input entry points and symbol cross references. A confirmed rule match establishes the named property, not exploitability. Indeterminate or absent analysis is not proof of safety. Comparison counts apply only when both engines ran; v2-only records identify v1 as NOT_RUN.</p>
+      <p>CLI selection overrides the legacy environment flag. Historical evidence remains retained; regenerated reports use current presentation. Resume requires the same engine selection. The optional inter-file analyzer remains independent.</p>
+      <p>Only configured mappings are evaluated. Missing mappings and no-match outcomes are not proof of safety. V2 reports preserve source evidence and limitations. See the accuracy review for historical test evidence.</p>
+      <p>The checked real-codebase baseline scanned 119 first-party DakshSCRA Python files: 116 comparisons agreed, three disagreed, and none failed or became indeterminate. Manual review classified the three disagreements as presence-based v1 false positives where v2 correctly found no untrusted flow. This validates the current codebase and mapping set, not arbitrary unseen software.</p>
+      <p>The expanded iAcademy validation covers 712 PHP files and five properties: 9,256 mapped evaluations, three distinct credential locations, and zero execution errors. Relevant unsupported PHP control-dependent flows remain explicitly indeterminate. Disagreements remain review evidence and cannot alter v1 findings.</p>
+
+    </section>
+
     <section id="rdl-sequence">
       <h3>Rule Evaluation Sequence</h3>
       <ol>
@@ -627,7 +698,7 @@ runtime/
       <pre><code>&lt;rule&gt;
   &lt;name&gt;Rule Name&lt;/name&gt;
   &lt;regex&gt;&lt;![CDATA[regex_to_match]]&gt;&lt;/regex&gt;
-  &lt;rdl_ref&gt;logic/common/core/insecure_sql_query_unsafe_string_concatenation.rdl&lt;/rdl_ref&gt;
+  &lt;rdl_ref&gt;logic/rdl/v1/common/core/insecure_sql_query_unsafe_string_concatenation.rdl&lt;/rdl_ref&gt;
   &lt;exclude&gt;&lt;![CDATA[pattern_to_exclude_lines]]&gt;&lt;/exclude&gt;  <span class="comment">&lt;!-- optional --&gt;</span>
   &lt;scan_config&gt;...&lt;/scan_config&gt;                           <span class="comment">&lt;!-- optional --&gt;</span>
   &lt;rule_desc&gt;Short description of what the rule detects.&lt;/rule_desc&gt;
@@ -661,7 +732,6 @@ TRACE SQLi gate: input source present and mitigation missing.</code></pre>
           <tr><td><code>WHEN CURRENT_FILE_MATCHES &lt;regex&gt;</code></td><td>Match against the entire current file content.</td><td>Whole-file config or structure checks</td></tr>
           <tr><td><code>WHEN FILE_NAME_IS &lt;name&gt;</code></td><td>Require an exact filename.</td><td><code>AndroidManifest.xml</code>, <code>Info.plist</code>, <code>web.xml</code></td></tr>
           <tr><td><code>WHEN FILE_PATH_MATCHES &lt;glob&gt;</code></td><td>Require the current path to match a glob.</td><td>Path-specific or framework-specific rules</td></tr>
-          <tr><td><code>UNLESS PRESENT &lt;regex&gt;</code></td><td>Fail if a safe pattern is present.</td><td>Early mitigation exclusion</td></tr>
           <tr><td><code>UNLESS CURRENT_FILE_MATCHES &lt;regex&gt;</code></td><td>Fail if the full file matches an exclusion pattern.</td><td>Skip known-safe structural cases</td></tr>
           <tr><td><code>OBSERVE PROJECT_HAS_GLOB &lt;glob&gt; AS &lt;label&gt;</code></td><td>Record related files from the project root in trace metadata.</td><td>Surface supporting config or companion files</td></tr>
           <tr><td><code>REPORT AS &lt;outcome&gt;</code></td><td>Set the rule outcome.</td><td>Usually <code>area_of_interest</code></td></tr>
@@ -678,7 +748,7 @@ TRACE SQLi gate: input source present and mitigation missing.</code></pre>
       <pre><code>&lt;rule&gt;
   &lt;name&gt;Possible SQL Injection in Query Execution&lt;/name&gt;
   &lt;regex&gt;&lt;![CDATA[(?i)\b(?:mysql_query|mysqli_query|-&gt;query)\s*\(]]&gt;&lt;/regex&gt;
-  &lt;rdl_ref&gt;logic/common/core/insecure_sql_query_unsafe_string_concatenation.rdl&lt;/rdl_ref&gt;
+  &lt;rdl_ref&gt;logic/rdl/v1/common/core/insecure_sql_query_unsafe_string_concatenation.rdl&lt;/rdl_ref&gt;
 &lt;/rule&gt;
 
 VERSION 1
@@ -692,7 +762,7 @@ REASON Query execution appears to rely on direct input without parameterisation.
       <pre><code>&lt;rule&gt;
   &lt;name&gt;Exported Components Without Permission&lt;/name&gt;
   &lt;regex&gt;&lt;![CDATA[&lt;(?P&lt;component&gt;activity|service|receiver|provider)\s[^&gt;]*android:name="(?P&lt;name&gt;[^"]+)"[^&gt;]*android:exported="true"[^&gt;]*(?:/&gt;|&gt;)]]&gt;&lt;/regex&gt;
-  &lt;rdl_ref&gt;logic/mobile/android/core/exported_components.rdl&lt;/rdl_ref&gt;
+  &lt;rdl_ref&gt;logic/rdl/v1/mobile/android/core/exported_components.rdl&lt;/rdl_ref&gt;
 &lt;/rule&gt;
 
 VERSION 1
@@ -707,7 +777,7 @@ REASON Exported component appears reachable without a permission guard.</code></
       <pre><code>&lt;rule&gt;
   &lt;name&gt;Admin Section File Path&lt;/name&gt;
   &lt;regex&gt;&lt;![CDATA[(?i)(^|/)(admin|administrator|root)(/|$)]]&gt;&lt;/regex&gt;
-  &lt;rdl_ref&gt;logic/filepaths/core/admin_section.rdl&lt;/rdl_ref&gt;
+  &lt;rdl_ref&gt;logic/rdl/v1/filepaths/core/admin_section.rdl&lt;/rdl_ref&gt;
 &lt;/rule&gt;
 
 VERSION 1
@@ -744,6 +814,51 @@ REASON Cleartext traffic is enabled; related network security config files were 
       <div class="warn"><div class="callout-label">Whole-file limitation</div><code>WHEN PRESENT</code>, <code>WHEN MISSING</code>, and <code>WHEN EXPR</code> are evaluated against the <strong>entire file</strong>, not the matched line only. If a mitigation appears anywhere in the file, all candidates in that file can be suppressed. That trade-off is intentional: lower noise at the cost of occasionally hiding an issue in an otherwise-safe file.</div>
     </section>
 
+    <section id="rdl-lint">
+      <h3>Validating and Linting Rules</h3>
+      <p>Lint RDL before running a scan or submitting a new rule:</p>
+      <pre><code><span class="comment"># Validate one rule</span>
+<span class="cmd">python3 tools/rdl_lint.py rules/scanning/logic/rdl/v1/python/core/command_injection_eval.rdl</span>
+
+<span class="comment"># Validate every shipped external rule</span>
+<span class="cmd">python3 tools/rdl_lint.py rules/scanning/logic/rdl/v1</span>
+
+<span class="comment"># Machine-readable diagnostics</span>
+<span class="cmd">python3 tools/rdl_lint.py rules/scanning/logic/rdl/v1 --json</span></code></pre>
+      <p>The command exits with status <code>0</code> when no rule errors exist and <code>1</code> when at least one error is present. Diagnostics include file, line, severity, stable code, message, and remediation hint.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Code</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><code>RDL001</code></td><td>Missing <code>VERSION</code> declaration</td></tr>
+          <tr><td><code>RDL003</code> / <code>RDL004</code></td><td>Invalid or unsupported language version</td></tr>
+          <tr><td><code>RDL101</code></td><td>Unknown instruction that the v1 runtime would otherwise ignore</td></tr>
+          <tr><td><code>RDL102</code></td><td>Empty command or regex operand</td></tr>
+          <tr><td><code>RDL103</code></td><td>Malformed regex</td></tr>
+          <tr><td><code>RDL106</code></td><td>Boolean expression has no recognized predicate</td></tr>
+          <tr><td><code>RDL201</code></td><td>Rule has no gating predicate and therefore always passes</td></tr>
+          <tr><td><code>RDL301</code></td><td>Informational warning that a v1 text predicate uses whole-file scope</td></tr>
+        </tbody>
+      </table></div>
+      <div class="warn"><div class="callout-label">Rule errors are not negative matches</div><code>NO_MATCH</code> and <code>RULE_ERROR</code> are distinct outcomes. V1 retains established runtime behavior for compatibility; lint rules before use. V2 preserves rule errors and budget exhaustion as explicit outcomes.</div>
+      <p>Run compiler and full legacy-corpus tests with:</p>
+      <pre><code><span class="cmd">python3 -m unittest tests.rdl.test_compiler tests.rdl.test_legacy_corpus</span></code></pre>
+    </section>
+
+    <section id="rdl-v2">
+      <h3>RDL v2 Direction</h3>
+      <div class="note"><div class="callout-label">Executable, experimental analysis</div>RDL v2 executes through the CLI and Web UI. Baseline coverage and deeper semantic capability are separate; adapter support and budgets determine which properties can be evaluated.</div>
+      <ol class="steps">
+        <li><strong>Simple rules:</strong> text and path predicates such as <code>PRESENT</code>, <code>MISSING</code>, <code>MATCHES</code>, <code>PROJECT_HAS</code>, and <code>PATH_MATCHES</code>.</li>
+        <li><strong>Structured relationships:</strong> typed functions, variables, calls, assignments, parameters, return values, resources, sources, sinks, and sanitizers.</li>
+        <li><strong>Data flow:</strong> propagation, aliases, transformations, fields, sanitizers, and bounded interprocedural source-to-sink analysis.</li>
+        <li><strong>Control flow:</strong> reachability, branches, loops, dominance, path conditions, and exceptional paths where supported.</li>
+        <li><strong>State analysis:</strong> generic transitions for memory lifetime, resources, locks, authorization, workflows, and business invariants.</li>
+      </ol>
+      <p>Language adapters map supported native syntax and APIs into a normalized representation. Generic rules target concepts such as <code>command.execution</code> and <code>sql.execution</code>; catalog packs provide concrete API mappings.</p>
+      <p>Severity describes impact; confidence describes evidence strength. Evidence identifies available text, semantic, flow, path or state analysis.</p>
+      <p>The current executor runs configured v2 checks in scans. Coverage expansion, performance hardening and fuzzing remain ongoing. Dual-run comparisons and safe/unsafe regressions validate migration; implemented services do not imply complete semantic coverage for every registered platform or framework.</p>
+    </section>
+
     <section id="rdl-authoring">
       <h3>Authoring Guidance</h3>
       <ul>
@@ -752,6 +867,10 @@ REASON Cleartext traffic is enabled; related network security config files were 
         <li>Prefer <code>WHEN PRESENT</code> / <code>WHEN MISSING</code> for simple gates and <code>WHEN EXPR</code> only when the logic genuinely needs boolean composition.</li>
         <li>Put report-facing intent in <code>REASON</code> and suppression-facing intent in <code>FAIL_REASON</code>.</li>
         <li>For file-path rules, write regex and RDL conditions against normalized slash-separated relative paths.</li>
+        <li>Run <code>python3 tools/rdl_lint.py &lt;path&gt;</code> before testing a rule against source code.</li>
+        <li>Treat every v1 text predicate as file-scoped. Do not assume a mitigation belongs to the same function, variable, call, or data-flow path as the candidate.</li>
+        <li>Do not use draft v2 syntax in active rules until the v2 parser and execution plans are enabled.</li>
+        <li>If a property requires identity, data flow, control flow, type information, call graphs, or state, record it as a semantic-analysis requirement instead of continually approximating it with more regex.</li>
       </ul>
     </section>
   </section>
@@ -785,7 +904,7 @@ REASON Cleartext traffic is enabled; related network security config files were 
   <span class="comment">&lt;!-- ── Report format ──────────────────────────────────────────────── --&gt;</span>
   <span class="comment">&lt;!-- default        : standard finding card (default)                 --&gt;</span>
   <span class="comment">&lt;!-- component_list : render named capture groups as a component list --&gt;</span>
-  <span class="comment">&lt;!-- secret_list    : render matches as a redacted secrets table      --&gt;</span>
+  <span class="comment">&lt;!-- secret_list    : render matches as a secrets table      --&gt;</span>
   &lt;report_format&gt;default&lt;/report_format&gt;
 
   <span class="comment">&lt;!-- ── Highlighting ───────────────────────────────────────────────── --&gt;</span>
@@ -823,7 +942,7 @@ REASON Cleartext traffic is enabled; related network security config files were 
 &lt;rule&gt;
   &lt;name&gt;Android Cleartext Traffic Allowed&lt;/name&gt;
   &lt;regex&gt;&lt;![CDATA[android:usesCleartextTraffic\s*=\s*"true"]]&gt;&lt;/regex&gt;
-  &lt;rdl_ref&gt;logic/mobile/android/core/cleartext_traffic.rdl&lt;/rdl_ref&gt;
+  &lt;rdl_ref&gt;logic/rdl/v1/mobile/android/core/cleartext_traffic.rdl&lt;/rdl_ref&gt;
   &lt;scan_config&gt;
     &lt;match_mode&gt;line&lt;/match_mode&gt;
     &lt;context_lines_before&gt;2&lt;/context_lines_before&gt;
@@ -840,7 +959,7 @@ REASON Cleartext traffic is enabled; related network security config files were 
 &lt;rule&gt;
   &lt;name&gt;Command Injection: shell_exec&lt;/name&gt;
   &lt;regex&gt;&lt;![CDATA[(shell_exec|exec|passthru|system)\(]]&gt;&lt;/regex&gt;
-  &lt;rdl_ref&gt;logic/php/core/command_injection_shell_exec_exec_passthru_system_popen_backtick.rdl&lt;/rdl_ref&gt;
+  &lt;rdl_ref&gt;logic/rdl/v1/php/core/command_injection_shell_exec_exec_passthru_system_popen_backtick.rdl&lt;/rdl_ref&gt;
   &lt;scan_config&gt;
     &lt;match_mode&gt;line&lt;/match_mode&gt;
     &lt;context_lines_before&gt;4&lt;/context_lines_before&gt;
@@ -853,12 +972,12 @@ REASON Cleartext traffic is enabled; related network security config files were 
 &lt;/rule&gt;</code></pre>
 
       <h4>Profile C &mdash; Hardcoded Secrets</h4>
-      <p>Applies to credential/key pattern rules. Aggregate per file so the report lists all secrets found in a file together; use <code>secret_list</code> format for a clean redacted table.</p>
+      <p>Applies to credential/key pattern rules. Aggregate per file so the report lists all secrets found in a file together; use <code>secret_list</code> format for a grouped secrets table.</p>
       <pre><code><span class="comment">&lt;!-- Example: hardcoded API key or token --&gt;</span>
 &lt;rule&gt;
   &lt;name&gt;Hardcoded Secret Material&lt;/name&gt;
   &lt;regex&gt;&lt;![CDATA[(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*["'][^"']{8,}["']]]&gt;&lt;/regex&gt;
-  &lt;rdl_ref&gt;logic/common/core/server_side_secrets_handling.rdl&lt;/rdl_ref&gt;
+  &lt;rdl_ref&gt;logic/rdl/v1/common/core/server_side_secrets_handling.rdl&lt;/rdl_ref&gt;
   &lt;scan_config&gt;
     &lt;match_mode&gt;line&lt;/match_mode&gt;
     &lt;context_lines_before&gt;1&lt;/context_lines_before&gt;
@@ -954,18 +1073,39 @@ REASON Cleartext traffic is enabled; related network security config files were 
 
   <section id="platforms">
     <h2>Platforms &amp; Rules</h2>
-    <div class="platform-grid">
-      <div class="platform-card"><div class="name">PHP</div><div class="flag">-r php</div><div class="ext">.php</div></div>
-      <div class="platform-card"><div class="name">Java</div><div class="flag">-r java</div><div class="ext">.java</div></div>
-      <div class="platform-card"><div class="name">.NET / C#</div><div class="flag">-r dotnet</div><div class="ext">.cs .aspx .cshtml</div></div>
-      <div class="platform-card"><div class="name">Python</div><div class="flag">-r python</div><div class="ext">.py</div></div>
-      <div class="platform-card"><div class="name">JavaScript</div><div class="flag">-r javascript</div><div class="ext">.js .ts .jsx .tsx</div></div>
-      <div class="platform-card"><div class="name">Go</div><div class="flag">-r golang</div><div class="ext">.go</div></div>
-      <div class="platform-card"><div class="name">Ruby</div><div class="flag">-r ruby</div><div class="ext">.rb</div></div>
-      <div class="platform-card"><div class="name">Kotlin</div><div class="flag">-r kotlin</div><div class="ext">.kt .kts</div></div>
-      <div class="platform-card"><div class="name">C</div><div class="flag">-r c</div><div class="ext">.c .h</div></div>
-      <div class="platform-card"><div class="name">C++</div><div class="flag">-r cpp</div><div class="ext">.cpp .cc .hpp</div></div>
-    </div>
+    <p>Current registries contain 27 platform packs and 73 framework mappings. Registered rule packs and semantic coverage are separate; coverage varies by rule and adapter.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Platform / -r value</th><th>Frameworks</th></tr></thead>
+      <tbody>
+        <tr><td><code>dotnet</code></td><td>aspnetcore, blazor, entityframework, identity</td></tr>
+        <tr><td><code>php</code></td><td>codeigniter, drupal, laravel, symfony, wordpress, yii</td></tr>
+        <tr><td><code>java</code></td><td>hibernate, mybatis, spring, springboot, struts</td></tr>
+        <tr><td><code>javascript</code></td><td>angular, electron, express, nestjs, nextjs, react, vue</td></tr>
+        <tr><td><code>kotlin</code></td><td>exposed, ktor, springkotlin</td></tr>
+        <tr><td><code>python</code></td><td>django, fastapi, flask, sqlalchemy</td></tr>
+        <tr><td><code>go</code></td><td>echo, fiber, gin, gorilla, gorm</td></tr>
+        <tr><td><code>c</code></td><td>freertos</td></tr>
+        <tr><td><code>cpp</code></td><td>boost, qt</td></tr>
+        <tr><td><code>android</code></td><td>cordova-android, flutter-android, ionic-android, jetpack, nativescript-android, reactnative-android, retrofit, room, xamarin-android</td></tr>
+        <tr><td><code>ios</code></td><td>alamofire, cordova-ios, coredata, flutter-ios, ionic-ios, nativescript-ios, reactnative-ios, swiftui, uikit, xamarin-ios</td></tr>
+        <tr><td><code>reactnative</code></td><td>expo, reactnative</td></tr>
+        <tr><td><code>flutter</code></td><td>flutter, flutter-dio, flutter-hive</td></tr>
+        <tr><td><code>xamarin</code></td><td>xamarin</td></tr>
+        <tr><td><code>maui</code></td><td>-</td></tr>
+        <tr><td><code>kmp</code></td><td>-</td></tr>
+        <tr><td><code>ionic</code></td><td>ionic</td></tr>
+        <tr><td><code>nativescript</code></td><td>nativescript</td></tr>
+        <tr><td><code>cordova</code></td><td>cordova</td></tr>
+        <tr><td><code>bash</code></td><td>-</td></tr>
+        <tr><td><code>powershell</code></td><td>-</td></tr>
+        <tr><td><code>dockerfile</code></td><td>-</td></tr>
+        <tr><td><code>terraform</code></td><td>terraform-aws, terraform-azure, terraform-gcp</td></tr>
+        <tr><td><code>kubernetes</code></td><td>-</td></tr>
+        <tr><td><code>ruby</code></td><td>rails, sinatra</td></tr>
+        <tr><td><code>rust</code></td><td>actix, axum, rocket</td></tr>
+        <tr><td><code>common</code></td><td>-</td></tr>
+      </tbody>
+    </table></div>
     <p>Combine platforms: <code>-r php,java,javascript</code></p>
     <pre><code><span class="comment"># List all rules</span>
 <span class="cmd">python dakshscra.py -l R</span>
@@ -1025,7 +1165,7 @@ REASON Cleartext traffic is enabled; related network security config files were 
 
     <h3>Resuming an interrupted scan</h3>
     <pre><code><span class="cmd">python dakshscra.py --resume-scan <span class="flag">-r</span> <span class="value">php</span> <span class="flag">-t</span> <span class="value">./app</span></span></code></pre>
-    <p>Scan state is checkpointed by default. Use <code>--resume-scan</code> to continue from the last saved point rather than starting over.</p>
+    <p>Enable checkpointing with <code>--state</code> or Settings before the initial scan. Use <code>--resume-scan</code> with the same target and engine selection to continue from its saved checkpoint.</p>
 
     <h3>Suppressing known false positives</h3>
     <ol class="steps">
@@ -1074,6 +1214,8 @@ REASON Cleartext traffic is enabled; related network security config files were 
     <p>Found a bug or want to contribute? Open an issue or pull request on GitHub.</p>
   </section>
 
+<p>Recorded traces offer Text / Graph views with file lanes, recorded handoffs, a minimap, pan/zoom, selected-step source evidence, keyboard and step navigation, and workspace expansion. Long traces use bounded segments while every step stays accessible. SVG exports contain the displayed segment. Arrows reflect recorded order, not invented branches or proof of runtime execution. New HTML packages include the offline explorer; keep all extracted files together. PDF and Word preserve static evidence.</p>
+<p>System → Disk info groups application storage by project and scan, including generated reports, saved results, runtime files, logs and temporary diagnostics. Inspect individual file sizes and modification dates, select generated reports or diagnostics for cleanup, or delete all data for a finished scan or project. Review the confirmation before deletion: scan history and project configuration remain, but removed results cannot be recovered or exported. Cleanup is blocked while related scans or report jobs are active. Source directories, account data and settings are preserved. Unassigned files are listed for inspection without automatic deletion.</p>
 </main>
 
 <script>

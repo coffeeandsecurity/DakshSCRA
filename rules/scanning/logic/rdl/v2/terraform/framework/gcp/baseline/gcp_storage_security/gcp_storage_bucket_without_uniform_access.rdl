@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.terraform.framework.gcp.gcp_storage_bucket_without_uniform_access VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "uniform_bucket_level_access\\s*=\\s*false" "im"
+WHEN (TEXT_MATCHES "uniform_bucket_level_access\\s*=\\s*false" "im" AND TEXT_MISSING "# intentional|# legacy|# migration" "im")
+REPORT "GCP Storage Bucket Without Uniform Access"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

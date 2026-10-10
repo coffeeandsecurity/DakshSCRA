@@ -1,0 +1,8 @@
+VERSION 2
+RULE ionic.capacitor-debugging VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bwebContentsDebuggingEnabled\\s*:\\s*true\\b" ""
+REPORT "Capacitor WebView Debugging Enabled"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

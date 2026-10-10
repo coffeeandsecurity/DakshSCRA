@@ -1,0 +1,6 @@
+VERSION 1
+WHEN PRESENT (?i)\b(login|authenticate|oauth|jwt)\b
+WHEN EXPR PRESENT:(?i)\b(auth|login|token|session|credential)\b
+REPORT AS area_of_interest
+REASON Detects authentication-related markers for human review. Package names, license headers and example labels do not invalidate executable authentication code; a marker is not proof of effective authentication.
+TRACE Externalized rule logic for Authentication Modules.

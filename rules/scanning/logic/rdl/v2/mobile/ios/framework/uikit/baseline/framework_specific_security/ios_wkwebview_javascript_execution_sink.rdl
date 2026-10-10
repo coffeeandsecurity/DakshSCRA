@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.ios.framework.uikit.ios_wkwebview_javascript_execution_sink VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "WKWebView|evaluateJavaScript\\(" "im"
+WHEN TEXT_MISSING "limitsNavigationsToAppBoundDomains\\s*=\\s*true" "im"
+REPORT "iOS WKWebView JavaScript Execution Sink"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

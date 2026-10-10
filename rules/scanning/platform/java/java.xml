@@ -3,7 +3,7 @@
         <rule>
             <name>Untrusted Input(s): requestParameters</name>
             <regex>requestParameters</regex>
-            <rdl_ref>logic/java/core/untrusted_input_s_requestparameters.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/untrusted_input_s_requestparameters.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -12,15 +12,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of `requestParameters`, which can introduce untrusted inputs into the code.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using user input from `requestParameters` without proper validation and sanitization. Improper handling of untrusted inputs can lead to security vulnerabilities, such as injection attacks (e.g., SQL, OS, LDAP), cross-site scripting (XSS), or remote code execution. Attackers can manipulate the `requestParameters` to provide malicious or unexpected values, potentially compromising the integrity and security of the application.</vuln_desc>
-            <developer>Validate and sanitize user input received from `requestParameters` before using it in any sensitive operations. Implement strong input validation mechanisms, ensuring that only expected and sanitized values are accepted. Additionally, developers should be aware of the potential risks associated with using user-supplied data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
+            <rule_desc>The code accepts or reads externally influenced data. Trace it to security-sensitive operations and identify the validation and authorization required by each destination.</rule_desc>
+            <vuln_desc>External input may cause injection, incorrect decisions, or unauthorized data access if it reaches a sensitive operation without the controls required by that operation. Reading input alone does not establish a vulnerability.</vuln_desc>
+            <developer>Validate type, size, and allowed values at trust boundaries, and apply destination-specific parameter binding or output encoding. Enforce authorization independently of input validation.</developer>
             <reviewer>Ensure that proper input handling is in place for `requestParameters`. Verify that developers have implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. Also assess the sensitivity of the data handled through `requestParameters` and confirm that relevant security measures, such as output encoding and protection against injection attacks, are implemented correctly. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted Input(s): getParameter</name>
             <regex>getParameter\(</regex>
-            <rdl_ref>logic/java/core/untrusted_input_s_getparameter.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/untrusted_input_s_getparameter.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -29,15 +29,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of the `getParameter` method, which can introduce untrusted inputs into the code.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using user input from the `getParameter` method without proper validation and sanitization. Attackers can manipulate the input parameters to provide malicious or unexpected values, potentially leading to security vulnerabilities, such as injection attacks (e.g., SQL, OS, LDAP), cross-site scripting (XSS), or unauthorized access to sensitive information.</vuln_desc>
-            <developer>Carefully validate and sanitize user input received from the `getParameter` method before using it in any sensitive operations. Implement strong input validation, ensuring that only expected and sanitized values are accepted from input parameters. Additionally, developers should be aware of the risks associated with using user-supplied data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
+            <rule_desc>The code accepts or reads externally influenced data. Trace it to security-sensitive operations and identify the validation and authorization required by each destination.</rule_desc>
+            <vuln_desc>External input may cause injection, incorrect decisions, or unauthorized data access if it reaches a sensitive operation without the controls required by that operation. Reading input alone does not establish a vulnerability.</vuln_desc>
+            <developer>Validate type, size, and allowed values at trust boundaries, and apply destination-specific parameter binding or output encoding. Enforce authorization independently of input validation.</developer>
             <reviewer>Check for appropriate input handling for the `getParameter` method. Assess whether developers have implemented proper input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. Also verify the usage of output encoding and protection against injection attacks to ensure the secure handling of user input received through input parameters. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted Input(s) in Application Response</name>
             <regex>((\bprint|out\.print(ln)?|response\.write)\(.*|response\.getWriter|out\.write)(\s)*\((\s)*("|')[^("|')]*</regex>
-            <rdl_ref>logic/java/core/untrusted_input_s_in_application_response.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/untrusted_input_s_in_application_response.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -46,15 +46,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects potential untrusted inputs in Java code that are included in application responses. The identified functions can be used to print content either to a web page or to the console, depending on the code implementation and context.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the presence of potentially untrusted data being included in application responses. Untrusted data, if not properly validated or sanitized, can lead to security vulnerabilities, including cross-site scripting (XSS). It is important to ensure that all inputs are validated and properly escaped before being included in the application response to prevent potential security risks.</vuln_desc>
-            <developer>Implement proper input validation and sanitization techniques to ensure that untrusted data is not included in application responses. Also use appropriate output encoding mechanisms, such as HTML escaping, to prevent potential XSS attacks. Thoroughly validate and sanitize any user-generated or external inputs before incorporating them into the application response.</developer>
+            <rule_desc>The code accepts or reads externally influenced data. Trace it to security-sensitive operations and identify the validation and authorization required by each destination.</rule_desc>
+            <vuln_desc>External input may cause injection, incorrect decisions, or unauthorized data access if it reaches a sensitive operation without the controls required by that operation. Reading input alone does not establish a vulnerability.</vuln_desc>
+            <developer>Validate type, size, and allowed values at trust boundaries, and apply destination-specific parameter binding or output encoding. Enforce authorization independently of input validation.</developer>
             <reviewer>Assess whether the Java code implements adequate input validation, sanitization, and output encoding techniques to prevent security vulnerabilities. Verify that untrusted data is properly handled and escaped before being included in application responses. Additionally, reviewers should evaluate the effectiveness of security controls in place to mitigate the risks of cross-site scripting attacks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted Input(s) in SQL Query (PreparedStatement)</name>
             <regex>PreparedStatement(\s)*(\.|-&gt;)execute( |Query|Update)</regex>
-            <rdl_ref>logic/java/core/untrusted_input_s_in_sql_query_preparedstatement.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/untrusted_input_s_in_sql_query_preparedstatement.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -63,15 +63,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects potential SQL injection vulnerabilities in Java code that uses prepared statements.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of SQL injection. SQL injection attacks can occur when user-supplied data is not properly sanitized or validated before being used in database queries. Attackers can manipulate the input to execute arbitrary SQL statements, potentially leading to unauthorized access, data loss, or other security breaches.</vuln_desc>
-            <developer>Use prepared statements or parameterized queries to prevent SQL injection vulnerabilities. By using placeholders and binding user input as parameters, developers can ensure that user data is treated as data and not as executable code. It is essential to avoid constructing SQL queries dynamically by concatenating user input directly.</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Verify that Java code uses prepared statements or parameterized queries to prevent SQL injection. Check whether user input is properly bound as parameters and not concatenated directly into SQL queries. Also assess the overall security of the database interactions and confirm that proper input validation and sanitization techniques are implemented. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Serialization/Deserialization Handling</name>
             <regex>\.readObject|\.writeObject|ObjectInputStream|ObjectOutputStream</regex>
-            <rdl_ref>logic/java/core/serialization_deserialization_handling.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/serialization_deserialization_handling.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -80,15 +80,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects potential serialization/deserialization vulnerabilities in Java code.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using serialization/deserialization methods or classes without proper validation and precautions. Attackers can exploit serialization/deserialization vulnerabilities to execute arbitrary code, tamper with data, or perform unauthorized actions.</vuln_desc>
-            <developer>Be cautious when using serialization/deserialization methods or classes and follow secure coding practices. It is important to validate and sanitize serialized data, enforce strict type checking, and implement integrity checks to prevent serialization/deserialization attacks. Additionally, developers should consider using frameworks or libraries that provide secure serialization/deserialization mechanisms and avoid using custom serialization/deserialization solutions.</developer>
+            <rule_desc>The application reads serialized objects or uses a parser that may construct runtime types. Identify the input’s trust and the effective parser and type restrictions.</rule_desc>
+            <vuln_desc>A crafted untrusted payload may instantiate dangerous types or trigger object behavior that executes code, modifies state, or exhausts resources when the parser permits those operations.</vuln_desc>
+            <developer>Use a data-only format and a safe loader for untrusted input. Disable automatic object or type construction, allowlist required types, and bound parsing size and complexity.</developer>
             <reviewer>Verify that appropriate measures are taken to mitigate serialization/deserialization vulnerabilities. Ensure that input validation, integrity checks, and secure coding practices are implemented for serialization and deserialization operations. Also assess the sensitivity of the serialized data and confirm that safeguards, such as input validation, proper exception handling, and the use of secure serialization/deserialization frameworks or libraries, are in place to prevent serialization/deserialization attacks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Command Injection</name>
             <regex>(Runtime(\s)*\.getRuntime(\s)*(\.|-&gt;)exec|ProcessBuilder(\s)*(\.|-&gt;)start)</regex>
-            <rdl_ref>logic/java/core/command_injection.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/command_injection.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -97,9 +97,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects potential command injection vulnerabilities in Java code.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of command injection. Command injection vulnerabilities occur when user-supplied data is passed to system commands without proper validation or sanitization, allowing attackers to execute arbitrary commands on the underlying operating system.</vuln_desc>
-            <developer>Avoid constructing commands by concatenating user inputs and instead use safe mechanisms, such as parameterized commands or libraries with built-in protection against command injection.</developer>
+            <rule_desc>The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.</rule_desc>
+            <vuln_desc>If an attacker controls interpreted syntax or the operation selected, code or commands may run with the application’s privileges, allowing data theft, state changes, or service disruption.</vuln_desc>
+            <developer>Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates or expressions.</developer>
             <reviewer>Verify that safe mechanisms, such as parameterized commands or libraries with built-in protection, are used to prevent command injection vulnerabilities. Assess whether user inputs are properly validated and sanitized before being used in command execution. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -107,7 +107,7 @@
         <rule>
             <name>Deprecated MODE_WORLD_WRITEABLE Usage</name>
             <regex>M(?:ODE_)?WORLD_WRITEABLE</regex>
-            <rdl_ref>logic/java/core/deprecated_mode_world_writeable_usage.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/deprecated_mode_world_writeable_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -116,15 +116,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects usage of the deprecated MODE_WORLD_WRITEABLE mode.</rule_desc>
-            <vuln_desc>The MODE_WORLD_WRITEABLE mode allows any application to write to your app's files, leading to potential data corruption or unauthorized modifications.</vuln_desc>
-            <developer>Avoid using MODE_WORLD_WRITEABLE. Consider using content providers or other mechanisms to share data securely.</developer>
+            <rule_desc>The source references a dependency, version, or deprecated API. Resolve the actual deployed version and supported behavior before deciding whether it needs replacement.</rule_desc>
+            <vuln_desc>A reachable vulnerability in an unsupported or affected dependency may compromise the application with its privileges. A version declaration or deprecated API alone does not establish that such a vulnerability is present.</vuln_desc>
+            <developer>Inventory resolved dependencies and runtime versions, compare them with authoritative advisories and support policy, and migrate affected or unsupported components to tested supported replacements.</developer>
             <reviewer>Check Java/Kotlin source files for occurrences of MODE_WORLD_WRITEABLE and ensure that secure alternatives are used. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Deprecated MODE_WORLD_READABLE Usage</name>
             <regex>M(?:ODE_)?WORLD_READABLE</regex>
-            <rdl_ref>logic/java/core/deprecated_mode_world_readable_usage.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/deprecated_mode_world_readable_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -133,15 +133,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects usage of the deprecated MODE_WORLD_READABLE mode.</rule_desc>
-            <vuln_desc>The MODE_WORLD_READABLE mode allows any application to read your app's files, potentially exposing sensitive data to unauthorized access.</vuln_desc>
-            <developer>Avoid using MODE_WORLD_READABLE. Use content providers or define explicit permissions to control data access.</developer>
+            <rule_desc>The source references a dependency, version, or deprecated API. Resolve the actual deployed version and supported behavior before deciding whether it needs replacement.</rule_desc>
+            <vuln_desc>A reachable vulnerability in an unsupported or affected dependency may compromise the application with its privileges. A version declaration or deprecated API alone does not establish that such a vulnerability is present.</vuln_desc>
+            <developer>Inventory resolved dependencies and runtime versions, compare them with authoritative advisories and support policy, and migrate affected or unsupported components to tested supported replacements.</developer>
             <reviewer>Check Java/Kotlin source files for occurrences of MODE_WORLD_READABLE and ensure secure data sharing mechanisms are in place. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure File Operations</name>
             <regex>openFile(?:Output|Input)\s*\([^,]*,\s*M(?:ODE_)?WORLD_(?:WRITEABLE|READABLE)</regex>
-            <rdl_ref>logic/java/core/insecure_file_operations.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/insecure_file_operations.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -150,15 +150,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects insecure file operations using deprecated world-readable or world-writable modes.</rule_desc>
-            <vuln_desc>Using world-readable or world-writable modes in file operations can lead to unauthorized access or modifications to the app's files.</vuln_desc>
-            <developer>Replace the use of MODE_WORLD_READABLE and MODE_WORLD_WRITEABLE with private modes or secure sharing mechanisms such as content providers.</developer>
+            <rule_desc>The code accesses, creates, deletes, or shares filesystem data. Resolve path provenance, destination containment, permission modes, and any concurrent access.</rule_desc>
+            <vuln_desc>An attacker controlling a path or shared file may read or replace private files, delete data, or redirect an operation outside its intended directory if containment and access controls are ineffective.</vuln_desc>
+            <developer>Resolve paths beneath a fixed permitted root and verify containment and effective permissions. Use safe exclusive temporary-file creation, restrict sharing, and account for symlinks and concurrent changes.</developer>
             <reviewer>Review Java/Kotlin source files for file operations that use insecure modes, ensuring that secure alternatives are implemented. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
-            <name>File Sharing Without Content Provider</name>
+            <name>Outgoing URI Intent Review</name>
             <regex>Intent\s*\(\s*(?:[^,]*,\s*)?Uri\.parse</regex>
-            <rdl_ref>logic/java/core/file_sharing_without_content_provider.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/file_sharing_without_content_provider.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -167,17 +167,17 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects file sharing operations that use URIs without a content provider.</rule_desc>
-            <vuln_desc>Sharing files directly using URIs without a content provider can expose sensitive data to unauthorized applications. Content providers offer a controlled mechanism for sharing files securely.</vuln_desc>
-            <developer>Use a content provider to securely share files between applications, ensuring proper access control and data protection.</developer>
-            <reviewer>Check Java/Kotlin source files for file sharing operations using `Intent` with `Uri.parse`. Verify that files are shared through content providers with appropriate permissions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+            <rule_desc>The application exposes or invokes an inter-process interface. Resolve export settings, permissions, intent recipients, URI grants, and runtime caller checks.</rule_desc>
+            <vuln_desc>An untrusted application may read private data, alter state, or invoke operations under the application’s identity if an externally reachable interface lacks effective caller authorization or permits unsafe mutation.</vuln_desc>
+            <developer>Disable unnecessary export and prefer explicit recipients and immutable PendingIntents. Apply appropriate caller permissions and authorization, bind query arguments, and validate every incoming payload.</developer>
+            <reviewer>Resolve the effective URI scheme and recipient. An outgoing HTTP link is not evidence of local file exposure or a missing content provider. When sharing private local files, verify a permission-scoped content URI and grant handling. Assess attacker-selected targets separately.</reviewer>
         </rule>
     </category>
     <category name="External Storage - Insecure Practices">
         <rule>
             <name>Insecure External Storage Write</name>
             <regex>(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*\.write</regex>
-            <rdl_ref>logic/java/core/insecure_external_storage_write.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/insecure_external_storage_write.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -186,15 +186,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects writing to external storage without proper validation or encryption.</rule_desc>
-            <vuln_desc>Writing sensitive information to external storage can lead to unauthorized access or modification, as external storage is globally writable and can be accessed by any application or user.</vuln_desc>
-            <developer>Store only non-sensitive information on external storage. For sensitive data, use internal storage or encrypt the data before writing it to external storage.</developer>
+            <rule_desc>The code accesses, creates, deletes, or shares filesystem data. Resolve path provenance, destination containment, permission modes, and any concurrent access.</rule_desc>
+            <vuln_desc>An attacker controlling a path or shared file may read or replace private files, delete data, or redirect an operation outside its intended directory if containment and access controls are ineffective.</vuln_desc>
+            <developer>Resolve paths beneath a fixed permitted root and verify containment and effective permissions. Use safe exclusive temporary-file creation, restrict sharing, and account for symlinks and concurrent changes.</developer>
             <reviewer>Verify that external storage is used only for non-sensitive data. Ensure that sensitive information is encrypted or stored securely. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Dynamic Loading from External Storage</name>
             <regex>(DexClassLoader|PathClassLoader)\s*\([^,]*Environment\.getExternalStorageDirectory</regex>
-            <rdl_ref>logic/java/core/dynamic_loading_from_external_storage.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/dynamic_loading_from_external_storage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -203,15 +203,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects dynamic loading of files from external storage.</rule_desc>
-            <vuln_desc>Loading executables or class files from external storage without cryptographic verification can lead to code execution vulnerabilities if the files are tampered with.</vuln_desc>
-            <developer>Avoid loading executables or class files from external storage. If necessary, ensure files are cryptographically signed and verified before loading.</developer>
+            <rule_desc>The code accesses, creates, deletes, or shares filesystem data. Resolve path provenance, destination containment, permission modes, and any concurrent access.</rule_desc>
+            <vuln_desc>An attacker controlling a path or shared file may read or replace private files, delete data, or redirect an operation outside its intended directory if containment and access controls are ineffective.</vuln_desc>
+            <developer>Resolve paths beneath a fixed permitted root and verify containment and effective permissions. Use safe exclusive temporary-file creation, restrict sharing, and account for symlinks and concurrent changes.</developer>
             <reviewer>Check for usage of `DexClassLoader` or `PathClassLoader` with files retrieved from external storage. Verify that proper cryptographic verification mechanisms are in place. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure External Storage Read</name>
             <regex>(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*\.read</regex>
-            <rdl_ref>logic/java/core/insecure_external_storage_read.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/insecure_external_storage_read.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -220,15 +220,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects reading data from external storage without proper input validation.</rule_desc>
-            <vuln_desc>Reading unvalidated data from external storage can lead to vulnerabilities such as malicious file execution or unexpected application behavior.</vuln_desc>
-            <developer>Validate and sanitize all data read from external storage as it may come from untrusted sources.</developer>
+            <rule_desc>The code accesses, creates, deletes, or shares filesystem data. Resolve path provenance, destination containment, permission modes, and any concurrent access.</rule_desc>
+            <vuln_desc>An attacker controlling a path or shared file may read or replace private files, delete data, or redirect an operation outside its intended directory if containment and access controls are ineffective.</vuln_desc>
+            <developer>Resolve paths beneath a fixed permitted root and verify containment and effective permissions. Use safe exclusive temporary-file creation, restrict sharing, and account for symlinks and concurrent changes.</developer>
             <reviewer>Ensure that data read from external storage is properly validated and sanitized before use. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Executable File Storage on External Storage</name>
             <regex>(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*.*\.(dex|so|jar|apk)</regex>
-            <rdl_ref>logic/java/core/executable_file_storage_on_external_storage.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/executable_file_storage_on_external_storage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -237,9 +237,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects storage of executable files on external storage.</rule_desc>
-            <vuln_desc>Storing executable files on external storage can lead to unauthorized code execution if the files are tampered with by other applications or users.</vuln_desc>
-            <developer>Avoid storing executable files on external storage. If necessary, ensure files are cryptographically signed and verified before usage.</developer>
+            <rule_desc>The code accesses, creates, deletes, or shares filesystem data. Resolve path provenance, destination containment, permission modes, and any concurrent access.</rule_desc>
+            <vuln_desc>An attacker controlling a path or shared file may read or replace private files, delete data, or redirect an operation outside its intended directory if containment and access controls are ineffective.</vuln_desc>
+            <developer>Resolve paths beneath a fixed permitted root and verify containment and effective permissions. Use safe exclusive temporary-file creation, restrict sharing, and account for symlinks and concurrent changes.</developer>
             <reviewer>Review external storage usage to ensure that executable files are not stored insecurely. Verify that any necessary executables are cryptographically signed and verified. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -247,7 +247,7 @@
         <rule>
             <name>File Upload Functionality</name>
             <regex>(?i)(FileUpload|MultipartFile|CommonsMultipartFile)\s*\(.*\)|\bPart\s*\(.*\)</regex>
-            <rdl_ref>logic/java/core/file_upload_functionality.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/file_upload_functionality.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -256,15 +256,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects potential unvalidated file uploads in Java applications, which can lead to security vulnerabilities such as remote code execution or denial of service.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of unvalidated file uploads. Attackers can exploit this vulnerability by uploading malicious files that can be executed on the server or cause other security risks. It is crucial to validate and sanitize file uploads to ensure that only authorized and safe files are processed.</vuln_desc>
-            <developer>Implement proper validation and sanitization of file uploads. Verify the file type, size, and content to prevent the execution of malicious files. Additionally, developers should store uploaded files in a secure location and apply access controls to restrict unauthorized access.</developer>
+            <rule_desc>The application accepts uploaded content. Identify storage destinations, execution behavior, filename handling, and the effective size and type checks.</rule_desc>
+            <vuln_desc>A crafted upload may execute as application code, overwrite files, disclose data through later processing, or exhaust storage if the upload crosses the intended content and filesystem boundaries.</vuln_desc>
+            <developer>Allowlist required file types, inspect content rather than trusting extensions, bound sizes, generate server-side names, and store uploads outside executable paths with appropriate access controls.</developer>
             <reviewer>Verify that file uploads are properly validated and sanitized. Assess whether the necessary checks, such as file type and size validation, are in place. Also ensure that uploaded files are stored securely and that access controls are applied appropriately. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
-            <name>File Inclusion Vulnerability</name>
-            <regex>(request\.getParameter|response\.sendRedirect|response\.setHeader|response\.addHeader)\s*\(\s*("|')[^\s'"]+\.(jsp|php|txt|html|xml|json|csv|log)("|')</regex>
-            <rdl_ref>logic/java/core/file_inclusion_vulnerability.rdl</rdl_ref>
+            <name>Request Dispatch Destination Review</name>
+            <regex>\b(?:getRequestDispatcher|sendRedirect)\s*\(</regex>
+            <rdl_ref>logic/rdl/v1/java/core/file_inclusion_vulnerability.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -273,17 +273,17 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects potential file inclusion vulnerabilities in Java code.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of file inclusion. File inclusion vulnerabilities occur when user-supplied input is used to construct file paths or URLs without proper validation, allowing attackers to include arbitrary files from the server or external sources.</vuln_desc>
-            <developer>Validate and sanitize user-supplied input used for constructing file paths or URLs. Ensure that only trusted and authorized files are accessed and implement proper input validation to prevent directory traversal attacks.</developer>
-            <reviewer>Verify that proper input validation and sanitization techniques are used to mitigate file inclusion vulnerabilities. Assess whether user-supplied input used for constructing file paths or URLs is properly validated and if the application is protected against directory traversal attacks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
+            <rule_desc>The code computes a request dispatch or redirect destination. Trace its origin and check which routes or external locations it may select.</rule_desc>
+            <vuln_desc>Caller-controlled destinations may expose unintended handlers or redirect users to an attacker-selected location when effective route and destination controls are missing. This check does not establish local file inclusion.</vuln_desc>
+            <developer>Use fixed routes where possible. Validate computed destinations against permitted routes or local locations and enforce authorization on the destination handler.</developer>
+            <reviewer>Trace computed dispatch and redirect destinations to their callers. Check permitted routes and local destination controls. A dispatch or redirect call alone does not establish file inclusion or an exploitable redirect.</reviewer>
         </rule>
     </category>
     <category name="Insecure/Deprecated Libraries">
         <rule>
             <name>Insecure Package: java.util.Random</name>
             <regex>java\.util\.Random</regex>
-            <rdl_ref>logic/java/core/insecure_package_java_util_random.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/insecure_package_java_util_random.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -292,15 +292,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of the java.util.Random package, which can lead to predictable and easily reproducible values if the seed is known.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using the java.util.Random package without proper precautions. The java.util.Random class generates pseudorandom values that can become predictable if the seed is known, which can lead to security vulnerabilities in cryptographic algorithms, simulations, or other scenarios where unpredictability is crucial.</vuln_desc>
-            <developer>Avoid using the java.util.Random class for generating secure random values, especially in cryptographic or security-sensitive applications. Instead, Use the java.security.SecureRandom class, which provides a more secure and unpredictable source of random numbers. Also review the usage of the java.util.Random package and consider whether a more suitable alternative is available for their specific use case.</developer>
+            <rule_desc>The checked source uses a random generator, cryptographic primitive, or initialization value whose suitability depends on its security purpose and inputs.</rule_desc>
+            <vuln_desc>Predictable secrets or unsuitable cryptographic parameters may enable credential guessing, reveal plaintext, or weaken integrity when used to protect security-sensitive data. Non-security hashes and identifiers do not establish this condition.</vuln_desc>
+            <developer>Use a cryptographically secure generator for secrets and modern purpose-appropriate cryptography. Use unique nonces, protected keys, and a vetted password-hashing scheme where passwords are stored.</developer>
             <reviewer>Verify that the java.util.Random package is used appropriately and assess the security implications. Check whether the java.security.SecureRandom class is used where secure random values are required. Also evaluate the context in which the java.util.Random package is used and determine if there are any security risks associated with the predictable nature of its random number generation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure Package: java.net.HttpURLConnection</name>
             <regex>java\.net\.HttpURLConnection</regex>
-            <rdl_ref>logic/java/core/insecure_package_java_net_httpurlconnection.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/insecure_package_java_net_httpurlconnection.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -309,15 +309,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of the java.net.HttpURLConnection package, which may expose applications to insecure HTTP connections.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential use of insecure HTTP connections without SSL/TLS. This can lead to man-in-the-middle attacks and data interception.</vuln_desc>
-            <developer>All network connections use HTTPS instead of HTTP. Validate SSL certificates and handle SSL/TLS connections securely using the HttpsURLConnection class.</developer>
+            <rule_desc>The checked source contains a transport-security exception, insecure endpoint, or certificate-validation configuration. Resolve the effective policy and the connections it governs.</rule_desc>
+            <vuln_desc>An attacker on the network may read or alter affected traffic if sensitive data travels over cleartext or the connection accepts an untrusted server. Normal HTTPS endpoints and correctly implemented validation do not establish exposure.</vuln_desc>
+            <developer>Use HTTPS with normal certificate-chain and hostname verification. Remove permissive production callbacks and broad transport exceptions; restrict any justified exception to a documented, non-sensitive endpoint.</developer>
             <reviewer>Check for the proper usage of HTTP connections and verify that secure protocols (like HTTPS) are enforced for all communications. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure Package: org.apache.commons.collections</name>
             <regex>org\.apache\.commons\.collections</regex>
-            <rdl_ref>logic/java/core/insecure_package_org_apache_commons_collections.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/insecure_package_org_apache_commons_collections.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -326,15 +326,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of the Apache Commons Collections library, which has known vulnerabilities related to deserialization.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential risk of deserialization attacks due to insecure handling of untrusted data. Vulnerabilities in this library can allow attackers to execute arbitrary code.</vuln_desc>
-            <developer>Avoid using insecure deserialization practices and update to the latest version of the library that addresses known vulnerabilities. Use safe alternatives for data handling whenever possible.</developer>
+            <rule_desc>The application reads serialized objects or uses a parser that may construct runtime types. Identify the input’s trust and the effective parser and type restrictions.</rule_desc>
+            <vuln_desc>A crafted untrusted payload may instantiate dangerous types or trigger object behavior that executes code, modifies state, or exhausts resources when the parser permits those operations.</vuln_desc>
+            <developer>Use a data-only format and a safe loader for untrusted input. Disable automatic object or type construction, allowlist required types, and bound parsing size and complexity.</developer>
             <reviewer>Evaluate the use of the Apache Commons Collections library and assess whether it is being used securely and with proper data validation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure Package: javax.xml.parsers.DocumentBuilderFactory</name>
             <regex>javax\.xml\.parsers\.DocumentBuilderFactory</regex>
-            <rdl_ref>logic/java/core/insecure_package_javax_xml_parsers_documentbuilderfactory.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/insecure_package_javax_xml_parsers_documentbuilderfactory.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -343,15 +343,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects the use of javax.xml.parsers.DocumentBuilderFactory, which may lead to XML external entity (XXE) attacks.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential for XXE vulnerabilities, where an attacker can control the XML parser to access sensitive files or perform server-side requests.</vuln_desc>
-            <developer>Configure the DocumentBuilderFactory to prevent XXE attacks by disabling external entity processing and using secure parsing configurations.</developer>
+            <rule_desc>The code parses or transforms XML. Resolve external entity, DTD, and resource-loading settings for the actual parser instance.</rule_desc>
+            <vuln_desc>If external resources or entity expansion are permitted for untrusted XML, an attacker may read local files, make requests to internal services, or exhaust parser resources.</vuln_desc>
+            <developer>Disable external entities and DTD loading for untrusted XML, use a restrictive resolver, and enforce input-size and expansion limits on the effective parser.</developer>
             <reviewer>Ensure that the XML parsing is done securely, with proper configurations in place to mitigate XXE vulnerabilities. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure Package: org.springframework.web.multipart.MultipartFile</name>
             <regex>org\.springframework\.web\.multipart\.MultipartFile</regex>
-            <rdl_ref>logic/java/core/insecure_package_org_springframework_web_multipart_multipartfile.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/insecure_package_org_springframework_web_multipart_multipartfile.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -360,15 +360,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects the use of MultipartFile for file uploads without validation, which can lead to file upload vulnerabilities.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential risk of accepting unvalidated file uploads, which can lead to the upload of malicious files.</vuln_desc>
-            <developer>Implement file validation checks on uploaded files, ensuring only allowed file types and sizes are accepted. Proper sanitization should also be enforced.</developer>
+            <rule_desc>The application accepts uploaded content. Identify storage destinations, execution behavior, filename handling, and the effective size and type checks.</rule_desc>
+            <vuln_desc>A crafted upload may execute as application code, overwrite files, disclose data through later processing, or exhaust storage if the upload crosses the intended content and filesystem boundaries.</vuln_desc>
+            <developer>Allowlist required file types, inspect content rather than trusting extensions, bound sizes, generate server-side names, and store uploads outside executable paths with appropriate access controls.</developer>
             <reviewer>Assess the file upload implementation and confirm that appropriate validation and sanitization processes are in place to mitigate risks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure Package: org.apache.poi.hssf.usermodel.HSSFWorkbook</name>
             <regex>org\.apache\.poi\.hssf\.usermodel\.HSSFWorkbook</regex>
-            <rdl_ref>logic/java/core/insecure_package_org_apache_poi_hssf_usermodel_hssfworkbook.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/insecure_package_org_apache_poi_hssf_usermodel_hssfworkbook.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -377,9 +377,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects the use of HSSFWorkbook for Excel file manipulation, which may expose applications to vulnerabilities due to outdated libraries.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential risk of using deprecated or vulnerable libraries for handling Excel files.</vuln_desc>
-            <developer>Use the latest versions of the Apache POI library or alternatives for handling Excel files. Ensure that the library used is actively maintained and secure.</developer>
+            <rule_desc>The application uses a spreadsheet-processing library. This rule does not resolve the deployed version or compare it with security advisories.</rule_desc>
+            <vuln_desc>A crafted spreadsheet may exploit a reachable defect in an affected library version or exhaust parsing resources; use of this class alone does not establish a known vulnerability.</vuln_desc>
+            <developer>Resolve the deployed library version and consult its official security advisories. Upgrade affected or unsupported versions and bound the size and complexity of untrusted documents.</developer>
             <reviewer>Confirm that the latest secure libraries are used for handling file formats and assess any associated vulnerabilities. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -387,7 +387,7 @@
         <rule>
             <name>Missing 'httpOnly' Flag in Cookie</name>
             <regex>(\bSet-Cookie:\s*)(?!(.*;\s*)*HttpOnly\b).*</regex>
-            <rdl_ref>logic/java/core/missing_httponly_flag_in_cookie.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/missing_httponly_flag_in_cookie.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -396,15 +396,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects cookies that are missing the 'httpOnly' flag, which can expose them to client-side attacks.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of cookies missing the 'httpOnly' flag. The 'httpOnly' flag is a security attribute that ensures cookies are not accessible by JavaScript code, reducing the risk of client-side attacks such as cross-site scripting (XSS). Without the 'httpOnly' flag, cookies may be exposed to unauthorized access, potentially leading to session hijacking or sensitive information leakage.</vuln_desc>
-            <developer>The 'httpOnly' flag is set for cookies that contain sensitive information or are involved in session management. By setting the 'httpOnly' flag, cookies become inaccessible to JavaScript code, thereby mitigating the risk of client-side attacks. Developers should review the cookies used in their applications and enable the 'httpOnly' flag when appropriate, following secure coding practices.</developer>
+            <rule_desc>The code handles session state or configures cookies and session secrets. Resolve cookie attributes, token generation, lifetime, and server-side validation.</rule_desc>
+            <vuln_desc>Weak session secrets, exposed cookies, or inadequate expiry may allow session theft, token forgery, or continued access after the user’s intended authorization ends.</vuln_desc>
+            <developer>Use strong unpredictable session secrets, rotate tokens on privilege changes, and enforce expiry and revocation. Set Secure, HttpOnly, and appropriate SameSite attributes for sensitive browser cookies.</developer>
             <reviewer>Verify that the 'httpOnly' flag is properly set for cookies handling sensitive information or participating in session management. Check whether the 'httpOnly' attribute is included in the Set-Cookie header for relevant cookies. Also assess the impact of missing 'httpOnly' flags and confirm that the necessary security measures are in place to prevent client-side attacks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Disabled CSRF Protection</name>
             <regex>(\b.disable\(\s*['"]csrf['"]\s*\))</regex>
-            <rdl_ref>logic/java/core/disabled_csrf_protection.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/disabled_csrf_protection.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -413,15 +413,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects disabled CSRF (Cross-Site Request Forgery) protection in Java code.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates that CSRF protection is disabled for certain requests. CSRF attacks occur when malicious websites trick authenticated users into performing unintended actions on other websites. Disabling CSRF protection exposes the application to CSRF attacks, potentially leading to unauthorized actions, data tampering, or information disclosure.</vuln_desc>
-            <developer>CSRF protection mechanisms are enabled for all relevant requests. CSRF tokens or other techniques should be implemented to validate and authenticate requests originating from trusted sources. Developers should review their application's request handling logic and enable CSRF protection to mitigate the risk of CSRF attacks.</developer>
+            <rule_desc>The code disables, exempts, or configures request-forgery protection. Verify whether a reachable state-changing operation authenticates through automatically sent browser credentials.</rule_desc>
+            <vuln_desc>An attacker may cause a victim’s browser to perform unwanted authenticated actions if the endpoint relies on ambient credentials and lacks an effective anti-forgery check.</vuln_desc>
+            <developer>Enforce anti-forgery protection on cookie-authenticated state changes, validate origins where appropriate, and justify exemptions only for independently authenticated non-browser flows.</developer>
             <reviewer>Verify that CSRF protection mechanisms are properly implemented and enabled for all relevant requests. Check for any instances where CSRF protection is explicitly disabled and assess the impact of such configurations. Also evaluate the effectiveness of the implemented CSRF protection measures in preventing CSRF attacks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Disabled Input Validation</name>
             <regex>(\bvalidateInput\s*=\s*['"]false['"])</regex>
-            <rdl_ref>logic/java/core/disabled_input_validation.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/disabled_input_validation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -430,9 +430,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects disabled input validation in Java code.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates that input validation is disabled for certain data inputs. Input validation is a crucial security measure that ensures data integrity, preventing malicious inputs from causing code execution, SQL injection, or other vulnerabilities. Disabling input validation exposes the application to various security risks and potential attacks.</vuln_desc>
-            <developer>Input validation is enabled for all relevant data inputs. Proper input validation techniques, such as white-listing, input sanitization, or regular expression checks, should be implemented based on the expected data format and security requirements. Developers should review their application's input handling logic and enable input validation to mitigate the risk of security vulnerabilities.</developer>
+            <rule_desc>The code accepts or reads externally influenced data. Trace it to security-sensitive operations and identify the validation and authorization required by each destination.</rule_desc>
+            <vuln_desc>External input may cause injection, incorrect decisions, or unauthorized data access if it reaches a sensitive operation without the controls required by that operation. Reading input alone does not establish a vulnerability.</vuln_desc>
+            <developer>Validate type, size, and allowed values at trust boundaries, and apply destination-specific parameter binding or output encoding. Enforce authorization independently of input validation.</developer>
             <reviewer>Verify that input validation mechanisms are properly implemented and enabled for all relevant data inputs. Identify any instances where input validation is explicitly disabled and assess the impact of such configurations. Also evaluate the effectiveness of the implemented input validation measures in preventing common security vulnerabilities. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -440,7 +440,7 @@
         <rule>
             <name>Logger Functions</name>
             <regex>logger\.(error|warn|info|debug|trace)</regex>
-            <rdl_ref>logic/java/core/logger_functions.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/logger_functions.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -449,15 +449,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of Java logger functions (error, warn, info, debug, trace), which can introduce potential security vulnerabilities if not handled properly.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the use of logger functions in Java code without proper validation. This can result in logging sensitive information or error messages that may expose valuable information to attackers, potentially aiding them in further exploitation.</vuln_desc>
-            <developer>The logger functions (error, warn, info, debug, trace) in Java code are used securely. Carefully validate the logged data to prevent the inclusion of sensitive information. Additionally, developers should review and configure the logging framework to avoid the exposure of sensitive data through the logs.</developer>
+            <rule_desc>The code writes diagnostic data or exposes detailed errors. Establish the values emitted, production configuration, and recipients of the output.</rule_desc>
+            <vuln_desc>Readers of exposed diagnostics may obtain credentials, private records, internal paths, or implementation details that enable account misuse or targeted attacks.</vuln_desc>
+            <developer>Keep sensitive values and detailed errors out of user-facing responses and routine logs. Redact before emission, restrict diagnostic access, and verify production logging configuration.</developer>
             <reviewer>Verify that the usage of logger functions (error, warn, info, debug, trace) in Java code is appropriate and adheres to secure coding practices. Assess whether proper validation mechanisms are in place to prevent the logging of sensitive information. Also review the log configurations to ensure that log levels are set appropriately and sensitive data is not leaked through the logs. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Debugging and Logging Statements</name>
             <regex>(System\.out\.print|System\.err\.print|System\.out\.println|System\.err\.println|log\.(debug|trace))</regex>
-            <rdl_ref>logic/java/core/debugging_and_logging_statements.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/debugging_and_logging_statements.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -466,15 +466,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of debugging and logging statements (System.out.print, System.err.print, System.out.println, System.err.println, log.debug, log.trace), which may expose sensitive backend information if used in the production environment.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the presence of debugging and logging statements, which may inadvertently log sensitive information. These statements can disclose sensitive data, such as passwords or authentication tokens, to the application logs or console output, increasing the risk of information exposure in the production environment.</vuln_desc>
-            <developer>Debugging and logging statements are not present in production code. Review and remove or disable any logging statements that may log sensitive information. Additionally, developers should follow secure coding practices to prevent the accidental inclusion of debugging statements in production code.</developer>
+            <rule_desc>The code writes diagnostic data or exposes detailed errors. Establish the values emitted, production configuration, and recipients of the output.</rule_desc>
+            <vuln_desc>Readers of exposed diagnostics may obtain credentials, private records, internal paths, or implementation details that enable account misuse or targeted attacks.</vuln_desc>
+            <developer>Keep sensitive values and detailed errors out of user-facing responses and routine logs. Redact before emission, restrict diagnostic access, and verify production logging configuration.</developer>
             <reviewer>Verify that debugging and logging statements are appropriately handled in production code. Assess whether sensitive information is inadvertently logged and if proper mechanisms are in place to prevent it. Also evaluate the code review and release processes to ensure that debugging statements are removed or disabled before deploying to production environments. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Stack Trace or Error Disclosure</name>
             <regex>(?i)(e\.printStackTrace\(\)|e\.getCause\(\)\.printStackTrace\(\)|System\.out\.print\(.*Exception.*\)|throw new \w+Exception\(.+\))</regex>
-            <rdl_ref>logic/java/core/stack_trace_or_error_disclosure.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/stack_trace_or_error_disclosure.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -483,15 +483,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects unsafe stack trace logging or error handling in Java code.</rule_desc>
-            <vuln_desc>Directly printing stack traces or detailed exceptions (e.g., via `e.printStackTrace` or `e.getCause().printStackTrace`) can expose sensitive information, such as implementation details and file paths.</vuln_desc>
-            <developer>Replace direct stack trace printing with centralized logging frameworks like Log4j or SLF4J, ensuring sensitive information is excluded from logs.</developer>
+            <rule_desc>The code writes diagnostic data or exposes detailed errors. Establish the values emitted, production configuration, and recipients of the output.</rule_desc>
+            <vuln_desc>Readers of exposed diagnostics may obtain credentials, private records, internal paths, or implementation details that enable account misuse or targeted attacks.</vuln_desc>
+            <developer>Keep sensitive values and detailed errors out of user-facing responses and routine logs. Redact before emission, restrict diagnostic access, and verify production logging configuration.</developer>
             <reviewer>Check for improper use of `printStackTrace` and `getCause().printStackTrace` and ensure exceptions are logged securely and not exposed in production environments. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Unencrypted Data Transmission over HTTP</name>
             <regex>new\s*HttpGet|new\s*HttpPost|new\s*HttpPut|new\s*HttpDelete|new\s*HttpURLConnection</regex>
-            <rdl_ref>logic/java/core/unencrypted_data_transmission_over_http.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/unencrypted_data_transmission_over_http.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -500,9 +500,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of HTTP client classes (HttpGet, HttpPost, HttpPut, HttpDelete, HttpURLConnection) without encryption, potentially resulting in information leaks.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the use of HTTP client classes without encryption, which can lead to the transmission of sensitive information over unsecured channels. Attackers can intercept and extract the data, potentially compromising the confidentiality and integrity of the transmitted information.</vuln_desc>
-            <developer>Sensitive data is transmitted over secure channels, such as HTTPS, to prevent information leaks. Use appropriate HTTP client classes with encryption capabilities and validate server certificates to establish secure connections.</developer>
+            <rule_desc>The checked source contains a transport-security exception, insecure endpoint, or certificate-validation configuration. Resolve the effective policy and the connections it governs.</rule_desc>
+            <vuln_desc>An attacker on the network may read or alter affected traffic if sensitive data travels over cleartext or the connection accepts an untrusted server. Normal HTTPS endpoints and correctly implemented validation do not establish exposure.</vuln_desc>
+            <developer>Use HTTPS with normal certificate-chain and hostname verification. Remove permissive production callbacks and broad transport exceptions; restrict any justified exception to a documented, non-sensitive endpoint.</developer>
             <reviewer>Verify that sensitive data is not transmitted over unencrypted HTTP connections. Assess whether appropriate encryption mechanisms are implemented using HTTP client classes and ensure the proper validation of server certificates. Also evaluate the overall security architecture and ensure that secure communication practices are followed. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -510,7 +510,7 @@
         <rule>
             <name>SQL Query: SELECT Statements with WHERE or ORDER BY</name>
             <regex>(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*</regex>
-            <rdl_ref>logic/java/core/sql_query_select_statements_with_where_or_order_by.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/sql_query_select_statements_with_where_or_order_by.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -519,15 +519,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects instances of SELECT statements with WHERE or ORDER BY clauses in SQL queries, which may be vulnerable to SQL injection if user input is not handled securely.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the use of potentially vulnerable SELECT statements with WHERE or ORDER BY clauses. Improper handling of user input in these clauses can lead to SQL injection, allowing attackers to manipulate query behavior and gain unauthorized access to data.</vuln_desc>
-            <developer>Validate and implement secure alternatives, such as using `PreparedStatement` to prevent SQL injection vulnerabilities.</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Check if parameterized queries with `PreparedStatement` are used for SELECT statements with WHERE or ORDER BY clauses to prevent SQL injection risks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>SQL Query: Unrestricted SELECT *</name>
             <regex>\bSELECT\s+\*\s+FROM\b</regex>
-            <rdl_ref>logic/java/core/sql_query_unrestricted_select.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/sql_query_unrestricted_select.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -536,15 +536,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects "SELECT * FROM" in SQL queries, which can expose unnecessary or sensitive data.</rule_desc>
-            <vuln_desc>If this rule matches, it suggests that the query retrieves more data than necessary, potentially exposing sensitive information and increasing the attack surface.</vuln_desc>
-            <developer>Validate queries to include only necessary columns and avoid using "SELECT *" to reduce exposure risks.</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Verify whether only required columns are used in SQL queries to avoid data overexposure. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>SQL Query: Non-parameterized DELETE Statements</name>
             <regex>(?i)\bDELETE\s+FROM\s+[^\s]+\s+WHERE\s+.*=.*\$.*</regex>
-            <rdl_ref>logic/java/core/sql_query_non_parameterized_delete_statements.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/sql_query_non_parameterized_delete_statements.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -553,15 +553,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects DELETE statements with direct use of user input, increasing the risk of SQL injection.</rule_desc>
-            <vuln_desc>If this rule matches, it suggests a potentially vulnerable DELETE query that could allow SQL injection if user input is not parameterized.</vuln_desc>
-            <developer>Use parameterized queries or prepared statements for DELETE operations to prevent SQL injection.</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Examine DELETE statements with user input and confirm that parameterized queries are used to avoid injection vulnerabilities. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>SQL Query: Querying Sensitive Information Directly in Code</name>
             <regex>(?i)\bSELECT\s+(password|ssn|creditcard|api_key|token|pin)\s+FROM\s+[^\s]+\b</regex>
-            <rdl_ref>logic/java/core/sql_query_querying_sensitive_information_directly_in_code.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/sql_query_querying_sensitive_information_directly_in_code.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -571,9 +571,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects SQL statements querying sensitive data directly, which could expose data if logs or exceptions are mishandled.</rule_desc>
-            <vuln_desc>If this rule matches, it suggests the use of sensitive data queries in code, which could lead to data leakage risks.</vuln_desc>
-            <developer>Ensure secure handling of sensitive data and prevent direct logging of SQL statements querying sensitive fields.</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Check if sensitive data fields are queried and confirm that data protection practices and secure logging methods are applied. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -581,7 +581,7 @@
         <rule>
             <name>XXE: DocumentBuilderFactory Without Secure Processing</name>
             <regex>DocumentBuilderFactory\.newInstance\s*\(|SAXParserFactory\.newInstance\s*\(|XMLInputFactory\.newInstance\s*\(</regex>
-            <rdl_ref>logic/java/core/xxe_documentbuilderfactory_without_secure_processing.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/xxe_documentbuilderfactory_without_secure_processing.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -590,15 +590,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects XML parser factory instantiation without XXE-hardening features.</rule_desc>
-            <vuln_desc>Parsers not configured to disable external entity resolution can be exploited via XXE to read arbitrary server files, perform SSRF, or cause DoS.</vuln_desc>
-            <developer>Disable DOCTYPE declarations and external entity resolution on all XML parsers. Set FEATURE_SECURE_PROCESSING, DISALLOW_DOCTYPE_DECL, and setExpandEntityReferences(false).</developer>
+            <rule_desc>The code parses or transforms XML. Resolve external entity, DTD, and resource-loading settings for the actual parser instance.</rule_desc>
+            <vuln_desc>If external resources or entity expansion are permitted for untrusted XML, an attacker may read local files, make requests to internal services, or exhaust parser resources.</vuln_desc>
+            <developer>Disable external entities and DTD loading for untrusted XML, use a restrictive resolver, and enforce input-size and expansion limits on the effective parser.</developer>
             <reviewer>Verify that all XML parser instantiations are followed by feature disablement for external entities and DTDs. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>XXE: TransformerFactory Without Secure Processing</name>
             <regex>TransformerFactory\.newInstance\s*\(|SchemaFactory\.newInstance\s*\(</regex>
-            <rdl_ref>logic/java/core/xxe_transformerfactory_without_secure_processing.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/xxe_transformerfactory_without_secure_processing.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -607,9 +607,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects TransformerFactory or SchemaFactory use without external access restrictions.</rule_desc>
-            <vuln_desc>Unprotected XSLT transformations can be exploited for XXE and SSRF by loading attacker-controlled stylesheets or schemas.</vuln_desc>
-            <developer>Set XMLConstants.ACCESS_EXTERNAL_STYLESHEET and ACCESS_EXTERNAL_DTD to empty strings to block external resource access.</developer>
+            <rule_desc>The code parses or transforms XML. Resolve external entity, DTD, and resource-loading settings for the actual parser instance.</rule_desc>
+            <vuln_desc>If external resources or entity expansion are permitted for untrusted XML, an attacker may read local files, make requests to internal services, or exhaust parser resources.</vuln_desc>
+            <developer>Disable external entities and DTD loading for untrusted XML, use a restrictive resolver, and enforce input-size and expansion limits on the effective parser.</developer>
             <reviewer>Check that TransformerFactory instances restrict external DTD and stylesheet access. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -617,7 +617,7 @@
         <rule>
             <name>LDAP Injection: InitialDirContext Search with User Input</name>
             <regex>InitialDirContext|InitialLdapContext|DirContext\.search\s*\(|new\s+SearchControls\s*\(</regex>
-            <rdl_ref>logic/java/core/ldap_injection_initialdircontext_search_with_user_input.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/ldap_injection_initialdircontext_search_with_user_input.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -626,9 +626,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects LDAP context or search operations that may incorporate unescaped user input.</rule_desc>
-            <vuln_desc>Injecting unsanitized user data into LDAP filter strings can allow attackers to bypass authentication, enumerate directory entries, or read sensitive attributes.</vuln_desc>
-            <developer>Escape all user-supplied values using LDAP-safe encoding (e.g., ESAPI.encoder().encodeForLDAP()) before constructing filter strings.</developer>
+            <rule_desc>The code constructs a directory query, XPath expression, or naming-service lookup. Review which input controls query syntax or the lookup target.</rule_desc>
+            <vuln_desc>Attacker-controlled query syntax may bypass intended selection or authorization and expose protected records. An attacker-selected naming-service target may also invoke unsafe remote resolution, depending on runtime behavior.</vuln_desc>
+            <developer>Keep untrusted values out of expression structure and remote naming targets. Use context-appropriate parameter binding or escaping, fixed trusted lookup destinations, and least-privileged service credentials.</developer>
             <reviewer>Trace user input flow into LDAP filter construction and verify proper escaping at every injection point. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -636,7 +636,7 @@
         <rule>
             <name>XPath Injection: XPathExpression with Concatenation</name>
             <regex>xpath\.evaluate\s*\(|XPathExpression\.evaluate\s*\(|XPath\.compile\s*\(</regex>
-            <rdl_ref>logic/java/core/xpath_injection_xpathexpression_with_concatenation.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/xpath_injection_xpathexpression_with_concatenation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -645,9 +645,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects XPath evaluation calls that may use user-supplied input in the expression.</rule_desc>
-            <vuln_desc>Concatenating user input into XPath expressions can allow attackers to alter query logic and extract unauthorized data from XML documents.</vuln_desc>
-            <developer>Use parameterized XPath queries via XPathVariableResolver, or sanitize input with XPath-safe escaping functions.</developer>
+            <rule_desc>The code constructs a directory query, XPath expression, or naming-service lookup. Review which input controls query syntax or the lookup target.</rule_desc>
+            <vuln_desc>Attacker-controlled query syntax may bypass intended selection or authorization and expose protected records. An attacker-selected naming-service target may also invoke unsafe remote resolution, depending on runtime behavior.</vuln_desc>
+            <developer>Keep untrusted values out of expression structure and remote naming targets. Use context-appropriate parameter binding or escaping, fixed trusted lookup destinations, and least-privileged service credentials.</developer>
             <reviewer>Inspect XPath expression construction for user-controlled string components. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -655,7 +655,7 @@
         <rule>
             <name>JNDI Injection: InitialContext Lookup with User Input</name>
             <regex>InitialContext\s*\(\s*\)|new\s+InitialContext\s*\(|context\.lookup\s*\(|jndiContext\.lookup\s*\(</regex>
-            <rdl_ref>logic/java/core/jndi_injection_initialcontext_lookup_with_user_input.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/java/core/jndi_injection_initialcontext_lookup_with_user_input.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -664,9 +664,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects JNDI lookup calls that may resolve attacker-controlled names (Log4Shell-class pattern).</rule_desc>
-            <vuln_desc>JNDI lookups with user-controlled input can trigger remote class loading from attacker-controlled servers, leading to remote code execution (as exploited in Log4Shell CVE-2021-44228).</vuln_desc>
-            <developer>Never pass user-controlled data to JNDI lookup calls. If lookups are necessary, restrict to an allowlist of trusted names and disable com.sun.jndi.rmi.object.trustURLCodebase.</developer>
+            <rule_desc>The code constructs a directory query, XPath expression, or naming-service lookup. Review which input controls query syntax or the lookup target.</rule_desc>
+            <vuln_desc>Attacker-controlled query syntax may bypass intended selection or authorization and expose protected records. An attacker-selected naming-service target may also invoke unsafe remote resolution, depending on runtime behavior.</vuln_desc>
+            <developer>Keep untrusted values out of expression structure and remote naming targets. Use context-appropriate parameter binding or escaping, fixed trusted lookup destinations, and least-privileged service credentials.</developer>
             <reviewer>Verify that no user-controlled data reaches JNDI lookup paths. Check JVM properties disabling remote class loading. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

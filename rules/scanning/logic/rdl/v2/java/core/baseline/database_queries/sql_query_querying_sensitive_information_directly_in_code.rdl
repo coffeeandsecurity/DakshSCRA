@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.java.core.sql_query_querying_sensitive_information_directly_in_code VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)\\bSELECT\\s+(password|ssn|creditcard|api_key|token|pin)\\s+FROM\\s+[^\\s]+\\b" "im"
+WHEN TEXT_MISSING "example|sample|dummy|test|placeholder" "im"
+REPORT "SQL Query: Querying Sensitive Information Directly in Code"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

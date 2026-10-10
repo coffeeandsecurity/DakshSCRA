@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT (?i)(file[\s_-]*upload|upload[\s_-]*file|upload[_-](?:handler|service|controller|module)|move_uploaded_file\s*\(|\$_FILES\b|multipart/form-data|\btype\s*=\s*["']file["'])
+REPORT AS area_of_interest
+REASON Detects likely implementations of file upload functionality by matching common terms associated with file upload services or modules.
+TRACE Externalized rule logic for File Upload Functionality.

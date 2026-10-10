@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.terraform.framework.aws.ec2_instance_metadata_service_v1_enabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "resource\\s+\"aws_instance\"" "im"
+WHEN TEXT_MISSING "http_tokens\\s*=\\s*\"required\"" "im"
+REPORT "EC2 Instance Metadata Service v1 Enabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

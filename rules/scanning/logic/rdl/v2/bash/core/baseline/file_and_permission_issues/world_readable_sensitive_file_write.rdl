@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.bash.core.world_readable_sensitive_file_write VERSION 1
+IN FILE
+WHEN TEXT_MATCHES ">\\s*(?:/etc/|/root/|~/)(?:passwd|shadow|sudoers|ssh|\\.ssh|crontab)\\b" "im"
+WHEN TEXT_MISSING "# intentional|test|example" "im"
+REPORT "World-Readable Sensitive File Write"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

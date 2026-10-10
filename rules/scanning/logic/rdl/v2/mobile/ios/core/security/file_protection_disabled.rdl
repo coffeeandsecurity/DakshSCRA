@@ -1,0 +1,8 @@
+VERSION 2
+RULE ios.file-protection-disabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:NSFileProtectionNone|FileProtectionType\\s*\\.\\s*none|URLFileProtection\\s*\\.\\s*none|noFileProtection)\\b" ""
+REPORT "File Data Protection Explicitly Disabled"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

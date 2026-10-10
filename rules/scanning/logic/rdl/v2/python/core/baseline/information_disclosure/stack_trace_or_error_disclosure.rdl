@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.python.core.stack_trace_or_error_disclosure VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)(traceback\\.format_exc\\(\\)|traceback\\.print_exc\\(\\)|print\\(.*Exception.*\\))" "im"
+WHEN TEXT_MISSING "(DEBUG=False|logger\\.exception|logging\\.exception|production)" "im"
+REPORT "Stack Trace or Error Disclosure"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

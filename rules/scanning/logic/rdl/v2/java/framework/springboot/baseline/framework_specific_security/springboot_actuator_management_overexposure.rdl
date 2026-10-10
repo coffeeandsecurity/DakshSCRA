@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.java.framework.springboot.springboot_actuator_management_overexposure VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "management\\.endpoints\\.web\\.exposure\\.include\\s*=\\s*\\*|/actuator" "im"
+WHEN TEXT_MISSING "management\\.endpoint\\..*\\.enabled\\s*=\\s*false|spring\\.security|@PreAuthorize|hasRole|authentication" "im"
+REPORT "Springboot Actuator/Management Overexposure"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

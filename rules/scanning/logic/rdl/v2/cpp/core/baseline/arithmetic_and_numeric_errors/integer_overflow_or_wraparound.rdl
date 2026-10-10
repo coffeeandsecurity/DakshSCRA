@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.cpp.core.integer_overflow_or_wraparound VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(int|short|unsigned)\\s+\\w+\\s*=\\s*\\w+\\s*\\+\\s*(\\d{5,}|INT_MAX|UINT_MAX);" "im"
+WHEN TEXT_MISSING "INT_MAX|UINT_MAX|__builtin_add_overflow|SafeAdd|checked_add|overflow|bounds" "im"
+REPORT "Integer Overflow or Wraparound"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

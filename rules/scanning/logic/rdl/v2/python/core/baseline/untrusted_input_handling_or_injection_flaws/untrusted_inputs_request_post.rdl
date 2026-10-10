@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.python.core.untrusted_inputs_request_post VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "request\\.POST" "im"
+WHEN (TEXT_MATCHES "(execute|raw\\(|extra\\(|eval\\(|subprocess|os\\.system|redirect|HttpResponse|mark_safe|safe_filter)" "im" AND TEXT_MISSING "(escape|sanitize|validate|cleaned_data|get_validators)" "im")
+REPORT "Untrusted Inputs: request.POST"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

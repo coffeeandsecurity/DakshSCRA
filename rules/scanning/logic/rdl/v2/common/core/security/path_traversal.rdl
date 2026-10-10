@@ -1,0 +1,11 @@
+VERSION 2
+RULE filesystem.path-traversal VERSION 1
+IN DATA_FLOW
+LET input BE VARIABLE MATCHES input.untrusted-path
+LET sink BE CALL MATCHES filesystem.access
+WHEN input FLOWS TO sink
+REQUIRE NOT sanitizer.path-containment input
+REPORT "path traversal"
+SEVERITY HIGH
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

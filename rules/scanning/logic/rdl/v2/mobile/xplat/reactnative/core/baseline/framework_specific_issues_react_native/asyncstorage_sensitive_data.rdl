@@ -1,0 +1,10 @@
+VERSION 2
+RULE baseline.mobile.xplat.reactnative.core.asyncstorage_sensitive_data VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bAsyncStorage\\.(?:setItem|multiSet)\\s*\\(" "i"
+WHEN TEXT_MATCHES "AsyncStorage\\.(?:setItem|multiSet).*(?:password|token|secret|key|auth|credential)" "im"
+WHEN PROJECT_OBSERVATION "**/package.json"
+REPORT "Insecure AsyncStorage for Sensitive Data"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

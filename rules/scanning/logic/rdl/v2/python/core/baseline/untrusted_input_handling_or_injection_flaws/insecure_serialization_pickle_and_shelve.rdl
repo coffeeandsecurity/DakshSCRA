@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.python.core.insecure_serialization_pickle_and_shelve VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)(pickle\\.load\\(.*\\)|pickle\\.loads\\(.*\\)|shelve\\.open\\(.*\\))" "im"
+WHEN TEXT_MISSING "(trusted|signed|verify|hmac|safe_serialization)" "im"
+REPORT "Insecure Serialization: pickle and shelve"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

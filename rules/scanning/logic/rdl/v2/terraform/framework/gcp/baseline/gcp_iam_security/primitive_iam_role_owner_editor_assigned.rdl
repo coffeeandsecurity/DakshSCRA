@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.terraform.framework.gcp.primitive_iam_role_owner_editor_assigned VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "role\\s*=\\s*\"roles/(?:owner|editor)\"" "im"
+WHEN (TEXT_MATCHES "roles/owner|roles/editor" "im" AND TEXT_MISSING "# intentional|# required|# break-glass|condition\\s*\\{" "im")
+REPORT "Primitive IAM Role (Owner/Editor) Assigned"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

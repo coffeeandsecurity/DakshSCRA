@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.javascript.framework.electron.nodeintegration_enabled_in_renderer_process VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "nodeIntegration\\s*:\\s*true" "im"
+WHEN TEXT_MISSING "contextIsolation:\\s*true|preload|sandbox:\\s*true" "im"
+REPORT "nodeIntegration Enabled in Renderer Process"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.cpp.core.resource_leak_on_exception VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\btry\\s*{[^}]*new\\s+\\w+" "im"
+WHEN TEXT_MISSING "unique_ptr|shared_ptr|RAII|catch\\s*\\(std::bad_alloc" "im"
+REPORT "Resource Leak on Exception"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

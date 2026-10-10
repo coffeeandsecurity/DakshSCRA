@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.c.core.unsafe_file_deletion_using_unlink_or_remove VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:unlink|remove)\\s*\\(\\s*(?:\"[^\"\\n]*(?:password|passwd|token|secret|key)[^\"\\n]*\"|sensitive_file\\w*)\\s*\\)" "im"
+WHEN TEXT_MISSING "example|sample|dummy|test|placeholder" "im"
+REPORT "Unsafe File Deletion Using `unlink` or `remove`"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

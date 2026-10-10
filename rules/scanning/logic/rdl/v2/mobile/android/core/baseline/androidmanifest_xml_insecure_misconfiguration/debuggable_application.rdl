@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.android.core.debuggable_application VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "android:debuggable\\s*=\\s*\"(true|TRUE)\"" "im"
+REPORT "Debuggable Application"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

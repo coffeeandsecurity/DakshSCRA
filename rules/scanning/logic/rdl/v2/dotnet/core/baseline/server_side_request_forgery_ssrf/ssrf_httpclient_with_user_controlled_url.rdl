@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.dotnet.core.ssrf_httpclient_with_user_controlled_url VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "httpClient\\.(GetAsync|PostAsync|PutAsync|DeleteAsync|SendAsync|GetStringAsync|GetByteArrayAsync)\\s*\\(" "im"
+WHEN (TEXT_MATCHES "Request\\.|QueryString|Form|userInput|\\+" "im" AND TEXT_MISSING "allowlist|whitelist|Uri\\.IsWellFormedUriString|IsLocalUrl" "im")
+REPORT "SSRF: HttpClient with User-Controlled URL"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

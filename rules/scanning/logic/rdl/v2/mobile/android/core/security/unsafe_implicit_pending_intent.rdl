@@ -1,0 +1,8 @@
+VERSION 2
+RULE android.unsafe-implicit-pending-intent VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bPendingIntent\\s*\\.\\s*FLAG_ALLOW_UNSAFE_IMPLICIT_INTENT\\b" ""
+REPORT "Unsafe Implicit PendingIntent Opt-In"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

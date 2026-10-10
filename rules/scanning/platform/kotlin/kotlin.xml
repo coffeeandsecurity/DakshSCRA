@@ -3,7 +3,7 @@
         <rule>
             <name>Untrusted Inputs: Intent Extras</name>
             <regex>Intent\.get.*Extra\(".*"</regex>
-            <rdl_ref>logic/kotlin/core/untrusted_inputs_intent_extras.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kotlin/core/untrusted_inputs_intent_extras.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -12,15 +12,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of Intent extras, which may contain untrusted inputs.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using Intent extras without proper validation and sanitization. Attackers can manipulate Intent extras to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks (SQL, OS, or other), data tampering, or unauthorized access.</vuln_desc>
-            <developer>Validate and sanitize Intent extras before using them in any sensitive operations. Implement strong input validation, ensuring that only expected and sanitized values are accepted from Intent extras. Additionally, developers should be cautious about the potential risks associated with using untrusted data and follow secure coding practices, such as parameterized queries, output encoding, and appropriate input filtering techniques, depending on the context in which the input is used.</developer>
+            <rule_desc>The code accepts or reads externally influenced data. Trace it to security-sensitive operations and identify the validation and authorization required by each destination.</rule_desc>
+            <vuln_desc>External input may cause injection, incorrect decisions, or unauthorized data access if it reaches a sensitive operation without the controls required by that operation. Reading input alone does not establish a vulnerability.</vuln_desc>
+            <developer>Validate type, size, and allowed values at trust boundaries, and apply destination-specific parameter binding or output encoding. Enforce authorization independently of input validation.</developer>
             <reviewer>Ensure that proper input handling is in place for Intent extras. Verify that developers have implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. Also assess the sensitivity of the data handled through Intent extras and confirm that relevant security measures, such as output encoding and protection against injection attacks, are implemented correctly. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted Inputs: Shared Preferences</name>
             <regex>SharedPreferences\.get.*\(".*"</regex>
-            <rdl_ref>logic/kotlin/core/untrusted_inputs_shared_preferences.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kotlin/core/untrusted_inputs_shared_preferences.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -29,15 +29,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Identifies the usage of Shared Preferences, which may contain untrusted inputs.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using Shared Preferences without proper validation and sanitization. Attackers can manipulate Shared Preferences to provide malicious or unexpected values, potentially leading to security vulnerabilities such as data tampering, information disclosure, or unauthorized access.</vuln_desc>
-            <developer>Carefully validate and sanitize data retrieved from Shared Preferences before using it in any sensitive operations. Implement strong input validation, ensuring that only expected and sanitized values are accepted from Shared Preferences. Additionally, developers should be aware of the risks associated with using untrusted data and follow secure coding practices, such as input validation, output encoding, and appropriate data encryption techniques.</developer>
+            <rule_desc>The application stores sensitive values or configures protection for persistent data. Determine the actual storage location, backup policy, and lock-state access restrictions.</rule_desc>
+            <vuln_desc>An actor with access to unprotected application files, backups, or overly broad keychain access may recover credentials or private records and use them outside the intended trust boundary.</vuln_desc>
+            <developer>Use the platform credential or key store for secrets and appropriate authenticated encryption and file protection for private records. Minimize stored data, backup exposure, and lock-state accessibility.</developer>
             <reviewer>Check for appropriate input handling for data retrieved from Shared Preferences. Assess whether developers have implemented proper input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. Also verify the usage of output encoding and protection against data tampering to ensure the secure handling of data retrieved from Shared Preferences. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted Inputs: User Input Fields</name>
             <regex>EditText\.getText\(\)</regex>
-            <rdl_ref>logic/kotlin/core/untrusted_inputs_user_input_fields.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kotlin/core/untrusted_inputs_user_input_fields.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -46,15 +46,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of user input fields, such as EditTexts, which may contain untrusted inputs.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using user input fields without proper validation and sanitization. Attackers can manipulate user input fields to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks (SQL, OS, or other), cross-site scripting (XSS), or unauthorized access.</vuln_desc>
-            <developer>Validate and sanitize user input retrieved from EditTexts or other user input fields before using it in any sensitive operations. Implement strong input validation, ensuring that only expected and sanitized values are accepted from user input fields. Additionally, developers should be cautious about the potential risks associated with using untrusted data and follow secure coding practices, such as input validation, output encoding, and appropriate data filtering techniques.</developer>
+            <rule_desc>The code accepts or reads externally influenced data. Trace it to security-sensitive operations and identify the validation and authorization required by each destination.</rule_desc>
+            <vuln_desc>External input may cause injection, incorrect decisions, or unauthorized data access if it reaches a sensitive operation without the controls required by that operation. Reading input alone does not establish a vulnerability.</vuln_desc>
+            <developer>Validate type, size, and allowed values at trust boundaries, and apply destination-specific parameter binding or output encoding. Enforce authorization independently of input validation.</developer>
             <reviewer>Ensure that proper input handling is in place for user input fields. Verify that developers have implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. Also assess the sensitivity of the data retrieved from user input fields and confirm that relevant security measures, such as output encoding and protection against injection attacks, are implemented correctly. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>SQL Injection: Room @Query / Raw SQL with Dynamic Input</name>
             <regex>@Query\s*\(\s*"[^"]*\$[^"]*"|\brawQuery\s*\(|\.execSQL\s*\(</regex>
-            <rdl_ref>logic/kotlin/core/sql_injection_room_query_raw_sql_with_dynamic_input.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kotlin/core/sql_injection_room_query_raw_sql_with_dynamic_input.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -63,9 +63,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects Room @Query annotations with Kotlin string interpolation, and direct SQLite rawQuery/execSQL calls, which may allow SQL injection.</rule_desc>
-            <vuln_desc>Room @Query annotations that embed Kotlin string interpolation (e.g. "SELECT * WHERE id = ${input}") bypass Room's parameterisation and are directly injectable. Similarly, rawQuery() and execSQL() with user-controlled strings allow direct SQL manipulation. Attackers can exploit these paths to extract, modify, or delete data.</vuln_desc>
-            <developer>Use named or positional parameters in Room @Query annotations (e.g. :param) instead of Kotlin string interpolation. Prefer Room's @Query binding over rawQuery/execSQL. Where raw SQL is necessary, use parameterised binding (bindString, bindLong, etc.).</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Confirm that no @Query annotation embeds $-interpolated Kotlin expressions in the SQL string. Verify rawQuery and execSQL calls use binding arguments rather than string concatenation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -73,7 +73,7 @@
         <rule>
             <name>Insecure Method Call: Runtime.exec()</name>
             <regex>Runtime\.exec\(".*"\)</regex>
-            <rdl_ref>logic/kotlin/core/insecure_method_call_runtime_exec.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kotlin/core/insecure_method_call_runtime_exec.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -82,15 +82,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects insecure usage of the Runtime.exec() method for executing shell commands.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of command injection. Attackers can exploit insecure usage of Runtime.exec() with unsanitized user input to execute arbitrary shell commands on the device, leading to unauthorized access, data loss, or other malicious activities.</vuln_desc>
-            <developer>Avoid using Runtime. exec() with user-supplied input whenever possible. If its usage is necessary, it is crucial to employ strict input validation, input sanitization, and command parameterization techniques to prevent command injection attacks.</developer>
+            <rule_desc>The code invokes a process or shell execution API. Trace the executable, arguments, shell use, and source of externally supplied values.</rule_desc>
+            <vuln_desc>If attacker-controlled data changes command syntax or executable selection, an attacker may execute commands with application privileges, read or modify files, or disrupt service.</vuln_desc>
+            <developer>Use a fixed executable with a separate argument array and avoid a shell where possible. Validate arguments for the selected program and allowlist permitted operations.</developer>
             <reviewer>Check for the secure usage of Runtime. exec() and assess if user input is properly validated, sanitized, and appropriately used as command parameters. Ensure that developers have implemented strong input validation measures, command parameterization techniques, and proper context-aware security controls to mitigate command injection vulnerabilities. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure Method Call: WebView.loadUrl() with Dynamic Content</name>
             <regex>\.loadUrl\s*\(\s*(?:"[^"]*\$[^"]*"|`[^`]*\$[^`]*`|[^\s"'(][^)]*\))</regex>
-            <rdl_ref>logic/kotlin/core/insecure_method_call_webview_loadurl_with_dynamic_content.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kotlin/core/insecure_method_call_webview_loadurl_with_dynamic_content.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -99,15 +99,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects WebView.loadUrl() calls where the URL argument is a variable or contains Kotlin string interpolation, which may allow JavaScript or URL injection.</rule_desc>
-            <vuln_desc>Passing a dynamically-constructed or interpolated string to WebView.loadUrl() can allow an attacker to inject javascript: URIs, manipulate the loaded URL, or redirect the WebView to an attacker-controlled page. Hardcoded safe URLs (about:blank, file:///android_asset/...) are excluded.</vuln_desc>
-            <developer>Validate and whitelist URLs before passing them to WebView.loadUrl(). Avoid Kotlin string interpolation directly inside the URL string. Use Uri.Builder to construct URLs safely and apply an allowlist of permitted hosts.</developer>
+            <rule_desc>The application renders web content, executes scripts, or exposes a native messaging interface. Resolve navigation trust, origin isolation, and validation at the native boundary.</rule_desc>
+            <vuln_desc>Attacker-controlled web content may execute in a trusted context or invoke native operations, exposing session data or application privileges when isolation and per-operation checks are insufficient.</vuln_desc>
+            <developer>Restrict navigation and message origins to required trusted sources. Avoid dynamic script construction, minimize native bridge methods, validate message inputs, and authorize sensitive native operations.</developer>
             <reviewer>Confirm that the URL passed to loadUrl() is not derived from untrusted external input. Check for Kotlin template literals (${ }) or variable arguments that could be influenced by intent extras, web content, or external data. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure Method Call: ContentResolver.query()</name>
             <regex>ContentResolver\.query\(".*"\)</regex>
-            <rdl_ref>logic/kotlin/core/insecure_method_call_contentresolver_query.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kotlin/core/insecure_method_call_contentresolver_query.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -116,15 +116,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects insecure usage of ContentResolver.query() method, which may lead to SQL injection vulnerabilities.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of SQL injection. Attackers can exploit insecure usage of ContentResolver.query() with unsanitized user input to inject malicious SQL code into content provider queries, leading to unauthorized data access or data manipulation.</vuln_desc>
-            <developer>ContentResolver.query() is used securely by properly parameterizing queries or sanitizing user input before incorporating it into content provider queries. Also follow best practices for securely accessing and querying content providers.</developer>
+            <rule_desc>The code constructs a query, selection, or ordering clause with values that may be externally controlled. Resolve whether those values enter syntax or bound data.</rule_desc>
+            <vuln_desc>Attacker-controlled query syntax may change selected records, bypass intended filters, or modify stored data with the connection or provider’s privileges.</vuln_desc>
+            <developer>Bind data values using the query API’s parameter mechanism. Choose ordering columns and other identifiers from a fixed allowlist, and enforce record-level authorization.</developer>
             <reviewer>Verify that ContentResolver.query() is used securely and that any user input incorporated into query parameters is properly validated, sanitized, and parameterized to prevent SQL injection vulnerabilities. Also ensure that developers follow best practices for securely accessing and querying content providers. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure Method Call: SharedPreferences</name>
             <regex>getSharedPreferences\(\s*[^,]+,\s*Context\.MODE_PRIVATE\s*\)</regex>
-            <rdl_ref>logic/kotlin/core/insecure_method_call_sharedpreferences.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kotlin/core/insecure_method_call_sharedpreferences.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -133,15 +133,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects insecure usage of SharedPreferences without proper encryption or secure storage.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of storing sensitive data in SharedPreferences without proper encryption or secure storage mechanisms. Attackers with access to the device can potentially extract and manipulate data stored in SharedPreferences, leading to unauthorized access or data leakage.</vuln_desc>
-            <developer>Avoid storing sensitive data, such as authentication tokens or user credentials, directly in SharedPreferences without proper encryption or secure storage mechanisms. Consider using encrypted storage solutions provided by Android APIs or third-party libraries to protect sensitive data.</developer>
+            <rule_desc>The application stores sensitive values or configures protection for persistent data. Determine the actual storage location, backup policy, and lock-state access restrictions.</rule_desc>
+            <vuln_desc>An actor with access to unprotected application files, backups, or overly broad keychain access may recover credentials or private records and use them outside the intended trust boundary.</vuln_desc>
+            <developer>Use the platform credential or key store for secrets and appropriate authenticated encryption and file protection for private records. Minimize stored data, backup exposure, and lock-state accessibility.</developer>
             <reviewer>Sensitive data is stored in SharedPreferences without proper encryption or secure storage. Ensure that developers have implemented appropriate security measures, such as encryption or secure storage solutions, to protect sensitive data stored on the device. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure Method Call: viewModelScope.launch (No Error Handling)</name>
             <regex>viewModelScope\.launch\s*\{[^}]*(?:query|rawQuery|execSQL|getPassword|getToken|decrypt|encrypt|hash|credential|authToken|network|http|https)[^}]*\}</regex>
-            <rdl_ref>logic/kotlin/core/insecure_method_call_viewmodelscope_launch_no_error_handling.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kotlin/core/insecure_method_call_viewmodelscope_launch_no_error_handling.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -150,15 +150,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects security-sensitive operations inside viewModelScope.launch without exception handling.</rule_desc>
-            <vuln_desc>Coroutines launched with viewModelScope.launch that perform security-sensitive operations (database queries, cryptographic operations, credential handling) without try-catch, runCatching, or a CoroutineExceptionHandler may silently swallow errors, hide authentication failures, or leave resources in an inconsistent state.</vuln_desc>
-            <developer>Wrap security-sensitive operations inside viewModelScope.launch with runCatching { } or try-catch, and log or handle errors appropriately. Consider setting a CoroutineExceptionHandler on the scope for consistent error handling.</developer>
+            <rule_desc>The code configures failure handling or resource consumption. Determine whether failure paths preserve security invariants and whether work is bounded.</rule_desc>
+            <vuln_desc>Unhandled failures or unbounded work may disrupt availability or leave security-relevant state inconsistent. The presence or absence of a named handler alone does not establish a reachable security defect.</vuln_desc>
+            <developer>Bound resource use, handle failures at the correct ownership boundary, and fail safely before updating trusted state. Test exceptional paths, cancellation, timeouts, and recovery behavior.</developer>
             <reviewer>Verify that coroutines performing security-sensitive operations (queries, crypto, auth) have explicit error handling and do not silently discard exceptions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure Method Call: setHtmlText</name>
             <regex>setHtmlText\s*\(.*\)</regex>
-            <rdl_ref>logic/kotlin/core/insecure_method_call_sethtmltext.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kotlin/core/insecure_method_call_sethtmltext.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -167,9 +167,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects insecure usage of the setHtmlText method.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using a custom method setHtmlText, which could pose security risks if it doesn't properly sanitize or validate the input HTML content. Unsanitized or unvalidated HTML content can lead to XSS (Cross-Site Scripting) vulnerabilities, allowing attackers to execute malicious scripts within the application.</vuln_desc>
-            <developer>Any custom methods for setting HTML content properly sanitize or validate the input HTML content to prevent XSS vulnerabilities. Use secure HTML parsing libraries or built-in platform APIs for handling HTML content to mitigate security risks.</developer>
+            <rule_desc>Application data is inserted into an HTML or script rendering context, or marked safe in a way that may bypass automatic encoding.</rule_desc>
+            <vuln_desc>If attacker-controlled content reaches an executable browser context, it may run under the application’s origin, read accessible session data, or perform actions with the victim’s permissions.</vuln_desc>
+            <developer>Use automatic context-aware output encoding and data-only DOM APIs. Sanitize deliberately accepted rich HTML with a maintained allowlist sanitizer and avoid marking untrusted content as safe.</developer>
             <reviewer>Any custom methods for setting HTML content, such as setHtmlText, properly sanitize or validate the input HTML content to prevent XSS vulnerabilities. Ensure that developers have implemented appropriate security measures to handle HTML content securely and mitigate potential security risks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -177,7 +177,7 @@
         <rule>
             <name>Deprecated MODE_WORLD_WRITEABLE Usage</name>
             <regex>M(?:ODE_)?WORLD_WRITEABLE</regex>
-            <rdl_ref>logic/kotlin/core/deprecated_mode_world_writeable_usage.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kotlin/core/deprecated_mode_world_writeable_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -186,15 +186,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects usage of the deprecated MODE_WORLD_WRITEABLE mode.</rule_desc>
-            <vuln_desc>The MODE_WORLD_WRITEABLE mode allows any application to write to your app's files, leading to potential data corruption or unauthorized modifications.</vuln_desc>
-            <developer>Avoid using MODE_WORLD_WRITEABLE. Consider using content providers or other mechanisms to share data securely.</developer>
+            <rule_desc>The source references a dependency, version, or deprecated API. Resolve the actual deployed version and supported behavior before deciding whether it needs replacement.</rule_desc>
+            <vuln_desc>A reachable vulnerability in an unsupported or affected dependency may compromise the application with its privileges. A version declaration or deprecated API alone does not establish that such a vulnerability is present.</vuln_desc>
+            <developer>Inventory resolved dependencies and runtime versions, compare them with authoritative advisories and support policy, and migrate affected or unsupported components to tested supported replacements.</developer>
             <reviewer>Check Java/Kotlin source files for occurrences of MODE_WORLD_WRITEABLE and ensure that secure alternatives are used. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Deprecated MODE_WORLD_READABLE Usage</name>
             <regex>M(?:ODE_)?WORLD_READABLE</regex>
-            <rdl_ref>logic/kotlin/core/deprecated_mode_world_readable_usage.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kotlin/core/deprecated_mode_world_readable_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -203,15 +203,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects usage of the deprecated MODE_WORLD_READABLE mode.</rule_desc>
-            <vuln_desc>The MODE_WORLD_READABLE mode allows any application to read your app's files, potentially exposing sensitive data to unauthorized access.</vuln_desc>
-            <developer>Avoid using MODE_WORLD_READABLE. Use content providers or define explicit permissions to control data access.</developer>
+            <rule_desc>The source references a dependency, version, or deprecated API. Resolve the actual deployed version and supported behavior before deciding whether it needs replacement.</rule_desc>
+            <vuln_desc>A reachable vulnerability in an unsupported or affected dependency may compromise the application with its privileges. A version declaration or deprecated API alone does not establish that such a vulnerability is present.</vuln_desc>
+            <developer>Inventory resolved dependencies and runtime versions, compare them with authoritative advisories and support policy, and migrate affected or unsupported components to tested supported replacements.</developer>
             <reviewer>Check Java/Kotlin source files for occurrences of MODE_WORLD_READABLE and ensure secure data sharing mechanisms are in place. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure File Operations</name>
             <regex>openFile(?:Output|Input)\s*\([^,]*,\s*M(?:ODE_)?WORLD_(?:WRITEABLE|READABLE)</regex>
-            <rdl_ref>logic/kotlin/core/insecure_file_operations.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kotlin/core/insecure_file_operations.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -220,15 +220,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects insecure file operations using deprecated world-readable or world-writable modes.</rule_desc>
-            <vuln_desc>Using world-readable or world-writable modes in file operations can lead to unauthorized access or modifications to the app's files.</vuln_desc>
-            <developer>Replace the use of MODE_WORLD_READABLE and MODE_WORLD_WRITEABLE with private modes or secure sharing mechanisms such as content providers.</developer>
+            <rule_desc>The code accesses, creates, deletes, or shares filesystem data. Resolve path provenance, destination containment, permission modes, and any concurrent access.</rule_desc>
+            <vuln_desc>An attacker controlling a path or shared file may read or replace private files, delete data, or redirect an operation outside its intended directory if containment and access controls are ineffective.</vuln_desc>
+            <developer>Resolve paths beneath a fixed permitted root and verify containment and effective permissions. Use safe exclusive temporary-file creation, restrict sharing, and account for symlinks and concurrent changes.</developer>
             <reviewer>Review Java/Kotlin source files for file operations that use insecure modes, ensuring that secure alternatives are implemented. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>File Sharing Without Content Provider</name>
             <regex>Intent\s*\(\s*(?:[^,]*,\s*)?Uri\.parse\s*\(\s*"(?!(?:https?|smsto|sms|tel|mailto|about|geo|market):)</regex>
-            <rdl_ref>logic/kotlin/core/file_sharing_without_content_provider.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kotlin/core/file_sharing_without_content_provider.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -237,9 +237,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects file sharing via raw file-path URIs without going through a ContentProvider/FileProvider.</rule_desc>
-            <vuln_desc>Sharing files by passing a raw file:// URI in an Intent exposes the file directly to the receiving app without access control. On Android 7.0+ this causes a FileUriExposedException; on older versions it silently grants read access to the physical file path. Use FileProvider (content://) URIs with grantUriPermissions instead. System protocol URIs (https, tel, sms, etc.) are excluded as they are not file-sharing paths.</vuln_desc>
-            <developer>Replace file:// URIs with a FileProvider content:// URI and set Intent.FLAG_GRANT_READ_URI_PERMISSION. Define the FileProvider in AndroidManifest and a res/xml/file_paths.xml resource.</developer>
+            <rule_desc>The application exposes or invokes an inter-process interface. Resolve export settings, permissions, intent recipients, URI grants, and runtime caller checks.</rule_desc>
+            <vuln_desc>An untrusted application may read private data, alter state, or invoke operations under the application’s identity if an externally reachable interface lacks effective caller authorization or permits unsafe mutation.</vuln_desc>
+            <developer>Disable unnecessary export and prefer explicit recipients and immutable PendingIntents. Apply appropriate caller permissions and authorization, bind query arguments, and validate every incoming payload.</developer>
             <reviewer>Confirm that no file:// URIs are passed in Intents for file sharing. Verify FileProvider is configured and content:// URIs with grant flags are used instead. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -247,7 +247,7 @@
         <rule>
             <name>Insecure External Storage Write</name>
             <regex>(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*\.write</regex>
-            <rdl_ref>logic/kotlin/core/insecure_external_storage_write.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kotlin/core/insecure_external_storage_write.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -256,15 +256,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects writing to external storage without proper validation or encryption.</rule_desc>
-            <vuln_desc>Writing sensitive information to external storage can lead to unauthorized access or modification, as external storage is globally writable and can be accessed by any application or user.</vuln_desc>
-            <developer>Store only non-sensitive information on external storage. For sensitive data, use internal storage or encrypt the data before writing it to external storage.</developer>
+            <rule_desc>The code accesses, creates, deletes, or shares filesystem data. Resolve path provenance, destination containment, permission modes, and any concurrent access.</rule_desc>
+            <vuln_desc>An attacker controlling a path or shared file may read or replace private files, delete data, or redirect an operation outside its intended directory if containment and access controls are ineffective.</vuln_desc>
+            <developer>Resolve paths beneath a fixed permitted root and verify containment and effective permissions. Use safe exclusive temporary-file creation, restrict sharing, and account for symlinks and concurrent changes.</developer>
             <reviewer>Verify that external storage is used only for non-sensitive data. Ensure that sensitive information is encrypted or stored securely. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Dynamic Loading from External Storage</name>
             <regex>(DexClassLoader|PathClassLoader)\s*\([^,]*Environment\.getExternalStorageDirectory</regex>
-            <rdl_ref>logic/kotlin/core/dynamic_loading_from_external_storage.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kotlin/core/dynamic_loading_from_external_storage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -273,15 +273,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects dynamic loading of files from external storage.</rule_desc>
-            <vuln_desc>Loading executables or class files from external storage without cryptographic verification can lead to code execution vulnerabilities if the files are tampered with.</vuln_desc>
-            <developer>Avoid loading executables or class files from external storage. If necessary, ensure files are cryptographically signed and verified before loading.</developer>
+            <rule_desc>The code accesses, creates, deletes, or shares filesystem data. Resolve path provenance, destination containment, permission modes, and any concurrent access.</rule_desc>
+            <vuln_desc>An attacker controlling a path or shared file may read or replace private files, delete data, or redirect an operation outside its intended directory if containment and access controls are ineffective.</vuln_desc>
+            <developer>Resolve paths beneath a fixed permitted root and verify containment and effective permissions. Use safe exclusive temporary-file creation, restrict sharing, and account for symlinks and concurrent changes.</developer>
             <reviewer>Check for usage of `DexClassLoader` or `PathClassLoader` with files retrieved from external storage. Verify that proper cryptographic verification mechanisms are in place. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure External Storage Read</name>
             <regex>(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*\.read</regex>
-            <rdl_ref>logic/kotlin/core/insecure_external_storage_read.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kotlin/core/insecure_external_storage_read.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -290,15 +290,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects reading data from external storage without proper input validation.</rule_desc>
-            <vuln_desc>Reading unvalidated data from external storage can lead to vulnerabilities such as malicious file execution or unexpected application behavior.</vuln_desc>
-            <developer>Validate and sanitize all data read from external storage as it may come from untrusted sources.</developer>
+            <rule_desc>The code accesses, creates, deletes, or shares filesystem data. Resolve path provenance, destination containment, permission modes, and any concurrent access.</rule_desc>
+            <vuln_desc>An attacker controlling a path or shared file may read or replace private files, delete data, or redirect an operation outside its intended directory if containment and access controls are ineffective.</vuln_desc>
+            <developer>Resolve paths beneath a fixed permitted root and verify containment and effective permissions. Use safe exclusive temporary-file creation, restrict sharing, and account for symlinks and concurrent changes.</developer>
             <reviewer>Ensure that data read from external storage is properly validated and sanitized before use. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Executable File Storage on External Storage</name>
             <regex>(Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*.*\.(dex|so|jar|apk)</regex>
-            <rdl_ref>logic/kotlin/core/executable_file_storage_on_external_storage.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kotlin/core/executable_file_storage_on_external_storage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -307,9 +307,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects storage of executable files on external storage.</rule_desc>
-            <vuln_desc>Storing executable files on external storage can lead to unauthorized code execution if the files are tampered with by other applications or users.</vuln_desc>
-            <developer>Avoid storing executable files on external storage. If necessary, ensure files are cryptographically signed and verified before usage.</developer>
+            <rule_desc>The code accesses, creates, deletes, or shares filesystem data. Resolve path provenance, destination containment, permission modes, and any concurrent access.</rule_desc>
+            <vuln_desc>An attacker controlling a path or shared file may read or replace private files, delete data, or redirect an operation outside its intended directory if containment and access controls are ineffective.</vuln_desc>
+            <developer>Resolve paths beneath a fixed permitted root and verify containment and effective permissions. Use safe exclusive temporary-file creation, restrict sharing, and account for symlinks and concurrent changes.</developer>
             <reviewer>Review external storage usage to ensure that executable files are not stored insecurely. Verify that any necessary executables are cryptographically signed and verified. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -317,7 +317,7 @@
         <rule>
             <name>JavaScript Bridge Exposure: WebView.addJavascriptInterface()</name>
             <regex>\.addJavascriptInterface\s*\(</regex>
-            <rdl_ref>logic/kotlin/core/javascript_bridge_exposure_webview_addjavascriptinterface.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kotlin/core/javascript_bridge_exposure_webview_addjavascriptinterface.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -326,9 +326,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects any call to addJavascriptInterface(), which exposes a native object to JavaScript running in a WebView.</rule_desc>
-            <vuln_desc>addJavascriptInterface() exposes a Kotlin/Java object as a JavaScript object inside the WebView. If the WebView loads content from untrusted origins (web URLs, injected HTML), any @JavascriptInterface-annotated method becomes callable from JavaScript. On Android &lt; 4.2 all public methods are exposed. Exploitation can lead to arbitrary Java/Kotlin method calls, data exfiltration, or RCE via reflection.</vuln_desc>
-            <developer>Annotate only the minimal required methods with @JavascriptInterface. Restrict WebView content to trusted first-party origins. Disable setAllowFileAccess and setAllowUniversalAccessFromFileURLs. Validate all data passed back from JavaScript before acting on it.</developer>
+            <rule_desc>The application renders web content, executes scripts, or exposes a native messaging interface. Resolve navigation trust, origin isolation, and validation at the native boundary.</rule_desc>
+            <vuln_desc>Attacker-controlled web content may execute in a trusted context or invoke native operations, exposing session data or application privileges when isolation and per-operation checks are insufficient.</vuln_desc>
+            <developer>Restrict navigation and message origins to required trusted sources. Avoid dynamic script construction, minimize native bridge methods, validate message inputs, and authorize sensitive native operations.</developer>
             <reviewer>Review every addJavascriptInterface() call: identify all @JavascriptInterface-annotated methods, confirm content origins are trusted, and verify that returned data is validated before use in sensitive operations. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -336,7 +336,7 @@
         <rule>
             <name>Mitigation Identified: SQL Injection (Room Database)</name>
             <regex>@Query\s*\(\s*"[^"]*(?::\w+|\?)[^"]*"\s*\)|SupportSQLiteDatabase.*compileStatement</regex>
-            <rdl_ref>logic/kotlin/core/mitigation_identified_sql_injection_room_database.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kotlin/core/mitigation_identified_sql_injection_room_database.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -345,17 +345,17 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects Room or SQLite query patterns that use bound parameters instead of dynamic SQL interpolation.</rule_desc>
-            <vuln_desc>This rule checks whether Kotlin database access uses parameter binding rather than string-built SQL. Room `@Query` annotations with named or positional placeholders and SQLite compiled statements are defensive signals because user input is bound as data instead of concatenated into executable SQL.</vuln_desc>
-            <developer>Prefer Room `@Query` placeholders such as `:arg` or `?` and compiled statements with bound values instead of Kotlin string interpolation in SQL strings.</developer>
+            <rule_desc>The code contains a security-control marker. Its presence is a review surface rather than evidence that the control is defective or consistently enforced.</rule_desc>
+            <vuln_desc>No adverse security consequence follows from the presence of a protection alone. If it is bypassed or applied outside the correct context, the protected operation may still permit injection or unauthorized access.</vuln_desc>
+            <developer>Verify that the control applies to every relevant entry point and uses the required context and policy. Retain effective protections; test bypass cases before recommending a change.</developer>
             <reviewer>Confirm that Room queries rely on placeholders or compiled statements with bound values, and that raw SQL construction with string interpolation is not being mistaken for parameterized execution. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
     <category name="Data Leakage">
         <rule>
             <name>Sensitive Data in Logcat Output</name>
-            <regex>Log\.[deiwtv]\s*\(\s*\w+\s*,\s*[^")][^)]*\)|Log\.[deiwtv]\s*\(\s*\w+\s*,\s*"[^"]*\$[^"]*"\)</regex>
-            <rdl_ref>logic/kotlin/core/sensitive_data_in_logcat_output.rdl</rdl_ref>
+            <regex>Log\.(?:[deiwtv]|wtf|println)\s*\(</regex>
+            <rdl_ref>logic/rdl/v1/kotlin/core/sensitive_data_in_logcat_output.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -364,15 +364,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects Logcat calls that may write security-sensitive variable data to the Android log.</rule_desc>
-            <vuln_desc>Log.d/e/i/w/v calls that include sensitive variables (tokens, passwords, credentials) or Kotlin string interpolation expose data to logcat, which is readable by any app holding READ_LOGS permission and accessible to anyone with ADB access. Even DEBUG-only logs can be forgotten in release builds.</vuln_desc>
-            <developer>Remove all Log statements that include sensitive data before release. Gate debug logging behind BuildConfig.DEBUG checks. Use structured logging with field redaction for production logging.</developer>
+            <rule_desc>The code writes diagnostic data or exposes detailed errors. Establish the values emitted, production configuration, and recipients of the output.</rule_desc>
+            <vuln_desc>Readers of exposed diagnostics may obtain credentials, private records, internal paths, or implementation details that enable account misuse or targeted attacks.</vuln_desc>
+            <developer>Keep sensitive values and detailed errors out of user-facing responses and routine logs. Redact before emission, restrict diagnostic access, and verify production logging configuration.</developer>
             <reviewer>Search for Log.* calls that reference security-sensitive field names or variables. Verify that sensitive values are redacted or omitted in production log output. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Dynamic Code Loading</name>
             <regex>DexClassLoader\s*\(|PathClassLoader\s*\(|URLClassLoader\s*\(</regex>
-            <rdl_ref>logic/kotlin/core/dynamic_code_loading.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/kotlin/core/dynamic_code_loading.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -381,9 +381,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects dynamic class loading from potentially untrusted paths.</rule_desc>
-            <vuln_desc>Loading DEX or class files dynamically from paths outside the app's internal storage (assets, filesDir, cacheDir) risks loading tampered or malicious code. External storage, downloaded files, and user-supplied paths can all be attacker-controlled.</vuln_desc>
-            <developer>Only load classes from paths inside the app's internal storage. Verify the integrity of any dynamically loaded code with a cryptographic signature before loading it.</developer>
+            <rule_desc>The code obtains executable material or replaces application behavior at runtime. Determine the origin, integrity checks, and intended deployment scope.</rule_desc>
+            <vuln_desc>A party able to substitute executable material or a runtime hook may run code with application privileges, inspect protected data, or alter security checks.</vuln_desc>
+            <developer>Load only approved code from trusted locations, verify signatures or integrity before execution, and restrict runtime replacement to documented, authorized behavior.</developer>
             <reviewer>Identify all dynamic class loader instantiations and confirm the source path is within the app's own internal storage or assets. Verify signature checks are in place if loading from downloaded content. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

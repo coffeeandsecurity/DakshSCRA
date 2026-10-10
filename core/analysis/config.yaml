@@ -553,7 +553,6 @@ java:
     - "\\bHtmlUtils\\.htmlEscape\\b"
     - "\\bMarkdownSanitizer\\b"
     - "\\bAntiSamy\\b"
-    - "\\bOwasp\\b"
     - "\\bPattern\\.compile\\b.*matches\\b"
     - "\\bwhitelist\\b"
     - "\\bvalidate\\b"

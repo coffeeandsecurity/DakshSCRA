@@ -1,40 +1,26 @@
-import { useEffect, useMemo, useState } from 'react'
+import { suppressionDetails } from '../lib/suppression'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   getSuppressedFindings,
   getSuppressedReportUrl,
   promoteSuppressedItem,
-  regenerateReports,
 } from '../api'
 
 /* ── Shared styles (defined first - referenced by all components below) ── */
 const inputStyle = {
-  background: '#0d1117',
-  border: '1px solid #30363d',
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
   borderRadius: '6px',
-  color: '#e6edf3',
+  color: 'var(--text)',
   padding: '6px 10px',
   fontSize: '13px',
-  outline: 'none',
-}
-
-const codeStyle = {
-  margin: '4px 0',
-  padding: '8px 12px',
-  background: '#0d1117',
-  borderRadius: '6px',
-  fontSize: '12px',
-  fontFamily: 'monospace',
-  overflowX: 'auto',
-  border: '1px solid #21262d',
-  whiteSpace: 'pre-wrap',
-  wordBreak: 'break-all',
 }
 
 const btnGhost = {
   background: 'transparent',
-  border: '1px solid #30363d',
+  border: '1px solid var(--border)',
   borderRadius: '6px',
-  color: '#8b949e',
+  color: 'var(--text-3)',
   padding: '6px 12px',
   fontSize: '12px',
   cursor: 'pointer',
@@ -47,17 +33,7 @@ const btnPrimary = {
   background: '#1f6feb',
   border: '1px solid #388bfd',
   borderRadius: '6px',
-  color: '#f8fafc',
-  padding: '6px 14px',
-  fontSize: '12px',
-  cursor: 'pointer',
-}
-
-const btnPromote = {
-  background: 'rgba(34,197,94,0.12)',
-  border: '1px solid rgba(34,197,94,0.35)',
-  borderRadius: '6px',
-  color: '#22c55e',
+  color: 'var(--primary-text)',
   padding: '6px 14px',
   fontSize: '12px',
   cursor: 'pointer',
@@ -65,8 +41,8 @@ const btnPromote = {
 
 /* ── Status colour map ───────────────────────────────────────── */
 const STATUS_COLOR = {
-  suppressed: { bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.35)', text: '#f59e0b' },
-  confirmed_finding: { bg: 'rgba(34,197,94,0.12)', border: 'rgba(34,197,94,0.35)', text: '#22c55e' },
+  suppressed: { bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.35)', text: 'var(--warning-text)' },
+  confirmed_finding: { bg: 'rgba(34,197,94,0.12)', border: 'rgba(34,197,94,0.35)', text: 'var(--success-text)' },
 }
 
 /* ── Helpers ─────────────────────────────────────────────────── */
@@ -96,15 +72,7 @@ function StatusBadge({ status }) {
 }
 
 function SummaryCard({ value, label, color }) {
-  return (
-    <div style={{
-      background: '#161b22', border: '1px solid #30363d', borderRadius: '8px',
-      padding: '16px 20px', minWidth: '140px', flex: '1',
-    }}>
-      <div style={{ fontSize: '28px', fontWeight: 700, color: color || '#f8fafc' }}>{value}</div>
-      <div style={{ fontSize: '12px', color: '#8b949e', marginTop: '4px' }}>{label}</div>
-    </div>
-  )
+  return <div className="fr-stat-card" style={{ '--stat-color': color }}><div><div className="fr-stat-value">{value}</div><div className="fr-stat-label">{label}</div></div></div>
 }
 
 /* ── Promote Modal ───────────────────────────────────────────── */
@@ -118,6 +86,20 @@ function PromoteModal({ item, onClose, onPromoted }) {
   })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const dialogRef = useRef(null)
+  useEffect(() => {
+    const previous = document.activeElement
+    dialogRef.current?.querySelector('input')?.focus()
+    return () => previous?.focus()
+  }, [])
+  function handleDialogKey(event) {
+    if (event.key === 'Escape' && !busy) onClose()
+    if (event.key !== 'Tab') return
+    const controls = [...dialogRef.current.querySelectorAll('input, select, textarea, button')].filter(node => !node.disabled)
+    const first = controls[0], last = controls[controls.length - 1]
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
+    if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
+  }
 
   function set(k, v) { setForm((f) => ({ ...f, [k]: v })) }
 
@@ -127,7 +109,7 @@ function PromoteModal({ item, onClose, onPromoted }) {
     setError('')
     try {
       await promoteSuppressedItem(item._runUuid, item.id, form)
-      onPromoted(item.id)
+      onPromoted(item.id, form)
     } catch (err) {
       setError(err.message || 'Promotion failed')
     } finally {
@@ -143,12 +125,12 @@ function PromoteModal({ item, onClose, onPromoted }) {
       }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={{
-        background: '#0d1117', border: '1px solid #30363d', borderRadius: '12px',
-        padding: '24px', width: '480px', maxWidth: '95vw',
+      <div ref={dialogRef} onKeyDown={handleDialogKey} role="dialog" aria-modal="true" aria-label="Promote to active finding" style={{
+        background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px',
+        padding: '24px', width: '480px', maxWidth: '95vw', maxHeight: '90vh', overflowY: 'auto',
       }}>
-        <h3 style={{ margin: '0 0 4px', color: '#f8fafc', fontSize: '16px' }}>Promote to Active Finding</h3>
-        <p style={{ margin: '0 0 20px', color: '#8b949e', fontSize: '13px' }}>
+        <h3 style={{ margin: '0 0 4px', color: 'var(--text)', fontSize: '16px' }}>Promote to Active Finding</h3>
+        <p style={{ margin: '0 0 20px', color: 'var(--text-3)', fontSize: '13px' }}>
           {item.rule_title} - {item.file}:{item.line}
         </p>
 
@@ -163,7 +145,7 @@ function PromoteModal({ item, onClose, onPromoted }) {
 
         <form onSubmit={handleSubmit}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', color: '#8b949e', fontSize: '12px' }}>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', color: 'var(--text-3)', fontSize: '12px' }}>
               Confidence Score
               <input
                 type="number" min="0" max="100" value={form.confidence}
@@ -171,7 +153,7 @@ function PromoteModal({ item, onClose, onPromoted }) {
                 style={inputStyle}
               />
             </label>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', color: '#8b949e', fontSize: '12px' }}>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', color: 'var(--text-3)', fontSize: '12px' }}>
               Confidence Level
               <select value={form.confidence_level} onChange={(e) => set('confidence_level', e.target.value)} style={inputStyle}>
                 <option value="low">Low</option>
@@ -180,7 +162,7 @@ function PromoteModal({ item, onClose, onPromoted }) {
                 <option value="critical">Critical</option>
               </select>
             </label>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', color: '#8b949e', fontSize: '12px' }}>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', color: 'var(--text-3)', fontSize: '12px' }}>
               Severity
               <select value={form.severity} onChange={(e) => set('severity', e.target.value)} style={inputStyle}>
                 <option value="info">Info</option>
@@ -190,7 +172,7 @@ function PromoteModal({ item, onClose, onPromoted }) {
                 <option value="critical">Critical</option>
               </select>
             </label>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', color: '#8b949e', fontSize: '12px' }}>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', color: 'var(--text-3)', fontSize: '12px' }}>
               Rating
               <input
                 type="text" placeholder="e.g. P2, CVSS:7.5"
@@ -200,7 +182,7 @@ function PromoteModal({ item, onClose, onPromoted }) {
               />
             </label>
           </div>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', color: '#8b949e', fontSize: '12px', marginBottom: '20px' }}>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', color: 'var(--text-3)', fontSize: '12px', marginBottom: '20px' }}>
             Notes
             <textarea
               value={form.notes}
@@ -223,335 +205,113 @@ function PromoteModal({ item, onClose, onPromoted }) {
   )
 }
 
-/* ── Row ─────────────────────────────────────────────────────── */
 function SuppressedRow({ item, runUuid, onPromoted }) {
   const [open, setOpen] = useState(false)
   const [showModal, setShowModal] = useState(false)
-  const isPromoted = item.status === 'confirmed_finding'
-
-  const ctxBefore = safeLines(item.context_before)
-  const ctxAfter = safeLines(item.context_after)
-
-  function handleHeaderClick(e) {
-    // Ignore clicks on interactive children (buttons, inputs, anchors)
-    if (e.target.closest('button, a, input, select, textarea')) return
-    setOpen((v) => !v)
-  }
-
-  return (
-    <>
-      {showModal && (
-        <PromoteModal
-          item={{ ...item, _runUuid: runUuid }}
-          onClose={() => setShowModal(false)}
-          onPromoted={(id) => { setShowModal(false); onPromoted(id) }}
-        />
-      )}
-      <div style={{
-        background: '#0d1117', border: '1px solid #21262d', borderRadius: '8px',
-        marginBottom: '8px', overflow: 'hidden',
-      }}>
-        {/* Header row */}
-        <div
-          onClick={handleHeaderClick}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '10px',
-            padding: '10px 14px', cursor: 'pointer',
-            background: open ? '#161b22' : 'transparent',
-            userSelect: 'none',
-          }}
-        >
-          <svg
-            width="12" height="12" viewBox="0 0 20 20" fill="currentColor"
-            style={{
-              color: '#8b949e', flexShrink: 0, transition: 'transform .15s',
-              transform: open ? 'rotate(90deg)' : 'none',
-            }}
-          >
-            <path fillRule="evenodd" d="M7.293 4.293a1 1 0 011.414 0l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414-1.414L11.586 10 7.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-          </svg>
-
-          <span style={{ fontSize: '12px', color: '#58a6ff', fontWeight: 600, fontFamily: 'monospace', flexShrink: 0 }}>
-            {item.platform || '-'}
-          </span>
-          <span style={{
-            fontSize: '13px', color: '#e6edf3', fontWeight: 500,
-            flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          }}>
-            {item.rule_title || '(no title)'}
-          </span>
-          <span style={{ fontSize: '11px', color: '#8b949e', fontFamily: 'monospace', flexShrink: 0 }}>
-            {(item.file || '').split('/').slice(-1)[0] || '-'}:{item.line ?? '?'}
-          </span>
-          <StatusBadge status={item.status} />
-        </div>
-
-        {/* Expanded detail */}
-        {open && (
-          <div style={{ padding: '0 14px 14px', borderTop: '1px solid #21262d' }}>
-            {/* Full file path */}
-            <div style={{ fontSize: '11px', color: '#8b949e', fontFamily: 'monospace', marginTop: '10px', marginBottom: '8px' }}>
-              {item.file || ''}:{item.line ?? ''}
-            </div>
-
-            {/* Context before */}
-            {ctxBefore.length > 0 && (
-              <pre style={codeStyle}>
-                {ctxBefore.map((l, i) => (
-                  <span key={i} style={{ color: '#8b949e', display: 'block' }}>{l}</span>
-                ))}
-              </pre>
-            )}
-
-            {/* Flagged line */}
-            <pre style={{ ...codeStyle, borderLeft: '3px solid #f59e0b', marginTop: 0, marginBottom: 0 }}>
-              <span style={{ color: '#fbbf24' }}>{item.line ?? ''}: {item.code || ''}</span>
-            </pre>
-
-            {/* Context after */}
-            {ctxAfter.length > 0 && (
-              <pre style={{ ...codeStyle, marginTop: 0 }}>
-                {ctxAfter.map((l, i) => (
-                  <span key={i} style={{ color: '#8b949e', display: 'block' }}>{l}</span>
-                ))}
-              </pre>
-            )}
-
-            {/* RDL condition */}
-            <div style={{
-              marginTop: '12px', padding: '10px 12px', background: '#161b22',
-              borderRadius: '6px', border: '1px solid #21262d',
-            }}>
-              <div style={{ fontSize: '11px', color: '#8b949e', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '.05em' }}>
-                RDL Condition Triggered
-              </div>
-              <code style={{ fontSize: '12px', color: '#a5d6ff', fontFamily: 'monospace', wordBreak: 'break-all' }}>
-                {item.rdl_condition || item.rdl_text || '-'}
-              </code>
-            </div>
-
-            {/* Suppression reason */}
-            <div style={{
-              marginTop: '8px', padding: '10px 12px',
-              background: 'rgba(245,158,11,0.06)', borderRadius: '6px',
-              border: '1px solid rgba(245,158,11,0.2)',
-            }}>
-              <div style={{ fontSize: '11px', color: '#8b949e', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '.05em' }}>
-                Why Suppressed
-              </div>
-              <span style={{ fontSize: '13px', color: '#e6edf3' }}>
-                {item.suppression_reason || 'RDL condition was not satisfied.'}
-              </span>
-            </div>
-
-            {/* Promote action */}
-            {!isPromoted && (
-              <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'flex-end' }}>
-                <button
-                  onClick={(e) => { e.stopPropagation(); setShowModal(true) }}
-                  style={btnPromote}
-                >
-                  Promote to Finding
-                </button>
-              </div>
-            )}
-
-            {/* Analyst note (post-promotion) */}
-            {isPromoted && item.notes && (
-              <div style={{
-                marginTop: '8px', padding: '8px 12px',
-                background: 'rgba(34,197,94,0.06)', borderRadius: '6px',
-                border: '1px solid rgba(34,197,94,0.2)',
-                fontSize: '12px', color: '#86efac',
-              }}>
-                <strong>Analyst note:</strong> {item.notes}
-              </div>
-            )}
-          </div>
-        )}
+  const promoted = item.status === 'confirmed_finding'
+  const details = suppressionDetails(item)
+  const trace = Array.isArray(item.logic_trace) ? item.logic_trace : item.logic_trace ? [item.logic_trace] : []
+  const consulted = Array.isArray(item.logic_consulted_files) ? item.logic_consulted_files : item.logic_consulted_files ? [item.logic_consulted_files] : []
+  const asText = value => typeof value === 'string' ? value : JSON.stringify(value, null, 2)
+  return <>
+    {showModal && <PromoteModal item={{ ...item, _runUuid: runUuid }} onClose={() => setShowModal(false)} onPromoted={(id, fields) => { setShowModal(false); onPromoted(id, fields) }} />}
+    <article className={`fr-card suppression-card${open ? ' open' : ''}`} style={{ '--conf-color': promoted ? 'var(--success-color)' : 'var(--warning-color)' }}>
+      <button className="fr-card-header" onClick={() => setOpen(value => !value)} aria-expanded={open}>
+        <StatusBadge status={item.status} />
+        <span className="fr-card-title">{item.rule_title || 'Untitled rule'}</span>
+        {item.platform && <span className="fr-platform-chip">{item.platform}</span>}
+        <span className="fr-platform-chip">{details.engine}</span>
+        <span className="fr-card-caret" aria-hidden="true">{open ? '▲' : '▼'}</span>
+      </button>
+      <div className="suppression-overview">
+        <div className="suppression-location">{item.file || 'File not recorded'}:{item.line ?? '?'}</div>
+        <p><strong>{promoted ? 'Original suppression reason' : 'Why suppressed'}:</strong> {details.reason}</p>
       </div>
-    </>
-  )
+      {open && <div className="fr-card-body">
+        <dl className="suppression-metadata">
+          <div><dt>Suppressing engine</dt><dd>{details.engine}</dd></div>
+          <div><dt>Rule</dt><dd>{item.rule_title || 'Not recorded'}{item.rule_id ? ` (${item.rule_id})` : ''}</dd></div>
+          <div><dt>RDL / logic source</dt><dd className="suppression-location">{details.source || 'Not recorded'}</dd></div>
+          {item.rdl_condition && item.rdl_condition !== `RDL:${details.source}` && <div><dt>Recorded condition</dt><dd>{item.rdl_condition}</dd></div>}
+          {item.rule_source && <div><dt>Rule definition</dt><dd>{item.rule_source}</dd></div>}
+          {item.category && <div><dt>Category</dt><dd>{item.category}</dd></div>}
+        </dl>
+        <section className="fr-note logic">
+          <h4 className="fr-note-label">Suppression decision</h4>
+          <p className="fr-note-text">{details.reason}</p>
+          {trace.length > 0 && <><h4 className="fr-note-label suppression-subheading">Evaluation trace</h4><ol className="suppression-trace">{trace.map((entry, index) => <li key={index}>{asText(entry)}</li>)}</ol></>}
+          {consulted.length > 0 && <><h4 className="fr-note-label suppression-subheading">Consulted files</h4><ul className="suppression-trace">{consulted.map((file, index) => <li key={index}>{asText(file)}</li>)}</ul></>}
+        </section>
+        <section><h4 className="fr-note-label">Source evidence</h4>
+          <pre className="suppression-code">{safeLines(item.context_before).map((line, index) => <span key={`before-${index}`}>{line}{'\n'}</span>)}<mark>{item.line ?? '?'}: {item.code || '(Source text not recorded)'}</mark>{'\n'}{safeLines(item.context_after).map((line, index) => <span key={`after-${index}`}>{line}{'\n'}</span>)}</pre>
+        </section>
+        {item.rdl_text && <details className="suppression-rule"><summary>Full RDL rule</summary><pre className="suppression-code">{item.rdl_text}</pre></details>}
+        {item.logic_reason && <p className="fr-note-text"><strong>Rule intent:</strong> {item.logic_reason}</p>}
+        {promoted && item.notes && <div className="fr-note dev"><h4 className="fr-note-label">Analyst note</h4><p>{item.notes}</p></div>}
+        {!promoted && <div className="suppression-actions"><button className="btn btn-secondary btn-sm" onClick={() => setShowModal(true)}>Promote to Finding</button></div>}
+      </div>}
+    </article>
+  </>
 }
 
-/* ── Main Panel ──────────────────────────────────────────────── */
 export default function SuppressedPanel({ runUuid, onLoaded }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
-  const [regenerating, setRegenerating] = useState(false)
-  const [regenMsg, setRegenMsg] = useState('')
-
+  const [filterEngine, setFilterEngine] = useState('all')
+  const [page, setPage] = useState(0)
   useEffect(() => {
     if (!runUuid) return
-    setLoading(true)
-    setError('')
-    getSuppressedFindings(runUuid)
-      .then((d) => {
-        setData(d)
-        if (typeof onLoaded === 'function') {
-          onLoaded(d?.summary?.total_suppressed ?? 0)
-        }
-      })
-      .catch((e) => setError(e.message || 'Failed to load suppressed findings'))
-      .finally(() => setLoading(false))
+    let cancelled = false
+    setLoading(true); setError(''); setData(null); setPage(0)
+    getSuppressedFindings(runUuid).then(result => {
+      if (cancelled) return
+      setData(result)
+      onLoaded?.(result?.summary?.total_suppressed ?? 0)
+    }).catch(err => { if (!cancelled) setError(err.message || 'Failed to load suppressed findings') })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
   }, [runUuid])
-
-  function handlePromoted(itemId) {
-    setData((prev) => {
-      if (!prev) return prev
-      const updated = (prev.suppressed || []).map((s) =>
-        s.id === itemId ? { ...s, status: 'confirmed_finding' } : s
-      )
-      const promoted = updated.filter((s) => s.status === 'confirmed_finding').length
-      return {
-        ...prev,
-        suppressed: updated,
-        summary: { ...prev.summary, promoted_to_findings: promoted },
-      }
-    })
-  }
-
-  async function handleRegenerate() {
-    setRegenerating(true)
-    setRegenMsg('')
-    try {
-      await regenerateReports(runUuid)
-      setRegenMsg('Reports regenerated successfully.')
-    } catch (e) {
-      setRegenMsg(`Error: ${e.message}`)
-    } finally {
-      setRegenerating(false)
-    }
-  }
-
+  const items = useMemo(() => (data?.suppressed || []).map(item => ({ ...item, details: suppressionDetails(item) })), [data])
+  const engines = useMemo(() => [...new Set(items.map(item => item.details.engine))].sort(), [items])
+  const ruleCount = useMemo(() => new Set(items.map(item => item.details.source || item.rule_title).filter(Boolean)).size, [items])
   const filtered = useMemo(() => {
-    const list = data?.suppressed || []
-    const q = search.toLowerCase()
-    return list.filter((s) => {
-      if (filterStatus !== 'all' && s.status !== filterStatus) return false
-      if (!q) return true
-      return (
-        (s.rule_title || '').toLowerCase().includes(q) ||
-        (s.file || '').toLowerCase().includes(q) ||
-        (s.platform || '').toLowerCase().includes(q) ||
-        (s.rdl_condition || '').toLowerCase().includes(q) ||
-        (s.suppression_reason || '').toLowerCase().includes(q)
-      )
-    })
-  }, [data, search, filterStatus])
-
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '40px 20px', color: '#8b949e' }}>
-        <div className="fr-spinner" />
-        <span>Loading suppressed findings…</span>
-      </div>
-    )
+    const query = search.trim().toLowerCase()
+    return items.filter(item => (filterStatus === 'all' || item.status === filterStatus) &&
+      (filterEngine === 'all' || item.details.engine === filterEngine) &&
+      (!query || [item.rule_title, item.rule_id, item.file, item.platform, item.category, item.details.source, item.details.engine, item.details.reason, item.rdl_text].some(value => String(value || '').toLowerCase().includes(query))))
+  }, [items, search, filterStatus, filterEngine])
+  function handlePromoted(id, fields) {
+    setData(previous => ({ ...previous, suppressed: previous.suppressed.map(item => item.id === id ? { ...item, ...fields, status: 'confirmed_finding' } : item) }))
   }
-
-  if (error) {
-    return (
-      <div style={{ padding: '40px 20px' }}>
-        <div className="empty-title">Error loading data</div>
-        <div className="empty-msg">{error}</div>
-      </div>
-    )
-  }
-
-  const summary = data?.summary || {}
-  const total = summary.total_suppressed ?? 0
-  const rdlHit = summary.rdl_conditions_triggered ?? 0
-  const promoted = summary.promoted_to_findings ?? 0
-
-  if (total === 0) {
-    return (
-      <div className="empty-state" style={{ padding: '40px 20px' }}>
-        <div className="empty-title">No suppressed findings</div>
-        <div className="empty-msg">
-          RDL conditions have not suppressed any matches for this scan.
-          Rules need IF() conditions and regex matches must fail those conditions
-          for suppressions to be recorded.
-        </div>
-      </div>
-    )
-  }
-
-  const jsonReportUrl = getSuppressedReportUrl(runUuid, 'json')
-  const htmlReportUrl = getSuppressedReportUrl(runUuid, 'html')
-
-  return (
-    <div style={{ padding: '0 0 32px' }}>
-      {/* Summary cards */}
-      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '24px' }}>
-        <SummaryCard value={total} label="Total Suppressed" color="#f59e0b" />
-        <SummaryCard value={rdlHit} label="RDL Conditions Triggered" color="#58a6ff" />
-        <SummaryCard value={promoted} label="Promoted to Findings" color="#22c55e" />
-      </div>
-
-      {/* Toolbar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: '200px' }}>
-          <svg
-            width="12" height="12" viewBox="0 0 20 20" fill="currentColor"
-            style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#8b949e', pointerEvents: 'none' }}
-          >
-            <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-          </svg>
-          <input
-            placeholder="Search rule, file, platform, condition…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ ...inputStyle, paddingLeft: '28px', width: '100%', boxSizing: 'border-box' }}
-          />
-        </div>
-
-        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} style={{ ...inputStyle, width: 'auto' }}>
-          <option value="all">All statuses</option>
-          <option value="suppressed">Suppressed only</option>
-          <option value="confirmed_finding">Promoted only</option>
-        </select>
-
-        <span style={{ fontSize: '12px', color: '#8b949e', flexShrink: 0 }}>
-          {filtered.length} / {total} shown
-        </span>
-
-        <a href={jsonReportUrl} download style={btnGhost}>Export JSON</a>
-        <a href={htmlReportUrl} download style={btnGhost}>Export HTML</a>
-
-        <button onClick={handleRegenerate} disabled={regenerating} style={btnPrimary}>
-          {regenerating ? 'Regenerating…' : 'Regenerate Reports'}
-        </button>
-      </div>
-
-      {regenMsg && (
-        <div style={{
-          marginBottom: '12px', padding: '8px 12px', borderRadius: '6px', fontSize: '13px',
-          background: regenMsg.startsWith('Error') ? 'rgba(248,81,73,0.1)' : 'rgba(34,197,94,0.1)',
-          border: `1px solid ${regenMsg.startsWith('Error') ? 'rgba(248,81,73,0.3)' : 'rgba(34,197,94,0.3)'}`,
-          color: regenMsg.startsWith('Error') ? '#f85149' : '#22c55e',
-        }}>
-          {regenMsg}
-        </div>
-      )}
-
-      {/* List */}
-      {filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', color: '#8b949e', padding: '32px', fontSize: '14px' }}>
-          No results match the current filter.
-        </div>
-      ) : (
-        filtered.map((item, idx) => (
-          <SuppressedRow
-            key={item.id || String(idx)}
-            item={item}
-            runUuid={runUuid}
-            onPromoted={handlePromoted}
-          />
-        ))
-      )}
+  function change(setter, value) { setter(value); setPage(0) }
+  const pages = Math.max(1, Math.ceil(filtered.length / 50))
+  const currentPage = Math.min(page, pages - 1)
+  const promoted = items.filter(item => item.status === 'confirmed_finding').length
+  if (loading) return <div className="empty-state"><div className="fr-spinner" />Loading suppressed findings…</div>
+  if (error) return <div className="error-banner" role="alert">{error}</div>
+  if (!items.length) return <div className="empty-state"><div className="empty-title">No suppressed findings</div><div className="empty-msg">No suppression decisions were recorded for this scan.</div></div>
+  return <div className="suppression-panel">
+    <div className="suppression-intro"><h3>Suppressed Findings</h3><p>Matches excluded by recorded rule logic. Suppression does not by itself confirm a false positive; review the decision and evidence below.</p></div>
+    <div className="fr-stats-row">
+      <SummaryCard value={items.length - promoted} label="Currently suppressed" color="var(--warning-color)" />
+      <SummaryCard value={ruleCount} label="Rules with suppressions" color="var(--primary)" />
+      <SummaryCard value={promoted} label="Promoted to findings" color="var(--success-color)" />
     </div>
-  )
+    <div className="suppression-toolbar">
+      <input className="fr-search" aria-label="Search suppressed findings" placeholder="Search rule, file, reason or RDL…" value={search} onChange={event => change(setSearch, event.target.value)} />
+      <select aria-label="Suppression status" value={filterStatus} onChange={event => change(setFilterStatus, event.target.value)}><option value="all">All statuses</option><option value="suppressed">Suppressed only</option><option value="confirmed_finding">Promoted only</option></select>
+      <select aria-label="Suppressing engine" value={filterEngine} onChange={event => change(setFilterEngine, event.target.value)}><option value="all">All engines</option>{engines.map(engine => <option key={engine}>{engine}</option>)}</select>
+      <a className="btn btn-secondary btn-sm" href={getSuppressedReportUrl(runUuid, 'json')} download>Export JSON</a>
+      <a className="btn btn-secondary btn-sm" href={getSuppressedReportUrl(runUuid, 'html')} download>Export HTML</a>
+    </div>
+    <div className="suppression-count" role="status">{filtered.length} of {items.length} records · {engines.join(', ')}</div>
+    <div className="suppression-list">
+      {filtered.slice(currentPage * 50, (currentPage + 1) * 50).map((item, index) => <SuppressedRow key={`${runUuid}:${item.id || currentPage * 50 + index}`} item={item} runUuid={runUuid} onPromoted={handlePromoted} />)}
+      {!filtered.length && <div className="empty-state">No findings match these filters.</div>}
+    </div>
+    {pages > 1 && <nav className="suppression-pagination" aria-label="Suppressed findings pages"><button className="btn btn-secondary btn-sm" disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}>Previous</button><span>Page {currentPage + 1} of {pages}</span><button className="btn btn-secondary btn-sm" disabled={currentPage === pages - 1} onClick={() => setPage(currentPage + 1)}>Next</button></nav>}
+  </div>
 }

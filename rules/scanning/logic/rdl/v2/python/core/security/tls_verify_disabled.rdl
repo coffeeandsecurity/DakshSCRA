@@ -1,0 +1,8 @@
+VERSION 2
+RULE python.tls-verify-disabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bverify\\s*=\\s*False\\b" ""
+REPORT "Python HTTP Certificate Verification Disabled"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

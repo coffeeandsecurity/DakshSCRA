@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{{ reportTitle }} - Modern Scan Report</title>
+  <title>{{ reportTitle }} · {{ report_page_title or report_scope }}</title>
   <style>
     :root {
       --bg: #f4f7fb;
@@ -532,6 +532,7 @@
         white-space: pre-wrap !important;
       }
     }
+    {% include "report_analysis.css" %}
   </style>
 </head>
 <body>
@@ -548,14 +549,24 @@
 
       <div class="nav-group">
         <p class="nav-title">Sections</p>
+        {% if report_pages %}
+        <a class="nav-link" href="{{ report_home }}">Summary &amp; Index</a>
+        {% for page in report_pages %}<a class="nav-link" href="{{ page.href }}">{{ page.label }} <span class="nav-meta">{{ page.count }}</span></a>{% endfor %}
+        <a class="nav-link" href="{{ report_data }}">Complete saved results (JSON)</a>
+        {% else %}
         <a class="nav-link" href="#overview">Overview</a>
         <a class="nav-link" href="#inputs">Inputs</a>
         <a class="nav-link" href="#timeline">Timeline</a>
+        {% if show_findings %}
         <a class="nav-link" href="#findings">Findings</a>
         <a class="nav-link" href="#paths-aoi">Parsed Paths AOI</a>
         <a class="nav-link" href="#paths-all">All Parsed Files</a>
+        {% endif %}
+        {% include "report_analysis_nav.html" %}
+        {% endif %}
       </div>
 
+      {% if platform_counts %}
       <div class="nav-group">
         <p class="nav-title">Platforms</p>
         {% for platform, count in platform_counts.items() %}
@@ -563,6 +574,8 @@
         {% endfor %}
       </div>
 
+      {% endif %}
+      {% if page_sections is not defined or 'findings' in page_sections or 'paths-aoi' in page_sections %}
       <div class="nav-group">
         <p class="nav-title">Controls</p>
         <div class="actions">
@@ -572,12 +585,15 @@
           <button type="button" id="collapse-all-findings">Collapse Findings</button>
         </div>
       </div>
+      {% endif %}
     </aside>
 
     <main class="main" id="content">
+      {% if report_pagination is mapping %}{% set pagination_position = "top" %}{% include "report_pagination.html" %}{% endif %}
       <section class="hero" id="overview">
         <h2>Security Analysis Report</h2>
-        <p>Interactive single-file view with collapsible platform and finding sections.</p>
+        <p>{{ report_scope }} · Source code review findings and supporting evidence</p>
+        <div class="report-identity"><span><b>Project:</b> {{ report_scan.get('project') or inputs.get('target_directory','Not recorded') }}</span>{% if report_scan.get('run_uuid') %}<span><b>Scan:</b> {{ report_scan.run_uuid }}</span>{% endif %}</div>
       </section>
 
       <section class="grid" aria-label="overview cards">
@@ -587,6 +603,9 @@
         <div class="card"><div class="k">Path Findings</div><div class="v">{{ detection.get('file_paths_areas_of_interest_identified', '-') }}</div></div>
       </section>
 
+      {% if page_sections is not defined or 'overview' in page_sections %}
+      {% if show_analysis %}<section class="report-section section" id="review-priorities"><h2>Review Priorities</h2><div class="report-section-body">{% include "report_review_summary.html" %}</div></section>{% endif %}
+      {% if report_pages %}<section class="report-section section" id="report-contents"><h2>Explore the Report</h2><div class="report-section-body"><p class="muted">Open a section to review its evidence. Detail pages are paginated and link back to this summary.</p><div class="report-index-grid">{% for page in report_pages %}<a class="report-stat" href="{{ page.href }}"><strong>{{ page.count }}</strong><span>{{ page.label }}</span></a>{% endfor %}</div></div></section>{% endif %}
       <section class="section" id="inputs">
         <div class="section-h">Scan Inputs</div>
         <div class="section-b kv">
@@ -637,7 +656,9 @@
         </div>
       </section>
 
-      <section class="section" id="findings">
+      {% endif %}
+      {% if show_findings %}
+      {% if page_sections is not defined or 'findings' in page_sections %}<section class="section" id="findings">
         <div class="section-h">Areas of Interest <span class="pill">{{ total_findings }} total findings</span></div>
         <div class="section-b">
           {% if snippets %}
@@ -662,7 +683,8 @@
                         {% if snippet["category"] %}<p><b>Issue Category:</b> {{ snippet["category"] }}</p>{% endif %}
                         {% if snippet["issue_scope"] %}<p><b>Issue Scope:</b> {{ snippet["issue_scope"] }}</p>{% endif %}
                         <p><b>Issue Description:</b> {{ snippet["issue_desc"] }}</p>
-                        <p><b>Developer Note:</b> {{ snippet["dev_note"] }}</p>
+                        <p><b>Security Impact:</b> {{ snippet["security_impact"] }}</p>
+                        <p><b>Recommended Correction:</b> {{ snippet["dev_note"] }}</p>
                         <p><b>Reviewer Note:</b> {{ snippet["rev_note"] }}</p>
                         {% if snippet["logic_engine"] or snippet["logic_reason"] %}
                         <p><b>Rule Logic{% if snippet["logic_engine"] %} ({{ snippet["logic_engine"]|upper }}){% endif %}:</b> {{ snippet["logic_reason"] }}</p>
@@ -695,9 +717,9 @@
             <p>No code findings were recorded for this run.</p>
           {% endif %}
         </div>
-      </section>
+      </section>{% endif %}
 
-      <section class="section" id="paths-aoi">
+      {% if page_sections is not defined or 'paths-aoi' in page_sections %}<section class="section" id="paths-aoi">
         <div class="section-h">Parsed Paths - Areas of Interest</div>
         <div class="section-b">
           {% if filepaths_aoi %}
@@ -721,16 +743,26 @@
             <p>No file-path findings were recorded for this run.</p>
           {% endif %}
         </div>
-      </section>
+      </section>{% endif %}
 
-      <section class="section" id="paths-all">
+      {% if page_sections is not defined or 'paths-all' in page_sections %}<section class="section" id="paths-all">
         <div class="section-h">All Identified File Paths</div>
         <div class="section-b paths">
           {% for path in filepaths %}
             <div class="paths-item">{{ path }}</div>
           {% endfor %}
         </div>
-      </section>
+      </section>{% endif %}
+      {% endif %}
+      {% if report_pages %}
+      <section class="report-section section" id="report-index"><h2>{{ report_page_title or 'Report contents' }}</h2><div class="report-section-body">
+      <p class="review-note">Areas of interest and static analysis evidence support human review. Recorded assessment status and coverage limits are retained.</p>
+      {% if report_pagination and report_pagination is not mapping %}<div class="report-tools">{% for page in report_pagination %}<a href="{{ page.href }}">{{ page.label }}</a>{% endfor %}</div>{% endif %}
+      {% if 'overview' in page_sections %}<p><a href="{{ report_data }}">Complete saved results (JSON)</a> includes the original saved fields and evidence.</p>{% endif %}
+      </div></section>
+      {% endif %}
+      {% include "report_analysis.html" %}
+      {% if report_pagination is mapping %}{% set pagination_position = "bottom" %}{% include "report_pagination.html" %}{% endif %}
     </main>
   </div>
 
@@ -743,6 +775,10 @@
 
   <script>
     (function () {
+      document.querySelectorAll('.report-page-jump').forEach(function (select) {
+        select.addEventListener('change', function () { window.location.assign(select.value); });
+      });
+
       function setOpen(selector, open) {
         document.querySelectorAll(selector).forEach(function (el) {
           el.open = open;
@@ -798,5 +834,7 @@
       });
     })();
   </script>
+  <script>{% include "report_analysis.js" %}</script>
+  {% if report_graph_enabled %}{% if report_graph_asset %}<script src="{{ report_graph_asset }}" defer></script>{% else %}<script>{{ report_graph_script|safe }}</script>{% endif %}{% endif %}
 </body>
 </html>

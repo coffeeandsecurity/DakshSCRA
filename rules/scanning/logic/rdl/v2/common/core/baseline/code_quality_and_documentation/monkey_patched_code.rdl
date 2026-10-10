@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.common.core.monkey_patched_code VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)(monkey_patch|patched_code|custom_patch)\\s*\\(" "im"
+WHEN TEXT_MISSING "(?i)\\b(test|spec|fixture|mock)\\b" "im"
+REPORT "Monkey Patched Code"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

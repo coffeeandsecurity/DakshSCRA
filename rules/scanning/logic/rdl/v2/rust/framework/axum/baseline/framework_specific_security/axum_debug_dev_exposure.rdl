@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.rust.framework.axum.axum_debug_dev_exposure VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "RUST_LOG\\s*=\\s*\"debug\"|env_logger::init\\(\\)" "im"
+WHEN TEXT_MISSING "release|production" "im"
+REPORT "Axum Debug/Dev Exposure"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

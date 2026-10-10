@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.php.core.deprecated_regular_expression_functions VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(ereg|eregi)\\b" "im"
+WHEN (TEXT_MISSING "preg_match|preg_replace|preg_split" "im" AND TEXT_MISSING "test|example" "im")
+REPORT "Deprecated Regular Expression Functions"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

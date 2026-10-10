@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.ios.framework.uikit.ios_insecure_http_exception_enabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "NSExceptionAllowsInsecureHTTPLoads" "im"
+WHEN TEXT_MISSING "NSIncludesSubdomains\\s*</key>\\s*<false/>" "im"
+REPORT "iOS Insecure HTTP Exception Enabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

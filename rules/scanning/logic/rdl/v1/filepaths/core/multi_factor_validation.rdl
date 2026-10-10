@@ -1,0 +1,4 @@
+VERSION 1
+WHEN PRESENT (?-i:(?:(?<![A-Za-z0-9])(?i:mfa|multi[-_]?factor|two[-_]?factor|2fa|totp|hotp|otp)(?=[A-Z_. /\\-]|$)|(?<=[a-z0-9])(?:Mfa|MFA|MultiFactor|Multi_factor|Multifactor|TwoFactor|Two_factor|Twofactor|2fa|2FA|Totp|TOTP|Hotp|HOTP|Otp|OTP)(?=[A-Z_. /\\-]|$)))
+REPORT AS area_of_interest
+REASON Detects file paths that may indicate the implementation or handling of Multi-Factor Validation.

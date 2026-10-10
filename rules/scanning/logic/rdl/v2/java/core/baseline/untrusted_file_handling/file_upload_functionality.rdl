@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.java.core.file_upload_functionality VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)(FileUpload|MultipartFile|CommonsMultipartFile)\\s*\\(.*\\)|\\bPart\\s*\\(.*\\)" "im"
+WHEN TEXT_MISSING "getContentType|getOriginalFilename|getSize|allowedTypes|allowedExtensions|maximumSize|validate|sanitize" "im"
+REPORT "File Upload Functionality"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

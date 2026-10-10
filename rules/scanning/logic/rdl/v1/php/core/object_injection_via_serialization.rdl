@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT (?i)\bunserialize\s*\(
+REPORT AS area_of_interest
+REASON Review an object-capable PHP deserialization call. Input trust and effective allowed_classes must be assessed per call; unrelated JSON decoding is not a mitigation.
+TRACE Externalized rule logic for Object Injection via Serialization.

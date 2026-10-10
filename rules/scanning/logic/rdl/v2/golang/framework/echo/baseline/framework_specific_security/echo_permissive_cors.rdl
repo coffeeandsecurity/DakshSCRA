@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.golang.framework.echo.echo_permissive_cors VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "AllowOrigins\\s*:\\s*\\[\\]\\s*string\\{\\s*\"\\*\"\\s*\\}|AllowOrigins\\s*:\\s*\"\\*\"" "im"
+WHEN (TEXT_MISSING "AllowOriginFunc|allowedOrigins" "im" AND TEXT_MATCHES "AllowOrigins.*\"\\*\"|AllowAnyOrigin" "im")
+REPORT "Echo Permissive CORS"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

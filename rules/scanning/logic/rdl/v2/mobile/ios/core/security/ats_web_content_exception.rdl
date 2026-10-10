@@ -1,0 +1,8 @@
+VERSION 2
+RULE ios.ats-web-content-exception VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "<key>NSAllowsArbitraryLoadsInWebContent</key>" ""
+REPORT "ATS Web Content Exception"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

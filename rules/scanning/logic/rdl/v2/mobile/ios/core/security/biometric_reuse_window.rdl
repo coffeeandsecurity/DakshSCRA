@@ -1,0 +1,8 @@
+VERSION 2
+RULE ios.biometric-reuse-window VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\btouchIDAuthenticationAllowableReuseDuration\\s*=\\s*(?:[1-9]\\d*(?:\\.\\d+)?|0\\.\\d*[1-9]\\d*)\\b" ""
+REPORT "Biometric Authentication Reuse Window"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

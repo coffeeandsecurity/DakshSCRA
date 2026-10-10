@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.android.framework.retrofit.okhttp_body_level_logging_in_production VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "HttpLoggingInterceptor\\.Level\\.BODY" "im"
+WHEN TEXT_MISSING "BuildConfig\\.DEBUG|if.*debug|if.*DEBUG|FLAVOR" "im"
+REPORT "OkHttp Body-Level Logging in Production"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

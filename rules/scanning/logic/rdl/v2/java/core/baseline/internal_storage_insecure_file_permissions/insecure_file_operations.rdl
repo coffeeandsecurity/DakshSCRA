@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.java.core.insecure_file_operations VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "openFile(?:Output|Input)\\s*\\([^,]*,\\s*M(?:ODE_)?WORLD_(?:WRITEABLE|READABLE)" "im"
+WHEN TEXT_MISSING "EncryptedFile|openFileOutput.*MODE_PRIVATE|test|example" "im"
+REPORT "Insecure File Operations"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.common.core.insecure_sql_query_unsafe_string_concatenation VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)\\bSELECT\\b.*\\bFROM\\b.*\\bWHERE\\b.*\\+.*\\+" "im"
+WHEN TEXT_MATCHES "(?i)\\b(input|request|param|query|\\$_GET|\\$_POST|\\$_REQUEST)\\b" "im"
+REPORT "Insecure SQL Query: Unsafe String Concatenation"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

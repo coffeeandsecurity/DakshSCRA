@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.android.core.implicit_intent_carrying_sensitive_data VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "new\\s+Intent\\s*\\(\\s*\"[a-z][a-z._]+\"\\s*\\)" "im"
+WHEN (TEXT_MATCHES "putExtra.*(?:password|token|secret|key|credential|auth|ssn|card)" "im" AND TEXT_MISSING "setPackage\\s*\\(|setComponent\\s*\\(|setClassName\\s*\\(|createChooser" "im")
+REPORT "Implicit Intent Carrying Sensitive Data"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,10 @@
+VERSION 2
+RULE memory.uninitialized-use VERSION 1
+IN FUNCTION
+LET value BE VARIABLE MATCHES memory.uninitialized
+WHEN EXISTS CALL MATCHES memory.use AS use
+REQUIRE use READS value AND NOT initialized value
+REPORT "use of uninitialized memory"
+SEVERITY HIGH
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

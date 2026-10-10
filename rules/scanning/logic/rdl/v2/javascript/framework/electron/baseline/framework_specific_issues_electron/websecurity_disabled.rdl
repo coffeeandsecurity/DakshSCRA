@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.javascript.framework.electron.websecurity_disabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "webSecurity\\s*:\\s*false" "im"
+WHEN (TEXT_MISSING "test|development|localhost" "im" AND TEXT_MATCHES "webSecurity:\\s*false|allowRunningInsecureContent:\\s*true" "im")
+REPORT "webSecurity Disabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

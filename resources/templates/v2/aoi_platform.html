@@ -62,9 +62,13 @@
                     {% endif %}
                 </div>
 
+                {% if entry.security_impact %}
+                <div class="info-card issue"><div class="label">Security impact</div><div class="text">{{ entry.security_impact }}</div></div>
+                {% endif %}
+
                 {% if entry.dev_note %}
                 <div class="note-block">
-                    <span class="note-title">Developer note:</span> {{ entry.dev_note }}
+                    <span class="note-title">Recommended correction:</span> {{ entry.dev_note }}
                 </div>
                 {% endif %}
                 {% if entry.rev_note %}

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.php.core.insecure_mitigation_sql_injection_mysql_real_escape_string VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "mysql_real_escape_string" "im"
+WHEN TEXT_MATCHES "mysql_real_escape_string|addslashes" "im"
+REPORT "Insecure Mitigation: SQL Injection (mysql_real_escape_string)"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

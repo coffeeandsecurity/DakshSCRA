@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.dotnet.framework.blazor.ijsruntime_invokevoidasync_with_user_input VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "InvokeVoidAsync\\s*\\(\\s*[\"']\\s*eval\\s*[\"']|InvokeVoidAsync\\s*\\(\\s*[\"']\\s*Function\\s*[\"']" "im"
+WHEN (TEXT_MISSING "validate|sanitize|allowlist|trusted|HtmlEncoder|WebUtility\\.HtmlEncode" "im" AND TEXT_MISSING "test|example" "im")
+REPORT "IJSRuntime InvokeVoidAsync with User Input"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.xplat.reactnative.core.react_native_debug_mode_marker VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "__DEV__|NODE_ENV\\s*=\\s*[\\'\\\"]development[\\'\\\"]" "im"
+WHEN TEXT_MISSING "NODE_ENV\\s*=\\s*[\\'\\\"]production[\\'\\\"]" "im"
+REPORT "React Native Debug Mode Marker"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,11 @@
+VERSION 2
+RULE resource.use-after-close VERSION 1
+IN FUNCTION
+LET resource BE RESOURCE MATCHES resource.closeable
+STATE resource STARTS open
+TRANSITION resource.close(resource) FROM open TO closed
+VIOLATION resource.use(resource) WHILE closed
+REPORT "resource used after close"
+SEVERITY MEDIUM
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.common.core.sensitive_debug_information VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)\\.debug\\s*=\\s*True|\\$debug\\s*=\\s*true|DEBUG\\s*=\\s*True|IsDebuggingEnabled\\s*=\\s*true" "im"
+WHEN TEXT_MISSING "(?i)\\b(release|production)\\b" "im"
+REPORT "Sensitive Debug Information"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.php.core.deprecated_register_globals_directive VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bregister_globals\\b" "im"
+WHEN (TEXT_MATCHES "register_globals\\s*=\\s*On|register_globals\\s*=\\s*1" "im" AND TEXT_MISSING "# intentional" "im")
+REPORT "Deprecated register_globals Directive"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

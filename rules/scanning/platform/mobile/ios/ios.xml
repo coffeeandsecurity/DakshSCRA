@@ -3,7 +3,7 @@
         <rule>
             <name>App Transport Security Allows Arbitrary Loads</name>
             <regex>NSAllowsArbitraryLoads\s*&lt;/key&gt;\s*&lt;true\s*/&gt;</regex>
-            <rdl_ref>logic/mobile/ios/core/ats_arbitrary_loads.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/ios/core/ats_arbitrary_loads.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -15,15 +15,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects ATS configuration that allows unrestricted cleartext or weak transport.</rule_desc>
-            <vuln_desc>Disabling ATS protections can expose traffic to interception and man-in-the-middle attacks.</vuln_desc>
-            <developer>Keep ATS enabled and define minimal domain exceptions only when strictly required.</developer>
+            <rule_desc>The checked source contains a transport-security exception, insecure endpoint, or certificate-validation configuration. Resolve the effective policy and the connections it governs.</rule_desc>
+            <vuln_desc>An attacker on the network may read or alter affected traffic if sensitive data travels over cleartext or the connection accepts an untrusted server. Normal HTTPS endpoints and correctly implemented validation do not establish exposure.</vuln_desc>
+            <developer>Use HTTPS with normal certificate-chain and hostname verification. Remove permissive production callbacks and broad transport exceptions; restrict any justified exception to a documented, non-sensitive endpoint.</developer>
             <reviewer>Review Info. plist ATS entries and validate that all exceptions are justified and limited. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure URL Scheme Registration</name>
             <regex>CFBundleURLSchemes</regex>
-            <rdl_ref>logic/mobile/ios/core/insecure_url_scheme_registration.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/ios/core/insecure_url_scheme_registration.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -35,15 +35,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects custom URL scheme declarations that may require deep-link validation checks.</rule_desc>
-            <vuln_desc>Improper deep-link validation can allow unauthorized app actions or data exposure.</vuln_desc>
-            <developer>Validate all deep-link parameters, enforce allowlists, and avoid sensitive actions without auth checks.</developer>
+            <rule_desc>The code handles a link, redirect, or externally selected navigation target. Validate the effective destination and any action triggered by the receiving handler.</rule_desc>
+            <vuln_desc>A crafted destination or link may direct users to a phishing site, leak URL-carried secrets, or trigger unauthorized operations if routing trusts external parameters without the required access checks.</vuln_desc>
+            <developer>Allowlist schemes, hosts, paths, and operations. Validate parsed link parameters, avoid credentials in URLs, and require authentication and authorization before sensitive actions.</developer>
             <reviewer>Assess deep-link handlers for authentication, authorization, and input validation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Application Queries Schemes Broad Allowlist</name>
             <regex>LSApplicationQueriesSchemes</regex>
-            <rdl_ref>logic/mobile/ios/core/application_queries_schemes_broad_allowlist.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/ios/core/application_queries_schemes_broad_allowlist.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -55,9 +55,9 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects URL scheme query allowlists in Info.plist.</rule_desc>
-            <vuln_desc>Overly broad query scheme allowlists may increase app fingerprinting and data exposure risks.</vuln_desc>
-            <developer>Restrict queried URL schemes to only those required for business functionality.</developer>
+            <rule_desc>Application configuration permits querying a broad set of URL schemes associated with other applications.</rule_desc>
+            <vuln_desc>Collecting the resulting application-presence information may reveal aspects of a user’s installed applications or behavior if the collection exceeds the authorized feature.</vuln_desc>
+            <developer>Limit query schemes to required integrations, avoid collecting an unnecessary application inventory, and document the purpose and handling of resulting information.</developer>
             <reviewer>Ensure scheme allowlist entries are minimal and justified. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -65,7 +65,7 @@
         <rule>
             <name>Keychain Accessibility Too Permissive</name>
             <regex>kSecAttrAccessible\s*:\s*kSecAttrAccessibleAlways</regex>
-            <rdl_ref>logic/mobile/ios/core/keychain_accessibility_too_permissive.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/ios/core/keychain_accessibility_too_permissive.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -77,15 +77,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects keychain entries with permissive accessibility settings.</rule_desc>
-            <vuln_desc>Overly permissive keychain accessibility can expose secrets when device security state is weaker.</vuln_desc>
-            <developer>Use stricter keychain accessibility (for example, WhenUnlocked or AfterFirstUnlock variants as required).</developer>
+            <rule_desc>The application stores sensitive values or configures protection for persistent data. Determine the actual storage location, backup policy, and lock-state access restrictions.</rule_desc>
+            <vuln_desc>An actor with access to unprotected application files, backups, or overly broad keychain access may recover credentials or private records and use them outside the intended trust boundary.</vuln_desc>
+            <developer>Use the platform credential or key store for secrets and appropriate authenticated encryption and file protection for private records. Minimize stored data, backup exposure, and lock-state accessibility.</developer>
             <reviewer>Check keychain storage options for least-privilege accessibility settings. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>UserDefaults Used for Sensitive Data</name>
             <regex>\b(?:UserDefaults\.standard|NSUserDefaults\s+standardUserDefaults)</regex>
-            <rdl_ref>logic/mobile/ios/core/userdefaults_used_for_sensitive_data.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/ios/core/userdefaults_used_for_sensitive_data.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -97,15 +97,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects UserDefaults storage usage which may be inappropriate for secrets.</rule_desc>
-            <vuln_desc>Storing secrets in UserDefaults can expose credentials or tokens through backups or local extraction.</vuln_desc>
-            <developer>Store sensitive values in Keychain and apply encryption for high-risk data.</developer>
+            <rule_desc>The application stores sensitive values or configures protection for persistent data. Determine the actual storage location, backup policy, and lock-state access restrictions.</rule_desc>
+            <vuln_desc>An actor with access to unprotected application files, backups, or overly broad keychain access may recover credentials or private records and use them outside the intended trust boundary.</vuln_desc>
+            <developer>Use the platform credential or key store for secrets and appropriate authenticated encryption and file protection for private records. Minimize stored data, backup exposure, and lock-state accessibility.</developer>
             <reviewer>Verify that tokens, passwords, and keys are not persisted in UserDefaults. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>WebView JavaScript Enabled for Dynamic Content</name>
             <regex>WKPreferences\(\)\.javaScriptEnabled\s*=\s*true|setJavaScriptEnabled\s*:\s*YES</regex>
-            <rdl_ref>logic/mobile/ios/core/webview_javascript_enabled_for_dynamic_content.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/ios/core/webview_javascript_enabled_for_dynamic_content.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -117,15 +117,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>magenta</highlight_color>
             </scan_config>
-            <rule_desc>Detects explicit JavaScript enablement in embedded web views.</rule_desc>
-            <vuln_desc>Unsafe web view configurations can increase XSS-style abuse and local data access risk.</vuln_desc>
-            <developer>Disable JavaScript unless required and enforce strict navigation/content policies.</developer>
+            <rule_desc>The application renders web content, executes scripts, or exposes a native messaging interface. Resolve navigation trust, origin isolation, and validation at the native boundary.</rule_desc>
+            <vuln_desc>Attacker-controlled web content may execute in a trusted context or invoke native operations, exposing session data or application privileges when isolation and per-operation checks are insufficient.</vuln_desc>
+            <developer>Restrict navigation and message origins to required trusted sources. Avoid dynamic script construction, minimize native bridge methods, validate message inputs, and authorize sensitive native operations.</developer>
             <reviewer>Review web view usage for script injection risk and trusted-content restrictions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Certificate Validation Override</name>
             <regex>didReceive\s+challenge|NSURLSessionAuthChallengeDisposition\.useCredential</regex>
-            <rdl_ref>logic/mobile/ios/core/certificate_validation_override.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/ios/core/certificate_validation_override.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -137,15 +137,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects custom TLS challenge handling that may weaken certificate validation.</rule_desc>
-            <vuln_desc>Improper challenge handling can bypass TLS trust and enable MITM attacks.</vuln_desc>
-            <developer>Use system trust evaluation and pinning patterns where appropriate; avoid unconditional trust.</developer>
+            <rule_desc>The checked source contains a transport-security exception, insecure endpoint, or certificate-validation configuration. Resolve the effective policy and the connections it governs.</rule_desc>
+            <vuln_desc>An attacker on the network may read or alter affected traffic if sensitive data travels over cleartext or the connection accepts an untrusted server. Normal HTTPS endpoints and correctly implemented validation do not establish exposure.</vuln_desc>
+            <developer>Use HTTPS with normal certificate-chain and hostname verification. Remove permissive production callbacks and broad transport exceptions; restrict any justified exception to a documented, non-sensitive endpoint.</developer>
             <reviewer>Inspect challenge handlers to confirm strict certificate and host validation logic. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>UIPasteboard Write with Sensitive Data</name>
             <regex>UIPasteboard\.general\.(string|setValue|setData|setObjects)\s*[=\(]</regex>
-            <rdl_ref>logic/mobile/ios/core/uipasteboard_write_with_sensitive_data.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/ios/core/uipasteboard_write_with_sensitive_data.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -157,15 +157,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects writes of sensitive data to the system pasteboard without expiration or local-only restrictions.</rule_desc>
-            <vuln_desc>Writing credentials or tokens to UIPasteboard.general without expiration or localOnly makes them accessible to any app on the device and synced across devices via Handoff.</vuln_desc>
-            <developer>Set UIPasteboardOptionLocalOnly and UIPasteboardOptionExpirationDate when writing sensitive values, or avoid writing secrets to the pasteboard entirely.</developer>
+            <rule_desc>The application reads the shared clipboard or pasteboard. Review whether the read follows an explicit paste action and whether the returned content enters logs, storage, or network requests.</rule_desc>
+            <vuln_desc>Passwords, payment details, or other private content copied from another application could be collected or disclosed if clipboard reads occur without user intent or the content is sent to an unauthorized recipient. Platform access restrictions and the actual handling of the data determine exposure.</vuln_desc>
+            <developer>Read clipboard content only for an explicit user paste action. Process only the value needed for that action, avoid logging or transmitting it unnecessarily, and respect platform clipboard access restrictions.</developer>
             <reviewer>Confirm that any pasteboard writes containing sensitive data set localOnly and a short expiration. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>evaluateJavaScript with Potentially User-Controlled Input</name>
             <regex>\.evaluateJavaScript\s*\(</regex>
-            <rdl_ref>logic/mobile/ios/core/evaluatejavascript_with_potentially_user_controlled_input.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/ios/core/evaluatejavascript_with_potentially_user_controlled_input.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -177,15 +177,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects evaluateJavaScript calls that may execute user-controlled or unsanitized script strings.</rule_desc>
-            <vuln_desc>Injecting user-controlled values into evaluateJavaScript strings can lead to DOM-based XSS, data exfiltration via the JavaScript bridge, or local file access within the web view context.</vuln_desc>
-            <developer>Build script strings from static templates only. Never interpolate user input directly into JavaScript strings passed to evaluateJavaScript.</developer>
+            <rule_desc>The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.</rule_desc>
+            <vuln_desc>If an attacker controls interpreted syntax or the operation selected, code or commands may run with the application’s privileges, allowing data theft, state changes, or service disruption.</vuln_desc>
+            <developer>Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates or expressions.</developer>
             <reviewer>Inspect the script string construction to determine if user-controlled data flows in without sanitization or encoding. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Keychain Item Missing Access Control Object</name>
             <regex>\bSecItemAdd\s*\(|\bSecItemUpdate\s*\(</regex>
-            <rdl_ref>logic/mobile/ios/core/keychain_item_missing_access_control_object.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/ios/core/keychain_item_missing_access_control_object.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -197,15 +197,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects Keychain item storage without an explicit access control object.</rule_desc>
-            <vuln_desc>Storing Keychain items without kSecAttrAccessControl means no biometric or passcode gate is applied, allowing access whenever the device is unlocked. High-sensitivity items should require user presence.</vuln_desc>
-            <developer>Use SecAccessControlCreateWithFlags to create an access control object with kSecAccessControlUserPresence or biometricAny, and pass it as kSecAttrAccessControl in the query dictionary.</developer>
+            <rule_desc>The application stores sensitive values or configures protection for persistent data. Determine the actual storage location, backup policy, and lock-state access restrictions.</rule_desc>
+            <vuln_desc>An actor with access to unprotected application files, backups, or overly broad keychain access may recover credentials or private records and use them outside the intended trust boundary.</vuln_desc>
+            <developer>Use the platform credential or key store for secrets and appropriate authenticated encryption and file protection for private records. Minimize stored data, backup exposure, and lock-state accessibility.</developer>
             <reviewer>Confirm high-sensitivity Keychain writes include a SecAccessControlRef requiring user authentication. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>openURL with Unvalidated Input Scheme</name>
             <regex>\bUIApplication\.shared\.open\s*\(|\bUIApplication\.sharedApplication\(\)\.openURL\s*\(</regex>
-            <rdl_ref>logic/mobile/ios/core/openurl_with_unvalidated_input_scheme.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/ios/core/openurl_with_unvalidated_input_scheme.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -217,9 +217,9 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects openURL calls that may open user-controlled or unvalidated URL schemes.</rule_desc>
-            <vuln_desc>Opening unvalidated URLs can invoke arbitrary third-party app schemes, navigate to phishing pages, or trigger app actions via javascript: or data: schemes if not restricted.</vuln_desc>
-            <developer>Validate the URL scheme against a strict allowlist before calling open(). Reject schemes outside of https and known safe custom schemes.</developer>
+            <rule_desc>The code handles a link, redirect, or externally selected navigation target. Validate the effective destination and any action triggered by the receiving handler.</rule_desc>
+            <vuln_desc>A crafted destination or link may direct users to a phishing site, leak URL-carried secrets, or trigger unauthorized operations if routing trusts external parameters without the required access checks.</vuln_desc>
+            <developer>Allowlist schemes, hosts, paths, and operations. Validate parsed link parameters, avoid credentials in URLs, and require authentication and authorization before sensitive actions.</developer>
             <reviewer>Trace the URL origin and check that scheme, host, and path are validated before calling open. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -227,7 +227,7 @@
         <rule>
             <name>Debug Logging in Production Code Paths</name>
             <regex>\b(?:NSLog\(|print\(|debugPrint\()</regex>
-            <rdl_ref>logic/mobile/ios/core/debug_logging_in_production_code_paths.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/ios/core/debug_logging_in_production_code_paths.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -239,15 +239,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects debug logging statements that may leak runtime internals or sensitive data.</rule_desc>
-            <vuln_desc>Verbose logs can disclose user data, API details, and security-relevant internals.</vuln_desc>
-            <developer>Gate debug logging by build configuration and redact sensitive values.</developer>
+            <rule_desc>The code writes diagnostic data or exposes detailed errors. Establish the values emitted, production configuration, and recipients of the output.</rule_desc>
+            <vuln_desc>Readers of exposed diagnostics may obtain credentials, private records, internal paths, or implementation details that enable account misuse or targeted attacks.</vuln_desc>
+            <developer>Keep sensitive values and detailed errors out of user-facing responses and routine logs. Redact before emission, restrict diagnostic access, and verify production logging configuration.</developer>
             <reviewer>Check logging behavior for production builds and sensitive-data exposure. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Associated Domains Entitlement Present</name>
             <regex>com\.apple\.developer\.associated-domains</regex>
-            <rdl_ref>logic/mobile/ios/core/associated_domains_entitlement_present.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/ios/core/associated_domains_entitlement_present.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -259,15 +259,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects associated domains entitlement that requires strict domain ownership and validation.</rule_desc>
-            <vuln_desc>Misconfigured universal links may enable unintended app routing or phishing workflows.</vuln_desc>
-            <developer>Configure only trusted domains and validate universal-link handling logic securely.</developer>
+            <rule_desc>The code handles a link, redirect, or externally selected navigation target. Validate the effective destination and any action triggered by the receiving handler.</rule_desc>
+            <vuln_desc>A crafted destination or link may direct users to a phishing site, leak URL-carried secrets, or trigger unauthorized operations if routing trusts external parameters without the required access checks.</vuln_desc>
+            <developer>Allowlist schemes, hosts, paths, and operations. Validate parsed link parameters, avoid credentials in URLs, and require authentication and authorization before sensitive actions.</developer>
             <reviewer>Verify entitlement scope and universal-link validation/authorization checks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Push Notification Entitlement Enabled</name>
             <regex>aps-environment</regex>
-            <rdl_ref>logic/mobile/ios/core/push_notification_entitlement_enabled.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/ios/core/push_notification_entitlement_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -279,9 +279,9 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects push notification entitlement usage.</rule_desc>
-            <vuln_desc>Push workflows can expose sensitive data if payload validation and notification handling are weak.</vuln_desc>
-            <developer>Ensure notification payloads avoid secrets and enforce secure action handling on receipt.</developer>
+            <rule_desc>The application declares push-notification support. This is a capability declaration rather than evidence of insecure notification handling.</rule_desc>
+            <vuln_desc>Private notification payloads may be disclosed on lock screens or through an unauthorized recipient, and crafted notification actions may affect state if handler authorization is inadequate.</vuln_desc>
+            <developer>Keep secrets out of notification payloads, verify device-token ownership and delivery recipients, and require authorization before executing sensitive notification actions.</developer>
             <reviewer>Review push handlers for sensitive data exposure and authorization checks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -289,7 +289,7 @@
         <rule>
             <name>Deprecated UIWebView Usage</name>
             <regex>\bUIWebView\b|UIWebViewDelegate</regex>
-            <rdl_ref>logic/mobile/ios/core/deprecated_uiwebview_usage.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/ios/core/deprecated_uiwebview_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -301,15 +301,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects use of the deprecated UIWebView class which has known security vulnerabilities.</rule_desc>
-            <vuln_desc>UIWebView is deprecated since iOS 12 and removed in iOS 15+ apps submitted to the App Store. It lacks modern security controls present in WKWebView, including process isolation, improved content security policy support, and no support for modern TLS configurations.</vuln_desc>
-            <developer>Replace UIWebView with WKWebView. Migrate delegate methods to WKNavigationDelegate and WKUIDelegate equivalents.</developer>
+            <rule_desc>The application renders web content, executes scripts, or exposes a native messaging interface. Resolve navigation trust, origin isolation, and validation at the native boundary.</rule_desc>
+            <vuln_desc>Attacker-controlled web content may execute in a trusted context or invoke native operations, exposing session data or application privileges when isolation and per-operation checks are insufficient.</vuln_desc>
+            <developer>Restrict navigation and message origins to required trusted sources. Avoid dynamic script construction, minimize native bridge methods, validate message inputs, and authorize sensitive native operations.</developer>
             <reviewer>Confirm all web view usage has been migrated to WKWebView. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure Random Number Generation</name>
             <regex>\barc4random\s*\(|\barc4random_uniform\s*\(|\brand\s*\(|\bsrand\s*\(|\bdrand48\s*\(</regex>
-            <rdl_ref>logic/mobile/ios/core/insecure_random_number_generation.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/ios/core/insecure_random_number_generation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -321,15 +321,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects use of non-cryptographically secure random functions in security-sensitive contexts.</rule_desc>
-            <vuln_desc>arc4random and rand() are not suitable for cryptographic purposes. Using them for tokens, keys, or nonces produces predictable values that attackers can guess or enumerate.</vuln_desc>
-            <developer>Use SecRandomCopyBytes() or CryptoKit's SymmetricKey/Nonce APIs for all cryptographically sensitive random generation.</developer>
+            <rule_desc>The checked source uses a random generator, cryptographic primitive, or initialization value whose suitability depends on its security purpose and inputs.</rule_desc>
+            <vuln_desc>Predictable secrets or unsuitable cryptographic parameters may enable credential guessing, reveal plaintext, or weaken integrity when used to protect security-sensitive data. Non-security hashes and identifiers do not establish this condition.</vuln_desc>
+            <developer>Use a cryptographically secure generator for secrets and modern purpose-appropriate cryptography. Use unique nonces, protected keys, and a vetted password-hashing scheme where passwords are stored.</developer>
             <reviewer>Verify security-critical random values use SecRandomCopyBytes or CryptoKit equivalents. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Hardcoded Cryptographic Key or Secret</name>
             <regex>(?i)(apiKey|api_key|secret|privateKey|encryptionKey|password|token)\s*[:=]\s*["'][A-Za-z0-9/+]{16,}["']</regex>
-            <rdl_ref>logic/mobile/ios/core/hardcoded_cryptographic_key_or_secret.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/ios/core/hardcoded_cryptographic_key_or_secret.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>none</context_type>
@@ -339,15 +339,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects likely hardcoded cryptographic keys or credentials in iOS Swift/Objective-C source.</rule_desc>
-            <vuln_desc>Hardcoded keys and secrets embedded in app source can be extracted from the compiled binary by attackers using static analysis tools.</vuln_desc>
-            <developer>Store secrets in Keychain or retrieve them at runtime from a secure backend. Never embed cryptographic material in source code.</developer>
+            <rule_desc>The checked source or build configuration embeds potentially sensitive credential or key material. Determine whether it is active and whether it reaches distributed artifacts or logs.</rule_desc>
+            <vuln_desc>A party who can read exposed source, artifacts, configuration, or logs may recover active secrets and access the protected service or decrypt data with the secret owner’s privileges.</vuln_desc>
+            <developer>Remove active secrets from source and build layers, rotate exposed values, and load replacements through a restricted secret-management facility. Use narrowly privileged, short-lived credentials.</developer>
             <reviewer>Verify no long-lived secrets or keys are embedded as string literals. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Certificate Pinning Using Leaf Certificate Hash Only</name>
             <regex>\bSecCertificateCopyData\s*\(</regex>
-            <rdl_ref>logic/mobile/ios/core/certificate_pinning_using_leaf_certificate_hash_only.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/ios/core/certificate_pinning_using_leaf_certificate_hash_only.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -359,9 +359,9 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects certificate pinning implementations that copy leaf certificate data without extracting and pinning the public key.</rule_desc>
-            <vuln_desc>Pinning the full leaf certificate DER hash breaks on every certificate renewal. Public key (SPKI) pinning is resilient to renewals and is the recommended approach. Leaf-only implementations also fail to cover intermediate rotation scenarios.</vuln_desc>
-            <developer>Pin the Subject Public Key Info (SPKI) hash rather than the full certificate. Use SecCertificateCopyKey or SecCertificateCopyPublicKey to extract the key and compare its SHA-256 hash against a pinned set.</developer>
+            <rule_desc>The code configures an additional server or update authenticity mechanism. Confirm the intended trust boundary and effective verification policy.</rule_desc>
+            <vuln_desc>If the intended authenticity check is absent or can be bypassed, a party controlling an otherwise accepted certificate or update source may impersonate a trusted endpoint or supply unauthorized code. Pinning absence alone does not prove broken TLS.</vuln_desc>
+            <developer>Document the required authenticity policy, verify signatures or the intended certificate or public-key pins, and test key rotation and failure behavior without disabling normal platform validation.</developer>
             <reviewer>Confirm the pinning implementation compares public key hashes (SPKI), not raw certificate data. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

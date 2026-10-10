@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.xplat.reactnative.core.ats_arbitrary_loads_enabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "NSAllowsArbitraryLoads\\s*</key>\\s*<true\\s*/>" "im"
+REPORT "ATS Arbitrary Loads Enabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.filepaths.core.authorization VERSION 1
+IN PATH
+WHEN TEXT_MATCHES "(?i)(authorization|authz|access_control)" "im"
+WHEN (TEXT_MATCHES "(?i)(/|\\\\\\\\).*(authz|authorization|access|permission|policy)" "im" AND TEXT_MISSING "(?i)(/docs?/|/examples?/|/samples?/|/tests?/)" "im")
+REPORT "Authorization"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.dotnet.core.insecure_deserialization_binaryformatter VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "BinaryFormatter\\s*\\(\\s*\\)|new\\s+BinaryFormatter|BinaryFormatter\\.Deserialize\\s*\\(" "im"
+WHEN (TEXT_MISSING "SerializationBinder|AllowType|TypeNameHandling\\.None|Activator\\.CreateInstance" "im" AND TEXT_MISSING "test|example" "im")
+REPORT "Insecure Deserialization: BinaryFormatter"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

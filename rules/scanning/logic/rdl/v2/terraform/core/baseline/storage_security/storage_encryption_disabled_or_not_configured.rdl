@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.terraform.core.storage_encryption_disabled_or_not_configured VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "resource\\s+\"aws_s3_bucket\"\\s*\"[^\"]+\"\\s*\\{" "im"
+WHEN TEXT_MISSING "server_side_encryption_configuration|aws_s3_bucket_server_side_encryption_configuration" "im"
+REPORT "Storage Encryption Disabled or Not Configured"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

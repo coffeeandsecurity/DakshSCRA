@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.android.core.unsafe_intent_filters VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "android.intent.action.VIEW" "im"
+REPORT "Unsafe Intent Filters"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

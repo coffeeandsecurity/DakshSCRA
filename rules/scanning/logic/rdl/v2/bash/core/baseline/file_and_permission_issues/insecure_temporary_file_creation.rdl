@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.bash.core.insecure_temporary_file_creation VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?:/tmp/|/var/tmp/)[^\"'\\s]*\\$\\w|>\\s*/tmp/\\w" "im"
+WHEN TEXT_MISSING "mktemp" "im"
+REPORT "Insecure Temporary File Creation"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

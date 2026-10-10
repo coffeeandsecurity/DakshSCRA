@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.javascript.core.untrusted_data_in_document_getelementbyid_value VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "document\\.getElementById\\(.+\\)\\.value" "im"
+WHEN (TEXT_MATCHES "(innerHTML|outerHTML|document\\.write|eval\\(|setTimeout\\(|setInterval\\(|fetch\\(|XMLHttpRequest|location\\.)" "im" AND TEXT_MISSING "(DOMPurify|sanitize|encodeURI|encodeURIComponent|textContent|innerText)" "im")
+REPORT "Untrusted Data in 'document.getElementById().value'"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

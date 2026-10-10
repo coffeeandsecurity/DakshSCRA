@@ -32,6 +32,7 @@ def _sanitize_project_id(value):
     return slug[:96]
 
 sourcedir = ''       # To be used for storing project directory name
+source_root = ''     # Absolute target root for bounded cross-file analysis
 
 verbosity = '1'
 
@@ -93,10 +94,14 @@ project_id = _sanitize_project_id(os.environ.get("DAKSH_PROJECT_ID", ""))
 run_id = _sanitize_project_id(os.environ.get("DAKSH_RUN_ID", ""))
 
 # Log File paths
+from utils.output_mode import web_scan
+
 runtime_dirpath = runtime_base_dir
 reports_dirpath = reports_base_dir / project_id if project_id else reports_base_dir
 if run_id:
     reports_dirpath = reports_dirpath / run_id
+if web_scan():
+    reports_dirpath = runtime_dirpath.parent / 'results'
 discovered_Fpaths = runtime_dirpath / "filepaths.log"
 discovered_clean_Fpaths = runtime_dirpath / "filepaths.txt"
 
@@ -174,6 +179,8 @@ def configure_project_paths(project_hint=None, run_hint=None):
     reports_dirpath = reports_base_dir / project_id if project_id else reports_base_dir
     if run_id:
         reports_dirpath = reports_dirpath / run_id
+    if web_scan():
+        reports_dirpath = runtime_dirpath.parent / 'results'
 
     # discovered_Fpaths, discovered_clean_Fpaths, inventory_Fpathext,
     # scanSummary_Fpath, reconOutput_Fpath, reconSummary_Fpath, and

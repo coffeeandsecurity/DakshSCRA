@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.xplat.reactnative.core.react_native_webview_origin_wildcard VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "originWhitelist\\s*=\\s*\\{?\\s*\\[\\s*[\\'\\\"]\\*[\\'\\\"]" "im"
+WHEN TEXT_MISSING "onShouldStartLoadWithRequest" "im"
+REPORT "React Native WebView Origin Wildcard"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

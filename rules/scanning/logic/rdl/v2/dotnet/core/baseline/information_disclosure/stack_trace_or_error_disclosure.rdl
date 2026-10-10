@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.dotnet.core.stack_trace_or_error_disclosure VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)(Response\\.Write\\s*\\([^)]{0,200}StackTrace|ex\\.ToString\\(\\)|Console\\.WriteLine\\([^)]{0,200}Exception[^)]*\\)|throw new \\w*Exception\\([^)]{0,200}\\))" "im"
+WHEN (TEXT_MISSING "ini_set.*display_errors.*0|error_reporting\\s*\\(\\s*0\\s*\\)|log_errors|try.*catch" "im" AND TEXT_MISSING "development|localhost" "im")
+REPORT "Stack Trace or Error Disclosure"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

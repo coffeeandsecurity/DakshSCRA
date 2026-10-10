@@ -1,0 +1,10 @@
+VERSION 2
+RULE injection.regular-expression VERSION 1
+IN DATA_FLOW
+LET input BE VARIABLE MATCHES input.untrusted
+LET sink BE CALL MATCHES regex.execution
+WHEN input FLOWS TO sink
+REPORT "regular expression injection"
+SEVERITY MEDIUM
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

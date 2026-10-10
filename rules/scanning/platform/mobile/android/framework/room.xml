@@ -3,7 +3,7 @@
         <rule>
             <name>RawQuery with User-Controlled Input</name>
             <regex>@RawQuery|rawQuery\s*\(\s*[^,)]*\+|rawQuery\s*\(\s*[^,)]*\$\{</regex>
-            <rdl_ref>logic/mobile/android/framework/room/rawquery_with_user_controlled_input.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/android/framework/room/rawquery_with_user_controlled_input.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -15,15 +15,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects use of Room @RawQuery or rawQuery() with potential for unsanitized input.</rule_desc>
-            <vuln_desc>@RawQuery annotations accept arbitrary SQL strings at runtime. When query strings are built from user input without parameterization, SQL injection is possible in the local SQLite database, potentially exposing or corrupting stored data.</vuln_desc>
-            <developer>Avoid @RawQuery where possible. Use @Query with compile-time verified SQL and typed parameters. If @RawQuery is necessary, pass a SupportSQLiteQuery with bound parameters using SimpleSQLiteQuery.</developer>
+            <rule_desc>The code constructs a query, selection, or ordering clause with values that may be externally controlled. Resolve whether those values enter syntax or bound data.</rule_desc>
+            <vuln_desc>Attacker-controlled query syntax may change selected records, bypass intended filters, or modify stored data with the connection or provider’s privileges.</vuln_desc>
+            <developer>Bind data values using the query API’s parameter mechanism. Choose ordering columns and other identifiers from a fixed allowlist, and enforce record-level authorization.</developer>
             <reviewer>Confirm @RawQuery implementations construct queries from controlled sources or use SupportSQLiteQuery with bound arguments. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Database Without Encryption</name>
             <regex>Room\.databaseBuilder\s*\(|Room\.inMemoryDatabaseBuilder\s*\(</regex>
-            <rdl_ref>logic/mobile/android/framework/room/database_without_encryption.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/android/framework/room/database_without_encryption.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -35,9 +35,9 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects Room database creation without an encrypted database factory.</rule_desc>
-            <vuln_desc>Unencrypted Room databases are stored as plaintext SQLite files on the device. On rooted devices or via USB debugging with adb backup, all database contents are accessible without authentication.</vuln_desc>
-            <developer>Use SQLCipher for Android with Room's SupportFactory to encrypt the database at rest: val factory = SupportFactory(SQLiteDatabase.getBytes(passphrase.toCharArray())).</developer>
+            <rule_desc>The application stores sensitive values or configures protection for persistent data. Determine the actual storage location, backup policy, and lock-state access restrictions.</rule_desc>
+            <vuln_desc>An actor with access to unprotected application files, backups, or overly broad keychain access may recover credentials or private records and use them outside the intended trust boundary.</vuln_desc>
+            <developer>Use the platform credential or key store for secrets and appropriate authenticated encryption and file protection for private records. Minimize stored data, backup exposure, and lock-state accessibility.</developer>
             <reviewer>Confirm Room databases containing sensitive data use an encrypted storage backend. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

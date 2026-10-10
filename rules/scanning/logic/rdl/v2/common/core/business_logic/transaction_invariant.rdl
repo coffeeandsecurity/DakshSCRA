@@ -1,0 +1,10 @@
+VERSION 2
+RULE business.transaction-invariant VERSION 1
+IN PROJECT
+LET transaction BE RESOURCE MATCHES business.transaction
+WHEN transaction.commits transaction
+REQUIRE NOT invariant.preserved transaction
+REPORT "transaction violates a business invariant"
+SEVERITY HIGH
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

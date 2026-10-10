@@ -1,3 +1,4 @@
+import FlowView from './FlowView'
 import { useEffect, useMemo, useState } from 'react'
 
 const SEVERITY_ORDER = ['critical', 'high', 'medium', 'low']
@@ -432,7 +433,6 @@ function FamilySummary({ family, open, onToggle }) {
 
 function InstanceDetail({ item }) {
   if (!item) return <div className="empty-msg">Choose an instance to inspect the exact sink path and trace context.</div>
-  const pathGroups = pathByFile(item.path)
   const nodes = (() => {
     const path = Array.isArray(item.path) ? item.path.filter(Boolean) : []
     if (!path.length) {
@@ -487,6 +487,10 @@ function InstanceDetail({ item }) {
         </div>
       </div>
 
+      {item.issue_description ? <div className="vg-section"><div className="vg-section-label">Issue description</div><p>{item.issue_description}</p></div> : null}
+      {item.security_impact ? <div className="vg-section"><div className="vg-section-label">Security impact</div><p>{item.security_impact}</p></div> : null}
+      {item.recommendation ? <div className="vg-section"><div className="vg-section-label">Recommended correction</div><p>{item.recommendation}</p></div> : null}
+      <FlowView steps={item.path || []} title="Vulnerability trace">{({steps}) => { const pathGroups = pathByFile(steps); return <>
       <div className="vg-trace">
         <div className="vg-section-label">Graphical Taint Path</div>
         <div className="vg-trace-row">
@@ -550,6 +554,8 @@ function InstanceDetail({ item }) {
           </div>
         </div>
       ) : null}
+
+      </> }}</FlowView>
 
       {(item.attack_vectors || []).length ? (
         <div className="vg-chip-row">

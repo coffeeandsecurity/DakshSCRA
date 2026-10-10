@@ -1,0 +1,8 @@
+VERSION 2
+RULE android.retrofit.hostname-check-disabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bhostnameVerifier\\s*\\{[^}\\n]{0,100}(?:->\\s*)true\\s*\\}" ""
+REPORT "OkHttp Hostname Verifier Always Accepts"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

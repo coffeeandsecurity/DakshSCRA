@@ -1,0 +1,10 @@
+VERSION 2
+RULE baseline.mobile.android.core.cleartext_traffic VERSION 1
+IN FILE
+WHEN FILE_NAME_IS "AndroidManifest.xml"
+WHEN TEXT_MATCHES "android:usesCleartextTraffic\\s*=\\s*\"(true|TRUE)\"" "i"
+WHEN PROJECT_OBSERVATION "**/network_security_config*.xml"
+REPORT "Insecure Network Traffic"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

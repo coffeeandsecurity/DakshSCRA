@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.cpp.core.access_to_freed_memory_2 VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bfree\\s*\\(|delete\\s*\\[?\\]?" "im"
+WHEN TEXT_MISSING "=\\s*nullptr|=\\s*NULL|unique_ptr|shared_ptr" "im"
+REPORT "Access to Freed Memory"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

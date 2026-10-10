@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.xplat.flutter.core.webview_unrestricted_javascript_mode VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "JavaScriptMode\\.unrestricted" "im"
+WHEN TEXT_MISSING "navigationDelegate|onNavigationRequest|allowList|trustedOrigins|shouldOverrideUrlLoading" "im"
+REPORT "WebView Unrestricted JavaScript Mode"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

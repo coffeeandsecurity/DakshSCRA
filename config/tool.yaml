@@ -1,7 +1,7 @@
 tool_name: Daksh SCRA (Source Code Review Assist)
 author: Debasis Mohanty (d3basis.m0hanty@gmail.com)
-release: 0.38
-release_date: 2026-08-23
+release: 0.39
+release_date: 2026-10-10
 display:
   # Timezone used for all timestamps in CLI output and reports.
   # Leave empty to use the server's local time (default).
@@ -31,7 +31,6 @@ analysis:
   # - professional_mode : light professional theme
   # - both              : generate both theme variants for comparison
   report_theme: hacker_mode
-  # Safety limits to prevent unbounded analysis on large codebases.
-  # Increase these values if you want deeper coverage on bigger repos.
-  max_files_per_platform: 300
-  max_functions_per_platform: 1500
+  # Zero scans every discovered file/function. Positive values explicitly restrict coverage.
+  max_files_per_platform: 0
+  max_functions_per_platform: 0

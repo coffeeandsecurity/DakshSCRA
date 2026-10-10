@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.python.framework.flask.flask_sql_injection_sink VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\.execute\\(\\s*f[\\'\\\"]|\\.execute\\(\\s*[^\\)]*%\\s*\\(|raw\\(\\s*f[\\'\\\"]" "im"
+WHEN TEXT_MISSING "paramstyle|cursor\\.execute\\s*\\(.*%s.*,|bindparams|params=" "im"
+REPORT "Flask SQL Injection Sink"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

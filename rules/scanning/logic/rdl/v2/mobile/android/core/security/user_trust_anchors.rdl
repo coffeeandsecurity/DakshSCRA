@@ -1,0 +1,8 @@
+VERSION 2
+RULE android.user-trust-anchors VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "<certificates\\b[^>]{0,300}\\bsrc\\s*=\\s*[\"\\x27]user[\"\\x27]" ""
+REPORT "User-Installed Certificates Trusted"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

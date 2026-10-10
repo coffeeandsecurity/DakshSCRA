@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.android.framework.jetpack.android_webview_file_url_universal_access VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "setAllowUniversalAccessFromFileURLs\\(\\s*true\\s*\\)|setAllowFileAccessFromFileURLs\\(\\s*true\\s*\\)" "im"
+WHEN (TEXT_MISSING "setAllowUniversalAccessFromFileURLs\\(\\s*false\\s*\\)" "im" AND TEXT_MISSING "setAllowFileAccessFromFileURLs\\(\\s*false\\s*\\)" "im")
+REPORT "Android WebView File URL Universal Access"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

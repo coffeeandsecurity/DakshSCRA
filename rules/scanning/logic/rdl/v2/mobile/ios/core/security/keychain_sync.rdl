@@ -1,0 +1,8 @@
+VERSION 2
+RULE ios.keychain-sync VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bkSecAttrSynchronizable\\s*(?:\\]\\s*=|:|=)\\s*(?:true\\b|kCFBooleanTrue\\b|@YES\\b)" ""
+REPORT "Keychain Synchronization Enabled"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

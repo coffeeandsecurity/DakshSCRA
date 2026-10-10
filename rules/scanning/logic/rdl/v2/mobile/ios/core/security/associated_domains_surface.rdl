@@ -1,0 +1,8 @@
+VERSION 2
+RULE ios.associated-domains-surface VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "<key>com.apple.developer.associated-domains</key>" ""
+REPORT "Associated Domain Trust Boundary"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

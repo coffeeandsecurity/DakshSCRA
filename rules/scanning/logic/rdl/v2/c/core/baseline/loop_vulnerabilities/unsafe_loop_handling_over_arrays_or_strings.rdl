@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.c.core.unsafe_loop_handling_over_arrays_or_strings VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:for|while)\\s*\\([^)]*(?:<|<=|>|>=)[^)]*(?:len|size|count|index|idx|i|j|k)[^)]*\\)" "im"
+WHEN TEXT_MATCHES "user_input|argv|getenv|scanf|fgets|recv\\s*\\(|read\\s*\\(|atoi|atol|strtol|strlen\\s*\\(.*argv|input|buf\\[|buffer\\[" "im"
+REPORT "Unsafe Loop Handling Over Arrays or Strings"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

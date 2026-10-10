@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.terraform.framework.gcp.gcp_storage_bucket_publicly_accessible VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "allUsers|allAuthenticatedUsers" "im"
+WHEN (TEXT_MATCHES "role\\s*=\\s*\"roles/storage\\.objectViewer\".*allUsers|allAuthenticatedUsers" "im" AND TEXT_MISSING "# intentional|# static-website|website\\s*\\{" "im")
+REPORT "GCP Storage Bucket Publicly Accessible"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -224,18 +224,18 @@ export default function SettingsPanel({ onToast }) {
               options={REPORT_THEMES}
             />
           </Field>
-          <Field label="Max files per platform" hint="Safety limit to prevent unbounded analysis on large codebases">
+          <Field label="Max files per platform (0 = all)" hint="0 includes all files. A positive value deliberately limits coverage.">
             <NumberInput
               value={data.analysis.max_files_per_platform}
               onChange={(v) => update('analysis', 'max_files_per_platform', v)}
-              min={1} max={10000}
+              min={0}
             />
           </Field>
-          <Field label="Max functions per platform" hint="Safety limit on the number of functions parsed per platform">
+          <Field label="Max functions per platform (0 = all)" hint="0 includes all functions. A positive value deliberately limits coverage.">
             <NumberInput
               value={data.analysis.max_functions_per_platform}
               onChange={(v) => update('analysis', 'max_functions_per_platform', v)}
-              min={1} max={50000}
+              min={0}
             />
           </Field>
         </SettingGroup>

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.bash.core.curl_with_tls_verification_disabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "curl\\s+(?:[^\\n]*\\s)?(?:-k|--insecure)" "im"
+WHEN TEXT_MISSING "test|development|localhost|staging|# intentional|# nosec" "im"
+REPORT "curl with TLS Verification Disabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

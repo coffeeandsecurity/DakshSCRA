@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.php.core.insecure_file_inclusion_include_require VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:include|require)(_once)?\\s*\\(\\s*(?:(?:\\'[^\\']*\\'|\\\"[^\\\"]*\\\")\\s*\\.\\s*)?\\$([a-zA-Z_\\x7f-\\xff][a-zA-Z0-9_\\x7f-\\xff]*)\\s*(?:\\.\\s*(?:\\'[^\\']*\\'|\\\"[^\\\"]*\\\"))?\\s*\\)" "im"
+WHEN TEXT_MISSING "realpath|basename|__DIR__|allowlist|whitelist|in_array" "im"
+REPORT "Insecure File Inclusion: include(), require()"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

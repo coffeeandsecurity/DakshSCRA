@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.xplat.nativescript.core.insecure_http_requests VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)\\b(?:fetch\\s*\\(|Http\\.request\\s*\\(|axios\\.(?:get|post|put|delete|request)\\s*\\(|url\\s*[:=]|endpoint\\s*[:=]|baseUrl\\s*[:=]|api(?:[_-]?(?:url|endpoint))?\\s*[:=]|src\\s*[:=]|href\\s*[:=])[^\\n]{0,220}http://" "im"
+REPORT "Insecure HTTP Requests"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

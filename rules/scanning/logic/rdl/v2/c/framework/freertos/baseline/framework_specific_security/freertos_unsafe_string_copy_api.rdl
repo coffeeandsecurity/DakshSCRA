@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.c.framework.freertos.freertos_unsafe_string_copy_api VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(strcpy|strcat|sprintf|gets)\\s*\\(" "im"
+WHEN TEXT_MISSING "strlcpy|snprintf|strncpy|vTaskStacks|configMAX_TASK_NAME_LEN" "im"
+REPORT "Freertos Unsafe String Copy API"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

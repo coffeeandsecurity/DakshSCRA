@@ -1,0 +1,8 @@
+VERSION 2
+RULE android.pin-override VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\boverridePins\\s*=\\s*[\"\\x27]true[\"\\x27]" ""
+REPORT "Certificate Pinning Override Enabled"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

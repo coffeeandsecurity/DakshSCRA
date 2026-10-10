@@ -1,0 +1,10 @@
+VERSION 2
+RULE memory.out-of-bounds-read VERSION 1
+IN FUNCTION
+LET buffer BE OBJECT MATCHES memory.buffer
+WHEN EXISTS CALL MATCHES memory.read AS read
+REQUIRE read TARGETS buffer AND bounds.exceeded buffer
+REPORT "out of bounds read"
+SEVERITY HIGH
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

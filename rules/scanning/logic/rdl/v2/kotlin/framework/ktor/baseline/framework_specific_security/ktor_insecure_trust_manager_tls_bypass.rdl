@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.kotlin.framework.ktor.ktor_insecure_trust_manager_tls_bypass VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "HostnameVerifier\\s*\\{\\s*.*true\\s*\\}|TrustAllCerts|setHostnameVerifier\\(" "im"
+WHEN TEXT_MISSING "test|development|localhost|staging" "im"
+REPORT "Ktor Insecure Trust Manager / TLS Bypass"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

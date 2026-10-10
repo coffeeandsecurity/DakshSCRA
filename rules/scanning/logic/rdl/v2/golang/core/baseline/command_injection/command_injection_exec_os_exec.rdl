@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.golang.core.command_injection_exec_os_exec VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "os/exec\\.Command|exec\\.(Command|CommandContext)" "im"
+WHEN TEXT_MISSING "validate|sanitize|allowlist|filepath\\.EvalSymlinks" "im"
+REPORT "Command Injection: exec, os/exec"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

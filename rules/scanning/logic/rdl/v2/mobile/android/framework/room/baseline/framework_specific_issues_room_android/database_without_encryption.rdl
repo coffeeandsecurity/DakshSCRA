@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.android.framework.room.database_without_encryption VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "Room\\.databaseBuilder\\s*\\(" "im"
+WHEN TEXT_MISSING "SQLCipher|net\\.zetetic\\.database|openHelperFactory|SupportFactory" "im"
+REPORT "Database Without Encryption"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

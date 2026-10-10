@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.c.core.unsafe_memory_function_use_of_malloc_without_free VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bmalloc\\s*\\(.*\\)(?!.*free)" "im"
+WHEN TEXT_MISSING "free\\s*\\(|delete\\s+|RAII|unique_ptr|shared_ptr|defer" "im"
+REPORT "Unsafe Memory Function: Use of malloc() Without free()"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

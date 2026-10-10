@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.terraform.framework.aws.rds_instance_publicly_accessible VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "resource\\s+\"aws_db_instance\"[^}]*publicly_accessible\\s*=\\s*true" "im"
+WHEN (TEXT_MATCHES "publicly_accessible\\s*=\\s*true" "im" AND TEXT_MISSING "# intentional|# development|# staging" "im")
+REPORT "RDS Instance Publicly Accessible"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

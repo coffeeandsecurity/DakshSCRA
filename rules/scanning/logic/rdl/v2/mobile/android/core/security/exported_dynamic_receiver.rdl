@@ -1,0 +1,8 @@
+VERSION 2
+RULE android.exported-dynamic-receiver VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:Context|ContextCompat)\\s*\\.\\s*RECEIVER_EXPORTED\\b" ""
+REPORT "Runtime Broadcast Receiver Exported"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

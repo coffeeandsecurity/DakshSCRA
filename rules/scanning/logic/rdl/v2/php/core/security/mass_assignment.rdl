@@ -1,0 +1,10 @@
+VERSION 2
+RULE model.mass-assignment VERSION 1
+IN DATA_FLOW
+LET input BE VARIABLE MATCHES input.untrusted
+LET sink BE CALL MATCHES model.mass-assignment
+WHEN input FLOWS TO sink
+REPORT "untrusted model mass assignment"
+SEVERITY HIGH
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

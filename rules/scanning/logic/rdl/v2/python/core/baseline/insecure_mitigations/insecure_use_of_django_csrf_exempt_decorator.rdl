@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.python.core.insecure_use_of_django_csrf_exempt_decorator VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)@csrf_exempt" "im"
+WHEN (TEXT_MISSING "@login_required|token_required|api_key|JWT|Bearer" "im" AND TEXT_MISSING "test|example" "im")
+REPORT "Insecure Use of Django csrf_exempt Decorator"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

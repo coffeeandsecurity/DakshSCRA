@@ -1,0 +1,8 @@
+VERSION 2
+RULE web.permissive-cors VERSION 1
+IN FILE
+WHEN EXISTS CALL MATCHES web.permissive-cors AS operation
+REPORT "permissive CORS configuration"
+SEVERITY LOW
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

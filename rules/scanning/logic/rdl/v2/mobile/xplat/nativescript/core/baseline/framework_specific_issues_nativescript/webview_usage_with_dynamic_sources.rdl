@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.xplat.nativescript.core.webview_usage_with_dynamic_sources VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "<WebView|webView\\.src\\s*=" "im"
+WHEN (TEXT_MISSING "shouldOverrideUrl|allowList|trustedOrigins|validate" "im" AND TEXT_MISSING "test|example" "im")
+REPORT "WebView Usage with Dynamic Sources"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

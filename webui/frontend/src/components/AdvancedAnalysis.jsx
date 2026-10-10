@@ -1,3 +1,4 @@
+import FlowView from './FlowView'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { artifactUrl } from '../api'
 
@@ -990,7 +991,7 @@ function transformationLabelForStep(step) {
   return ''
 }
 
-function SimpleTraceGraph({ flow }) {
+function SimpleTraceText({ flow }) {
   const transformations = detectTransformations(flow)
   const steps = flow.path || []
 
@@ -1056,6 +1057,10 @@ function SimpleTraceGraph({ flow }) {
       </div>
     </div>
   )
+}
+
+function SimpleTraceGraph({ flow }) {
+  return <FlowView steps={flow.path || []} title="Taint trace">{({steps}) => <SimpleTraceText flow={{...flow,path:steps}}/>}</FlowView>
 }
 
 function TaintWorkspace({ sourceCatalog, selectedFlow, onSelectFlow, artifactIndex, onOpenReport }) {
@@ -1275,7 +1280,7 @@ function TaintWorkspace({ sourceCatalog, selectedFlow, onSelectFlow, artifactInd
   )
 }
 
-function PathGraph({ flow }) {
+function PathText({ flow }) {
   if (!flow) return null
   return (
     <div className="aa-graph-board">
@@ -1309,6 +1314,10 @@ function PathGraph({ flow }) {
       </div>
     </div>
   )
+}
+
+function PathGraph({ flow }) {
+  return <FlowView steps={flow.path || []} title="Recorded code path">{({steps}) => <PathText flow={{...flow,path:steps}}/>}</FlowView>
 }
 
 function FlowDetail({ flow, artifactIndex, onOpenReport }) {
@@ -2034,8 +2043,8 @@ function AttackVectorsSubtab({ vectors, vectorGroups, pentestTargets, onSelect }
   )
 }
 
-export default function AdvancedAnalysis({ analysis, artifactIndex }) {
-  const [subtab, setSubtab] = useState('summary')
+export default function AdvancedAnalysis({ analysis, artifactIndex, initialSection = 'summary' }) {
+  const [subtab, setSubtab] = useState(initialSection)
   const model = useMemo(() => buildModel(analysis), [analysis])
   const [selectedId, setSelectedId] = useState('')
   const hasEmbeddedReport = useMemo(

@@ -1,0 +1,8 @@
+VERSION 2
+RULE android.dynamic-dex-loading VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:new\\s+)?(?:DexClassLoader|PathClassLoader|InMemoryDexClassLoader|DexFile\\s*\\.\\s*loadDex)\\s*\\(" ""
+REPORT "Dynamic Android Code Loading"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

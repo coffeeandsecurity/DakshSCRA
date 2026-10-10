@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.xplat.reactnative.core.postmessage_handler_without_event_origin_validation VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "addEventListener\\s*\\(\\s*['\"]message['\"]" "im"
+WHEN TEXT_MISSING "event\\.origin|e\\.origin|message\\.origin|trustedOrigin|allowedOrigins" "im"
+REPORT "PostMessage Handler Without Event Origin Validation"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

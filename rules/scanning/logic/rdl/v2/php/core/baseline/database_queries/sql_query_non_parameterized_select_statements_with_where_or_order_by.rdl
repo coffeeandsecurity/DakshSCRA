@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.php.core.sql_query_non_parameterized_select_statements_with_where_or_order_by VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)\\bSELECT\\s+\\*?\\s+FROM\\s+[^\\s]+\\s+(WHERE|ORDER BY)\\b.*" "im"
+WHEN TEXT_MATCHES "(\\.\\s*\\$|\\$_(GET|POST|REQUEST|COOKIE)|sprintf\\s*\\(|format\\s*\\()" "im"
+REPORT "SQL Query: Non-parameterized SELECT Statements with WHERE or ORDER BY"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.terraform.framework.gcp.cloud_sql_instance_publicly_exposed VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "authorized_networks\\s*\\{[^}]*value\\s*=\\s*\"0\\.0\\.0\\.0/0\"" "im"
+WHEN (TEXT_MATCHES "ipv4_enabled\\s*=\\s*true|authorized_networks" "im" AND TEXT_MISSING "require_ssl\\s*=\\s*true|ssl_mode\\s*=\\s*\"ENCRYPTED_ONLY\"|private_network" "im")
+REPORT "Cloud SQL Instance Publicly Exposed"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

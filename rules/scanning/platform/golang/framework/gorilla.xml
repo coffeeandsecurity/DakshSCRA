@@ -3,7 +3,7 @@
         <rule>
             <name>CSRF Protection Disabled or Not Applied</name>
             <regex>csrf\.Protect\s*\([^)]*Secure\s*:\s*false|csrf\.SameSite\s*\(\s*csrf\.SameSiteNoneMode\s*\)|csrf\.Protect\s*\([^)]*(?:IgnoreHost|TrustedOrigins)</regex>
-            <rdl_ref>logic/golang/framework/gorilla/csrf_protection_disabled_or_not_applied.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/golang/framework/gorilla/csrf_protection_disabled_or_not_applied.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -12,15 +12,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects Gorilla CSRF middleware configured with weakened security options.</rule_desc>
-            <vuln_desc>Disabling Secure on CSRF cookies or using SameSiteNone without Secure allows CSRF token cookies to be transmitted over HTTP or cross-site, weakening CSRF protection against state-changing requests.</vuln_desc>
-            <developer>Configure csrf.Protect with Secure: true, HttpOnly: true, and SameSite: csrf.SameSiteStrictMode. Ensure the middleware is applied to all state-changing routes.</developer>
+            <rule_desc>The code disables, exempts, or configures request-forgery protection. Verify whether a reachable state-changing operation authenticates through automatically sent browser credentials.</rule_desc>
+            <vuln_desc>An attacker may cause a victim’s browser to perform unwanted authenticated actions if the endpoint relies on ambient credentials and lacks an effective anti-forgery check.</vuln_desc>
+            <developer>Enforce anti-forgery protection on cookie-authenticated state changes, validate origins where appropriate, and justify exemptions only for independently authenticated non-browser flows.</developer>
             <reviewer>Confirm CSRF middleware is applied to all POST/PUT/DELETE/PATCH routes with Secure cookies. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure Session Cookie Configuration</name>
             <regex>sessions\.NewCookieStore|securecookie\.New[^;)]*\n[^;)]*(?:HttpOnly\s*:\s*false|Secure\s*:\s*false)|Options\s*:\s*&amp;sessions\.Options\s*\{[^}]*(?:HttpOnly\s*:\s*false|Secure\s*:\s*false)</regex>
-            <rdl_ref>logic/golang/framework/gorilla/insecure_session_cookie_configuration.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/golang/framework/gorilla/insecure_session_cookie_configuration.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -29,15 +29,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects Gorilla sessions configured without Secure or HttpOnly flags.</rule_desc>
-            <vuln_desc>Session cookies without Secure flag can be transmitted over HTTP, exposing session tokens to interception. Cookies without HttpOnly are accessible to JavaScript, enabling session theft via XSS.</vuln_desc>
-            <developer>Set session options: store.Options = &amp;sessions.Options{Secure: true, HttpOnly: true, SameSite: http.SameSiteStrictMode}. Use SecureCookieStore with a random 32-byte authentication key.</developer>
+            <rule_desc>The code handles session state or configures cookies and session secrets. Resolve cookie attributes, token generation, lifetime, and server-side validation.</rule_desc>
+            <vuln_desc>Weak session secrets, exposed cookies, or inadequate expiry may allow session theft, token forgery, or continued access after the user’s intended authorization ends.</vuln_desc>
+            <developer>Use strong unpredictable session secrets, rotate tokens on privilege changes, and enforce expiry and revocation. Set Secure, HttpOnly, and appropriate SameSite attributes for sensitive browser cookies.</developer>
             <reviewer>Verify session cookie options enforce Secure, HttpOnly, and appropriate SameSite policy. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Weak or Short Session Store Key</name>
             <regex>sessions\.NewCookieStore\s*\(\s*\[\]byte\s*\(\s*["'][^"']{1,15}["']\s*\)</regex>
-            <rdl_ref>logic/golang/framework/gorilla/weak_or_short_session_store_key.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/golang/framework/gorilla/weak_or_short_session_store_key.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -46,9 +46,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects Gorilla session stores initialized with short or hardcoded authentication keys.</rule_desc>
-            <vuln_desc>Short or hardcoded session authentication keys can be brute-forced or guessed, enabling session forgery and authentication bypass.</vuln_desc>
-            <developer>Use a cryptographically random 32-byte or 64-byte key generated at startup and loaded from a secure secrets store. Never hardcode session keys.</developer>
+            <rule_desc>The code handles session state or configures cookies and session secrets. Resolve cookie attributes, token generation, lifetime, and server-side validation.</rule_desc>
+            <vuln_desc>Weak session secrets, exposed cookies, or inadequate expiry may allow session theft, token forgery, or continued access after the user’s intended authorization ends.</vuln_desc>
+            <developer>Use strong unpredictable session secrets, rotate tokens on privilege changes, and enforce expiry and revocation. Set Secure, HttpOnly, and appropriate SameSite attributes for sensitive browser cookies.</developer>
             <reviewer>Confirm session store keys are sufficiently long (32+ bytes), randomly generated, and loaded from secure storage. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

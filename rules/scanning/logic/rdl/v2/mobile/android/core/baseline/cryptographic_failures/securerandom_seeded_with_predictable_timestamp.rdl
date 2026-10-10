@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.android.core.securerandom_seeded_with_predictable_timestamp VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\.setSeed\\s*\\(" "im"
+WHEN TEXT_MATCHES "setSeed.*currentTimeMillis|setSeed.*nanoTime|setSeed.*System\\.current|setSeed.*hashCode" "im"
+REPORT "SecureRandom Seeded with Predictable Timestamp"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

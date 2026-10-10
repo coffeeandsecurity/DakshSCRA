@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.android.core.allow_backup VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "android:allowBackup\\s*=\\s*\"(true|TRUE)\"" "im"
+REPORT "Allow Backup"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -3,7 +3,7 @@
         <rule>
             <name>Insecure AsyncStorage for Sensitive Data</name>
             <regex>\bAsyncStorage\.(?:setItem|multiSet)\s*\(</regex>
-            <rdl_ref>logic/mobile/xplat/reactnative/core/asyncstorage_sensitive_data.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/reactnative/core/asyncstorage_sensitive_data.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -15,15 +15,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects storage of values using AsyncStorage, which is unsuitable for secrets.</rule_desc>
-            <vuln_desc>AsyncStorage is not intended for sensitive secrets and may expose tokens or credentials on compromised devices.</vuln_desc>
-            <developer>Store secrets in platform-backed secure storage (Keychain/Keystore wrappers).</developer>
+            <rule_desc>The application stores sensitive values or configures protection for persistent data. Determine the actual storage location, backup policy, and lock-state access restrictions.</rule_desc>
+            <vuln_desc>An actor with access to unprotected application files, backups, or overly broad keychain access may recover credentials or private records and use them outside the intended trust boundary.</vuln_desc>
+            <developer>Use the platform credential or key store for secrets and appropriate authenticated encryption and file protection for private records. Minimize stored data, backup exposure, and lock-state accessibility.</developer>
             <reviewer>Verify sensitive values are not persisted in AsyncStorage. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>WebView JavaScript Enabled</name>
             <regex>&lt;WebView[^&gt;]*javaScriptEnabled\s*=\s*\{?true\}?</regex>
-            <rdl_ref>logic/mobile/xplat/reactnative/core/webview_javascript_enabled.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/reactnative/core/webview_javascript_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -35,15 +35,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>magenta</highlight_color>
             </scan_config>
-            <rule_desc>Detects JavaScript-enabled React Native WebView usage.</rule_desc>
-            <vuln_desc>Improper WebView restrictions can allow script injection, malicious redirects, or data exfiltration.</vuln_desc>
-            <developer>Restrict navigation targets and disable JavaScript unless required.</developer>
+            <rule_desc>The application renders web content, executes scripts, or exposes a native messaging interface. Resolve navigation trust, origin isolation, and validation at the native boundary.</rule_desc>
+            <vuln_desc>Attacker-controlled web content may execute in a trusted context or invoke native operations, exposing session data or application privileges when isolation and per-operation checks are insufficient.</vuln_desc>
+            <developer>Restrict navigation and message origins to required trusted sources. Avoid dynamic script construction, minimize native bridge methods, validate message inputs, and authorize sensitive native operations.</developer>
             <reviewer>Confirm WebView origin allowlist and navigation blocking logic are enforced. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Arbitrary External URL Opening</name>
             <regex>\bLinking\.openURL\s*\(</regex>
-            <rdl_ref>logic/mobile/xplat/reactnative/core/arbitrary_external_url_opening.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/reactnative/core/arbitrary_external_url_opening.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -55,15 +55,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects external URL launches that require strict allowlist validation.</rule_desc>
-            <vuln_desc>Opening attacker-controlled URLs can trigger phishing, malicious apps, or sensitive action abuse.</vuln_desc>
-            <developer>Validate URI schemes and host allowlists before opening external URLs.</developer>
+            <rule_desc>The code handles a link, redirect, or externally selected navigation target. Validate the effective destination and any action triggered by the receiving handler.</rule_desc>
+            <vuln_desc>A crafted destination or link may direct users to a phishing site, leak URL-carried secrets, or trigger unauthorized operations if routing trusts external parameters without the required access checks.</vuln_desc>
+            <developer>Allowlist schemes, hosts, paths, and operations. Validate parsed link parameters, avoid credentials in URLs, and require authentication and authorization before sensitive actions.</developer>
             <reviewer>Review URL construction paths and enforce allowlists. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>PostMessage Handler Without Event Origin Validation</name>
             <regex>addEventListener\s*\(\s*['"]message['"]</regex>
-            <rdl_ref>logic/mobile/xplat/reactnative/core/postmessage_handler_without_event_origin_validation.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/reactnative/core/postmessage_handler_without_event_origin_validation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -75,15 +75,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects postMessage event handlers that may not validate the event origin.</rule_desc>
-            <vuln_desc>React Native WebView injects a postMessage bridge accessible from loaded web content. Handlers that process messages without checking event.origin allow any cross-origin frame or web content to invoke native actions, enabling cross-site scripting into native APIs.</vuln_desc>
-            <developer>Always check event.origin against an allowlist of trusted origins before processing postMessage data. Reject all messages from unexpected origins.</developer>
+            <rule_desc>The application renders web content, executes scripts, or exposes a native messaging interface. Resolve navigation trust, origin isolation, and validation at the native boundary.</rule_desc>
+            <vuln_desc>Attacker-controlled web content may execute in a trusted context or invoke native operations, exposing session data or application privileges when isolation and per-operation checks are insufficient.</vuln_desc>
+            <developer>Restrict navigation and message origins to required trusted sources. Avoid dynamic script construction, minimize native bridge methods, validate message inputs, and authorize sensitive native operations.</developer>
             <reviewer>Inspect the message event handler to confirm event.origin is validated before any action is taken. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>ReactMethod Exposed Without Permission Check</name>
             <regex>@ReactMethod</regex>
-            <rdl_ref>logic/mobile/xplat/reactnative/core/reactmethod_exposed_without_permission_check.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/reactnative/core/reactmethod_exposed_without_permission_check.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -95,15 +95,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects @ReactMethod annotated native module methods that may lack permission or authentication checks.</rule_desc>
-            <vuln_desc>Native modules exposed via @ReactMethod are callable from any JavaScript context loaded in the app, including malicious third-party scripts in WebViews. Without permission or auth checks, sensitive native operations can be invoked by untrusted JS code.</vuln_desc>
-            <developer>Add permission checks (checkSelfPermission) or authentication guards inside each @ReactMethod that performs a sensitive operation. Reject unauthenticated or unauthorized callers.</developer>
+            <rule_desc>The application renders web content, executes scripts, or exposes a native messaging interface. Resolve navigation trust, origin isolation, and validation at the native boundary.</rule_desc>
+            <vuln_desc>Attacker-controlled web content may execute in a trusted context or invoke native operations, exposing session data or application privileges when isolation and per-operation checks are insufficient.</vuln_desc>
+            <developer>Restrict navigation and message origins to required trusted sources. Avoid dynamic script construction, minimize native bridge methods, validate message inputs, and authorize sensitive native operations.</developer>
             <reviewer>Review each @ReactMethod body for authorization checks before sensitive operations. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>WebView Source with Potentially User-Controlled URI</name>
             <regex>&lt;WebView[^&gt;]*source\s*=\s*\{\{?\s*uri\s*:</regex>
-            <rdl_ref>logic/mobile/xplat/reactnative/core/webview_source_with_potentially_user_controlled_uri.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/reactnative/core/webview_source_with_potentially_user_controlled_uri.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -115,15 +115,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects WebView source URI props that may be derived from user-controlled input without validation.</rule_desc>
-            <vuln_desc>Passing user-controlled URIs to the WebView source prop can lead to loading attacker-supplied content, enabling phishing, javascript: URI execution, or local resource access via file:// URIs.</vuln_desc>
-            <developer>Validate the URI scheme and host against an allowlist before passing it to the source prop. Use onShouldStartLoadWithRequest for additional navigation-time checks. Block non-https schemes.</developer>
+            <rule_desc>The application renders web content, executes scripts, or exposes a native messaging interface. Resolve navigation trust, origin isolation, and validation at the native boundary.</rule_desc>
+            <vuln_desc>Attacker-controlled web content may execute in a trusted context or invoke native operations, exposing session data or application privileges when isolation and per-operation checks are insufficient.</vuln_desc>
+            <developer>Restrict navigation and message origins to required trusted sources. Avoid dynamic script construction, minimize native bridge methods, validate message inputs, and authorize sensitive native operations.</developer>
             <reviewer>Trace the URI value in source={{ uri }} to its origin and verify scheme and host validation are applied. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Metro Bundler DevSettings Accessed Outside Debug Guard</name>
             <regex>\bNativeModules\.DevSettings\b|\bDevSettings\b</regex>
-            <rdl_ref>logic/mobile/xplat/reactnative/core/metro_bundler_devsettings_accessed_outside_debug_guard.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/reactnative/core/metro_bundler_devsettings_accessed_outside_debug_guard.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -135,9 +135,9 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects Metro bundler DevSettings module access that may not be guarded by a debug-only check.</rule_desc>
-            <vuln_desc>NativeModules.DevSettings exposes React Native Metro bundler controls including remote debugging enablement and hot reload configuration. Accessing this module in production code can allow an attacker to enable remote JS debugging, effectively creating a code injection path via the Metro dev server.</vuln_desc>
-            <developer>Guard all DevSettings access with if (__DEV__) to ensure the module is only usable in debug builds. Never expose DevSettings configuration in production.</developer>
+            <rule_desc>A configuration or API enables development diagnostics, process inspection, or debugging. Verify whether it applies to a deployed production artifact.</rule_desc>
+            <vuln_desc>An actor with access to an enabled debugging interface may inspect private state or influence application execution; exposed development endpoints may disclose internal implementation details.</vuln_desc>
+            <developer>Disable debugging and development endpoints in production, bind necessary diagnostic services to restricted interfaces, and verify the final deployed artifact and access policy.</developer>
             <reviewer>Confirm DevSettings usage is within a __DEV__ guard or equivalent compile-time exclusion for release builds. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -145,7 +145,7 @@
         <rule>
             <name>React Native Debug Mode Marker</name>
             <regex>__DEV__|NODE_ENV\s*=\s*[\'\"]development[\'\"]</regex>
-            <rdl_ref>logic/mobile/xplat/reactnative/core/react_native_debug_mode_marker.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/reactnative/core/react_native_debug_mode_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -157,15 +157,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects React Native debug/development mode usage.</rule_desc>
-            <vuln_desc>Debug mode can expose diagnostics and weaken production posture.</vuln_desc>
-            <developer>Ensure production builds disable debug/developer features.</developer>
+            <rule_desc>A configuration or API enables development diagnostics, process inspection, or debugging. Verify whether it applies to a deployed production artifact.</rule_desc>
+            <vuln_desc>An actor with access to an enabled debugging interface may inspect private state or influence application execution; exposed development endpoints may disclose internal implementation details.</vuln_desc>
+            <developer>Disable debugging and development endpoints in production, bind necessary diagnostic services to restricted interfaces, and verify the final deployed artifact and access policy.</developer>
             <reviewer>Review build variants and runtime debug toggles. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>React Native Insecure HTTP Usage</name>
             <regex>fetch\(\s*[\'\"]http://|axios\.(get|post|request)\(\s*[\'\"]http://|http://</regex>
-            <rdl_ref>logic/mobile/xplat/reactnative/core/react_native_insecure_http_usage.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/reactnative/core/react_native_insecure_http_usage.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -177,15 +177,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects cleartext network endpoint usage.</rule_desc>
-            <vuln_desc>Cleartext transport can expose sensitive app traffic.</vuln_desc>
-            <developer>Use HTTPS endpoints and strict TLS validation.</developer>
+            <rule_desc>The checked source contains a transport-security exception, insecure endpoint, or certificate-validation configuration. Resolve the effective policy and the connections it governs.</rule_desc>
+            <vuln_desc>An attacker on the network may read or alter affected traffic if sensitive data travels over cleartext or the connection accepts an untrusted server. Normal HTTPS endpoints and correctly implemented validation do not establish exposure.</vuln_desc>
+            <developer>Use HTTPS with normal certificate-chain and hostname verification. Remove permissive production callbacks and broad transport exceptions; restrict any justified exception to a documented, non-sensitive endpoint.</developer>
             <reviewer>Audit all API base URLs and network clients. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>React Native AsyncStorage Secret Marker</name>
             <regex>AsyncStorage\.(setItem|multiSet)\(.*(token|secret|password|apikey)</regex>
-            <rdl_ref>logic/mobile/xplat/reactnative/core/react_native_asyncstorage_secret_marker.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/reactnative/core/react_native_asyncstorage_secret_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -197,15 +197,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects likely sensitive values being persisted via AsyncStorage.</rule_desc>
-            <vuln_desc>AsyncStorage is not suitable for secrets without additional protection.</vuln_desc>
-            <developer>Use secure storage/keychain abstractions for secrets.</developer>
+            <rule_desc>The application stores sensitive values or configures protection for persistent data. Determine the actual storage location, backup policy, and lock-state access restrictions.</rule_desc>
+            <vuln_desc>An actor with access to unprotected application files, backups, or overly broad keychain access may recover credentials or private records and use them outside the intended trust boundary.</vuln_desc>
+            <developer>Use the platform credential or key store for secrets and appropriate authenticated encryption and file protection for private records. Minimize stored data, backup exposure, and lock-state accessibility.</developer>
             <reviewer>Review storage keys and classify sensitive data paths. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>React Native WebView Origin Wildcard</name>
             <regex>originWhitelist\s*=\s*\{?\s*\[\s*[\'\"]\*[\'\"]</regex>
-            <rdl_ref>logic/mobile/xplat/reactnative/core/react_native_webview_origin_wildcard.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/reactnative/core/react_native_webview_origin_wildcard.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -217,15 +217,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>magenta</highlight_color>
             </scan_config>
-            <rule_desc>Detects wildcard origin allowlist in React Native WebView.</rule_desc>
-            <vuln_desc>Wildcard origins can allow untrusted content loading.</vuln_desc>
-            <developer>Restrict origin whitelist to trusted domains.</developer>
+            <rule_desc>A browser-origin or navigation policy permits a broad set of external origins or destinations. Identify the resources and privileged interfaces covered by the effective policy.</rule_desc>
+            <vuln_desc>An untrusted site may read protected responses or invoke privileged interfaces if a permissive policy admits it and independent authentication or authorization does not prevent the operation.</vuln_desc>
+            <developer>Allow only required trusted origins and destinations. Validate origin and message schemas, handle credentials deliberately, and enforce access controls independently of the origin policy.</developer>
             <reviewer>Validate WebView origin restrictions and navigation policies. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>React Native WebView JavaScript Bridge</name>
             <regex>onMessage\s*=|injectedJavaScript\s*=|javaScriptEnabled\s*=\s*\{?true\}?</regex>
-            <rdl_ref>logic/mobile/xplat/reactnative/core/react_native_webview_javascript_bridge.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/reactnative/core/react_native_webview_javascript_bridge.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -237,15 +237,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>magenta</highlight_color>
             </scan_config>
-            <rule_desc>Detects JS bridge/script injection capabilities in React Native WebView.</rule_desc>
-            <vuln_desc>Unsafe bridge/script usage can increase injection and data exfiltration risk.</vuln_desc>
-            <developer>Minimize bridge surface and sanitize message handling.</developer>
+            <rule_desc>The application renders web content, executes scripts, or exposes a native messaging interface. Resolve navigation trust, origin isolation, and validation at the native boundary.</rule_desc>
+            <vuln_desc>Attacker-controlled web content may execute in a trusted context or invoke native operations, exposing session data or application privileges when isolation and per-operation checks are insufficient.</vuln_desc>
+            <developer>Restrict navigation and message origins to required trusted sources. Avoid dynamic script construction, minimize native bridge methods, validate message inputs, and authorize sensitive native operations.</developer>
             <reviewer>Audit WebView bridge handlers and untrusted content paths. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>React Native Hardcoded Secret Marker</name>
             <regex>(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*[\'\"][^\'\"]{8,}[\'\"]</regex>
-            <rdl_ref>logic/mobile/xplat/reactnative/core/react_native_hardcoded_secret_marker.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/reactnative/core/react_native_hardcoded_secret_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>none</context_type>
@@ -255,9 +255,9 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects likely hardcoded secret values in React Native code.</rule_desc>
-            <vuln_desc>Embedded secrets can be extracted from source or bundles.</vuln_desc>
-            <developer>Use backend-issued short-lived tokens and secure storage.</developer>
+            <rule_desc>The checked source or build configuration embeds potentially sensitive credential or key material. Determine whether it is active and whether it reaches distributed artifacts or logs.</rule_desc>
+            <vuln_desc>A party who can read exposed source, artifacts, configuration, or logs may recover active secrets and access the protected service or decrypt data with the secret owner’s privileges.</vuln_desc>
+            <developer>Remove active secrets from source and build layers, rotate exposed values, and load replacements through a restricted secret-management facility. Use narrowly privileged, short-lived credentials.</developer>
             <reviewer>Verify no long-lived production secrets are bundled. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -265,7 +265,7 @@
         <rule>
             <name>Android Cleartext Traffic Enabled</name>
             <regex>usesCleartextTraffic\s*=\s*"?(?:true|TRUE)"?</regex>
-            <rdl_ref>logic/mobile/xplat/reactnative/core/android_cleartext_traffic_enabled.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/reactnative/core/android_cleartext_traffic_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -277,9 +277,9 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects cleartext traffic allowance in Android-side configuration files.</rule_desc>
-            <vuln_desc>Allowing cleartext traffic weakens confidentiality and enables man-in-the-middle interception.</vuln_desc>
-            <developer>Disable cleartext traffic and enforce HTTPS endpoints.</developer>
+            <rule_desc>The checked source contains a transport-security exception, insecure endpoint, or certificate-validation configuration. Resolve the effective policy and the connections it governs.</rule_desc>
+            <vuln_desc>An attacker on the network may read or alter affected traffic if sensitive data travels over cleartext or the connection accepts an untrusted server. Normal HTTPS endpoints and correctly implemented validation do not establish exposure.</vuln_desc>
+            <developer>Use HTTPS with normal certificate-chain and hostname verification. Remove permissive production callbacks and broad transport exceptions; restrict any justified exception to a documented, non-sensitive endpoint.</developer>
             <reviewer>Check Android networking policy for cleartext exceptions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -287,7 +287,7 @@
         <rule>
             <name>ATS Arbitrary Loads Enabled</name>
             <regex>NSAllowsArbitraryLoads\s*&lt;/key&gt;\s*&lt;true\s*/&gt;</regex>
-            <rdl_ref>logic/mobile/xplat/reactnative/core/ats_arbitrary_loads_enabled.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/reactnative/core/ats_arbitrary_loads_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -299,9 +299,9 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects iOS transport policy relaxation in React Native iOS projects.</rule_desc>
-            <vuln_desc>Relaxed ATS controls can permit insecure HTTP traffic and increase interception risk.</vuln_desc>
-            <developer>Use ATS defaults and limit exceptions to specific trusted domains.</developer>
+            <rule_desc>The checked source contains a transport-security exception, insecure endpoint, or certificate-validation configuration. Resolve the effective policy and the connections it governs.</rule_desc>
+            <vuln_desc>An attacker on the network may read or alter affected traffic if sensitive data travels over cleartext or the connection accepts an untrusted server. Normal HTTPS endpoints and correctly implemented validation do not establish exposure.</vuln_desc>
+            <developer>Use HTTPS with normal certificate-chain and hostname verification. Remove permissive production callbacks and broad transport exceptions; restrict any justified exception to a documented, non-sensitive endpoint.</developer>
             <reviewer>Validate ATS exceptions and domain scoping in iOS plist files. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

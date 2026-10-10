@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.xplat.xamarin.core.xamarin_webview_script_bridge_marker VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "WebView|EvaluateJavaScriptAsync\\(|addJavascriptInterface\\(" "im"
+WHEN TEXT_MISSING "Navigating\\s*\\+=" "im"
+REPORT "Xamarin WebView Script Bridge Marker"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

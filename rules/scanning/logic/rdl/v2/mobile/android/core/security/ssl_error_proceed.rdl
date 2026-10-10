@@ -1,0 +1,8 @@
+VERSION 2
+RULE android.ssl-error-proceed VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:handler|sslErrorHandler)\\s*\\.\\s*proceed\\s*\\(" ""
+REPORT "WebView TLS Error Ignored"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

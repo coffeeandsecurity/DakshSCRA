@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.javascript.core.prototype_pollution VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(\\b__proto__\\b|Object\\.prototype\\.(?!hasOwnProperty)[a-zA-Z]+\\s?=)" "im"
+WHEN TEXT_MISSING "Object\\.freeze|hasOwnProperty|Object\\.create\\s*\\(\\s*null|__proto__.*check" "im"
+REPORT "Prototype Pollution"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

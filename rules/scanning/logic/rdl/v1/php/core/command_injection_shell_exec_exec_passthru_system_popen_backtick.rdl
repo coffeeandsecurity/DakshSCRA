@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT \b(?:shell_exec|exec|passthru|system|popen)\s*\(|`[^`\r\n]*\$[^`\r\n]*`
+REPORT AS area_of_interest
+REASON Review PHP process calls and variable-bearing backticks. Input may arrive through parameters or other files; the absence of a local request keyword does not establish trust.
+TRACE Externalized rule logic for Command Injection: shell_exec, exec, passthru, system, popen, backtick.

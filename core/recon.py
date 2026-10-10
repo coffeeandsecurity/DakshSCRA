@@ -1,3 +1,4 @@
+from utils.scan_scope import walk_source, allows_file
 import base64
 import fnmatch
 import json
@@ -9,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 
 import yaml
-from jinja2 import Template
+from jinja2 import Environment, FileSystemLoader
 
 import state.runtime_state as state
 import utils.cli_utils as cli
@@ -278,7 +279,7 @@ def _walk_project_files(targetdir, progress_callback=None):
     visited_dirs = 0
     total_files_seen = 0
     log_filepaths = []
-    for root, dirs, files in os.walk(targetdir):
+    for root, dirs, files in walk_source(targetdir):
         visited_dirs += 1
         dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
         total_files_seen += len(files)
@@ -650,7 +651,9 @@ def summarize_recon(json_file_path):
         except OSError as exc:
             logger.error("Failed to write recon summary to %s: %s", out_path, exc)
 
-    recon_summary_html_report(runtime_summary_path, state.reconreport_Fpath)
+    from utils.output_mode import web_scan
+    if not web_scan():
+        recon_summary_html_report(runtime_summary_path, state.reconreport_Fpath)
     return str(runtime_summary_path)
 
 
@@ -691,38 +694,8 @@ def recon_summary_html_report(json_file_path, output_file_path):
     except OSError as exc:
         logger.error("Failed to load logo image %s: %s", state.staticLogo, exc)
 
-    sections = []
-    total_tech = 0
-    total_files = 0
-    total_dirs = 0
-    for category, items in sorted(categories.items()):
-        tech_rows = []
-        for tech_name, tech_data in items.items():
-            dirs = tech_data.get("directories", [])
-            tfiles = int(tech_data.get("totalFiles", 0))
-            tdirs = int(tech_data.get("totalDirectories", 0))
-            tech_rows.append(
-                {
-                    "name": tech_name,
-                    "total_files": tfiles,
-                    "total_dirs": tdirs,
-                    "directories": dirs,
-                    "sample_files": tech_data.get("sampleFiles", []),
-                    "confidence": tech_data.get("dominantConfidence", "medium"),
-                    "confidence_counts": tech_data.get("confidenceCounts", {"high": 0, "medium": 0, "low": 0}),
-                }
-            )
-            total_tech += 1
-            total_files += tfiles
-            total_dirs += tdirs
-
-        if tech_rows:
-            sections.append(
-                {
-                    "category": category,
-                    "tech_rows": sorted(tech_rows, key=lambda x: x["total_files"], reverse=True),
-                }
-            )
+    from core.recon_presentation import recon_presentation
+    recon_report = recon_presentation(data)
 
     template_path = state.htmltemplates_dir / "recon.html"
     try:
@@ -731,7 +704,8 @@ def recon_summary_html_report(json_file_path, output_file_path):
         logger.error("Failed to load recon HTML template %s: %s", template_path, exc)
         return
 
-    rendered_html = Template(template_html).render(
+    rendered_html = Environment(loader=FileSystemLoader(state.htmltemplates_dir), autoescape=True).from_string(template_html).render(
+        recon_report=recon_report,
         reportTitle=report_title,
         reportSubTitle=report_subtitle,
         reportDate=datetime.now().strftime("%b %d, %Y"),
@@ -739,11 +713,6 @@ def recon_summary_html_report(json_file_path, output_file_path):
         recon_target=meta.get("recon_target_directory", ""),
         recon_strict_mode=meta.get("recon_strict_mode", "false"),
         logoImagePath=logo_image_path,
-        sections=sections,
-        total_categories=len(sections),
-        total_technologies=total_tech,
-        total_files=total_files,
-        total_directories=total_dirs,
     )
 
     output_file_path = Path(output_file_path)

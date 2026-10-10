@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.common.core.authorization_modules VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)\\b(authorize|access_control|rbac|abac|acl)\\b" "im"
+WHEN (TEXT_MATCHES "(?i)\\b(role|permission|policy|access|authorize)\\b" "im" AND TEXT_MISSING "(?i)\\b(readme|changelog|example|sample|docs?)\\b" "im")
+REPORT "Authorization Modules"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

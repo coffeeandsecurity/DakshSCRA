@@ -1,6 +1,7 @@
 # Standard libraries
 import argparse
 import atexit
+from utils.output_mode import web_scan
 import fnmatch
 import inspect
 import json
@@ -22,6 +23,8 @@ import core.recon as rec
 import core.reports as report
 from core.analysis import report as analysis_report
 from core import analysis_dispatch
+from core.rdl.shadow import default_shadow_runner, summarize_shadow_records
+from core.rdl.selection import configure_engines
 
 from core.analysis.php import analyzer as php_analysis
 from core.analysis.dotnet import analyzer as dotnet_analysis
@@ -96,6 +99,10 @@ args = cli.DakshArgumentParser(
 )
 
 scan_group = args.add_argument_group("Scan options")
+scan_group.add_argument('--custom-rdl', action='append', default=[], metavar='PACK.json',
+                        help='Include an optional application-specific RDL v2 pack; repeat for multiple packs')
+scan_group.add_argument('--rdl-engine', choices=('v1', 'v2', 'both'), default='both',
+                        help='RDL engines to run (default: both). V1: established rules; v2: experimental successor with incomplete coverage.')
 mode_group = args.add_argument_group("Mode options")
 output_group = args.add_argument_group("Output options")
 advanced_group = args.add_argument_group("Advanced options")
@@ -133,7 +140,7 @@ mode_group.add_argument('--pdf-from-json', action='store_true', dest='pdf_from_j
 
 output_group.add_argument('-rpt', '--report', type=str, action='store', dest='report_format',
                           default='html', metavar='FORMATS',
-                          help='Report formats to generate: html, pdf, or html,pdf (default: html)')
+                          help='Report formats to generate: html, pdf, docx, json, or a comma-separated combination (default: html)')
 
 output_group.add_argument('--json-input-dir', type=str, action='store', dest='json_input_dir',
                           default='', metavar='PATH',
@@ -183,6 +190,15 @@ advanced_group.add_argument('--no-state', action='store_true', dest='state_disab
 advanced_group.add_argument('--state', action='store_true', dest='state_enable',
                             help='Force enable scan state checkpointing for this run')
 
+scan_group.add_argument('--exclude-check', action='append', default=[], dest='exclude_checks', metavar='CLASS',
+                        help='Exclude a check class; repeat for multiple classes (see Web UI Vulnerability DB)')
+scan_group.add_argument('--exclude-path', action='append', default=[], dest='exclude_paths', metavar='GLOB',
+                        help='Exclude a project-relative file/directory path or glob; repeat as needed')
+scan_group.add_argument('--exclude-type', action='append', default=[], dest='exclude_types', metavar='EXT',
+                        help='Exclude a file extension or filename glob; repeat as needed')
+scan_group.add_argument('--exclude-keyword', action='append', default=[], dest='exclude_keywords', metavar='TEXT',
+                        help='Exclude whole files containing literal text, case-insensitive; repeat as needed')
+
 # Display help if no arguments are passed
 if len(sys.argv) < 2:
     args.print_help()
@@ -190,6 +206,17 @@ if len(sys.argv) < 2:
 
 # Parse arguments with error handling
 results = args.parse_args()
+try:
+    configure_engines(state.root_dir, results.rdl_engine, results.custom_rdl)
+except (OSError, ValueError, KeyError, TypeError) as exc:
+    args.error('Custom RDL configuration: ' + str(exc))
+
+from utils.scan_scope import configure_scope
+try:
+    configure_scope(results.target_dir, exclude_checks=results.exclude_checks, exclude_paths=results.exclude_paths,
+                    exclude_types=results.exclude_types, exclude_keywords=results.exclude_keywords)
+except ValueError as exc:
+    args.error(str(exc))
 
 original_rule_file = results.rule_file
 
@@ -614,9 +641,10 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
                         "ok": True,
                         "flows": flow_items if isinstance(flow_items, list) else [],
                         "json_path": str(flow_json_path),
-                        "html_path": str(flow_html_path),
+                        "html_path": str(flow_html_path) if flow_html_path else "",
                     }
                 except Exception as exc:
+                    print(f"     [!] Analyzer failed      : {platform}: {exc}", flush=True)
                     cache[canonical] = {
                         "ok": False,
                         "error": str(exc),
@@ -633,7 +661,7 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
                 legacy_html_path = Path(legacy_html) if legacy_html else None
                 modern_theme = str(analysis_cfg.get("report_theme", "hacker_mode")).strip().lower()
                 modern_variants = []
-                if legacy_json_path:
+                if legacy_json_path and not web_scan():
                     analysis_dir = legacy_json_path.parent
                     if modern_theme == "both":
                         modern_variants = [
@@ -665,61 +693,16 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
                     "xref_html": str(legacy_html_path.parent / "analysis_xref.html") if legacy_html_path else "",
                     "modern_variants": modern_variants,
                 }
-                security_inventory = analysis_report.build_security_inventory(
-                    cache_entry.get("flows", []),
-                    scan_root=Path(source_root),
-                    platform=platform,
-                    source_findings=aoi_records,
-                    supported_engine=bool(runner),
-                )
-                entry["security_inventory"] = security_inventory
+                # Flow analyzers supply evidence to Advanced Analysis. Vulnerability
+                # decisions are owned by RDL v2, not a second sink-name classifier.
+                entry["vulnerability_engine"] = "rdl_v2"
                 scores = []
                 for flow in cache_entry.get("flows", []):
                     if not isinstance(flow, dict):
                         continue
                     score = _normalize_confidence_score(flow.get("risk_score"), default=55)
                     scores.append(score)
-                    path_steps = flow.get("path", []) if isinstance(flow.get("path", []), list) else []
-                    source_step = next((step for step in path_steps if str(step.get("role", "")).lower() == "source"), None)
-                    sink_step = next((step for step in reversed(path_steps) if str(step.get("role", "")).lower() == "sink"), None)
-                    source_loc = "-"
-                    sink_loc = "-"
-                    if isinstance(source_step, dict):
-                        source_loc = f"{source_step.get('file', '-')}" + (f":{source_step.get('line')}" if source_step.get("line") not in (None, "") else "")
-                    if isinstance(sink_step, dict):
-                        sink_loc = f"{sink_step.get('file', '-')}" + (f":{sink_step.get('line')}" if sink_step.get("line") not in (None, "") else "")
-                    trace_chain = [
-                        f"{str(step.get('role', 'step')).lower()}:{step.get('file', '-')}" + (f":{step.get('line')}" if step.get("line") not in (None, "") else "")
-                        for step in path_steps[:8]
-                        if isinstance(step, dict)
-                    ]
-                    entry["findings"].append({
-                        "id": f"FLOW-{flow.get('rank', '')}",
-                        "title": str(flow.get("sink", "")).strip() or "Sensitive sink flow",
-                        "description": str(flow.get("description", "")).strip(),
-                        "analysis_kind": "taint_flow",
-                        "source": source_loc,
-                        "sink": sink_loc,
-                        "trace_chain": trace_chain,
-                        "path": path_steps,
-                        "xref": flow.get("xref", []) if isinstance(flow.get("xref", []), list) else [],
-                        "input_surface": flow.get("input_surface", {}) if isinstance(flow.get("input_surface", {}), dict) else {},
-                        "attack_vectors": flow.get("attack_vectors", []) if isinstance(flow.get("attack_vectors", []), list) else [],
-                        "file": str(flow.get("file", "")).strip(),
-                        "function": str(flow.get("function", "")).strip(),
-                        "line": flow.get("line"),
-                        "source_file": source_step.get("file", "") if isinstance(source_step, dict) else "",
-                        "source_line": source_step.get("line") if isinstance(source_step, dict) else "",
-                        "sink_file": sink_step.get("file", "") if isinstance(sink_step, dict) else "",
-                        "sink_line": sink_step.get("line") if isinstance(sink_step, dict) else "",
-                        "termination_nodes": flow.get("termination_nodes", []) if isinstance(flow.get("termination_nodes", []), list) else [],
-                        "cross_file": bool(flow.get("cross_file", False)),
-                        "risk_score": flow.get("risk_score"),
-                        "severity": str(flow.get("severity", "")).strip(),
-                        "confidence_score": score,
-                        "confidence_label": _confidence_label(score),
-                        "source_count": len(path_steps),
-                    })
+                    entry["findings"].append(analysis_report.flow_finding(flow))
                 if scores:
                     entry["confidence_score"] = int(round(sum(scores) / len(scores)))
                     entry["confidence_label"] = _confidence_label(entry["confidence_score"])
@@ -787,55 +770,31 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
                         "engine": "platform_inherited",
                         "analysis_kind": "inherited",
                         "supported_engine": bool(parent and parent.get("supported_engine")),
-                        "status": "completed" if fw_findings else "no_findings",
+                        **analysis_dispatch.inherited_analysis_state(parent, bool(fw_findings)),
                         "confidence_score": inherited_score,
                         "confidence_label": _confidence_label(inherited_score),
                         "findings": fw_findings,
                         "artifacts": parent.get("artifacts", {}) if parent else {},
-                        "security_inventory": {
-                            "summary": {
-                                "confirmed_vulnerabilities": 0,
-                                "mitigated_implementations": 0,
-                                "validated_findings": 0,
-                                "suppressed_false_positives": 0,
-                                "manual_review_recommended": 0,
-                                "by_kind": {},
-                                "mitigated_by_kind": {},
-                            },
-                            "vulnerabilities": [],
-                            "mitigations": [],
-                            "finding_reviews": [],
-                            "false_positives": [],
-                            "manual_reviews": [],
-                        },
+                        "vulnerability_engine": "rdl_v2",
                     }
                     results_payload.append(fw_entry_payload)
 
     total_findings = sum(len(item.get("findings", [])) for item in results_payload)
     taint_targets = len([item for item in results_payload if item.get("engine") == "dataflow_controlflow"])
-    platform_security = [item.get("security_inventory", {}) for item in results_payload if item.get("target_type") == "platform"]
-    total_vulnerabilities = sum(int((item.get("summary", {}) or {}).get("confirmed_vulnerabilities", 0) or 0) for item in platform_security if isinstance(item, dict))
-    total_mitigations = sum(int((item.get("summary", {}) or {}).get("mitigated_implementations", 0) or 0) for item in platform_security if isinstance(item, dict))
-    total_validated_findings = sum(int((item.get("summary", {}) or {}).get("validated_findings", 0) or 0) for item in platform_security if isinstance(item, dict))
-    total_suppressed_false_positives = sum(int((item.get("summary", {}) or {}).get("suppressed_false_positives", 0) or 0) for item in platform_security if isinstance(item, dict))
-    total_manual_review_recommended = sum(int((item.get("summary", {}) or {}).get("manual_review_recommended", 0) or 0) for item in platform_security if isinstance(item, dict))
     summary = {
         "enabled": True,
         "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "targets_total": len(results_payload),
         "targets_analyzed": len([item for item in results_payload if item.get("status") in {"completed", "no_findings"}]),
+        "targets_failed": len([item for item in results_payload if item.get("status") == "failed"]),
         "taint_targets": taint_targets,
         "findings_identified": total_findings,
-        "validated_findings": total_validated_findings,
-        "confirmed_vulnerabilities": total_vulnerabilities,
-        "mitigated_implementations": total_mitigations,
-        "suppressed_false_positives": total_suppressed_false_positives,
-        "manual_review_recommended": total_manual_review_recommended,
+        "vulnerability_engine": "rdl_v2",
         "platform_targets_total": total_platform_targets,
         "platform_targets_completed": total_platform_targets,
         "current_target": "",
         "last_heartbeat_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "heartbeat_message": "Analyzer completed",
+        "heartbeat_message": "Analyzer completed with target failures" if any(item.get("status") == "failed" for item in results_payload) else "Analyzer completed",
     }
 
     output_payload = {
@@ -868,6 +827,9 @@ def _update_live_progress(force=False, **payload):
     now = time.time()
     if not force and (now - _live_progress_tick["last"]) < 0.25:
         return
+    payload.setdefault("updated_at", now)
+    payload.setdefault("operation_started_at", 0)
+    payload.setdefault("elapsed_seconds", max(0, int(now - state.start_time)))
     result.update_scan_summary_many({
         f"live_progress.{key}": value for key, value in payload.items()
     })
@@ -1003,6 +965,12 @@ elif results.rule_file:
     result.update_scan_summary("inputs_received.project_id", state.project_id or project_output_id)
     result.update_scan_summary("inputs_received.run_id", state.run_id or run_output_id)
     result.update_scan_summary("inputs_received.report_root", str(state.reports_dirpath))
+    result.update_scan_summary("inputs_received.rdl_engine", results.rdl_engine)
+    result.update_scan_summary("inputs_received.custom_rdl", results.custom_rdl)
+    result.update_scan_summary(
+        "inputs_received.rdl_v2_shadow_enabled",
+        default_shadow_runner(state.root_dir).enabled,
+    )
 
     cutils.init_or_prompt_project_config()
     if str(results.verbosity) in ('1', '2', '3'):
@@ -1018,6 +986,14 @@ if path.isdir(results.target_dir) is False:
     sys.exit(1)
 
 project_dir = os.path.join(results.target_dir, '')
+state.source_root = str(Path(results.target_dir).resolve())
+# Retain review evidence and unresolved analysis, without comparison-only history.
+os.environ["DAKSH_RDL_RESULT_RETENTION"] = "review"
+# Source and rule bytes remain consistent across all passes in this scan.
+from utils.source_cache import source_snapshot
+_scan_source_snapshot = source_snapshot(state.source_root, Path(state.root_dir) / 'rules')
+_scan_source_snapshot.__enter__()
+atexit.register(lambda: _scan_source_snapshot.__exit__(None, None, None))
 state.sourcedir = re.search(r'((?!\/|\\).)*(\/|\\)$', project_dir)[0]        # Target Source Code Directory
 
 root_dir = os.path.dirname(os.path.realpath(__file__))
@@ -1137,6 +1113,7 @@ for fw_entries in framework_rule_files.values():
 total_rules_loaded = sum(map(int, rule_counts)) + common_rules_total + framework_rules_total
 
 cli.section_print(f"[*] Rules Loaded")
+print(f"     [-] RDL Engines          : {results.rdl_engine}" + (" (v2 experimental)" if results.rdl_engine != "v1" else ""))
 print(f"     [-] Platform Rules       : {platform_rules_total}")
 print(f"     [-] Framework Rules      : {framework_rules_total}")
 print(f"     [-] Common Rules         : {common_rules_total}")
@@ -1156,6 +1133,11 @@ if results.rule_file:
         "file_types": str(results.file_types),
         "recon": bool(results.recon),
         "recon_strict": bool(results.recon_strict),
+        "exclude_checks": results.exclude_checks,
+        "exclude_paths": results.exclude_paths,
+        "exclude_types": results.exclude_types,
+        "exclude_keywords": results.exclude_keywords,
+        "rdl_engine": results.rdl_engine,
     }
     scan_config = {
         "state_file": str(state_file_path),
@@ -1163,6 +1145,7 @@ if results.rule_file:
         "persist_after_seconds": state_cfg["persist_after_seconds"],
         "persist_interval_seconds": state_cfg["persist_interval_seconds"],
         "rule_engine": state.ruleEngine,
+        "rdl_engine": results.rdl_engine,
         "project_output_id": project_output_id,
         "run_output_id": run_output_id,
     }
@@ -1294,12 +1277,14 @@ def _source_progress(payload):
     _update_live_progress(
         stage="pattern_matching",
         status=str(payload.get("status", "running")),
-        message="Scanning source rules",
+        message=payload.get("message", "Scanning source rules"),
+        updated_at=payload.get("updated_at", time.time()),
+        operation_started_at=payload.get("operation_started_at", 0),
         platform=payload.get("platform", ""),
         category=payload.get("category", ""),
         rule_title=payload.get("rule_title", ""),
-        current_function=str(payload.get("rule_title", "")),
-        current_phase="pattern_matching",
+        current_function=str(payload.get("current_function", payload.get("rule_title", ""))),
+        current_phase=payload.get("phase", "pattern_matching"),
         current_file=str(payload.get("filepath", "")),
         current_index=int(payload.get("file_index", 0) or 0),
         total_items=int(payload.get("total_items", 0) or 0),
@@ -1490,6 +1475,18 @@ result.update_scan_summary("detection_summary.file_paths_areas_of_interest_ident
 total_loc = futils.clean_file_paths(master_file_paths, count_loc=bool(results.loc))
 if total_loc is not None:
     result.update_scan_summary("detection_summary.total_loc", str(total_loc))
+if default_shadow_runner(state.root_dir).enabled:
+    try:
+        from core.rdl.xref import build_index, write_index, INDEX_NAME
+        _update_live_progress(force=True, stage="analysis", status="running", message="Indexing source cross-references")
+        xref_index = build_index(results.target_dir, progress=lambda filename, count: _update_live_progress(
+            stage="analysis", status="running", message="Indexing source cross-references",
+            current_file=filename, current_index=count))
+        write_index(state.runtime_dirpath / INDEX_NAME, xref_index)
+        print("     [-] Source cross-references :", xref_index['summary']['symbols'], "symbols /", xref_index['summary']['calls'], "calls")
+    except Exception as exc:
+        print("     [!] Source cross-reference index:", exc)
+
 os.unlink(master_file_paths)
 scan_state_mgr.mark_path_analysis_completed()
 
@@ -1520,6 +1517,7 @@ if results.baseline_generate:
 
 ###### [Stage 4] Analyzer ######
 analysis_payload = {"summary": {"enabled": False, "targets_total": 0, "targets_analyzed": 0, "findings_identified": 0}, "results": []}
+analyzer_error_message = ""
 if analysis_enabled_for_run:
     sCnt += 1
     cli.section_print(f"[*] [Stage {sCnt}] Analyzer")
@@ -1542,21 +1540,26 @@ if analysis_enabled_for_run:
             include_frameworks=analysis_include_frameworks,
         )
         summary = analysis_payload.get("summary", {})
+        analyzer_error_message = analysis_dispatch.analysis_failure_message(analysis_payload)
         print("     [-] Analyzer Targets     :", summary.get("targets_total", 0))
         print("     [-] Analyzer Findings    :", summary.get("findings_identified", 0))
         print("     [-] Analyzer JSON        :", re.sub(str(state.root_dir), "", str(state.outputAnalysis_JSON)))
-        scan_state_mgr.update_stage("analysis", "completed", summary)
+        scan_state_mgr.update_stage("analysis", "failed" if analyzer_error_message else "completed", summary)
         result.update_scan_summary("analyzer_summary.enabled", True)
         result.update_scan_summary("analyzer_summary.targets_total", summary.get("targets_total", 0))
         result.update_scan_summary("analyzer_summary.targets_analyzed", summary.get("targets_analyzed", 0))
+        result.update_scan_summary("analyzer_summary.targets_failed", summary.get("targets_failed", 0))
+        result.update_scan_summary("analyzer_summary.error", analyzer_error_message)
         result.update_scan_summary("analyzer_summary.taint_targets", summary.get("taint_targets", 0))
         result.update_scan_summary("analyzer_summary.findings_identified", summary.get("findings_identified", 0))
         result.update_scan_summary("analyzer_summary.output_json", str(state.outputAnalysis_JSON))
     except Exception as exc:
+        analyzer_error_message = str(exc)
         print(f"[!] Analyzer stage failed: {exc}")
         scan_state_mgr.update_stage("analysis", "failed", {"error": str(exc)})
         result.update_scan_summary("analyzer_summary.enabled", False)
         result.update_scan_summary("analyzer_summary.taint_targets", 0)
+        result.update_scan_summary("analyzer_summary.error", analyzer_error_message)
 else:
     result.update_scan_summary("analyzer_summary.enabled", False)
     result.update_scan_summary("analyzer_summary.taint_targets", 0)
@@ -1581,28 +1584,49 @@ _update_live_progress(
     current_index=0,
     total_items=0,
 )
-valid_formats = {"html", "pdf"}
+from utils.output_mode import web_scan
+valid_formats = {"html", "pdf", "docx", "json"}
 requested_formats = results.report_format.lower().replace(" ", "").split(",")
 selected_formats = [fmt for fmt in requested_formats if fmt in valid_formats]
 
-if selected_formats:
+if web_scan():
+    selected_formats = []
+    print("[*] Web results saved. CLI report files are not generated.")
+elif selected_formats:
     report.gen_report(formats=",".join(selected_formats), include_multifile_pdf=not results.pdf_single_only)
 else:
     print("[!] No valid report format selected. Defaulting to html.")
     selected_formats = ["html"]
     report.gen_report(formats="html", include_multifile_pdf=False)
+
+shadow_summary = summarize_shadow_records(state.runtime_dirpath / "rdl_shadow_comparisons.jsonl")
+shadow_enabled = default_shadow_runner(state.root_dir).enabled
+if shadow_enabled:
+    print("")
+    print("[*] RDL v2 review results")
+    print("     [-] Retained results      :", shadow_summary["total"])
+    print("     [-] Unique review leads   :", shadow_summary.get('review_leads', 0))
+    print("     [-] Unresolved analysis   :", sum(shadow_summary['statuses'].get(key, 0) for key in ('INDETERMINATE', 'RULE_ERROR', 'SHADOW_ERROR')))
+    if shadow_summary["malformed"]:
+        print("     [!] Malformed records     :", shadow_summary["malformed"])
+    print("     [-] Evidence available in the RDL review views; comparison history is not retained.")
+
 scan_state_mgr.update_stage("reporting", "completed")
 _update_live_progress(force=True, stage="reporting", status="completed", message="Reports generated")
 
-if "pdf" not in selected_formats:
+if not web_scan() and "pdf" not in selected_formats:
     print("")
     print("     [i] PDF report not generated. To generate PDF from existing JSON output:")
     print("         dakshscra.py --pdf-from-json --json-input-dir ./reports/<project-id>/<run-id>/data")
     print("         dakshscra.py --pdf-from-json --json-input-dir ./reports/<project-id>/<run-id>/data --pdf-single-only")
 
 cutils.update_project_config("","")     # Clean up project details in the config file
-scan_state_mgr.mark_completed()
-_update_live_progress(force=True, stage="completed", status="completed", message="Scan completed")
+if analyzer_error_message:
+    scan_state_mgr.mark_failed(analyzer_error_message)
+    _update_live_progress(force=True, stage="failed", status="failed", message=analyzer_error_message + "; partial results saved")
+else:
+    scan_state_mgr.mark_completed()
+    _update_live_progress(force=True, stage="completed", status="completed", message="Scan completed")
 scan_state_mgr.uninstall_signal_handlers()
 
 if not os.environ.get("DAKSH_RUNTIME_DIR", "").strip():
@@ -1610,6 +1634,9 @@ if not os.environ.get("DAKSH_RUNTIME_DIR", "").strip():
     # per-run diagnostics via scan_runtime.cleanup_run_runtime) - the
     # decision-trace JSONL files have no reader once the run is done.
     cleanup_trace_dir()
+
+if analyzer_error_message:
+    raise SystemExit(1)
 
 if not os.environ.get("DAKSH_RUNTIME_DIR", "").strip():
     # Plain CLI run (not spawned by the web UI, which sweeps its own

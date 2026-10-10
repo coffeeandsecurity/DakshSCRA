@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.ruby.framework.rails.rails_development_debug_mode_enabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "RAILS_ENV\\s*=\\s*[\\'\\\"]development[\\'\\\"]|config\\.consider_all_requests_local\\s*=\\s*true" "im"
+WHEN TEXT_MISSING "release|production" "im"
+REPORT "Rails Development/Debug Mode Enabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

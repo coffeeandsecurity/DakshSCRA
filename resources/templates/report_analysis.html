@@ -1,0 +1,112 @@
+{% macro flow_view(steps, title, require_flow=false) %}
+{% if require_flow %}
+{% set flow = namespace(steps=[], source=false, continuation=false) %}
+{% for step in steps %}{% if step.get('matched') is not sameas false and step.get('predicate') in ['SOURCE','PROPAGATION','SINK'] %}
+{% set flow.steps = flow.steps + [step] %}{% if step.get('predicate') == 'SOURCE' %}{% set flow.source = true %}{% else %}{% set flow.continuation = true %}{% endif %}
+{% endif %}{% endfor %}
+{% set steps = flow.steps if flow.source and flow.continuation else [] %}
+{% endif %}
+{% if report_graph_enabled and steps %}<div class="report-flow-shell flow-view">
+<div class="flow-view-heading"><strong>{{ title }}</strong><div class="flow-view-modes" role="group" aria-label="Evidence display mode"><button type="button" data-flow-mode="text" aria-pressed="true">Text</button><button type="button" data-flow-mode="graph" aria-pressed="false">Graph</button></div></div>
+<script type="application/json">{{ {'steps':steps,'title':title}|tojson }}</script>
+<div data-flow-text>{{ caller() }}</div><div data-flow-graph hidden></div></div>
+{% else %}{{ caller() }}{% endif %}
+{% endmacro %}
+{% macro location(item) -%}{{ item.get('file') or item.get('path') or '-' }}{% if item.get('line') %}:{{ item.line }}{% endif %}{%- endmacro %}
+{% macro badge(value) -%}<span class="report-badge severity-{{ value|lower }}">{{ value or 'Not rated' }}</span>{%- endmacro %}
+{% macro snippet(rows) %}{% if rows %}<pre class="report-code">{% for row in rows %}<span class="line{% if row.get('highlight') %} highlight{% endif %}"><span class="line-number">{{ row.get('line', '') }}</span>{{ row.get('text', row.get('code', '')) }}</span>{% endfor %}</pre>{% endif %}{% endmacro %}
+{% macro metadata(value) %}
+{% if value is mapping %}<dl class="report-meta">{% for key, child in value.items() %}<dt>{{ key|replace('_',' ')|title }}</dt><dd>{{ metadata(child) }}</dd>{% endfor %}</dl>
+{% elif value is sequence and value is not string %}<ul>{% for child in value %}<li>{{ metadata(child) }}</li>{% endfor %}</ul>
+{% else %}{{ value if value is not none else 'Not recorded' }}{% endif %}
+{% endmacro %}
+
+{% if show_analysis %}
+{% if page_sections is not defined or 'analysis-overview' in page_sections %}<section class="report-section section" id="analysis-overview">
+<h2>Advanced Analysis</h2><div class="report-section-body">
+<p class="review-note">Saved analysis from this scan. Vulnerability labels are analyzer assessments that require reviewer confirmation. Inferred entry points, incomplete traces and unresolved references retain their recorded limitations.</p>
+<div class="report-stats">
+<div class="report-stat"><strong>{{ analysis_flows|length }}</strong><span>Analysis findings</span></div>
+<div class="report-stat"><strong>{{ vulnerabilities|length }}</strong><span>Confirmed RDL findings</span></div>
+<div class="report-stat"><strong>{{ attack_vectors|length }}</strong><span>Flow-associated attack vectors</span></div>
+<div class="report-stat"><strong>{{ mitigations|length }}</strong><span>Mitigation observations</span></div>
+</div>
+{% if analysis_targets %}<table class="report-table"><thead><tr><th>Platform / framework</th><th>Engine</th><th>Recorded status</th><th>Coverage</th></tr></thead><tbody>
+{% for target in analysis_targets %}<tr><td>{{ target.get('target','Unknown') }}</td><td>{{ target.get('engine','Not recorded') }}</td><td>{{ target.get('status','Not recorded') }}{% if target.get('error') %}<small>{{ target.error }}</small>{% endif %}</td><td>{% if target.get('engine') == 'platform_inherited' %}Inherited from {{ target.get('platform','parent platform') }}; counted once{% else %}{{ target.get('findings',[])|length }} findings{% endif %}</td></tr>{% endfor %}
+</tbody></table>{% else %}<p class="report-empty">No native analyzer results were saved for this selection.</p>{% endif %}
+</div></section>{% endif %}
+
+{% if page_sections is not defined or 'vulnerabilities' in page_sections %}<section class="report-section section" id="vulnerabilities"><h2>Vulnerabilities &amp; Mitigations</h2><div class="report-section-body">
+{% if vulnerabilities %}<table class="report-table"><thead><tr><th style="width:16%">Severity / CWE</th><th style="width:29%">Assessment</th><th>Location &amp; rationale</th></tr></thead><tbody>
+{% for item in vulnerabilities %}<tr><td>{{ badge(item.get('severity')) }}<small>{{ item.get('cwe','') }}</small></td><td><b>{{ item.get('title') or item.get('kind','Vulnerability assessment') }}</b><small>{{ item.get('id','') }} · {{ item.get('report_platform','') }}</small><small>Recorded status: {{ item.get('status','Not recorded') }}<br>Trace: {{ item.get('trace_status','Not recorded') }}</small></td><td>{{ location(item) }}<p><b>Issue description:</b> {{ item.get('issue_description') or item.get('reason') or item.get('description','') }}</p>{% if item.get('security_impact') %}<p><b>Security impact:</b> {{ item.security_impact }}</p>{% endif %}{% if item.get('recommendation') %}<p><b>Recommended correction:</b> {{ item.recommendation }}</p>{% endif %}{% if item.get('explanation') %}<small>{{ item.explanation }}</small>{% endif %}{% if item.get('source') %}<small>Source: {{ item.source }}</small>{% endif %}{% if item.get('sink') %}<small>Sink: {{ item.sink }}</small>{% endif %}</td></tr>{% endfor %}
+</tbody></table>{% else %}<p class="report-empty">No matching RDL findings were recorded. This does not establish that the scanned code is free of vulnerabilities.</p>{% endif %}
+{% if rdl_assessments %}<h3>RDL review findings / vulnerability candidates</h3><p class="muted">Recorded rule assessments; pattern-only evidence does not establish exploitability.</p><table class="report-table"><thead><tr><th>Severity / CWE</th><th>Assessment / confidence</th><th>Issue, impact &amp; correction</th></tr></thead><tbody>{% for item in rdl_assessments %}<tr><td>{{ badge(item.get('severity')) }}<small>{{ item.get('cwe','') }}</small></td><td><a href="#{{ item.anchor }}">{{ item.get('title') or item.rule_title }}</a><small>{{ location(item.get('location') or {'path':item.report_path}) }}</small><small>{{ item.get('confidence','Not recorded') }} · {{ item.get('confidence_reason','') }}</small>{% if item.get('report_locations') %}<small>{{ item.report_locations|length }} recorded locations</small>{% endif %}</td><td><p><b>Issue description:</b> {{ item.get('description') or item.get('message') or item.report_explanation }}</p><p><b>Security impact:</b> {{ item.get('impact','No rule-specific consequence recorded.') }}</p><p><b>Recommended correction:</b> {{ item.get('remediation','') }}</p></td></tr>{% endfor %}</tbody></table>{% endif %}
+{% for label, items in [('Mitigation observations', mitigations), ('Manual review recommendations', manual_reviews)] %}
+{% if items %}<h3>{{ label }}</h3>{% for item in items %}<details class="report-entry"><summary>{{ item.get('title') or item.get('kind') or item.get('rule_title') or label }} <small>{{ location(item) }}</small></summary><div class="report-entry-body">{{ metadata(item) }}</div></details>{% endfor %}{% endif %}{% endfor %}
+</div></section>{% endif %}
+
+{% if page_sections is not defined or 'attack-vectors' in page_sections %}<section class="report-section section" id="attack-vectors"><h2>Attack Vectors</h2><div class="report-section-body">
+<p class="muted">Entry-point evidence linked to the flow it belongs to; code-path candidates are not presented as verified external endpoints.</p>
+{% if attack_vectors %}<table class="report-table"><thead><tr><th style="width:25%">Input surface</th><th>Evidence &amp; reachability</th><th style="width:25%">Related flow</th></tr></thead><tbody>
+{% for vector in attack_vectors %}<tr><td><b>{{ vector.get('label') or vector.get('kind','Input') }}</b><small>{{ vector.get('category','') }} · {{ vector.platform }}</small></td><td>{{ vector.get('reason','') }}{% for example in vector.get('examples',[]) %}<small>{{ example }}</small>{% endfor %}{% if vector.get('taint_symbols') %}<small>Symbols: {{ vector.taint_symbols|join(', ') }}</small>{% endif %}</td><td><a href="#{{ vector.flow_anchor }}">{{ vector.flow_title }}</a><small>{{ vector.source }}</small></td></tr>{% endfor %}
+</tbody></table>{% else %}<p class="report-empty">No native attack vectors were recorded. Semantic rule source evidence, where available, is included below.</p>{% endif %}
+{% if semantic_vectors %}<h3>RDL semantic input sources</h3><table class="report-table"><thead><tr><th>Source / location</th><th>Recorded evidence</th></tr></thead><tbody>{% for source in semantic_vectors %}<tr><td>{{ source.get('symbol','Source') }}<small>{{ location(source.get('location') or {}) }}</small></td><td>{{ source.get('explanation','') }}{{ snippet(source.get('snippet',[])) }}</td></tr>{% endfor %}</tbody></table>{% endif %}
+</div></section>{% endif %}
+
+{% if page_sections is not defined or 'taint-flows' in page_sections %}<section class="report-section section" id="taint-flows"><h2>Taint &amp; Data Flow Evidence</h2><div class="report-section-body">
+<div class="report-tools"><input type="search" aria-label="Search analysis flows" placeholder="Search flow, file or evidence" data-report-search="taint-flows"><button type="button" data-report-expand="taint-flows">Expand all flows</button><button type="button" data-report-collapse="taint-flows">Collapse all flows</button></div>
+{% for flow in analysis_flows %}<details class="report-entry" id="{{ flow.anchor }}"><summary>{{ badge(flow.get('severity')) }} {{ flow.get('title','Analysis finding') }} <small>· {{ flow.report_platform }} · {{ flow.get('id','') }}</small></summary>
+<div class="report-entry-body"><p>{{ flow.get('description','') }}</p><dl class="report-meta"><dt>Analysis kind</dt><dd>{{ flow.get('analysis_kind','Not recorded') }}</dd><dt>Source</dt><dd>{{ flow.get('source','Not recorded') }}</dd><dt>Sink</dt><dd>{{ flow.get('sink','Not recorded') }}</dd><dt>Recorded confidence</dt><dd>{{ flow.get('confidence_score','Not recorded') }}{% if flow.get('confidence_score') is not none %}%{% endif %}</dd></dl>
+{% if flow.get('input_surface') %}<h3>Input surface</h3>{{ metadata(flow.input_surface) }}{% endif %}
+{% call flow_view(flow.get('path',[]), 'Taint evidence') %}<ol class="flow-path">{% for step in flow.get('path',[]) %}<li><span class="role">{{ step.get('role','Step') }}</span> <small>{{ location(step) }}</small>{% if step.get('code') %}<pre class="report-code">{{ step.code }}</pre>{% endif %}{% if step.get('context_before') %}{{ snippet(step.context_before) }}{% endif %}{% if step.get('context_after') %}{{ snippet(step.context_after) }}{% endif %}{% if step.get('reason') %}<p>{{ step.reason }}</p>{% endif %}</li>{% endfor %}</ol>{% endcall %}
+{% if flow.get('termination_nodes') %}<h3>Trace termination</h3>{{ metadata(flow.termination_nodes) }}{% endif %}
+{% if flow.get('xref') %}<h3>Cross references</h3><table class="report-table"><thead><tr><th>Kind / symbol</th><th>Location / context</th></tr></thead><tbody>{% for ref in flow.xref %}<tr><td>{{ ref.get('type') or ref.get('kind','Reference') }}<br>{{ ref.get('resolved_name') or ref.get('symbol','') }}</td><td>{{ location(ref) }}<small>{{ ref.get('context') or ref.get('code','') }}</small></td></tr>{% endfor %}</tbody></table>{% endif %}
+</div></details>{% else %}<p class="report-empty">No taint flows were recorded.</p>{% endfor %}
+{% if semantic_flows %}<h3>RDL semantic source-to-sink paths</h3>{% for flow in semantic_flows %}<details class="report-entry" id="{{ flow.anchor }}"><summary>{{ badge(flow.get('severity')) }} {{ flow.get('title') or flow.rule_title }} <small>· {{ 'Source and sink recorded' if flow.report_complete else 'Partial trace: destination unresolved' }}</small></summary><div class="report-entry-body"><p><a href="#{{ flow.finding_anchor }}">Related finding, impact and remediation</a></p>{% call flow_view(flow.report_steps, 'Semantic flow evidence') %}<ol class="flow-path">{% for step in flow.report_steps %}<li><span class="role">{{ step.get('predicate') }}</span> {{ location(step.get('location') or {}) }}<p>{{ step.get('symbol') or step.get('explanation','') }}</p>{% if step.get('transition') %}<small>{{ step.transition }}</small>{% endif %}{% if step.get('report_excerpt') %}<a href="#{{ step.report_excerpt }}">View saved source excerpt</a>{% endif %}</li>{% endfor %}</ol>{% endcall %}</div></details>{% endfor %}{% endif %}
+</div></section>{% endif %}
+
+{% if page_sections is not defined or 'cross-references' in page_sections %}<section class="report-section section" id="cross-references"><h2>Cross References</h2><div class="report-section-body">
+{% if semantic_references %}<h3>Recorded call and file handoffs</h3><table class="report-table"><thead><tr><th>From</th><th>To</th><th>Connection</th></tr></thead><tbody>{% for edge in semantic_references %}<tr><td>{{ location(edge.before.get('location') or {}) }}<small>{{ edge.before.get('symbol','') }}</small></td><td>{{ location(edge.after.get('location') or {}) }}<small>{{ edge.after.get('symbol','') }}</small></td><td>{% call flow_view([edge.before,edge.after], 'Recorded handoff') %}{{ edge.transition or 'Cross-file handoff' }}<p><a href="#{{ edge.flow_anchor }}">Related taint path</a></p>{% endcall %}</td></tr>{% endfor %}</tbody></table>{% endif %}
+{% if cross_reference %}
+<p class="review-note">Saved static call graph. Unresolved and ambiguous calls remain labelled; zero callers can include framework or HTTP entry points that are not represented as direct calls.</p>
+<div class="report-stats">{% for key in ['symbols','calls','resolved','unresolved'] %}<div class="report-stat"><strong>{{ cross_reference.get('summary',{}).get(key,0) }}</strong><span>{{ key|title }}</span></div>{% endfor %}</div>
+{% if cross_reference.get('truncated') %}<p class="review-note">The saved graph reports truncation. This report preserves that coverage limit.</p>{% endif %}
+<details class="report-entry"><summary>Symbol index · {{ cross_reference.get('symbols',[])|length }} symbols</summary><div class="report-entry-body"><table class="report-table"><thead><tr><th>Symbol / kind</th><th>Definition</th><th style="width:15%">Callers / callees</th></tr></thead><tbody>{% for symbol in cross_reference.get('symbols',[]) %}<tr><td>{{ symbol.get('qualified_name') or symbol.get('name','') }}<small>{{ symbol.get('kind','') }}</small></td><td>{{ location(symbol) }}<small>{{ symbol.get('signature','') }}</small></td><td>{{ symbol.get('callers',0) }} / {{ symbol.get('callees',0) }}</td></tr>{% endfor %}</tbody></table></div></details>
+<details class="report-entry"><summary>Call-site index · {{ cross_reference.get('calls',[])|length }} calls</summary><div class="report-entry-body"><table class="report-table"><thead><tr><th style="width:24%">Callee</th><th>Call site</th><th style="width:30%">Resolution / reason</th></tr></thead><tbody>{% for call in cross_reference.get('calls',[]) %}<tr><td>{{ call.get('callee','') }}</td><td>{{ location(call) }}{% for argument in call.get('arguments',[]) %}<small>{{ argument.get('name') or argument.get('parameter') or 'Argument' }}: {{ argument.get('expression','') }}</small>{% endfor %}</td><td>{{ call.get('resolution','Not recorded') }}<small>{{ call.get('reason','') }}</small></td></tr>{% endfor %}</tbody></table></div></details>
+{% elif flow_references %}<p>{{ flow_references|length }} flow-associated references are recorded in the individual <a href="#taint-flows">flow evidence</a>. No whole-project graph was saved for this selection.</p>
+{% else %}<p class="report-empty">No cross-reference graph was saved for this selection.</p>{% endif %}
+</div></section>{% endif %}
+
+{% if page_sections is not defined or 'rdl-evidence' in page_sections %}<section class="report-section section" id="rdl-evidence"><h2>RDL Review Evidence</h2><div class="report-section-body">
+{% if rdl_outcomes %}<p>{% for outcome,count in rdl_outcomes.items() %}<span class="report-badge">{{ outcome }} {{ count }}</span> {% endfor %}</p>{% endif %}
+<p class="muted">Rule review leads retain their recorded outcomes and source evidence. Baseline pattern matches are distinct from semantic source-to-sink analysis. {{ rdl_finding_count }} distinct findings; identical baseline predicate evidence is printed once per rule and file, with every finding location retained.</p>
+{% for item in rdl_findings %}<details class="report-entry" id="{{ item.anchor }}"><summary>{{ badge(item.get('severity')) }} {{ item.get('title') or item.rule_title }} <small>· {{ item.report_kind }} · {{ location(item.get('location') or {'path':item.report_path}) }}</small></summary><div class="report-entry-body"><p>{{ item.get('message') or item.get('description') or item.report_explanation }}</p>
+<dl class="report-meta">{% for key in ['cwe','confidence','confidence_reason','impact','remediation','review_area','source','sink','limitations'] %}{% if item.get(key) %}<dt>{{ key|replace('_',' ')|title }}</dt><dd>{{ metadata(item[key]) }}</dd>{% endif %}{% endfor %}</dl>
+{% if item.get('trace') %}{% for key in ['summary','review_note','protection_note'] %}{% if item.trace.get(key) %}<p><b>{{ key|replace('_',' ')|title }}:</b> {{ item.trace[key] }}</p>{% endif %}{% endfor %}{% endif %}
+{% if item.get('report_locations') %}<table class="report-table"><thead><tr><th>Finding location</th><th>Severity / message</th></tr></thead><tbody>{% for lead in item.report_locations %}<tr><td>{{ location(lead.location) }}</td><td>{{ lead.severity or 'Not rated' }}{% if lead.message %}<small>{{ lead.message }}</small>{% endif %}</td></tr>{% endfor %}</tbody></table>{% endif %}
+{% call flow_view(item.report_evidence, 'Recorded data-flow trace', require_flow=true) %}{% for step in item.report_evidence %}<div class="source-block"><div class="source-head">{{ step.get('predicate','Evidence') }} · {{ location(step.get('location') or {}) }}{% if step.get('matched') is sameas false %} · Not matched{% endif %}</div><div class="report-entry-body"><p>{{ step.get('explanation') or step.get('symbol','') }}</p>{% if step.get('report_excerpt') %}<a href="#{{ step.report_excerpt }}">View saved source excerpt</a>{% endif %}</div></div>{% endfor %}{% endcall %}
+</div></details>{% else %}<p class="report-empty">No RDL v2 review findings were saved for this selection.</p>{% endfor %}
+{% if review_limitations %}<h3>Inconclusive checks &amp; coverage limits</h3><table class="report-table"><thead><tr><th>Rule / file</th><th>Recorded limit</th></tr></thead><tbody>{% for item in review_limitations %}<tr><td>{{ item.rule }}<small>{{ item.file }}</small></td><td>{{ item.outcome }}<small>{{ item.reason }}</small></td></tr>{% endfor %}</tbody></table>{% endif %}
+</div></section>{% endif %}
+{% if page_sections is not defined or 'source-evidence' in page_sections %}<section class="report-section section" id="source-evidence"><h2>Saved Source Evidence</h2><div class="report-section-body"><p class="muted">Rule evidence links here. Repeated source lines are printed once per file; all recorded context lines are retained.</p>
+{% for source in evidence_sources %}<details class="report-entry" id="{{ source.id }}"><summary>{{ source.path }} <small>· {{ source.rows|length }} recorded lines</small></summary><div class="report-entry-body"><pre class="report-code">{% for row in source.rows %}<span id="{{ row.anchor }}" class="line{% if row.get('highlight') %} highlight{% endif %}"><span class="line-number">{{ row.get('line','') }}</span>{{ row.text }}</span>{% endfor %}</pre></div></details>{% endfor %}
+</div></section>{% endif %}
+{% endif %}
+
+{% if show_suppressed %}{% if page_sections is not defined or 'suppressed-findings' in page_sections %}<section class="report-section section" id="suppressed-findings"><h2>Suppressed Findings</h2><div class="report-section-body"><p class="muted">{{ suppressed|length }} saved records. Suppression reasons and rule intent are shown separately.</p>
+{% for item in suppressed %}<details class="report-entry"><summary>{{ item.get('rule_title','Suppressed finding') }} <span class="report-badge">{{ item.report_engine }}</span> <small>{{ location(item) }}</small></summary><div class="report-entry-body">
+<p><b>Suppression reason:</b> {{ item.get('suppression_reason') or 'Reason not recorded' }}</p><p><b>Rule source:</b> {{ item.report_source or 'Not recorded' }}</p><p><b>Recorded status:</b> {{ item.get('status','Not recorded') }}</p>
+{% if item.get('logic_reason') %}<p><b>Rule intent:</b> {{ item.logic_reason }}</p>{% endif %}
+{% if item.get('code') %}<pre class="report-code">{{ item.code }}</pre>{% endif %}
+{% if item.get('logic_trace') %}<h3>Decision trace</h3><ul>{% for line in item.logic_trace %}<li>{{ line }}</li>{% endfor %}</ul>{% endif %}
+{% if item.get('logic_consulted_files') %}<p><b>Consulted files:</b> {{ item.logic_consulted_files|join(', ') }}</p>{% endif %}
+{% if item.get('rdl_text') %}<h3>Recorded RDL</h3><pre class="report-code">{{ item.rdl_text }}</pre>{% endif %}
+{% if item.get('review_notes') %}<p><b>Review notes:</b> {{ item.review_notes }}</p>{% endif %}
+</div></details>{% endfor %}
+</div></section>{% endif %}{% endif %}
+{% if recon %}{% if page_sections is not defined or 'reconnaissance' in page_sections %}
+{% if recon_report is defined %}{% include 'report_recon.html' %}
+{% else %}{# A report already rendering in an older worker retains its original context. #}
+<section class="report-section section" id="reconnaissance"><h2>Software Reconnaissance</h2><div class="report-section-body">{{ metadata(recon) }}</div></section>
+{% endif %}{% endif %}{% endif %}
+{% for key,value in (extra_sections|default({})).items() %}<section class="report-section section" id="{{ extra_section_id|default('additional-' ~ loop.index) }}"><h2>{{ key|replace('_',' ')|title }}</h2><div class="report-section-body">{{ metadata(value) }}</div></section>{% endfor %}

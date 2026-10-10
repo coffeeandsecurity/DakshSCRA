@@ -1,4 +1,6 @@
+from utils.scan_scope import walk_source, allows_file
 from pathlib import Path
+import os
 
 
 def project_language_hints(source_root):
@@ -12,20 +14,20 @@ def project_language_hints(source_root):
     if not root.exists():
         return counts
 
-    patterns = {
-        "java": ("*.java",),
-        "kotlin": ("*.kt",),
-        "javascript": ("*.js", "*.jsx", "*.ts", "*.tsx"),
-        "dotnet": ("*.cs", "*.vb", "*.aspx", "*.cshtml"),
+    languages = {
+        ".java": "java", ".kt": "kotlin",
+        ".js": "javascript", ".jsx": "javascript",
+        ".ts": "javascript", ".tsx": "javascript",
+        ".cs": "dotnet", ".vb": "dotnet",
+        ".aspx": "dotnet", ".cshtml": "dotnet",
     }
-    for lang, globs in patterns.items():
-        total = 0
-        for glob in globs:
-            try:
-                total += sum(1 for _ in root.rglob(glob))
-            except OSError:
-                continue
-        counts[lang] = total
+    # Walk once: repeated glob discovery is expensive on mounted source trees.
+    # As with rglob, do not descend into directory symlinks.
+    for _, _, names in walk_source(root, followlinks=False):
+        for name in names:
+            language = languages.get(Path(name).suffix)
+            if language:
+                counts[language] += 1
     return counts
 
 
@@ -47,3 +49,20 @@ def resolve_analysis_target(platform, alias_map, analyzers, language_hints):
             return "kotlin", analyzers.get("kotlin")
 
     return canonical, None
+
+
+def inherited_analysis_state(parent, has_findings):
+    if parent and parent.get('status') == 'failed':
+        return {'status': 'failed', 'error': parent.get('error', 'Parent analyzer failed')}
+    return {'status': 'completed' if has_findings else 'no_findings'}
+
+
+def analysis_failure_message(payload):
+    """Keep saved partial results, but do not report failed targets as success."""
+    failed = [item for item in payload.get('results', []) if item.get('status') == 'failed']
+    if failed:
+        return 'Analyzer targets failed: ' + '; '.join(
+            '{}: {}'.format(item.get('platform', 'unknown'), item.get('error') or 'analysis failed')
+            for item in failed)
+    count = int(payload.get('summary', {}).get('targets_failed', 0) or 0)
+    return '{} analyzer target(s) failed'.format(count) if count else ''

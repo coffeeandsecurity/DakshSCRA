@@ -1,0 +1,8 @@
+VERSION 2
+RULE ios.alamofire.trust-evaluation-disabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:DisabledTrustEvaluator\\s*\\(|allHostsMustBeEvaluated\\s*:\\s*false)" ""
+REPORT "Alamofire Trust Evaluation Disabled"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

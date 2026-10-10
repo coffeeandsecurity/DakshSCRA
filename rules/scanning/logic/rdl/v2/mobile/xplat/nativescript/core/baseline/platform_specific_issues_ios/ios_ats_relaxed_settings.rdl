@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.xplat.nativescript.core.ios_ats_relaxed_settings VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "NSAllowsArbitraryLoads\\s*</key>\\s*<true\\s*/>" "im"
+REPORT "iOS ATS Relaxed Settings"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

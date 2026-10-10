@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.xplat.reactnative.core.arbitrary_external_url_opening VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bLinking\\.openURL\\s*\\(" "im"
+WHEN (TEXT_MISSING "allowlist|Linking\\.canOpenURL|validateUrl|startsWith.*https|trustedDomains" "im" AND TEXT_MISSING "test|example" "im")
+REPORT "Arbitrary External URL Opening"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

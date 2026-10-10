@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.javascript.core.server_side_request_forgery_ssrf VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "XMLHttpRequest\\.open\\(|fetch\\(|axios\\.get\\(|http\\.request\\(|https\\.request\\(|http\\.get\\(|https\\.get\\(|http\\.post\\(|https\\.post\\(|http\\.put\\(|https\\.put\\(|http\\.delete\\(|https\\.delete\\(|\\$.ajax\\({\\s*url:\\s*['\"].+['\"]" "im"
+WHEN (TEXT_MATCHES "(req\\.|params|query|body|userInput|target|url)" "im" AND TEXT_MISSING "(allowlist|whitelist|isPrivateIPBlocked|validateUrl|new URL\\()" "im")
+REPORT "Server-Side Request Forgery (SSRF)"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

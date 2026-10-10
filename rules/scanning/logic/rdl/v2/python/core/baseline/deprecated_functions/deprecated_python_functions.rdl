@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.python.core.deprecated_python_functions VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)\\b(urllib2|commands)\\b" "im"
+WHEN (TEXT_MATCHES "urllib2|commands\\.getoutput|commands\\.getstatusoutput|urllib\\.urlopen" "im" AND TEXT_MISSING "test|example|migration|legacy" "im")
+REPORT "Deprecated Python Functions"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

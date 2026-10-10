@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.terraform.framework.aws.lambda_function_with_broad_iam_role VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "resource\\s+\"aws_iam_role_policy\"[^}]*Action\\s*\":\\s*\"\\*\"" "im"
+WHEN (TEXT_MATCHES "AdministratorAccess|arn:aws:iam::aws:policy/AdministratorAccess|\"\\*\".*\"Allow\"" "im" AND TEXT_MISSING "# intentional|# required|boundary|permission_boundary" "im")
+REPORT "Lambda Function with Broad IAM Role"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

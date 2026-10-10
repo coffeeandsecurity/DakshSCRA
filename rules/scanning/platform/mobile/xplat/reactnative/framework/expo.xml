@@ -3,7 +3,7 @@
         <rule>
             <name>Expo Updates Without Code Signing</name>
             <regex>"expo-updates"|expoConfig.*updates|updates\.url|runtimeVersion</regex>
-            <rdl_ref>logic/mobile/xplat/reactnative/framework/expo/expo_updates_without_code_signing.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/reactnative/framework/expo/expo_updates_without_code_signing.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -15,15 +15,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects Expo OTA updates configuration without code signing enabled.</rule_desc>
-            <vuln_desc>Expo OTA updates without code signing allow a compromised update server or MITM attacker to push malicious JavaScript bundles to production devices, achieving remote code execution without an App Store update.</vuln_desc>
-            <developer>Enable Expo code signing: configure codeSigningCertificate and codeSigningMetadata in app.json/app.config.js. Use EAS Update with signed updates for all production OTA deployments.</developer>
+            <rule_desc>The code configures an additional server or update authenticity mechanism. Confirm the intended trust boundary and effective verification policy.</rule_desc>
+            <vuln_desc>If the intended authenticity check is absent or can be bypassed, a party controlling an otherwise accepted certificate or update source may impersonate a trusted endpoint or supply unauthorized code. Pinning absence alone does not prove broken TLS.</vuln_desc>
+            <developer>Document the required authenticity policy, verify signatures or the intended certificate or public-key pins, and test key rotation and failure behavior without disabling normal platform validation.</developer>
             <reviewer>Confirm expo-updates is configured with code signing for production builds. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Expo Linking Without Deep Link Validation</name>
             <regex>Linking\.addEventListener\s*\(\s*['"]url['"]|Linking\.getInitialURL\s*\(\s*\)|expo-linking|useURL\s*\(\s*\)</regex>
-            <rdl_ref>logic/mobile/xplat/reactnative/framework/expo/expo_linking_without_deep_link_validation.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/reactnative/framework/expo/expo_linking_without_deep_link_validation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -35,15 +35,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects Expo Linking deep link handlers without URL validation logic.</rule_desc>
-            <vuln_desc>Deep link handlers that do not validate the incoming URL scheme, host, and path allow malicious apps or websites to trigger unintended app actions, navigate to sensitive screens, or pass malicious parameters via deep links.</vuln_desc>
-            <developer>Validate deep link URLs against an allowlist of expected schemes and hosts. Sanitize and validate all query parameters before using them for navigation or data loading.</developer>
+            <rule_desc>The code handles a link, redirect, or externally selected navigation target. Validate the effective destination and any action triggered by the receiving handler.</rule_desc>
+            <vuln_desc>A crafted destination or link may direct users to a phishing site, leak URL-carried secrets, or trigger unauthorized operations if routing trusts external parameters without the required access checks.</vuln_desc>
+            <developer>Allowlist schemes, hosts, paths, and operations. Validate parsed link parameters, avoid credentials in URLs, and require authentication and authorization before sensitive actions.</developer>
             <reviewer>Confirm all deep link event handlers validate the URL structure and parameters. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Expo SecureStore Fallback to Unencrypted</name>
             <regex>SecureStore\.setItemAsync|SecureStore\.getItemAsync</regex>
-            <rdl_ref>logic/mobile/xplat/reactnative/framework/expo/expo_securestore_fallback_to_unencrypted.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/xplat/reactnative/framework/expo/expo_securestore_fallback_to_unencrypted.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -55,9 +55,9 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects Expo SecureStore usage without explicit accessibility and authentication options.</rule_desc>
-            <vuln_desc>Without specifying keychainAccessible options, SecureStore may use a permissive default accessibility level, allowing secret access when the device is locked or by other apps in some configurations.</vuln_desc>
-            <developer>Specify explicit options: SecureStore.setItemAsync(key, value, { keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY }). Use requireAuthentication: true for high-sensitivity secrets.</developer>
+            <rule_desc>Secure-storage configuration does not establish the intended synchronization and lock-state accessibility policy. Resolve library defaults and the effective platform options.</rule_desc>
+            <vuln_desc>Secrets may be accessible on synchronized devices or while the device is locked if the effective policy is broader than the application requires. Missing options alone do not prove plaintext storage or synchronization.</vuln_desc>
+            <developer>Set synchronization and accessibility options explicitly for the threat model, verify library defaults on supported platforms, and avoid plaintext fallback when secure storage fails.</developer>
             <reviewer>Verify SecureStore calls include appropriate accessibility options for the sensitivity of stored data. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

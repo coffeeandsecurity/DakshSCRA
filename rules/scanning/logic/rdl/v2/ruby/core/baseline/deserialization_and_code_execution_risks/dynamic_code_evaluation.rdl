@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.ruby.core.dynamic_code_evaluation VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:eval|instance_eval|class_eval|module_eval)\\s*\\(" "im"
+WHEN (TEXT_MISSING "trusted|allowlist|static_method" "im" AND TEXT_MISSING "test|spec|example|dummy" "im")
+REPORT "Dynamic Code Evaluation"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

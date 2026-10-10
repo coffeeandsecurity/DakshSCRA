@@ -1,6 +1,16 @@
+import { formatDuration as niceDuration } from '../lib/duration'
 import { useState } from 'react'
+import ScanDeleteActions from './ScanDeleteActions'
 
-function StatusBadge({ status }) {
+function StatusBadge({ status, dataRemoved }) {
+  if (dataRemoved) {
+    return (
+      <span className="badge removed">
+        <span className="badge-dot" />
+        data removed
+      </span>
+    )
+  }
   return (
     <span className={`badge ${status}`}>
       <span className={`badge-dot${status === 'running' ? ' pulse' : ''}`} />
@@ -152,6 +162,12 @@ function ProjectsTable({ projects = [], onNavigate, onOpenProject, onDeleteProje
                         {p.running_scans} running
                       </span>
                     )}
+                    {p.queued_scans > 0 && (
+                      <span className="badge queued" style={{ marginLeft: 8, fontSize: 10 }}>
+                        <span className="badge-dot" />
+                        {p.queued_scans} queued
+                      </span>
+                    )}
                   </td>
                   <td className="truncate" style={{ maxWidth: 200 }} title={p.target_dir}>
                     <span className="text-muted font-mono text-sm">{p.target_dir}</span>
@@ -162,6 +178,7 @@ function ProjectsTable({ projects = [], onNavigate, onOpenProject, onDeleteProje
                   <td>
                     {confirming === p.project_key ? (
                       <div className="dash-del-confirm">
+                        <span className="project-delete-confirm-text">Delete project data? History records remain.</span>
                         <button className="btn btn-danger btn-xs" onClick={() => { onDeleteProject(p.project_key); setConfirming(null) }}>Delete</button>
                         <button className="btn btn-ghost btn-xs" onClick={() => setConfirming(null)}>Cancel</button>
                       </div>
@@ -187,11 +204,7 @@ function ProjectsTable({ projects = [], onNavigate, onOpenProject, onDeleteProje
   )
 }
 
-function niceDuration(sec) {
-  if (sec == null) return '-'
-  if (sec < 60) return `${Math.round(sec)}s`
-  return `${Math.floor(sec / 60)}m ${Math.round(sec % 60)}s`
-}
+
 
 function niceDate(iso) {
   if (!iso) return '-'
@@ -310,7 +323,7 @@ function VersionNotification({ versionInfo, latestRelease, githubChecked }) {
   )
 }
 
-export default function Dashboard({ metrics, projects = [], runs = [], onNavigate, onOpenProject, onDeleteProject, versionInfo, latestRelease, githubChecked }) {
+export default function Dashboard({ metrics, projects = [], runs = [], onNavigate, onOpenProject, onDeleteProject, onDeleteScanData, onDeleteScanRecord, versionInfo, latestRelease, githubChecked }) {
   const statusCounts = {
     success: metrics?.success_scans || 0,
     running: metrics?.running_scans || 0,
@@ -440,22 +453,35 @@ export default function Dashboard({ metrics, projects = [], runs = [], onNavigat
                     <th>Target</th>
                     <th>Duration</th>
                     <th>Date</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {recentRuns.map((r) => (
                     <tr
                       key={r.run_uuid}
-                      onClick={() => onNavigate('scans', r)}
+                      className={r.data_removed ? 'scan-record-only' : ''}
+                      onClick={() => { if (!r.data_removed) onNavigate('scans', r) }}
                     >
-                      <td><StatusBadge status={r.status} /></td>
-                      <td style={{ fontWeight: 600, color: 'var(--text)' }}>{r.project_name || '-'}</td>
+                      <td><StatusBadge status={r.status} dataRemoved={r.data_removed} /></td>
+                      <td style={{ fontWeight: 600, color: 'var(--text)' }}>
+                        {r.project_name || '-'}
+                        {r.data_removed ? <div className="scan-record-note">Scan data removed. History record only.</div> : null}
+                      </td>
                       <td><span className="code-inline">{r.rules}</span></td>
                       <td className="truncate" style={{ maxWidth: 260 }} title={r.target_dir}>
                         <span className="text-muted font-mono text-sm">{r.target_dir}</span>
                       </td>
                       <td className="text-muted">{niceDuration(r.duration_sec)}</td>
                       <td className="text-muted">{niceDate(r.created_at)}</td>
+                      <td>
+                        <ScanDeleteActions
+                          run={r}
+                          onDeleteData={onDeleteScanData}
+                          onDeleteRecord={onDeleteScanRecord}
+                          compact
+                        />
+                      </td>
                     </tr>
                   ))}
                 </tbody>

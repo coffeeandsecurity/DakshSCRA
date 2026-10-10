@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.xplat.reactnative.core.react_native_insecure_http_usage VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "http://" "im"
+REPORT "React Native Insecure HTTP Usage"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

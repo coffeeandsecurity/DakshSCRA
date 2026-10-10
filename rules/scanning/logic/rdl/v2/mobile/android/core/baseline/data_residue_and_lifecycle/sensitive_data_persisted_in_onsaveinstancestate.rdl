@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.android.core.sensitive_data_persisted_in_onsaveinstancestate VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "outState\\.put\\w+\\s*\\(" "im"
+WHEN (TEXT_MATCHES "outState\\.put.*(?:password|token|secret|key|credential|auth|card|pin)" "im" AND TEXT_MISSING "encrypted|cipher|// intentional" "im")
+REPORT "Sensitive Data Persisted in onSaveInstanceState"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

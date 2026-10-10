@@ -1,0 +1,8 @@
+VERSION 2
+RULE android.sql-raw-query-surface VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:rawQuery|execSQL)\\s*\\(" ""
+REPORT "Android Raw SQL Review Surface"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

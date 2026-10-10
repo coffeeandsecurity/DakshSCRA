@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.dotnet.framework.blazor.markupstring_cast_from_user_input VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "@\\(\\s*\\(MarkupString\\)\\s*|new\\s+MarkupString\\s*\\(" "im"
+WHEN TEXT_MISSING "HtmlEncoder|Sanitize|AntiXss|allowlist" "im"
+REPORT "MarkupString Cast from User Input"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

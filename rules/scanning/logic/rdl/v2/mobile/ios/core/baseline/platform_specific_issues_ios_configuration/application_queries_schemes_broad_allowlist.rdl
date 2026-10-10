@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.ios.core.application_queries_schemes_broad_allowlist VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "LSApplicationQueriesSchemes" "im"
+WHEN (TEXT_MATCHES "LSApplicationQueriesSchemes" "im" AND TEXT_MISSING "# intentional|# required" "im")
+REPORT "Application Queries Schemes Broad Allowlist"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

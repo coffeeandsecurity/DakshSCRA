@@ -1,3 +1,4 @@
+from utils.scan_scope import walk_source, allows_file
 # Standard libraries
 import fnmatch
 import json
@@ -31,6 +32,7 @@ AUTO_MARKER_VALIDATED_PLATFORMS = {
     "nativescript",
     "cordova",
     "javascript",
+    "kubernetes",
 }
 
 AUTO_RULE_SUPPRESSION = {
@@ -94,7 +96,7 @@ def detect_mobile_rule_types(sourcepath, progress_callback=None):
         except json.JSONDecodeError:
             return {}
 
-    for root, dirs, files in os.walk(sourcepath):
+    for root, dirs, files in walk_source(sourcepath):
         directories_scanned += 1
         files_discovered += len(files)
         now = time.monotonic()
@@ -116,6 +118,23 @@ def detect_mobile_rule_types(sourcepath, progress_callback=None):
         files_set_lower = {f.lower() for f in files_set}
         for file_name in files:
             _bump_ext(file_name)
+
+        # Ordinary CI/config YAML is not a Kubernetes resource. Require a
+        # parsed resource identity; Helm chart metadata is a separate marker.
+        for yaml_name in (name for name in files if name.lower().endswith(('.yaml', '.yml'))):
+            import yaml
+            try:
+                documents = yaml.safe_load_all(_read_text_limited(os.path.join(root, yaml_name)))
+                for document in documents:
+                    if not isinstance(document, dict):
+                        continue
+                    version, kind = document.get('apiVersion'), document.get('kind')
+                    if isinstance(version, str) and isinstance(kind, str) and re.fullmatch(r'(?:[A-Za-z0-9.-]+/)?v\d+(?:(?:alpha|beta)\d+)?', version) and kind:
+                        detected.add('kubernetes')
+                    if yaml_name.lower() == 'chart.yaml' and document.get('name') and document.get('version') and isinstance(version, str) and version in {'v1', 'v2'}:
+                        detected.add('kubernetes')
+            except (yaml.YAMLError, ValueError, RecursionError):
+                continue
 
         # Native Android markers
         if "AndroidManifest.xml" in files_set or "proguard-rules.pro" in files_set:
@@ -389,7 +408,7 @@ def detect_framework_rule_files(sourcepath, selected_platforms=None):
     dep_index = {}
     content_cache = {}
 
-    for root, _, files in os.walk(sourcepath):
+    for root, _, files in walk_source(sourcepath):
         for fname in files:
             fpath = os.path.join(root, fname)
             lower_name = fname.lower()
@@ -462,7 +481,14 @@ def detect_framework_rule_files(sourcepath, selected_platforms=None):
                                     candidates.append((p, content_cache[p]))
                 else:
                     candidates = [(p, content_cache[p]) for p in file_index.get(target_file, []) if p in content_cache]
-                for _, content in candidates:
+                for candidate_path, content in candidates:
+                    if entry['name'] == 'wordpress' and str(candidate_path).lower().endswith('.php'):
+                        from core.rdl.source_review import source_views
+                        _, content = source_views(candidate_path, content)
+                    if entry['name'] == 'spring' and str(candidate_path).lower().endswith(('.java', '.xml')):
+                        from core.rdl.source_review import source_views
+                        comments, code = source_views(candidate_path, content)
+                        content = code if str(candidate_path).lower().endswith('.java') else comments
                     if regex_obj.search(content):
                         matched = True
                         break
@@ -593,7 +619,7 @@ def discover_files(codebase, sourcepath, mode, progress_callback=None):
                 })
 
             # Traverse the source path to discover and log files
-            for root, _, filenames in os.walk(sourcepath):
+            for root, _, filenames in walk_source(sourcepath):
                 directories_scanned += 1
                 total_files_count += len(filenames)
 
@@ -705,7 +731,7 @@ def recon_discover_files(codebase, sourcepath, mode):
     
     identified_files = []  # List to store discovered file paths
 
-    for root, dirnames, filenames in os.walk(sourcepath):
+    for root, dirnames, filenames in walk_source(sourcepath):
         for extensions in filetypes:
             for filename in fnmatch.filter(filenames, extensions):
                 file_path = os.path.join(root, filename)
@@ -785,7 +811,7 @@ def auto_detect_rule_types_with_details(sourcepath, progress_callback=None):
             "elapsed_seconds": 0,
         })
 
-    for root, _, files in os.walk(sourcepath):
+    for root, _, files in walk_source(sourcepath):
         directories_scanned += 1
         files_discovered += len(files)
         if not pending_platforms:

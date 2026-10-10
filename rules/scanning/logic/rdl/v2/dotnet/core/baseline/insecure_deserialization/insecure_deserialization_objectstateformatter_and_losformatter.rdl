@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.dotnet.core.insecure_deserialization_objectstateformatter_and_losformatter VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "ObjectStateFormatter\\.Deserialize\\s*\\(|LosFormatter\\.Deserialize\\s*\\(|NetDataContractSerializer\\s*\\(" "im"
+WHEN (TEXT_MISSING "trusted|allowlist|validate|SerializationBinder" "im" AND TEXT_MISSING "test|example" "im")
+REPORT "Insecure Deserialization: ObjectStateFormatter and LosFormatter"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

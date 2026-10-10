@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.java.core.disabled_input_validation VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(\\bvalidateInput\\s*=\\s*['\"]false['\"])" "im"
+WHEN (TEXT_MATCHES "validateRequest\\s*=\\s*\"false\"|@SuppressWarnings.*\"unchecked\"|@Valid\\s*=\\s*false|disableValidation" "im" AND TEXT_MISSING "test|example" "im")
+REPORT "Disabled Input Validation"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,8 @@
+VERSION 2
+RULE android.sensitive-preference-write VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)\\b(?P<receiver>[A-Za-z_]\\w*)\\s*\\.\\s*putString\\s*\\(\\s*\"(?:password|passwd|token|access_token|refresh_token|secret|credential)\"\\s*,\\s*(?P<value>[^;\\n]{1,200})\\)" ""
+REPORT "Sensitive Value Written To Preferences"
+SEVERITY HIGH
+CONFIDENCE LOW
+WITH TRACE

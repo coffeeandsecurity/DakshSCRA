@@ -16,21 +16,21 @@
     <rule>
         <platform>java</platform>
         <path>/java/java.xml</path>
-        <platform_ftypes>*.java, *.jsp</platform_ftypes>
+        <platform_ftypes>*.java, *.jsp, *.jspx, *.xml, *.properties</platform_ftypes>
         <project_config_ftypes>pom.xml, settings.xml, application.properties, application.yml</project_config_ftypes>
         <common_ftypes>*.xml, *.properties, *.config, *.json, *.log, *.yml, *.yaml</common_ftypes>
     </rule>
     <rule>
         <platform>javascript</platform>
         <path>/javascript/javascript.xml</path>
-        <platform_ftypes>*.js, *.ts</platform_ftypes>
+        <platform_ftypes>*.js, *.ts, *.jsx, *.tsx, *.mjs, *.cjs</platform_ftypes>
         <project_config_ftypes>package.json, package-lock.json, webpack.config.js, tsconfig.json</project_config_ftypes>
         <common_ftypes>*.json, *.config, *.lock, *.yml, *.yaml, *.log</common_ftypes>
     </rule>
     <rule>
         <platform>kotlin</platform>
         <path>/kotlin/kotlin.xml</path>
-        <platform_ftypes>*.kt</platform_ftypes>
+        <platform_ftypes>*.kt, *.kts, *.gradle.kts</platform_ftypes>
         <project_config_ftypes>build.gradle, settings.gradle, gradle.properties</project_config_ftypes>
         <common_ftypes>*.java, *.xml, *.json, *.gradle, *.properties, *.log</common_ftypes>
     </rule>
@@ -65,70 +65,70 @@
     <rule>
         <platform>android</platform>
         <path>/mobile/android/android.xml</path>
-        <platform_ftypes>AndroidManifest.xml, build.gradle, proguard-rules.pro</platform_ftypes>
+        <platform_ftypes>AndroidManifest.xml, build.gradle, proguard-rules.pro, *.java, *.kt, *.kts, *.xml, *.gradle.kts, *.c, *.cpp, *.cc, *.cxx, *.h, *.hpp, CMakeLists.txt</platform_ftypes>
         <project_config_ftypes>AndroidManifest.xml, build.gradle, proguard-rules.pro</project_config_ftypes>
         <common_ftypes>*.xml, *.json, *.gradle, *.properties, *.log</common_ftypes>
     </rule>
     <rule>
         <platform>ios</platform>
         <path>/mobile/ios/ios.xml</path>
-        <platform_ftypes>*.swift, *.m, *.mm, *.h, Info.plist, *.entitlements, Podfile, project.pbxproj</platform_ftypes>
+        <platform_ftypes>*.swift, *.m, *.mm, *.h, Info.plist, *.entitlements, Podfile, project.pbxproj, *.plist, *.xcconfig, *.xcprivacy, *.c, *.cpp, *.cc, *.cxx, *.hpp, Package.swift, Package.resolved</platform_ftypes>
         <project_config_ftypes>Info.plist, *.entitlements, Podfile, project.pbxproj, *.xcodeproj</project_config_ftypes>
         <common_ftypes>*.plist, *.json, *.mobileprovision, *.xcconfig, *.log</common_ftypes>
     </rule>
     <rule>
         <platform>reactnative</platform>
         <path>/mobile/xplat/reactnative/reactnative.xml</path>
-        <platform_ftypes>*.js, *.jsx, *.ts, *.tsx, app.json, metro.config.js, babel.config.js</platform_ftypes>
+        <platform_ftypes>*.js, *.jsx, *.ts, *.tsx, app.json, metro.config.js, babel.config.js, AndroidManifest.xml, Info.plist, *.entitlements, *.gradle, *.gradle.kts, *.java, *.kt, *.swift, *.m, *.mm, *.xml, *.plist, *.xcprivacy, *.c, *.cpp, *.h, *.hpp</platform_ftypes>
         <project_config_ftypes>package.json, app.json, metro.config.js, babel.config.js</project_config_ftypes>
         <common_ftypes>*.json, *.config.js, *.ts, *.js, *.yml, *.yaml, *.log</common_ftypes>
     </rule>
     <rule>
         <platform>flutter</platform>
         <path>/mobile/xplat/flutter/flutter.xml</path>
-        <platform_ftypes>*.dart, pubspec.yaml, AndroidManifest.xml, Info.plist</platform_ftypes>
+        <platform_ftypes>*.dart, pubspec.yaml, AndroidManifest.xml, Info.plist, *.gradle, *.gradle.kts, *.java, *.kt, *.swift, *.m, *.mm, *.xml, *.plist, *.entitlements, *.xcprivacy, *.c, *.cpp, *.h, *.hpp</platform_ftypes>
         <project_config_ftypes>pubspec.yaml, analysis_options.yaml, AndroidManifest.xml, Info.plist</project_config_ftypes>
         <common_ftypes>*.dart, *.yaml, *.yml, *.json, *.plist, *.gradle, *.log</common_ftypes>
     </rule>
     <rule>
         <platform>xamarin</platform>
         <path>/mobile/xplat/xamarin/xamarin.xml</path>
-        <platform_ftypes>*.cs, *.csproj, AndroidManifest.xml, Info.plist, Entitlements.plist</platform_ftypes>
+        <platform_ftypes>*.cs, *.csproj, AndroidManifest.xml, Info.plist, Entitlements.plist, *.xml, *.plist, *.entitlements, *.xcprivacy, *.c, *.cpp, *.h, *.hpp</platform_ftypes>
         <project_config_ftypes>*.csproj, *.sln, AndroidManifest.xml, Info.plist, Entitlements.plist</project_config_ftypes>
         <common_ftypes>*.config, *.plist, *.json, *.xml, *.resx, *.log</common_ftypes>
     </rule>
     <rule>
         <platform>maui</platform>
         <path>/mobile/xplat/maui/maui.xml</path>
-        <platform_ftypes>*.cs, *.csproj, *.xaml, AndroidManifest.xml, Info.plist, Entitlements.plist</platform_ftypes>
+        <platform_ftypes>*.cs, *.csproj, *.xaml, AndroidManifest.xml, Info.plist, Entitlements.plist, *.xml, *.plist, *.entitlements, *.xcprivacy, *.c, *.cpp, *.h, *.hpp</platform_ftypes>
         <project_config_ftypes>*.csproj, *.sln, MauiProgram.cs, AndroidManifest.xml, Info.plist, Entitlements.plist</project_config_ftypes>
         <common_ftypes>*.config, *.plist, *.json, *.xml, *.resx, *.xaml, *.log</common_ftypes>
     </rule>
     <rule>
         <platform>kmp</platform>
         <path>/mobile/xplat/kmp/kmp.xml</path>
-        <platform_ftypes>*.kt, *.kts, *.gradle, *.gradle.kts, AndroidManifest.xml, Info.plist</platform_ftypes>
+        <platform_ftypes>*.kt, *.kts, *.gradle, *.gradle.kts, AndroidManifest.xml, Info.plist, *.swift, *.m, *.mm, *.java, *.xml, *.plist, *.entitlements, *.xcprivacy, *.c, *.cpp, *.h, *.hpp</platform_ftypes>
         <project_config_ftypes>build.gradle, build.gradle.kts, settings.gradle, settings.gradle.kts, gradle.properties, AndroidManifest.xml, Info.plist</project_config_ftypes>
         <common_ftypes>*.kt, *.kts, *.gradle, *.plist, *.json, *.properties, *.yaml, *.yml, *.log</common_ftypes>
     </rule>
     <rule>
         <platform>ionic</platform>
         <path>/mobile/xplat/ionic/ionic.xml</path>
-        <platform_ftypes>*.ts, *.js, *.html, capacitor.config.json, capacitor.config.ts, ionic.config.json</platform_ftypes>
+        <platform_ftypes>*.ts, *.js, *.html, capacitor.config.json, capacitor.config.ts, ionic.config.json, config.xml, AndroidManifest.xml, Info.plist, *.java, *.kt, *.swift, *.m, *.mm, *.xml, *.plist, *.xcprivacy, *.c, *.cpp, *.h, *.hpp</platform_ftypes>
         <project_config_ftypes>package.json, capacitor.config.json, capacitor.config.ts, ionic.config.json</project_config_ftypes>
         <common_ftypes>*.json, *.yaml, *.yml, *.xml, *.gradle, *.plist, *.log</common_ftypes>
     </rule>
     <rule>
         <platform>nativescript</platform>
         <path>/mobile/xplat/nativescript/nativescript.xml</path>
-        <platform_ftypes>*.js, *.ts, app.gradle, AndroidManifest.xml, Info.plist</platform_ftypes>
+        <platform_ftypes>*.js, *.ts, app.gradle, AndroidManifest.xml, Info.plist, *.java, *.kt, *.swift, *.m, *.mm, *.xml, *.plist, *.xcprivacy, *.c, *.cpp, *.h, *.hpp</platform_ftypes>
         <project_config_ftypes>package.json, app.gradle, webpack.config.js, nsconfig.json</project_config_ftypes>
         <common_ftypes>*.json, *.ts, *.js, *.xml, *.gradle, *.plist, *.log</common_ftypes>
     </rule>
     <rule>
         <platform>cordova</platform>
         <path>/mobile/xplat/cordova/cordova.xml</path>
-        <platform_ftypes>config.xml, *.js, *.ts, *.html</platform_ftypes>
+        <platform_ftypes>config.xml, *.js, *.ts, *.html, AndroidManifest.xml, Info.plist, *.java, *.kt, *.swift, *.m, *.mm, *.xml, *.plist, *.xcprivacy, *.c, *.cpp, *.h, *.hpp</platform_ftypes>
         <project_config_ftypes>config.xml, package.json, cordova-plugin-*.xml</project_config_ftypes>
         <common_ftypes>*.json, *.xml, *.plist, *.gradle, *.properties, *.log</common_ftypes>
     </rule>
@@ -184,7 +184,7 @@
     <rule>
         <platform>common</platform>
         <path>/common.xml</path>
-        <platform_ftypes>*.aspx, *.cs, *.vb, *.asax, *.asp, *.sln, *.svc, *.cshtml, *.rdl, *.edmx, *.php, *.java, *.jsp, *.js, *.ts, *.py, *.kt, *.go, *.c, *.cpp, *.h, *.cc, *.cxx, *.hpp, *.hxx, *.groovy, *.carbon, *.rb, *.rs, *.swift, *.m, *.mm, *.dart, *.sql, *.psql, *.db, *.env</platform_ftypes>
+        <platform_ftypes>*.aspx, *.cs, *.vb, *.asax, *.asp, *.sln, *.svc, *.cshtml, *.rdl, *.edmx, *.php, *.java, *.jsp, *.js, *.ts, *.py, *.kt, *.go, *.c, *.cpp, *.h, *.cc, *.cxx, *.hpp, *.hxx, *.groovy, *.carbon, *.rb, *.rs, *.swift, *.m, *.mm, *.dart, *.sql, *.psql, *.db, *.env, *.jsx, *.tsx, *.mjs, *.cjs, *.kts</platform_ftypes>
         <project_config_ftypes>*.config, web.config, app.config, machine.config, php.ini, .htaccess, composer.json, composer.lock, pom.xml, settings.xml, application.properties, application.yml, package.json, package-lock.json, webpack.config.js, tsconfig.json, build.gradle, settings.gradle, gradle.properties, requirements.txt, setup.py, Pipfile, Pipfile.lock, manage.py, settings.py, wsgi.py, asgi.py, pyproject.toml, go.mod, go.sum, Makefile, configure.ac, config.h, CMakeLists.txt, *.vcxproj, *.props, AndroidManifest.xml, proguard-rules.pro, Info.plist, Podfile, project.pbxproj, pubspec.yaml, Cargo.toml, Gemfile</project_config_ftypes>
         <common_ftypes>*.conf, *.properties, *.env, *.resx, *.settings, *.json, *.lock, *.yml, *.yaml, *.xml, *.log, *.ini, *.txt, .env, *.cfg, *.bash, *.sh, *.ps1, *.bat, *.cmd, *.mod, *.sum</common_ftypes>
     </rule>

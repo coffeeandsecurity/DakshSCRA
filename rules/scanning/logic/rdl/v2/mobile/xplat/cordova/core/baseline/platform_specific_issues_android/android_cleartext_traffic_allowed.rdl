@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.xplat.cordova.core.android_cleartext_traffic_allowed VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "usesCleartextTraffic\\s*=\\s*\"?(?:true|TRUE)\"?" "im"
+REPORT "Android Cleartext Traffic Allowed"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

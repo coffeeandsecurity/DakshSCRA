@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.android.core.sensitive_data_written_to_android_logs VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "Log\\.[dviweVIWDE]\\s*\\(.*(?:password|token|secret|apiKey|credential|authToken|accessToken)" "im"
+WHEN TEXT_MISSING "BuildConfig\\.DEBUG|if\\s*\\(\\s*BuildConfig\\.DEBUG|if\\s*\\(\\s*DEBUG" "im"
+REPORT "Sensitive Data Written to Android Logs"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

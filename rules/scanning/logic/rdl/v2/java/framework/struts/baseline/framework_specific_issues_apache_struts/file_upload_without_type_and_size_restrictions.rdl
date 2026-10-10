@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.java.framework.struts.file_upload_without_type_and_size_restrictions VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "<interceptor-ref\\s+name=\"fileUpload\"" "im"
+WHEN TEXT_MISSING "maximumSize|allowedTypes|allowedExtensions" "im"
+REPORT "File Upload Without Type and Size Restrictions"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

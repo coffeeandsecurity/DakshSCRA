@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.java.core.insecure_package_org_springframework_web_multipart_multipartfile VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "org\\.springframework\\.web\\.multipart\\.MultipartFile" "im"
+WHEN (TEXT_MISSING "validate|allowlist|getOriginalFilename.*replace|ContentType|getSize\\s*\\(\\s*\\)" "im" AND TEXT_MISSING "test|example" "im")
+REPORT "Insecure Package: org.springframework.web.multipart.MultipartFile"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

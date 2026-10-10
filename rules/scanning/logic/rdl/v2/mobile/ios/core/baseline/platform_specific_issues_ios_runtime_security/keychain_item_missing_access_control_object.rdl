@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.ios.core.keychain_item_missing_access_control_object VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bSecItemAdd\\s*\\(|\\bSecItemUpdate\\s*\\(" "im"
+WHEN TEXT_MISSING "kSecAttrAccessControl|SecAccessControlCreateWithFlags" "im"
+REPORT "Keychain Item Missing Access Control Object"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

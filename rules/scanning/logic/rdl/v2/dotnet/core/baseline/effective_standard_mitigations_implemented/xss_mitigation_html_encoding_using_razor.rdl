@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.dotnet.core.xss_mitigation_html_encoding_using_razor VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "Html\\.Encode\\s*\\(|HttpUtility\\.HtmlEncode\\s*\\(|AntiXssEncoder\\.HtmlEncode\\s*\\(|HtmlEncoder\\.Default\\.Encode\\s*\\(" "im"
+WHEN (TEXT_MATCHES "Html\\.Encode\\s*\\(|HttpUtility\\.HtmlEncode\\s*\\(|AntiXssEncoder\\.HtmlEncode\\s*\\(|HtmlEncoder\\.Default\\.Encode\\s*\\(" "im" AND TEXT_MISSING "test|example" "im")
+REPORT "XSS Mitigation: HTML Encoding using Razor"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

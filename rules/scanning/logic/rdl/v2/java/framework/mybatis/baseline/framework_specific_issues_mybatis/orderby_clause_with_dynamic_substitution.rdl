@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.java.framework.mybatis.orderby_clause_with_dynamic_substitution VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "ORDER\\s+BY\\s+\\$\\{|order\\s+by\\s+\\$\\{" "im"
+WHEN TEXT_MISSING "allowlist|whitelist|validateColumn|allowedColumns|escapeSQL" "im"
+REPORT "OrderBy Clause with Dynamic Substitution"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

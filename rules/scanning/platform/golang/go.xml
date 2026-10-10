@@ -3,7 +3,7 @@
         <rule>
             <name>Untrusted Inputs: HTTP Request Parameters</name>
             <regex>http\.Request|http\.RequestForm|http\.FormValue</regex>
-            <rdl_ref>logic/golang/core/untrusted_inputs_http_request_parameters.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/golang/core/untrusted_inputs_http_request_parameters.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -12,15 +12,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of HTTP request parameters without proper validation and sanitization.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using untrusted input from HTTP requests without proper validation and sanitization. Attackers can manipulate request parameters to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks, cross-site scripting (XSS), or unauthorized access to sensitive information.</vuln_desc>
-            <developer>Validate and sanitize user input received from HTTP requests before using it in any sensitive operations. Implement strong input validation, ensuring that only expected and sanitized values are accepted from request parameters. Additionally, developers should be cautious about the potential risks associated with using user-supplied data and follow secure coding practices.</developer>
+            <rule_desc>The code accepts or reads externally influenced data. Trace it to security-sensitive operations and identify the validation and authorization required by each destination.</rule_desc>
+            <vuln_desc>External input may cause injection, incorrect decisions, or unauthorized data access if it reaches a sensitive operation without the controls required by that operation. Reading input alone does not establish a vulnerability.</vuln_desc>
+            <developer>Validate type, size, and allowed values at trust boundaries, and apply destination-specific parameter binding or output encoding. Enforce authorization independently of input validation.</developer>
             <reviewer>Ensure that proper input handling is in place for HTTP request parameters. Verify that developers have implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted Inputs: User-Defined Structures</name>
             <regex>struct</regex>
-            <rdl_ref>logic/golang/core/untrusted_inputs_user_defined_structures.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/golang/core/untrusted_inputs_user_defined_structures.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -29,9 +29,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of user-defined structures without proper validation and sanitization of fields.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using user-defined structures without validating and sanitizing the fields. Attackers can manipulate structure fields to provide malicious or unexpected values, potentially leading to security vulnerabilities such as injection attacks or unauthorized access to sensitive information.</vuln_desc>
-            <developer>Validate and sanitize fields of user-defined structures before using them in any sensitive operations. Implement strong input validation, ensuring that only expected and sanitized values are accepted. Additionally, developers should be cautious about the potential risks associated with using user-supplied data and follow secure coding practices.</developer>
+            <rule_desc>The code accepts or reads externally influenced data. Trace it to security-sensitive operations and identify the validation and authorization required by each destination.</rule_desc>
+            <vuln_desc>External input may cause injection, incorrect decisions, or unauthorized data access if it reaches a sensitive operation without the controls required by that operation. Reading input alone does not establish a vulnerability.</vuln_desc>
+            <developer>Validate type, size, and allowed values at trust boundaries, and apply destination-specific parameter binding or output encoding. Enforce authorization independently of input validation.</developer>
             <reviewer>Ensure that proper input handling is in place for user-defined structures. Verify that developers have implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related to untrusted inputs. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -39,7 +39,7 @@
         <rule>
             <name>Command Injection: exec, os/exec</name>
             <regex>os/exec\.Command|exec\.(Command|CommandContext)</regex>
-            <rdl_ref>logic/golang/core/command_injection_exec_os_exec.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/golang/core/command_injection_exec_os_exec.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -48,9 +48,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects instances of executing shell commands without proper validation and sanitization.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of command injection. Attackers can exploit shell-executing functions with unsanitized user input to execute arbitrary shell commands on the server.</vuln_desc>
-            <developer>Avoid executing shell commands with user-supplied input whenever possible. If necessary, it is crucial to employ strict input validation, input sanitization, and command parameterization techniques to prevent command injection attacks.</developer>
+            <rule_desc>The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.</rule_desc>
+            <vuln_desc>If an attacker controls interpreted syntax or the operation selected, code or commands may run with the application’s privileges, allowing data theft, state changes, or service disruption.</vuln_desc>
+            <developer>Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates or expressions.</developer>
             <reviewer>Check for the secure usage of shell-executing functions and assess if user input is properly validated, sanitized, and appropriately used as command parameters. Ensure that developers have implemented strong input validation measures, command parameterization techniques, and proper context-aware security controls to mitigate command injection vulnerabilities. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -58,7 +58,7 @@
         <rule>
             <name>Arbitrary Code Execution: unsafe, go:generate</name>
             <regex>unsafe\.|go:generate</regex>
-            <rdl_ref>logic/golang/core/arbitrary_code_execution_unsafe_go_generate.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/golang/core/arbitrary_code_execution_unsafe_go_generate.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -67,9 +67,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects instances of unsafe code execution without proper validation.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of arbitrary code execution. Attackers can exploit unsafe code execution with unsanitized user input to execute arbitrary code on the server.</vuln_desc>
-            <developer>Avoid using unsafe code execution mechanisms with untrusted user input whenever possible. If necessary, it is crucial to employ strict input validation and parameterization techniques to prevent arbitrary code execution vulnerabilities.</developer>
+            <rule_desc>The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.</rule_desc>
+            <vuln_desc>If an attacker controls interpreted syntax or the operation selected, code or commands may run with the application’s privileges, allowing data theft, state changes, or service disruption.</vuln_desc>
+            <developer>Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates or expressions.</developer>
             <reviewer>Check for the secure usage of unsafe code execution mechanisms and assess if user input is properly validated, sanitized, and appropriately used. Ensure that developers have implemented strong input validation measures and proper context-aware security controls to mitigate arbitrary code execution vulnerabilities. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -77,7 +77,7 @@
         <rule>
             <name>Mitigation Identified: XSS</name>
             <regex>html\.EscapeString|template\.HTMLEscapeString|bluemonday\.\w+</regex>
-            <rdl_ref>logic/golang/core/mitigation_identified_xss.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/golang/core/mitigation_identified_xss.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -86,9 +86,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>green</highlight_color>
             </scan_config>
-            <rule_desc>Detects Go-specific XSS mitigation helpers such as html.EscapeString, template.HTMLEscapeString, or bluemonday sanitization.</rule_desc>
-            <vuln_desc>This rule checks whether Go code applies common XSS mitigation helpers before rendering untrusted data into HTML contexts. Cross-Site Scripting (XSS) vulnerabilities arise when attacker-controlled content is rendered without proper encoding or sanitization. Functions such as html.EscapeString, template.HTMLEscapeString, and bluemonday sanitizers are typical defensive signals.</vuln_desc>
-            <developer>Verify that untrusted data rendered into HTML is consistently escaped or sanitized with Go-appropriate helpers, and confirm the chosen helper matches the output context instead of relying on ad hoc string replacement.</developer>
+            <rule_desc>The code contains a security-control marker. Its presence is a review surface rather than evidence that the control is defective or consistently enforced.</rule_desc>
+            <vuln_desc>No adverse security consequence follows from the presence of a protection alone. If it is bypassed or applied outside the correct context, the protected operation may still permit injection or unauthorized access.</vuln_desc>
+            <developer>Verify that the control applies to every relevant entry point and uses the required context and policy. Retain effective protections; test bypass cases before recommending a change.</developer>
             <reviewer>Assess whether Go-specific output encoding or sanitization is applied consistently before user-controlled data reaches HTML output. Confirm the defense is appropriate for the rendering context and that reachable paths do not bypass it. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

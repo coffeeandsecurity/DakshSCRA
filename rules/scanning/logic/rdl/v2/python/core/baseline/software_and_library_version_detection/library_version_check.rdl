@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.python.core.library_version_check VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "@\\w+_version" "im"
+WHEN (TEXT_MATCHES "__version__|pkg_resources\\.require|version_info" "im" AND TEXT_MISSING "test|example|migration" "im")
+REPORT "Library Version Check"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.python.core.subprocess_modules_os_system_os_spawn_os_popen_popen2_os_kill_commands VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)(os\\.system|os\\.spawn|os\\.popen|popen2\\.|os\\.kill|commands\\.)" "im"
+WHEN (TEXT_MATCHES "(input\\(|request|params|query|argv)" "im" AND TEXT_MISSING "(shlex\\.quote|allowlist|whitelist)" "im")
+REPORT "Subprocess Modules: os.system, os.spawn, os.popen, popen2., os.kill, commands."
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

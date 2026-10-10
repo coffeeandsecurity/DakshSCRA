@@ -1,0 +1,11 @@
+VERSION 2
+RULE filesystem.file-inclusion VERSION 1
+IN DATA_FLOW
+LET input BE VARIABLE MATCHES input.untrusted
+LET sink BE CALL MATCHES code.inclusion
+WHEN input FLOWS TO sink
+REQUIRE NOT sanitizer.path-containment input
+REPORT "file inclusion"
+SEVERITY CRITICAL
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

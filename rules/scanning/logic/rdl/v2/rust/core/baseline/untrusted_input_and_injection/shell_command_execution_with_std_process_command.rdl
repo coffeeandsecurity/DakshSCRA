@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.rust.core.shell_command_execution_with_std_process_command VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:std::process::)?Command::new\\s*\\(" "im"
+WHEN (TEXT_MISSING "validate|sanitize|allowlist|whitelist|args\\s*\\(\\s*&\\s*\\[|arg\\s*\\(\\s*\"[^\"]*\"" "im" AND TEXT_MISSING "test|example" "im")
+REPORT "Shell Command Execution with std::process::Command"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

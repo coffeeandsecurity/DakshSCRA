@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.android.core.contentprovider_raw_selection_parameter_injection VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)public\\s+(?:Cursor|int|String)\\s+\\w+\\s*\\(\\s*Uri\\b" "im"
+WHEN TEXT_MISSING "selectionArgs|DatabaseUtils\\.sqlEscapeString|rawQuery.*\\?,|whitelist|allowedColumns|throw.*IllegalArgumentException" "im"
+REPORT "ContentProvider Raw Selection Parameter Injection"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

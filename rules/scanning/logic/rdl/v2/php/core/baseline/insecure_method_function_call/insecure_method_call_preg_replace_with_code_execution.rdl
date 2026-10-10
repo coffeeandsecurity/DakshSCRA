@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.php.core.insecure_method_call_preg_replace_with_code_execution VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "preg_replace\\s*\\(\\s*['\"](eval|assert|system|passthru|shell_exec|exec|popen|proc_open|pcntl_exec)['\"]\\s*,\\s*\\$([^\\s,]*)\\s*\\)" "im"
+WHEN TEXT_MISSING "preg_replace_callback|str_replace|validate|test|example" "im"
+REPORT "Insecure Method Call: preg_replace() with Code Execution"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

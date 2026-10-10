@@ -1,0 +1,5 @@
+VERSION 1
+WHEN PRESENT \bsetrlimit\s*\(\s*RLIMIT_CORE\s*,\s*(?:0|NULL|nullptr)\s*\)
+REPORT AS area_of_interest
+REASON Review a null rlimit pointer passed to setrlimit. This does not configure zero limits; check the return value and pass a correctly initialized struct rlimit when disabling core dumps.
+TRACE Externalized rule logic for Improper Use of `setrlimit` for Core Dump Prevention.

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.cpp.framework.boost.boost_insecure_serialization_deserialization_marker VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "boost::archive|QDataStream\\s*&gt;&gt;" "im"
+WHEN (TEXT_MISSING "trusted|validate|verify|schema|allowlist" "im" AND TEXT_MISSING "test|example" "im")
+REPORT "Boost Insecure Serialization/Deserialization Marker"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

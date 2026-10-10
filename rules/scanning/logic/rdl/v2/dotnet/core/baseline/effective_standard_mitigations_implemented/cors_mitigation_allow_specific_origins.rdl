@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.dotnet.core.cors_mitigation_allow_specific_origins VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\[EnableCors\\s*\\(\\s*\\\"AllowSpecificOrigins\\\"\\s*\\)\\]" "im"
+WHEN (TEXT_MATCHES "AllowAnyOrigin\\s*\\(\\s*\\)|WithOrigins\\s*\\(\\s*\"\\*\"|Access-Control-Allow-Origin.*\\*" "im" AND TEXT_MISSING "WithOrigins\\s*\\(\\s*\"https?://[^*]|AllowCredentials|SetIsOriginAllowed" "im")
+REPORT "CORS Mitigation: Allow Specific Origins"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

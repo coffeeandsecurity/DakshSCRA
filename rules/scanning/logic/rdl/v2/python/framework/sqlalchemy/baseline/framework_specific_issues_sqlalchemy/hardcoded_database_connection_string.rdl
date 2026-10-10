@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.python.framework.sqlalchemy.hardcoded_database_connection_string VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "create_engine\\s*\\(\\s*[\"'](?:postgresql|mysql|sqlite|mssql|oracle)[^\"']*://[^\"']*:[^\"'@]{6,}@" "im"
+WHEN TEXT_MISSING "os\\.environ|getenv|config\\.|settings\\." "im"
+REPORT "Hardcoded Database Connection String"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

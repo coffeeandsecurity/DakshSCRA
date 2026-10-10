@@ -148,10 +148,10 @@ def get_analysis_config():
     if report_theme not in {"hacker_mode", "professional_mode", "both"}:
         report_theme = "hacker_mode"
 
-    def _pos_int(val, default):
+    def _nonnegative_int(val, default):
         try:
             v = int(val)
-            return v if v > 0 else default
+            return v if v >= 0 else default
         except (TypeError, ValueError):
             return default
 
@@ -159,8 +159,8 @@ def get_analysis_config():
         "run_by_default": bool(analysis_cfg.get("run_by_default", True)),
         "include_frameworks": bool(analysis_cfg.get("include_frameworks", True)),
         "report_theme": report_theme,
-        "max_files_per_platform": _pos_int(analysis_cfg.get("max_files_per_platform"), 300),
-        "max_functions_per_platform": _pos_int(analysis_cfg.get("max_functions_per_platform"), 1500),
+        "max_files_per_platform": _nonnegative_int(analysis_cfg.get("max_files_per_platform"), 0),
+        "max_functions_per_platform": _nonnegative_int(analysis_cfg.get("max_functions_per_platform"), 0),
     }
 
 

@@ -1,0 +1,10 @@
+VERSION 2
+RULE authentication.bypass VERSION 1
+IN FUNCTION
+LET operation BE CALL MATCHES authentication.success
+WHEN reachable operation
+REQUIRE NOT authentication.proof_dominates operation
+REPORT "authentication bypass"
+SEVERITY CRITICAL
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

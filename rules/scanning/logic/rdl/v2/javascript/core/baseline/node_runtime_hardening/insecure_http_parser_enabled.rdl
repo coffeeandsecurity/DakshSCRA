@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.javascript.core.insecure_http_parser_enabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\binsecureHTTPParser\\s*:\\s*true\\b" "im"
+WHEN (TEXT_MATCHES "insecureHTTPParser:\\s*true|legacyHeaders:\\s*true" "im" AND TEXT_MISSING "test|development|legacy" "im")
+REPORT "Insecure HTTP Parser Enabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

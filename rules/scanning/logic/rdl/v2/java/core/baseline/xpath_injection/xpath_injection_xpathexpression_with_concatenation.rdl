@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.java.core.xpath_injection_xpathexpression_with_concatenation VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "xpath\\.evaluate\\s*\\(|XPathExpression\\.evaluate\\s*\\(|XPath\\.compile\\s*\\(" "im"
+WHEN (TEXT_MATCHES "request|getParameter|input|query|\\+" "im" AND TEXT_MISSING "XPathVariableResolver|parameterized|encodeForXPath" "im")
+REPORT "XPath Injection: XPathExpression with Concatenation"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

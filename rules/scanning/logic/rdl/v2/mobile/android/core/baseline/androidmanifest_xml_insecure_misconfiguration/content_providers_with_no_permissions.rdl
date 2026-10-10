@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.android.core.content_providers_with_no_permissions VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "<provider\\b|android:authorities\\s*=" "im"
+REPORT "Content Providers with No Permissions"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

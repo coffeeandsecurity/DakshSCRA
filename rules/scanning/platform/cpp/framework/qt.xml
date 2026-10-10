@@ -3,7 +3,7 @@
         <rule>
             <name>Qt Unsafe Memory/String API</name>
             <regex>\b(strcpy|strcat|sprintf|gets|memcpy)\s*\(</regex>
-            <rdl_ref>logic/cpp/framework/qt/qt_unsafe_memory_string_api.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/cpp/framework/qt/qt_unsafe_memory_string_api.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -12,15 +12,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>magenta</highlight_color>
             </scan_config>
-            <rule_desc>Detects unsafe memory/string APIs in C++ code.</rule_desc>
-            <vuln_desc>Improper memory operations can cause overflow and memory safety issues.</vuln_desc>
-            <developer>Use safer abstractions and explicit bounds checks.</developer>
+            <rule_desc>The code uses a low-level memory, formatting, allocation, or type-conversion operation whose safety depends on bounds, types, initialization, and caller invariants.</rule_desc>
+            <vuln_desc>A violated memory or formatting invariant may expose process memory, corrupt application state, crash the process, or permit code execution when an attacker can influence the relevant inputs.</vuln_desc>
+            <developer>Validate sizes and types before use, use bounded and type-safe APIs, and keep format strings fixed. Prefer checked conversions and safe ownership abstractions; document and test every remaining unsafe invariant.</developer>
             <reviewer>Inspect unsafe calls for size validation and tainted input. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Qt Command Execution Sink</name>
             <regex>\b(system|popen|_popen)\s*\(</regex>
-            <rdl_ref>logic/cpp/framework/qt/qt_command_execution_sink.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/cpp/framework/qt/qt_command_execution_sink.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -29,15 +29,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>magenta</highlight_color>
             </scan_config>
-            <rule_desc>Detects OS command execution APIs in C++ code paths.</rule_desc>
-            <vuln_desc>User-influenced command strings can lead to command injection.</vuln_desc>
-            <developer>Avoid shell execution or strictly validate/allow-list inputs.</developer>
+            <rule_desc>The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.</rule_desc>
+            <vuln_desc>If an attacker controls interpreted syntax or the operation selected, code or commands may run with the application’s privileges, allowing data theft, state changes, or service disruption.</vuln_desc>
+            <developer>Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates or expressions.</developer>
             <reviewer>Trace untrusted data flow into command execution. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Qt TLS Validation Bypass Marker</name>
             <regex>ignoreSslErrors\(\)|setPeerVerifyMode\(\s*QSslSocket::VerifyNone</regex>
-            <rdl_ref>logic/cpp/framework/qt/qt_tls_validation_bypass_marker.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/cpp/framework/qt/qt_tls_validation_bypass_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -46,15 +46,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects TLS validation bypass markers in C++/Qt networking code.</rule_desc>
-            <vuln_desc>TLS bypass permits interception and spoofing attacks.</vuln_desc>
-            <developer>Enforce strict certificate validation and remove bypasses.</developer>
+            <rule_desc>The checked source contains a transport-security exception, insecure endpoint, or certificate-validation configuration. Resolve the effective policy and the connections it governs.</rule_desc>
+            <vuln_desc>An attacker on the network may read or alter affected traffic if sensitive data travels over cleartext or the connection accepts an untrusted server. Normal HTTPS endpoints and correctly implemented validation do not establish exposure.</vuln_desc>
+            <developer>Use HTTPS with normal certificate-chain and hostname verification. Remove permissive production callbacks and broad transport exceptions; restrict any justified exception to a documented, non-sensitive endpoint.</developer>
             <reviewer>Audit all network client TLS settings. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Qt Hardcoded Secret Material</name>
             <regex>(?i)(secret|apikey|token|password)\s*[:=]\s*"[^"]{8,}"</regex>
-            <rdl_ref>logic/cpp/framework/qt/qt_hardcoded_secret_material.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/cpp/framework/qt/qt_hardcoded_secret_material.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -63,15 +63,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects likely hardcoded secrets in C++ source.</rule_desc>
-            <vuln_desc>Hardcoded credentials may leak through source/binary exposure.</vuln_desc>
-            <developer>Externalize secrets and rotate keys.</developer>
+            <rule_desc>The checked source or build configuration embeds potentially sensitive credential or key material. Determine whether it is active and whether it reaches distributed artifacts or logs.</rule_desc>
+            <vuln_desc>A party who can read exposed source, artifacts, configuration, or logs may recover active secrets and access the protected service or decrypt data with the secret owner’s privileges.</vuln_desc>
+            <developer>Remove active secrets from source and build layers, rotate exposed values, and load replacements through a restricted secret-management facility. Use narrowly privileged, short-lived credentials.</developer>
             <reviewer>Confirm no production credentials are embedded. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Qt Insecure Serialization/Deserialization Marker</name>
             <regex>boost::archive|QDataStream\s*&gt;&gt;</regex>
-            <rdl_ref>logic/cpp/framework/qt/qt_insecure_serialization_deserialization_marker.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/cpp/framework/qt/qt_insecure_serialization_deserialization_marker.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -80,9 +80,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects serialization/deserialization APIs that need trust-boundary review.</rule_desc>
-            <vuln_desc>Deserializing untrusted data can lead to memory and logic vulnerabilities.</vuln_desc>
-            <developer>Validate input formats and enforce strict schema checks.</developer>
+            <rule_desc>The application reads serialized objects or uses a parser that may construct runtime types. Identify the input’s trust and the effective parser and type restrictions.</rule_desc>
+            <vuln_desc>A crafted untrusted payload may instantiate dangerous types or trigger object behavior that executes code, modifies state, or exhausts resources when the parser permits those operations.</vuln_desc>
+            <developer>Use a data-only format and a safe loader for untrusted input. Disable automatic object or type construction, allowlist required types, and bound parsing size and complexity.</developer>
             <reviewer>Review deserialization boundaries and source trust assumptions. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

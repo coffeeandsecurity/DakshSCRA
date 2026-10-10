@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.cpp.core.dangling_pointer_delete_without_nullptr VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bdelete\\s+\\b(?:[^\\s]+)\\b" "im"
+WHEN TEXT_MISSING "=\\s*nullptr|=\\s*NULL|std::unique_ptr|std::shared_ptr|std::weak_ptr" "im"
+REPORT "Dangling Pointer: delete without nullptr"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

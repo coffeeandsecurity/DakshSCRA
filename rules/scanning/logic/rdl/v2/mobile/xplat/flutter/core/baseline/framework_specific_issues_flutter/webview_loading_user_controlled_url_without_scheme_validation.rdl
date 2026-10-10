@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.xplat.flutter.core.webview_loading_user_controlled_url_without_scheme_validation VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bWebViewController\\b|\\bWebViewWidget\\b" "im"
+WHEN TEXT_MISSING "scheme|canLaunchUrl|allowedSchemes|guard.*scheme|Uri\\.parse.*scheme|navigationDelegate|onNavigationRequest" "im"
+REPORT "WebView Loading User-Controlled URL Without Scheme Validation"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

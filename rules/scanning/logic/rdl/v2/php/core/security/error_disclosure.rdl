@@ -1,0 +1,8 @@
+VERSION 2
+RULE php.error-disclosure VERSION 1
+IN FILE
+WHEN EXISTS CALL MATCHES error.disclosure AS operation
+REPORT "diagnostic information disclosure"
+SEVERITY MEDIUM
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

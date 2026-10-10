@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.python.core.insecure_url_configuration VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)(url|re_path)\\s*\\(\\s*['\"](\\^|\\^\\/)([^'\"]+)['\"]" "im"
+WHEN TEXT_MISSING "login_required|permission_required|LoginRequired|csrf_protect" "im"
+REPORT "Insecure URL Configuration"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

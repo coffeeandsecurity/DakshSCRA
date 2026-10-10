@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.powershell.core.bypass_execution_policy VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)-ExecutionPolicy\\s+(?:Bypass|Unrestricted)|Set-ExecutionPolicy\\s+(?:Bypass|Unrestricted)" "im"
+WHEN (TEXT_MATCHES "-ExecutionPolicy\\s+Bypass|Set-ExecutionPolicy\\s+Bypass|executionpolicy.*bypass" "im" AND TEXT_MISSING "test|CI|pipeline|development|example" "im")
+REPORT "Bypass Execution Policy"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.terraform.framework.aws.rds_storage_not_encrypted VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "resource\\s+\"aws_db_instance\"" "im"
+WHEN TEXT_MISSING "storage_encrypted\\s*=\\s*true" "im"
+REPORT "RDS Storage Not Encrypted"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

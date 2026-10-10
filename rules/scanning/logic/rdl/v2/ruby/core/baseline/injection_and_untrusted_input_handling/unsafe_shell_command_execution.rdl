@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.ruby.core.unsafe_shell_command_execution VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:system|exec|spawn|popen|Open3\\.(?:capture2e?|pipeline|popen2e?))\\s*\\(" "im"
+WHEN (TEXT_MISSING "Shellwords\\.escape|Shellwords\\.shellescape|validate|sanitize|allowlist" "im" AND TEXT_MISSING "test|spec|example" "im")
+REPORT "Unsafe Shell Command Execution"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

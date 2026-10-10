@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.c.core.unbounded_memory_allocation VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bmalloc\\s*\\(\\s*[^\\)]*user_input" "im"
+WHEN TEXT_MISSING "sizeof\\s*\\(|MAX_SIZE|MAX_LEN|limit|bounds|check" "im"
+REPORT "Unbounded Memory Allocation"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

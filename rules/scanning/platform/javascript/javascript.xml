@@ -3,7 +3,7 @@
         <rule>
             <name>Untrusted Data in 'document.getElementById().value'</name>
             <regex>document\.getElementById\(.+\)\.value</regex>
-            <rdl_ref>logic/javascript/core/untrusted_data_in_document_getelementbyid_value.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/javascript/core/untrusted_data_in_document_getelementbyid_value.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -12,15 +12,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of unvalidated input.</rule_desc>
-            <vuln_desc>This rule matches instances where user input obtained from `document.getElementById().value` is used without proper validation. Unvalidated input can lead to security vulnerabilities such as injection attacks, cross-site scripting (XSS), and improper data handling.</vuln_desc>
-            <developer>Validate and sanitize user input obtained through `document. getElementById(). value` before using it in any sensitive operations. Implement input validation techniques appropriate for the expected input, such as data type checking, length validation, and character filtering.</developer>
+            <rule_desc>The code accepts or reads externally influenced data. Trace it to security-sensitive operations and identify the validation and authorization required by each destination.</rule_desc>
+            <vuln_desc>External input may cause injection, incorrect decisions, or unauthorized data access if it reaches a sensitive operation without the controls required by that operation. Reading input alone does not establish a vulnerability.</vuln_desc>
+            <developer>Validate type, size, and allowed values at trust boundaries, and apply destination-specific parameter binding or output encoding. Enforce authorization independently of input validation.</developer>
             <reviewer>Ensure that proper input handling is in place for user input obtained through `document. getElementById(). value`. Verify that developers have implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related to unvalidated input. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted Data in InnerHTML</name>
             <regex>\.innerHTML\s?=\s?.+</regex>
-            <rdl_ref>logic/javascript/core/untrusted_data_in_innerhtml.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/javascript/core/untrusted_data_in_innerhtml.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -29,15 +29,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects potential security risks when assigning untrusted data to the innerHTML property.</rule_desc>
-            <vuln_desc>This rule matches instances where potentially untrusted data is assigned to the innerHTML property. Assigning untrusted data directly to innerHTML can lead to cross-site scripting (XSS) vulnerabilities if proper input validation and output encoding are not performed.</vuln_desc>
-            <developer>Avoid assigning untrusted data directly to the innerHTML property. Implement proper input validation and output encoding techniques when updating the content of elements via innerHTML to prevent XSS vulnerabilities.</developer>
+            <rule_desc>Application data is inserted into an HTML or script rendering context, or marked safe in a way that may bypass automatic encoding.</rule_desc>
+            <vuln_desc>If attacker-controlled content reaches an executable browser context, it may run under the application’s origin, read accessible session data, or perform actions with the victim’s permissions.</vuln_desc>
+            <developer>Use automatic context-aware output encoding and data-only DOM APIs. Sanitize deliberately accepted rich HTML with a maintained allowlist sanitizer and avoid marking untrusted content as safe.</developer>
             <reviewer>Potentially untrusted data is assigned to the innerHTML property. Assess whether the code implements proper input validation and output encoding techniques to prevent XSS vulnerabilities when updating element content. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Untrusted Data in 'document.write'</name>
             <regex>document\.write\(|innerHTML\s?=\s?.+</regex>
-            <rdl_ref>logic/javascript/core/untrusted_data_in_document_write.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/javascript/core/untrusted_data_in_document_write.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -46,9 +46,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects potential DOM-based cross-site scripting (XSS) vulnerabilities.</rule_desc>
-            <vuln_desc>This rule matches instances where the `document.write()` function or the assignment of potentially untrusted values to the `innerHTML` property is performed. These actions can introduce DOM-based cross-site scripting vulnerabilities if proper input validation and output encoding are not applied.</vuln_desc>
-            <developer>Avoid using `document. write()` and should implement appropriate input validation and output encoding techniques when assigning values to the `innerHTML` property. Ensure that user-supplied data is properly sanitized and encoded to prevent XSS attacks.</developer>
+            <rule_desc>Application data is inserted into an HTML or script rendering context, or marked safe in a way that may bypass automatic encoding.</rule_desc>
+            <vuln_desc>If attacker-controlled content reaches an executable browser context, it may run under the application’s origin, read accessible session data, or perform actions with the victim’s permissions.</vuln_desc>
+            <developer>Use automatic context-aware output encoding and data-only DOM APIs. Sanitize deliberately accepted rich HTML with a maintained allowlist sanitizer and avoid marking untrusted content as safe.</developer>
             <reviewer>The code uses `document. write()` or assigns potentially untrusted values to the `innerHTML` property. Assess whether proper input validation and output encoding techniques are implemented to prevent DOM-based cross-site scripting vulnerabilities. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -56,7 +56,7 @@
         <rule>
             <name>Handlebars Unescaped String</name>
             <regex>\{\{\{.*?\}\}\}</regex>
-            <rdl_ref>logic/javascript/core/handlebars_unescaped_string.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/javascript/core/handlebars_unescaped_string.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -66,9 +66,9 @@
                 <highlight_color>red</highlight_color>
             </scan_config>
             <description>Detects unescaped Handlebars strings in code.</description>
-            <rule_desc>Detects instances of unescaped Handlebars strings in the code, which can indicate a potential security vulnerability.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of unescaped Handlebars strings in the code. Unescaped strings can lead to cross-site scripting (XSS) vulnerabilities if user input is not properly escaped or sanitized before rendering.</vuln_desc>
-            <developer>User input used with Handlebars strings is properly sanitized or escaped to prevent XSS attacks. Handlebars provides built-in mechanisms for escaping user input, but triple curly braces can bypass this. Developers should follow secure coding practices and sanitize or escape user-generated content before using it in Handlebars strings.</developer>
+            <rule_desc>Application data is inserted into an HTML or script rendering context, or marked safe in a way that may bypass automatic encoding.</rule_desc>
+            <vuln_desc>If attacker-controlled content reaches an executable browser context, it may run under the application’s origin, read accessible session data, or perform actions with the victim’s permissions.</vuln_desc>
+            <developer>Use automatic context-aware output encoding and data-only DOM APIs. Sanitize deliberately accepted rich HTML with a maintained allowlist sanitizer and avoid marking untrusted content as safe.</developer>
             <reviewer>Verify that proper input sanitization techniques are applied when using Handlebars strings. Ensure that developers use Handlebars' built-in escaping mechanisms or equivalent custom sanitization methods to mitigate the risk of XSS vulnerabilities. Also assess the implementation of output encoding and confirm that user input is properly sanitized before rendering it in the application. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -76,7 +76,7 @@
         <rule>
             <name>Insecure Method Call: child_process.exec()</name>
             <regex>(^|\s|=\s?)require\(\s*('|")child_process('|")\s*\)(\s*\.(\s*\w+\s*)*\()?\s*\)</regex>
-            <rdl_ref>logic/javascript/core/insecure_method_call_child_process_exec.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/javascript/core/insecure_method_call_child_process_exec.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -85,15 +85,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of the `require('child_process')` statement with the `exec()` function, which can introduce remote OS command execution vulnerabilities.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the potential vulnerability of using the `child_process.exec()` function to execute operating system commands. Attackers can manipulate user input or crafted data to execute arbitrary commands on the host system, leading to unauthorized access, data breaches, or system compromise.</vuln_desc>
-            <developer>Exercise caution when using the `child_process. exec()` function and ensure that any user input passed to it is properly validated, sanitized, and restricted to prevent command injection vulnerabilities. It is recommended to use safer alternatives, such as using predefined functions or libraries specifically designed for safe command execution or employing proper input validation and sanitization techniques.</developer>
+            <rule_desc>The code invokes a process or shell execution API. Trace the executable, arguments, shell use, and source of externally supplied values.</rule_desc>
+            <vuln_desc>If attacker-controlled data changes command syntax or executable selection, an attacker may execute commands with application privileges, read or modify files, or disrupt service.</vuln_desc>
+            <developer>Use a fixed executable with a separate argument array and avoid a shell where possible. Validate arguments for the selected program and allowlist permitted operations.</developer>
             <reviewer>Verify whether the code implements sufficient measures to prevent remote OS command execution vulnerabilities. Check whether the usage of `child_process. exec()` is necessary, and if so, ensure that proper input validation, sanitization, and command parameterization techniques are implemented to prevent command injection attacks. Also assess the context in which this function is used and verify that security best practices are followed to mitigate any potential risks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure Method Call: eval|setTimeout|setInterval</name>
             <regex>\b(eval|setTimeout|setInterval)\(.+\)</regex>
-            <rdl_ref>logic/javascript/core/insecure_method_call_eval_settimeout_setinterval.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/javascript/core/insecure_method_call_eval_settimeout_setinterval.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -102,9 +102,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of the `eval`, `setTimeout`, and `setInterval` functions.</rule_desc>
-            <vuln_desc>This rule matches instances where the `eval`, `setTimeout`, or `setInterval` functions are used. These functions can introduce security vulnerabilities if not used carefully, as they can execute arbitrary code and lead to code injection or unintended consequences.</vuln_desc>
-            <developer>Avoid using the `eval`, `setTimeout`, and `setInterval` functions whenever possible. If their usage is necessary, developers should carefully validate and sanitize any input used within these functions to prevent code injection vulnerabilities.</developer>
+            <rule_desc>The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.</rule_desc>
+            <vuln_desc>If an attacker controls interpreted syntax or the operation selected, code or commands may run with the application’s privileges, allowing data theft, state changes, or service disruption.</vuln_desc>
+            <developer>Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates or expressions.</developer>
             <reviewer>Verify whether the code uses the `eval`, `setTimeout`, or `setInterval` functions. Assess whether the usage is justified and if proper input validation and sanitization techniques are implemented to prevent code injection vulnerabilities. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -112,7 +112,7 @@
         <rule>
             <name>Weak Cryptography</name>
             <regex>(CryptoJS\.DES\.encrypt|MD5|SHA-1|RC4)\(.+\)</regex>
-            <rdl_ref>logic/javascript/core/weak_cryptography.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/javascript/core/weak_cryptography.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -121,15 +121,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of weak cryptographic functions.</rule_desc>
-            <vuln_desc>This rule matches instances where weak cryptographic functions, such as `CryptoJS.DES.encrypt`, `MD5`, `SHA-1`, or `RC4`, are used. These algorithms are cryptographically broken or weak and should not be used for security-sensitive operations.</vuln_desc>
-            <developer>Use stronger and more secure cryptographic functions and algorithms, such as AES-256 or SHA-256, for encryption and hashing operations. Also follow best practices for key management and encryption protocols.</developer>
+            <rule_desc>The checked source uses a random generator, cryptographic primitive, or initialization value whose suitability depends on its security purpose and inputs.</rule_desc>
+            <vuln_desc>Predictable secrets or unsuitable cryptographic parameters may enable credential guessing, reveal plaintext, or weaken integrity when used to protect security-sensitive data. Non-security hashes and identifiers do not establish this condition.</vuln_desc>
+            <developer>Use a cryptographically secure generator for secrets and modern purpose-appropriate cryptography. Use unique nonces, protected keys, and a vetted password-hashing scheme where passwords are stored.</developer>
             <reviewer>Weak cryptographic functions are used in the code. Assess whether the code uses secure cryptographic algorithms and if best practices for encryption and hashing are followed. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Weak Random Number Generation</name>
             <regex>Math\.random\(.*\)</regex>
-            <rdl_ref>logic/javascript/core/weak_random_number_generation.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/javascript/core/weak_random_number_generation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -138,9 +138,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects the usage of Math.random() in security-sensitive contexts.</rule_desc>
-            <vuln_desc>Math.random() is not cryptographically secure and produces predictable values. Using it to generate tokens, session identifiers, nonces, or cryptographic keys can lead to predictable output that attackers can guess or reproduce.</vuln_desc>
-            <developer>Use `crypto.getRandomValues()` or the `crypto.randomUUID()` / `crypto.randomBytes()` APIs for any security-critical random number generation. Math.random() is acceptable only for non-security uses such as UI animations or sampling.</developer>
+            <rule_desc>The checked source uses a random generator, cryptographic primitive, or initialization value whose suitability depends on its security purpose and inputs.</rule_desc>
+            <vuln_desc>Predictable secrets or unsuitable cryptographic parameters may enable credential guessing, reveal plaintext, or weaken integrity when used to protect security-sensitive data. Non-security hashes and identifiers do not establish this condition.</vuln_desc>
+            <developer>Use a cryptographically secure generator for secrets and modern purpose-appropriate cryptography. Use unique nonces, protected keys, and a vetted password-hashing scheme where passwords are stored.</developer>
             <reviewer>Verify that Math.random() is not used where cryptographic randomness is required. Confirm that security-sensitive identifiers use a CSPRNG. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -148,7 +148,7 @@
         <rule>
             <name>Routes</name>
             <regex>(?i)route:\s+'.*(\s?)</regex>
-            <rdl_ref>logic/javascript/core/routes.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/javascript/core/routes.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -157,15 +157,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects the presence of hardcoded routes in JavaScript code, which may expose sensitive information or introduce security risks.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the presence of hardcoded routes in the JavaScript code. Hardcoded routes may expose sensitive information, such as internal URLs, API endpoints, or authentication routes, to potential attackers. Hardcoded routes can also lead to security vulnerabilities, such as insufficient access control, information disclosure, or bypassing security mechanisms.</vuln_desc>
-            <developer>Avoid hardcoding routes in JavaScript code and instead consider using configuration files or dynamic route handling mechanisms. Hardcoding routes can introduce security risks and make the codebase less maintainable. By implementing dynamic routing solutions, developers can improve flexibility, allow for easier configuration changes, and minimize the exposure of sensitive information.</developer>
+            <rule_desc>The code declares an entry point, model, destination, or configuration value that may cross a trust boundary. Identify callers, recipients, and the required data-access policy.</rule_desc>
+            <vuln_desc>A boundary that trusts unauthorized callers or exposes private output may permit data disclosure or state changes. A declaration, address, or architectural marker alone does not establish such a failure.</vuln_desc>
+            <developer>Trace the actual boundary, restrict accepted inputs and recipients, and enforce authentication and object-level authorization where required. Verify both authorized and denied use cases.</developer>
             <reviewer>Verify whether the code contains hardcoded routes and assess the potential security implications. Ensure that sensitive information, such as internal URLs, API endpoints, or authentication routes, is not exposed through hardcoded routes. Also check if the code implements appropriate access control measures and adheres to secure coding practices, such as using configuration files or dynamic routing mechanisms. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Stack Trace or Error Disclosure (Node/Express)</name>
             <regex>res\.(?:send|json|end)\s*\(\s*err(?:or)?(?:\.stack|\.message)?\s*\)</regex>
-            <rdl_ref>logic/javascript/core/stack_trace_or_error_disclosure_node_express.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/javascript/core/stack_trace_or_error_disclosure_node_express.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -174,9 +174,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects Node/Express response patterns that send raw error objects or stack traces directly to HTTP clients.</rule_desc>
-            <vuln_desc>Sending raw error objects or stack traces in HTTP responses discloses internal file paths, library versions, and execution context to attackers, aiding reconnaissance and exploitation.</vuln_desc>
-            <developer>Return a generic error message to the client and log the detailed error server-side only. Use an error handler middleware that maps exceptions to safe, sanitized HTTP responses.</developer>
+            <rule_desc>The code writes diagnostic data or exposes detailed errors. Establish the values emitted, production configuration, and recipients of the output.</rule_desc>
+            <vuln_desc>Readers of exposed diagnostics may obtain credentials, private records, internal paths, or implementation details that enable account misuse or targeted attacks.</vuln_desc>
+            <developer>Keep sensitive values and detailed errors out of user-facing responses and routine logs. Redact before emission, restrict diagnostic access, and verify production logging configuration.</developer>
             <reviewer>Confirm that HTTP responses never include raw error objects, stack traces, or internal diagnostic details. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -184,7 +184,7 @@
         <rule>
             <name>Node Inspector Exposed via --inspect</name>
             <regex>\B--inspect(?:-brk)?(?:=\S+)?\b</regex>
-            <rdl_ref>logic/javascript/core/node_inspector_exposed_via_inspect.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/javascript/core/node_inspector_exposed_via_inspect.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -193,15 +193,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects Node.js debug inspector flags that may expose a remotely reachable debug endpoint.</rule_desc>
-            <vuln_desc>If debug inspector is exposed beyond localhost, attackers may gain high-impact introspection or code execution capabilities.</vuln_desc>
-            <developer>Disable inspector in production, or bind strictly to localhost behind controlled access and network restrictions.</developer>
+            <rule_desc>A configuration or API enables development diagnostics, process inspection, or debugging. Verify whether it applies to a deployed production artifact.</rule_desc>
+            <vuln_desc>An actor with access to an enabled debugging interface may inspect private state or influence application execution; exposed development endpoints may disclose internal implementation details.</vuln_desc>
+            <developer>Disable debugging and development endpoints in production, bind necessary diagnostic services to restricted interfaces, and verify the final deployed artifact and access policy.</developer>
             <reviewer>Verify runtime scripts and deployment manifests do not expose inspector endpoints in production environments. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure HTTP Parser Enabled</name>
             <regex>\binsecureHTTPParser\s*:\s*true\b</regex>
-            <rdl_ref>logic/javascript/core/insecure_http_parser_enabled.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/javascript/core/insecure_http_parser_enabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -210,9 +210,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects explicit enablement of Node's insecure HTTP parser option.</rule_desc>
-            <vuln_desc>Using insecure parsing behavior can increase request-smuggling and parser ambiguity risks in proxy/backend chains.</vuln_desc>
-            <developer>Avoid enabling insecure parser options and align HTTP parsing behavior with hardened defaults.</developer>
+            <rule_desc>The checked source contains a transport-security exception, insecure endpoint, or certificate-validation configuration. Resolve the effective policy and the connections it governs.</rule_desc>
+            <vuln_desc>An attacker on the network may read or alter affected traffic if sensitive data travels over cleartext or the connection accepts an untrusted server. Normal HTTPS endpoints and correctly implemented validation do not establish exposure.</vuln_desc>
+            <developer>Use HTTPS with normal certificate-chain and hostname verification. Remove permissive production callbacks and broad transport exceptions; restrict any justified exception to a documented, non-sensitive endpoint.</developer>
             <reviewer>Confirm parser hardening remains enabled across app servers and reverse-proxy boundaries. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -220,7 +220,7 @@
         <rule>
             <name>Weak Mitigation: Using disable|bypass|ignore|suppress|unsafe</name>
             <regex>\b(disable|bypass|ignore|suppress|unsafe)\b</regex>
-            <rdl_ref>logic/javascript/core/weak_mitigation_using_disable_bypass_ignore_suppress_unsafe.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/javascript/core/weak_mitigation_using_disable_bypass_ignore_suppress_unsafe.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -229,9 +229,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects weak or inadequate security mitigations.</rule_desc>
-            <vuln_desc>This rule matches instances where weak or inadequate security mitigations (such as disable, bypass, ignore, suppress, or unsafe) are used. Weak mitigations can lead to security vulnerabilities or provide a false sense of security, leaving the application exposed to attacks.</vuln_desc>
-            <developer>Avoid using weak or inadequate security mitigations as they can create vulnerabilities in the application. Implement strong and effective security measures that follow established best practices and standards.</developer>
+            <rule_desc>The code contains a security-control marker. Its presence is a review surface rather than evidence that the control is defective or consistently enforced.</rule_desc>
+            <vuln_desc>No adverse security consequence follows from the presence of a protection alone. If it is bypassed or applied outside the correct context, the protected operation may still permit injection or unauthorized access.</vuln_desc>
+            <developer>Verify that the control applies to every relevant entry point and uses the required context and policy. Retain effective protections; test bypass cases before recommending a change.</developer>
             <reviewer>Identify weak or inadequate security mitigations in the code and recommend implementing stronger security measures. Assess whether the application applies appropriate security controls and avoids relying on weak mitigations that may be easily bypassed by attackers. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -239,7 +239,7 @@
         <rule>
             <name>SQL Query: SELECT Statements with WHERE or ORDER BY</name>
             <regex>(?i)\bSELECT\s+?\*?\s+?FROM\s+[^\s]+\s+(WHERE|ORDER BY)\b.*</regex>
-            <rdl_ref>logic/javascript/core/sql_query_select_statements_with_where_or_order_by.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/javascript/core/sql_query_select_statements_with_where_or_order_by.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -248,15 +248,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects SELECT statements with WHERE or ORDER BY clauses in SQL queries, which may be vulnerable to SQL injection if user input is not handled securely in JavaScript environments.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the use of potentially vulnerable SELECT statements with WHERE or ORDER BY clauses. Improper handling of user input in these clauses can lead to SQL injection, allowing attackers to manipulate query behavior and gain unauthorized access to data.</vuln_desc>
-            <developer>Validate and implement secure alternatives, such as using parameterized queries or query bindings provided by JavaScript libraries like `mysql`, `pg`, or ORMs such as Sequelize to avoid SQL injection risks.</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Check if parameterized queries or query bindings are used with SELECT statements containing WHERE or ORDER BY clauses in JavaScript applications to ensure secure handling of user input. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>SQL Query: Unrestricted SELECT *</name>
             <regex>\bSELECT\s+\*\s+FROM\b</regex>
-            <rdl_ref>logic/javascript/core/sql_query_unrestricted_select.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/javascript/core/sql_query_unrestricted_select.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -265,15 +265,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects "SELECT * FROM" in SQL queries, which can expose unnecessary or sensitive data in JavaScript applications.</rule_desc>
-            <vuln_desc>If this rule matches, it suggests that the query retrieves more data than necessary, potentially exposing sensitive information and increasing the attack surface.</vuln_desc>
-            <developer>Validate and specify only necessary columns in SQL queries rather than using "SELECT *" to prevent unnecessary data exposure. This is especially important when working with libraries like `mysql` or `pg` in Node. js.</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Verify that SQL queries in JavaScript applications select only the required columns to minimize data exposure risks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>SQL Query: Non-parameterized INSERT Statements</name>
             <regex>(?i)\bINSERT\s+INTO\s+[^\s]+\s+\(.*=.*\$.*\)</regex>
-            <rdl_ref>logic/javascript/core/sql_query_non_parameterized_insert_statements.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/javascript/core/sql_query_non_parameterized_insert_statements.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -282,15 +282,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects non-parameterized INSERT statements that may include user input directly, leading to SQL injection vulnerabilities in JavaScript environments.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates a potentially vulnerable INSERT statement that could allow SQL injection if user input is included without proper handling.</vuln_desc>
-            <developer>Use parameterized queries or prepared statements in INSERT operations to prevent SQL injection attacks when using JavaScript libraries like `mysql`, `pg`, or ORMs such as Sequelize.</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Inspect any INSERT statements to confirm secure parameterization in JavaScript applications and ensure that user input is handled safely to minimize injection risks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Deprecated SQL Functions</name>
             <regex>(?is)\b(?:mysql_query|pg_query|sqlite_query|db\.query|db\.execute|knex\.raw)\s*\(\s*(?:['"`]\s*(?:SELECT|INSERT|UPDATE|DELETE)\b[^'"`]*['"`]|(?:SELECT|INSERT|UPDATE|DELETE)\b[^,\n;)]*(?:\+|\$\{)[^,\n;)]*)</regex>
-            <rdl_ref>logic/javascript/core/deprecated_sql_functions.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/javascript/core/deprecated_sql_functions.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -299,9 +299,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects usage of deprecated or insecure SQL functions and dynamic SQL queries that may lead to security vulnerabilities in JavaScript applications.</rule_desc>
-            <vuln_desc>If this rule matches, it indicates the usage of potentially insecure SQL functions or libraries that may be vulnerable to SQL injection or other security issues if used without proper configurations or parameterization.</vuln_desc>
-            <developer>Avoid using deprecated SQL functions or dynamic query building, and instead use secure alternatives like prepared statements or parameterized queries available in Node. js libraries (`mysql`, `pg`, Sequelize).</developer>
+            <rule_desc>The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.</rule_desc>
+            <vuln_desc>If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.</vuln_desc>
+            <developer>Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.</developer>
             <reviewer>Check for deprecated SQL functions or dynamic SQL building with user input, ensuring secure alternatives are implemented and that input validation and query parameterization practices are followed in JavaScript applications. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -309,7 +309,7 @@
         <rule>
             <name>Deprecated JS Function: escape|unescape|eval</name>
             <regex>\b(escape|unescape|eval)\b</regex>
-            <rdl_ref>logic/javascript/core/deprecated_js_function_escape_unescape_eval.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/javascript/core/deprecated_js_function_escape_unescape_eval.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -318,9 +318,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects usage of deprecated JavaScript functions.</rule_desc>
-            <vuln_desc>This rule matches instances where deprecated JavaScript functions (such as escape, unescape, or eval) are used. Deprecated functions may have security vulnerabilities or compatibility issues and should be replaced with modern, safer alternatives.</vuln_desc>
-            <developer>Avoid using deprecated JavaScript functions as they may introduce security vulnerabilities. update their code to use modern alternatives and follow best practices to ensure the security and compatibility of their applications.</developer>
+            <rule_desc>The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.</rule_desc>
+            <vuln_desc>If an attacker controls interpreted syntax or the operation selected, code or commands may run with the application’s privileges, allowing data theft, state changes, or service disruption.</vuln_desc>
+            <developer>Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates or expressions.</developer>
             <reviewer>Check for the usage of deprecated JavaScript functions and recommend replacing them with safer alternatives. Assess whether the codebase follows best practices and avoids deprecated functions that may pose security risks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -328,7 +328,7 @@
         <rule>
             <name>Insecure Direct Object References (IDOR)</name>
             <regex>(req\.params|req\.query|req\.body)[\s\S]*?(\[|\.)[\s\S]*?</regex>
-            <rdl_ref>logic/javascript/core/insecure_direct_object_references_idor.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/javascript/core/insecure_direct_object_references_idor.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -337,15 +337,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects potential Insecure Direct Object References (IDOR).</rule_desc>
-            <vuln_desc>This rule matches potential Insecure Direct Object References (IDOR) vulnerabilities in the code. IDOR occurs when user-supplied input is used directly to access internal resources or sensitive objects without proper authorization or validation. Attackers can manipulate the input to access unauthorized resources, view sensitive data, or perform actions they are not allowed to.</vuln_desc>
-            <developer>Implement proper authorization and access control mechanisms to prevent IDOR vulnerabilities. User input used to access resources should be validated, sanitized, and authorized based on the user's privileges. Additionally, developers should use indirect references or randomized identifiers to obfuscate direct object references.</developer>
+            <rule_desc>The checked code implements an identity, access-control, or abuse-prevention decision. Determine the trusted verifier, protected resources, and whether the control is enforced on every relevant path.</rule_desc>
+            <vuln_desc>If identity or resource authorization can be bypassed, an attacker may impersonate a user, access another user’s data, or perform restricted operations. A control’s presence alone does not establish a weakness.</vuln_desc>
+            <developer>Enforce authentication and object-level authorization on the trusted server or privileged boundary. Use strong verifier material, appropriate rate limits and recovery controls, and test access by unauthenticated and insufficiently privileged callers.</developer>
             <reviewer>Verify whether the code implements proper authorization and access control mechanisms to prevent IDOR vulnerabilities. Check whether user input used to access resources is properly validated, sanitized, and authorized. Reviewers should assess the effectiveness of the implemented measures in mitigating IDOR risks. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Server-Side Request Forgery (SSRF)</name>
             <regex>XMLHttpRequest\.open\(|fetch\(|axios\.get\(|http\.request\(|https\.request\(|http\.get\(|https\.get\(|http\.post\(|https\.post\(|http\.put\(|https\.put\(|http\.delete\(|https\.delete\(|\$.ajax\({\s*url:\s*['"].+['"]</regex>
-            <rdl_ref>logic/javascript/core/server_side_request_forgery_ssrf.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/javascript/core/server_side_request_forgery_ssrf.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -354,15 +354,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects potential server-side request forgery (SSRF) vulnerabilities.</rule_desc>
-            <vuln_desc>This rule matches instances where XMLHttpRequest, fetch, axios, http.request, https.request, http.get, https.get, http.post, https.post, http.put, https.put, http.delete, https.delete, or $.ajax functions are used with potentially untrusted URLs. Improper usage of these functions can lead to SSRF vulnerabilities, allowing attackers to make unauthorized requests to internal resources.</vuln_desc>
-            <developer>Implement proper input validation and sanitization when using XMLHttpRequest, fetch, axios, http. request, https. request, http. get, https. get, http. post, https. post, http. put, https. put, http. delete, https. delete, or $. ajax functions. Validate and restrict the URLs to trusted sources to prevent SSRF attacks.</developer>
+            <rule_desc>The application makes an outbound request whose destination may be influenced by external data. Resolve URL construction, redirects, DNS results, and network reachability.</rule_desc>
+            <vuln_desc>If an attacker can select a reachable destination, the application may expose internal services or metadata credentials, or send protected data to an unauthorized recipient.</vuln_desc>
+            <developer>Allowlist required destinations and protocols, validate resolved addresses and every redirect, and restrict outbound access to internal and metadata services.</developer>
             <reviewer>XMLHttpRequest, fetch, axios, http. request, https. request, http. get, https. get, http. post, https. post, http. put, https. put, http. delete, https. delete, or $. ajax functions are used with potentially untrusted URLs. Assess whether proper input validation and URL restriction mechanisms are implemented to mitigate SSRF vulnerabilities. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Prototype Pollution</name>
             <regex>(\b__proto__\b|Object\.prototype\.(?!hasOwnProperty)[a-zA-Z]+\s?=)</regex>
-            <rdl_ref>logic/javascript/core/prototype_pollution.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/javascript/core/prototype_pollution.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -371,15 +371,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects potential prototype pollution vulnerabilities.</rule_desc>
-            <vuln_desc>This rule matches instances where the `__proto__` property or assignment to properties of `Object.prototype` (excluding `hasOwnProperty`) is performed. These actions can lead to prototype pollution vulnerabilities, allowing attackers to modify the behavior of objects and potentially compromise the application's security.</vuln_desc>
-            <developer>Avoid using or modifying the `__proto__` property directly, and exercise caution when extending or modifying properties of `Object. prototype`. Use safer alternatives, such as `Object. create()` or creating new objects with specific prototypes.</developer>
+            <rule_desc>The code writes object properties or merges data in a way that may affect prototype state. Determine whether externally supplied keys can reach the operation.</rule_desc>
+            <vuln_desc>An attacker who changes shared prototype properties may alter authorization decisions or other application behavior; some reachable gadgets may also lead to data disclosure or code execution.</vuln_desc>
+            <developer>Reject prototype-manipulating keys such as __proto__, constructor, and prototype where appropriate. Use safe own-property handling, null-prototype dictionaries, and maintained merge libraries.</developer>
             <reviewer>The code directly uses or modifies the `__proto__` property or assigns values to properties of `Object. prototype` (excluding `hasOwnProperty`). Assess whether proper precautions are taken to prevent prototype pollution vulnerabilities. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Missing Cookie Security Flags</name>
             <regex>res\.cookie\s*\(|document\.cookie\s*=</regex>
-            <rdl_ref>logic/javascript/core/missing_cookie_security_flags.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/javascript/core/missing_cookie_security_flags.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -388,9 +388,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects cookie creation without essential security flags such as httpOnly, secure, and SameSite.</rule_desc>
-            <vuln_desc>Cookies set without httpOnly are accessible to JavaScript and vulnerable to XSS-based theft. Cookies without the secure flag are transmitted over HTTP. Cookies without SameSite are vulnerable to cross-site request forgery (CSRF).</vuln_desc>
-            <developer>Always set httpOnly:true, secure:true, and sameSite:'Strict' or 'Lax' on session and authentication cookies. Example: res.cookie('session', value, { httpOnly: true, secure: true, sameSite: 'Strict' }).</developer>
+            <rule_desc>The code handles session state or configures cookies and session secrets. Resolve cookie attributes, token generation, lifetime, and server-side validation.</rule_desc>
+            <vuln_desc>Weak session secrets, exposed cookies, or inadequate expiry may allow session theft, token forgery, or continued access after the user’s intended authorization ends.</vuln_desc>
+            <developer>Use strong unpredictable session secrets, rotate tokens on privilege changes, and enforce expiry and revocation. Set Secure, HttpOnly, and appropriate SameSite attributes for sensitive browser cookies.</developer>
             <reviewer>Confirm that all cookies setting session or authentication state include httpOnly, secure, and sameSite attributes. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

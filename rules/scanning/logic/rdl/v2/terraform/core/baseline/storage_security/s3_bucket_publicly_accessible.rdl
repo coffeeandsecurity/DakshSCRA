@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.terraform.core.s3_bucket_publicly_accessible VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "acl\\s*=\\s*\"public-read(?:-write)?\"|block_public_acls\\s*=\\s*false|block_public_policy\\s*=\\s*false" "im"
+WHEN (TEXT_MATCHES "acl\\s*=\\s*\"public-read|block_public_acls\\s*=\\s*false|ignore_public_acls\\s*=\\s*false" "im" AND TEXT_MISSING "# intentional|# static-website|website\\s*\\{" "im")
+REPORT "S3 Bucket Publicly Accessible"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

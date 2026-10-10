@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.rust.core.potential_tls_verification_bypass VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:danger_accept_invalid_certs|danger_accept_invalid_hostnames)\\s*\\(\\s*true\\s*\\)" "im"
+WHEN TEXT_MISSING "test|development|localhost|staging" "im"
+REPORT "Potential TLS Verification Bypass"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

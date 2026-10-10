@@ -1,0 +1,50 @@
+<section class="report-section section" id="reconnaissance">
+  <h2>Software Reconnaissance</h2>
+  <div class="report-section-body">
+    <p class="review-note">Detected technology indicators from the saved scan. Confidence describes detection evidence, not vulnerability severity. A file or directory can support several technologies; match totals below include those overlaps and sum only recorded counts. Missing counts or confidence are labelled Not recorded.</p>
+    <div class="report-stats">
+      <div class="report-stat"><strong>{{ recon_report.total_categories }}</strong><span>Technology categories</span></div>
+      <div class="report-stat"><strong>{{ recon_report.total_technologies }}</strong><span>Technology detections</span></div>
+      <div class="report-stat"><strong>{{ recon_report.file_observations }}</strong><span>Recorded file matches</span></div>
+      <div class="report-stat"><strong>{{ recon_report.directory_observations }}</strong><span>Recorded directory matches</span></div>
+    </div>
+    {% if recon_report.metadata %}<dl class="report-meta recon-meta">{% for item in recon_report.metadata %}<dt>{{ item.label }}</dt><dd>{{ item.value if item.value is not none else 'Not recorded' }}</dd>{% endfor %}</dl>{% endif %}
+    {% if recon_report.technologies %}
+    <h3>Technology overview</h3>
+    <div class="recon-table-scroll" role="region" aria-label="Technology overview" tabindex="0">
+      <table class="report-table recon-overview">
+        <thead><tr><th>Category</th><th>Technology</th><th>Files</th><th>Directories</th><th>Dominant confidence</th><th>File confidence breakdown</th></tr></thead>
+        <tbody>{% for tech in recon_report.technologies %}<tr>
+          <td>{{ tech.category }}</td><td><strong>{{ tech.name }}</strong></td>
+          <td>{{ tech.files if tech.files is not none else 'Not recorded' }}</td>
+          <td>{{ tech.directory_count if tech.directory_count is not none else 'Not recorded' }}</td>
+          <td><span class="recon-confidence confidence-{{ tech.confidence|replace(' ', '-') }}">{{ tech.confidence|capitalize }}</span></td>
+          <td>{% for level in ['high','medium','low'] %}<span class="recon-count">{{ level|capitalize }}: <b>{{ tech.confidence_counts[level] if tech.confidence_counts[level] is not none else 'Not recorded' }}</b></span>{% endfor %}</td>
+        </tr>{% endfor %}</tbody>
+      </table>
+    </div>
+    <h3>Detection evidence by category</h3>
+    {% if recon_report.target %}<p class="muted">Evidence paths inside the target directory are shown relative to it. Paths outside the target retain their original form. Sample files are the examples retained by the scan, not a complete file inventory.</p>{% endif %}
+    {% for category in recon_report.categories %}
+    <div class="recon-category" id="{{ category.anchor }}">
+      <h3>{{ category.name }} <span class="recon-category-count">{{ category.technologies|length }} technology detection{% if category.technologies|length != 1 %}s{% endif %}</span></h3>
+      {% for tech in category.technologies %}
+      <article class="recon-technology">
+        <div class="recon-tech-heading"><h4>{{ tech.name }}</h4><span class="recon-confidence confidence-{{ tech.confidence|replace(' ', '-') }}">{{ tech.confidence|capitalize }} confidence</span></div>
+        <p class="recon-tech-metrics"><strong>{{ tech.files if tech.files is not none else 'Not recorded' }}</strong> files · <strong>{{ tech.directory_count if tech.directory_count is not none else 'Not recorded' }}</strong> directories</p>
+        <div class="recon-confidence-counts" aria-label="File confidence breakdown">{% for level in ['high','medium','low'] %}<span>{{ level|capitalize }} <b>{{ tech.confidence_counts[level] if tech.confidence_counts[level] is not none else 'Not recorded' }}</b></span>{% endfor %}</div>
+        <details class="recon-evidence" open><summary>Directory evidence · {{ tech.directories|length }} saved entries</summary>
+          {% if tech.directories %}<table class="report-table recon-path-table"><thead><tr><th>Directory</th><th>Matched files</th></tr></thead><tbody>{% for directory in tech.directories %}<tr><td><code class="recon-path" title="{{ directory.path }}">{{ directory.display }}</code></td><td>{{ directory.files if directory.files is not none else 'Not recorded' }}</td></tr>{% endfor %}</tbody></table>
+          {% else %}<p class="report-empty">No directory evidence was saved for this detection.</p>{% endif %}
+        </details>
+        <details class="recon-evidence" open><summary>{{ tech.evidence_label }} · {{ tech.samples|length }} saved entries</summary>
+          {% if tech.samples %}<ul class="recon-files">{% for file in tech.samples %}<li><code class="recon-path" title="{{ file.path }}">{{ file.display }}</code>{% if file.confidence != 'not recorded' %}<span class="recon-confidence confidence-{{ file.confidence }}">{{ file.confidence|capitalize }}</span>{% endif %}</li>{% endfor %}</ul>
+          {% else %}<p class="report-empty">No sample file paths were saved for this detection.</p>{% endif %}
+        </details>
+      </article>
+      {% endfor %}
+    </div>
+    {% endfor %}
+    {% else %}<p class="report-empty">No technology detections were saved in this reconnaissance result.</p>{% endif %}
+  </div>
+</section>

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.xplat.cordova.core.cordova_wildcard_allow_navigation VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "<allow-navigation\\s+href=\\\"\\*\\\"" "im"
+WHEN TEXT_MISSING "allow-navigation\\s+href=\\\"https://" "im"
+REPORT "Cordova Wildcard Allow Navigation"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

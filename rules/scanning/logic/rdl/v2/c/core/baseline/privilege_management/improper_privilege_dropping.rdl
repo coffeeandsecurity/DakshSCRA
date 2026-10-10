@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.c.core.improper_privilege_dropping VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "^[^*/]*(setuid|setgid|initgroups)\\s*\\(\\s*[^)]+\\s*\\)\\s*[^/]*$" "im"
+WHEN TEXT_MISSING "if\\s*\\(|==\\s*-1|!=\\s*0|perror|strerror|errno" "im"
+REPORT "Improper Privilege Dropping"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

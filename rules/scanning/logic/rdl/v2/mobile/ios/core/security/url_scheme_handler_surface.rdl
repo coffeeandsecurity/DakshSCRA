@@ -1,0 +1,8 @@
+VERSION 2
+RULE ios.url-scheme-handler-surface VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:openURLContexts\\s+\\w+\\s*:|(?:openURLContexts|handleOpenURL|openURL)\\s*[:(])" ""
+REPORT "iOS URL Scheme Handler Surface"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

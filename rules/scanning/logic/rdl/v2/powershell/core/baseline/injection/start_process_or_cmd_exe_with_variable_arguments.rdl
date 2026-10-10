@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.powershell.core.start_process_or_cmd_exe_with_variable_arguments VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?:Start-Process|&\\s+cmd(?:\\.exe)?|Invoke-Command)\\s+[^`\\n]*\\$(?:args|input|params|\\w+URL|\\w+Path|\\w+Cmd)" "im"
+WHEN TEXT_MISSING "EscapeShellArgument|Sanitize|\\[ValidatePattern\\]" "im"
+REPORT "Start-Process or cmd.exe with Variable Arguments"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.javascript.core.insecure_direct_object_references_idor VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(req\\.params|req\\.query|req\\.body)[\\s\\S]*?(\\[|\\.)[\\s\\S]*?" "im"
+WHEN (TEXT_MATCHES "(findByPk|findOne|findAll|where|delete|update|patch|put|remove|destroy)" "im" AND TEXT_MISSING "(authorize|isAuthorized|canAccess|hasRole|ownership|tenantId)" "im")
+REPORT "Insecure Direct Object References (IDOR)"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

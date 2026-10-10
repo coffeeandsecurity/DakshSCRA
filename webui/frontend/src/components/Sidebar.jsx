@@ -21,13 +21,34 @@ const NAV_ITEMS = [
     ),
   },
   {
-    id: 'scans',
-    label: 'Scans',
+    id: 'newScan',
+    label: 'Scan',
     icon: (
       <svg className="nav-icon" viewBox="0 0 20 20" fill="currentColor">
         <path fillRule="evenodd" d="M3 4a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm2 2V5h1v1H5zM3 13a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1v-3zm2 2v-1h1v1H5zM13 3a1 1 0 00-1 1v3a1 1 0 001 1h3a1 1 0 001-1V4a1 1 0 00-1-1h-3zm1 2v1h1V5h-1zM11 13a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-3zm2 2v-1h1v1h-1z" clipRule="evenodd" />
       </svg>
     ),
+  },
+  {
+    id: 'scans',
+    label: 'Active Scans',
+    child: true,
+    icon: <svg className="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l3 2"/></svg>,
+  },
+  {
+    id: 'completed',
+    label: 'Completed',
+    child: true,
+    icon: (
+      <svg className="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414 0L9 11.586 7.707 10.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4a1 1 0 000-1.414z" clipRule="evenodd" />
+      </svg>
+    ),
+  },
+  {
+    id: 'system',
+    label: 'System',
+    icon: <svg className="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="2" y="3" width="16" height="11" rx="2"/><path d="M6 18h8M10 14v4M5 7h10M5 10h6"/></svg>,
   },
   {
     id: 'settings',
@@ -67,7 +88,7 @@ function LogoutIcon() {
   )
 }
 
-export default function Sidebar({ active, onChange, health, runningCount = 0, user, version, onLogout }) {
+export default function Sidebar({ active, onChange, health, runningCount = 0, completedCount = 0, user, version, onLogout }) {
   const initial = String(user?.username || '?').trim().charAt(0).toUpperCase()
   return (
     <aside className="sidebar">
@@ -79,7 +100,7 @@ export default function Sidebar({ active, onChange, health, runningCount = 0, us
         <div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
             <span className="brand-name">DAKSH SCRA</span>
-            <span className="sidebar-version">v{version || '0.38'}</span>
+            {version ? <span className="sidebar-version">v{version}</span> : null}
           </div>
           <span className="brand-sub">Code Security Review</span>
         </div>
@@ -90,7 +111,7 @@ export default function Sidebar({ active, onChange, health, runningCount = 0, us
         {NAV_ITEMS.map((item) => (
           <button
             key={item.id}
-            className={`nav-item${active === item.id ? ' active' : ''}`}
+            className={`nav-item${item.child ? ' nav-child' : ''}${active === item.id ? ' active' : ''}`}
             onClick={() => onChange(item.id)}
           >
             {item.icon}
@@ -98,6 +119,7 @@ export default function Sidebar({ active, onChange, health, runningCount = 0, us
             {item.id === 'scans' && runningCount > 0 && (
               <span className="nav-badge">{runningCount}</span>
             )}
+            {item.id === 'completed' && <span className="nav-badge">{completedCount}</span>}
           </button>
         ))}
       </nav>

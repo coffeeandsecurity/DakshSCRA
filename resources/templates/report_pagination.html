@@ -1,0 +1,20 @@
+<nav class="report-pagination" aria-label="{{ report_page_title }} pagination {{ pagination_position }}">
+  <div class="report-pagination-summary">
+    <strong>{{ report_page_title }}</strong>
+    <span>{% if report_pagination.start %}Showing {{ report_pagination.start }}–{{ report_pagination.end }} of {{ report_pagination.total_items }} items{% else %}{{ report_pagination.page_items }} records on this page · {{ report_pagination.total_items }} total{% endif %}</span>
+  </div>
+  <div class="report-pagination-controls">
+    {% for label, href in [('First', report_pagination.first), ('Previous', report_pagination.previous)] %}
+      {% if href %}<a href="{{ href }}" aria-label="{{ label }} page">{{ label }}</a>{% else %}<span class="is-disabled" aria-disabled="true">{{ label }}</span>{% endif %}
+    {% endfor %}
+    <label class="report-page-selector" for="report-page-{{ pagination_position }}">Page
+      <select class="report-page-jump" id="report-page-{{ pagination_position }}" aria-label="Jump to page {{ pagination_position }}">
+        {% for option in report_pagination.options %}<option value="{{ option.href }}" {% if option.number == report_pagination.current %}selected{% endif %}>{{ option.number }}</option>{% endfor %}
+      </select>
+      <span>of {{ report_pagination.total }}</span>
+    </label>
+    {% for label, href in [('Next', report_pagination.next), ('Last', report_pagination.last)] %}
+      {% if href %}<a href="{{ href }}" aria-label="{{ label }} page">{{ label }}</a>{% else %}<span class="is-disabled" aria-disabled="true">{{ label }}</span>{% endif %}
+    {% endfor %}
+  </div>
+</nav>

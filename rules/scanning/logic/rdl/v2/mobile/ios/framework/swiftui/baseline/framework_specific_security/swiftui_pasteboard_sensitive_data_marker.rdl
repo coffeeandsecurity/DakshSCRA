@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.ios.framework.swiftui.swiftui_pasteboard_sensitive_data_marker VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "UIPasteboard" "im"
+WHEN (TEXT_MISSING "expirationDate" "im" AND TEXT_MISSING "localOnly" "im")
+REPORT "SwiftUI Pasteboard Sensitive Data Marker"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

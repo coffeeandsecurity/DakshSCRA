@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.c.core.use_of_system_with_hardcoded_paths VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bsystem\\s*\\(\\s*[\"'].*(/bin|/usr/bin)" "im"
+WHEN (TEXT_MISSING "validate|check|verify" "im" AND TEXT_MISSING "test|example|sample" "im")
+REPORT "Use of `system()` with Hardcoded Paths"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

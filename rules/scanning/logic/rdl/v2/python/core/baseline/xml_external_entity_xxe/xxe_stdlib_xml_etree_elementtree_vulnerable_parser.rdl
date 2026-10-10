@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.python.core.xxe_stdlib_xml_etree_elementtree_vulnerable_parser VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "xml\\.etree\\.ElementTree\\.parse\\s*\\(|ElementTree\\.parse\\s*\\(|xml\\.dom\\.minidom\\.parse\\s*\\(|xml\\.sax\\.parse\\s*\\(" "im"
+WHEN TEXT_MISSING "defusedxml|no_network|resolve_entities\\s*=\\s*False" "im"
+REPORT "XXE: stdlib xml.etree.ElementTree Vulnerable Parser"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

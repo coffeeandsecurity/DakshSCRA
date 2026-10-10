@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.terraform.core.wildcard_iam_resource VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "resources\\s*=\\s*\\[\\s*\"\\*\"\\s*\\]" "im"
+WHEN TEXT_MISSING "condition|Condition" "im"
+REPORT "Wildcard IAM Resource"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

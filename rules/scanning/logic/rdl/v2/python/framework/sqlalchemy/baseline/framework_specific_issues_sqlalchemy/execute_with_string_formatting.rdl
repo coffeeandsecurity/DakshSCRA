@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.python.framework.sqlalchemy.execute_with_string_formatting VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\.execute\\s*\\(\\s*[\"'][^\"']*[\"']\\s*\\+|\\.execute\\s*\\(\\s*f[\"']|\\.execute\\s*\\(\\s*[\"'][^\"']*%\\s*(?:\\(|\\w)" "im"
+WHEN TEXT_MISSING "bindparams|bindparam|:(?!:)\\w|params" "im"
+REPORT "execute() with String Formatting"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

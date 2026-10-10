@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.java.framework.struts.dynamic_method_invocation_enabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "struts\\.enable\\.DynamicMethodInvocation\\s*=\\s*true|<constant\\s+name=\"struts\\.enable\\.DynamicMethodInvocation\"\\s+value=\"true\"" "im"
+WHEN TEXT_MISSING "SecurityMemberAccess|OgnlContextState|allowlist|xwork\\.security\\.excludedClasses" "im"
+REPORT "Dynamic Method Invocation Enabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

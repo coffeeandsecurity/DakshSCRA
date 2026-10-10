@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.kotlin.core.insecure_external_storage_write VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(Environment\\.getExternalStorageDirectory|Context\\.getExternalFilesDir)\\s*\\(\\)\\s*\\.write" "im"
+WHEN (TEXT_MISSING "EncryptedFile|AES|encrypt|cipher|KeyStore" "im" AND TEXT_MISSING "test|example|sample" "im")
+REPORT "Insecure External Storage Write"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,9 @@
+VERSION 2
+RULE java.command-execution-input VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "Runtime\\s*\\.\\s*getRuntime\\s*\\(\\s*\\)\\s*\\.\\s*exec\\s*\\(|new\\s+ProcessBuilder\\s*\\(" "m"
+WHEN TEXT_MATCHES "\\bgetParameter\\s*\\(|\\brequestParameters\\b|\\bSystem\\.getProperty\\s*\\(|\\bargs\\s*\\[" "m"
+REPORT "Command Execution With External Input Markers"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.bash.core.sudo_usage_without_privilege_validation VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bsudo\\s+(?!visudo|passwd\\s+-l|-l\\b|-v\\b)\\S" "im"
+WHEN TEXT_MISSING "if\\s+\\[|check|validate|authorized" "im"
+REPORT "sudo Usage Without Privilege Validation"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

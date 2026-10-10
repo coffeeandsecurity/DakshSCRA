@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.php.core.insecure_file_operations_fopen_file_get_contents_file_put_contents VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(fopen|file_get_contents|file_put_contents)\\s*\\(\\s*(?:(?:\\'[^\\']*\\'|\\\"[^\\\"]*\\\")\\s*\\.\\s*)?\\$([a-zA-Z_\\x7f-\\xff][a-zA-Z0-9_\\x7f-\\xff]*)\\s*(?:\\.\\s*(?:\\'[^\\']*\\'|\\\"[^\\\"]*\\\"))?\\s*\\)" "im"
+WHEN TEXT_MISSING "realpath|basename|open_basedir|filter_input|allowlist|whitelist|__DIR__" "im"
+REPORT "Insecure File Operations: fopen(), file_get_contents(), file_put_contents()"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

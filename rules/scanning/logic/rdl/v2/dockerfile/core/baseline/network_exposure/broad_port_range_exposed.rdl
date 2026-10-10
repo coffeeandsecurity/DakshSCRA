@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.dockerfile.core.broad_port_range_exposed VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "^EXPOSE\\s+\\d+-\\d{4,}|^EXPOSE\\s+0\\.0\\.0\\.0" "im"
+WHEN TEXT_MISSING "# intentional|# required|# documentation" "im"
+REPORT "Broad Port Range Exposed"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

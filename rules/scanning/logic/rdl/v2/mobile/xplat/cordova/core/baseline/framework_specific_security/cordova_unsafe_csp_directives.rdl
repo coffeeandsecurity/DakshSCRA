@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.xplat.cordova.core.cordova_unsafe_csp_directives VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "unsafe-inline|unsafe-eval" "im"
+WHEN TEXT_MISSING "nonce-|sha256-" "im"
+REPORT "Cordova Unsafe CSP Directives"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

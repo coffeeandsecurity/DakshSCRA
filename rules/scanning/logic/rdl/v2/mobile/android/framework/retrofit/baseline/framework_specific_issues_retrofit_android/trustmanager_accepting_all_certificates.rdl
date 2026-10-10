@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.mobile.android.framework.retrofit.trustmanager_accepting_all_certificates VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "X509TrustManager[^}]*\\{\\s*\\}|override\\s+fun\\s+checkServerTrusted" "im"
+WHEN TEXT_MISSING "CertPathValidator|PKIXParameters|validate|checkValidity" "im"
+REPORT "TrustManager Accepting All Certificates"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,8 @@
+VERSION 2
+RULE java.wildcard-cors VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "@CrossOrigin\\([^\\n]*[\\\"\\x27]\\*[\\\"\\x27]|allowedOrigins\\s*=\\s*\\{?\\s*[\\\"\\x27]\\*[\\\"\\x27]" "im"
+REPORT "Wildcard CORS Annotation Or Origin Setting"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

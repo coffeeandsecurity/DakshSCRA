@@ -3,7 +3,7 @@
         <rule>
             <name>NSFetchRequest Predicate from User Input</name>
             <regex>NSPredicate\s*\(\s*format\s*:\s*["'][^"']*%@|NSPredicate\s*\(\s*format\s*:\s*["'][^"']*\\\(|predicateWithFormat\s*:\s*[@][^,)]*\+</regex>
-            <rdl_ref>logic/mobile/ios/framework/coredata/nsfetchrequest_predicate_from_user_input.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/ios/framework/coredata/nsfetchrequest_predicate_from_user_input.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -15,15 +15,15 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects NSPredicate format strings that interpolate values without using the argument array pattern.</rule_desc>
-            <vuln_desc>NSPredicate format strings using %@ with directly concatenated or interpolated user values are vulnerable to predicate injection, allowing attackers to manipulate fetch logic, bypass filters, or extract unintended data from Core Data stores.</vuln_desc>
-            <developer>Use NSPredicate with an argument array: NSPredicate(format: "name == %@", argumentArray: [userInput]). This ensures proper escaping of special predicate characters.</developer>
+            <rule_desc>A Core Data predicate may be constructed from external values. Distinguish safely bound values from input that changes predicate format or structure.</rule_desc>
+            <vuln_desc>If an attacker controls predicate syntax, they may alter filtering and retrieve records outside the intended selection or authorization boundary.</vuln_desc>
+            <developer>Keep predicate formats fixed and bind values using the supported placeholder mechanism. Allowlist dynamic fields and enforce record-level authorization independently.</developer>
             <reviewer>Confirm all NSPredicate format strings use proper argument array binding for user-supplied values. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Core Data Store Without Data Protection</name>
             <regex>NSPersistentStoreCoordinator|addPersistentStore|NSPersistentContainer\s*\(</regex>
-            <rdl_ref>logic/mobile/ios/framework/coredata/core_data_store_without_data_protection.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/mobile/ios/framework/coredata/core_data_store_without_data_protection.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_type>lines</context_type>
@@ -35,9 +35,9 @@
                 <highlight_target>match</highlight_target>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects Core Data persistent store creation without file protection attributes.</rule_desc>
-            <vuln_desc>Core Data stores without NSFileProtectionComplete are accessible when the device is locked or in certain backup scenarios, exposing sensitive data to physical device attacks and backup extraction.</vuln_desc>
-            <developer>Set NSFileProtectionComplete on the persistent store URL: try FileManager.default.setAttributes([.protectionKey: .complete], ofItemAtPath: storeURL.path). Or pass NSPersistentStoreFileProtectionKey in store options.</developer>
+            <rule_desc>The application stores sensitive values or configures protection for persistent data. Determine the actual storage location, backup policy, and lock-state access restrictions.</rule_desc>
+            <vuln_desc>An actor with access to unprotected application files, backups, or overly broad keychain access may recover credentials or private records and use them outside the intended trust boundary.</vuln_desc>
+            <developer>Use the platform credential or key store for secrets and appropriate authenticated encryption and file protection for private records. Minimize stored data, backup exposure, and lock-state accessibility.</developer>
             <reviewer>Confirm Core Data stores containing sensitive data have appropriate file protection levels. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

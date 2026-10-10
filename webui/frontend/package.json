@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview --host 0.0.0.0 --port 4173"
+    "build": "vite build && npm run build:reports",
+    "preview": "vite preview --host 0.0.0.0 --port 4173",
+    "build:reports": "vite build --config vite.report.config.js && vite build --config vite.flow.config.js"
   },
   "dependencies": {
     "react": "^18.3.1",

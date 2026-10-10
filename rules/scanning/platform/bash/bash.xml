@@ -3,7 +3,7 @@
         <rule>
             <name>Command Injection via eval</name>
             <regex>eval\s+["']?\$\{?\w</regex>
-            <rdl_ref>logic/bash/core/command_injection_via_eval.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/bash/core/command_injection_via_eval.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -12,15 +12,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects eval statements that interpolate variables, enabling arbitrary command execution.</rule_desc>
-            <vuln_desc>eval with user-controlled or environment-derived input can allow arbitrary OS command injection, escalating to full system compromise.</vuln_desc>
-            <developer>Avoid eval entirely. Use arrays for command construction and validate all inputs against an explicit allowlist.</developer>
+            <rule_desc>The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.</rule_desc>
+            <vuln_desc>If an attacker controls interpreted syntax or the operation selected, code or commands may run with the application’s privileges, allowing data theft, state changes, or service disruption.</vuln_desc>
+            <developer>Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates or expressions.</developer>
             <reviewer>Trace the data source for all eval arguments. Confirm no path allows attacker-controlled input. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Unquoted Variable in Command Context</name>
             <regex>(?:exec|system|run|sh\s+-c)\s+[^"'][^;|\n]*\$\w</regex>
-            <rdl_ref>logic/bash/core/unquoted_variable_in_command_context.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/bash/core/unquoted_variable_in_command_context.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -29,15 +29,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects unquoted variables passed to shell execution contexts.</rule_desc>
-            <vuln_desc>Unquoted variables in shell commands are subject to word splitting and glob expansion, allowing injection of unintended command arguments or operators.</vuln_desc>
-            <developer>Always double-quote variables ("$var") to prevent word splitting and unintended shell expansion.</developer>
+            <rule_desc>The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.</rule_desc>
+            <vuln_desc>If an attacker controls interpreted syntax or the operation selected, code or commands may run with the application’s privileges, allowing data theft, state changes, or service disruption.</vuln_desc>
+            <developer>Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates or expressions.</developer>
             <reviewer>Check whether the variable originates from user input, environment, or file. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Backtick Command Substitution with Variable</name>
             <regex>`[^`]*\$\w[^`]*`</regex>
-            <rdl_ref>logic/bash/core/backtick_command_substitution_with_variable.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/bash/core/backtick_command_substitution_with_variable.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>3</context_lines_before>
@@ -46,9 +46,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects backtick command substitution containing interpolated variables.</rule_desc>
-            <vuln_desc>Backtick substitution with unsanitized variables can allow command injection via environment or parameter manipulation.</vuln_desc>
-            <developer>Use $() syntax with properly quoted variables and validate all inputs before substitution.</developer>
+            <rule_desc>The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.</rule_desc>
+            <vuln_desc>If an attacker controls interpreted syntax or the operation selected, code or commands may run with the application’s privileges, allowing data theft, state changes, or service disruption.</vuln_desc>
+            <developer>Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates or expressions.</developer>
             <reviewer>Determine the origin of substituted variables and whether they can be influenced by an attacker. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -56,7 +56,7 @@
         <rule>
             <name>Hardcoded Credential in Shell Script</name>
             <regex>(?i)(password|passwd|secret|api_key|apikey|token|access_key)\s*=\s*['"]?[A-Za-z0-9@#$%^&amp;*!_\-]{8,}['"]?</regex>
-            <rdl_ref>logic/bash/core/hardcoded_credential_in_shell_script.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/bash/core/hardcoded_credential_in_shell_script.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -65,15 +65,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects hardcoded credentials or secrets assigned as shell variables.</rule_desc>
-            <vuln_desc>Plaintext secrets in shell scripts are easily exposed through source control, process listings, and shell history files.</vuln_desc>
-            <developer>Read secrets from environment variables, vault integrations (HashiCorp Vault, AWS Secrets Manager), or secure credential helpers. Never hardcode secrets.</developer>
+            <rule_desc>The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.</rule_desc>
+            <vuln_desc>If an attacker controls interpreted syntax or the operation selected, code or commands may run with the application’s privileges, allowing data theft, state changes, or service disruption.</vuln_desc>
+            <developer>Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates or expressions.</developer>
             <reviewer>Verify all credential assignments reference environment variables or secret stores. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Credentials Passed via Command Line Arguments</name>
             <regex>(?i)(?:--password|--secret|--token|--key|--api-key)\s*=?\s*\S</regex>
-            <rdl_ref>logic/bash/core/credentials_passed_via_command_line_arguments.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/bash/core/credentials_passed_via_command_line_arguments.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -82,9 +82,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>red</highlight_color>
             </scan_config>
-            <rule_desc>Detects credentials passed as command line arguments, which are visible in process listings.</rule_desc>
-            <vuln_desc>Command line arguments are visible in /proc, ps output, and system audit logs, exposing credentials to any user with process visibility.</vuln_desc>
-            <developer>Use environment variables, stdin piping, or credential files with restricted permissions instead of command-line argument secrets.</developer>
+            <rule_desc>The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.</rule_desc>
+            <vuln_desc>If an attacker controls interpreted syntax or the operation selected, code or commands may run with the application’s privileges, allowing data theft, state changes, or service disruption.</vuln_desc>
+            <developer>Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates or expressions.</developer>
             <reviewer>Confirm credentials are not hardcoded in CLI flags. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -92,7 +92,7 @@
         <rule>
             <name>Overly Permissive chmod</name>
             <regex>chmod\s+(?:0?777|[augo]+\+[rwx]*w[rwx]*|a\+x)</regex>
-            <rdl_ref>logic/bash/core/overly_permissive_chmod.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/bash/core/overly_permissive_chmod.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -101,15 +101,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects chmod commands granting world-writable or globally executable permissions.</rule_desc>
-            <vuln_desc>World-writable files and directories allow any local user to modify content, enabling privilege escalation or persistent backdoor placement.</vuln_desc>
-            <developer>Apply least-privilege permissions. Use 640 or 750 for most files and scripts; restrict world access unless explicitly required.</developer>
+            <rule_desc>The code accesses, creates, deletes, or shares filesystem data. Resolve path provenance, destination containment, permission modes, and any concurrent access.</rule_desc>
+            <vuln_desc>An attacker controlling a path or shared file may read or replace private files, delete data, or redirect an operation outside its intended directory if containment and access controls are ineffective.</vuln_desc>
+            <developer>Resolve paths beneath a fixed permitted root and verify containment and effective permissions. Use safe exclusive temporary-file creation, restrict sharing, and account for symlinks and concurrent changes.</developer>
             <reviewer>Verify the permission level is justified and the affected path cannot be exploited by a lower-privilege user. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>Insecure Temporary File Creation</name>
             <regex>(?:/tmp/|/var/tmp/)[^"'\s]*\$\w|&gt;\s*/tmp/\w</regex>
-            <rdl_ref>logic/bash/core/insecure_temporary_file_creation.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/bash/core/insecure_temporary_file_creation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -118,15 +118,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects insecure creation of temporary files with predictable or hardcoded names.</rule_desc>
-            <vuln_desc>Predictable temp file names are vulnerable to TOCTOU race conditions and symlink attacks allowing privilege escalation or data injection.</vuln_desc>
-            <developer>Use mktemp or mkstemp for secure temporary file creation with randomized unpredictable names.</developer>
+            <rule_desc>The code accesses, creates, deletes, or shares filesystem data. Resolve path provenance, destination containment, permission modes, and any concurrent access.</rule_desc>
+            <vuln_desc>An attacker controlling a path or shared file may read or replace private files, delete data, or redirect an operation outside its intended directory if containment and access controls are ineffective.</vuln_desc>
+            <developer>Resolve paths beneath a fixed permitted root and verify containment and effective permissions. Use safe exclusive temporary-file creation, restrict sharing, and account for symlinks and concurrent changes.</developer>
             <reviewer>Confirm temporary files are created with mktemp and that the handle is used immediately without re-opening by name. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>World-Readable Sensitive File Write</name>
             <regex>&gt;\s*(?:/etc/|/root/|~/)(?:passwd|shadow|sudoers|ssh|\.ssh|crontab)\b</regex>
-            <rdl_ref>logic/bash/core/world_readable_sensitive_file_write.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/bash/core/world_readable_sensitive_file_write.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -135,9 +135,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects writes to sensitive system files including shadow, sudoers, and SSH configuration.</rule_desc>
-            <vuln_desc>Unauthorized or unintended modification of privileged system files can enable privilege escalation, backdoor persistence, or authentication bypass.</vuln_desc>
-            <developer>Avoid direct writes to sensitive system files in automation scripts. Use dedicated tools (visudo, usermod) with proper validation.</developer>
+            <rule_desc>The script writes to a sensitive system file. Determine the writer’s privileges, intended content, and effective file permissions.</rule_desc>
+            <vuln_desc>Unauthorized changes to system authentication or configuration files may grant privileged access or establish persistence; exposure of readable secrets may also compromise account credentials.</vuln_desc>
+            <developer>Restrict who can modify sensitive system files, validate the written content, and apply least-privileged file permissions through an approved administrative workflow.</developer>
             <reviewer>Confirm whether writes to these paths are intentional, authorized, and include validation. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -145,7 +145,7 @@
         <rule>
             <name>curl with TLS Verification Disabled</name>
             <regex>curl\s+(?:[^\n]*\s)?(?:-k|--insecure)</regex>
-            <rdl_ref>logic/bash/core/curl_with_tls_verification_disabled.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/bash/core/curl_with_tls_verification_disabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -154,15 +154,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects curl invocations that disable TLS certificate verification.</rule_desc>
-            <vuln_desc>Disabling TLS verification makes connections vulnerable to man-in-the-middle attacks by accepting any certificate, including forged ones.</vuln_desc>
-            <developer>Remove -k/--insecure flags and ensure the target certificate chain is trusted. Use --cacert to specify a custom CA bundle if needed.</developer>
+            <rule_desc>The checked source contains a transport-security exception, insecure endpoint, or certificate-validation configuration. Resolve the effective policy and the connections it governs.</rule_desc>
+            <vuln_desc>An attacker on the network may read or alter affected traffic if sensitive data travels over cleartext or the connection accepts an untrusted server. Normal HTTPS endpoints and correctly implemented validation do not establish exposure.</vuln_desc>
+            <developer>Use HTTPS with normal certificate-chain and hostname verification. Remove permissive production callbacks and broad transport exceptions; restrict any justified exception to a documented, non-sensitive endpoint.</developer>
             <reviewer>Verify this flag is not present in production scripts or CI pipelines. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>wget with Certificate Check Disabled</name>
             <regex>wget\s+(?:[^\n]*\s)?(?:--no-check-certificate)</regex>
-            <rdl_ref>logic/bash/core/wget_with_certificate_check_disabled.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/bash/core/wget_with_certificate_check_disabled.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -171,9 +171,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects wget invocations that skip TLS certificate validation.</rule_desc>
-            <vuln_desc>Skipping certificate validation exposes downloads to interception and substitution via MITM attacks.</vuln_desc>
-            <developer>Remove --no-check-certificate and ensure the server certificate is valid and trusted.</developer>
+            <rule_desc>The checked source contains a transport-security exception, insecure endpoint, or certificate-validation configuration. Resolve the effective policy and the connections it governs.</rule_desc>
+            <vuln_desc>An attacker on the network may read or alter affected traffic if sensitive data travels over cleartext or the connection accepts an untrusted server. Normal HTTPS endpoints and correctly implemented validation do not establish exposure.</vuln_desc>
+            <developer>Use HTTPS with normal certificate-chain and hostname verification. Remove permissive production callbacks and broad transport exceptions; restrict any justified exception to a documented, non-sensitive endpoint.</developer>
             <reviewer>Confirm this flag is not used in production or deployment scripts. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>
@@ -181,7 +181,7 @@
         <rule>
             <name>Missing errexit or pipefail Options</name>
             <regex>^#!\s*/(?:bin/|usr/bin/env\s+)(?:bash|sh)\b</regex>
-            <rdl_ref>logic/bash/core/missing_errexit_or_pipefail_options.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/bash/core/missing_errexit_or_pipefail_options.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>1</context_lines_before>
@@ -190,15 +190,15 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects shell scripts that do not enable errexit or pipefail safety options.</rule_desc>
-            <vuln_desc>Scripts without set -e or set -o pipefail silently continue on command failure, potentially executing subsequent commands in an undefined or insecure state.</vuln_desc>
-            <developer>Add "set -euo pipefail" at the top of all scripts to fail fast on errors, unset variables, and pipe failures.</developer>
+            <rule_desc>The code configures failure handling or resource consumption. Determine whether failure paths preserve security invariants and whether work is bounded.</rule_desc>
+            <vuln_desc>Unhandled failures or unbounded work may disrupt availability or leave security-relevant state inconsistent. The presence or absence of a named handler alone does not establish a reachable security defect.</vuln_desc>
+            <developer>Bound resource use, handle failures at the correct ownership boundary, and fail safely before updating trusted state. Test exceptional paths, cancellation, timeouts, and recovery behavior.</developer>
             <reviewer>Verify critical scripts have proper error handling enabled. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
         <rule>
             <name>sudo Usage Without Privilege Validation</name>
             <regex>\bsudo\s+(?!visudo|passwd\s+-l|-l\b|-v\b)\S</regex>
-            <rdl_ref>logic/bash/core/sudo_usage_without_privilege_validation.rdl</rdl_ref>
+            <rdl_ref>logic/rdl/v1/bash/core/sudo_usage_without_privilege_validation.rdl</rdl_ref>
             <scan_config>
                 <match_mode>line</match_mode>
                 <context_lines_before>2</context_lines_before>
@@ -207,9 +207,9 @@
                 <highlight_enabled>true</highlight_enabled>
                 <highlight_color>yellow</highlight_color>
             </scan_config>
-            <rule_desc>Detects sudo usage in scripts without surrounding authorization validation logic.</rule_desc>
-            <vuln_desc>Unrestricted sudo in automated scripts can silently escalate privileges and perform administrative actions without validation, increasing blast radius of script compromise.</vuln_desc>
-            <developer>Limit sudo use to specific commands, define explicit sudoers rules for automation accounts, and add explicit permission checks before privileged operations.</developer>
+            <rule_desc>The code or deployment configuration requests privileges or grants access beyond an explicitly resolved minimum. Determine the effective permissions and the operation’s requirements.</rule_desc>
+            <vuln_desc>A compromised actor may access additional data, modify protected resources, or extend compromise beyond the intended application boundary when excessive privileges remain available.</vuln_desc>
+            <developer>Run with the least privileges required, remove unnecessary grants, and scope each permission to its intended resource and operation. Verify effective inherited permissions and test denied access.</developer>
             <reviewer>Review all sudo invocations for necessity, scope, and surrounding validation logic. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.</reviewer>
         </rule>
     </category>

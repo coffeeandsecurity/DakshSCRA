@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.java.framework.hibernate.hibernate_sql_query_concatenation_sink VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "createQuery\\(\\s*\"[^\"]*\"\\s*\\+|createNativeQuery\\(\\s*\"[^\"]*\"\\s*\\+|Statement\\s+\\w+\\s*=\\s*.*createStatement\\(" "im"
+WHEN TEXT_MISSING "createQuery\\s*\\(.*:|\\?\\d|setParameter|TypedQuery|NamedQuery|@Query\\s*\\(.*:" "im"
+REPORT "Hibernate SQL Query Concatenation Sink"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE
