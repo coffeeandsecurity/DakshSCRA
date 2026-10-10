@@ -56,7 +56,6 @@ const EMPTY_FORM = {
   verbosity: 1,
   recon: true,
   estimate: false,
-  estimate_assumptions: {},
   analysis: false,
   loc: true,
 }

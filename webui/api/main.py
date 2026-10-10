@@ -53,7 +53,6 @@ from .scan_runtime import (
 )
 from .schemas import (
     ArtifactIndex,
-    EffortPlanRequest,
     BootstrapInfo,
     ChangePasswordRequest,
     DashboardMetrics,
@@ -1184,51 +1183,6 @@ def get_scan_findings(run_uuid: str, db: Session = Depends(db_session)):
     }
 
 
-def _effort_workload(run_uuid, db):
-    row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
-    if not row:
-        raise HTTPException(status_code=404, detail='run_not_found')
-    if row.data_removed_at is not None:
-        raise HTTPException(status_code=410, detail='scan_data_removed')
-    if row.status in ('queued', 'running', 'stopping'):
-        raise HTTPException(status_code=409, detail='effort_requires_finished_scan')
-    from core.effort import workload_from_run
-    try:
-        return workload_from_run(_scan_data_dir(row.project_key, run_uuid), run_dir(run_uuid) / 'runtime',
-                                 target=row.target_dir, complete=row.status == 'success')
-    except (OSError, ValueError, TypeError, KeyError, RuntimeError) as exc:
-        raise HTTPException(status_code=422, detail='effort_evidence_error: ' + str(exc))
-
-
-@protected.get('/api/v1/scans/{run_uuid}/effort-plan')
-def get_effort_plan(run_uuid: str, db: Session = Depends(db_session)):
-    from core.effort import estimate_workload
-    workload = _effort_workload(run_uuid, db)
-    row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
-    options = json.loads(getattr(row, 'scan_options_json', None) or '{}')
-    return estimate_workload(workload, assumptions=options.get('estimate_assumptions') or {})
-
-
-@protected.post('/api/v1/scans/{run_uuid}/effort-plan')
-def create_effort_plan(run_uuid: str, payload: EffortPlanRequest, db: Session = Depends(db_session)):
-    from core.effort import estimate_workload
-    workload = _effort_workload(run_uuid, db)
-    try:
-        return estimate_workload(workload, payload.mode, payload.domains, payload.assumptions, payload.calibration)
-    except (ValueError, TypeError, AttributeError) as exc:
-        raise HTTPException(status_code=422, detail=str(exc))
-
-
-@protected.post('/api/v1/scans/{run_uuid}/effort-report')
-def download_effort_report(run_uuid: str, payload: EffortPlanRequest, db: Session = Depends(db_session)):
-    from core.effort import render_estimate
-    report = create_effort_plan(run_uuid, payload, db)
-    return HTMLResponse(render_estimate(report), headers={
-        'Content-Disposition': 'attachment; filename="review-effort-plan.html"',
-        'Cache-Control': 'no-store',
-    })
-
-
 @protected.get("/api/v1/scans/{run_uuid}/analysis")
 def get_scan_analysis(run_uuid: str, db: Session = Depends(db_session)):
     """Return analyzer data for clients that request it separately."""
@@ -1667,7 +1621,8 @@ def get_settings():
                 "cleanup_on_success": bool(tool_sm.get("cleanup_on_success", False)),
             },
             estimation={
-                "assumptions": estimate.get('assumptions', {}),
+                "efficiency_factor": int(estimate.get("efficiency_factor", 10)),
+                "buffer": int(estimate.get("buffer", 2)),
             },
         )
     except Exception as exc:
@@ -1725,8 +1680,8 @@ def save_settings(payload: SettingsData):
 
         # estimate.yaml
         estimate = _load("config/estimate.yaml")
-        estimate['model_version'] = '2.0'
-        estimate['assumptions'] = payload.estimation.assumptions
+        estimate["efficiency_factor"] = payload.estimation.efficiency_factor
+        estimate["buffer"] = payload.estimation.buffer
         _save("config/estimate.yaml", estimate)
 
         return get_settings()

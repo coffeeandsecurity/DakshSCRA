@@ -44,9 +44,9 @@ def audit_coverage(root, run_pairs=True):
     root = Path(root)
     failures = []
     definitions, expected = inventory(root)
-    baseline = json.loads((root / 'rules/scanning/metadata/rdl/baseline.json').read_text())['entries']
-    additional = json.loads((root / 'rules/scanning/metadata/rdl/additional.json').read_text())['entries']
-    shadow_config = json.loads((root / 'rules/scanning/metadata/rdl/shadow-mappings.json').read_text())
+    baseline = json.loads((root / 'config/rdl_baseline.json').read_text())['entries']
+    additional = json.loads((root / 'config/rdl_additional.json').read_text())['entries']
+    shadow_config = json.loads((root / 'config/rdl_shadow.json').read_text())
     semantic = shadow_config['mappings']
     if shadow_config.get('project_flow'):
         from .portable_profiles import project_mappings
@@ -62,7 +62,7 @@ def audit_coverage(root, run_pairs=True):
         if not (root / path).is_file() or (root / path).read_text() != content:
             failures.append('Stale or missing baseline: ' + path)
     known_packs = {e['xml_pack'] for e in baseline}
-    overlays = json.loads((root / 'rules/scanning/metadata/rdl/platform-overlays.json').read_text())['entries']
+    overlays = json.loads((root / 'config/rdl_platform_overlays.json').read_text())['entries']
     for overlay in overlays:
         if overlay['source_pack'] not in known_packs or overlay['target_pack'] not in known_packs:
             failures.append('Invalid mobile overlay: ' + str(overlay))
@@ -169,7 +169,7 @@ def markdown_report(report):
         '| Review area | New mobile definitions |', '|---|---:|']
     lines += ['| {} | {} |'.format(key, value) for key, value in sorted(report['mobile_review_areas'].items())]
     lines += ['', 'Source selection includes Android Java/Kotlin/XML/Gradle Kotlin DSL, JavaScript JSX/TSX/module variants, Kotlin scripts, and hybrid native manifests/plists. Source selection is exercised by regression tests; platform and framework filters are checked for every new paired fixture.', '',
-        'Mobile selections also dispatch applicable native-language v2 packs through `rules/scanning/metadata/rdl/platform-overlays.json` (for example React Native → JavaScript, MAUI → .NET, KMP → Kotlin, and native Android/iOS bridge files). Duplicate pack/file evaluations are skipped. V1 pack selection and rule predicates remain independent.', '', '## Evidence handling', '',
+        'Mobile selections also dispatch applicable native-language v2 packs through `config/rdl_platform_overlays.json` (for example React Native → JavaScript, MAUI → .NET, KMP → Kotlin, and native Android/iOS bridge files). Duplicate pack/file evaluations are skipped. V1 pack selection and rule predicates remain independent.', '', '## Evidence handling', '',
         'Source snippets retain original credential and sensitive values, including unquoted configuration values. JSON and HTML downloads retain the same evidence. HTML still escapes source markup so code is displayed as text. File/evaluation/telemetry resource limits remain in force; absent or incomplete evidence is not a safety verdict.', '',
         '## Remaining boundaries', '']
     lines += ['- '+item for item in report['limitations']]

@@ -57,9 +57,9 @@ DakshSCRA brings together distinctive capabilities for manual source code review
 | Feature | Tag | Why it matters |
 |---|---|---|
 | **File Path Areas of Interest** | World's First* | Scans file and directory names themselves, alongside code, to flag suspicious paths such as backup files, debug endpoints, configuration dumps and credential files that reviewers often miss. |
-| **Scientific Effort Estimation** | Evidence-based | Plans assisted, targeted and fully manual review from unique files, LOC, active and suppressed decisions, unresolved evidence and traces. Explicit task assumptions and observed calibration make calculations reproducible; AI-assisted duration requires benchmarking. |
+| **Scientific Effort Estimation** | World's First* | Produces a quantified estimate of manual-review effort based on codebase size and project signals. Configurable assumptions make engagement planning explicit and repeatable. |
 | **Areas of Interest, Not Bug Flags** | Reviewer in Control | Surfaces patterns worth investigating rather than tagging every match as a vulnerability. Contextual rules and suppression evidence reduce triage noise and keep the reviewer in control. |
-| **Software Reconnaissance** | Integrated Software Recon | Provides open-source source-code reconnaissance, identifying languages, frameworks, infrastructure and project characteristics from source contents and structure. Uses the technology inventory to guide rule selection and security review planning. Microsoft Application Inspector is an earlier known open-source tool with comparable reconnaissance capabilities. |
+| **Software Reconnaissance** | Integrated Software Recon | Detects languages, frameworks and infrastructure from file contents and project structure before scanning. Connects the technology inventory to automatic rule selection, semantic analysis and review planning. |
 | **RDL Conditional Rules** | Advanced Conditional Rules | Goes beyond simple regex with PRESENT, MISSING, boolean expressions and file/path conditions. RDL v1 records decisions and suppression reasons; RDL v2 adds typed semantic services and bounded cross-file evidence. |
 | **Advanced Semantic and Cross-File Analysis** | Built from the Ground Up | Traces user-controlled data from source to sink across supported file boundaries using purpose-built analysis. Advanced Analysis shipped alongside the original RDL in March 2026; RDL v2 extends semantic rule evaluation across files. |
 | **Platform-Agnostic Auto Scanning** | Automatic Multi-Platform | Use `-r auto` to scan mixed-technology projects without choosing a single language beforehand. Recon selects supported platform and framework rules automatically. Introduced in v0.23-beta, November 2024. |
@@ -88,6 +88,14 @@ DakshSCRA brings together distinctive capabilities for manual source code review
 | External RDL architecture and reporting | 22 March 2026 | v0.37-beta | [External rule logic and revised advanced reports.](https://github.com/coffeeandsecurity/DakshSCRA/commit/5b17d89) |
 | RDL v2 semantic services and integrated workflow | 10 October 2026 | v0.39 | Typed semantic rules, bounded cross-file evidence and custom packs. |
 
+### Comparative evidence
+
+- **Recon predecessor:** [Microsoft Application Inspector](https://www.microsoft.com/en-us/security/blog/2020/01/16/introducing-microsoft-application-inspector/) — 16 January 2020. Documents an earlier source-characteristics tool; does not establish a worldwide first/second ranking.
+
+Dates identify repository or release milestones; they do not independently establish worldwide priority. “Not verified” means a release number has not been established from the reviewed evidence.
+
+Release milestones and comparative evidence are listed above.
+
 DakshSCRA was introduced during **Black Hat USA 2022** training and publicly debuted at **Black Hat USA 2023**. Those dates describe the project's introduction, not every current feature.
 
 ### What it does
@@ -97,7 +105,7 @@ DakshSCRA was introduced during **Black Hat USA 2022** training and publicly deb
 | **Rule-based scanning** | Matches platform-specific patterns (SQL queries, command execution, file I/O, etc.) against source files |
 | **Reconnaissance** | Detects languages, frameworks, and technology stack from file contents and structure |
 | **Taint analysis** | Traces data flows from user-controlled sources to security-sensitive sinks across files |
-| **Effort estimation** | Plans review work from measured scan evidence with explicit, calibratable assumptions |
+| **Effort estimation** | Estimates manual review time based on codebase size, complexity, and finding volume |
 | **Report generation** | Produces indexed HTML bundles, PDF, editable Word, and JSON using shared CLI/web renderers |
 
 ---
@@ -185,25 +193,9 @@ Modes change *what* the tool does during a run. Multiple modes can be combined.
 |---|---|
 | `--recon` | Run technology stack reconnaissance. Detects languages, frameworks, libraries, and infrastructure clues. Can be used alone or alongside `-r` for scanning. |
 | `--rs` / `--recon-strict` | Filter recon output to high-confidence detections only. Use with `--recon` to reduce noise on large or generic codebases. |
-| `--estimate` | Run a scan of the supplied scope (auto rules when omitted), enable recon/LOC, and generate a plan after findings and analysis finish. |
-| `--estimate-mode` | Choose `assisted`, `targeted`, `manual` or `ai`. |
-| `--estimate-domain` | Repeat to select targeted domains, including `authentication`, `authorization` and `taint`. |
-| `--estimate-calibration` | Import a JSON array of observed `component`, `units`, `hours` samples. |
+| `--estimate` | Generate a manual review effort estimation report based on codebase size and finding volume. |
 | `--pdf-from-json` | Generate PDF reports from existing JSON output without re-running a scan. Useful after a completed scan when PDF was not initially requested. |
 | `-l {R,RF}` | List available platform rules. `R` lists rules, `RF` also lists associated file types. |
-
-#### Review effort scenarios
-
-`--estimate` runs a scan of the supplied scope, includes recon and LOC, and estimates only after findings and requested analysis finish. Exclusions and engine settings still bound coverage.
-
-In a finished scan, open **Insights → Effort Estimate**. Choose Daksh-assisted manual review, Targeted review, Fully manual review or AI-assisted review. Targeted review allows selecting authentication, authorization, taint analysis and other domains. Shared files and evidence count once. Generate an estimation report and download HTML or JSON; HTML can be printed to PDF.
-
-```bash
-python3 dakshscra.py --estimate --estimate-mode targeted \
-  --estimate-domain authentication --estimate-domain authorization -t ./app
-```
-
-The report separates inspection, areas of interest, confirmed/RDL-supported finding review, suppression review, unresolved investigation, trace review and reporting. Settings → Effort Estimation supplies the organization-wide baseline. In Insights, expand **Custom reviewer or company baseline** to override rates for one report, import/export a reusable baseline, or use organization defaults. Enter 10 and 15 for 10–15 minutes, or 20 and 20 for a fixed 20 minutes. Fully manual review has separate issue rates. Omitted imported rates use current organization defaults; applied rates and deviations are retained in the JSON report. A site uses either the areas-of-interest rate or the confirmed/RDL-supported rate once; an RDL match is not proof of exploitability. Effort hours and days round up to whole numbers after calculation. Defaults are planning assumptions, not empirically validated productivity rates. Ranges are sensitivity bounds, not confidence intervals. Missing LOC withholds a complete total. AI duration requires benchmarking the actual model and hardware/service, including human validation and rework. Remediation and retesting are separate. No blanket automation discount is applied.
 
 #### Combining modes
 

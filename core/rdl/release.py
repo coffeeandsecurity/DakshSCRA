@@ -43,7 +43,7 @@ def audit_rule_tree(root):
 
 def run_release_gates(root, config_path=None, repeat=2):
     root = Path(root)
-    config_path = Path(config_path or root / "tests/rdl/data/release-gates.json")
+    config_path = Path(config_path or root / "config" / "rdl_release_gates.json")
     config = json.loads(config_path.read_text(encoding="utf-8"))
     if config.get("schema_version") != 1:
         raise ValueError("unsupported release-gate schema")

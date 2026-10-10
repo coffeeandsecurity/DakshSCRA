@@ -2,9 +2,6 @@ tool_name: Daksh SCRA (Source Code Review Assist)
 author: Debasis Mohanty (d3basis.m0hanty@gmail.com)
 release: 0.39
 release_date: 2026-10-10
-rdl:
-  # Opt-in comparison default; explicit review mode and environment overrides take precedence.
-  shadow_enabled: false
 display:
   # Timezone used for all timestamps in CLI output and reports.
   # Leave empty to use the server's local time (default).

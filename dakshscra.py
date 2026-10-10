@@ -18,7 +18,6 @@ from uuid import uuid4
 # Local application imports
 import core.discovery as discover
 import core.estimator as estimate
-from core.effort import DOMAINS as EFFORT_DOMAINS
 import core.parser as parser
 import core.recon as rec
 import core.reports as report
@@ -134,18 +133,7 @@ mode_group.add_argument('--rs', '--recon-strict', action='store_true', dest='rec
                         help='Strict recon filter (use with --recon): high-confidence framework/platform detections only')
 
 mode_group.add_argument('--estimate', action='store_true', dest='estimate',
-                        help='Scan supplied scope, collect recon/LOC and estimate review effort from final evidence')
-mode_group.add_argument('--estimate-assumptions', default='{}', metavar='JSON',
-                        help='Per-scan effort rate overrides as a JSON object; omitted rates use global defaults')
-mode_group.add_argument('--no-recon', action='store_true', help='Disable reconnaissance, including the estimate default')
-mode_group.add_argument('--no-loc', action='store_true', help='Disable LOC counting; a complete effort total may be unavailable')
-mode_group.add_argument('--estimate-mode', choices=('assisted', 'targeted', 'manual', 'ai'), default='assisted',
-                        help='Review effort scenario (default: assisted manual review)')
-mode_group.add_argument('--estimate-domain', action='append', default=None,
-                        choices=tuple(key for key, _ in EFFORT_DOMAINS),
-                        help='Targeted review domain; repeat to select multiple domains (default: all)')
-mode_group.add_argument('--estimate-calibration', default='', metavar='JSON',
-                        help='Observed comparable task samples: component, units and hours; at least five per component')
+                        help='Estimate code review effort based on codebase size')
 
 mode_group.add_argument('--pdf-from-json', action='store_true', dest='pdf_from_json',
                         help='Generate PDF report(s) from existing JSON outputs without re-running scan')
@@ -218,32 +206,9 @@ if len(sys.argv) < 2:
 
 # Parse arguments with error handling
 results = args.parse_args()
-estimate_calibration_samples = []
-if results.no_recon:
-    results.recon = False
-if results.no_loc:
-    results.loc = False
-try:
-    estimate_assumptions = json.loads(results.estimate_assumptions)
-    from core.effort import validate_assumptions
-    if estimate_assumptions:
-        validate_assumptions(estimate_assumptions)
-    elif not isinstance(estimate_assumptions, dict):
-        raise ValueError('Effort assumptions must be a JSON object')
-except (ValueError, TypeError) as exc:
-    args.error(str(exc))
 if results.estimate:
-    # Estimates need the completed scan evidence and a measured code inventory.
-    results.rule_file = results.rule_file or 'auto'
-    results.recon = not results.no_recon
-    results.loc = not results.no_loc
-    if results.estimate_calibration:
-        try:
-            estimate_calibration_samples = json.loads(Path(results.estimate_calibration).read_text())
-            from core.effort import calibrate, load_assumptions
-            calibrate(estimate_calibration_samples, load_assumptions())
-        except (OSError, ValueError, TypeError, AttributeError) as exc:
-            args.error('Effort calibration: ' + str(exc))
+    results.recon = True
+    results.loc = True
 try:
     configure_engines(state.root_dir, results.rdl_engine, results.custom_rdl)
 except (OSError, ValueError, KeyError, TypeError) as exc:
@@ -949,15 +914,31 @@ elif results.rules_filetypes is not None:
     rutils.list_rules_filetypes(results.rules_filetypes)
     sys.exit(0)
 
-# Recon-only mode does not produce a review-effort plan.
-if results.recon and results.target_dir and not results.rule_file:
+# Priority #1 - recon/estimate only
+if (results.recon or results.estimate) and results.target_dir and not results.rule_file:
     print(constants.AUTHOR_BANNER.format(version=version))
     if not path.isdir(results.target_dir):
         print("\nInvalid target directory :" + results.target_dir + "\n")
         cli.tool_usage("invalid_dir")
         sys.exit(1)
-    rec.recon(results.target_dir, False, strict_mode=results.recon_strict, progress_callback=_repository_progress)
-    sys.exit(0)
+    targetdir = results.target_dir
+    if results.recon and not results.estimate:
+        rec.recon(targetdir, False, strict_mode=results.recon_strict, progress_callback=_repository_progress)
+        sys.exit(1)
+    elif results.estimate and not results.recon:
+        _, recSummary = rec.recon(targetdir, False, strict_mode=results.recon_strict, progress_callback=_repository_progress)
+        try:
+            estimate.effort_estimator(recSummary)
+        except (ValueError, OSError, KeyError) as exc:
+            print(f"     [-] Effort estimation skipped: {exc}")
+        sys.exit(1)
+    else:
+        _, recSummary = rec.recon(targetdir, False, strict_mode=results.recon_strict, progress_callback=_repository_progress)
+        try:
+            estimate.effort_estimator(recSummary)
+        except (ValueError, OSError, KeyError) as exc:
+            print(f"     [-] Effort estimation skipped: {exc}")
+        sys.exit(1)
 
 # Priority #2 - rule based scan
 elif results.rule_file:
@@ -1243,6 +1224,18 @@ else:
         "master_file_paths": str(master_file_paths),
         "platform_file_paths": [str(p) for p in platform_file_paths],
     })
+
+    # Effort estimation: requires recon summary; run recon now if not already done.
+    if results.estimate:
+        sCnt += 1
+        cli.section_print(f"[*] [Stage {sCnt}] Effort Estimation")
+        if not results.recon:
+            print("     [-] Running recon to generate file inventory for estimation...")
+            rec.recon(results.target_dir, True, strict_mode=results.recon_strict, progress_callback=_repository_progress)
+        try:
+            estimate.effort_estimator(str(state.reconSummary_Fpath))
+        except (ValueError, OSError, KeyError) as exc:
+            print(f"     [-] Effort estimation skipped: {exc}")
 
 ###### [Stage 2 or 3] Pattern Matching & Analysis ######
 sCnt += 1
@@ -1582,16 +1575,6 @@ parser.gen_scan_summary_text(state.scanSummary_Fpath)
 ###### [Stage 5] Generate Reports ######
 if results.review_config:
     _apply_review_config_to_outputs(results.review_config)
-
-if results.estimate:
-    cli.section_print('[*] Review Effort Planning')
-    try:
-        effort_plan = estimate.effort_estimator(mode=results.estimate_mode,
-            domains=results.estimate_domain, calibration=estimate_calibration_samples, assumptions=estimate_assumptions)
-        print('     [-] Review scenario     :', effort_plan['mode'])
-        print('     [-] Planning hours      :', effort_plan['total_hours'] or 'Not estimable from available measurements')
-    except (ValueError, OSError, KeyError) as exc:
-        print(f'     [!] Effort planning failed: {exc}')
 
 scan_state_mgr.update_stage("reporting", "running")
 _update_live_progress(

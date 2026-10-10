@@ -1,5 +1,4 @@
 import os
-import json
 import shlex
 import shutil
 import subprocess
@@ -96,19 +95,13 @@ def build_cmd(payload: dict) -> List[str]:
         cmd.append("-" + ("v" * min(v, 3)))
 
 
-    if payload.get("recon", True):
+    if payload.get("recon"):
         cmd.append("--recon")
     if payload.get("estimate"):
         cmd.append("--estimate")
-        if payload.get('recon') is False:
-            cmd.append('--no-recon')
-        if payload.get('loc') is False:
-            cmd.append('--no-loc')
-        if payload.get('estimate_assumptions'):
-            cmd += ['--estimate-assumptions', json.dumps(payload['estimate_assumptions'])]
     if payload.get("analysis") is False:
         cmd.append("--skip-analysis")
-    if payload.get("loc", True):
+    if payload.get("loc"):
         cmd.append("--loc")
 
     from .schemas import ScanOptions

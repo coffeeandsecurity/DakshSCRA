@@ -186,16 +186,6 @@ export function getScanFindings(runUuid) {
   return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/findings`)
 }
 
-export function getEffortPlan(runUuid) {
-  return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/effort-plan`)
-}
-
-export function createEffortPlan(runUuid, options, report = false) {
-  return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/${report ? 'effort-report' : 'effort-plan'}`, {
-    method: 'POST', body: JSON.stringify(options),
-  })
-}
-
 export function getScanAnalysis(runUuid) {
   return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/analysis`)
 }

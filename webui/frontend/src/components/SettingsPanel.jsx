@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { getSettings, saveSettings } from '../api'
-import EffortAssumptions from './EffortAssumptions'
 
 const TIMEZONES = [
   '', 'UTC',
@@ -282,8 +281,20 @@ export default function SettingsPanel({ onToast }) {
 
         {/* Effort estimation */}
         <SettingGroup title="Effort Estimation">
-          <p>Organization-wide review baseline. Set separate issue rates for areas of interest, confirmed/RDL-supported findings and fully manual review. Enter the same low and high value for a fixed rate. These defaults apply unless a reviewer overrides them in Insights → Effort Estimate; planning assumptions are not measured productivity.</p>
-          <EffortAssumptions values={data.estimation.assumptions} onChange={(values) => update('estimation', 'assumptions', values)} />
+          <Field label="Efficiency factor (%)" hint="Reviewer efficiency percentage used in effort calculations">
+            <NumberInput
+              value={data.estimation.efficiency_factor}
+              onChange={(v) => update('estimation', 'efficiency_factor', v)}
+              min={1} max={100}
+            />
+          </Field>
+          <Field label="Buffer (days)" hint="Extra days added to the estimated effort as a buffer">
+            <NumberInput
+              value={data.estimation.buffer}
+              onChange={(v) => update('estimation', 'buffer', v)}
+              min={0} max={30}
+            />
+          </Field>
         </SettingGroup>
 
       </div>

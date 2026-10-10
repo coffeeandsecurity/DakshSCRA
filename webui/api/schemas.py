@@ -3,15 +3,6 @@ from typing import Any, Dict, Optional, List, Literal
 
 
 class ScanOptions(BaseModel):
-    estimate_assumptions: Dict[str, Any] = Field(default_factory=dict)
-
-    @field_validator('estimate_assumptions')
-    @classmethod
-    def validate_estimate_assumptions(cls, value):
-        from core.effort import validate_assumptions
-        validate_assumptions(value)
-        return value
-
     exclude_checks: List[str] = Field(default_factory=list, max_length=64)
     exclude_paths: List[str] = Field(default_factory=list, max_length=100)
     exclude_types: List[str] = Field(default_factory=list, max_length=100)
@@ -44,13 +35,16 @@ class ScanCreate(ScanOptions):
     file_types: Optional[str] = None
     report_format: str = Field(default="web")
     verbosity: int = Field(default=1, ge=1, le=3)
-    recon: bool = True
+    recon: bool = False
     estimate: bool = False
     analysis: bool = True
-    loc: bool = True
+    loc: bool = False
 
     @model_validator(mode='after')
     def validate_modes(self):
+        if self.estimate:
+            self.recon = True
+            self.loc = True
         if self.recon_strict and not self.recon:
             raise ValueError('Strict reconnaissance requires reconnaissance')
         if self.baseline_mode == 'custom' and not (self.baseline_file or '').strip():
@@ -156,35 +150,8 @@ class StateManagementSettings(BaseModel):
 
 
 class EstimationSettings(BaseModel):
-    assumptions: Dict[str, Any] = Field(default_factory=dict)
-
-    @field_validator('assumptions')
-    @classmethod
-    def validate_rates(cls, value):
-        from core.effort import validate_assumptions
-        return validate_assumptions(value)
-
-
-class EffortPlanRequest(BaseModel):
-    mode: Literal['assisted', 'targeted', 'manual', 'ai'] = 'assisted'
-    domains: Optional[List[str]] = Field(default=None, max_length=11)
-    assumptions: Dict[str, Any] = Field(default_factory=dict)
-    calibration: List[Dict[str, Any]] = Field(default_factory=list, max_length=1000)
-
-    @field_validator('domains')
-    @classmethod
-    def validate_domains(cls, value):
-        from core.effort import DOMAINS
-        if value is not None and set(value) - {key for key, _ in DOMAINS}:
-            raise ValueError('Unknown review domain')
-        return list(dict.fromkeys(value)) if value is not None else None
-
-    @field_validator('assumptions')
-    @classmethod
-    def validate_rates(cls, value):
-        from core.effort import validate_assumptions
-        validate_assumptions(value)
-        return value
+    efficiency_factor: int = 10
+    buffer: int = 2
 
 
 class SettingsData(BaseModel):

@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import { artifactUrl } from '../api'
-import EffortPlanner from './EffortPlanner'
 
 /* ─── Confidence helpers ─────────────────────────────────────── */
 const CONF_COLOR = { high: '#f85149', medium: '#d29922', low: '#3fb950', critical: '#f85149', info: '#58a6ff' }
@@ -265,6 +264,79 @@ function Recon({ recon }) {
 /* ═══════════════════════════════════════════════════════════════
    EFFORT ESTIMATE SECTION
 ═══════════════════════════════════════════════════════════════ */
+function EffortEstimate({ artifactIndex, ranEstimate }) {
+  const estimateArtifacts = useMemo(() => {
+    const all = [
+      ...(artifactIndex?.other_html || []),
+      ...(artifactIndex?.pdf_files || []),
+    ]
+    return all.filter((a) => a.toLowerCase().includes('estimate'))
+  }, [artifactIndex])
+
+  if (!ranEstimate && !estimateArtifacts.length) {
+    return (
+      <div className="empty-state" style={{ padding: '40px 20px' }}>
+        <svg className="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div className="empty-title">Effort estimate not run</div>
+        <div className="empty-msg">Enable <strong>Effort Estimate</strong> in scan options to generate a manual review effort estimate based on findings complexity and volume.</div>
+      </div>
+    )
+  }
+
+  if (!estimateArtifacts.length) {
+    return (
+      <div className="empty-state" style={{ padding: '40px 20px' }}>
+        <div className="empty-title">Estimate report not yet available</div>
+        <div className="empty-msg">The scan ran with effort estimation enabled. The report may still be generating, or was not saved to the output directory.</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="ip-section-body">
+      <div className="ip-estimate-intro">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" style={{ color: 'var(--primary)', flexShrink: 0 }}>
+          <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+        </svg>
+        <span>Effort estimate reports show estimated manual review days broken down by language and component.</span>
+      </div>
+
+      <div className="ip-estimate-list">
+        {estimateArtifacts.map((a) => {
+          const name = a.split('/').slice(-1)[0]
+          const isPdf = a.toLowerCase().endsWith('.pdf')
+          return (
+            <div key={a} className="ip-estimate-card">
+              <div className="ip-estimate-card-icon">
+                {isPdf ? (
+                  <svg width="28" height="28" viewBox="0 0 20 20" fill="currentColor" style={{ color: '#f85149' }}>
+                    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                  </svg>
+                ) : (
+                  <svg width="28" height="28" viewBox="0 0 20 20" fill="currentColor" style={{ color: 'var(--primary)' }}>
+                    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </div>
+              <div className="ip-estimate-card-info">
+                <div className="ip-estimate-card-name">{name}</div>
+                <div className="ip-estimate-card-path">{a}</div>
+              </div>
+              <div className="ip-estimate-card-actions">
+                <a href={artifactUrl(a)} target="_blank" rel="noreferrer" className="btn btn-primary btn-sm">
+                  Open Report ↗
+                </a>
+                <a href={artifactUrl(a)} download className="btn btn-ghost btn-sm">Download</a>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
 
 /* ═══════════════════════════════════════════════════════════════
    LINES OF CODE SECTION
@@ -470,7 +542,7 @@ export default function InsightsPanel({ findingsData, artifactIndex, run }) {
       <div className="ip-content">
         {activeSection === 'recon' && <Recon recon={recon} />}
         {activeSection === 'estimate' && (
-          <EffortPlanner key={run?.run_uuid} artifactIndex={artifactIndex} run={run} />
+          <EffortEstimate artifactIndex={artifactIndex} ranEstimate={ranEstimate} />
         )}
         {activeSection === 'loc' && (
           <LoCSection locBreakdown={locBreakdown} scanMeta={scanMeta} />

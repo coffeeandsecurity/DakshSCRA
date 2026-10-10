@@ -12,7 +12,7 @@ class SemanticCatalog:
 
     @classmethod
     def load(cls, path=None):
-        catalog_path = Path(path) if path else Path(__file__).resolve().parents[2] / "rules/scanning/semantics/rdl/catalog.json"
+        catalog_path = Path(path) if path else Path(__file__).resolve().parents[2] / "config" / "rdl_semantic_catalog.json"
         return cls(json.loads(catalog_path.read_text(encoding="utf-8")))
 
     def concepts_for_call(self, language: str, qualified_name: str) -> Set[str]:

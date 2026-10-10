@@ -16,27 +16,6 @@ from .scan_runtime import build_cmd
 
 
 class ScanOptionsApiTests(unittest.TestCase):
-    def test_scan_effort_overrides_persist_and_reach_cli(self):
-        rates = {'active_minutes': [10, 15], 'confirmed_minutes': [20, 20]}
-        with tempfile.TemporaryDirectory() as tmp:
-            engine = create_engine('sqlite:///' + tmp + '/effort.db')
-            Base.metadata.create_all(engine)
-            sessions = sessionmaker(bind=engine)
-            with sessions() as db, patch.object(main, '_wake_scan_dispatcher'), patch.object(main, 'get_browse_roots', return_value=[tmp]):
-                result = main.create_scan(ScanCreate(target_dir=tmp, rules='auto', estimate=True,
-                    estimate_assumptions=rates, recon=False, loc=False), db)
-                self.assertEqual(rates, result.estimate_assumptions)
-                row = db.query(ScanRun).filter_by(run_uuid=result.run_uuid).one()
-                self.assertEqual(rates, json.loads(row.scan_options_json)['estimate_assumptions'])
-                cmd = main._scan_cmd_from_row(row)
-                self.assertEqual(rates, json.loads(cmd[cmd.index('--estimate-assumptions') + 1]))
-                self.assertIn('--no-recon', cmd); self.assertIn('--no-loc', cmd)
-                plain = main.create_scan(ScanCreate(target_dir=tmp, rules='auto', estimate=True), db)
-                self.assertEqual({}, plain.estimate_assumptions)
-            engine.dispose()
-        with self.assertRaises(ValidationError):
-            ScanCreate(target_dir='/src', estimate_assumptions={'active_minutes': [20, 10]})
-
     def test_checkpoint_file_is_isolated_for_each_web_run(self):
         from . import scan_runtime
         with tempfile.TemporaryDirectory() as tmp:
@@ -81,7 +60,7 @@ class ScanOptionsApiTests(unittest.TestCase):
 
     def test_invalid_options_fail_before_queueing(self):
         for options in [dict(exclude_checks=['imaginary']), dict(exclude_keywords=['a\nb']),
-                        dict(exclude_paths=['x' * 513]), dict(recon=False, recon_strict=True), dict(baseline_mode='custom'),
+                        dict(exclude_paths=['x' * 513]), dict(recon_strict=True), dict(baseline_mode='custom'),
                         dict(state_mode='resume'), dict(exclude_keywords=['\x00'])]:
             with self.subTest(options=options), self.assertRaises(ValidationError):
                 ScanCreate(target_dir='/allowed', **options)

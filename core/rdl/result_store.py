@@ -416,45 +416,6 @@ class ResultStore:
                     if review: record['security_review'] = json.loads(review[0])
                 yield record
 
-    def iter_records_readonly(self):
-        """Read original decisions and reviews without migrations or imports.
-
-        Planning and export consumers must not change retained scan data. Read
-        unimported journal tails separately using the saved legacy offsets.
-        """
-        offsets = {}
-        if self.path.is_file():
-            connection = sqlite3.connect(self.path.resolve().as_uri() + '?mode=ro', uri=True)
-            try:
-                connection.execute('PRAGMA query_only=ON')
-                connection.execute('BEGIN')
-                tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-                if 'metadata' in tables:
-                    for key, value in connection.execute("SELECT key,value FROM metadata WHERE key LIKE 'legacy:%'"):
-                        offsets[key[7:]] = json.loads(value).get('offset', 0)
-                for group_id, payload in connection.execute('SELECT group_id,payload FROM records ORDER BY id'):
-                    record = {key: self._get(connection, value) for key, value in json.loads(payload).items()}
-                    if 'security_reviews' in tables:
-                        review = connection.execute('SELECT payload FROM security_reviews WHERE group_id=?', (group_id,)).fetchone()
-                        if review:
-                            record['security_review'] = json.loads(review[0])
-                    yield record
-            finally:
-                connection.close()
-        for journal, compressed in ((self.source, False), (self.source.with_suffix('.findings.jsonl.gz'), True)):
-            if not journal.is_file():
-                continue
-            opener = gzip.open if compressed else open
-            with opener(journal, 'rb') as handle:
-                handle.seek(offsets.get(journal.name, 0))
-                for line in handle:
-                    if not line.strip():
-                        continue
-                    record = json.loads(line)
-                    if not isinstance(record, dict):
-                        raise ResultStorageError('Invalid retained RDL decision')
-                    yield record
-
     def iter_groups(self):
         with self.connect() as db:
             with db: self._sync_legacy(db)

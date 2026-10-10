@@ -109,17 +109,4 @@
 {% else %}{# A report already rendering in an older worker retains its original context. #}
 <section class="report-section section" id="reconnaissance"><h2>Software Reconnaissance</h2><div class="report-section-body">{{ metadata(recon) }}</div></section>
 {% endif %}{% endif %}{% endif %}
-{% for key,value in (extra_sections|default({})).items() %}<section class="report-section section" id="{{ extra_section_id|default('additional-' ~ loop.index) }}"><h2>{{ key|replace('_',' ')|title }}</h2><div class="report-section-body">
-{% if key == 'estimation' and value.schema_version|default(0) == 2 %}
-<h3>Review effort plan · {{ value.mode|capitalize }} · Model {{ value.model_version }}</h3>
-<p>{{ value.assumption_basis }}. Ranges are sensitivity bounds, not confidence intervals.</p>
-<p><strong>Person-hours:</strong> {% if value.total_hours is not none %}{{ value.total_hours[0] }}–{{ value.total_hours[1] }}{% else %}Not estimable{% endif %}. <strong>Person-days:</strong> {% if value.total_days_min is not none %}{{ value.total_days_min }}–{{ value.total_days_max }}{% else %}Not estimable{% endif %}, using {{ value.assumptions.hours_per_day }} productive hours/day.</p>
-<p>{{ value.selected_workload.files }} files, {{ value.selected_workload.effective_loc }} effective LOC. {{ value.selected_workload.active }} active sites, {{ value.selected_workload.suppressed }} suppressed, {{ value.selected_workload.unresolved }} unresolved. Scope: {{ value.code_scope }}. Domains: {{ value.selected_domains|join(', ') }}.</p>
-{% for warning in value.warnings %}<p>{{ warning }}</p>{% endfor %}
-{% if value.mode == 'ai' %}<ul>{% for item in value.ai_measurements_required %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
-<p>{{ value.rounding | default('') }}</p>
-<table><thead><tr><th>Task</th><th>Quantity</th><th>Person-hours</th><th>Applied rate</th></tr></thead><tbody>{% for row in value.components %}<tr><td>{{ row.label }}</td><td>{{ row.quantity }}</td><td>{{ row.hours[0] }}–{{ row.hours[1] }}</td><td>{{ value.assumptions[row.assumption] }}</td></tr>{% endfor %}</tbody></table>
-<p>{{ value.deduplication }}</p><ul>{% for item in value.limitations %}<li>{{ item }}</li>{% endfor %}</ul>
-<p>Input fingerprint: <code>{{ value.input_fingerprint }}</code>. Exact workload, assumptions and calibration are retained in the report JSON.</p>
-{% else %}{{ metadata(value) }}{% endif %}
-</div></section>{% endfor %}
+{% for key,value in (extra_sections|default({})).items() %}<section class="report-section section" id="{{ extra_section_id|default('additional-' ~ loop.index) }}"><h2>{{ key|replace('_',' ')|title }}</h2><div class="report-section-body">{{ metadata(value) }}</div></section>{% endfor %}

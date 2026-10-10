@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { getCheckCatalog, getSettings } from '../api'
+import { getCheckCatalog } from '../api'
 import RulesSelect from './RulesSelect'
-import EffortAssumptions from './EffortAssumptions'
 
 const TABS = [
   ['setup', 'Setup'], ['checks', 'Check Classes'], ['exclusions', 'Exclusions'],
@@ -15,7 +14,7 @@ const ENGINES = [
 const OPTIONS = [
   ['analysis', 'Inter-file analysis', 'Trace data across files and functions. Larger projects take longer.'],
   ['recon', 'Reconnaissance', 'Map languages, frameworks and repository structure.'],
-  ['estimate', 'Review effort estimate', 'Plan review from final findings and suppressed decisions. Reconnaissance and LOC improve the estimate.'],
+  ['estimate', 'Review effort estimate', 'Estimate manual review effort. Requires reconnaissance and lines of code.'],
   ['loc', 'Lines of code', 'Include source line counts by file and language.'],
 ]
 const nonEmpty = (lines = []) => lines.filter((line) => line.trim())
@@ -93,16 +92,6 @@ export default function ScanForm({ values, setValues, onSubmit, onBrowse, creati
   const [catalogError, setCatalogError] = useState('')
   const [catalogLoading, setCatalogLoading] = useState(true)
   const [catalogAttempt, setCatalogAttempt] = useState(0)
-  const [effortDefaults, setEffortDefaults] = useState(null)
-  const [effortError, setEffortError] = useState('')
-  useEffect(() => {
-    if (!values.estimate || effortDefaults) return
-    let cancelled = false
-    getSettings().then((data) => {
-      if (!cancelled) { setEffortDefaults(data.estimation.assumptions); setEffortError('') }
-    }).catch((error) => { if (!cancelled) setEffortError(error.message) })
-    return () => { cancelled = true }
-  }, [values.estimate, effortDefaults])
   useEffect(() => {
     let cancelled = false
     setCatalogLoading(true)
@@ -179,13 +168,7 @@ export default function ScanForm({ values, setValues, onSubmit, onBrowse, creati
         </>}
         {activeTab === 'analysis' && <>
           <div className="scan-section-heading"><h2>Analysis & output</h2><p>Choose supporting analysis and the level of scan detail.</p></div>
-          <div className="scan-analysis-options">{OPTIONS.map(([key, label, description]) => <label key={key}><input type="checkbox" aria-label={label} checked={Boolean(values[key])} onChange={(e) => setValues((previous) => ({ ...previous, [key]: e.target.checked, ...(key === 'recon' && !e.target.checked ? { recon_strict: false } : {}) }))} /><span><strong>{label}</strong><small>{description}</small></span></label>)}<label className="scan-option-child"><input type="checkbox" aria-label="Strict reconnaissance" checked={Boolean(values.recon_strict)} disabled={!values.recon} onChange={(e) => upd('recon_strict', e.target.checked)} /><span><strong>Strict reconnaissance</strong><small>Keep high-confidence technology detections. Requires reconnaissance.</small></span></label></div>
-          {values.estimate && <details className="effort-settings"><summary>Effort estimation settings (optional)</summary>
-            <p>Organization defaults are used unless you override them for this scan. Enter the same low and high value for a fixed rate, or different values for a range. These rates apply to this scan and its generated effort report.</p>
-            {effortDefaults ? <><EffortAssumptions values={{ ...effortDefaults, ...(values.estimate_assumptions || {}) }} onChange={(rates) => upd('estimate_assumptions', Object.fromEntries(Object.entries(rates).filter(([key, value]) => JSON.stringify(value) !== JSON.stringify(effortDefaults[key]))))} disabled={creating} />
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => upd('estimate_assumptions', {})} disabled={creating}>Use organization defaults</button></> : <p role={effortError ? 'alert' : 'status'}>{effortError ? `Custom settings unavailable: ${effortError}. Organization defaults will still apply.` : 'Loading organization defaults…'}</p>}
-          </details>}
-          {values.estimate && (!values.recon || !values.loc) && <p className="scan-config-notice">Reconnaissance and LOC are recommended for effort planning. Without LOC, a complete effort total may be unavailable; disabling reconnaissance reduces technology context.</p>}
+          <div className="scan-analysis-options">{OPTIONS.map(([key, label, description]) => <label key={key}><input type="checkbox" aria-label={label} checked={Boolean(values[key]) || (values.estimate && ['recon', 'loc'].includes(key))} disabled={Boolean(values.estimate && ['recon', 'loc'].includes(key))} onChange={(e) => setValues((previous) => ({ ...previous, [key]: e.target.checked, ...(key === 'estimate' && e.target.checked ? { recon: true, loc: true } : {}), ...(key === 'recon' && !e.target.checked ? { recon_strict: false } : {}) }))} /><span><strong>{label}</strong><small>{description}</small></span></label>)}<label className="scan-option-child"><input type="checkbox" aria-label="Strict reconnaissance" checked={Boolean(values.recon_strict)} disabled={!values.recon} onChange={(e) => upd('recon_strict', e.target.checked)} /><span><strong>Strict reconnaissance</strong><small>Keep high-confidence technology detections. Requires reconnaissance.</small></span></label></div>
           <div className="scan-fields-two"><div className="form-field"><label className="form-label" htmlFor="scan-verbosity">Log detail</label><select id="scan-verbosity" className="form-select" value={values.verbosity} onChange={(e) => upd('verbosity', Number(e.target.value))}><option value={1}>Normal</option><option value={2}>Verbose</option><option value={3}>Debug</option></select></div><div className="form-field"><label className="form-label" htmlFor="scan-state-mode">Scan checkpoints</label><select id="scan-state-mode" className="form-select" value={values.state_mode || 'default'} onChange={(e) => upd('state_mode', e.target.value)}><option value="default">Use system setting</option><option value="enabled">Enable for this scan</option><option value="disabled">Disable for this scan</option></select><small className="text-muted">Save scan progress in this run’s isolated workspace.</small></div></div>
           <div className="scan-config-notice"><strong>Reports</strong><p>Results are available in the Web UI. Use Reports after completion to generate downloadable HTML, PDF or Word documents.</p></div>
         </>}

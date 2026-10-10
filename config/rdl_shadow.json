@@ -1,5 +1,6 @@
 {
   "schema_version": 1,
+  "enabled": false,
   "authoritative_engine": "v1",
   "mappings": {
     "logic/rdl/v1/python/core/command_injection_subprocess.rdl": {

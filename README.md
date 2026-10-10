@@ -24,9 +24,9 @@ DakshSCRA brings together distinctive capabilities for manual source code review
 | Feature | Tag | Why it matters |
 |---|---|---|
 | **File Path Areas of Interest** | World's First* | Scans file and directory names themselves, alongside code, to flag suspicious paths such as backup files, debug endpoints, configuration dumps and credential files that reviewers often miss. |
-| **Scientific Effort Estimation** | Evidence-based | Plans assisted, targeted and fully manual review from unique files, LOC, active and suppressed decisions, unresolved evidence and traces. Explicit task assumptions and observed calibration make calculations reproducible; AI-assisted duration requires benchmarking. |
+| **Scientific Effort Estimation** | World's First* | Produces a quantified estimate of manual-review effort based on codebase size and project signals. Configurable assumptions make engagement planning explicit and repeatable. |
 | **Areas of Interest, Not Bug Flags** | Reviewer in Control | Surfaces patterns worth investigating rather than tagging every match as a vulnerability. Contextual rules and suppression evidence reduce triage noise and keep the reviewer in control. |
-| **Software Reconnaissance** | Integrated Software Recon | Provides open-source source-code reconnaissance, identifying languages, frameworks, infrastructure and project characteristics from source contents and structure. Uses the technology inventory to guide rule selection and security review planning. Microsoft Application Inspector is an earlier known open-source tool with comparable reconnaissance capabilities. |
+| **Software Reconnaissance** | Integrated Software Recon | Detects languages, frameworks and infrastructure from file contents and project structure before scanning. Connects the technology inventory to automatic rule selection, semantic analysis and review planning. |
 | **RDL Conditional Rules** | Advanced Conditional Rules | Goes beyond simple regex with PRESENT, MISSING, boolean expressions and file/path conditions. RDL v1 records decisions and suppression reasons; RDL v2 adds typed semantic services and bounded cross-file evidence. |
 | **Advanced Semantic and Cross-File Analysis** | Built from the Ground Up | Traces user-controlled data from source to sink across supported file boundaries using purpose-built analysis. Advanced Analysis shipped alongside the original RDL in March 2026; RDL v2 extends semantic rule evaluation across files. |
 | **Platform-Agnostic Auto Scanning** | Automatic Multi-Platform | Use `-r auto` to scan mixed-technology projects without choosing a single language beforehand. Recon selects supported platform and framework rules automatically. Introduced in v0.23-beta, November 2024. |
@@ -54,6 +54,14 @@ DakshSCRA brings together distinctive capabilities for manual source code review
 | Web UI and Docker rollout | 16 March 2026 | v0.33-beta | [Introduced browser-launched scans, live progress, findings/artifact browsing, OS-aware directory selection and built-in Help; added Docker Compose Web UI/CLI services and portable environment setup.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.33-beta) |
 | External RDL architecture and reporting | 22 March 2026 | v0.37-beta | [External rule logic and revised advanced reports.](https://github.com/coffeeandsecurity/DakshSCRA/commit/5b17d89) |
 | RDL v2 semantic services and integrated workflow | 10 October 2026 | v0.39 | Typed semantic rules, bounded cross-file evidence and custom packs. |
+
+### Comparative evidence
+
+- **Recon predecessor:** [Microsoft Application Inspector](https://www.microsoft.com/en-us/security/blog/2020/01/16/introducing-microsoft-application-inspector/) — 16 January 2020. Documents an earlier source-characteristics tool; does not establish a worldwide first/second ranking.
+
+Dates identify repository or release milestones; they do not independently establish worldwide priority. “Not verified” means a release number has not been established from the reviewed evidence.
+
+Release milestones and comparative evidence are listed above.
 
 DakshSCRA was introduced during **Black Hat USA 2022** training and publicly debuted at **Black Hat USA 2023**. Those dates describe the project's introduction, not every current feature.
 
@@ -161,49 +169,6 @@ Stop the stack with:
 ```bash
 docker compose down
 ```
-
-### Docker cleanup and fresh reset
-
-Docker images, build cache and unused containers or volumes can accumulate over time. Repeated Compose launches from the same project normally reuse its services; different project names or folders can leave separate stacks. Check disk usage with:
-
-```bash
-docker system df
-```
-
-**Reclaim unused space while keeping saved scans and accounts:**
-
-```bash
-docker system prune -af
-docker buildx prune -af
-```
-
-These commands clean unused resources across the current Docker environment, including stopped containers and unused images/cache. Named volumes containing saved tool data remain.
-
-**Reset DakshSCRA for a fresh start:** run from the DakshSCRA repository. Export or back up anything you need first: this deletes the tool's runtime volume, including accounts, sessions, scan history and saved scan data. Repository files and host-mounted source folders remain.
-
-```bash
-docker compose down --volumes --rmi all --remove-orphans
-python3 tools/start_webui.py --detach
-```
-
-Open [http://localhost:8080](http://localhost:8080) and complete first-time account setup again. Existing `.env` settings still apply. To reclaim additional unused Docker space after the reset, use the cleanup commands above.
-
-**Purge all Docker workloads:** only use this if you intend to delete every container and its volume data in the current Docker environment, including other applications. These commands are for Bash on Linux or WSL; they do not uninstall Docker or delete host-mounted files.
-
-```bash
-docker ps -aq | xargs -r docker rm -f
-docker system prune -af
-docker volume prune -af
-docker buildx prune -af
-```
-
-For a fresh DakshSCRA installation afterward:
-
-```bash
-python3 tools/start_webui.py --detach
-```
-
-See the Docker documentation for [Compose reset options](https://docs.docker.com/reference/cli/docker/compose/down/) and [resource pruning](https://docs.docker.com/engine/manage-resources/pruning/).
 
 ### Logging in
 
@@ -339,10 +304,7 @@ usage: dakshscra.py [-h] [-r RULES] [-f FILE_TYPES] [-v] [-t TARGET_DIR]
 | `-l {R,RF}` | List platform rules + frameworks `[R]` or include filetypes `[RF]` |
 | `--recon` | Run reconnaissance (platform / framework / language detection) |
 | `--rs`, `--recon-strict` | Strict recon: high-confidence detections only (use with `--recon`) |
-| `--estimate` | Scan supplied scope, collect recon/LOC and plan review from final evidence |
-| `--estimate-mode` | `assisted`, `targeted`, `manual` or `ai` review scenario |
-| `--estimate-domain` | Repeat to select targeted domains, such as `authentication`, `authorization` and `taint` |
-| `--estimate-calibration` | JSON array of observed task units and person-hours |
+| `--estimate` | Estimate code review effort based on codebase size |
 | `-rpt`, `--report FORMATS` | Report formats: `html`, `pdf`, `docx`, `json`, or a comma-separated combination (default: `html`) |
 | `--pdf-from-json` | Generate PDF report(s) from existing JSON outputs without re-scanning |
 | `--json-input-dir PATH` | JSON report directory (default: `./reports/data`) |
