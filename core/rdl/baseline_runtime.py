@@ -14,13 +14,13 @@ from .executor import SemanticExecutor
 class BaselineRunner:
     def __init__(self, root):
         self.root = Path(root)
-        payload = json.loads((self.root / 'config/rdl_baseline.json').read_text())
+        payload = json.loads((self.root / 'rules/scanning/metadata/rdl/baseline.json').read_text())
         self.packs = {}
-        additional = json.loads((self.root / 'config/rdl_additional.json').read_text())
+        additional = json.loads((self.root / 'rules/scanning/metadata/rdl/additional.json').read_text())
         for entry in payload['entries'] + additional['entries']:
             self.packs.setdefault(entry['xml_pack'], []).append(entry)
         self.overlays = {}
-        overlay_config = json.loads((self.root / 'config/rdl_platform_overlays.json').read_text())
+        overlay_config = json.loads((self.root / 'rules/scanning/metadata/rdl/platform-overlays.json').read_text())
         for overlay in overlay_config['entries']:
             if overlay['source_pack'] not in self.packs or overlay['target_pack'] not in self.packs:
                 raise ValueError('Mobile overlay references an unregistered native pack')

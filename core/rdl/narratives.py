@@ -10,10 +10,10 @@ ROOT = Path(__file__).resolve().parents[2]
 @lru_cache(maxsize=8)
 def _load(root, signatures):
     root = Path(root)
-    semantic = json.loads((root / 'config/rdl_semantic_guidance.json').read_text())['entries']
+    semantic = json.loads((root / 'resources/guidance/rdl/semantic.json').read_text())['entries']
     by_path, by_id = {}, {}
-    for name in ('rdl_baseline.json', 'rdl_additional.json'):
-        for entry in json.loads((root / 'config' / name).read_text())['entries']:
+    for name in ('baseline.json', 'additional.json'):
+        for entry in json.loads((root / 'rules/scanning/metadata/rdl' / name).read_text())['entries']:
             narrative = {field: entry.get(field, '') for field in ('description', 'impact', 'remediation')}
             by_path[entry['v2_rule']] = narrative
             by_id[entry['rule_id']] = narrative
@@ -23,8 +23,10 @@ def _load(root, signatures):
 
 def catalogs(root=ROOT):
     root = Path(root)
-    names = ('rdl_baseline.json', 'rdl_additional.json', 'rdl_semantic_guidance.json')
-    signatures = tuple((root / 'config' / name).stat().st_mtime_ns for name in names)
+    paths = ('rules/scanning/metadata/rdl/baseline.json',
+             'rules/scanning/metadata/rdl/additional.json',
+             'resources/guidance/rdl/semantic.json')
+    signatures = tuple((root / path).stat().st_mtime_ns for path in paths)
     return _load(str(root), signatures)
 
 
@@ -55,7 +57,7 @@ def refresh_record(record):
 def enrich_source_findings(items, root=ROOT, path_only=False):
     """Resolve legacy identities by pack and title, never by loose title keywords."""
     by_path, _ = catalogs(root)
-    entries = json.loads((Path(root) / 'config/rdl_baseline.json').read_text())['entries']
+    entries = json.loads((Path(root) / 'rules/scanning/metadata/rdl/baseline.json').read_text())['entries']
     index = {}
     for entry in entries:
         if bool(entry['path_rule']) == path_only:
@@ -82,11 +84,11 @@ def enrich_source_findings(items, root=ROOT, path_only=False):
 
 @lru_cache(maxsize=2)
 def _analysis_guidance(signature):
-    return json.loads((ROOT / 'config/analysis_finding_guidance.json').read_text())['entries']
+    return json.loads((ROOT / 'resources/guidance/analysis/findings.json').read_text())['entries']
 
 
 def enrich_vulnerability(item):
-    path = ROOT / 'config/analysis_finding_guidance.json'
+    path = ROOT / 'resources/guidance/analysis/findings.json'
     narrative = _analysis_guidance(path.stat().st_mtime_ns).get(item.get('kind'))
     return {**item, **({'issue_description': narrative['description'],
                        'security_impact': narrative['impact'],

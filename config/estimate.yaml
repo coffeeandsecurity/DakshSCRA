@@ -1,74 +1,22 @@
-efficiency_factor: 10   # percentage
-
-buffer: 2   # days
-
-estimation_days_ranges:
-  backend_data:
-    - files_range: [1, 10]
-      effort_range: [0.5, 1]
-    - files_range: [11, 20]
-      effort_range: [1, 2]
-    - files_range: [21, 40]
-      effort_range: [2, 4]
-    - files_range: [41, 100]
-      effort_range: [5, 10]
-    - files_range: [101, 300]
-      effort_range: [11, 20]
-    - files_range: [301, 1000]
-      effort_range: [21, 40]
-    - files_range: [1001, 10000]
-      effort_range: [41, 60]
-    - files_range: [10001, 30000]
-      effort_range: [61, 90]
-    - files_range: [30001, 50000]
-      effort_range: [91, 180]
-    - files_range: [50001, 999999]  # Range with '999999' upper bound indicates maximum limit exceeded
-      effort_range: [181, 270]
-
-  frontend_data:
-    - files_range: [1, 40]
-      effort_range: [0.5, 1]
-    - files_range: [41, 100]
-      effort_range: [1, 2]
-    - files_range: [101, 500]
-      effort_range: [2, 4]
-    - files_range: [501, 1000]
-      effort_range: [4, 5]
-    - files_range: [1001, 10000]
-      effort_range: [5, 6]
-    - files_range: [10001, 999999]  # Range with '999999' upper bound indicates maximum limit exceeded
-      effort_range: [6, 10]
-
-# Recon (rules/recon/technology.json) reports 7 categories total, but only
-# Backend/Frontend had calibrated day-ranges above - the other 5 always
-# contributed 0 days to the estimate regardless of file count. Rather than
-# hand-calibrating 5 more full range tables (no real data to calibrate
-# against), each maps to whichever existing curve is the closer shape and
-# scales it by a multiplier - Mobile/System code reviews slower than a
-# typical backend file, Database/Shell/Infrastructure files are usually
-# smaller and faster to review than a typical frontend file. Adjust these
-# multipliers as real review-time data becomes available.
-category_effort_multipliers:
-  Mobile Platforms:
-    base: backend_data
-    multiplier: 1.1
-  System Programs:
-    base: backend_data
-    multiplier: 1.3
-  Database:
-    base: frontend_data
-    multiplier: 0.8
-  Shell Scripts:
-    base: frontend_data
-    multiplier: 0.7
-  Infrastructure:
-    base: frontend_data
-    multiplier: 0.6
-
-report_gen_days_ranges:
-  - findings: [1, 10]
-    effort_range: [1, 2]
-  - findings: [11, 30]
-    effort_range: [3, 5]
-  - findings: [31, 50]
-    effort_range: [6, 8]
+# Global defaults for review planning. These are assumptions, not calibrated facts.
+model_version: '2.0'
+assumptions:
+  hours_per_day: 6
+  # Rate bounds: the higher LOC/hour value produces the lower time estimate.
+  inspection_loc_per_hour: [100, 200]
+  active_minutes: [8, 20]
+  confirmed_minutes: [8, 20]
+  manual_active_minutes: [8, 20]
+  manual_confirmed_minutes: [8, 20]
+  manual_suppressed_minutes: [3, 10]
+  manual_unresolved_minutes: [15, 45]
+  suppressed_minutes: [3, 10]
+  unresolved_minutes: [15, 45]
+  trace_step_minutes: [0.25, 1]
+  manual_trace_step_minutes: [1, 3]
+  assisted_setup_hours: [1, 3]
+  manual_setup_hours: [3, 8]
+  manual_file_minutes: [1, 3]
+  domain_exploration_hours: [1, 4]
+  report_base_hours: [1, 3]
+  report_unit_minutes: [3, 8]

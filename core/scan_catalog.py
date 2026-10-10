@@ -75,8 +75,8 @@ def check_class(title='', category='', rule_id=''):
 def registered_classes():
     root = Path(__file__).resolve().parents[1]
     classes = {}
-    for name in ('rdl_baseline', 'rdl_additional'):
-        for entry in json.loads((root / 'config' / (name + '.json')).read_text())['entries']:
+    for name in ('baseline.json', 'additional.json'):
+        for entry in json.loads((root / 'rules/scanning/metadata/rdl' / name).read_text())['entries']:
             value = check_class(entry['title'], entry.get('category', ''), entry['rule_id'])
             for key in (entry['rule_id'], entry.get('v1_ref'), entry['v2_rule']):
                 if key:
@@ -88,9 +88,9 @@ def check_catalog(root):
     """Read the registered inventory, rather than advertise invented checks."""
     root = Path(root)
     entries = []
-    for name in ('rdl_baseline', 'rdl_additional'):
-        entries.extend(json.loads((root / 'config' / (name + '.json')).read_text())['entries'])
-    shadow = json.loads((root / 'config/rdl_shadow.json').read_text())['mappings']
+    for name in ('baseline.json', 'additional.json'):
+        entries.extend(json.loads((root / 'rules/scanning/metadata/rdl' / name).read_text())['entries'])
+    shadow = json.loads((root / 'rules/scanning/metadata/rdl/shadow-mappings.json').read_text())['mappings']
     from core.rdl.portable_profiles import project_mappings
     for reference, mapping in dict(shadow, **project_mappings()).items():
         entries.append(dict(title=Path(mapping['v2_rule']).stem.replace('_', ' ').title(),

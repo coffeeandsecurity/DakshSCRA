@@ -110,7 +110,7 @@ function WhatIsSection() {
           ['Rule-based scanning', 'Matches platform-specific patterns (SQL queries, command execution, file I/O, etc.) against source files'],
           ['Reconnaissance', 'Detects languages, frameworks, and technology stack from file contents and structure'],
           ['Taint analysis', 'Traces data flows from user-controlled sources to security-sensitive sinks across files'],
-          ['Effort estimation', 'Estimates manual review time based on codebase size, complexity, and finding volume'],
+          ['Effort estimation', 'Plans review work from measured scan evidence with explicit, calibratable assumptions'],
           ['Report generation', 'CLI exports HTML, PDF, Word and JSON; Web UI generates reports on demand from saved results'],
         ]}
       />
@@ -128,9 +128,9 @@ function DistinctiveSection() {
   },
   {
     "title": "Scientific Effort Estimation",
-    "tag": "World's First*",
+    "tag": "Evidence-based",
     "highlight": true,
-    "body": "Produces a quantified estimate of manual-review effort based on codebase size and project signals. Configurable assumptions make engagement planning explicit and repeatable."
+    "body": "Plans assisted, targeted and fully manual review from unique files, LOC, active and suppressed decisions, unresolved evidence and traces. Explicit task assumptions and observed calibration make calculations reproducible; AI-assisted duration requires benchmarking."
   },
   {
     "title": "Areas of Interest, Not Bug Flags",
@@ -142,7 +142,7 @@ function DistinctiveSection() {
     "title": "Software Reconnaissance",
     "tag": "Integrated Software Recon",
     "highlight": true,
-    "body": "Detects languages, frameworks and infrastructure from file contents and project structure before scanning. Connects the technology inventory to automatic rule selection, semantic analysis and review planning."
+    "body": "Provides open-source source-code reconnaissance, identifying languages, frameworks, infrastructure and project characteristics from source contents and structure. Uses the technology inventory to guide rule selection and security review planning. Microsoft Application Inspector is an earlier known open-source tool with comparable reconnaissance capabilities."
   },
   {
     "title": "RDL Conditional Rules",
@@ -217,12 +217,6 @@ function DistinctiveSection() {
         ["External RDL architecture and reporting", "22 March 2026", "v0.37-beta", <span><a href="https://github.com/coffeeandsecurity/DakshSCRA/commit/5b17d89">External rule logic and revised advanced reports.</a></span>],
         ["RDL v2 semantic services and integrated workflow", "10 October 2026", "v0.39", <span>Typed semantic rules, bounded cross-file evidence and custom packs.</span>],
       ]} />
-      <SubHeading>Comparative Evidence</SubHeading>
-      <ul className="help-list">
-        <li><strong>Recon predecessor:</strong> <a href="https://www.microsoft.com/en-us/security/blog/2020/01/16/introducing-microsoft-application-inspector/">Microsoft Application Inspector</a> — 16 January 2020. Documents an earlier source-characteristics tool; does not establish a worldwide first/second ranking.</li>
-      </ul>
-      <div className="help-debut-note">Dates identify repository or release milestones. Release numbers and implementation milestones are distinguished; worldwide priority and overall superiority are not independently established.</div>
-      <ul className="help-list"><li>Release milestones and comparative evidence are listed above.</li></ul>
 
       </details>
     </section>
@@ -305,7 +299,10 @@ function CliUsageSection() {
         rows={[
           [<Code>--recon</Code>, 'Run technology stack reconnaissance. Detects languages, frameworks, libraries, and infrastructure clues.'],
           [<Code>--rs / --recon-strict</Code>, 'Filter recon output to high-confidence detections only. Use with --recon to reduce noise.'],
-          [<Code>--estimate</Code>, 'Generate a manual review effort estimation report.'],
+          [<Code>--estimate</Code>, 'Scan supplied scope, include recon/LOC and plan review after final findings.'],
+          [<Code>--estimate-mode</Code>, 'assisted, targeted, manual or ai review scenario.'],
+          [<Code>--estimate-domain</Code>, 'Repeat to select targeted authentication, authorization, taint and other domains.'],
+          [<Code>--estimate-calibration</Code>, 'JSON array of measured component, units and hours samples.'],
           [<Code>--pdf-from-json</Code>, 'Generate PDF reports from existing JSON output without re-running a scan.'],
           [<Code>-l {'{R,RF}'}</Code>, 'List available platform rules. R lists rules, RF also lists associated file types.'],
         ]}
@@ -497,7 +494,7 @@ function WebUISection() {
           ['Review mode', 'Comprehensive Review (recommended), Finding Analysis Only, or Areas of Interest Review Only. Results retain the underlying engine selection.'],
           ['Verbosity', 'Output detail level (1–3).'],
           ['Recon', 'Enable technology stack detection.'],
-          ['Effort Estimate', 'Generate a review effort estimation report.'],
+          ['Effort Estimate', 'Plan review from final evidence; includes reconnaissance and LOC.'],
           ['LOC Count', 'Include effective lines of code in the scan summary.'],
           ['Inter-file Analysis', 'Enable the optional native taint analyzer. Its initial value follows Settings. Can be slow on large codebases; independent of RDL engine selection.'],
         ]}
@@ -517,6 +514,8 @@ function WebUISection() {
         <li><strong>Reports</strong>: On-demand exports and available saved artifacts.</li>
       </ul>
       <P>Completed scan data removal deletes saved evidence and reports but keeps a history record. Clear record removes that remaining entry after data removal. Active jobs are protected from deletion.</P>
+      <P>Insights → Effort Estimate offers Daksh-assisted manual review, Targeted review, Fully manual review and AI-assisted review. Select authentication, authorization, taint analysis and other domains for targeted plans; overlapping sites and files count once. Generate a report and download HTML or JSON. HTML supports printing to PDF.</P>
+      <P>Plans separate inspection, active and suppressed decision review, unresolved investigation, traces and reporting. Defaults are transparent planning assumptions; per-report overrides and observed calibration samples are supported. Ranges are sensitivity bounds, not confidence intervals. Missing LOC withholds a complete total. AI duration requires measurements of the actual model, hardware/service, human validation and rework. Remediation and retesting are separate.</P>
 
       <SubHeading id="webui-findings">Understanding Findings</SubHeading>
       <p className="help-p"><strong>Scanner Findings</strong></p>

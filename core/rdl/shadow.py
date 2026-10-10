@@ -1,6 +1,7 @@
 """Fail-isolated v1/v2 shadow comparison for controlled production rollout."""
 
 import json
+import yaml
 import os
 import tempfile
 import zlib
@@ -30,8 +31,11 @@ _TRUE = {"1", "true", "yes", "on"}
 class ShadowRunner:
     def __init__(self, repository_root, config_path=None, enabled=None, executor=None, config=None):
         self.root = Path(repository_root)
-        self.config_path = Path(config_path or self.root / "config" / "rdl_shadow.json")
+        self.config_path = Path(config_path or self.root / "rules/scanning/metadata/rdl/shadow-mappings.json")
         self.config = dict(config) if config is not None else self._load_config(self.config_path)
+        if config is None and config_path is None:
+            settings = yaml.safe_load(read_source_text(self.root / 'config/tool.yaml', encoding='utf-8')) or {}
+            self.config['enabled'] = bool((settings.get('rdl') or {}).get('shadow_enabled', False))
         self.project_mappings = project_mappings() if self.config.get("project_flow", False) else {}
         self.enabled_override = enabled
         self.v1_enabled = True

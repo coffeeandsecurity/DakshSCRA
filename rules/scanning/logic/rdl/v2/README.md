@@ -23,18 +23,18 @@ rules/scanning/logic/rdl/v2/
   existing rule-pack scope without requiring a semantic adapter. Definitions
   live under each owning scope's `baseline/<category>/` directory.
 - **Semantic:** 49 shared or language-specific definitions: 20 are mapped for
-  scan-time execution in `config/rdl_shadow.json`, six additional definitions have
+  scan-time execution in `rules/scanning/metadata/rdl/shadow-mappings.json`, six additional definitions have
   corpus coverage, and 23 have development samples only. These last 29 are not
   enabled production detectors. Adapter and data-flow support remain incomplete.
 - **Additional checks:** 142 native definitions cover source/configuration review
   areas across supported languages, including 116 mobile checks.
-  `config/rdl_additional.json` registers the selected packs; 292 positive/negative
+  `rules/scanning/metadata/rdl/additional.json` registers the selected packs; 292 positive/negative
   source cases verify the 144 registrations.
 
 The [full coverage audit](../../../../../docs/rdl/coverage-audit.md) records every scope,
 mobile review area and remaining semantic limitation. Mobile scans also evaluate
 applicable underlying-language and native-bridge packs through
-`config/rdl_platform_overlays.json`; these overlays affect v2 only. Source evidence
+`rules/scanning/metadata/rdl/platform-overlays.json`; these overlays affect v2 only. Source evidence
 preserves original credential values. HTML output still escapes source text.
 
 The [coverage matrix](../../../../../docs/rdl/baseline-coverage.md) lists all 83 baseline
@@ -44,7 +44,7 @@ preserves these defects for comparison; supplemental corrections use distinct ID
 Scan-time [source review](../../../../../docs/rdl/source-review.md) filters unsupported
 comment/configuration matches and retains the raw baseline outcome separately.
 
-`config/rdl_baseline.json` links each XML/v1 source, source hash, rule ID and native
+`rules/scanning/metadata/rdl/baseline.json` links each XML/v1 source, source hash, rule ID and native
 v2 definition. `tools/rdl_baseline.py` maintains this derived baseline; edit legacy
 sources then regenerate, or add independent v2 improvements outside `baseline/`.
 V2 execution never delegates to v1. In `both` mode, v1 runs independently to
@@ -80,7 +80,7 @@ compilation alone does not establish runnable or accurate detection.
 The initial layout migration retained all 49 pre-existing rules unchanged: 38 shared
 properties and 11 PHP-specific properties. Some describe analysis capabilities
 that remain unsupported for particular languages. The live
-[`config/rdl_shadow.json`](../../../../../config/rdl_shadow.json) mappings determine
+[`rules/scanning/metadata/rdl/shadow-mappings.json`](../../../../../rules/scanning/metadata/rdl/shadow-mappings.json) mappings determine
 which semantic properties scans evaluate. The baseline and additional manifests
 register native text/path checks. Directory discovery does not enable rules.
 V1 remains supported until repeated tests establish full v2 coverage of its
@@ -91,7 +91,7 @@ bug classes across every supported language and framework.
 1. Find the owning scope in [INDEX.md](INDEX.md). Reuse an existing shared
    property where possible; create a scope-specific rule only when needed.
 2. Implement required semantic concepts/capabilities in the
-   [catalog](../../../../../config/rdl_semantic_catalog.json) and
+   [catalog](../../../../../rules/scanning/semantics/rdl/catalog.json) and
    [adapters](../../../../../core/rdl/adapters/). Unsupported analysis must remain
    explicit rather than produce a successful no-match.
 3. Add vulnerable, safe, and edge cases to the
