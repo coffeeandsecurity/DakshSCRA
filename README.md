@@ -126,7 +126,22 @@ Windows PowerShell or Command Prompt (foreground):
 py tools/start_webui.py
 ```
 
-Add `--detach` for background mode, or `--dry-run` to inspect detected paths.
+To run in detached (background) mode, add `--detach`. The containers keep running
+after the startup command returns, leaving your terminal available.
+
+Linux, macOS or WSL (detached):
+
+```bash
+python3 tools/start_webui.py --detach
+```
+
+Windows PowerShell or Command Prompt (detached):
+
+```powershell
+py tools/start_webui.py --detach
+```
+
+Use `--dry-run` to inspect detected paths without starting the containers.
 Existing `.env` path overrides are respected. Accounts, scans and the runtime
 volume are preserved when containers are recreated.
 
