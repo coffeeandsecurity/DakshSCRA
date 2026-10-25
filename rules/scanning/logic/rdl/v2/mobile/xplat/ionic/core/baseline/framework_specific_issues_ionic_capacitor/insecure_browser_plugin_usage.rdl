@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.mobile.xplat.ionic.core.insecure_browser_plugin_usage VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:InAppBrowser|cordova\\.InAppBrowser|Browser\\.open)\\s*\\(" "im"
-WHEN TEXT_MISSING "validate|allowlist|trusted|Capacitor\\.Platform|test|example" "im"
-REPORT "Insecure Browser Plugin Usage"
+REPORT "Legacy Browser Plugin Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

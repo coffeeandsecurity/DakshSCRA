@@ -3,7 +3,7 @@ RULE baseline.java.framework.springboot.springboot_insecure_transport_setting VE
 IN FILE
 WHEN TEXT_MATCHES "http://|server\\.ssl\\.enabled\\s*=\\s*false|allowInsecureProtocol\\s*=\\s*true" "im"
 WHEN TEXT_MISSING "https://" "im"
-REPORT "Springboot Insecure Transport Setting"
+REPORT "Cleartext HTTP Communication Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

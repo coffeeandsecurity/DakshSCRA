@@ -3,7 +3,7 @@ RULE baseline.powershell.core.amsi_bypass_attempt VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "amsiInitFailed|AmsiScanBuffer|amsi\\.dll|amsiContext|Disable.*AMSI|AMSI.*bypass" "im"
 WHEN (TEXT_MATCHES "amsi|AmsiScanBuffer|amsiContext|amsiInitFailed" "im" AND TEXT_MISSING "test|development|example|research" "im")
-REPORT "AMSI Bypass Attempt"
+REPORT "AMSI Bypass Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

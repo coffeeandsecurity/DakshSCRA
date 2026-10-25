@@ -1,6 +1,7 @@
 """Resolve explicit local Python imports without importing or executing code."""
 import ast
 import hashlib
+import os
 from pathlib import Path
 from utils.source_cache import read_source_bytes, read_source_text, source_stat
 
@@ -9,6 +10,17 @@ from .cache import AnalysisBudgetExceeded
 
 
 def local_imports(path, root):
+    from utils.source_cache import current_snapshot
+    snapshot = current_snapshot()
+    if snapshot is not None and snapshot.key(path) is not None:
+        values = snapshot.memo(['python-local-imports-v1', snapshot.key(path), os.path.abspath(root)],
+                               lambda: {alias: [str(target), symbol] for alias, (target, symbol)
+                                        in _local_imports(path, root).items()})
+        return {alias: (Path(target), symbol) for alias, (target, symbol) in values.items()}
+    return _local_imports(path, root)
+
+
+def _local_imports(path, root):
     path, root = Path(path).resolve(), Path(root).resolve()
     tree = ast.parse(read_source_text(path, encoding='utf-8'), filename=str(path))
     bindings = {}

@@ -3,7 +3,7 @@ RULE baseline.javascript.framework.electron.remote_module_usage_deprecated VERSI
 IN FILE
 WHEN TEXT_MATCHES "require\\s*\\(\\s*['\"]electron['\"]\\s*\\)\\s*\\.\\s*remote|@electron/remote" "im"
 WHEN (TEXT_MISSING "contextBridge|ipcRenderer|ipcMain" "im" AND TEXT_MISSING "test|example" "im")
-REPORT "Remote Module Usage (Deprecated)"
+REPORT "Legacy Remote Module Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

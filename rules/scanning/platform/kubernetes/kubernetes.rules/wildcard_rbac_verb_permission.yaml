@@ -1,0 +1,39 @@
+format: daksh-pattern-rule/v1
+id: kubernetes.core.wildcard_rbac_verb_permission
+title: Wildcard RBAC Verb Permission
+order: 8
+category: RBAC and Access Control
+detection:
+  pattern: verbs\s*:\s*\[?\s*["']?\*["']?\s*\]?
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects RBAC roles or cluster roles granting all verbs (*) on resources.
+  trace:
+  - Externalized rule logic for Wildcard RBAC Verb Permission.
+  description: The code or deployment configuration requests privileges or grants access beyond an explicitly resolved
+    minimum. Determine the effective permissions and the operation’s requirements.
+  impact: A compromised actor may access additional data, modify protected resources, or extend compromise beyond
+    the intended application boundary when excessive privileges remain available.
+  remediation: Run with the least privileges required, remove unnecessary grants, and scope each permission to its
+    intended resource and operation. Verify effective inherited permissions and test denied access.
+  reviewer: Wildcard verbs in RBAC are high-risk and should be individually justified. This can be confirmed as
+    an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify the actor, action and protected resource, including ownership and tenant boundaries.
+  - Trace every reachable request or service path and inspect the effective permission check before sensitive work
+    occurs.
+  - Test unauthenticated access, insufficient roles and access to another user or tenant; record effective middleware
+    and service-level controls.
+  recommendations:
+  - Enforce authorization on the server for each protected action and resource; deny requests without an explicit
+    permitted outcome.
+  - Add tests for cross-user and cross-tenant access and ensure alternate routes cannot bypass the same policy.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

@@ -1,0 +1,45 @@
+format: daksh-pattern-rule/v1
+id: java.core.insecure_package_java_util_random
+title: "Random Number Generation Review"
+order: 18
+category: Insecure/Deprecated Libraries
+detection:
+  pattern: \bnew\s+(?:java\.util\.)?Random\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects construction of a non-cryptographic random generator. Review uses in OTPs, tokens and other security-sensitive
+    values; an unrelated SecureRandom or a chosen seed does not secure this generator.
+  trace:
+  - Source operation retained independently of unrelated file-level markers.
+  description: The checked source uses a random generator, cryptographic primitive, or initialization value whose
+    suitability depends on its security purpose and inputs.
+  impact: Predictable secrets or unsuitable cryptographic parameters may enable credential guessing, reveal plaintext,
+    or weaken integrity when used to protect security-sensitive data. Non-security hashes and identifiers do not
+    establish this condition.
+  remediation: Use a cryptographically secure generator for secrets and modern purpose-appropriate cryptography.
+    Use unique nonces, protected keys, and a vetted password-hashing scheme where passwords are stored.
+  reviewer: Verify that the java.util.Random package is used appropriately and assess the security implications.
+    Check whether the java.security.SecureRandom class is used where secure random values are required. Also evaluate
+    the context in which the java.util.Random package is used and determine if there are any security risks associated
+    with the predictable nature of its random number generation. This can be confirmed as an issue when the matched
+    path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify the purpose of the cryptographic operation, algorithm, mode, key or nonce handling, and protected data.
+  - Distinguish password storage, confidentiality, integrity and non-security checksums; each requires different
+    controls.
+  - Inspect deployed configuration and all encrypt, decrypt or verification paths before deciding whether the use
+    is unsafe.
+  recommendations:
+  - Use maintained high-level cryptographic APIs appropriate to the purpose; use authenticated encryption for confidential
+    application data.
+  - For passwords, use the platform password-hashing facility rather than a fast general-purpose digest. Verify
+    key, nonce and migration handling for affected data.
+scan_config:
+  match_mode: file
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

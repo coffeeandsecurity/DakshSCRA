@@ -3,7 +3,7 @@ RULE baseline.c.core.improper_use_of_mlock_for_sensitive_data VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\bmlock\\s*\\(.*?\\)" "im"
 WHEN TEXT_MISSING "munlock|sodium_mlock|MADV_DONTDUMP" "im"
-REPORT "Improper Use of `mlock` for Sensitive Data"
+REPORT "Sensitive Memory Locking Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

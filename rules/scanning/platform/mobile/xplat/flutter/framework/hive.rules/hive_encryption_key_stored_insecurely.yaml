@@ -1,0 +1,54 @@
+format: daksh-pattern-rule/v1
+id: mobile.xplat.flutter.framework.hive.hive_encryption_key_stored_insecurely
+title: "Hive Key Storage Review"
+order: 2
+category: Framework-Specific Issues - Hive (Flutter)
+detection:
+  pattern: Hive\.generateSecureKey\s*\(\s*\)|HiveAesCipher\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects Hive AES cipher key usage without secure storage for the key material.
+  trace:
+  - Externalized mobile rule logic for Hive Encryption Key Stored Insecurely.
+  description: 'Review target: Hive Encryption Key Stored Insecurely. The application stores sensitive values or
+    configures protection for persistent data. Determine the actual storage location, backup policy, and lock-state
+    access restrictions. Determine whether the operation protects secrets, authenticates data or serves a non-security
+    purpose; resolve algorithm, mode and key provenance.'
+  impact: An actor with access to unprotected application files, backups, or overly broad keychain access may recover
+    credentials or private records and use them outside the intended trust boundary.
+  remediation: Use the platform credential or key store for secrets and appropriate authenticated encryption and
+    file protection for private records. Minimize stored data, backup exposure, and lock-state accessibility. Use
+    supported authenticated cryptography, securely generated keys and nonces, and platform-backed key storage; replace
+    hardcoded or constant key material.
+  reviewer: Confirm Hive encryption keys are stored in platform-backed secure storage, not SharedPreferences or
+    plaintext files. This can be confirmed as an issue when the matched path is reachable and required controls
+    are missing, weak, or inconsistent. Distinguish checksums from authentication, asymmetric RSA transformations
+    from symmetric ECB, and test IV/nonce reuse, fixed keys and algorithm migration.
+  review_steps:
+  - Identify the sensitive data, actual storage location, backup inclusion and lock-state or account access policy.
+  - Inspect encryption, key access and data retention, including copies in caches, backups and exported artifacts.
+  - Verify access under the relevant attacker model; a storage API alone does not establish an exposure.
+  - Determine whether the operation protects secrets, authenticates data or serves a non-security purpose; resolve
+    algorithm, mode and key provenance.
+  - Distinguish checksums from authentication, asymmetric RSA transformations from symmetric ECB, and test IV/nonce
+    reuse, fixed keys and algorithm migration.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Store secrets using the platform credential store and apply appropriate access controls and protection to other
+    private data.
+  - Limit retention and unnecessary copies, configure backup handling deliberately, and verify access and recovery
+    behavior in the deployed environment.
+  - Use supported authenticated cryptography, securely generated keys and nonces, and platform-backed key storage;
+    replace hardcoded or constant key material.
+scan_config:
+  match_mode: file
+  context_type: lines
+  context_lines_before: '3'
+  context_lines_after: '0'
+  aggregate: none
+  report_format: default
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: yellow

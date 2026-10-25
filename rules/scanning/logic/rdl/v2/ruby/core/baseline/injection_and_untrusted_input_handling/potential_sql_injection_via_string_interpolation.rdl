@@ -3,7 +3,7 @@ RULE baseline.ruby.core.potential_sql_injection_via_string_interpolation VERSION
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:where|find_by_sql|execute|order|joins)\\s*\\(\\s*[\"'][^\"']*#\\{" "im"
 WHEN TEXT_MISSING "where\\s*\\(\\s*\"[^\"]*\\?|sanitize_sql_for_conditions|Arel" "im"
-REPORT "Potential SQL Injection via String Interpolation"
+REPORT "SQL Injection Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

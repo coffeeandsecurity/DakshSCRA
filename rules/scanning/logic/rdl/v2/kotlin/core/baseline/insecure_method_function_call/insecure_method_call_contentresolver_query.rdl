@@ -3,7 +3,7 @@ RULE baseline.kotlin.core.insecure_method_call_contentresolver_query VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "ContentResolver\\.query\\(\".*\"\\)" "im"
 WHEN TEXT_MISSING "selectionArgs|bindArgs|\\?,\\s*arrayOf|validate|sanitize" "im"
-REPORT "Insecure Method Call: ContentResolver.query()"
+REPORT "Content Provider Query Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

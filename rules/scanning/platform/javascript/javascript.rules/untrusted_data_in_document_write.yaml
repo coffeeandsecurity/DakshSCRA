@@ -1,0 +1,36 @@
+format: daksh-pattern-rule/v1
+id: javascript.core.untrusted_data_in_document_write
+title: "HTML Output Encoding Review"
+order: 3
+category: Untrusted Input Handling or Injection Flaws
+detection:
+  pattern: \bdocument\s*\.\s*write(?:ln)?\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects potential DOM-based cross-site scripting (XSS) vulnerabilities.
+  trace:
+  - Externalized rule logic for Untrusted Data in 'document.write'.
+  description: document.write passes content to the document parser. Review each dynamic fragment and its rendering context.
+  impact: If attacker-controlled content reaches an executable browser context, it may run under the application’s origin,
+    read accessible session data, or perform actions with the victim’s permissions.
+  remediation: Replace document.write with DOM construction and textContent for text. Keep external values out of script and
+    event-handler syntax; sanitize deliberately accepted HTML at the insertion boundary.
+  reviewer: Trace each document.write argument, decoding step and concatenated fragment. Determine whether an attacker can
+    introduce executable markup in the actual parser context and document lifecycle. Fixed application markup is not a confirmed
+    vulnerability.
+  review_steps:
+  - Identify dynamic fragments in document.write arguments.
+  - Trace their origin, decoding and sanitization.
+  - Verify the parser context and a reachable payload that bypasses the relevant protection.
+  recommendations:
+  - Construct elements explicitly and set text properties.
+  - Remove string-built scripts and event handlers; HTML sanitization does not make arbitrary JavaScript strings safe.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

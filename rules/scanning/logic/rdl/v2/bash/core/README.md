@@ -29,20 +29,20 @@ Status: 13 owned rule(s), 13 runtime mapping(s). No claim of complete coverage.
 
 ## Current runtime mappings
 
-Baseline and semantic comparisons link the v1 source; additional checks link the selected XML pack. Shared properties retain a single owning definition.
+Pattern baselines and semantic comparisons link the unified rule source; additional checks link the selected pack metadata. Shared properties retain a single owning definition.
 
-| V1 definition or selected pack | V2 property |
+| Unified rule or selected pack | V2 property |
 |---|---|
-| [command_injection_via_eval.rdl](../../../v1/bash/core/command_injection_via_eval.rdl) | [baseline.bash.core.command_injection_via_eval](baseline/injection/command_injection_via_eval.rdl) |
-| [unquoted_variable_in_command_context.rdl](../../../v1/bash/core/unquoted_variable_in_command_context.rdl) | [baseline.bash.core.unquoted_variable_in_command_context](baseline/injection/unquoted_variable_in_command_context.rdl) |
-| [backtick_command_substitution_with_variable.rdl](../../../v1/bash/core/backtick_command_substitution_with_variable.rdl) | [baseline.bash.core.backtick_command_substitution_with_variable](baseline/injection/backtick_command_substitution_with_variable.rdl) |
-| [hardcoded_credential_in_shell_script.rdl](../../../v1/bash/core/hardcoded_credential_in_shell_script.rdl) | [baseline.bash.core.hardcoded_credential_in_shell_script](baseline/sensitive_data_exposure/hardcoded_credential_in_shell_script.rdl) |
-| [credentials_passed_via_command_line_arguments.rdl](../../../v1/bash/core/credentials_passed_via_command_line_arguments.rdl) | [baseline.bash.core.credentials_passed_via_command_line_arguments](baseline/sensitive_data_exposure/credentials_passed_via_command_line_arguments.rdl) |
-| [overly_permissive_chmod.rdl](../../../v1/bash/core/overly_permissive_chmod.rdl) | [baseline.bash.core.overly_permissive_chmod](baseline/file_and_permission_issues/overly_permissive_chmod.rdl) |
-| [insecure_temporary_file_creation.rdl](../../../v1/bash/core/insecure_temporary_file_creation.rdl) | [baseline.bash.core.insecure_temporary_file_creation](baseline/file_and_permission_issues/insecure_temporary_file_creation.rdl) |
-| [world_readable_sensitive_file_write.rdl](../../../v1/bash/core/world_readable_sensitive_file_write.rdl) | [baseline.bash.core.world_readable_sensitive_file_write](baseline/file_and_permission_issues/world_readable_sensitive_file_write.rdl) |
-| [curl_with_tls_verification_disabled.rdl](../../../v1/bash/core/curl_with_tls_verification_disabled.rdl) | [baseline.bash.core.curl_with_tls_verification_disabled](baseline/network_and_transport/curl_with_tls_verification_disabled.rdl) |
-| [wget_with_certificate_check_disabled.rdl](../../../v1/bash/core/wget_with_certificate_check_disabled.rdl) | [baseline.bash.core.wget_with_certificate_check_disabled](baseline/network_and_transport/wget_with_certificate_check_disabled.rdl) |
-| [missing_errexit_or_pipefail_options.rdl](../../../v1/bash/core/missing_errexit_or_pipefail_options.rdl) | [baseline.bash.core.missing_errexit_or_pipefail_options](baseline/script_hardening/missing_errexit_or_pipefail_options.rdl) |
-| [sudo_usage_without_privilege_validation.rdl](../../../v1/bash/core/sudo_usage_without_privilege_validation.rdl) | [baseline.bash.core.sudo_usage_without_privilege_validation](baseline/script_hardening/sudo_usage_without_privilege_validation.rdl) |
-| [bash.xml](../../../../../platform/bash/bash.xml) | [bash.shell-trace-secrets](security/shell_trace_secrets.rdl) |
+| [command_injection_via_eval.yaml](../../../../../platform/bash/bash.rules/command_injection_via_eval.yaml) | [baseline.bash.core.command_injection_via_eval](baseline/injection/command_injection_via_eval.rdl) |
+| [unquoted_variable_in_command_context.yaml](../../../../../platform/bash/bash.rules/unquoted_variable_in_command_context.yaml) | [baseline.bash.core.unquoted_variable_in_command_context](baseline/injection/unquoted_variable_in_command_context.rdl) |
+| [backtick_command_substitution_with_variable.yaml](../../../../../platform/bash/bash.rules/backtick_command_substitution_with_variable.yaml) | [baseline.bash.core.backtick_command_substitution_with_variable](baseline/injection/backtick_command_substitution_with_variable.rdl) |
+| [hardcoded_credential_in_shell_script.yaml](../../../../../platform/bash/bash.rules/hardcoded_credential_in_shell_script.yaml) | [baseline.bash.core.hardcoded_credential_in_shell_script](baseline/sensitive_data_exposure/hardcoded_credential_in_shell_script.rdl) |
+| [credentials_passed_via_command_line_arguments.yaml](../../../../../platform/bash/bash.rules/credentials_passed_via_command_line_arguments.yaml) | [baseline.bash.core.credentials_passed_via_command_line_arguments](baseline/sensitive_data_exposure/credentials_passed_via_command_line_arguments.rdl) |
+| [overly_permissive_chmod.yaml](../../../../../platform/bash/bash.rules/overly_permissive_chmod.yaml) | [baseline.bash.core.overly_permissive_chmod](baseline/file_and_permission_issues/overly_permissive_chmod.rdl) |
+| [insecure_temporary_file_creation.yaml](../../../../../platform/bash/bash.rules/insecure_temporary_file_creation.yaml) | [baseline.bash.core.insecure_temporary_file_creation](baseline/file_and_permission_issues/insecure_temporary_file_creation.rdl) |
+| [world_readable_sensitive_file_write.yaml](../../../../../platform/bash/bash.rules/world_readable_sensitive_file_write.yaml) | [baseline.bash.core.world_readable_sensitive_file_write](baseline/file_and_permission_issues/world_readable_sensitive_file_write.rdl) |
+| [curl_with_tls_verification_disabled.yaml](../../../../../platform/bash/bash.rules/curl_with_tls_verification_disabled.yaml) | [baseline.bash.core.curl_with_tls_verification_disabled](baseline/network_and_transport/curl_with_tls_verification_disabled.rdl) |
+| [wget_with_certificate_check_disabled.yaml](../../../../../platform/bash/bash.rules/wget_with_certificate_check_disabled.yaml) | [baseline.bash.core.wget_with_certificate_check_disabled](baseline/network_and_transport/wget_with_certificate_check_disabled.rdl) |
+| [missing_errexit_or_pipefail_options.yaml](../../../../../platform/bash/bash.rules/missing_errexit_or_pipefail_options.yaml) | [baseline.bash.core.missing_errexit_or_pipefail_options](baseline/script_hardening/missing_errexit_or_pipefail_options.rdl) |
+| [sudo_usage_without_privilege_validation.yaml](../../../../../platform/bash/bash.rules/sudo_usage_without_privilege_validation.yaml) | [baseline.bash.core.sudo_usage_without_privilege_validation](baseline/script_hardening/sudo_usage_without_privilege_validation.rdl) |
+| [_pack.yaml](../../../../../platform/bash/bash.rules/_pack.yaml) | [bash.shell-trace-secrets](security/shell_trace_secrets.rdl) |

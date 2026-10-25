@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.ios.core.review_ios_biometric_reuse_window VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\btouchIDAuthenticationAllowableReuseDuration\\s*=\\s*(?:[1-9]\\d*(?:\\.\\d+)?|0\\.\\d*[1-9]\\d*)\\b" "im"
+REPORT "Biometric Authentication Reuse Window"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

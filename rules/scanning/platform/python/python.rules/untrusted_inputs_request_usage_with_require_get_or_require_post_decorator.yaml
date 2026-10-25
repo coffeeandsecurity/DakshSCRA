@@ -1,0 +1,44 @@
+format: daksh-pattern-rule/v1
+id: python.core.untrusted_inputs_request_usage_with_require_get_or_require_post_decorator
+title: "Untrusted Input Entry Point"
+order: 3
+category: Untrusted Input Handling or Injection Flaws
+detection:
+  pattern: '@require_(GET|POST)[\s\S]*?def\s+(\w+)\(.*?request.*?:'
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:cleaned_data|validate|sanitize|escape
+reporting:
+  type: area_of_interest
+  reason: Detects instances where either the require_GET or require_POST decorator is used and the request object
+    is accessed in the view function.
+  trace:
+  - 'Externalized rule logic for Untrusted Inputs: Request Usage with require_GET or require_POST Decorator.'
+  description: The code accepts or reads externally influenced data. Trace it to security-sensitive operations and
+    identify the validation and authorization required by each destination.
+  impact: External input may cause injection, incorrect decisions, or unauthorized data access if it reaches a sensitive
+    operation without the controls required by that operation. Reading input alone does not establish a vulnerability.
+  remediation: Validate type, size, and allowed values at trust boundaries, and apply destination-specific parameter
+    binding or output encoding. Enforce authorization independently of input validation.
+  reviewer: Verify that view functions decorated with require_GET or require_POST correctly handle the associated
+    HTTP request methods and that the request object is used securely to prevent vulnerabilities. This can be confirmed
+    as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify who can supply the matched input, including stored values and upstream services; record its type, size
+    limits and trust boundary.
+  - Trace the value through transformations to each sensitive operation. Check the protection at that destination
+    and resource-level authorization.
+  - Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side
+    check alone is insufficient evidence.
+  recommendations:
+  - Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve
+    legitimate characters and protect each destination separately.
+  - Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations
+    where applicable. Test rejected input and unauthorized access.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

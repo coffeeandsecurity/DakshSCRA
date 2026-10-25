@@ -3,7 +3,7 @@ RULE baseline.cpp.core.insufficient_code_provenance_guarantees_in_build_configur
 IN FILE
 WHEN TEXT_MATCHES "/ZH:SHA_SHA256|/Zi|/SOURCELINK" "im"
 WHEN (TEXT_MATCHES "FetchContent_Declare|ExternalProject_Add|find_package|add_subdirectory|pkg_check_modules" "im" AND TEXT_MISSING "DOWNLOAD_EXTRACT_TIMESTAMP|GIT_TAG.*[a-f0-9]{40}|URL_HASH|SHA256|verify" "im")
-REPORT "Insufficient Code Provenance Guarantees in Build Configuration"
+REPORT "Build Provenance Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

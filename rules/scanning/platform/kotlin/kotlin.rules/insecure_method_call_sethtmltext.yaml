@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: kotlin.core.insecure_method_call_sethtmltext
+title: "HTML Output Encoding Review"
+order: 10
+category: Insecure Method/Function Call
+detection:
+  pattern: setHtmlText\s*\(.*\)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:HtmlUtils\.htmlEscape|StringEscapeUtils\.escapeHtml|ESAPI\.encoder|Jsoup\.clean|sanitize
+reporting:
+  type: area_of_interest
+  reason: Detects insecure usage of the setHtmlText method.
+  trace:
+  - 'Externalized rule logic for Insecure Method Call: setHtmlText.'
+  description: Application data is inserted into an HTML or script rendering context, or marked safe in a way that
+    may bypass automatic encoding.
+  impact: If attacker-controlled content reaches an executable browser context, it may run under the application’s
+    origin, read accessible session data, or perform actions with the victim’s permissions.
+  remediation: Use automatic context-aware output encoding and data-only DOM APIs. Sanitize deliberately accepted
+    rich HTML with a maintained allowlist sanitizer and avoid marking untrusted content as safe.
+  reviewer: Any custom methods for setting HTML content, such as setHtmlText, properly sanitize or validate the
+    input HTML content to prevent XSS vulnerabilities. Ensure that developers have implemented appropriate security
+    measures to handle HTML content securely and mitigate potential security risks. This can be confirmed as an
+    issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - 'Trace the matched value to its browser rendering context: text, attribute, URL, script or DOM operation.'
+  - Inspect the exact encoder or safe rendering API and any bypass of automatic escaping; verify it protects that
+    context.
+  - Distinguish literal trusted content from externally influenced markup. Record the reachable rendering path and
+    any effective sanitizer configuration.
+  recommendations:
+  - Use safe text or template APIs and context-appropriate encoding at the rendering boundary.
+  - If rich HTML is required, use a maintained sanitizer with a restricted policy; validate URL schemes and test
+    the actual browser output.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

@@ -1,0 +1,41 @@
+format: daksh-pattern-rule/v1
+id: common.core.monkey_patched_code
+title: "Monkey Patching Review"
+order: 20
+category: Code Quality and Documentation
+detection:
+  pattern: (?i)(monkey_patch|patched_code|custom_patch)[\s\S]*?\(\s*\*?\w+\s*\*?\)
+  conditions:
+  - WHEN PRESENT (?i)(monkey_patch|patched_code|custom_patch)\s*\(
+  - WHEN EXPR MISSING:(?i)\b(test|spec|fixture|mock)\b
+reporting:
+  type: area_of_interest
+  reason: Detects the presence of monkey patched code in a project.
+  trace:
+  - Externalized rule logic for Monkey Patched Code.
+  description: The code obtains executable material or replaces application behavior at runtime. Determine the origin,
+    integrity checks, and intended deployment scope.
+  impact: A party able to substitute executable material or a runtime hook may run code with application privileges,
+    inspect protected data, or alter security checks.
+  remediation: Load only approved code from trusted locations, verify signatures or integrity before execution,
+    and restrict runtime replacement to documented, authorized behavior.
+  reviewer: Verify the presence of monkey patched code in the project and assess its impact on code stability and
+    security. Particular attention should be paid to patches affecting security-critical components like authentication,
+    authorization, or database queries. This can be confirmed as an issue when the matched path is reachable and
+    required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Trace the origin of downloaded or dynamically loaded code and inspect its integrity and publisher verification.
+  - Check which privileges the loaded material receives and whether external input can change the source or verification
+    policy.
+  - Verify failure behavior when integrity or authenticity checks fail; dynamic loading alone does not establish
+    compromise.
+  recommendations:
+  - Use trusted distribution channels and verify authenticity and integrity before executing downloaded material.
+  - Restrict allowed sources and execution capabilities and test that failed verification prevents loading or execution.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

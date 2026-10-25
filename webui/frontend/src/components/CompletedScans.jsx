@@ -1,15 +1,11 @@
+import { formatDateTime } from '../lib/datetime'
 import { formatDuration as niceDuration } from '../lib/duration'
 import { useEffect, useMemo, useState } from 'react'
 import ScanDeleteActions from './ScanDeleteActions'
 
 const PAGE_SIZE = 10
 
-function niceDate(iso) {
-  if (!iso) return '-'
-  return new Date(iso).toLocaleString(undefined, {
-    month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit',
-  })
-}
+const niceDate = formatDateTime
 
 
 

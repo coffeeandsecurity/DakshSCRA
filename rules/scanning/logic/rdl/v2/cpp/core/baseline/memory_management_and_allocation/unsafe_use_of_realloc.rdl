@@ -3,7 +3,7 @@ RULE baseline.cpp.core.unsafe_use_of_realloc VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\brealloc\\s*\\(" "im"
 WHEN TEXT_MISSING "if\\s*\\(|NULL\\s*!=|!=\\s*NULL|check|validate|assert" "im"
-REPORT "Unsafe Use of realloc()"
+REPORT "Memory Reallocation Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

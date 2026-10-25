@@ -3,7 +3,7 @@ RULE baseline.php.framework.laravel.laravel_dangerous_dynamic_eval_template_exec
 IN FILE
 WHEN TEXT_MATCHES "\\beval\\s*\\(|assert\\s*\\(\\s*\\$|create_function\\s*\\(" "im"
 WHEN TEXT_MISSING "validate|allowlist|trusted|Blade::|test|example" "im"
-REPORT "Laravel Dangerous Dynamic Eval/Template Execution"
+REPORT "Dynamic Code Evaluation Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

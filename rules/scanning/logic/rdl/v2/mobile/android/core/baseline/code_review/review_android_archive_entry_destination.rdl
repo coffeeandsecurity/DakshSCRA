@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.android.core.review_android_archive_entry_destination VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:ZipEntry|ZipInputStream|getNextEntry|nextEntry|zipEntry\\s*\\.\\s*(?:name|getName\\s*\\())\\b" "im"
+REPORT "Archive Entry Controls Extraction Destination"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

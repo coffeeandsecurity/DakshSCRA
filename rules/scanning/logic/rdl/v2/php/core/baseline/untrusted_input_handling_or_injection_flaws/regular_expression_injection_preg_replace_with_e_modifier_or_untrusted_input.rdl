@@ -2,7 +2,7 @@ VERSION 2
 RULE baseline.php.core.regular_expression_injection_preg_replace_with_e_modifier_or_untrusted_input VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "preg_replace\\(([^,]+,\\s*)?[^/]*e[^/]*|preg_replace\\(\\$_(GET|POST|REQUEST|COOKIE)" "im"
-REPORT "Regular Expression Injection: preg_replace with /e Modifier or Untrusted Input"
+REPORT "Dynamic Code Evaluation Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

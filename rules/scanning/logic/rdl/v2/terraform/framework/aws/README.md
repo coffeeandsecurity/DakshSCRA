@@ -24,15 +24,15 @@ Status: 8 owned rule(s), 8 runtime mapping(s). No claim of complete coverage.
 
 ## Current runtime mappings
 
-Baseline and semantic comparisons link the v1 source; additional checks link the selected XML pack. Shared properties retain a single owning definition.
+Pattern baselines and semantic comparisons link the unified rule source; additional checks link the selected pack metadata. Shared properties retain a single owning definition.
 
-| V1 definition or selected pack | V2 property |
+| Unified rule or selected pack | V2 property |
 |---|---|
-| [ec2_instance_metadata_service_v1_enabled.rdl](../../../../v1/terraform/framework/aws/ec2_instance_metadata_service_v1_enabled.rdl) | [baseline.terraform.framework.aws.ec2_instance_metadata_service_v1_enabled](baseline/aws_compute_security/ec2_instance_metadata_service_v1_enabled.rdl) |
-| [ec2_instance_with_public_ip.rdl](../../../../v1/terraform/framework/aws/ec2_instance_with_public_ip.rdl) | [baseline.terraform.framework.aws.ec2_instance_with_public_ip](baseline/aws_compute_security/ec2_instance_with_public_ip.rdl) |
-| [rds_instance_publicly_accessible.rdl](../../../../v1/terraform/framework/aws/rds_instance_publicly_accessible.rdl) | [baseline.terraform.framework.aws.rds_instance_publicly_accessible](baseline/aws_database_security/rds_instance_publicly_accessible.rdl) |
-| [rds_storage_not_encrypted.rdl](../../../../v1/terraform/framework/aws/rds_storage_not_encrypted.rdl) | [baseline.terraform.framework.aws.rds_storage_not_encrypted](baseline/aws_database_security/rds_storage_not_encrypted.rdl) |
-| [rds_multi_az_disabled.rdl](../../../../v1/terraform/framework/aws/rds_multi_az_disabled.rdl) | [baseline.terraform.framework.aws.rds_multi_az_disabled](baseline/aws_database_security/rds_multi_az_disabled.rdl) |
-| [lambda_function_with_broad_iam_role.rdl](../../../../v1/terraform/framework/aws/lambda_function_with_broad_iam_role.rdl) | [baseline.terraform.framework.aws.lambda_function_with_broad_iam_role](baseline/aws_lambda_security/lambda_function_with_broad_iam_role.rdl) |
-| [lambda_environment_variable_contains_secret.rdl](../../../../v1/terraform/framework/aws/lambda_environment_variable_contains_secret.rdl) | [baseline.terraform.framework.aws.lambda_environment_variable_contains_secret](baseline/aws_lambda_security/lambda_environment_variable_contains_secret.rdl) |
-| [s3_access_logging_disabled.rdl](../../../../v1/terraform/framework/aws/s3_access_logging_disabled.rdl) | [baseline.terraform.framework.aws.s3_access_logging_disabled](baseline/aws_logging_and_monitoring/s3_access_logging_disabled.rdl) |
+| [ec2_instance_metadata_service_v1_enabled.yaml](../../../../../../platform/terraform/framework/aws.rules/ec2_instance_metadata_service_v1_enabled.yaml) | [baseline.terraform.framework.aws.ec2_instance_metadata_service_v1_enabled](baseline/aws_compute_security/ec2_instance_metadata_service_v1_enabled.rdl) |
+| [ec2_instance_with_public_ip.yaml](../../../../../../platform/terraform/framework/aws.rules/ec2_instance_with_public_ip.yaml) | [baseline.terraform.framework.aws.ec2_instance_with_public_ip](baseline/aws_compute_security/ec2_instance_with_public_ip.rdl) |
+| [rds_instance_publicly_accessible.yaml](../../../../../../platform/terraform/framework/aws.rules/rds_instance_publicly_accessible.yaml) | [baseline.terraform.framework.aws.rds_instance_publicly_accessible](baseline/aws_database_security/rds_instance_publicly_accessible.rdl) |
+| [rds_storage_not_encrypted.yaml](../../../../../../platform/terraform/framework/aws.rules/rds_storage_not_encrypted.yaml) | [baseline.terraform.framework.aws.rds_storage_not_encrypted](baseline/aws_database_security/rds_storage_not_encrypted.rdl) |
+| [rds_multi_az_disabled.yaml](../../../../../../platform/terraform/framework/aws.rules/rds_multi_az_disabled.yaml) | [baseline.terraform.framework.aws.rds_multi_az_disabled](baseline/aws_database_security/rds_multi_az_disabled.rdl) |
+| [lambda_function_with_broad_iam_role.yaml](../../../../../../platform/terraform/framework/aws.rules/lambda_function_with_broad_iam_role.yaml) | [baseline.terraform.framework.aws.lambda_function_with_broad_iam_role](baseline/aws_lambda_security/lambda_function_with_broad_iam_role.rdl) |
+| [lambda_environment_variable_contains_secret.yaml](../../../../../../platform/terraform/framework/aws.rules/lambda_environment_variable_contains_secret.yaml) | [baseline.terraform.framework.aws.lambda_environment_variable_contains_secret](baseline/aws_lambda_security/lambda_environment_variable_contains_secret.rdl) |
+| [s3_access_logging_disabled.yaml](../../../../../../platform/terraform/framework/aws.rules/s3_access_logging_disabled.yaml) | [baseline.terraform.framework.aws.s3_access_logging_disabled](baseline/aws_logging_and_monitoring/s3_access_logging_disabled.rdl) |

@@ -1,0 +1,361 @@
+{
+  "schema_version": 1,
+  "entries": {
+    "injection.command": {
+      "cwe": "CWE-78",
+      "description": "Untrusted input can change the command interpreted by a shell or command interpreter.",
+      "impact": "If an attacker controls interpreted syntax or the operation selected, code or commands may run with the application’s privileges, allowing data theft, state changes, or service disruption.",
+      "remediation": "Use a fixed executable and argument array without a shell. Validate arguments for the executable being called."
+    },
+    "injection.sql": {
+      "cwe": "CWE-89",
+      "description": "Untrusted data reaches SQL statement text and may alter the query structure.",
+      "impact": "If externally controlled values enter query syntax, an attacker may read, change, or delete records or bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound parameters do not establish this condition.",
+      "remediation": "Bind data as parameters. Choose table and column identifiers from a fixed allowlist; placeholders cannot bind identifiers."
+    },
+    "deserialization.untrusted-object": {
+      "cwe": "CWE-502",
+      "description": "Attacker-controlled serialized data reaches object construction.",
+      "impact": "A crafted untrusted payload may instantiate dangerous types or trigger object behavior that executes code, modifies state, or exhausts resources when the parser permits those operations.",
+      "remediation": "Prefer a data-only format such as JSON. Do not trust a type or signature flag supplied inside the same untrusted payload."
+    },
+    "network.server-side-request-forgery": {
+      "cwe": "CWE-918",
+      "description": "Untrusted input controls the destination of a server-side request.",
+      "impact": "If an attacker can select a reachable destination, the application may expose internal services or metadata credentials, or send protected data to an unauthorized recipient.",
+      "remediation": "Allowlist destinations and protocols, reject internal addresses, and validate redirect targets and resolved addresses."
+    },
+    "filesystem.path-traversal": {
+      "cwe": "CWE-22",
+      "description": "External input controls a filesystem path used by a read or write operation. The intended root and effective containment checks require review.",
+      "impact": "An attacker controlling a path or shared file may read or replace private files, delete data, or redirect an operation outside its intended directory if containment and access controls are ineffective.",
+      "remediation": "Resolve paths beneath a fixed root and verify containment before access. Account for symlinks and concurrent filesystem changes."
+    },
+    "secrets.hardcoded-material": {
+      "cwe": "CWE-798",
+      "description": "A credential-like assignment contains an embedded string literal.",
+      "impact": "A party who can read exposed source, artifacts, configuration, or logs may recover active secrets and access the protected service or decrypt data with the secret owner’s privileges.",
+      "remediation": "Confirm that this is an active credential, rotate it if exposed, and load its replacement from a secret store or environment."
+    },
+    "configuration.insecure-default": {
+      "cwe": "CWE-16",
+      "description": "A recognized security control is explicitly configured to an insecure value.",
+      "impact": "An actor with access to an enabled debugging interface may inspect private state or influence application execution; exposed development endpoints may disclose internal implementation details.",
+      "remediation": "Disable production debug/testing and enable the relevant transport or cookie protection."
+    },
+    "crypto.weak-primitive": {
+      "cwe": "CWE-327",
+      "description": "A weak cryptographic primitive is used.",
+      "impact": "Predictable secrets or unsuitable cryptographic parameters may enable credential guessing, reveal plaintext, or weaken integrity when used to protect security-sensitive data. Non-security hashes and identifiers do not establish this condition.",
+      "remediation": "Confirm the security purpose and replace the primitive with an appropriate modern algorithm."
+    },
+    "injection.code": {
+      "cwe": "CWE-94",
+      "description": "Untrusted data reaches code evaluated by PHP.",
+      "impact": "If an attacker controls interpreted syntax or the operation selected, code or commands may run with the application’s privileges, allowing data theft, state changes, or service disruption.",
+      "remediation": "Replace runtime code evaluation with fixed operations and data-only inputs."
+    },
+    "injection.cross-site-scripting": {
+      "cwe": "CWE-79",
+      "description": "Untrusted data reaches HTML output without a modeled encoding step.",
+      "impact": "If attacker-controlled content reaches an executable browser context, it may run under the application’s origin, read accessible session data, or perform actions with the victim’s permissions.",
+      "remediation": "Encode for the precise output context; use HTML encoding for text and quoted attributes, and dedicated encoders for JavaScript and URLs."
+    },
+    "filesystem.file-inclusion": {
+      "cwe": "CWE-98",
+      "description": "Untrusted data reaches a PHP include or require operation.",
+      "impact": "An attacker controlling a path or shared file may read or replace private files, delete data, or redirect an operation outside its intended directory if containment and access controls are ineffective.",
+      "remediation": "Select include targets from a fixed allowlist of application files."
+    },
+    "web.open-redirect": {
+      "cwe": "CWE-601",
+      "description": "Untrusted data reaches a redirect or response header.",
+      "impact": "A crafted destination or link may direct users to a phishing site, leak URL-carried secrets, or trigger unauthorized operations if routing trusts external parameters without the required access checks.",
+      "remediation": "Allowlist redirect destinations and reject response-header control characters."
+    },
+    "xml.external-entity": {
+      "cwe": "CWE-611",
+      "description": "Untrusted XML reaches parsing with entity expansion or external DTD loading enabled.",
+      "impact": "If external resources or entity expansion are permitted for untrusted XML, an attacker may read local files, make requests to internal services, or exhaust parser resources.",
+      "remediation": "Disable external entity and DTD loading; use safe parser flags and a restrictive resolver."
+    },
+    "php.deprecated-api": {
+      "cwe": "CWE-477",
+      "description": "A deprecated PHP API is used; security impact depends on the runtime version and surrounding code.",
+      "impact": "A reachable vulnerability in an unsupported or affected dependency may compromise the application with its privileges. A version declaration or deprecated API alone does not establish that such a vulnerability is present.",
+      "remediation": "Migrate to a supported API and review its input handling."
+    },
+    "php.error-disclosure": {
+      "cwe": "CWE-209",
+      "description": "Diagnostic output may expose internal application information.",
+      "impact": "Readers of exposed diagnostics may obtain credentials, private records, internal paths, or implementation details that enable account misuse or targeted attacks.",
+      "remediation": "Keep diagnostics out of production responses and use restricted server-side logs."
+    },
+    "php.insecure-setting": {
+      "cwe": "CWE-16",
+      "description": "PHP is explicitly configured to expose diagnostics or enable an unsafe legacy feature.",
+      "impact": "An actor with access to an enabled debugging interface may inspect private state or influence application execution; exposed development endpoints may disclose internal implementation details.",
+      "remediation": "Use production-safe settings and keep detailed diagnostics in restricted logs."
+    },
+    "crypto.weak-operation": {
+      "cwe": "CWE-327",
+      "description": "A weak cryptographic or non-cryptographic random primitive is used; confirm its security purpose.",
+      "impact": "Predictable secrets or unsuitable cryptographic parameters may enable credential guessing, reveal plaintext, or weaken integrity when used to protect security-sensitive data. Non-security hashes and identifiers do not establish this condition.",
+      "remediation": "Use a modern purpose-appropriate primitive and a cryptographically secure random generator for secrets."
+    },
+    "web.permissive-cors": {
+      "cwe": "CWE-942",
+      "description": "A wildcard origin is explicitly configured. Confirm whether the resource is intended to be public.",
+      "impact": "An untrusted site may read protected responses or invoke privileged interfaces if a permissive policy admits it and independent authentication or authorization does not prevent the operation.",
+      "remediation": "Use explicit trusted origins for private resources; review credentials and preflight handling."
+    },
+    "injection.variable": {
+      "cwe": "CWE-913",
+      "description": "Untrusted keys can become local variable names.",
+      "impact": "An attacker may overwrite trusted local state and influence authorization or application behavior when imported keys collide with security-relevant variables.",
+      "remediation": "Use explicit field assignments into a dedicated data structure; do not import untrusted keys into local variables."
+    },
+    "injection.regular-expression": {
+      "cwe": "CWE-1333",
+      "description": "External input controls a regular expression or evaluated replacement operation.",
+      "impact": "An attacker may cause excessive matching work and deny service, change intended validation semantics, or execute code where replacement expressions are evaluated.",
+      "remediation": "Use fixed patterns or quote literal user text, avoid evaluated replacements, and bound input size and matching work."
+    },
+    "model.mass-assignment": {
+      "cwe": "CWE-915",
+      "description": "Untrusted fields reach a bulk model assignment; runtime field allowlists still require review.",
+      "impact": "An attacker may set privileged fields, transfer ownership, or alter protected state if the model permits assignment of attributes outside the intended request schema.",
+      "remediation": "Allowlist writable fields for each operation and set privilege, ownership, and authorization attributes only on the trusted server."
+    },
+    "injection.interprocedural-command": {
+      "cwe": "CWE-78",
+      "description": "External input crosses a call boundary and reaches a command-execution operation.",
+      "impact": "An attacker controlling interpreted command syntax may execute commands with the application’s privileges, exposing data, modifying files, or disrupting service.",
+      "remediation": "Trace and constrain arguments across every call boundary. Use a fixed executable and separate argument array without a shell, and validate arguments for the invoked program."
+    },
+    "dynamic.dangerous-eval": {
+      "cwe": "CWE-94",
+      "description": "A reachable dynamic evaluation operation interprets externally influenced content as code.",
+      "impact": "Attacker-controlled code may run in the application’s security context, exposing protected data or modifying trusted state.",
+      "remediation": "Replace dynamic evaluation with fixed operations and data-only inputs; do not rely on ad hoc filtering of executable syntax."
+    },
+    "business.missing-authorization": {
+      "cwe": "CWE-862",
+      "description": "A modeled protected operation or privilege transition is reachable without its required identity or access-control check.",
+      "impact": "An unauthorized caller may obtain protected data, perform restricted actions, or gain privileges beyond the intended access policy.",
+      "remediation": "Enforce the required identity and resource-level authorization at the trusted boundary on every path. Deny access by default and test unauthorized callers and alternate entry points."
+    },
+    "authorization.privilege-boundary": {
+      "cwe": "CWE-862",
+      "description": "A modeled protected operation or privilege transition is reachable without its required identity or access-control check.",
+      "impact": "An unauthorized caller may obtain protected data, perform restricted actions, or gain privileges beyond the intended access policy.",
+      "remediation": "Enforce the required identity and resource-level authorization at the trusted boundary on every path. Deny access by default and test unauthorized callers and alternate entry points."
+    },
+    "authentication.bypass": {
+      "cwe": "CWE-862",
+      "description": "A modeled protected operation or privilege transition is reachable without its required identity or access-control check.",
+      "impact": "An unauthorized caller may obtain protected data, perform restricted actions, or gain privileges beyond the intended access policy.",
+      "remediation": "Enforce the required identity and resource-level authorization at the trusted boundary on every path. Deny access by default and test unauthorized callers and alternate entry points."
+    },
+    "business.transaction-invariant": {
+      "cwe": "CWE-841",
+      "description": "A transaction path violates a modeled business invariant or updates trusted state without the required condition.",
+      "impact": "An attacker may obtain an incorrect balance, unauthorized entitlement, or inconsistent transaction state if the violated invariant governs a reachable operation.",
+      "remediation": "Enforce business invariants on the trusted server within an appropriate transaction, validate authoritative values, and test concurrent and repeated requests."
+    },
+    "business.workflow-bypass": {
+      "cwe": "CWE-841",
+      "description": "A modeled workflow permits a sensitive step without a required earlier state or verification.",
+      "impact": "A caller may skip approval, payment, or verification and obtain an outcome that the intended workflow would deny.",
+      "remediation": "Check prerequisite state on the trusted server for every transition. Reject replay and out-of-order requests and test alternate routes through the workflow."
+    },
+    "concurrency.atomicity-violation": {
+      "cwe": "CWE-362",
+      "description": "A modeled shared-state check and dependent operation can interleave with another access without the required atomicity.",
+      "impact": "Concurrent changes may invalidate a security check, corrupt trusted state, or redirect a resource operation, permitting unauthorized effects or service disruption.",
+      "remediation": "Keep the check and dependent update in a protected transaction or critical section. Use atomic resource operations and test adversarial interleavings."
+    },
+    "concurrency.data-race": {
+      "cwe": "CWE-362",
+      "description": "A modeled shared-state check and dependent operation can interleave with another access without the required atomicity.",
+      "impact": "Concurrent changes may invalidate a security check, corrupt trusted state, or redirect a resource operation, permitting unauthorized effects or service disruption.",
+      "remediation": "Keep the check and dependent update in a protected transaction or critical section. Use atomic resource operations and test adversarial interleavings."
+    },
+    "concurrency.toctou": {
+      "cwe": "CWE-362",
+      "description": "A modeled shared-state check and dependent operation can interleave with another access without the required atomicity.",
+      "impact": "Concurrent changes may invalidate a security check, corrupt trusted state, or redirect a resource operation, permitting unauthorized effects or service disruption.",
+      "remediation": "Keep the check and dependent update in a protected transaction or critical section. Use atomic resource operations and test adversarial interleavings."
+    },
+    "concurrency.deadlock-cycle": {
+      "cwe": "CWE-833",
+      "description": "A modeled lock acquisition path contains a cycle or inconsistent lock order.",
+      "impact": "Concurrent execution may block indefinitely, preventing affected requests or services from completing and reducing availability.",
+      "remediation": "Apply a consistent lock order, minimize lock scope, and test concurrent acquisition paths and cancellation. Use bounded waits and recovery where appropriate."
+    },
+    "concurrency.lock-order-violation": {
+      "cwe": "CWE-833",
+      "description": "A modeled lock acquisition path contains a cycle or inconsistent lock order.",
+      "impact": "Concurrent execution may block indefinitely, preventing affected requests or services from completing and reducing availability.",
+      "remediation": "Apply a consistent lock order, minimize lock scope, and test concurrent acquisition paths and cancellation. Use bounded waits and recovery where appropriate."
+    },
+    "memory.buffer-underflow": {
+      "cwe": "CWE-124",
+      "description": "A memory operation may address bytes before the start of its allocation.",
+      "impact": "Reading before a buffer may disclose adjacent memory; writing there may corrupt state or permit code execution.",
+      "remediation": "Validate lower as well as upper bounds before access and use checked indexing."
+    },
+    "memory.dangling-pointer": {
+      "cwe": "CWE-416",
+      "description": "A pointer may outlive the object or storage it references.",
+      "impact": "Access through an expired pointer may expose unrelated memory, corrupt process state, or crash the application.",
+      "remediation": "Tie pointer lifetime to its owner and avoid retaining references after release or scope exit."
+    },
+    "memory.double-free": {
+      "cwe": "CWE-415",
+      "description": "An allocation may be released more than once on a modeled execution path.",
+      "impact": "Repeated release may corrupt allocator state, crash the process, or allow code execution under attacker-influenced allocation patterns.",
+      "remediation": "Establish one release owner and make cleanup paths exclusive; use automatic ownership abstractions."
+    },
+    "memory.integer-overflow-allocation": {
+      "cwe": "CWE-190",
+      "description": "Allocation-size arithmetic may overflow before memory is reserved.",
+      "impact": "An undersized allocation may be followed by out-of-bounds writes, causing memory corruption or code execution.",
+      "remediation": "Check arithmetic before allocation and verify every subsequent access against the allocated capacity."
+    },
+    "memory.invalid-free": {
+      "cwe": "CWE-590",
+      "description": "A release operation may receive a pointer that is not a valid live allocation for that allocator.",
+      "impact": "Invalid release may corrupt allocator state or terminate the process.",
+      "remediation": "Release only the original live allocation through its matching allocator and track ownership explicitly."
+    },
+    "memory.iterator-invalidation": {
+      "cwe": "CWE-664",
+      "description": "A container mutation may invalidate an iterator used later in the modeled path.",
+      "impact": "Using an invalidated iterator may read or corrupt unrelated memory or crash the process.",
+      "remediation": "Reacquire iterators after invalidating mutations and follow the container’s documented validity rules."
+    },
+    "memory.lifetime-violation": {
+      "cwe": "CWE-664",
+      "description": "An object or reference may be used outside its valid construction or lifetime interval.",
+      "impact": "Invalid object access may expose memory, corrupt trusted state, or disrupt availability.",
+      "remediation": "Keep references within a valid owner lifetime and make object construction and destruction order explicit."
+    },
+    "memory.mismatched-deallocation": {
+      "cwe": "CWE-762",
+      "description": "An allocation may be released through a deallocation mechanism that does not match its allocator.",
+      "impact": "A mismatched release may corrupt heap state or crash the process.",
+      "remediation": "Pair each allocation with the correct release mechanism and prefer automatic ownership wrappers."
+    },
+    "memory.null-dereference": {
+      "cwe": "CWE-476",
+      "description": "A pointer that may be null reaches a dereference without an established guard.",
+      "impact": "A reachable null dereference may terminate a process or request and deny service.",
+      "remediation": "Check nullable results before use and handle failure without skipping required security checks."
+    },
+    "memory.out-of-bounds-read": {
+      "cwe": "CWE-125",
+      "description": "An indexed or pointer-based read may exceed its allocation bounds.",
+      "impact": "An attacker may obtain adjacent memory containing private data, or trigger a crash, if the read is reachable with a violated bound.",
+      "remediation": "Check offsets and lengths against the allocation before reading and use bounded APIs."
+    },
+    "memory.out-of-bounds-write": {
+      "cwe": "CWE-787",
+      "description": "An indexed or pointer-based write may exceed its allocation bounds.",
+      "impact": "An attacker may corrupt memory, alter control flow, or execute code if they can influence the violating write.",
+      "remediation": "Validate offsets and lengths against the allocation before writing and use bounded APIs."
+    },
+    "memory.signedness-bounds": {
+      "cwe": "CWE-195",
+      "description": "A signedness conversion may change the interpretation of a length or index used by a bounds decision.",
+      "impact": "A negative or oversized value may bypass a check and cause an out-of-bounds access, exposing or corrupting memory.",
+      "remediation": "Reject negative sizes before conversion and perform comparisons in a type that safely represents the full valid range."
+    },
+    "memory.type-confusion": {
+      "cwe": "CWE-843",
+      "description": "An object may be accessed as a type inconsistent with its actual representation.",
+      "impact": "Misinterpreted object layout may disclose or corrupt memory or redirect control flow.",
+      "remediation": "Validate runtime types and preserve representation invariants before casts and dispatch."
+    },
+    "memory.uninitialized-use": {
+      "cwe": "CWE-457",
+      "description": "A value may be read before initialization on a modeled path.",
+      "impact": "Uninitialized data may disclose process memory or influence security decisions unpredictably.",
+      "remediation": "Initialize values on every reachable path and reject use before successful construction or assignment."
+    },
+    "memory.unsafe-cast": {
+      "cwe": "CWE-704",
+      "description": "A cast may violate modeled alignment, type, or object-lifetime requirements.",
+      "impact": "Invalid interpretation may cause memory corruption, data disclosure, or a process crash.",
+      "remediation": "Use checked conversions and document and enforce alignment, representation, and lifetime invariants."
+    },
+    "memory.use-after-free": {
+      "cwe": "CWE-416",
+      "description": "A value may be accessed after its allocation has been released.",
+      "impact": "Reused memory may disclose private data, corrupt process state, or enable control-flow manipulation.",
+      "remediation": "Remove aliases after release, preserve ownership across callbacks, and use appropriate lifetime-safe abstractions."
+    },
+    "resource.use-after-close": {
+      "cwe": "CWE-672",
+      "description": "An operation may use a resource after its handle was closed or invalidated.",
+      "impact": "The operation may fail, target a reused handle, or affect an unintended resource, compromising availability or integrity.",
+      "remediation": "Keep resource use within its ownership lifetime and prevent stale handles from being reused after close."
+    },
+    "mobile.intent-redirection-flow": {
+      "description": "Modeled external input propagates into an Android component-launch call. The recorded path identifies the input, handoffs and launch sink; it does not resolve all Android-version, caller or component protection behavior.",
+      "impact": "An untrusted nested intent may launch a private or privileged action or pass unintended URI grants if effective target restrictions and authorization are insufficient.",
+      "remediation": "Avoid forwarding untrusted nested intents. Constrain the exact component and data, clear unnecessary read/write/persistable/prefix grants, and apply runtime authorization. Resolve target platform launch protections rather than assuming they cover every supported device.",
+      "reviewer": "Trace the same intent into the launch. Test explicit and implicit targets, nested extras, malformed parcels, null callers and URI grant flags. Android platform hardening and sanitizers must be resolved for the actual path and build; unrelated guards do not protect it."
+    },
+    "mobile.webview-navigation-flow": {
+      "description": "Modeled external input propagates into an embedded web-navigation call. Inspect the loaded scheme and parsed host, redirects and bridge permissions for this WebView instance.",
+      "impact": "Untrusted embedded content can expose users to phishing or native-bridge abuse when the affected view has insufficient isolation and privileged interfaces.",
+      "remediation": "Validate schemes and parsed hosts before navigation, restrict trusted content and native bridge operations, and authorize sensitive messages and permissions.",
+      "reviewer": "Check the recorded instance and URI at the sink. Test subframes, redirects, host-suffix tricks and javascript/data/content schemes. A recorded flow is not proof of exploitation, and an unrelated allowlist or protected WebView is not a suppression."
+    },
+    "python.predictable-security-value": {
+      "cwe": "CWE-338",
+      "description": "A resolved Python random API has a recorded path to a variable or object field whose name indicates a token, password, nonce or another security value. Names indicate review context, not proof of authentication use. Helper returns and comprehensions are included when resolved.",
+      "impact": "If this value is accepted as a security credential, a predictable generator may allow guessing or state-based prediction. Reachability, entropy and server-side use require verification.",
+      "remediation": "Use secrets.token_urlsafe or another operating-system-backed cryptographic generator. Verify active callers, token purpose, expiry, storage and invalidation; ordinary sampling does not need this change."
+    },
+    "python.direct-password-comparison": {
+      "cwe": "CWE-256",
+      "description": "Python syntax directly compares a password-named field with another password field or dictionary value. This supports a credential-storage review; field names alone do not establish plaintext database contents.",
+      "impact": "If the stored operand is a plaintext or equivalently reusable password and the other operand is the submitted credential, a storage leak exposes reusable credentials. ORM parameter binding prevents SQL injection but does not protect stored passwords.",
+      "remediation": "Verify the active login and registration paths. Store a salted password hash using an appropriate password-hashing library and verify with its checking API. Do not replace this with fast general-purpose hashing or reversible encryption."
+    },
+    "dotnet.token-policy-disabled": {
+      "description": "A token-policy setting disables an issuer, audience, lifetime, signing-key policy or signed-token requirement. Review the actual policy object and the values accepted by each endpoint. A false flag does not by itself establish authentication bypass. This property records literal false settings in a typed token-policy initializer. Later overrides, custom validators and runtime deployment remain review limits.",
+      "impact": "An endpoint may accept tokens outside the intended issuer, audience or validity period, or permit unsigned tokens when RequireSignedTokens is disabled. ValidateIssuerSigningKey controls signing-key policy validation; setting it false alone does not establish that signature verification is disabled.",
+      "remediation": "Configure token validation for the intended trust boundary and verify invalid-token rejection. Keep issuer and audience restrictions appropriate to the endpoint, enforce lifetime and signed-token requirements, and validate signing-key policy."
+    },
+    "python.untrusted-redirect-target": {
+      "cwe": "CWE-601",
+      "description": "Client-controlled input has a recorded path into a resolved Python redirect API destination. Verify the effective URL and any server-side destination restrictions. A fixed local route builder carrying query parameters is kept separate from selecting an external destination.",
+      "impact": "If the destination permits an unauthorized external origin, a crafted link may send users to phishing content or expose URL-carried information. An internal redirect or a correctly constrained destination does not establish that outcome.",
+      "remediation": "Use fixed server routes or validate the parsed scheme, origin and permitted path before redirecting. Reject scheme-relative destinations and test alternate encodings. Confirm the active route and every fallback branch."
+    },
+    "security.origin-response-flow": {
+      "title": "Response Origin Policy Review",
+      "description": "Untrusted data reaches the value of an explicitly identified response-origin header.",
+      "impact": "A sensitive response may be readable by an unapproved browser origin if the effective policy permits it. Credential handling and resource access require verification.",
+      "remediation": "Validate the exact effective origin against an approved allowlist. Test both preflight and actual responses; do not treat an unrelated validation marker as protection.",
+      "reviewer": "Review the recorded operation, effective deployment and path-specific controls. A rule match is a review lead, not demonstrated exploitation."
+    },
+    "security.bulk-binding-flow": {
+      "title": "Bulk Object Field Binding Review",
+      "description": "An untrusted source has a recorded path into a bulk object-binding or typed model-deserialization operation.",
+      "impact": "Privilege, ownership or protected state may be changed if the destination accepts fields outside the permitted request schema. The flow alone does not establish writable fields.",
+      "remediation": "Use an explicit request schema and operation-specific field allowlists. Set tenant, ownership and privilege fields from trusted context; inspect serializers and model policies.",
+      "reviewer": "Review the recorded operation, effective deployment and path-specific controls. A rule match is a review lead, not demonstrated exploitation."
+    },
+    "security.literal-key-fallback-flow": {
+      "title": "Cryptographic Key Fallback Review",
+      "description": "An explicitly modeled literal environment/configuration fallback has a recorded path to a cryptographic key argument.",
+      "impact": "If the fallback executes in a reachable deployment, a predictable key can permit forgery or disclosure. Static path evidence does not prove that production configuration is missing.",
+      "remediation": "Fail closed when required keys are missing; load production keys from a secret store. Verify the failure branch and rotate any active exposed key.",
+      "reviewer": "Review the recorded operation, effective deployment and path-specific controls. A rule match is a review lead, not demonstrated exploitation."
+    }
+  }
+}

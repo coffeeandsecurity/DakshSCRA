@@ -16,7 +16,7 @@ from uuid import uuid4
 
 from fastapi import APIRouter, Cookie, Depends, FastAPI, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 from sqlalchemy import inspect, text, or_, func
 from sqlalchemy.orm import Session
 import core.reports as core_reports
@@ -53,6 +53,7 @@ from .scan_runtime import (
 )
 from .schemas import (
     ArtifactIndex,
+    EffortPlanRequest,
     BootstrapInfo,
     ChangePasswordRequest,
     DashboardMetrics,
@@ -61,10 +62,13 @@ from .schemas import (
     LoginRequest,
     ProjectSummary,
     ScanCreate,
+    QueueEditRequest,
+    QueueEditSave,
     ScanDetails,
     ScanSummary,
     SelfChangePasswordRequest,
     SettingsData,
+    StorageCleanupRequest,
     UserCreate,
     UserOut,
 )
@@ -81,7 +85,7 @@ async def _lifespan(app: FastAPI):
     finally:
         _db.close()
     _start_scan_dispatcher()
-    port = os.environ.get("DAKSH_PORT", "8080")
+    port = os.environ.get("DAKSH_PORT", "3030")
     print(f"\n  DakshSCRA Web UI  →  http://localhost:{port}\n", flush=True)
     try:
         yield
@@ -90,6 +94,8 @@ async def _lifespan(app: FastAPI):
 
 
 app = FastAPI(title="DakshSCRA API", version="2.0.0", lifespan=_lifespan)
+from .error_handling import install_error_handling
+install_error_handling(app, ROOT_DIR / 'runtime' / 'api-errors.log')
 
 # core.reports/state.runtime_state are written for a single CLI process and
 # hold their output paths in module-level globals. regenerate_reports()
@@ -132,6 +138,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Request-ID"],
 )
 
 # Every route except health/version/login/logout/me/change-password
@@ -140,6 +147,14 @@ app.add_middleware(
 # dependency) so those endpoints can stay reachable pre-login and while a
 # password change is still outstanding.
 protected = APIRouter(dependencies=[Depends(require_password_ok)])
+
+from .error_handling import ClientErrorReport, record_client_error
+
+@protected.post('/api/v1/client-errors', status_code=204)
+def client_error_report(payload: ClientErrorReport):
+    record_client_error(payload)
+    return Response(status_code=204)
+
 
 
 def _ensure_schema_compatibility() -> None:
@@ -161,6 +176,9 @@ def _ensure_schema_compatibility() -> None:
 
     cols = {c["name"] for c in insp.get_columns("scan_runs")}
     statements = []
+    for name, sql_type in [('queue_order_at', 'DATETIME'), ('queue_edit_token', 'VARCHAR(64)'), ('queue_edit_expires', 'FLOAT')]:
+        if name not in cols:
+            statements.append(f'ALTER TABLE scan_runs ADD COLUMN {name} {sql_type}')
     if "custom_rdl_json" not in cols:
         statements.append("ALTER TABLE scan_runs ADD COLUMN custom_rdl_json TEXT NOT NULL DEFAULT '[]'")
     if "scan_options_json" not in cols:
@@ -314,7 +332,7 @@ def _resolve_target_path(raw_path: str, roots: List[Path]) -> Path:
     raise HTTPException(status_code=403, detail="target_outside_allowed_roots")
 
 
-def _get_or_create_project(db: Session, payload: ScanCreate) -> Project:
+def _get_or_create_project(db: Session, payload: ScanCreate, commit: bool = True) -> Project:
     name = (payload.project_name or "").strip()
     if not name:
         name = _default_project_name(payload.target_dir, payload.rules)
@@ -324,7 +342,7 @@ def _get_or_create_project(db: Session, payload: ScanCreate) -> Project:
         existing.target_dir = payload.target_dir
         existing.rules = payload.rules
         existing.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
-        db.commit()
+        db.commit() if commit else db.flush()
         db.refresh(existing)
         return existing
 
@@ -336,7 +354,7 @@ def _get_or_create_project(db: Session, payload: ScanCreate) -> Project:
         updated_at=datetime.now(timezone.utc).replace(tzinfo=None),
     )
     db.add(project)
-    db.commit()
+    db.commit() if commit else db.flush()
     db.refresh(project)
     return project
 
@@ -356,6 +374,14 @@ def _scan_rdl_engine(scan: ScanRun) -> str:
     return "v1"
 
 
+def _utc_timestamp(value):
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc).isoformat()
+
+
 def _serialize_scan(s: ScanRun) -> ScanDetails:
     artifacts: List[str] = []
     try:
@@ -372,6 +398,11 @@ def _serialize_scan(s: ScanRun) -> ScanDetails:
         rules=s.rules,
         target_dir=s.target_dir,
         created_at=s.created_at.isoformat() if s.created_at else None,
+        started_at=_utc_timestamp(s.started_at),
+        ended_at=_utc_timestamp(s.ended_at),
+        queue_order_at=(s.queue_order_at or s.created_at).isoformat() if (s.queue_order_at or s.created_at) else None,
+        queue_editing=s.status == 'queued' and bool(s.queue_edit_expires and s.queue_edit_expires > time.time()),
+        queue_reserved=s.status == 'queued' and bool(s.queue_edit_token),
         duration_sec=s.duration_sec,
         data_removed=s.data_removed_at is not None,
         data_removed_at=s.data_removed_at.isoformat() if s.data_removed_at else None,
@@ -462,16 +493,22 @@ def _claim_next_queued_scan() -> Optional[str]:
         scan = (
             db.query(ScanRun)
             .filter(ScanRun.status == "queued")
-            .order_by(ScanRun.created_at.asc(), ScanRun.id.asc())
+            .order_by(func.coalesce(ScanRun.queue_order_at, ScanRun.created_at).asc(), ScanRun.id.asc())
             .first()
         )
         if not scan:
             return None
-        scan.status = "running"
-        scan.started_at = datetime.now(timezone.utc).replace(tzinfo=None)
-        scan.ended_at = None
-        scan.return_code = None
-        scan.duration_sec = None
+        # A reserved head keeps its turn until saved, cancelled or moved back.
+        available = ScanRun.queue_edit_token.is_(None)
+        claimed = db.query(ScanRun).filter(ScanRun.id == scan.id, ScanRun.status == "queued", available).update({
+            ScanRun.status: "running",
+            ScanRun.queue_edit_token: None, ScanRun.queue_edit_expires: None,
+            ScanRun.started_at: datetime.now(timezone.utc).replace(tzinfo=None),
+            ScanRun.ended_at: None, ScanRun.return_code: None, ScanRun.duration_sec: None,
+        }, synchronize_session=False)
+        if not claimed:
+            db.rollback()
+            return None
         db.commit()
         return scan.run_uuid
     finally:
@@ -582,7 +619,7 @@ def _stop_scan_dispatcher() -> None:
 
 @app.get("/api/v1/health")
 def health():
-    return {"status": "ok", "service": "dakshscra-api"}
+    return {"status": "ok", "service": "dakshscra-api", "queue_editing": True}
 
 
 @app.get("/api/v1/version")
@@ -595,6 +632,8 @@ def get_version():
             _cfg = _yaml.safe_load(_f)
         ver = str(_cfg.get("release", "unknown"))
         release_date = str(_cfg.get("release_date", "")) or None
+        if release_date and len(release_date) == 10 and release_date[2] == '-':
+            release_date = datetime.strptime(release_date, '%m-%d-%Y').date().isoformat()
     except Exception:
         ver = "unknown"
         release_date = None
@@ -758,15 +797,27 @@ def reset_user_password(user_id: int, payload: ChangePasswordRequest, db: Sessio
     return {"status": "password_reset", "user_id": user_id}
 
 
+_CHECK_CATALOG_LOCK = threading.Lock()
+_CHECK_CATALOG_CACHE = None
+
+
 @protected.get('/api/v1/check-catalog')
-def get_check_catalog():
+def get_check_catalog(refresh: bool = False):
+    global _CHECK_CATALOG_CACHE
     from core.scan_catalog import check_catalog
-    return check_catalog(ROOT_DIR)
+    with _CHECK_CATALOG_LOCK:
+        if not refresh and _CHECK_CATALOG_CACHE and time.monotonic() - _CHECK_CATALOG_CACHE[0] < 10:
+            return _CHECK_CATALOG_CACHE[1]
+        try:
+            catalog = check_catalog(ROOT_DIR)
+        except (OSError, ValueError) as exc:
+            _CHECK_CATALOG_CACHE = None
+            raise HTTPException(status_code=422, detail='Pattern Rule catalog: ' + str(exc)) from exc
+        _CHECK_CATALOG_CACHE = (time.monotonic(), catalog)
+        return catalog
 
 
-@protected.post("/api/v1/scans", response_model=ScanDetails)
-def create_scan(payload: ScanCreate, db: Session = Depends(db_session)):
-    run_uuid = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S") + "-" + uuid4().hex[:8]
+def _validate_scan_payload(payload: ScanCreate):
     roots = [Path(p).resolve() for p in get_browse_roots()]
     target_dir = str(_resolve_target_path(payload.target_dir, roots))
     payload.target_dir = target_dir
@@ -798,7 +849,7 @@ def create_scan(payload: ScanCreate, db: Session = Depends(db_session)):
 
     if payload.custom_rdl:
         if payload.rdl_engine == 'v1':
-            raise HTTPException(status_code=422, detail='Custom RDL packs require v2 or both engines')
+            raise HTTPException(status_code=422, detail='Custom Semantic Rule packs require semantic or both mode')
         try:
             from core.rdl.custom import load_custom_packs
             selected = [Path(p).expanduser().resolve(strict=True) for p in payload.custom_rdl]
@@ -808,6 +859,12 @@ def create_scan(payload: ScanCreate, db: Session = Depends(db_session)):
             load_custom_packs(payload.custom_rdl)
         except (OSError, ValueError, KeyError, TypeError) as exc:
             raise HTTPException(status_code=422, detail='Custom RDL configuration: ' + str(exc))
+
+
+@protected.post("/api/v1/scans", response_model=ScanDetails)
+def create_scan(payload: ScanCreate, db: Session = Depends(db_session)):
+    run_uuid = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S") + "-" + uuid4().hex[:8]
+    _validate_scan_payload(payload)
 
     project = _get_or_create_project(db, payload)
 
@@ -820,6 +877,7 @@ def create_scan(payload: ScanCreate, db: Session = Depends(db_session)):
         project_key=project.project_key,
         project_name=project.project_name,
         status="queued",
+        queue_order_at=datetime.now(timezone.utc).replace(tzinfo=None),
         rules=payload.rules,
         rdl_engine=payload.rdl_engine,
         custom_rdl_json=json.dumps(payload.custom_rdl),
@@ -843,6 +901,86 @@ def create_scan(payload: ScanCreate, db: Session = Depends(db_session)):
     _wake_scan_dispatcher()
 
     return _serialize_scan(scan)
+
+
+QUEUE_EDIT_SECONDS = 120
+
+
+def _queue_edit_query(db, run_uuid, token):
+    return db.query(ScanRun).filter(
+        ScanRun.run_uuid == run_uuid, ScanRun.status == 'queued',
+        ScanRun.queue_edit_token == token, ScanRun.queue_edit_expires > time.time())
+
+
+def _queue_edit_commit(db, changed):
+    if not changed:
+        db.rollback()
+        raise HTTPException(status_code=409, detail='queue_edit_unavailable')
+    db.commit()
+
+
+@protected.post('/api/v1/scans/{run_uuid}/queue-edit')
+def begin_queue_edit(run_uuid: str, db: Session = Depends(db_session)):
+    token = uuid4().hex
+    changed = db.query(ScanRun).filter(
+        ScanRun.run_uuid == run_uuid, ScanRun.status == 'queued',
+        or_(ScanRun.queue_edit_expires.is_(None), ScanRun.queue_edit_expires <= time.time()),
+    ).update({ScanRun.queue_edit_token: token, ScanRun.queue_edit_expires: time.time() + QUEUE_EDIT_SECONDS}, synchronize_session=False)
+    _queue_edit_commit(db, changed)
+    scan = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
+    return {'token': token, 'scan': _serialize_scan(scan), 'lease_seconds': QUEUE_EDIT_SECONDS}
+
+
+@protected.patch('/api/v1/scans/{run_uuid}/queue-edit')
+def renew_queue_edit(run_uuid: str, payload: QueueEditRequest, db: Session = Depends(db_session)):
+    changed = _queue_edit_query(db, run_uuid, payload.token).update(
+        {ScanRun.queue_edit_expires: time.time() + QUEUE_EDIT_SECONDS}, synchronize_session=False)
+    _queue_edit_commit(db, changed)
+    return {'reserved': True}
+
+
+@protected.post('/api/v1/scans/{run_uuid}/queue-edit/move-back')
+def move_queue_edit_back(run_uuid: str, payload: QueueEditRequest, db: Session = Depends(db_session)):
+    last = db.query(func.max(func.coalesce(ScanRun.queue_order_at, ScanRun.created_at))).filter(ScanRun.status == 'queued').scalar()
+    tail = max(datetime.now(timezone.utc).replace(tzinfo=None), last + timedelta(microseconds=1) if last else datetime.min)
+    changed = _queue_edit_query(db, run_uuid, payload.token).update(
+        {ScanRun.queue_order_at: tail, ScanRun.queue_edit_expires: time.time() + QUEUE_EDIT_SECONDS}, synchronize_session=False)
+    _queue_edit_commit(db, changed)
+    _wake_scan_dispatcher()
+    return {'moved_to_back': True}
+
+
+@protected.delete('/api/v1/scans/{run_uuid}/queue-edit')
+def cancel_queue_edit(run_uuid: str, payload: QueueEditRequest, db: Session = Depends(db_session)):
+    changed = _queue_edit_query(db, run_uuid, payload.token).update(
+        {ScanRun.queue_edit_token: None, ScanRun.queue_edit_expires: None}, synchronize_session=False)
+    _queue_edit_commit(db, changed)
+    _wake_scan_dispatcher()
+    return {'released': True}
+
+
+@protected.put('/api/v1/scans/{run_uuid}/queue-edit', response_model=ScanDetails)
+def save_queue_edit(run_uuid: str, payload: QueueEditSave, db: Session = Depends(db_session)):
+    if not _queue_edit_query(db, run_uuid, payload.token).first():
+        raise HTTPException(status_code=409, detail='queue_edit_unavailable')
+    settings = payload.settings
+    _validate_scan_payload(settings)
+    cmd_payload = settings.model_dump()
+    command = cmd_as_shell_string(build_cmd(cmd_payload))
+    project = _get_or_create_project(db, settings, commit=False)
+    values = {getattr(ScanRun, key): getattr(settings, key) for key in ('rules', 'target_dir', 'file_types', 'verbosity', 'rdl_engine')}
+    values.update({getattr(ScanRun, key): str(getattr(settings, key)).lower() for key in ('analysis', 'recon', 'estimate', 'loc')})
+    values.update({ScanRun.project_key: project.project_key, ScanRun.project_name: project.project_name,
+                   ScanRun.custom_rdl_json: json.dumps(settings.custom_rdl),
+                   ScanRun.scan_options_json: json.dumps({key: cmd_payload[key] for key in OPTION_FIELDS}),
+                   ScanRun.command: command, ScanRun.queue_edit_token: None, ScanRun.queue_edit_expires: None})
+    changed = _queue_edit_query(db, run_uuid, payload.token).update(values, synchronize_session=False)
+    _queue_edit_commit(db, changed)
+    db.expire_all()
+    scan = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
+    result = _serialize_scan(scan)
+    _wake_scan_dispatcher()
+    return result
 
 
 @protected.post("/api/v1/scans/{run_uuid}/stop")
@@ -963,7 +1101,8 @@ def list_scans(
         needle = search.strip().lower()
         q = q.filter(or_(*(func.lower(field).contains(needle, autoescape=True)
                           for field in (ScanRun.run_uuid, ScanRun.rules, ScanRun.target_dir, ScanRun.project_name))))
-    rows = q.order_by(ScanRun.created_at.desc(), ScanRun.id.desc()).offset(offset).limit(limit).all()
+    order = func.coalesce(ScanRun.queue_order_at, ScanRun.created_at) if status == "queued" else ScanRun.created_at
+    rows = q.order_by(order.desc(), ScanRun.id.desc()).offset(offset).limit(limit).all()
     out = []
     for s in rows:
         out.append(
@@ -975,6 +1114,11 @@ def list_scans(
                 rules=s.rules,
                 target_dir=s.target_dir,
                 created_at=s.created_at.isoformat() if s.created_at else None,
+                started_at=_utc_timestamp(s.started_at),
+                ended_at=_utc_timestamp(s.ended_at),
+                queue_order_at=(s.queue_order_at or s.created_at).isoformat() if (s.queue_order_at or s.created_at) else None,
+                queue_editing=s.status == "queued" and bool(s.queue_edit_expires and s.queue_edit_expires > time.time()),
+                queue_reserved=s.status == 'queued' and bool(s.queue_edit_token),
                 duration_sec=s.duration_sec,
                 data_removed=s.data_removed_at is not None,
                 data_removed_at=s.data_removed_at.isoformat() if s.data_removed_at else None,
@@ -1137,7 +1281,7 @@ def get_scan_findings(run_uuid: str, db: Session = Depends(db_session)):
     if not row:
         raise HTTPException(status_code=404, detail="run_not_found")
     if row.data_removed_at is not None:
-        return {
+        return JSONResponse({
             "run_uuid": run_uuid,
             "status": row.status,
             "data_removed": True,
@@ -1149,7 +1293,7 @@ def get_scan_findings(run_uuid: str, db: Session = Depends(db_session)):
             "scan_meta": None,
             "progress": {},
             "loc_breakdown": [],
-        }
+        })
 
     rdir = run_dir(run_uuid)
     json_dir = _scan_data_dir(row.project_key, run_uuid)
@@ -1165,7 +1309,7 @@ def get_scan_findings(run_uuid: str, db: Session = Depends(db_session)):
     scan_meta = _load_json_safe(runtime_dir / "scan_summary.json")
     loc_breakdown = _load_json_safe(runtime_dir / "filepaths.json") or []
 
-    return {
+    return JSONResponse({
         "run_uuid": run_uuid,
         "status": row.status,
         "findings": findings,
@@ -1180,7 +1324,51 @@ def get_scan_findings(run_uuid: str, db: Session = Depends(db_session)):
             started_at=row.started_at,
         ),
         "loc_breakdown": loc_breakdown,
-    }
+    })
+
+def _effort_workload(run_uuid, db):
+    row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
+    if not row:
+        raise HTTPException(status_code=404, detail='run_not_found')
+    if row.data_removed_at is not None:
+        raise HTTPException(status_code=410, detail='scan_data_removed')
+    if row.status in ('queued', 'running', 'stopping'):
+        raise HTTPException(status_code=409, detail='effort_requires_finished_scan')
+    from core.effort import workload_from_run
+    try:
+        return workload_from_run(_scan_data_dir(row.project_key, run_uuid), run_dir(run_uuid) / 'runtime',
+                                 target=row.target_dir, complete=row.status == 'success')
+    except (OSError, ValueError, TypeError, KeyError, RuntimeError) as exc:
+        raise HTTPException(status_code=422, detail='effort_evidence_error: ' + str(exc))
+
+
+@protected.get('/api/v1/scans/{run_uuid}/effort-plan')
+def get_effort_plan(run_uuid: str, db: Session = Depends(db_session)):
+    from core.effort import estimate_workload
+    workload = _effort_workload(run_uuid, db)
+    row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
+    options = json.loads(getattr(row, 'scan_options_json', None) or '{}')
+    return estimate_workload(workload, assumptions=options.get('estimate_assumptions') or {})
+
+
+@protected.post('/api/v1/scans/{run_uuid}/effort-plan')
+def create_effort_plan(run_uuid: str, payload: EffortPlanRequest, db: Session = Depends(db_session)):
+    from core.effort import estimate_workload
+    workload = _effort_workload(run_uuid, db)
+    try:
+        return estimate_workload(workload, payload.mode, payload.domains, payload.assumptions, payload.calibration)
+    except (ValueError, TypeError, AttributeError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+
+@protected.post('/api/v1/scans/{run_uuid}/effort-report')
+def download_effort_report(run_uuid: str, payload: EffortPlanRequest, db: Session = Depends(db_session)):
+    from core.effort import render_estimate
+    report = create_effort_plan(run_uuid, payload, db)
+    return HTMLResponse(render_estimate(report), headers={
+        'Content-Disposition': 'attachment; filename="review-effort-plan.html"',
+        'Cache-Control': 'no-store',
+    })
 
 
 @protected.get("/api/v1/scans/{run_uuid}/analysis")
@@ -1190,15 +1378,71 @@ def get_scan_analysis(run_uuid: str, db: Session = Depends(db_session)):
     if not row:
         raise HTTPException(status_code=404, detail="run_not_found")
     if row.data_removed_at is not None:
-        return {"run_uuid": run_uuid, "data_removed": True, "analysis": None}
+        return JSONResponse({"run_uuid": run_uuid, "data_removed": True, "analysis": None})
     from core.rdl.narratives import enrich_analysis
-    return {
+    return JSONResponse({
         "run_uuid": run_uuid,
         "analysis": enrich_analysis(_load_json_safe(_scan_data_dir(row.project_key, run_uuid) / "analysis.json")),
-    }
-
+    })
 
 _xref_build_lock = threading.Lock()
+
+
+def _program_graph_scan(run_uuid, db):
+    row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
+    if row is None:
+        raise HTTPException(status_code=404, detail="run_not_found")
+    if row.data_removed_at is not None:
+        raise HTTPException(status_code=410, detail="Scan data has been removed")
+    return row
+
+
+@protected.get("/api/v1/scans/{run_uuid}/program-graphs")
+def get_program_graphs(run_uuid: str, search: str = Query(default='', max_length=200),
+                       language: str = Query(default='all', max_length=32, pattern='^[a-z]+$'),
+                       offset: int = Query(default=0, ge=0, le=25000),
+                       file_id: str = Query(default='', max_length=64, pattern='^[a-f0-9]*$'),
+                       function_id: str = Query(default='', max_length=64, pattern='^[a-f0-9]*$'),
+                       kind: str = Query(default='cfg', pattern='^(cfg|dfg)$'),
+                       db: Session = Depends(db_session)):
+    _program_graph_scan(run_uuid, db)
+    from core.rdl.program_graphs import read_catalog, query_catalog
+    try:
+        return query_catalog(read_catalog(run_dir(run_uuid) / 'runtime'), search=search,
+                             language=language, offset=offset, file_id=file_id,
+                             function_id=function_id, kind=kind)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Saved program graph selection was not found") from exc
+    except (OSError, ValueError, TypeError) as exc:
+        raise HTTPException(status_code=422, detail="Saved program graphs could not be read. Build a new graph snapshot.") from exc
+
+
+@protected.post("/api/v1/scans/{run_uuid}/program-graphs")
+def build_program_graphs(run_uuid: str, db: Session = Depends(db_session)):
+    row = _program_graph_scan(run_uuid, db)
+    if row.status in {'queued', 'running', 'stopping'}:
+        raise HTTPException(status_code=409, detail="Wait for this scan to finish before building program graphs")
+    root = _resolve_target_path(row.target_dir, [Path(p).resolve() for p in get_browse_roots()])
+    if not _xref_build_lock.acquire(blocking=False):
+        raise HTTPException(status_code=409, detail="A source index is already being built. Try again shortly.")
+    try:
+        from core.rdl.program_graphs import build_catalog, query_catalog, REVIEW_NAME
+        from core.rdl.xref import write_index
+        from utils.scan_scope import ScanScope
+        options = json.loads(row.scan_options_json or '{}')
+        scope = ScanScope(root, **{key: options.get(key, []) for key in ('exclude_paths', 'exclude_types', 'exclude_keywords')})
+        catalog = build_catalog(root, provenance='current-source', scope=scope)
+        db.refresh(row)
+        if row.data_removed_at is not None:
+            raise HTTPException(status_code=410, detail="Scan data has been removed")
+        # Keep original scan graphs and verdicts immutable. A deliberate review
+        # rebuild has separate provenance and a separate persisted artifact.
+        write_index(run_dir(run_uuid) / 'runtime' / REVIEW_NAME, catalog)
+        return query_catalog(catalog)
+    except (OSError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail="Unable to build program graphs from the allowed source directory") from exc
+    finally:
+        _xref_build_lock.release()
 
 
 def _xref_scan(run_uuid, db):
@@ -1208,7 +1452,7 @@ def _xref_scan(run_uuid, db):
     if row.data_removed_at is not None:
         raise HTTPException(status_code=410, detail="Scan data has been removed")
     if _scan_rdl_engine(row) == 'v1':
-        raise HTTPException(status_code=409, detail="RDL v2 was not enabled for this scan")
+        raise HTTPException(status_code=409, detail="Semantic rule analysis was not enabled for this scan")
     return row
 
 
@@ -1246,6 +1490,9 @@ def build_rdl_xref(run_uuid: str, db: Session = Depends(db_session)):
         if row.data_removed_at is not None:
             raise HTTPException(status_code=410, detail="Scan data has been removed")
         write_index(run_dir(run_uuid) / 'runtime' / INDEX_NAME, index)
+        review_index = run_dir(run_uuid) / 'runtime' / 'rdl_advanced_review.json'
+        if review_index.is_file():
+            write_index(review_index, index)
         return query_index(index)
     except (OSError, ValueError) as exc:
         raise HTTPException(status_code=422, detail="Unable to build the reference index from this scan's source directory.") from exc
@@ -1263,6 +1510,7 @@ def get_rdl_shadow_results(
     section: str = Query(default='all', pattern='^(all|findings|taint|xref|vectors|confirmed|suppressed|manual|mitigated)$'),
     search: str = Query(default='', max_length=200),
     after: Optional[str] = Query(default=None, max_length=128),
+    advanced: bool = Query(default=False),
     db: Session = Depends(db_session),
 ):
     """Return one indexed page of v1/v2 comparisons for a scan."""
@@ -1271,6 +1519,17 @@ def get_rdl_shadow_results(
         raise HTTPException(status_code=404, detail="run_not_found")
     if row.data_removed_at is not None:
         return {"run_uuid": run_uuid, "enabled": False, "data_removed": True, "summary": {"total": 0, "malformed": 0, "statuses": {}}, "comparisons": []}
+
+    if advanced is True and section in {'taint', 'vectors'}:
+        from core.rdl.advanced import query_inventory, read_inventory_index
+        from core.rdl.xref import read_index, INDEX_NAME
+        try:
+            index = read_inventory_index(run_dir(run_uuid) / 'runtime')
+        except (OSError, ValueError, TypeError, KeyError) as exc:
+            raise HTTPException(status_code=422, detail='Saved input inventory could not be read. Rebuild the reference index.') from exc
+        if index and index.get('input_inventory') is not None:
+            return dict(run_uuid=run_uuid, **query_inventory(index, section, search, kind, offset, limit))
+        # Keep older saved rule paths visible while offering an inventory rebuild.
 
     telemetry_path = run_dir(run_uuid) / "runtime" / "rdl_shadow_comparisons.jsonl"
     scan_meta = _load_json_safe(run_dir(run_uuid) / "runtime" / "scan_summary.json") or {}
@@ -1286,6 +1545,7 @@ def get_rdl_shadow_results(
     total = results['summary']['total']
     return {
         "run_uuid": run_uuid,
+        "needs_rebuild": advanced is True and section in {'taint', 'vectors'},
         "rdl_engine": _scan_rdl_engine(row),
         "enabled": _scan_rdl_engine(row) != "v1" or enabled_for_run or telemetry_path.exists(),
         "applicable": total > 0,
@@ -1456,7 +1716,23 @@ def delete_scan_data(run_uuid: str, db: Session = Depends(db_session)):
     scan = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
     if not scan:
         raise HTTPException(status_code=404, detail="run_not_found")
-    if scan.status in ("running", "queued"):
+    if scan.status == "queued":
+        removed = db.query(ScanRun).filter(ScanRun.id == scan.id, ScanRun.status == "queued").delete(synchronize_session=False)
+        if not removed:
+            db.rollback()
+            raise HTTPException(status_code=409, detail="scan_is_active")
+        db.expunge(scan)
+        scan.status = "stopped"
+        try:
+            _purge_scan_data(scan)
+            result = _serialize_scan(scan)
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
+        _wake_scan_dispatcher()
+        return result
+    if scan.status in ("running", "stopping"):
         raise HTTPException(status_code=409, detail="scan_is_active")
     _purge_scan_data(scan)
     db.commit()
@@ -1536,7 +1812,7 @@ def dashboard_metrics(db: Session = Depends(db_session)):
 
 @protected.get("/api/v1/fs/list", response_model=FsListResponse)
 def fs_list(path: str = Query(default="")):
-    roots = [Path(p).resolve() for p in get_browse_roots()]
+    roots = [Path(p) for p in get_browse_roots()]
     if not roots:
         raise HTTPException(status_code=503, detail="No configured browse roots are available. Check the Docker mounts.")
 
@@ -1558,20 +1834,28 @@ def fs_list(path: str = Query(default="")):
             raise HTTPException(status_code=403, detail="This path is outside the allowed scan folders.")
         if not p.is_dir():
             raise HTTPException(status_code=404, detail="Directory not found. Check that the host folder is mounted in Docker.")
-        iterable = list(p.iterdir())
+        dirs = []
+        with os.scandir(p) as entries:
+            for entry in entries:
+                try:
+                    is_link = entry.is_symlink()
+                    if not is_link and not entry.is_dir(follow_symlinks=False):
+                        continue
+                    cp = Path(entry.path).resolve()
+                    if is_link:
+                        cp = _remap_path_aliases(cp)
+                        if not cp.is_dir():
+                            continue
+                    if under_roots(cp):
+                        dirs.append(FsEntry(name=entry.name, path=str(cp)))
+                except (OSError, RuntimeError):
+                    continue
     except PermissionError:
         raise HTTPException(status_code=403, detail="Permission denied. Allow Docker access to this host folder and try again.")
     except (OSError, RuntimeError):
         raise HTTPException(status_code=400, detail="This directory cannot be read. Check the host mount and filesystem permissions.")
 
-    dirs = []
-    for child in sorted(iterable, key=lambda x: x.name.lower()):
-        try:
-            cp = _remap_path_aliases(child.resolve())
-            if cp.is_dir() and under_roots(cp):
-                dirs.append(FsEntry(name=child.name, path=str(cp)))
-        except (OSError, RuntimeError):
-            continue
+    dirs.sort(key=lambda entry: entry.name.lower())
     parent = str(p.parent) if p.parent != p and under_roots(p.parent) else None
     root_names = [str(r) for r in roots]
     return FsListResponse(current=str(p), parent=parent, roots=root_names, directories=dirs,
@@ -1605,7 +1889,7 @@ def get_settings():
         return SettingsData(
             tool_info={"tool_name": str(tool.get("tool_name", "")), "release": str(tool.get("release", ""))},
             project={"title": str(project.get("title", "")), "subtitle": str(project.get("subtitle", ""))},
-            display={"timezone": str(tool_disp.get("timezone", "") or "")},
+            display=tool_disp,
             analysis={
                 "run_by_default": bool(tool_an.get("run_by_default", True)),
                 "include_frameworks": bool(tool_an.get("include_frameworks", True)),
@@ -1621,8 +1905,7 @@ def get_settings():
                 "cleanup_on_success": bool(tool_sm.get("cleanup_on_success", False)),
             },
             estimation={
-                "efficiency_factor": int(estimate.get("efficiency_factor", 10)),
-                "buffer": int(estimate.get("buffer", 2)),
+                "assumptions": estimate.get('assumptions', {}),
             },
         )
     except Exception as exc:
@@ -1654,7 +1937,7 @@ def save_settings(payload: SettingsData):
         # tool.yaml
         tool = _load("config/tool.yaml")
         disp = tool.setdefault("display", {})
-        disp["timezone"] = payload.display.timezone
+        disp.update(payload.display.model_dump())
 
         an = tool.setdefault("analysis", {})
         an["run_by_default"] = payload.analysis.run_by_default
@@ -1680,8 +1963,8 @@ def save_settings(payload: SettingsData):
 
         # estimate.yaml
         estimate = _load("config/estimate.yaml")
-        estimate["efficiency_factor"] = payload.estimation.efficiency_factor
-        estimate["buffer"] = payload.estimation.buffer
+        estimate['model_version'] = '2.1'
+        estimate['assumptions'] = payload.estimation.assumptions
         _save("config/estimate.yaml", estimate)
 
         return get_settings()
@@ -1695,13 +1978,16 @@ def get_suppressed_findings(
     summary_only: bool = Query(default=False),
     db: Session = Depends(db_session),
 ):
-    """Return suppressed findings (RDL-filtered FPs) for a scan."""
+    """Return excluded matches with recorded decision and trace limitations."""
     row = db.query(ScanRun).filter(ScanRun.run_uuid == run_uuid).first()
     if not row:
         raise HTTPException(status_code=404, detail="run_not_found")
 
     sup_path = _scan_data_dir(row.project_key, run_uuid) / "suppressed_findings.json"
     suppressed = _load_json_safe(sup_path) or []
+
+    from core.rdl.narratives import enrich_source_findings
+    suppressed = enrich_source_findings(suppressed)
 
     # Build summary metrics
     total_suppressed = len(suppressed)
@@ -1717,8 +2003,10 @@ def get_suppressed_findings(
         },
     }
     if not summary_only:
-        response["suppressed"] = suppressed
-    return response
+        from core.suppression_explanations import explain_suppressions
+        response["suppressed"] = explain_suppressions(suppressed, run_dir(run_uuid) / 'runtime',
+            target=row.target_dir, active=row.status in {'queued', 'running', 'stopping'})
+    return JSONResponse(response)
 
 
 @protected.put("/api/v1/scans/{run_uuid}/suppressed/{item_id}")
@@ -1788,13 +2076,18 @@ def promote_suppressed_to_finding(
         if k in payload:
             item[k] = payload[k]
 
-    # Merge into findings: look for existing finding with same platform + rule_title
+    # Display titles can be shared by separate checks. Match their recorded
+    # rule source before merging evidence or platform-specific guidance.
     platform = item.get("platform", "")
     rule_title = item.get("rule_title", "")
-    existing = next(
-        (f for f in findings if f.get("platform") == platform and f.get("rule_title") == rule_title),
-        None,
-    )
+    def rule_source(value):
+        source = str(value.get("logic_source") or value.get("suppression_source") or value.get("rdl_condition") or "")
+        return re.sub(r"^(?:Pattern|RDL):", "", source, flags=re.I)
+    source = rule_source(item)
+    candidates = [f for f in findings if f.get("platform") == platform and
+                  ((source and rule_source(f) == source) or
+                   (not source and f.get("promoted_from_suppression_id") == item_id))]
+    existing = candidates[0] if len(candidates) == 1 else None
 
     ev_entry = {
         "file": item.get("file", ""),
@@ -1810,7 +2103,8 @@ def promote_suppressed_to_finding(
     if existing is None:
         new_finding = {
             "platform": platform,
-            "rule_id": f"{platform}-promoted",
+            "rule_id": f"{platform}-promoted-{item_id}",
+            "promoted_from_suppression_id": item_id,
             "rule_title": rule_title,
             "category": item.get("category", ""),
             "issue_scope": "",
@@ -1823,6 +2117,9 @@ def promote_suppressed_to_finding(
             "scan_config": {},
             "evidence": [ev_entry],
         }
+        for key in ("logic_source", "logic_engine", "rdl_condition"):
+            if item.get(key):
+                new_finding[key] = item[key]
         for k in ("severity", "rating"):
             if k in payload:
                 new_finding[k] = payload[k]
@@ -1860,6 +2157,13 @@ def get_suppressed_report(
 
     sup_path = _scan_data_dir(row.project_key, run_uuid) / "suppressed_findings.json"
     suppressed = _load_json_safe(sup_path) or []
+    from core.rdl.narratives import enrich_source_findings
+    from utils.report_audience import filter_guidance
+    audience = json.loads(row.scan_options_json or '{}').get('report_audience', 'both')
+    suppressed = filter_guidance(enrich_source_findings(suppressed), audience)
+    from core.suppression_explanations import explain_suppressions
+    suppressed = explain_suppressions(suppressed, run_dir(run_uuid) / 'runtime',
+        target=row.target_dir, active=row.status in {'queued', 'running', 'stopping'})
 
     if format == "json":
         total_suppressed = len(suppressed)
@@ -1867,6 +2171,7 @@ def get_suppressed_report(
         report = {
             "run_uuid": run_uuid,
             "generated_at": datetime.now(timezone.utc).isoformat(),
+            "report_audience": audience,
             "summary": {
                 "total_suppressed": total_suppressed,
                 "rdl_conditions_triggered": rdl_conditions_hit,
@@ -1880,7 +2185,7 @@ def get_suppressed_report(
         )
 
     if format == "html":
-        html = _build_suppressed_html_report(run_uuid, suppressed)
+        html = _build_suppressed_html_report(run_uuid, suppressed, audience)
         from fastapi.responses import HTMLResponse
         return HTMLResponse(
             content=html,
@@ -1915,7 +2220,8 @@ def create_report(run_uuid: str, payload: report_exports.ReportRequest, db: Sess
     try:
         return report_exports.start(run_dir(run_uuid), _scan_data_dir(row.project_key, run_uuid), payload,
                                     {"run_uuid": run_uuid, "project": row.project_name or row.project_key,
-                                     "project_key": row.project_key, "status": row.status})
+                                     "project_key": row.project_key, "status": row.status,
+                                     "report_audience": json.loads(row.scan_options_json or '{}').get('report_audience', 'both')})
     except ValueError as exc:
         raise HTTPException(status_code=429, detail=str(exc))
 
@@ -1955,15 +2261,29 @@ def _esc(value) -> str:
     return html.escape(str(value if value is not None else ""))
 
 
-def _build_suppressed_html_report(run_uuid: str, suppressed: list) -> str:
+def _build_suppressed_html_report(run_uuid: str, suppressed: list, audience='both') -> str:
     """Build an HTML report for suppressed (RDL-filtered) findings."""
     total = len(suppressed)
     rdl_hit = len({s.get("rdl_condition", "") for s in suppressed if s.get("rdl_condition")})
     promoted = sum(1 for s in suppressed if s.get("status") == "confirmed_finding")
-    generated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    from utils.datetime_utils import format_datetime
+    generated = format_datetime()
+    from utils.report_audience import filter_guidance, LABELS
+    suppressed = filter_guidance(suppressed, audience)
 
     rows = ""
     for s in suppressed:
+        guidance = ''.join(f'<div style="white-space:pre-line;margin-top:10px"><b>{label}:</b> {_esc(s[key])}</div>'
+                           for key,label in [('security_impact','Security impact'),('reviewer_note','Review guidance'),('developer_note','Recommendations')]
+                           if s.get(key))
+        guidance = f'<details><summary>Impact and guidance</summary>{guidance}</details>' if guidance else ''
+        explanation = s.get('suppression_explanation') or {}
+        decision = '<p>' + _esc(explanation.get('summary') or s.get('suppression_reason', 'Reason not recorded')) + '</p>'
+        if explanation:
+            decision += '<p><b>Trace coverage:</b> ' + _esc(explanation.get('trace_summary')) + '</p>'
+            decision += '<p><b>Decision scope:</b> ' + _esc(explanation.get('decision_scope')) + '</p>'
+            decision += '<ul>' + ''.join('<li>' + _esc(limit) + '</li>' for limit in explanation.get('limitations', [])) + '</ul>'
+        decision += '<details><summary>Technical rule decision</summary>' + _esc(s.get('suppression_reason', '')) + '</details>'
         status_badge = (
             '<span style="background:#22c55e;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px">Promoted</span>'
             if s.get("status") == "confirmed_finding"
@@ -1972,11 +2292,11 @@ def _build_suppressed_html_report(run_uuid: str, suppressed: list) -> str:
         rows += f"""
         <tr>
           <td style="padding:8px;border-bottom:1px solid #333">{_esc(s.get("platform",""))}</td>
-          <td style="padding:8px;border-bottom:1px solid #333">{_esc(s.get("rule_title",""))}</td>
+          <td style="padding:8px;border-bottom:1px solid #333">{_esc(s.get("rule_title",""))}{guidance}</td>
           <td style="padding:8px;border-bottom:1px solid #333">{_esc(s.get("file",""))}</td>
           <td style="padding:8px;border-bottom:1px solid #333;font-family:monospace;font-size:12px">{_esc(s.get("line",""))}: {_esc(s.get("code",""))}</td>
           <td style="padding:8px;border-bottom:1px solid #333;font-family:monospace;font-size:11px">{_esc(s.get("rdl_condition",""))}</td>
-          <td style="padding:8px;border-bottom:1px solid #333;font-size:12px">{_esc(s.get("suppression_reason",""))}</td>
+          <td style="padding:8px;border-bottom:1px solid #333;font-size:12px">{decision}</td>
           <td style="padding:8px;border-bottom:1px solid #333">{status_badge}</td>
         </tr>"""
 
@@ -2000,7 +2320,7 @@ def _build_suppressed_html_report(run_uuid: str, suppressed: list) -> str:
 </head>
 <body>
   <h1>Suppressed Findings Report</h1>
-  <div class="meta">Scan: {_esc(run_uuid)} &mdash; Generated: {_esc(generated)}</div>
+  <div class="meta">Scan: {_esc(run_uuid)} &mdash; Generated: {_esc(generated)} &mdash; Report audience: {_esc(LABELS[audience])}</div>
   <div class="cards">
     <div class="card"><div class="card-val">{total}</div><div class="card-lbl">Total Suppressed</div></div>
     <div class="card"><div class="card-val">{rdl_hit}</div><div class="card-lbl">RDL Conditions Triggered</div></div>
@@ -2142,6 +2462,7 @@ def get_artifact(path: str = Query(...), embed: bool = Query(False)):
 
 
 from . import disk_info
+from core import storage_cleanup
 
 
 def _ensure_storage_idle(scan):
@@ -2177,7 +2498,30 @@ def system_disk(db: Session = Depends(db_session)):
                         active.add(scan.run_uuid)
                 except (OSError, ValueError):
                     continue
-    return disk_info.inventory(scans, db.query(Project).all(), ROOT_DIR, WEB_RUNS_DIR, ROOT_DIR / 'reports', active)
+    payload = disk_info.inventory(scans, db.query(Project).all(), ROOT_DIR, WEB_RUNS_DIR, ROOT_DIR / 'reports', active)
+    with report_exports._LOCK:
+        busy = bool(report_exports._ACTIVE) or _report_regen_lock.locked() or any(s.status in ('queued', 'running', 'stopping') for s in scans)
+    payload['cleanup'] = storage_cleanup.public_plan(storage_cleanup.plan(ROOT_DIR, busy=busy))
+    return payload
+
+
+@protected.post('/api/v1/system/disk/cleanup')
+def system_disk_cleanup(payload: StorageCleanupRequest, db: Session = Depends(db_session)):
+    if not _report_regen_lock.acquire(blocking=False):
+        raise HTTPException(status_code=409, detail='Report regeneration is active. Try cleanup later.')
+    try:
+        with report_exports._LOCK:
+            busy = bool(report_exports._ACTIVE) or db.query(ScanRun).filter(ScanRun.status.in_(['queued', 'running', 'stopping'])).first() is not None
+            if busy:
+                raise HTTPException(status_code=409, detail='A scan or report is active. Wait until it finishes before cleanup.')
+            try:
+                return storage_cleanup.cleanup(ROOT_DIR, payload.areas)
+            except ValueError as exc:
+                raise HTTPException(status_code=400, detail=str(exc))
+            except OSError:
+                raise HTTPException(status_code=500, detail='Cleanup could not finish. Refresh Disk info to inspect remaining files.')
+    finally:
+        _report_regen_lock.release()
 
 
 @protected.get('/api/v1/system/disk/scans/{run_uuid}/units/{unit_id}/files')

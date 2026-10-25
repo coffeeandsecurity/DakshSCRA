@@ -2,7 +2,22 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from typing import Any, Dict, Optional, List, Literal
 
 
+class StorageCleanupRequest(BaseModel):
+    areas: List[str] = Field(min_length=1, max_length=20)
+
+
 class ScanOptions(BaseModel):
+    report_audience: Literal['developer', 'code_review', 'both'] = 'both'
+    rule_mode: Optional[Literal['pattern', 'semantic', 'both']] = None
+    estimate_assumptions: Dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator('estimate_assumptions')
+    @classmethod
+    def validate_estimate_assumptions(cls, value):
+        from core.effort import validate_assumptions
+        validate_assumptions(value)
+        return value
+
     exclude_checks: List[str] = Field(default_factory=list, max_length=64)
     exclude_paths: List[str] = Field(default_factory=list, max_length=100)
     exclude_types: List[str] = Field(default_factory=list, max_length=100)
@@ -35,13 +50,19 @@ class ScanCreate(ScanOptions):
     file_types: Optional[str] = None
     report_format: str = Field(default="web")
     verbosity: int = Field(default=1, ge=1, le=3)
-    recon: bool = False
+    recon: bool = True
     estimate: bool = False
     analysis: bool = True
-    loc: bool = False
+    loc: bool = True
 
     @model_validator(mode='after')
     def validate_modes(self):
+        if self.rule_mode is not None:
+            from core.rdl.selection import RULE_MODES
+            selected = RULE_MODES[self.rule_mode]
+            if 'rdl_engine' in self.model_fields_set and self.rdl_engine != selected:
+                raise ValueError('Rule mode and legacy engine selection conflict')
+            self.rdl_engine = selected
         if self.estimate:
             self.recon = True
             self.loc = True
@@ -52,6 +73,14 @@ class ScanCreate(ScanOptions):
         return self
 
 
+class QueueEditRequest(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+
+
+class QueueEditSave(QueueEditRequest):
+    settings: ScanCreate
+
+
 class ScanSummary(BaseModel):
     run_uuid: str
     project_key: str
@@ -60,6 +89,11 @@ class ScanSummary(BaseModel):
     rules: str
     target_dir: str
     created_at: Optional[str] = None
+    started_at: Optional[str] = None
+    ended_at: Optional[str] = None
+    queue_order_at: Optional[str] = None
+    queue_editing: bool = False
+    queue_reserved: bool = False
     duration_sec: Optional[float] = None
     data_removed: bool = False
     data_removed_at: Optional[str] = None
@@ -130,7 +164,15 @@ class ProjectSettings(BaseModel):
 
 
 class DisplaySettings(BaseModel):
-    timezone: str = ""
+    timezone: str = "UTC"
+    date_format: Literal['MM-DD-YYYY', 'DD-MM-YYYY', 'YYYY-MM-DD'] = 'MM-DD-YYYY'
+    time_format: Literal['24h', '12h'] = '24h'
+
+    @model_validator(mode='after')
+    def validate_zone(self):
+        from utils.datetime_utils import validate_display
+        self.timezone = validate_display(self.model_dump())['timezone']
+        return self
 
 
 class AnalysisSettings(BaseModel):
@@ -150,8 +192,35 @@ class StateManagementSettings(BaseModel):
 
 
 class EstimationSettings(BaseModel):
-    efficiency_factor: int = 10
-    buffer: int = 2
+    assumptions: Dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator('assumptions')
+    @classmethod
+    def validate_rates(cls, value):
+        from core.effort import validate_assumptions
+        return validate_assumptions(value)
+
+
+class EffortPlanRequest(BaseModel):
+    mode: Literal['assisted', 'targeted', 'manual', 'ai'] = 'assisted'
+    domains: Optional[List[str]] = Field(default=None, max_length=11)
+    assumptions: Dict[str, Any] = Field(default_factory=dict)
+    calibration: List[Dict[str, Any]] = Field(default_factory=list, max_length=1000)
+
+    @field_validator('domains')
+    @classmethod
+    def validate_domains(cls, value):
+        from core.effort import DOMAINS
+        if value is not None and set(value) - {key for key, _ in DOMAINS}:
+            raise ValueError('Unknown review domain')
+        return list(dict.fromkeys(value)) if value is not None else None
+
+    @field_validator('assumptions')
+    @classmethod
+    def validate_rates(cls, value):
+        from core.effort import validate_assumptions
+        validate_assumptions(value)
+        return value
 
 
 class SettingsData(BaseModel):

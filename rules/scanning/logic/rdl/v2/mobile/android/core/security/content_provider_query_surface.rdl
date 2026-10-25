@@ -2,7 +2,7 @@ VERSION 2
 RULE android.content-provider-query-surface VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:override\\s+fun\\s+query|public\\s+Cursor\\s+query)\\s*\\(" ""
-REPORT "Content Provider Query Entry Point"
+REPORT "Content Provider Query Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

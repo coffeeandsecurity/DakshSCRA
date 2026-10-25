@@ -3,7 +3,7 @@ RULE baseline.cpp.core.information_leakage_with_structures_security_concern VERS
 IN FILE
 WHEN TEXT_MATCHES "\\bstruct\\s+\\w+\\s*\\{" "im"
 WHEN (TEXT_MATCHES "struct\\s+\\w+.*\\{.*\\}|memcpy\\s*\\(|send\\s*\\(" "im" AND TEXT_MISSING "memset\\s*\\(|SecureZeroMemory|redact|sanitize" "im" AND TEXT_MISSING "test|example" "im")
-REPORT "Information Leakage with Structures: Security Concern"
+REPORT "Structure Data Exposure Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

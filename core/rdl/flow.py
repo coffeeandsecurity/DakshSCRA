@@ -291,12 +291,12 @@ class _PythonFlowWalker:
                 self.statement(statement)
 
     def assign_target(self, target, sources):
-        if isinstance(target, ast.Name):
+        if isinstance(target, (ast.Name, ast.Attribute)):
             entity = self.entity(target, EntityType.VARIABLE)
             if entity:
                 for source in sources:
                     self.edge(source, entity.entity_id, "assignment")
-                self.environment[target.id] = {entity.entity_id}
+                self.environment[_python_qualified_name(target)] = {entity.entity_id}
         elif isinstance(target, (ast.Tuple, ast.List)):
             for item in target.elts:
                 self.assign_target(item, sources)
@@ -348,7 +348,19 @@ class _PythonFlowWalker:
             values = self.expression(node.value)
             entity = self.entity(node, EntityType.VARIABLE)
             if entity:
+                for previous in self.environment.get(_python_qualified_name(node), ()):
+                    self.edge(previous, entity.entity_id, 'reference')
                 values.add(entity.entity_id)
+            return values
+        if isinstance(node, (ast.GeneratorExp, ast.ListComp, ast.SetComp, ast.DictComp)):
+            before = dict(self.environment)
+            for generator in node.generators:
+                self.assign_target(generator.target, self.expression(generator.iter))
+                for condition in generator.ifs:
+                    self.expression(condition)
+            values = (self.expression(node.key) | self.expression(node.value)
+                      if isinstance(node, ast.DictComp) else self.expression(node.elt))
+            self.environments[-1] = before
             return values
         if isinstance(node, ast.Subscript):
             return self.expression(node.value) | self.expression(node.slice)

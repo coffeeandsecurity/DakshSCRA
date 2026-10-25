@@ -1,0 +1,40 @@
+format: daksh-pattern-rule/v1
+id: filepaths.core.database_interaction
+title: "Database Access Review"
+order: 26
+detection:
+  pattern: (?-i:(?:(?<![A-Za-z])(?i:database|db|sql)(?=[A-Z_. /\\-]|ite|$)|(?<=[a-z])(?:Database|DB|Sql|SQL)(?=[A-Z_.
+    /\\-]|ite|$)))
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/)
+reporting:
+  type: area_of_interest
+  reason: Detects file paths related to database interaction functionality.
+  description: A file or directory name matches the database interaction review area. This check inspects paths,
+    not the implementation or a reachable execution path.
+  impact: If externally controlled values enter query syntax, an attacker may read, change, or delete records or
+    bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound
+    parameters do not establish this condition. A filename match alone does not establish this consequence.
+  remediation: Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level
+    access checks. Trace the complete query construction before replacing a safe query.
+  reviewer: Verify the presence and secure implementation of database interaction functionality. This can be confirmed
+    as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the matched file or directory contents and determine whether it is deployed or externally accessible.
+  - Identify whether sensitive data, configuration or executable content is present; a name match alone does not
+    establish exposure.
+  - Check effective access controls and build or packaging exclusions and record the specific content and exposure
+    path.
+  recommendations:
+  - Where exposure is verified, remove unnecessary files from deployment or restrict access to the intended users
+    and processes.
+  - Verify the deployed artifact and access behavior after the change; retain required application files with appropriate
+    controls.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

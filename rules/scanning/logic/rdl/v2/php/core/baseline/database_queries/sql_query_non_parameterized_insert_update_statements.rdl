@@ -2,7 +2,7 @@ VERSION 2
 RULE baseline.php.core.sql_query_non_parameterized_insert_update_statements VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(?i)\\b(INSERT INTO|UPDATE)\\s+[^\\s]+\\s+(SET|VALUES)\\s+.*=.*\\$.*" "im"
-REPORT "SQL Query: Non-parameterized INSERT/UPDATE Statements"
+REPORT "SQL Parameterization Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

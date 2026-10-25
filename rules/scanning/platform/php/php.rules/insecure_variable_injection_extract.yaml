@@ -1,0 +1,40 @@
+format: daksh-pattern-rule/v1
+id: php.core.insecure_variable_injection_extract
+title: "Variable Injection Review"
+order: 10
+category: Insecure Method/Function Call
+detection:
+  pattern: extract\s*\(\s*(\$_(GET|POST|REQUEST)|\$\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\}?)\s*,\s*(?:\s*EXTR_(?:OVERWRITE|SKIP|PREFIX_SAME|PREFIX_ALL|IF_EXISTS|IF_DOESNT_EXIST|PREFIX_INVALID))?
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:EXTR_SKIP|EXTR_PREFIX_ALL|allowlist|filter_var|validate && MISSING:test|example
+reporting:
+  type: area_of_interest
+  reason: Detects usage of extract() with user-supplied arrays, which can introduce variable overwrite vulnerabilities.
+  trace:
+  - 'Externalized rule logic for Insecure Variable Injection: extract().'
+  description: Externally supplied array keys may be converted into local variable names.
+  impact: An attacker may overwrite security-relevant variables or alter program decisions when imported keys collide
+    with trusted local state.
+  remediation: Avoid importing untrusted keys into the local namespace. Parse into a dedicated data structure and
+    explicitly assign only expected fields.
+  reviewer: Examine extract usage with request-derived arrays and variable scope impact. This can be confirmed as
+    an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the matched construct in its containing function or configuration and identify the security-sensitive
+    behavior under review.
+  - Verify reachable callers, external influence and effective protections, including deployment overrides and failure
+    paths.
+  - Record concrete evidence for a confirmed issue or a justified suppression; retain an unresolved outcome when
+    the required evidence is unavailable.
+  recommendations:
+  - Apply the rule-specific correction above only after verifying the affected behavior and required control.
+  - Add a regression case for the unsafe condition and a valid protected case; verify the effective behavior in
+    the relevant deployment.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

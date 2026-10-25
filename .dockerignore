@@ -7,6 +7,16 @@ venv/
 reports/
 runtime/
 exclude/
+config/rdl_*.json
+config/analysis_finding_guidance.json
+tests/
+**/tests/
+**/__tests__/
+**/test_*.py
+**/*_test.py
+**/conftest.py
+**/*.test.*
+**/*.spec.*
 .env
 .env.*
 !.env.example
@@ -16,3 +26,25 @@ webui/frontend/dist/
 # Local hidden directories and configuration must not enter images.
 /.*
 !.env.example
+
+# Match the public documentation and utility allowlists.
+/examples/
+/docs/**
+!/docs/usage-guide.md
+!/docs/usage-guide.html
+/tools/**
+!/tools/start_webui.py
+!/tools/clean_project_docker.py
+!/tools/purge_all_docker.py
+!/tools/cleanup_storage.py
+!/tools/rdl_lint.py
+!/tools/rdl_migrate.py
+!/tools/supported_platforms.py
+!/tools/rdl_shadow_report.py
+!/tools/prune_rdl_comparisons.py
+
+# Retired deployment files and superseded assets.
+/docker/webui.Dockerfile
+/webui/deploy/docker-compose.yml
+/resources/logo.jpg
+/resources/static/logo_for_report.jpg

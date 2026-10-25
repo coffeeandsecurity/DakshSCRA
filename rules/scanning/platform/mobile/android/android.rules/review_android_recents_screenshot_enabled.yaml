@@ -1,0 +1,39 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.review_android_recents_screenshot_enabled
+title: "Screen Capture Protection Review"
+order: 84
+category: PLATFORM Review
+detection:
+  pattern: \bsetRecentsScreenshotEnabled\s*\(\s*true\s*\)
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: An activity explicitly allows screenshots for the recent-task preview. Determine whether sensitive
+    content is visible and whether other window protections prevent capture. Identify the actual sensitive value
+    and the recipients, retention and user-consent context of this exposure or capability.
+  impact: Sensitive content visible during background transitions may appear in the task switcher when the effective
+    window policy permits a preview.
+  remediation: Disable recent-task screenshots for sensitive activities and apply the appropriate secure-window
+    policy. Verify background transitions and screen recording on supported devices. Minimize collection and retention,
+    redact secret values, and apply the platform controls needed for sensitive UI and data sharing.
+  reviewer: Test release logging, crash-report payloads, screenshot/background snapshots and clipboard lifetime;
+    permission or API capability alone does not establish collection or malicious behavior.
+  review_steps:
+  - Trace the matched candidate to its actual value, caller or resource.
+  - Test release logging, crash-report payloads, screenshot/background snapshots and clipboard lifetime; permission
+    or API capability alone does not establish collection or malicious behavior.
+  - Resolve release configuration and runtime assumptions before confirming an issue.
+  recommendations:
+  - Disable recent-task screenshots for sensitive activities and apply the appropriate secure-window policy. Verify
+    background transitions and screen recording on supported devices. Minimize collection and retention, redact
+    secret values, and apply the platform controls needed for sensitive UI and data sharing.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

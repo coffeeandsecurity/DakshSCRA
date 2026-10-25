@@ -1,0 +1,41 @@
+format: daksh-pattern-rule/v1
+id: javascript.framework.electron.allowrunninginsecurecontent_enabled
+title: "Mixed Content Policy Review"
+order: 4
+category: Framework-Specific Issues - Electron
+detection:
+  pattern: allowRunningInsecureContent\s*:\s*true
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:allowRunningInsecureContent:\s*true && MISSING:test|development|localhost
+reporting:
+  type: area_of_interest
+  reason: Detects Electron configurations that allow loading insecure (HTTP) content in HTTPS pages.
+  trace:
+  - Externalized rule logic for allowRunningInsecureContent Enabled.
+  description: An embedded browser permits active insecure content within a secure page.
+  impact: A network attacker may replace cleartext scripts or other active content and run it in the page’s trusted
+    context, potentially exposing session data or privileged renderer functionality.
+  remediation: Disallow active mixed content and load all executable resources through authenticated HTTPS. Keep
+    renderer privileges isolated from untrusted pages.
+  reviewer: Confirm mixed content loading is not allowed in production. This can be confirmed as an issue when the
+    matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the effective connection settings, certificate-chain validation and hostname verification for the deployed
+    client or server.
+  - Trace configuration overrides, custom trust handlers and error paths; determine whether untrusted networks can
+    affect the connection.
+  - Verify the actual handshake and failure behavior against an untrusted or mismatched certificate before confirming
+    a transport issue.
+  recommendations:
+  - Use authenticated encrypted transport and retain certificate and hostname verification; limit any development
+    exception to a verified non-production scope.
+  - Configure trust through the platform trust mechanism and test that invalid certificates and insecure protocol
+    downgrades are rejected.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

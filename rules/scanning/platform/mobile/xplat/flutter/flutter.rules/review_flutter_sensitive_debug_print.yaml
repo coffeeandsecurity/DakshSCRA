@@ -1,0 +1,39 @@
+format: daksh-pattern-rule/v1
+id: mobile.xplat.flutter.core.review_flutter_sensitive_debug_print
+title: "Sensitive Data Logging Review"
+order: 19
+category: PRIVACY Review
+detection:
+  pattern: (?i)\b(?:debugPrint|print)\s*\([^\n;]{0,200}\b(?:password|token|secret|credential)\b
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: Diagnostic output or execution tracing includes values that may contain credentials, tokens, or private
+    user data. Identify the actual sensitive value and the recipients, retention and user-consent context of this
+    exposure or capability.
+  impact: Sensitive values written to logs may be recovered by log readers, telemetry operators, or other parties
+    with access to collected diagnostics, enabling account misuse or disclosure of private data.
+  remediation: Remove or redact sensitive values before logging. Disable verbose payload and shell tracing in production,
+    restrict log access, and rotate active credentials that have already been exposed. Minimize collection and retention,
+    redact secret values, and apply the platform controls needed for sensitive UI and data sharing.
+  reviewer: Test release logging, crash-report payloads, screenshot/background snapshots and clipboard lifetime;
+    permission or API capability alone does not establish collection or malicious behavior.
+  review_steps:
+  - Trace the matched candidate to its actual value, caller or resource.
+  - Test release logging, crash-report payloads, screenshot/background snapshots and clipboard lifetime; permission
+    or API capability alone does not establish collection or malicious behavior.
+  - Resolve release configuration and runtime assumptions before confirming an issue.
+  recommendations:
+  - Remove or redact sensitive values before logging. Disable verbose payload and shell tracing in production, restrict
+    log access, and rotate active credentials that have already been exposed. Minimize collection and retention,
+    redact secret values, and apply the platform controls needed for sensitive UI and data sharing.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

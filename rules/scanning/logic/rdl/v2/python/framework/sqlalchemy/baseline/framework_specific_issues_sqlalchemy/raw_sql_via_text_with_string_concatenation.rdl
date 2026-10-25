@@ -3,7 +3,7 @@ RULE baseline.python.framework.sqlalchemy.raw_sql_via_text_with_string_concatena
 IN FILE
 WHEN TEXT_MATCHES "text\\s*\\(\\s*[\"'][^\"']*[\"']\\s*\\+|text\\s*\\(\\s*f[\"']|text\\s*\\(\\s*[\"'][^\"']*%\\s*(?:\\(|\\w)" "im"
 WHEN TEXT_MISSING "bindparams|bindparam|:(?!:)\\w" "im"
-REPORT "Raw SQL via text() with String Concatenation"
+REPORT "SQL Injection Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.ios.core.review_ios_sensitive_public_log VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "(?i)\\b(?:logger|log)\\s*\\.\\s*(?:debug|info|notice|warning|error|critical|log)\\s*\\([^\\n]{0,200}?\\\\\\(\\s*(?:[A-Za-z_][A-Za-z0-9_]{0,60}\\.){0,4}(?:password|token|secret|credential)\\w*[^)\\n]{0,100}\\bprivacy\\s*:\\s*\\.public\\b" "im"
+REPORT "Sensitive Value Logged with Public Privacy"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.android.core.review_android_device_admin_control VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:wipeData|resetPassword|lockNow)\\s*\\(" "im"
+REPORT "Device Administration Capability"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

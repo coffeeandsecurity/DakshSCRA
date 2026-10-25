@@ -1,0 +1,46 @@
+format: daksh-pattern-rule/v1
+id: javascript.core.routes
+title: Routes
+order: 9
+category: Information Disclosure
+detection:
+  pattern: (?i)route:\s+'.*(\s?)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:app\.(get|post|put|delete|patch)\s*\(\s*["']/|router\.(get|post|put|delete|patch)\s*\(\s*["']/[^"']*:\w
+    && MISSING:authenticate|authorize|auth|middleware|passport|jwt|session
+reporting:
+  type: area_of_interest
+  reason: Detects the presence of hardcoded routes in JavaScript code, which may expose sensitive information or
+    introduce security risks.
+  trace:
+  - Externalized rule logic for Routes.
+  description: The code declares an entry point, model, destination, or configuration value that may cross a trust
+    boundary. Identify callers, recipients, and the required data-access policy.
+  impact: A boundary that trusts unauthorized callers or exposes private output may permit data disclosure or state
+    changes. A declaration, address, or architectural marker alone does not establish such a failure.
+  remediation: Trace the actual boundary, restrict accepted inputs and recipients, and enforce authentication and
+    object-level authorization where required. Verify both authorized and denied use cases.
+  reviewer: Verify whether the code contains hardcoded routes and assess the potential security implications. Ensure
+    that sensitive information, such as internal URLs, API endpoints, or authentication routes, is not exposed through
+    hardcoded routes. Also check if the code implements appropriate access control measures and adheres to secure
+    coding practices, such as using configuration files or dynamic routing mechanisms. This can be confirmed as
+    an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the matched construct in its containing function or configuration and identify the security-sensitive
+    behavior under review.
+  - Verify reachable callers, external influence and effective protections, including deployment overrides and failure
+    paths.
+  - Record concrete evidence for a confirmed issue or a justified suppression; retain an unresolved outcome when
+    the required evidence is unavailable.
+  recommendations:
+  - Apply the rule-specific correction above only after verifying the affected behavior and required control.
+  - Add a regression case for the unsafe condition and a valid protected case; verify the effective behavior in
+    the relevant deployment.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

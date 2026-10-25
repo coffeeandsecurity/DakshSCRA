@@ -1,0 +1,6 @@
+{% macro hours(value) -%}
+{% if value is none %}Not estimable{% else %}{% set labels = [] %}{% for n in value %}{% if n > 0 and n < 0.25 %}{% set label = '<0.5' %}{% else %}{% set label = '%g'|format(((n * 2 + 0.5)|round(0, 'floor')) / 2) %}{% endif %}{% set _ = labels.append(label) %}{% endfor %}{{ labels[0] if labels[0] == labels[1] else labels|join('–') }}{% endif %}
+{%- endmacro %}
+{% macro days(value) -%}
+{% if value is none %}Not estimable{% else %}{% set labels = [] %}{% for n in value %}{% if n > 0 and n < 0.125 %}{% set label = '<0.25' %}{% else %}{% set label = '%g'|format(((n * 4 + 0.5)|round(0, 'floor')) / 4) %}{% endif %}{% set _ = labels.append(label) %}{% endfor %}{{ labels[0] if labels[0] == labels[1] else labels|join('–') }}{% endif %}
+{%- endmacro %}

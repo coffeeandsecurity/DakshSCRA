@@ -3,7 +3,7 @@ RULE baseline.dotnet.core.request_validation_disabled_configuration VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "%@\\s?Page\\s?.*\\s?ValidateRequest\\s?=\\s?(\\'|\\\")false(\\'|\\\")" "im"
 WHEN (TEXT_MATCHES "validateRequest\\s*=\\s*\"false\"|ValidateInput\\s*\\(\\s*false|RequestValidationMode" "im" AND TEXT_MISSING "test|example|AntiXssEncoder|HtmlEncode" "im")
-REPORT "Request Validation: Disabled Configuration"
+REPORT "Request Validation Policy Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

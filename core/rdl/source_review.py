@@ -35,6 +35,9 @@ def source_views(path, content):
     # comment. The sentinel is never copied into source/evidence offsets.
     for offset, kind, value in lexer.get_tokens_unprocessed(lex_content+'\n'):
         comment = kind in Comment and kind not in Comment.Preproc and kind not in Comment.PreprocFile
+        # PHP documentation blocks are classified as String.Doc by the lexer.
+        if str(path).lower().endswith('.php') and kind in String.Doc and value.startswith('/**'):
+            comment = True
         literal = kind in String
         if comment or literal:
             for index in range(offset, min(offset + len(value), len(content))):
@@ -92,6 +95,8 @@ def provider_review(result, path, text):
                        errors=('Cannot associate provider attributes with source locations.',))
     witnesses = []
     for node, tag in zip(providers, tags):
+        if application is None or node not in list(application):
+            continue
         attrs = node.attrib
         if attrs.get(android + 'exported') == 'false' or attrs.get(android + 'enabled') == 'false' or inherited.get(android + 'enabled') == 'false':
             continue
@@ -129,11 +134,11 @@ GUIDANCE = {
         'A dispatch or redirect destination is computed in the checked code. Its provenance and permitted destinations need review. This check does not establish local file inclusion.',
         'Trace the destination to its caller and enforce permitted routes or local destinations. Review file access separately from redirects.'),
     'react_native_hardcoded_secret_marker': (
-        'Embedded Client Credential Or API Identifier Review',
+        "Client Credential Usage Review",
         'A credential-like literal is embedded in client source. Public API identifiers can be intentional; this check does not establish that the value is active, secret or unrestricted.',
         'Determine the credential type, effective service restrictions and shipped use. Remove and rotate actual exposed secrets; restrict public client API identifiers to the intended application and APIs.'),
     'weak_random_number_generation': (
-        'Random Number Use Review',
+        "Random Number Generation Review",
         'A non-cryptographic random-number API is present. Display data, simulations and UI fixtures do not establish insecure security-sensitive randomness.',
         'Trace the generated value. Use a cryptographically secure generator for tokens, secrets and other security-sensitive values; assess ordinary display randomness separately.'),
     'file_sharing_without_content_provider': (
@@ -145,19 +150,19 @@ GUIDANCE = {
         'A replacement pattern remains unresolved or contains the legacy /e modifier. This check does not establish attacker-controlled evaluated content or a PHP runtime that supports that modifier.',
         'Resolve pattern construction, delimiters, modifiers, caller input and the deployed PHP version. Use literal replacements or preg_replace_callback instead of evaluated replacement syntax, and constrain dynamic patterns.'),
     'rdl_conditional_sql_query_with_untrusted_input_and_missing_parameterization': (
-        'SQL Query And Input Marker Review',
+        "SQL Input Handling Review",
         'SQL execution and an input marker occur in the checked file. This file-level predicate does not establish that the input changes the query or that a particular statement lacks parameterization.',
         'Inspect the exact source-to-query flow and query arguments. Use bound parameters for values and approved identifiers for dynamic query structure; confirm a defect only where the recorded flow supports it.'),
     'ssrf_file_get_contents_with_user_controlled_url': (
-        'File Or URL Read Review',
+        "File or URL Read Review",
         'A file-reading API receives a variable or input marker. This text check does not resolve whether the argument is a local path, a PHP-assigned upload path, or an attacker-selected network URL.',
         'Resolve the argument and URL scheme at the read operation. Apply path containment to filesystem access and destination restrictions to network access; do not classify local file reads as SSRF.'),
     'ssrf_curl_exec_with_user_controlled_url': (
-        'cURL Destination Review',
+        "Outbound Request Destination Review",
         'The code initializes or assigns a cURL destination. This text check does not prove that a caller can select the destination or that the request crosses a prohibited network boundary.',
         'Trace the effective URL into the request, including redirects and configuration. Restrict attacker-selectable destinations according to the endpoint policy.'),
     'server_side_request_forgery_ssrf': (
-        'Outbound Request Review',
+        "Outbound Request Destination Review",
         'A request API is present. This file-level check does not establish attacker control of the destination or whether the code executes in a browser or on a server.',
         'Resolve the execution environment and exact URL flow. Assess SSRF for server-side requests with attacker-selectable destinations; review browser requests against their applicable trust boundaries.'),
     'path_traversal_open_with_user_controlled_path': (
@@ -205,15 +210,15 @@ GUIDANCE = {
         'A network configuration enables user-installed trust anchors in the recorded scope. Debug-only and domain overrides must be resolved before asserting release interception.',
         'Review the selected resource, inherited policy and most specific domain configuration alongside endpoint requirements.'),
     'debuggable_build_enabled': (
-        'Build Debugging Configuration Review',
+        "Debug Mode Configuration Review",
         'A non-debug or unresolved build scope enables debugging. Resolve the selected production build before treating this as release exposure.',
         'Disable debugging in shipped builds and verify the merged manifest and artifact.'),
     'exported_components': (
-        'External Component Access Review',
+        "Exported Component Access Review",
         'A component is externally accessible without a resolved signature restriction. Export alone does not prove unauthorized access.',
         'Resolve merged manifests, platform defaults, caller authorization and runtime guards for each component.'),
     'allow_backup': (
-        'Android Backup Policy Review',
+        "Application Backup Review",
         'Application backup is enabled. Actual inclusion, encryption and transfer behavior depend on referenced backup policies, build variants and Android versions.',
         'Review cloud and device-transfer rules alongside stored secrets and key recovery; do not infer exposure from the allowBackup flag alone.'),
     'cleartext_traffic': (
@@ -221,11 +226,11 @@ GUIDANCE = {
         'A manifest or scoped network configuration permits cleartext traffic; the effective resource, domain and transmitted data must be checked.',
         'Review the selected build and domain policy. Remove cleartext permission for sensitive endpoints; certificate revocation and debug exceptions require contextual assessment.'),
     'unsafe_intent_filters': (
-        'Deep-Link Intent Filter Review',
+        "Deep Link Intent Filter Review",
         'An externally accessible browsable filter registers a URI. Registration alone does not establish unsafe handling.',
         'Validate routing and authentication in the receiving code, including scheme, domain and path checks.'),
     'insecure_permissions': (
-        'Sensitive Android Permission Review',
+        "Permission Handling Review",
         'The manifest requests a sensitive permission. This is a capability declaration, not proof of excessive access or insecure use.',
         'Verify that each permission is required and that runtime requests, platform version behavior and storage access match the intended feature.'),
     'content_providers_with_no_permissions': (
@@ -239,6 +244,12 @@ GUIDANCE = {
 }
 
 
+def comments_only(content, without_comments):
+    """Retain comment characters only, at their original source offsets."""
+    return ''.join(original if original != masked else ('\n' if original == '\n' else '\r' if original == '\r' else ' ')
+                   for original, masked in zip(content, without_comments))
+
+
 def review_source(entry, document, baseline, path, content, project_root, views):
     stem = entry['rule_id'].rsplit('.', 1)[-1]
     guidance = GUIDANCE.get(stem)
@@ -246,11 +257,39 @@ def review_source(entry, document, baseline, path, content, project_root, views)
         guidance = None
     if entry['path_rule']:
         return baseline, (), guidance
+    if content.startswith('\x03\x00\x08\x00'):
+        reason = 'Compiled Android XML must be decoded before textual source checks; string-pool matches do not establish application behavior.'
+        return replace(baseline, outcome=ExecutionOutcome.INDETERMINATE,
+                       witnesses=(), evidence=(), errors=(reason,)), (reason,), guidance
     without_comments, code = views
     # Commented credentials are still evidence of embedded secret material.
     secrets = any(word in entry['rule_id'].lower() for word in ('credential', 'secret', 'password', 'private_key', 'private-key', 'hardcoded', 'access_key', 'access-key'))
     comment_rule = stem in {'todo_comments'}
-    selected = content if secrets or comment_rule else without_comments
+    selected = comments_only(content, without_comments) if comment_rule else content if secrets else without_comments
+    from .mobile_precision import refine
+    selected = refine(stem, path, selected, project_root)
+    if entry['scope'] == 'common/core' and stem == 'ipv4_ipv6_address':
+        from .ip_literals import address_view
+        selected = address_view(path, content, without_comments, code)
+    from .accuracy_review import review_operations
+    selected = review_operations(entry['rule_id'], path, selected)
+    from .security_patterns import PATTERNS, candidate_view
+    if stem in PATTERNS:
+        selected = candidate_view(stem, without_comments, code)
+    if entry['scope'] == 'java/core' and stem == 'sensitive_values_in_log_output':
+        from .literal_review import java_sensitive_logs
+        selected = java_sensitive_logs(without_comments, code)
+    if entry['scope'] == 'java/core' and stem in {'disabled_csrf_protection', 'insecure_package_java_util_random'}:
+        from .literal_review import java_security_operations
+        selected = java_security_operations(selected, code, stem)
+    if entry['scope'] == 'java/core' and stem == 'jsp_unescaped_expression_output':
+        from .literal_review import jsp_output_expressions
+        selected = jsp_output_expressions(path, content)
+    if entry['scope'] in {'c/core', 'cpp/core'} and stem in {'access_to_freed_memory', 'access_to_freed_memory_2', 'memory_copy_size_and_overlap_review'}:
+        selected = code
+    if entry['scope'] in {'c/core', 'cpp/core'} and stem in {'potential_format_string_attack', 'potential_format_string_attack_printf_fprintf_etc', 'format_string_misuse_in_c_streams'}:
+        from .native_call_review import dynamic_format_calls
+        selected = dynamic_format_calls(selected, code)
     if entry['scope'].startswith('java/framework/') and stem.endswith('_hardcoded_secret_material'):
         from .literal_review import secret_placeholders
         selected = secret_placeholders(selected)
@@ -258,6 +297,8 @@ def review_source(entry, document, baseline, path, content, project_root, views)
         from .literal_review import java_fixed_destinations
         selected = java_fixed_destinations(selected)
     if stem == 'potential_memory_leak_use_of_new_without_delete':
+        selected = code
+    if entry['scope'] == 'python/core' and stem in {'predictable_randomness_review', 'flask_request_data_review'}:
         selected = code
     from .literal_review import (shell_literals, kotlin_dynamic_literals,
                                  promise_resolver_timers, resource_algorithm_words,
@@ -290,6 +331,18 @@ def review_source(entry, document, baseline, path, content, project_root, views)
             return match.group()
         selected = re.sub(r"\bexport\s+const\s+(set_[a-z_]*(?:token|password|secret)[a-z_]*)\s*=\s*([\"'])([A-Za-z_]+)\2",
                           action_identifier, selected)
+    if entry['scope'] == 'javascript/core' and stem == 'server_side_request_forgery_ssrf':
+        from .literal_review import javascript_request_operations
+        selected = javascript_request_operations(selected, code)
+    if entry['scope'].startswith('javascript/framework/') and stem.endswith('_hardcoded_secret_material'):
+        from .literal_review import javascript_secret_values
+        selected = javascript_secret_values(selected)
+    if stem in {'fast_hashing_of_passwords', 'password_self_comparison', 'reversible_password_storage'}:
+        from .literal_review import password_security_operations
+        selected = password_security_operations(selected, code, stem)
+    if stem == 'jwt_claims_read_without_local_validation':
+        from .literal_review import jwt_claim_operations
+        selected = jwt_claim_operations(selected, code)
     compact, remap = compact_trivia(content, selected)
     result = execute_text(document, path, project_root, compact, collect_matches=True)
     result = replace(result, evidence=tuple(remap(e) for e in result.evidence),
@@ -319,10 +372,22 @@ def review_source(entry, document, baseline, path, content, project_root, views)
         result = review_gradle(entry, result, path, without_comments, code)
     if entry.get('mobile_check'):
         from .mobile_review import review_mobile
-        result = review_mobile(entry, result, path, without_comments, code)
-    if entry.get('client_check'):
+        result = review_mobile(entry, result, path, without_comments, code, project_root)
+    if stem == 'credential_http_request':
+        from .mobile_review import review_mobile
+        result = review_mobile(dict(entry, mobile_check='credential-http-request', file_patterns=['*.java']), result, path, without_comments, code, project_root)
+    if entry.get('project_check') or stem == 'logout_retained_state':
+        from .mobile_review import review_mobile
+        selected_check = entry.get('project_check', 'logout')
+        result = review_mobile(dict(entry,mobile_check='project-'+selected_check,file_patterns=entry.get('file_patterns',['*.js','*.jsx','*.ts','*.tsx','*.mjs','*.cjs'])),result,path,without_comments,code,project_root)
+    if stem in {'privacy_api_purpose','credential_backup_correlation'}:
+        from .mobile_review import review_mobile
+        check='privacy' if stem=='privacy_api_purpose' else 'backup'
+        result=review_mobile(dict(entry,mobile_check='project-'+check,file_patterns=['Info.plist' if check=='privacy' else 'AndroidManifest.xml']),result,path,without_comments,code,project_root)
+    if entry.get('client_check') or stem == 'otp_completion_navigation':
         from .client_review import review_client
-        result = review_client(entry, result, path, without_comments, code)
+        selected_entry = dict(entry, client_check=entry.get('client_check', 'otp-navigation'))
+        result = review_client(selected_entry, result, path, without_comments, code)
     if entry.get('java_check') == 'datasource-secret':
         from .java_review import datasource_credentials
         result = datasource_credentials(result, path, without_comments)

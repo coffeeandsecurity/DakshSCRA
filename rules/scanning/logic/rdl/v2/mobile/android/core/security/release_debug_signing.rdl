@@ -1,0 +1,8 @@
+VERSION 2
+RULE android.release-debug-signing VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bsigningConfig\\b" ""
+REPORT "Release Debug Signing Review"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

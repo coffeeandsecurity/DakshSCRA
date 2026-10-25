@@ -24,16 +24,48 @@ class FunctionDef:
     meta: Dict = field(default_factory=dict)
 
 
+def _sink_identity(item: Dict) -> Tuple:
+    return tuple(item.get(key) for key in ('sink', 'description', 'file', 'line', 'function'))
+
+
+class SinkEvidence(list):
+    """Ordered set of semantic sink facts, independent of propagation routes.
+
+    Recursive calls and shared aliases can reach the same sink repeatedly.
+    Keeping those routes as repeated list entries multiplies memory and work
+    on each pass even though summary equality already ignores duplicates.
+    """
+    def __init__(self, items=()):
+        super().__init__()
+        self._identities = set()
+        self.extend(items)
+
+    def append(self, item):
+        identity = _sink_identity(item)
+        if identity not in self._identities:
+            self._identities.add(identity)
+            super().append(item)
+
+    def extend(self, items):
+        for item in items:
+            self.append(item)
+
+
 @dataclass
 class FunctionSummary:
     param_to_sink: Dict[int, List[Dict]] = field(default_factory=dict)
     param_to_return: Set[int] = field(default_factory=set)
-    source_to_sink: List[Dict] = field(default_factory=list)
+    source_to_sink: List[Dict] = field(default_factory=SinkEvidence)
     source_to_return: bool = False
     param_to_session: Dict[int, Set[str]] = field(default_factory=dict)
     source_to_session: Set[str] = field(default_factory=set)
     session_to_sink: Dict[str, List[Dict]] = field(default_factory=dict)
     session_to_return: Set[str] = field(default_factory=set)
+
+    def __post_init__(self):
+        self.source_to_sink = SinkEvidence(self.source_to_sink)
+        self.param_to_sink = {key: SinkEvidence(items) for key, items in self.param_to_sink.items()}
+        self.session_to_sink = {key: SinkEvidence(items) for key, items in self.session_to_sink.items()}
 
 
 CALL_RE = re.compile(r"([A-Za-z_$][A-Za-z0-9_$]*(?:(?:->|::|\.)[A-Za-z_$][A-Za-z0-9_$]*)*)\s*\(")
@@ -735,6 +767,22 @@ def _extract_assignment(line: str, platform: str) -> Optional[Tuple[str, str]]:
             r"([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+)",
             stripped,
         )
+    elif platform in {"c", "cpp"}:
+        # Qualified types, pointer/reference declarators and storage qualifiers
+        # are declarations, not part of the tracked variable name.
+        m = re.match(
+            r"(?:(?:[\w:]+(?:<[^;=]+>)?[\s*&]+)+)?"
+            r"([A-Za-z_][A-Za-z0-9_]*)\s*=(?!=)\s*(.+)",
+            stripped,
+        )
+        if m is None and platform == "cpp":
+            m = re.match(
+                r"(?:[\w:]+(?:<[^;=]+>)?[\s*&]+)+"
+                r"([A-Za-z_][A-Za-z0-9_]*)\s*(?:\((.+)\)|\{(.+)\})$",
+                stripped,
+            )
+            if m:
+                return m.group(1), (m.group(2) or m.group(3)).strip()
     elif platform == "dotnet":
         m = re.match(
             r"(?:(?:public|private|protected|internal|static|readonly|const|var|async)\s+)*"
@@ -1332,7 +1380,7 @@ def _scan_scope_for_summary(
                                 for var, origins in tainted.items():
                                     if _line_has_var(arg_expr, var, platform):
                                         for origin_idx in origins:
-                                            summary.param_to_sink.setdefault(origin_idx, []).append(sink_obj)
+                                            summary.param_to_sink.setdefault(origin_idx, SinkEvidence()).append(sink_obj)
                                 for var in source_tainted:
                                     if _line_has_var(arg_expr, var, platform):
                                         summary.source_to_sink.append(sink_obj)
@@ -1352,7 +1400,7 @@ def _scan_scope_for_summary(
                                 if callee.param_to_sink.get(arg_idx):
                                     for sink_item in callee.param_to_sink[arg_idx]:
                                         for origin_idx in origins:
-                                            summary.param_to_sink.setdefault(origin_idx, []).append(sink_item)
+                                            summary.param_to_sink.setdefault(origin_idx, SinkEvidence()).append(sink_item)
                                 if platform == "php" and callee.session_to_sink:
                                     for bucket in session_var_buckets.get(var, set()):
                                         if bucket in callee.session_to_return:
@@ -1375,7 +1423,7 @@ def _scan_scope_for_summary(
                     for bucket, sink_items in callee.session_to_sink.items():
                         if bucket in session_tainted:
                             for origin_idx in session_tainted[bucket]:
-                                summary.param_to_sink.setdefault(origin_idx, []).extend(sink_items)
+                                summary.param_to_sink.setdefault(origin_idx, SinkEvidence()).extend(sink_items)
                         if bucket in session_source_tainted:
                             summary.source_to_sink.extend(sink_items)
                     if callee.source_to_session:
@@ -1410,7 +1458,7 @@ def _scan_scope_for_summary(
                 for var, origins in tainted.items():
                     if _line_has_var(arg_expr, var, platform):
                         for origin_idx in origins:
-                            summary.param_to_sink.setdefault(origin_idx, []).append(sink_obj)
+                            summary.param_to_sink.setdefault(origin_idx, SinkEvidence()).append(sink_obj)
                 for var in source_tainted:
                     if _line_has_var(arg_expr, var, platform):
                         summary.source_to_sink.append(sink_obj)
@@ -1462,7 +1510,7 @@ def _scan_scope_for_summary(
             for var, origins in tainted.items():
                 if _line_has_var(argument_text, var, platform):
                     for origin_idx in origins:
-                        summary.param_to_sink.setdefault(origin_idx, []).append(sink_obj)
+                        summary.param_to_sink.setdefault(origin_idx, SinkEvidence()).append(sink_obj)
             for var in source_tainted:
                 if _line_has_var(argument_text, var, platform):
                     summary.source_to_sink.append(sink_obj)
@@ -1470,11 +1518,11 @@ def _scan_scope_for_summary(
                 for var, buckets in session_var_buckets.items():
                     if _line_has_var(stripped, var, platform):
                         for bucket in buckets:
-                            summary.session_to_sink.setdefault(bucket, []).append(sink_obj)
+                            summary.session_to_sink.setdefault(bucket, SinkEvidence()).append(sink_obj)
                 for bucket in _extract_php_session_reads(stripped):
-                    summary.session_to_sink.setdefault(bucket, []).append(sink_obj)
+                    summary.session_to_sink.setdefault(bucket, SinkEvidence()).append(sink_obj)
                     for origin_idx in session_tainted.get(bucket, set()):
-                        summary.param_to_sink.setdefault(origin_idx, []).append(sink_obj)
+                        summary.param_to_sink.setdefault(origin_idx, SinkEvidence()).append(sink_obj)
                     if bucket in session_source_tainted:
                         summary.source_to_sink.append(sink_obj)
 
@@ -1511,7 +1559,7 @@ def _summaries_equal(a: FunctionSummary, b: FunctionSummary) -> bool:
 def _canon_sinks(items: List[Dict]) -> Set[Tuple]:
     out = set()
     for item in items:
-        out.add((item.get("sink"), item.get("description"), item.get("file"), item.get("line"), item.get("function")))
+        out.add(_sink_identity(item))
     return out
 
 
@@ -1755,10 +1803,10 @@ def analyze_multifile_flows(
                     agg.param_to_session.setdefault(idx, set()).update(buckets)
                 agg.source_to_session.update(cur.source_to_session)
                 for idx, sinks in cur.param_to_sink.items():
-                    agg.param_to_sink.setdefault(idx, []).extend(sinks)
+                    agg.param_to_sink.setdefault(idx, SinkEvidence()).extend(sinks)
                 agg.source_to_sink.extend(cur.source_to_sink)
                 for bucket, sinks in cur.session_to_sink.items():
-                    agg.session_to_sink.setdefault(bucket, []).extend(sinks)
+                    agg.session_to_sink.setdefault(bucket, SinkEvidence()).extend(sinks)
                 agg.session_to_return.update(cur.session_to_return)
 
         for name, new_summary in merged.items():
@@ -2014,7 +2062,7 @@ def analyze_multifile_flows(
                     if _is_safe_callee(call_name, raw_symbol, safe_callees):
                         continue
                     for arg_expr in call_args:
-                        for var, steps in tainted_paths.items():
+                        for var, steps in tuple(tainted_paths.items()):
                             if not _line_has_var(arg_expr, var, platform):
                                 continue
                             call_step = _make_path_step(
@@ -2057,7 +2105,7 @@ def analyze_multifile_flows(
                                 termination_reason="unresolved_callee",
                                 termination_node=termination_node,
                             )
-                        for var, steps in source_tainted_paths.items():
+                        for var, steps in tuple(source_tainted_paths.items()):
                             if not _line_has_var(arg_expr, var, platform):
                                 continue
                             call_step = _make_path_step(
@@ -2230,7 +2278,7 @@ def analyze_multifile_flows(
                         target_symbol=call_name,
                         variables=source_vars or [arg_expr],
                     )
-                    for var, steps in tainted_paths.items():
+                    for var, steps in tuple(tainted_paths.items()):
                         if not _line_has_var(arg_expr, var, platform):
                             continue
                         call_step = _make_path_step(
@@ -2296,7 +2344,7 @@ def analyze_multifile_flows(
                                     "cross_file": _is_cross,
                                 }
                             )
-                    for var, steps in source_tainted_paths.items():
+                    for var, steps in tuple(source_tainted_paths.items()):
                         if not _line_has_var(arg_expr, var, platform):
                             continue
                         call_step = _make_path_step(

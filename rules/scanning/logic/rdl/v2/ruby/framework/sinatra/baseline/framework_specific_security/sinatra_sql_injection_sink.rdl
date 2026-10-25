@@ -3,7 +3,7 @@ RULE baseline.ruby.framework.sinatra.sinatra_sql_injection_sink VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "where\\(\\s*\"[^\"]*#\\{|find_by_sql\\(|connection\\.execute\\(" "im"
 WHEN TEXT_MISSING "where\\s*\\(\\s*\".*?\",|sanitize_sql|Arel::Nodes" "im"
-REPORT "Sinatra SQL Injection Sink"
+REPORT "SQL Injection Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

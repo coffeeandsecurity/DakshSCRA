@@ -3,7 +3,7 @@ RULE baseline.dotnet.core.unvalidated_redirects_and_forwards VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(?i)Response\\.Redirect" "im"
 WHEN TEXT_MISSING "(IsLocalUrl|allowlist|whitelist|Uri\\.TryCreate)" "im"
-REPORT "Unvalidated Redirects and Forwards"
+REPORT "Redirect Destination Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -1,0 +1,36 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.review_android_archive_entry_destination
+title: Archive Entry Controls Extraction Destination
+order: 90
+category: CODE Review
+detection:
+  pattern: \b(?:ZipEntry|ZipInputStream|getNextEntry|nextEntry|zipEntry\s*\.\s*(?:name|getName\s*\())\b
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: The code uses archive-entry or extraction APIs. Trace names supplied by each archive entry to the
+    actual output file; the marker alone does not establish an unsafe write.
+  impact: Untrusted content may execute privileged behavior or overwrite files if integrity, type constraints or
+    destination containment are ineffective.
+  remediation: Verify signed updates and compatibility, restrict decoded types, and enforce canonical destination
+    containment before extraction or execution.
+  reviewer: Test tampered updates, downgrade/replay, absolute paths, traversal, sibling-prefix and symlink escapes,
+    size limits and partial failure; an unrelated validation call does not protect this operation.
+  review_steps:
+  - Resolve the exact instance, declaration, value and release configuration.
+  - Test tampered updates, downgrade/replay, absolute paths, traversal, sibling-prefix and symlink escapes, size
+    limits and partial failure; an unrelated validation call does not protect this operation.
+  - Confirm reachability and security impact before confirming an issue.
+  recommendations:
+  - Verify signed updates and compatibility, restrict decoded types, and enforce canonical destination containment
+    before extraction or execution.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

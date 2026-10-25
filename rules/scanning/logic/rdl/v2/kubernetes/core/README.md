@@ -30,21 +30,21 @@ Status: 14 owned rule(s), 14 runtime mapping(s). No claim of complete coverage.
 
 ## Current runtime mappings
 
-Baseline and semantic comparisons link the v1 source; additional checks link the selected XML pack. Shared properties retain a single owning definition.
+Pattern baselines and semantic comparisons link the unified rule source; additional checks link the selected pack metadata. Shared properties retain a single owning definition.
 
-| V1 definition or selected pack | V2 property |
+| Unified rule or selected pack | V2 property |
 |---|---|
-| [privileged_container_enabled.rdl](../../../v1/kubernetes/core/privileged_container_enabled.rdl) | [baseline.kubernetes.core.privileged_container_enabled](baseline/container_security/privileged_container_enabled.rdl) |
-| [allowprivilegeescalation_not_disabled.rdl](../../../v1/kubernetes/core/allowprivilegeescalation_not_disabled.rdl) | [baseline.kubernetes.core.allowprivilegeescalation_not_disabled](baseline/container_security/allowprivilegeescalation_not_disabled.rdl) |
-| [container_running_as_root_user.rdl](../../../v1/kubernetes/core/container_running_as_root_user.rdl) | [baseline.kubernetes.core.container_running_as_root_user](baseline/container_security/container_running_as_root_user.rdl) |
-| [read_only_root_filesystem_not_enforced.rdl](../../../v1/kubernetes/core/read_only_root_filesystem_not_enforced.rdl) | [baseline.kubernetes.core.read_only_root_filesystem_not_enforced](baseline/container_security/read_only_root_filesystem_not_enforced.rdl) |
-| [host_pid_namespace_shared.rdl](../../../v1/kubernetes/core/host_pid_namespace_shared.rdl) | [baseline.kubernetes.core.host_pid_namespace_shared](baseline/host_namespace_sharing/host_pid_namespace_shared.rdl) |
-| [host_network_namespace_shared.rdl](../../../v1/kubernetes/core/host_network_namespace_shared.rdl) | [baseline.kubernetes.core.host_network_namespace_shared](baseline/host_namespace_sharing/host_network_namespace_shared.rdl) |
-| [host_ipc_namespace_shared.rdl](../../../v1/kubernetes/core/host_ipc_namespace_shared.rdl) | [baseline.kubernetes.core.host_ipc_namespace_shared](baseline/host_namespace_sharing/host_ipc_namespace_shared.rdl) |
-| [wildcard_rbac_verb_permission.rdl](../../../v1/kubernetes/core/wildcard_rbac_verb_permission.rdl) | [baseline.kubernetes.core.wildcard_rbac_verb_permission](baseline/rbac_and_access_control/wildcard_rbac_verb_permission.rdl) |
-| [wildcard_rbac_resource.rdl](../../../v1/kubernetes/core/wildcard_rbac_resource.rdl) | [baseline.kubernetes.core.wildcard_rbac_resource](baseline/rbac_and_access_control/wildcard_rbac_resource.rdl) |
-| [clusterrolebinding_to_cluster_admin.rdl](../../../v1/kubernetes/core/clusterrolebinding_to_cluster_admin.rdl) | [baseline.kubernetes.core.clusterrolebinding_to_cluster_admin](baseline/rbac_and_access_control/clusterrolebinding_to_cluster_admin.rdl) |
-| [secret_exposed_as_environment_variable.rdl](../../../v1/kubernetes/core/secret_exposed_as_environment_variable.rdl) | [baseline.kubernetes.core.secret_exposed_as_environment_variable](baseline/secrets_management/secret_exposed_as_environment_variable.rdl) |
-| [no_resource_limits_defined.rdl](../../../v1/kubernetes/core/no_resource_limits_defined.rdl) | [baseline.kubernetes.core.no_resource_limits_defined](baseline/resource_management/no_resource_limits_defined.rdl) |
-| [default_service_account_token_auto_mounted.rdl](../../../v1/kubernetes/core/default_service_account_token_auto_mounted.rdl) | [baseline.kubernetes.core.default_service_account_token_auto_mounted](baseline/resource_management/default_service_account_token_auto_mounted.rdl) |
-| [kubernetes.xml](../../../../../platform/kubernetes/kubernetes.xml) | [kubernetes.automounted-service-token](security/automounted_service_token.rdl) |
+| [privileged_container_enabled.yaml](../../../../../platform/kubernetes/kubernetes.rules/privileged_container_enabled.yaml) | [baseline.kubernetes.core.privileged_container_enabled](baseline/container_security/privileged_container_enabled.rdl) |
+| [allowprivilegeescalation_not_disabled.yaml](../../../../../platform/kubernetes/kubernetes.rules/allowprivilegeescalation_not_disabled.yaml) | [baseline.kubernetes.core.allowprivilegeescalation_not_disabled](baseline/container_security/allowprivilegeescalation_not_disabled.rdl) |
+| [container_running_as_root_user.yaml](../../../../../platform/kubernetes/kubernetes.rules/container_running_as_root_user.yaml) | [baseline.kubernetes.core.container_running_as_root_user](baseline/container_security/container_running_as_root_user.rdl) |
+| [read_only_root_filesystem_not_enforced.yaml](../../../../../platform/kubernetes/kubernetes.rules/read_only_root_filesystem_not_enforced.yaml) | [baseline.kubernetes.core.read_only_root_filesystem_not_enforced](baseline/container_security/read_only_root_filesystem_not_enforced.rdl) |
+| [host_pid_namespace_shared.yaml](../../../../../platform/kubernetes/kubernetes.rules/host_pid_namespace_shared.yaml) | [baseline.kubernetes.core.host_pid_namespace_shared](baseline/host_namespace_sharing/host_pid_namespace_shared.rdl) |
+| [host_network_namespace_shared.yaml](../../../../../platform/kubernetes/kubernetes.rules/host_network_namespace_shared.yaml) | [baseline.kubernetes.core.host_network_namespace_shared](baseline/host_namespace_sharing/host_network_namespace_shared.rdl) |
+| [host_ipc_namespace_shared.yaml](../../../../../platform/kubernetes/kubernetes.rules/host_ipc_namespace_shared.yaml) | [baseline.kubernetes.core.host_ipc_namespace_shared](baseline/host_namespace_sharing/host_ipc_namespace_shared.rdl) |
+| [wildcard_rbac_verb_permission.yaml](../../../../../platform/kubernetes/kubernetes.rules/wildcard_rbac_verb_permission.yaml) | [baseline.kubernetes.core.wildcard_rbac_verb_permission](baseline/rbac_and_access_control/wildcard_rbac_verb_permission.rdl) |
+| [wildcard_rbac_resource.yaml](../../../../../platform/kubernetes/kubernetes.rules/wildcard_rbac_resource.yaml) | [baseline.kubernetes.core.wildcard_rbac_resource](baseline/rbac_and_access_control/wildcard_rbac_resource.rdl) |
+| [clusterrolebinding_to_cluster_admin.yaml](../../../../../platform/kubernetes/kubernetes.rules/clusterrolebinding_to_cluster_admin.yaml) | [baseline.kubernetes.core.clusterrolebinding_to_cluster_admin](baseline/rbac_and_access_control/clusterrolebinding_to_cluster_admin.rdl) |
+| [secret_exposed_as_environment_variable.yaml](../../../../../platform/kubernetes/kubernetes.rules/secret_exposed_as_environment_variable.yaml) | [baseline.kubernetes.core.secret_exposed_as_environment_variable](baseline/secrets_management/secret_exposed_as_environment_variable.rdl) |
+| [no_resource_limits_defined.yaml](../../../../../platform/kubernetes/kubernetes.rules/no_resource_limits_defined.yaml) | [baseline.kubernetes.core.no_resource_limits_defined](baseline/resource_management/no_resource_limits_defined.rdl) |
+| [default_service_account_token_auto_mounted.yaml](../../../../../platform/kubernetes/kubernetes.rules/default_service_account_token_auto_mounted.yaml) | [baseline.kubernetes.core.default_service_account_token_auto_mounted](baseline/resource_management/default_service_account_token_auto_mounted.rdl) |
+| [_pack.yaml](../../../../../platform/kubernetes/kubernetes.rules/_pack.yaml) | [kubernetes.automounted-service-token](security/automounted_service_token.rdl) |

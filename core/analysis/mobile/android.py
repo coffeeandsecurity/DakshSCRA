@@ -11,6 +11,8 @@ from core.analysis.java.analyzer import analyze_java_flows
 from core.analysis.kotlin.analyzer import analyze_kotlin_flows
 from core.analysis.mobile.common import annotate_flows, output_dir
 from core.analysis.report import write_reports
+from core.mobile_model import module_namespace, component_permissions, enabled, build_scope
+from core.analysis.mobile.common import read_mobile_lines
 
 ANDROID_NS = "{http://schemas.android.com/apk/res/android}"
 COMPONENT_TAGS = ("activity", "activity-alias", "service", "receiver", "provider")
@@ -128,7 +130,10 @@ def _component_is_exported(component: ET.Element) -> bool:
     return component.find("intent-filter") is not None
 
 
-def _permission_guard(component: ET.Element) -> str:
+def _permission_guard(component: ET.Element, root=None, application=None) -> str:
+    if root is not None:
+        restrictions = component_permissions(component, root, application)
+        return 'signature-restricted' if restrictions and all(restrictions.values()) else ''
     for name in ("permission", "readPermission", "writePermission"):
         value = _android_attr(component, name)
         if value:
@@ -171,7 +176,7 @@ def _source_index(source_root: Path, source_cache=None) -> Dict[str, Path]:
             stem = file_path.stem
             fqcn = f"{package_name}.{stem}" if package_name else stem
             for key in {stem, fqcn, f".{stem}"}:
-                index.setdefault(key, file_path)
+                index[key] = file_path if key not in index or index[key] == file_path else None
         return index
     for glob in ("*.kt", "*.java"):
         for file_path in glob_source(source_root, glob):
@@ -183,7 +188,7 @@ def _source_index(source_root: Path, source_cache=None) -> Dict[str, Path]:
             stem = file_path.stem
             fqcn = f"{package_name}.{stem}" if package_name else stem
             for key in {stem, fqcn, f".{stem}"}:
-                index.setdefault(key, file_path)
+                index[key] = file_path if key not in index or index[key] == file_path else None
     return index
 
 
@@ -192,7 +197,7 @@ def _source_cache(source_root: Path) -> Dict[Path, List[str]]:
     for glob in ("*.kt", "*.java"):
         for file_path in glob_source(source_root, glob):
             try:
-                cache[file_path] = file_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+                cache[file_path] = read_mobile_lines(file_path)
             except OSError:
                 continue
     return cache
@@ -216,14 +221,21 @@ def _find_component_source(component_name: str, manifest_package: str, source_ma
     resolved = _resolve_component_name(component_name, manifest_package)
     for key in (component_name, resolved, Path(resolved).name if resolved else "", f".{Path(resolved).name}" if resolved else ""):
         token = str(key or "").strip()
-        if token and token in source_map:
+        if token and source_map.get(token) is not None:
             return source_map[token]
+    if not manifest_package and str(component_name).startswith('.'):
+        candidates = {value for name,value in source_map.items() if name.endswith(component_name) and value is not None}
+        if len(candidates) == 1:
+            return next(iter(candidates))
     return None
 
 
 def _first_match_line(lines: List[str], pattern: re.Pattern, start: int = 1) -> int:
     for idx in range(max(1, start), len(lines) + 1):
-        if pattern.search(lines[idx - 1]):
+        for match in pattern.finditer(lines[idx-1]):
+            code=getattr(lines,'code',None)
+            if code and not code[idx-1][match.start():match.start()+1].strip():
+                continue
             return idx
     return 0
 
@@ -639,11 +651,12 @@ def _exported_component_flows(manifest_path: Path, source_root: Path, root: ET.E
         tag = _component_kind(component.tag)
         if tag not in COMPONENT_TAGS:
             continue
-        if not _component_is_exported(component):
+        if not enabled(component, app) or not _component_is_exported(component):
             continue
 
-        permission = _permission_guard(component)
+        permission = _permission_guard(component, root, app)
         component_name = _android_attr(component, "name") or tag
+        source_component_name = _android_attr(component, 'targetActivity') or component_name
         source_line = declarations[component]
         exported_line = source_line
 
@@ -659,7 +672,10 @@ def _exported_component_flows(manifest_path: Path, source_root: Path, root: ET.E
             f"The manifest exposes `{component_name}` to other applications. "
             "No component-level permission is declared, so an external app can invoke it directly."
         )
-        sink_code = f"<{tag} android:name=\"{component_name}\" android:exported=\"true\">"
+        opening = re.match(r'\s*(<'+re.escape(tag)+r'\b(?:[^>"\']|"[^"]*"|\'[^\']*\')*>)', '\n'.join(lines[source_line-1:]))
+        sink_code = opening.group(1) if opening else lines[source_line-1].strip()
+        if not _android_attr(component, 'exported'):
+            explanation += ' Export visibility is inferred from an intent filter under applicable SDK defaults; no explicit exported attribute is recorded.'
         source_code = f"[android entrypoint] External intent can reach exported {tag} `{component_name}`."
         attack_vectors = [
             {
@@ -694,7 +710,7 @@ def _exported_component_flows(manifest_path: Path, source_root: Path, root: ET.E
             )
         )
 
-        source_file = _find_component_source(component_name, manifest_package, source_map)
+        source_file = _find_component_source(source_component_name, manifest_package, source_map)
         if not source_file:
             continue
         try:
@@ -751,9 +767,9 @@ def _provider_flows(manifest_path: Path, source_root: Path, root: ET.Element, li
     for component in app.findall("provider"):
         authorities = _android_attr(component, "authorities")
         component_name = _android_attr(component, "name") or authorities or "provider"
-        if not _component_is_exported(component):
+        if not enabled(component, app) or not _component_is_exported(component):
             continue
-        if _permission_guard(component):
+        if _permission_guard(component, root, app):
             continue
 
         source_line = declarations[component]
@@ -843,6 +859,8 @@ def _deep_link_flows(manifest_path: Path, source_root: Path, root: ET.Element, l
         tag = _component_kind(component.tag)
         if tag not in {"activity", "activity-alias"}:
             continue
+        if not enabled(component, app):
+            continue
         component_name = _android_attr(component, "name") or tag
         exported = _component_is_exported(component)
         for intent_filter in component.findall("intent-filter"):
@@ -854,8 +872,7 @@ def _deep_link_flows(manifest_path: Path, source_root: Path, root: ET.Element, l
             schemes = [_android_attr(item, "scheme") for item in datas if _android_attr(item, "scheme")]
             if not exported:
                 continue
-            if _bool_attr(intent_filter, "autoVerify", default=False):
-                continue
+            verification_requested = _bool_attr(intent_filter, "autoVerify", default=False)
 
             source_line = declarations[component]
             sink_line = declarations[intent_filter]
@@ -863,7 +880,8 @@ def _deep_link_flows(manifest_path: Path, source_root: Path, root: ET.Element, l
             host_summary = ", ".join(hosts[:3]) or "any host"
             scheme_summary = ", ".join(schemes[:3]) or "custom/unrestricted scheme"
             uri_example = f"{(schemes[0] if schemes else 'https')}://{(hosts[0] if hosts else 'example.com')}/<PAYLOAD>"
-            description = f"Deep-linkable activity `{component_name}` accepts VIEW intents for {scheme_summary} without app-link verification."
+            verification = 'requests app-link verification; device verification state is unresolved' if verification_requested else 'does not request app-link verification'
+            description = f"Deep-linkable activity `{component_name}` accepts VIEW intents for {scheme_summary} and {verification}. Resolve authorization before sensitive actions."
             explanation = (
                 "An external app, browser, or malicious link can route a VIEW intent into this activity. "
                 "The manifest exposes a deep-link entrypoint, but the intent-filter is not marked with autoVerify."
@@ -1001,7 +1019,7 @@ def _parse_manifest(manifest_path: Path, source_root: Path, *, source_map=None, 
         return []
 
     lines = raw.splitlines()
-    manifest_package = _manifest_package(root)
+    manifest_package = _manifest_package(root) or module_namespace(manifest_path, source_root)
     if source_map is None or method_index is None:
         source_cache = _source_cache(source_root)
         if source_map is None:
@@ -1013,6 +1031,18 @@ def _parse_manifest(manifest_path: Path, source_root: Path, *, source_map=None, 
     flows.extend(_provider_flows(manifest_path, source_root, root, lines, source_map, manifest_package, method_index))
     flows.extend(_deep_link_flows(manifest_path, source_root, root, lines, source_map, manifest_package, method_index))
     flows.extend(_cleartext_flows(manifest_path, source_root, root, lines))
+    for item in flows:
+        item['build_scope'] = build_scope(manifest_path)
+        item['configuration_status'] = 'source_configuration'
+        if all(step.get('file') == _rel_path(manifest_path,source_root) for step in item.get('path',[])):
+            item['analysis_kind'] = 'configuration_review'
+            from core.rdl.ratings import rating_context
+            context = rating_context(item.get('sink', ''), manifest_path, raw, {'line': item.get('line')})
+            item.update(context)
+            if context.get('exposure_scope') == 'launcher_entry':
+                item['input_surface']['params'] = []
+                item['input_surface']['examples'] = ['Launch the declared entry activity; no sensitive extra-consuming action is established.']
+        item['explanation'] = item.get('explanation', '') + ' Build source set: ' + item['build_scope'] + '; resolve merged configuration and runtime behavior.'
     return flows
 
 

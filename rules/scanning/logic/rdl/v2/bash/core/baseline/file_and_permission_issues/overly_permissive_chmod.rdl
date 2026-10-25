@@ -3,7 +3,7 @@ RULE baseline.bash.core.overly_permissive_chmod VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "chmod\\s+(?:0?777|[augo]+\\+[rwx]*w[rwx]*|a\\+x)" "im"
 WHEN (TEXT_MISSING "# intentional|# required|umask" "im" AND TEXT_MISSING "test|example|sample" "im")
-REPORT "Overly Permissive chmod"
+REPORT "File Permission Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -1,0 +1,8 @@
+VERSION 2
+RULE android.fragment-validation-accepts-all VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bisValidFragment\\s*\\([^)]{0,240}\\)\\s*(?::\\s*Boolean\\s*)?(?:=\\s*true\\b|\\{\\s*return\\s+true\\b)" ""
+REPORT "Fragment Validation Accepts Every Class"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

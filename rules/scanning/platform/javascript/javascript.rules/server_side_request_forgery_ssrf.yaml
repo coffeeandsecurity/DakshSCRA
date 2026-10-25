@@ -1,0 +1,46 @@
+format: daksh-pattern-rule/v1
+id: javascript.core.server_side_request_forgery_ssrf
+title: Outbound Request Destination Review
+order: 20
+category: MISC Checks
+detection:
+  pattern: XMLHttpRequest\.open\(|fetch\(|axios\.get\(|http\.request\(|https\.request\(|http\.get\(|https\.get\(|http\.post\(|https\.post\(|http\.put\(|https\.put\(|http\.delete\(|https\.delete\(|\$.ajax\({\s*url:\s*['"].+['"]
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:(req\.|params|query|body|userInput|target|url) && MISSING:(allowlist|whitelist|isPrivateIPBlocked|validateUrl|new
+    URL\()
+reporting:
+  type: area_of_interest
+  reason: Detects potential server-side request forgery (SSRF) vulnerabilities.
+  trace:
+  - Externalized rule logic for Server-Side Request Forgery (SSRF).
+  description: An outbound request operation is present. Resolve client versus server runtime, destination authority,
+    redirects and attacker influence before classifying SSRF. A fixed-authority mobile client request alone is not
+    SSRF.
+  impact: If an attacker can select a reachable destination, the application may expose internal services or metadata
+    credentials, or send protected data to an unauthorized recipient.
+  remediation: Allowlist required destinations and protocols, validate resolved addresses and every redirect, and
+    restrict outbound access to internal and metadata services.
+  reviewer: XMLHttpRequest, fetch, axios, http. request, https. request, http. get, https. get, http. post, https.
+    post, http. put, https. put, http. delete, https. delete, or $. ajax functions are used with potentially untrusted
+    URLs. Assess whether proper input validation and URL restriction mechanisms are implemented to mitigate SSRF
+    vulnerabilities. This can be confirmed as an issue when the matched path is reachable and required controls
+    are missing, weak, or inconsistent.
+  review_steps:
+  - Verify the operation makes a server-side request, then trace external control over the URL, host, port and redirects.
+  - Inspect destination restrictions, DNS resolution and redirect handling; distinguish fixed destinations from
+    caller-controlled requests.
+  - Check deployment egress controls and whether internal services or local files are reachable from the requesting
+    process.
+  recommendations:
+  - Prefer fixed destinations or a restricted set of permitted services; validate schemes, hosts and ports before
+    the request.
+  - Apply destination checks to redirects and resolved addresses where applicable, restrict network egress, and
+    test prohibited destinations.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

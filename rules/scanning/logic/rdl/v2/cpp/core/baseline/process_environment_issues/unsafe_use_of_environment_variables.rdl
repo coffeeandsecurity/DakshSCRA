@@ -3,7 +3,7 @@ RULE baseline.cpp.core.unsafe_use_of_environment_variables VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(std::getenv)\\s*\\(" "im"
 WHEN TEXT_MISSING "validate|sanitize|allowlist|whitelist|check\\s*\\(|strlen|strnlen" "im"
-REPORT "Unsafe Use of Environment Variables"
+REPORT "Process Environment Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

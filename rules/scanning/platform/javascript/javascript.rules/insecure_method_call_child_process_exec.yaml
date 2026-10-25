@@ -1,0 +1,46 @@
+format: daksh-pattern-rule/v1
+id: javascript.core.insecure_method_call_child_process_exec
+title: "OS Command Injection Review"
+order: 5
+category: Insecure Method/Function Call
+detection:
+  pattern: (^|\s|=\s?)require\(\s*('|")child_process('|")\s*\)(\s*\.(\s*\w+\s*)*\()?\s*\)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:execFile|spawn\s*\(|validate|sanitize|allowlist|escapeShellArg && MISSING:test|example|spec
+reporting:
+  type: area_of_interest
+  reason: Detects the usage of the `require('child_process')` statement with the `exec()` function, which can introduce
+    remote OS command execution vulnerabilities.
+  trace:
+  - 'Externalized rule logic for Insecure Method Call: child_process.exec().'
+  description: The code invokes a process or shell execution API. Trace the executable, arguments, shell use, and
+    source of externally supplied values.
+  impact: If attacker-controlled data changes command syntax or executable selection, an attacker may execute commands
+    with application privileges, read or modify files, or disrupt service.
+  remediation: Use a fixed executable with a separate argument array and avoid a shell where possible. Validate
+    arguments for the selected program and allowlist permitted operations.
+  reviewer: Verify whether the code implements sufficient measures to prevent remote OS command execution vulnerabilities.
+    Check whether the usage of `child_process. exec()` is necessary, and if so, ensure that proper input validation,
+    sanitization, and command parameterization techniques are implemented to prevent command injection attacks.
+    Also assess the context in which this function is used and verify that security best practices are followed
+    to mitigate any potential risks. This can be confirmed as an issue when the matched path is reachable and required
+    controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify the executable, arguments, shell use and working directory; trace external influence over each.
+  - Check whether a shell interprets metacharacters or whether options can change command behavior even without
+    a shell.
+  - Verify the operation is reachable and examine validation, executable selection and process privileges before
+    confirming an issue.
+  recommendations:
+  - Prefer a library API or a fixed executable with a separate argument array; avoid passing external text to a
+    shell.
+  - Restrict permitted operations and arguments, constrain option handling, and test rejected input under the actual
+    deployment privileges.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

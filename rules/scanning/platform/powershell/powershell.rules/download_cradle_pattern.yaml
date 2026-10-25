@@ -1,0 +1,41 @@
+format: daksh-pattern-rule/v1
+id: powershell.core.download_cradle_pattern
+title: "Downloaded Code Execution Review"
+order: 5
+category: Download and Execution
+detection:
+  pattern: (?:IEX|Invoke-Expression)\s*\(\s*(?:New-Object\s+Net\.WebClient|Invoke-WebRequest|iwr|curl|wget)\s*[^)]*\)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:test|CI|pipeline|AllowList|InternalSource|development|example|-WhatIf
+reporting:
+  type: area_of_interest
+  reason: Detects download-and-execute cradle patterns commonly used in living-off-the-land attacks.
+  trace:
+  - Externalized rule logic for Download Cradle Pattern.
+  description: The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace
+    executable selection and evaluated content to their trust boundaries.
+  impact: If an attacker controls interpreted syntax or the operation selected, code or commands may run with the
+    application’s privileges, allowing data theft, state changes, or service disruption.
+  remediation: Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate
+    argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates
+    or expressions.
+  reviewer: This pattern is a high-confidence indicator of malicious activity in most production environments. Verify
+    the remote source and confirm a legitimate use case exists. This can be confirmed as an issue when the matched
+    path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Determine whether the matched operation interprets code, expressions or templates; identify its execution context
+    and permissions.
+  - Trace control over the executed text and distinguish fixed application code from externally influenced content.
+  - Inspect restrictions and failure paths; record a reachable input-to-execution path before confirming code execution.
+  recommendations:
+  - Replace externally assembled code with fixed operations and data-only inputs where possible.
+  - Keep template or expression sources under application control; restrict exposed capabilities and test rejection
+    of unexpected syntax.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

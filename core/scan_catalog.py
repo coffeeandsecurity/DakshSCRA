@@ -60,6 +60,21 @@ _MATCHERS = [(key, re.compile(pattern, re.I)) for group, _, checks in CHECK_GROU
 def check_class(title='', category='', rule_id=''):
     if str(rule_id).startswith('custom.'):
         return 'custom'
+    from core.issue_titles import rule_selection_class
+    recorded_class = rule_selection_class(rule_id)
+    if recorded_class in CHECK_IDS:
+        return recorded_class
+    operation_classes = {
+        'origin_response_review': 'cors', 'origin_response_flow': 'cors',
+        'bulk_binding_review': 'authorization', 'bulk_binding_flow': 'authorization',
+        'literal_key_fallback_review': 'crypto', 'literal_key_fallback_flow': 'crypto',
+        'anonymous_operation_review': 'authorization', 'tenant_data_scope_review': 'authorization',
+    }
+    identity = str(rule_id).replace('-', '_').rsplit('/',1)[-1]
+    if identity.endswith('.rdl'):identity=identity[:-4]
+    stem=identity.rsplit('.',1)[-1]
+    if stem in operation_classes:
+        return operation_classes[stem]
     # Titles/IDs are deliberately preferred over broad inventory categories.
     text = ' '.join((str(title), str(rule_id))).replace('_', ' ')
     for key, pattern in _MATCHERS:
@@ -75,8 +90,9 @@ def check_class(title='', category='', rule_id=''):
 def registered_classes():
     root = Path(__file__).resolve().parents[1]
     classes = {}
-    for name in ('rdl_baseline', 'rdl_additional'):
-        for entry in json.loads((root / 'config' / (name + '.json')).read_text())['entries']:
+    from core.pattern_rules import catalog_entries
+    for entries in (catalog_entries(root), json.loads((root / 'rules/scanning/metadata/rdl/additional.json').read_text())['entries']):
+        for entry in entries:
             value = check_class(entry['title'], entry.get('category', ''), entry['rule_id'])
             for key in (entry['rule_id'], entry.get('v1_ref'), entry['v2_rule']):
                 if key:
@@ -88,9 +104,10 @@ def check_catalog(root):
     """Read the registered inventory, rather than advertise invented checks."""
     root = Path(root)
     entries = []
-    for name in ('rdl_baseline', 'rdl_additional'):
-        entries.extend(json.loads((root / 'config' / (name + '.json')).read_text())['entries'])
-    shadow = json.loads((root / 'config/rdl_shadow.json').read_text())['mappings']
+    from core.pattern_rules import catalog_entries
+    entries.extend(catalog_entries(root))
+    entries.extend(json.loads((root / 'rules/scanning/metadata/rdl/additional.json').read_text())['entries'])
+    shadow = json.loads((root / 'rules/scanning/metadata/rdl/shadow-mappings.json').read_text())['mappings']
     from core.rdl.portable_profiles import project_mappings
     for reference, mapping in dict(shadow, **project_mappings()).items():
         entries.append(dict(title=Path(mapping['v2_rule']).stem.replace('_', ' ').title(),
@@ -105,7 +122,7 @@ def check_catalog(root):
                                     scope=platform + ' / ' + kind, source_kind=kind))
     buckets = {key: {} for key in CHECK_IDS}
     for entry in entries:
-        key = registered_classes().get(entry.get('rule_id')) or check_class(entry.get('title'), entry.get('category'), entry.get('rule_id'))
+        key = check_class(entry.get('title'), entry.get('category'), entry.get('rule_id'))
         identity = entry['v2_rule']
         buckets[key][identity] = dict(title=entry['title'], scope=entry.get('scope', ''),
                                      kind=entry.get('source_kind', ''))

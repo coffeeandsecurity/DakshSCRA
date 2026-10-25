@@ -3,7 +3,7 @@ RULE baseline.javascript.framework.electron.nodeintegration_enabled_in_renderer_
 IN FILE
 WHEN TEXT_MATCHES "nodeIntegration\\s*:\\s*true" "im"
 WHEN TEXT_MISSING "contextIsolation:\\s*true|preload|sandbox:\\s*true" "im"
-REPORT "nodeIntegration Enabled in Renderer Process"
+REPORT "Electron Node Integration Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

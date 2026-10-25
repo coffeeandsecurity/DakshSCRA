@@ -1,0 +1,45 @@
+format: daksh-pattern-rule/v1
+id: java.core.sql_query_querying_sensitive_information_directly_in_code
+title: "Sensitive Data Query Review"
+order: 35
+category: Database Queries
+detection:
+  pattern: (?i)\bSELECT\s+(password|ssn|creditcard|api_key|token|pin)\s+FROM\s+[^\s]+\b
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:example|sample|dummy|test|placeholder
+reporting:
+  type: area_of_interest
+  reason: Detects SQL statements querying sensitive data directly, which could expose data if logs or exceptions
+    are mishandled.
+  trace:
+  - 'Externalized rule logic for SQL Query: Querying Sensitive Information Directly in Code.'
+  description: The checked source contains a database query or query-construction operation. Determine whether untrusted
+    values can change statement structure and whether record access is authorized.
+  impact: If externally controlled values enter query syntax, an attacker may read, change, or delete records or
+    bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound
+    parameters do not establish this condition.
+  remediation: Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level
+    access checks. Trace the complete query construction before replacing a safe query.
+  reviewer: Check if sensitive data fields are queried and confirm that data protection practices and secure logging
+    methods are applied. This can be confirmed as an issue when the matched path is reachable and required controls
+    are missing, weak, or inconsistent.
+  review_steps:
+  - Locate the final query and determine whether caller-controlled data can alter its structure; inspect interpolated
+    fragments and raw-query helpers.
+  - Verify that values are bound by the database driver. For identifiers or sort directions that cannot be bound,
+    inspect a fixed mapping of allowed choices.
+  - Record the reachable caller and effective controls; a constant query or correctly bound value does not establish
+    injection.
+  recommendations:
+  - Bind data values with the driver or ORM parameter API; avoid constructing query syntax from external strings.
+  - Use fixed mappings for dynamic identifiers and ordering. Test that unusual input remains data and that the database
+    account has only required privileges.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '0'
+  aggregate: file
+  report_format: secret_list
+  highlight_enabled: 'true'
+  highlight_color: red

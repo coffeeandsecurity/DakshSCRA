@@ -2,7 +2,7 @@ VERSION 2
 RULE baseline.mobile.ios.framework.swiftui.swiftui_insecure_url_usage VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "http://" "im"
-REPORT "SwiftUI Insecure URL Usage"
+REPORT "Cleartext HTTP Communication Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

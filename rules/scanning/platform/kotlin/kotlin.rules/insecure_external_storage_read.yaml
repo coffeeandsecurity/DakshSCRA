@@ -1,0 +1,41 @@
+format: daksh-pattern-rule/v1
+id: kotlin.core.insecure_external_storage_read
+title: "External File Storage Review"
+order: 17
+category: External Storage - Insecure Practices
+detection:
+  pattern: (Environment\.getExternalStorageDirectory|Context\.getExternalFilesDir)\s*\(\)\s*\.read
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:validate|sanitize|allowlist && MISSING:test|example|sample
+reporting:
+  type: area_of_interest
+  reason: Detects reading data from external storage without proper input validation.
+  trace:
+  - Externalized rule logic for Insecure External Storage Read.
+  description: The code accesses, creates, deletes, or shares filesystem data. Resolve path provenance, destination
+    containment, permission modes, and any concurrent access.
+  impact: An attacker controlling a path or shared file may read or replace private files, delete data, or redirect
+    an operation outside its intended directory if containment and access controls are ineffective.
+  remediation: Resolve paths beneath a fixed permitted root and verify containment and effective permissions. Use
+    safe exclusive temporary-file creation, restrict sharing, and account for symlinks and concurrent changes.
+  reviewer: Ensure that data read from external storage is properly validated and sanitized before use. This can
+    be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Trace external influence over the path and resolve it as the filesystem will, including relative segments and
+    symbolic links.
+  - Check the resolved destination remains within the permitted root and that the caller is authorized for the specific
+    file operation.
+  - Inspect read, write and extraction paths separately; record the effective path restrictions and deployment permissions.
+  recommendations:
+  - Resolve paths against a fixed permitted root and enforce containment with filesystem-aware checks; avoid simple
+    prefix checks.
+  - Use application-controlled file identifiers where possible, restrict filesystem privileges, and test traversal
+    and archive extraction boundaries.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

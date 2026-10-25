@@ -1,0 +1,46 @@
+format: daksh-pattern-rule/v1
+id: java.core.untrusted_input_s_in_sql_query_preparedstatement
+title: "SQL Injection Review"
+order: 4
+category: Untrusted Input Handling or Injection Flaws
+detection:
+  pattern: PreparedStatement(\s)*(\.|->)execute( |Query|Update)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:(\+|String\.format|MessageFormat|append\() && MISSING:setString\(|setInt\(|setLong\(|setObject\(
+reporting:
+  type: area_of_interest
+  reason: Detects potential SQL injection vulnerabilities in Java code that uses prepared statements.
+  trace:
+  - Externalized rule logic for Untrusted Input(s) in SQL Query (PreparedStatement).
+  description: The checked source contains a database query or query-construction operation. Determine whether untrusted
+    values can change statement structure and whether record access is authorized.
+  impact: If externally controlled values enter query syntax, an attacker may read, change, or delete records or
+    bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound
+    parameters do not establish this condition.
+  remediation: Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level
+    access checks. Trace the complete query construction before replacing a safe query.
+  reviewer: Verify that Java code uses prepared statements or parameterized queries to prevent SQL injection. Check
+    whether user input is properly bound as parameters and not concatenated directly into SQL queries. Also assess
+    the overall security of the database interactions and confirm that proper input validation and sanitization
+    techniques are implemented. This can be confirmed as an issue when the matched path is reachable and required
+    controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify who can supply the matched input, including stored values and upstream services; record its type, size
+    limits and trust boundary.
+  - Trace the value through transformations to each sensitive operation. Check the protection at that destination
+    and resource-level authorization.
+  - Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side
+    check alone is insufficient evidence.
+  recommendations:
+  - Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve
+    legitimate characters and protect each destination separately.
+  - Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations
+    where applicable. Test rejected input and unauthorized access.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

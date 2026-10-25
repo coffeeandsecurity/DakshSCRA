@@ -1,0 +1,38 @@
+format: daksh-pattern-rule/v1
+id: mobile.xplat.flutter.core.review_flutter_ios_keychain_accessibility
+title: "Keychain Accessibility Review"
+order: 18
+category: STORAGE Review
+detection:
+  pattern: \baccessibility\s*:\s*KeychainAccessibility\.(?:first_unlock|first_unlock_this_device)\b
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: The selected keychain accessibility allows access after the first unlock, including subsequent locked
+    periods. Device-only accessibility changes migration behavior; it does not require the device to remain unlocked.
+    Determine whether background access is intended.
+  impact: A secret may remain accessible to this application while the device is locked after its first unlock.
+    This matters when the application policy requires every use to occur only while unlocked; background access
+    can be a legitimate requirement.
+  remediation: Choose an accessibility class that matches required lock-state and migration behavior. Use an unlocked
+    or passcode-bound class where continuous unlocked-state access is required, and device-only variants where migration
+    must be restricted.
+  reviewer: Compare locked-state requirements with background processing needs. An unlocked accessibility class
+    is not an after-first-unlock weakness, and device-only custody does not by itself prevent access during later
+    locked periods.
+  review_steps:
+  - Compare locked-state requirements with background processing needs. An unlocked accessibility class is not an
+    after-first-unlock weakness, and device-only custody does not by itself prevent access during later locked periods.
+  recommendations:
+  - Choose an accessibility class that matches required lock-state and migration behavior. Use an unlocked or passcode-bound
+    class where continuous unlocked-state access is required, and device-only variants where migration must be restricted.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

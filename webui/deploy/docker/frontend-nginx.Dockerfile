@@ -3,7 +3,7 @@ WORKDIR /frontend
 COPY webui/frontend/package*.json ./
 RUN npm install
 COPY webui/frontend/ .
-COPY resources/templates/flow_graph.css /resources/templates/flow_graph.css
+COPY resources/templates/flow_graph.css resources/templates/program_graph.css /resources/templates/
 RUN npm run build
 
 FROM nginx:1.27-alpine

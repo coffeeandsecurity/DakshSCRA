@@ -3,7 +3,7 @@ RULE baseline.php.core.stack_trace_or_error_disclosure VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(?i)(echo .*Exception.*;|print_r\\(.*Exception.*\\)|trigger_error\\(.+\\))" "im"
 WHEN (TEXT_MISSING "ini_set.*display_errors.*0|error_reporting\\s*\\(\\s*0\\s*\\)|log_errors|try.*catch" "im" AND TEXT_MISSING "development|localhost" "im")
-REPORT "Stack Trace or Error Disclosure"
+REPORT "Error Detail Disclosure Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.ios.core.review_ios_keychain_access_group_surface VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "<key>keychain-access-groups</key>" "im"
+REPORT "Shared Keychain Access Group"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

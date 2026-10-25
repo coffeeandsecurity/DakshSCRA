@@ -14,11 +14,9 @@ GUIDANCE = {key: (entry.get('cwe', ''), entry['impact'], entry['remediation'])
 
 
 def format_issue_title(title):
-    """Capitalize each word without lowercasing acronyms or existing names."""
-    title = title.strip()
-    if title.casefold() == 'sql injection':
-        return 'SQL Injection'
-    return re.sub(r'\b[^\W\d_]', lambda match: match.group().upper(), title)
+    """Use the same issue names in pattern, semantic and exported results."""
+    from core.issue_titles import issue_title
+    return issue_title(title)
 
 
 def evidence_payload(evidence, sources=None):

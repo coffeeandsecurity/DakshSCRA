@@ -3,7 +3,7 @@ RULE baseline.dockerfile.core.no_user_directive_present VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "^(?:ENTRYPOINT|CMD)\\s" "im"
 WHEN TEXT_MISSING "^USER\\s" "im"
-REPORT "No USER Directive Present"
+REPORT "Container User Configuration Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

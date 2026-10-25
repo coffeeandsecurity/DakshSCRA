@@ -83,6 +83,7 @@ def _default_summary():
             "last_heartbeat_at": "",
             "heartbeat_message": "",
         },
+        "mobile_review": {"status": "not_evaluated", "coverage": {}, "contracts": 0, "error": ""},
     }
 
 

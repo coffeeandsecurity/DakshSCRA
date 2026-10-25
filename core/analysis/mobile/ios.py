@@ -6,7 +6,7 @@ import re
 import xml.etree.ElementTree as ET
 
 import state.runtime_state as state
-from core.analysis.mobile.common import annotate_flows, first_match_line, flow, line_text, output_dir
+from core.analysis.mobile.common import read_mobile_lines, annotate_flows, first_match_line, flow, line_text, output_dir
 from core.analysis.report import write_reports
 
 
@@ -35,9 +35,20 @@ CERT_BYPASS_RE = re.compile(
 
 
 def _guard_present(lines: List[str], start: int, end: int) -> bool:
-    upper = end or len(lines)
-    for idx in range(max(1, start), upper + 1):
-        if any(pattern.search(lines[idx - 1]) for pattern in GUARD_PATTERNS):
+    from core.mobile_model import views, enclosing_blocks
+    text='\n'.join(lines[max(0,start-1):end or len(lines)])
+    comments,code=views('Handler.swift',text)
+    sink=OPEN_URL_RE.search(code)
+    if sink is None or EVAL_JS_RE.search(code[:sink.start()]):
+        return False
+    for guard in re.finditer(r'\bguard\s+([^{}]+)\s+else\s*\{\s*(?:return|throw)\b',comments[:sink.start()]):
+        condition=guard.group(1)
+        if '||' in condition or '!' in condition or not code[guard.start():guard.start()+1].strip():
+            continue
+        scheme=re.search(r'\b(url)\.scheme\s*==\s*["\']https["\']',condition)
+        host=re.search(r'\burl\.host\s*==\s*["\']([A-Za-z0-9.-]+)["\']',condition)
+        same_value=re.match(r'\s*url\s*[,)]',comments[sink.end():])
+        if scheme and host and '.' in host.group(1) and same_value and enclosing_blocks(code,guard.start())==enclosing_blocks(code,sink.start()):
             return True
     return False
 
@@ -66,15 +77,11 @@ def _plist_value(node: ET.Element) -> Any:
 
 
 def _load_plist(plist_path: Path) -> Dict[str, Any]:
+    from core.mobile_model import load_plist
     try:
-        root = ET.parse(plist_path).getroot()
-    except ET.ParseError:
+        return load_plist(plist_path)
+    except (ET.ParseError, ValueError, OSError):
         return {}
-    dict_node = root.find("dict")
-    if dict_node is None:
-        return {}
-    value = _plist_value(dict_node)
-    return value if isinstance(value, dict) else {}
 
 
 def _plist_files(source_root: Path) -> List[Path]:
@@ -94,7 +101,7 @@ def _ats_flows(source_root: Path, plist_files: List[Path]) -> List[Dict]:
     for plist_path in plist_files:
         data = _load_plist(plist_path)
         ats = data.get("NSAppTransportSecurity")
-        if not isinstance(ats, dict) or not ats.get("NSAllowsArbitraryLoads"):
+        if not isinstance(ats, dict) or ats.get("NSAllowsArbitraryLoads") is not True:
             continue
         try:
             lines = plist_path.read_text(encoding="utf-8", errors="ignore").splitlines()
@@ -162,7 +169,7 @@ def _handler_flows(source_root: Path, source_files: List[Path], plist_files: Lis
                 "current_file": str(file_path),
             })
         try:
-            lines = file_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+            lines = read_mobile_lines(file_path)
         except OSError:
             continue
         handler_line = first_match_line(lines, SWIFT_HANDLER_RE, 1)
@@ -318,7 +325,7 @@ def _cert_flows(source_root: Path, source_files: List[Path]) -> List[Dict]:
     flows: List[Dict] = []
     for file_path in source_files:
         try:
-            lines = file_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+            lines = read_mobile_lines(file_path)
         except OSError:
             continue
         line_no = first_match_line(lines, CERT_BYPASS_RE, 1)

@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.mobile.xplat.flutter.framework.dio.loginterceptor_with_response_body_in_non_debug_build VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "LogInterceptor\\s*\\([^)]*responseBody\\s*:\\s*true|LogInterceptor\\s*\\([^)]*requestBody\\s*:\\s*true" "im"
-WHEN TEXT_MISSING "kDebugMode|kReleaseMode\\s*==\\s*false|assert\\b" "im"
-REPORT "LogInterceptor with Response Body in Non-Debug Build"
+REPORT "HTTP Body Logging Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

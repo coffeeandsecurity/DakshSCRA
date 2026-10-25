@@ -1,0 +1,43 @@
+format: daksh-pattern-rule/v1
+id: c.core.memory_copy_size_and_overlap_review
+title: Memory Copy Size and Overlap Review
+order: 4
+category: Untrusted Input Handling and Buffer Overflow
+detection:
+  pattern: \b(?:memcpy|memmove|mempcpy|wmemcpy|wmemmove)\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: A native memory-copy API is present. Verify both buffer extents, length arithmetic and overlap requirements
+    at this call; no overflow is established by the API name alone.
+  trace:
+  - Native memory-copy capacity and overlap review.
+  description: The code copies a caller-specified amount of native memory. Verify source and destination extents,
+    length arithmetic and the API's overlap contract.
+  impact: An incorrect copy length or overlapping memcpy regions may cause invalid reads or writes, corrupt state,
+    disclose memory or crash the process. A correctly bounded copy is legitimate; this review marker alone does
+    not establish a vulnerability.
+  remediation: Check both buffer capacities and guard size multiplication or addition before allocation and copying.
+    Use memmove where overlap is possible and retain explicit ownership and lifetime guarantees.
+  reviewer: Trace each copy length to image dimensions, file metadata or caller input. Compare it with both allocation
+    sizes and review integer overflow, truncation, lifetime and overlap.
+  review_steps:
+  - Identify who can supply the matched input, including stored values and upstream services; record its type, size
+    limits and trust boundary.
+  - Trace the value through transformations to each sensitive operation. Check the protection at that destination
+    and resource-level authorization.
+  - Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side
+    check alone is insufficient evidence.
+  recommendations:
+  - Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve
+    legitimate characters and protect each destination separately.
+  - Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations
+    where applicable. Test rejected input and unauthorized access.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

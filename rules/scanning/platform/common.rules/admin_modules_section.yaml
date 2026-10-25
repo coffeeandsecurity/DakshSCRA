@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: common.core.admin_modules_section
+title: "Admin Interface Review"
+order: 3
+category: Privileged User or Management Functionalities
+detection:
+  pattern: (?i)\b(admin_func|admin_page|admin_login|administrator|admin_portal|admin_module|admin_interface)\b
+  conditions:
+  - WHEN PRESENT (?i)\b(admin_login|admin_portal|admin_module|admin_interface|administrator)\b
+  - WHEN EXPR PRESENT:(?i)\b(auth|role|permission|access)\b && MISSING:(?i)\b(readme|changelog|example|sample|docs?)\b
+reporting:
+  type: area_of_interest
+  reason: Detects common terms for administrative functions, modules, or login pages, specifically focusing on terms
+    that indicate specific functionality rather than general mentions.
+  trace:
+  - Externalized rule logic for Admin Modules/Section.
+  description: The checked code implements an identity, access-control, or abuse-prevention decision. Determine
+    the trusted verifier, protected resources, and whether the control is enforced on every relevant path.
+  impact: If identity or resource authorization can be bypassed, an attacker may impersonate a user, access another
+    user’s data, or perform restricted operations. A control’s presence alone does not establish a weakness.
+  remediation: Enforce authentication and object-level authorization on the trusted server or privileged boundary.
+    Use strong verifier material, appropriate rate limits and recovery controls, and test access by unauthenticated
+    and insufficiently privileged callers.
+  reviewer: Verify that all admin functionalities are secured and access-controlled to prevent unauthorized access
+    and ensure secure implementation. This can be confirmed as an issue when the matched path is reachable and required
+    controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify the trusted identity verifier, protected resources and decision made by the matched control.
+  - Inspect effective middleware and service checks, alternate routes and failure paths; validate the supplied evidence
+    before issuing privileges.
+  - Test invalid identity evidence, insufficient permissions and access to another user or tenant before confirming
+    a bypass.
+  recommendations:
+  - Use a trusted verifier and enforce the applicable server-side identity and resource checks consistently.
+  - Fail closed on invalid evidence and test that alternate routes and error paths cannot issue unintended access.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

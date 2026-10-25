@@ -1,0 +1,44 @@
+format: daksh-pattern-rule/v1
+id: mobile.ios.core.openurl_with_unvalidated_input_scheme
+title: External URL Handling Review
+order: 11
+category: Platform-Specific Issues - iOS Runtime Security
+detection:
+  pattern: \bUIApplication\.shared\.open\s*\(|\bUIApplication\.sharedApplication\(\)\.openURL\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects openURL calls that may open user-controlled or unvalidated URL schemes.
+  trace:
+  - Externalized mobile rule logic for openURL with Unvalidated Input Scheme.
+  description: 'Review target: openURL with Unvalidated Input Scheme. The code handles a link, redirect, or externally
+    selected navigation target. Validate the effective destination and any action triggered by the receiving handler.
+    Resolve the external entry point, its caller or URI grant, and the sensitive operation or resource reached.'
+  impact: A crafted destination or link may direct users to a phishing site, leak URL-carried secrets, or trigger
+    unauthorized operations if routing trusts external parameters without the required access checks.
+  remediation: Allowlist schemes, hosts, paths, and operations. Validate parsed link parameters, avoid credentials
+    in URLs, and require authentication and authorization before sensitive actions.
+  reviewer: Trace the URL origin and check that scheme, host, and path are validated before calling open. This can
+    be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Determine whether untrusted input controls the redirect destination and whether the redirect is reachable.
+  - Inspect URL parsing, relative versus absolute destinations, scheme handling and authorization around the redirect.
+  - Check how encoded or ambiguous URLs are interpreted by the framework and browser before confirming an unsafe
+    redirect.
+  - Resolve the external entry point, its caller or URI grant, and the sensitive operation or resource reached.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Prefer application route identifiers mapped to fixed destinations; permit only necessary relative paths or explicitly
+    allowed external destinations.
+  - Reject unsupported schemes and ambiguous destinations and test redirect handling after decoding and normalization.
+scan_config:
+  match_mode: file
+  context_type: lines
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  report_format: default
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: yellow

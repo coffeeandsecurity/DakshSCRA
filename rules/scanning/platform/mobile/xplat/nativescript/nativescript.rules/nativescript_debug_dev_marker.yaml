@@ -1,0 +1,44 @@
+format: daksh-pattern-rule/v1
+id: mobile.xplat.nativescript.core.nativescript_debug_dev_marker
+title: "Debug Mode Configuration Review"
+order: 4
+category: Framework-Specific Security
+detection:
+  pattern: NODE_ENV\s*=\s*[\'\"]development[\'\"]|debug\s*[:=]\s*true
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects development mode markers in NativeScript projects.
+  trace:
+  - Externalized mobile rule logic for NativeScript Debug/Dev Marker.
+  description: 'Review target: NativeScript Debug/Dev Marker. A configuration or API enables development diagnostics,
+    process inspection, or debugging. Verify whether it applies to a deployed production artifact. Resolve the exact
+    declaration or operation in the selected build and identify its security boundary.'
+  impact: An actor with access to an enabled debugging interface may inspect private state or influence application
+    execution; exposed development endpoints may disclose internal implementation details.
+  remediation: Disable debugging and development endpoints in production, bind necessary diagnostic services to
+    restricted interfaces, and verify the final deployed artifact and access policy. Apply the least-privilege platform
+    control appropriate to the matched operation and verify the production configuration.
+  reviewer: Review build/runtime environment toggles. This can be confirmed as an issue when the matched path is
+    reachable and required controls are missing, weak, or inconsistent. Check debug/release and product flavors,
+    generated/native code, plugin boundaries and failure paths; source evidence alone does not establish shipped
+    or runtime behavior.
+  review_steps:
+  - Inspect the effective production configuration and determine who can reach debugging or development functionality.
+  - Check environment guards, deployment overrides and the information or capabilities exposed by the feature.
+  - Verify the actual production behavior; a development-only setting is not itself a production vulnerability.
+  - Resolve the exact declaration or operation in the selected build and identify its security boundary.
+  - Check debug/release and product flavors, generated/native code, plugin boundaries and failure paths; source
+    evidence alone does not establish shipped or runtime behavior.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Disable development-only functionality in production and enforce the environment boundary in deployment configuration.
+  - Restrict operational diagnostics and add a production-configuration check covering the exposed route or feature.
+  - Apply the least-privilege platform control appropriate to the matched operation and verify the production configuration.
+scan_config:
+  match_mode: file
+  context_lines_before: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

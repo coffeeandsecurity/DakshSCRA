@@ -1,0 +1,56 @@
+format: daksh-pattern-rule/v1
+id: mobile.ios.core.keychain_item_missing_access_control_object
+title: "Keychain Access Control Review"
+order: 10
+category: Platform-Specific Issues - iOS Runtime Security
+detection:
+  pattern: \bSecItemAdd\s*\(|\bSecItemUpdate\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects Keychain item storage without an explicit access control object.
+  trace:
+  - Externalized mobile rule logic for Keychain Item Missing Access Control Object.
+  description: 'Review target: Keychain Item Missing Access Control Object. The application stores sensitive values
+    or configures protection for persistent data. Determine the actual storage location, backup policy, and lock-state
+    access restrictions. Identify the value written, backing store and access class, including backup, restore,
+    reinstall and logout behavior.'
+  impact: An actor with access to unprotected application files, backups, or overly broad keychain access may recover
+    credentials or private records and use them outside the intended trust boundary.
+  remediation: Use the platform credential or key store for secrets and appropriate authenticated encryption and
+    file protection for private records. Minimize stored data, backup exposure, and lock-state accessibility. Keep
+    privileged secrets on the server, use appropriate device-backed secure storage for local credentials, and restrict
+    backup and sharing to intended non-sensitive data.
+  reviewer: Confirm high-sensitivity Keychain writes include a SecAccessControlRef requiring user authentication.
+    This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak,
+    or inconsistent. Test device lock state, cloud backup versus device transfer, restored keys, keychain persistence
+    after reinstall, and secure-storage failure; do not silently fall back to plaintext or treat an unrelated secure
+    store as protection.
+  review_steps:
+  - Identify the actor, action and protected resource, including ownership and tenant boundaries.
+  - Trace every reachable request or service path and inspect the effective permission check before sensitive work
+    occurs.
+  - Test unauthenticated access, insufficient roles and access to another user or tenant; record effective middleware
+    and service-level controls.
+  - Identify the value written, backing store and access class, including backup, restore, reinstall and logout
+    behavior.
+  - Test device lock state, cloud backup versus device transfer, restored keys, keychain persistence after reinstall,
+    and secure-storage failure; do not silently fall back to plaintext or treat an unrelated secure store as protection.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Enforce authorization on the server for each protected action and resource; deny requests without an explicit
+    permitted outcome.
+  - Add tests for cross-user and cross-tenant access and ensure alternate routes cannot bypass the same policy.
+  - Keep privileged secrets on the server, use appropriate device-backed secure storage for local credentials, and
+    restrict backup and sharing to intended non-sensitive data.
+scan_config:
+  match_mode: file
+  context_type: lines
+  context_lines_before: '5'
+  context_lines_after: '0'
+  aggregate: none
+  report_format: default
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: yellow

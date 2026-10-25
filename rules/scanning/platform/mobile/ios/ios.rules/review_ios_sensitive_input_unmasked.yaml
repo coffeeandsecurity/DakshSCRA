@@ -1,0 +1,39 @@
+format: daksh-pattern-rule/v1
+id: mobile.ios.core.review_ios_sensitive_input_unmasked
+title: "Sensitive Input Masking Review"
+order: 54
+category: PLATFORM Review
+detection:
+  pattern: (?i)\b(?:password|passwd|pin|secret|token)\w*\s*\.\s*isSecureTextEntry\s*=\s*(?:false|NO)\b
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: A text field whose identifier indicates secret input explicitly disables secure entry. Confirm the
+    field’s content and whether an intentional reveal action limits this behavior. Identify the actual sensitive
+    value and the recipients, retention and user-consent context of this exposure or capability.
+  impact: An observer or recording mechanism may capture displayed credentials or secrets while the field is unmasked.
+    Identifier matching alone does not establish that the field contains a secret.
+  remediation: Enable secure entry for secret input by default. If a reveal feature is necessary, require explicit
+    user intent and restore masking when the screen loses focus. Minimize collection and retention, redact secret
+    values, and apply the platform controls needed for sensitive UI and data sharing.
+  reviewer: Test release logging, crash-report payloads, screenshot/background snapshots and clipboard lifetime;
+    permission or API capability alone does not establish collection or malicious behavior.
+  review_steps:
+  - Trace the matched candidate to its actual value, caller or resource.
+  - Test release logging, crash-report payloads, screenshot/background snapshots and clipboard lifetime; permission
+    or API capability alone does not establish collection or malicious behavior.
+  - Resolve release configuration and runtime assumptions before confirming an issue.
+  recommendations:
+  - Enable secure entry for secret input by default. If a reveal feature is necessary, require explicit user intent
+    and restore masking when the screen loses focus. Minimize collection and retention, redact secret values, and
+    apply the platform controls needed for sensitive UI and data sharing.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

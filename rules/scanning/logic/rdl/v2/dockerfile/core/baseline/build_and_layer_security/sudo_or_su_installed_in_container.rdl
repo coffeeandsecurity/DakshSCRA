@@ -3,7 +3,7 @@ RULE baseline.dockerfile.core.sudo_or_su_installed_in_container VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(?:apt-get|yum|apk|dnf)\\s+install\\s+[^\\n]*\\bsudo\\b" "im"
 WHEN TEXT_MISSING "# intentional|gosu|su-exec|# required" "im"
-REPORT "sudo or su Installed in Container"
+REPORT "Privilege Tooling Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

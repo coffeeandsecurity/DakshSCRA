@@ -6,7 +6,7 @@ STATE object STARTS allocated
 TRANSITION memory.free(object) FROM allocated TO freed
 VIOLATION memory.free(object) WHILE freed
 REQUIRE REACHABLE PATH
-REPORT "double free"
+REPORT "Double Free"
 SEVERITY HIGH
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

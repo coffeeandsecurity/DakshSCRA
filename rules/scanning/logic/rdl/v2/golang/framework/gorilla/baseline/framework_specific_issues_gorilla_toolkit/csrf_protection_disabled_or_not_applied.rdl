@@ -3,7 +3,7 @@ RULE baseline.golang.framework.gorilla.csrf_protection_disabled_or_not_applied V
 IN FILE
 WHEN TEXT_MATCHES "csrf\\.Protect\\s*\\([^)]*Secure\\s*:\\s*false" "im"
 WHEN TEXT_MISSING "csrf\\.Protect\\s*\\(.*Secure:\\s*true|SameSite:\\s*csrf\\.SameSiteStrictMode|csrf\\.Protect\\s*\\(.*HttpOnly:\\s*true" "im"
-REPORT "CSRF Protection Disabled or Not Applied"
+REPORT "CSRF Protection Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -3,7 +3,7 @@ RULE baseline.dockerfile.core.add_used_to_fetch_remote_content VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "^ADD\\s+https?://" "im"
 WHEN TEXT_MISSING "checksum|sha256|sha512|verify" "im"
-REPORT "ADD Used to Fetch Remote Content"
+REPORT "Remote Build Input Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

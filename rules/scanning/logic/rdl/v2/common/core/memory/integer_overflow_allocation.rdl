@@ -4,7 +4,7 @@ IN FUNCTION
 LET size BE EXPRESSION MATCHES memory.allocation-size
 WHEN arithmetic.overflow_possible size
 REQUIRE size FLOWS TO memory.allocation
-REPORT "integer overflow affecting allocation size"
+REPORT "Integer Overflow Affecting Allocation Size"
 SEVERITY CRITICAL
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

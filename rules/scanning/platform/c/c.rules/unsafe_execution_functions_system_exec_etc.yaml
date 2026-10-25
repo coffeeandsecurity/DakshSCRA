@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: c.core.unsafe_execution_functions_system_exec_etc
+title: "OS Command Injection Review"
+order: 5
+category: Command Injection
+detection:
+  pattern: \b(?:system|popen|exec|execl|execv|execle|execve|execlp|execvp|execvpe|execp|CreateProcess(?:A|W)?|ShellExecute(?:Ex)?(?:A|W)?|WinExec|(?:g_)?spawn_command_line_(?:async|sync))\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: A process-launch API is present. Review executable selection, argument boundaries and caller trust; a
+    validation helper elsewhere in the file does not establish safety.
+  trace:
+  - 'Externalized rule logic for Unsafe Execution Functions: system(), exec(), etc..'
+  description: The code invokes a process or shell execution API. Trace the executable, arguments, shell use, and
+    source of externally supplied values.
+  impact: If attacker-controlled data changes command syntax or executable selection, an attacker may execute commands
+    with application privileges, read or modify files, or disrupt service.
+  remediation: Use a fixed executable with a separate argument array and avoid a shell where possible. Validate
+    arguments for the selected program and allowlist permitted operations.
+  reviewer: Identify all instances of execution functions. Verify that input is properly sanitized and ensure only
+    trusted data is used. This can be confirmed as an issue when the matched path is reachable and required controls
+    are missing, weak, or inconsistent.
+  review_steps:
+  - Identify the executable, arguments, shell use and working directory; trace external influence over each.
+  - Check whether a shell interprets metacharacters or whether options can change command behavior even without
+    a shell.
+  - Verify the operation is reachable and examine validation, executable selection and process privileges before
+    confirming an issue.
+  recommendations:
+  - Prefer a library API or a fixed executable with a separate argument array; avoid passing external text to a
+    shell.
+  - Restrict permitted operations and arguments, constrain option handling, and test rejected input under the actual
+    deployment privileges.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

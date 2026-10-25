@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.xplat.reactnative.core.review_reactnative_mixed_content VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bmixedContentMode\\s*=\\s*(?:[\"\\x27]always[\"\\x27]|\\{\\s*[\"\\x27]always[\"\\x27]\\s*\\})" "im"
+REPORT "WebView Mixed Content Allowed"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

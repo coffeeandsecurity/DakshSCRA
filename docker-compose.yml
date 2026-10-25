@@ -7,7 +7,7 @@ services:
     environment:
       DAKSH_NON_INTERACTIVE: "1"
       PYTHONPATH: /app/webui
-      DAKSH_PORT: "${DAKSH_PORT:-8080}"
+      DAKSH_PORT: "${DAKSH_PORT:-3030}"
       DAKSH_CONTAINER: "1"
       DAKSH_HOST_OS: "${DAKSH_HOST_OS:-auto}"
       DAKSH_BROWSE_ROOTS: "${DAKSH_BROWSE_ROOTS:-}"
@@ -44,7 +44,7 @@ services:
       dockerfile: webui/deploy/docker/frontend-nginx.Dockerfile
     container_name: webui
     ports:
-      - "${DAKSH_PORT:-8080}:80"
+      - "${DAKSH_PORT:-3030}:80"
     depends_on:
       api:
         condition: service_started

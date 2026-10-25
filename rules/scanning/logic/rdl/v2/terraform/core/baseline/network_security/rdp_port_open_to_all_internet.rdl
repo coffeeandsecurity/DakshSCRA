@@ -3,7 +3,7 @@ RULE baseline.terraform.core.rdp_port_open_to_all_internet VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "from_port\\s*=\\s*3389[^\\d][^}]*cidr_blocks\\s*=\\s*\\[\"0\\.0\\.0\\.0/0\"\\]" "im"
 WHEN (TEXT_MATCHES "from_port\\s*=\\s*3389|to_port\\s*=\\s*3389" "im" AND TEXT_MATCHES "cidr_blocks.*0\\.0\\.0\\.0/0|cidr_ipv6.*::/0" "im" AND TEXT_MISSING "# intentional|# bastion" "im")
-REPORT "RDP Port Open to All Internet"
+REPORT "Public RDP Access Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

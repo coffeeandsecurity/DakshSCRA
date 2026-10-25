@@ -3,7 +3,7 @@ RULE baseline.python.core.insecure_use_of_django_mark_safe VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(?i)\\.mark_safe\\(\\s*[\"']" "im"
 WHEN (TEXT_MISSING "escape|bleach\\.clean|html\\.escape|strip_tags|validate" "im" AND TEXT_MISSING "test|example" "im")
-REPORT "Insecure Use of Django mark_safe"
+REPORT "HTML Output Encoding Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

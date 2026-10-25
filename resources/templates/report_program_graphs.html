@@ -1,0 +1,19 @@
+{% if show_analysis and program_graph_catalog and (page_sections is not defined or 'program-graphs' in page_sections) %}
+<section class="report-section section report-program-graphs" id="program-graphs" data-section="CFG and DFG">
+<h2>Control Flow Graphs &amp; Data Flow Graphs</h2><div class="report-section-body">
+<p class="review-note">CFG shows modeled control transfers; DFG shows recorded value dependencies. Neither is a taint verdict or proof of feasible execution. Framework and mobile code uses its implementation-language profile. Declarative configurations have no executable graph model.</p>
+<p><b>Snapshot:</b> {{ program_graph_catalog.get('provenance','Not recorded') }} · {{ program_graph_catalog.get('created_at','') }}. {{ program_graph_catalog.get('summary',{}).get('files',0) }} source files. {% if program_graph_catalog.get('truncated') %}<b>Coverage was truncated by the recorded budget.</b>{% endif %}</p>
+{% for note in program_graph_catalog.get('diagnostics',[]) %}<p>{{ note }}</p>{% endfor %}
+{% if report_graph_enabled %}<button type="button" class="btn" data-program-explorer>Open interactive CFG / DFG explorer</button><div data-program-root hidden></div><script type="application/json" data-program-data>{{ program_graph_catalog|tojson }}</script>{% endif %}
+<details><summary>Language and format applicability</summary><table class="report-table"><thead><tr><th>Language / format</th><th>CFG / DFG model</th><th>Scope</th></tr></thead><tbody>{% for row in program_graph_catalog.get('coverage',[]) %}<tr><td>{{ row.language }}</td><td>{{ row.cfg }} / {{ row.dfg }}</td><td>{{ row.note }}</td></tr>{% endfor %}</tbody></table></details>
+{% for view in program_graph_views %}
+<details class="report-entry report-program-view" open><summary>{{ view.kind|upper }} · {{ view.path }} · {{ view.language }} · {{ view.status }}</summary><div class="report-entry-body">
+{% if view.window_note is defined %}<p>{{ view.window_note }}</p>{% endif %}
+{% for note in view.get('diagnostics',[]) + view.get('limitations',[]) %}<p class="review-note">{{ note }}</p>{% endfor %}
+{% if view.svg %}<div class="report-program-svg">{{ view.svg|safe }}</div><p class="review-note">The drawing shows up to 80 nodes and only recorded edges whose endpoints are in this node window. The complete recorded node and edge tables follow; use the interactive explorer or saved JSON for larger selections.</p>{% endif %}
+{% if view.get('nodes') %}<h3>Recorded nodes ({{ view.nodes|length }})</h3><table class="report-table"><thead><tr><th>Node / scope</th><th>Recorded source</th><th>Operation</th></tr></thead><tbody>{% for node in view.nodes %}<tr><td><code>{{ node.id }}</code><small>{{ node.kind }} · scope {{ node.get('function_id','') }}</small></td><td>{{ node.location.path }}:{{ node.location.line }}<pre>{{ node.get('code','') }}</pre></td><td>{{ node.label }}</td></tr>{% endfor %}</tbody></table>{% endif %}
+{% if view.get('edges') %}<h3>Recorded edges ({{ view.edges|length }})</h3><table class="report-table"><thead><tr><th>Source node</th><th>Relationship / condition</th><th>Target node</th></tr></thead><tbody>{% for edge in view.edges %}<tr><td><code>{{ edge.source }}</code></td><td>{{ edge.get('label') or edge.kind }}</td><td><code>{{ edge.target }}</code></td></tr>{% endfor %}</tbody></table>{% endif %}
+{% if not view.get('nodes') %}<p>No executable graph was recorded for this selection; this is not a safety verdict.</p>{% endif %}
+</div></details>{% endfor %}
+</div></section>
+{% endif %}

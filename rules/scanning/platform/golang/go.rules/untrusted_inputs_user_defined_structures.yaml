@@ -1,0 +1,44 @@
+format: daksh-pattern-rule/v1
+id: golang.core.untrusted_inputs_user_defined_structures
+title: "Untrusted Input Entry Point"
+order: 2
+category: Untrusted Input Handling or Injection Flaws
+detection:
+  pattern: struct
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - 'WHEN EXPR PRESENT:r\.FormValue|r\.URL\.Query|json\.Unmarshal|c\.Bind|c\.ShouldBind && MISSING:validate|Validate|binding:|required:'
+reporting:
+  type: area_of_interest
+  reason: Detects the usage of user-defined structures without proper validation and sanitization of fields.
+  trace:
+  - 'Externalized rule logic for Untrusted Inputs: User-Defined Structures.'
+  description: The code accepts or reads externally influenced data. Trace it to security-sensitive operations and
+    identify the validation and authorization required by each destination.
+  impact: External input may cause injection, incorrect decisions, or unauthorized data access if it reaches a sensitive
+    operation without the controls required by that operation. Reading input alone does not establish a vulnerability.
+  remediation: Validate type, size, and allowed values at trust boundaries, and apply destination-specific parameter
+    binding or output encoding. Enforce authorization independently of input validation.
+  reviewer: Ensure that proper input handling is in place for user-defined structures. Verify that developers have
+    implemented appropriate input validation and sanitization techniques to prevent security vulnerabilities related
+    to untrusted inputs. This can be confirmed as an issue when the matched path is reachable and required controls
+    are missing, weak, or inconsistent.
+  review_steps:
+  - Identify who can supply the matched input, including stored values and upstream services; record its type, size
+    limits and trust boundary.
+  - Trace the value through transformations to each sensitive operation. Check the protection at that destination
+    and resource-level authorization.
+  - Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side
+    check alone is insufficient evidence.
+  recommendations:
+  - Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve
+    legitimate characters and protect each destination separately.
+  - Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations
+    where applicable. Test rejected input and unauthorized access.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

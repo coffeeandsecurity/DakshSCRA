@@ -2,7 +2,7 @@ VERSION 2
 RULE baseline.filepaths.core.multi_factor_validation VERSION 1
 IN PATH
 WHEN TEXT_MATCHES "(?-i:(?:(?<![A-Za-z0-9])(?i:mfa|multi[-_]?factor|two[-_]?factor|2fa|totp|hotp|otp)(?=[A-Z_. /\\\\-]|$)|(?<=[a-z0-9])(?:Mfa|MFA|MultiFactor|Multi_factor|Multifactor|TwoFactor|Two_factor|Twofactor|2fa|2FA|Totp|TOTP|Hotp|HOTP|Otp|OTP)(?=[A-Z_. /\\\\-]|$)))" "im"
-REPORT "Multi-Factor Validation"
+REPORT "Multi-Factor Authentication Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -1,0 +1,45 @@
+format: daksh-pattern-rule/v1
+id: dotnet.core.untrusted_input_handling_in_htlm_output_response_write
+title: "HTML Output Encoding Review"
+order: 3
+category: Untrusted Input/Output Handling
+detection:
+  pattern: Response\.Write\(.*\)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:(Request\.|HttpContext\.Current\.Request) && MISSING:(HtmlEncode|HttpUtility\.HtmlEncode|AntiXssEncoder|TagBuilder)
+reporting:
+  type: area_of_interest
+  reason: Detects the usage of Response.Write without output encoding, which can lead to cross-site scripting vulnerabilities.
+  trace:
+  - 'Externalized rule logic for Untrusted Input Handling in HTLM Output: Response.Write.'
+  description: Application data is inserted into an HTML or script rendering context, or marked safe in a way that
+    may bypass automatic encoding.
+  impact: If attacker-controlled content reaches an executable browser context, it may run under the application’s
+    origin, read accessible session data, or perform actions with the victim’s permissions.
+  remediation: Use automatic context-aware output encoding and data-only DOM APIs. Sanitize deliberately accepted
+    rich HTML with a maintained allowlist sanitizer and avoid marking untrusted content as safe.
+  reviewer: Inspect the usage of Response. Write and verify if appropriate output encoding is applied to mitigate
+    XSS vulnerabilities. assess the output handling and ensure that user-generated content or dynamic data is properly
+    sanitized and displayed in a secure manner, preventing the execution of malicious scripts or HTML code. This
+    can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or
+    inconsistent.
+  review_steps:
+  - Identify who can supply the matched input, including stored values and upstream services; record its type, size
+    limits and trust boundary.
+  - Trace the value through transformations to each sensitive operation. Check the protection at that destination
+    and resource-level authorization.
+  - Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side
+    check alone is insufficient evidence.
+  recommendations:
+  - Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve
+    legitimate characters and protect each destination separately.
+  - Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations
+    where applicable. Test rejected input and unauthorized access.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

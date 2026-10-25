@@ -1,3 +1,4 @@
+import { setDisplayPreferences } from './lib/datetime'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   createScan,
@@ -28,6 +29,7 @@ import LoginPage from './components/LoginPage'
 import SettingsPanel from './components/SettingsPanel'
 import ProjectsPanel from './components/ProjectsPanel'
 import ScanDetail from './components/ScanDetail'
+import QueuedScanDetail from './components/QueuedScanDetail'
 import ScanForm from './components/ScanForm'
 import ScanTable from './components/ScanTable'
 import Sidebar from './components/Sidebar'
@@ -38,6 +40,7 @@ const ACTIVE_SCAN_STATUSES = new Set(['running', 'queued', 'stopping'])
 
 const EMPTY_FORM = {
   rdl_engine: 'both',
+  rule_mode: 'both',
   custom_rdl: [],
   exclude_checks: [],
   exclude_paths: [],
@@ -53,9 +56,11 @@ const EMPTY_FORM = {
   target_dir: '',
   file_types: 'auto',
   report_format: 'web',
+  report_audience: 'both',
   verbosity: 1,
   recon: true,
   estimate: false,
+  estimate_assumptions: {},
   analysis: false,
   loc: true,
 }
@@ -149,7 +154,7 @@ function AccountMenu({ user, version, onChangePassword, onLogout }) {
             <span className="account-menu-icon">↪</span>
             Log out
           </button>
-          <div className="account-dropdown-version">Daksh SCRA{version ? ` v${version}` : ''}</div>
+          <div className="account-dropdown-version">Daksh SCRA{version ? ` v${String(version).trim().replace(/^v+/i, '')}` : ''}</div>
         </div>
       ) : null}
     </div>
@@ -160,6 +165,12 @@ function AccountMenu({ user, version, onChangePassword, onLogout }) {
 let toastCounter = 0
 
 export default function App() {
+  const [, refreshDisplay] = useState(0)
+  useEffect(() => {
+    const refresh = () => refreshDisplay(value => value + 1)
+    window.addEventListener('display-preferences-changed', refresh)
+    return () => window.removeEventListener('display-preferences-changed', refresh)
+  }, [])
   const [user, setUser] = useState(null)
   const [authChecked, setAuthChecked] = useState(false)
 
@@ -172,10 +183,12 @@ export default function App() {
   const [viewedProject, setViewedProject] = useState('')
 
   const [runs, setRuns] = useState([])
+  const [queuedRuns, setQueuedRuns] = useState([])
   const [selected, setSelected] = useState(null)
   const [selectedDetail, setSelectedDetail] = useState(null)
   const [selectedArtifacts, setSelectedArtifacts] = useState(null)
   const [selectedLog, setSelectedLog] = useState('')
+  const [submittedQueuedRun, setSubmittedQueuedRun] = useState(null)
 
   const [form, setForm] = useState(EMPTY_FORM)
   const [creating, setCreating] = useState(false)
@@ -198,13 +211,13 @@ export default function App() {
   }, [])
 
   const runningCount = useMemo(
-    () => runs.filter((r) => ACTIVE_SCAN_STATUSES.has(r.status)).length,
+    () => runs.filter((r) => ['running', 'stopping'].includes(r.status)).length,
     [runs]
   )
 
   const hasActiveRun = useMemo(
-    () => runs.some((r) => ACTIVE_SCAN_STATUSES.has(r.status)) || ACTIVE_SCAN_STATUSES.has(selectedDetail?.status),
-    [runs, selectedDetail?.status]
+    () => !!submittedQueuedRun || runs.some((r) => ACTIVE_SCAN_STATUSES.has(r.status)) || ACTIVE_SCAN_STATUSES.has(selectedDetail?.status),
+    [runs, selectedDetail?.status, submittedQueuedRun]
   )
 
   /* ── Data Fetchers ── */
@@ -217,8 +230,11 @@ export default function App() {
   const selectedFailedRef = useRef(false)
   const sessionGeneration = useRef(0)
   const selectedRequest = useRef(0)
+  const navigationGeneration = useRef(0)
 
   function clearSelectedScan() {
+    navigationGeneration.current++
+    setSubmittedQueuedRun(null)
     selectedRequest.current++
     setSelected(null)
     setSelectedDetail(null)
@@ -233,6 +249,7 @@ export default function App() {
     setMetrics(null)
     setProjects([])
     setRuns([])
+    setQueuedRuns([])
     setSelectedProject('')
     setViewedProject('')
     setSection('dashboard')
@@ -264,9 +281,25 @@ export default function App() {
   async function refreshRuns() {
     const generation = sessionGeneration.current
     try {
-      const data = await listScans(200)
+      const [data, running, stopping, waiting] = await Promise.all([
+        listScans(200),
+        listScans(200, '', { status: 'running' }),
+        listScans(200, '', { status: 'stopping' }),
+        (async () => {
+          const rows = []
+          let page
+          do {
+            page = await listScans(200, '', { status: 'queued', offset: rows.length })
+            rows.push(...page)
+          } while (page.length === 200)
+          // The API returns newest first, including its ID tie-breaker.
+          // Reversing preserves the dispatcher's created_at/ID FIFO order.
+          return [...new Map(rows.map(row => [row.run_uuid, row])).values()].reverse()
+        })(),
+      ])
       if (generation !== sessionGeneration.current) return
-      setRuns(data)
+      setQueuedRuns(waiting.filter(run => !run.data_removed))
+      setRuns([...new Map([...data, ...waiting, ...running, ...stopping].map(run => [run.run_uuid, run])).values()])
       runsFailedRef.current = false
     } catch {
       if (generation !== sessionGeneration.current) return
@@ -277,12 +310,12 @@ export default function App() {
     }
   }
 
-  async function refreshSelected(runUuid) {
+  async function refreshSelected(runUuid, includeEvidence = true) {
     if (!runUuid) return
     const requestId = ++selectedRequest.current
     const generation = sessionGeneration.current
     const [detailResult, artifactsResult, logResult] = await Promise.allSettled([
-      getScan(runUuid), getScanArtifacts(runUuid), getScanLog(runUuid),
+      getScan(runUuid), includeEvidence ? getScanArtifacts(runUuid) : Promise.resolve(null), includeEvidence ? getScanLog(runUuid) : Promise.resolve(null),
     ])
     if (generation !== sessionGeneration.current || requestId !== selectedRequest.current) return
     if (detailResult.status === 'rejected') {
@@ -300,8 +333,10 @@ export default function App() {
     }
     setSelectedDetail(detailResult.value)
     selectedFailedRef.current = false
-    setSelectedArtifacts(artifactsResult.status === 'fulfilled' ? artifactsResult.value : null)
-    setSelectedLog(logResult.status === 'fulfilled' ? logResult.value.log_tail || '' : '')
+    if (includeEvidence) {
+      setSelectedArtifacts(artifactsResult.status === 'fulfilled' ? artifactsResult.value : null)
+      setSelectedLog(logResult.status === 'fulfilled' ? logResult.value.log_tail || '' : '')
+    }
   }
 
   async function submitScan() {
@@ -312,15 +347,29 @@ export default function App() {
     }
     setCreating(true)
     setError('')
+    const generation = sessionGeneration.current
+    const navigation = navigationGeneration.current
     try {
       const created = await createScan({ ...form, custom_rdl: (form.custom_rdl || []).map((p) => p.trim()).filter(Boolean) })
-      await Promise.all([refreshOverview(), refreshRuns()])
-      setSection('scans')
-      setSelected(created)
-      setSelectedDetail(created)
+      // Creation records a queued job before the dispatcher can claim it.
+      // Resolve its current state after refreshing instead of routing from
+      // that initial response, which may already be out of date.
+      const [, , current] = await Promise.all([
+        refreshOverview(), refreshRuns(), getScan(created.run_uuid).catch(() => created),
+      ])
+      if (generation !== sessionGeneration.current || navigation !== navigationGeneration.current) return
+      const queued = current.status === 'queued'
+      const active = ACTIVE_SCAN_STATUSES.has(current.status)
+      setSection(queued ? 'queued' : active ? 'scans' : 'completed')
+      setSubmittedQueuedRun(queued ? current.run_uuid : null)
+      setSelected(queued ? null : current)
+      setSelectedDetail(queued ? null : current)
       setSelectedArtifacts(null)
       setSelectedLog('')
-      addToast(`Scan queued: ${created.project_name || created.run_uuid}`, 'success', 'Scan Started')
+      addToast(queued
+        ? `${current.project_name || current.run_uuid} is queued and will start when its turn comes. Scans are listed next to run first.`
+        : `Scan ${active ? 'started' : 'finished'}: ${current.project_name || current.run_uuid}`,
+      current.status === 'failed' ? 'error' : 'success', queued ? 'Scan Queued' : active ? 'Scan Started' : 'Scan Finished')
     } catch (e) {
       const msg = `Failed to queue scan: ${e.message}`
       setError(msg)
@@ -346,7 +395,7 @@ export default function App() {
       await deleteScanData(run.run_uuid)
       if (selected?.run_uuid === run.run_uuid) handleBackToScans()
       await Promise.all([refreshOverview(), refreshRuns()])
-      addToast('Reports, findings, logs, and runtime data were deleted. The Recent Scans record was retained.', 'success', 'Scan Data Deleted')
+      addToast(run.status === 'queued' ? 'The queued scan was deleted and will not run.' : 'Reports, findings, logs, and runtime data were deleted. The Recent Scans record was retained.', 'success', run.status === 'queued' ? 'Queued Scan Deleted' : 'Scan Data Deleted')
     } catch (e) {
       addToast(e.message === 'scan_is_active' ? 'Stop the scan before deleting its data.' : e.message, 'error', 'Delete Failed')
       throw e
@@ -378,13 +427,15 @@ export default function App() {
     clearSelectedScan()
     setSelectedProject(run.project_key)
     setViewedProject(run.project_key)
-    setSection(ACTIVE_SCAN_STATUSES.has(run.status) ? 'scans' : 'completed')
+    setSection(run.status === 'queued' ? 'queued' : ACTIVE_SCAN_STATUSES.has(run.status) ? 'scans' : 'completed')
     setSelected(run)
     setError('')
   }
 
   /* ── Navigation handler (from child components) ── */
   function handleNavigate(dest, run = null) {
+    navigationGeneration.current++
+    setSubmittedQueuedRun(null)
     if (dest === 'scans' && run) handleOpenProjectScan(run)
     else { setSection(dest); if (run) setSelected(run) }
   }
@@ -420,6 +471,7 @@ export default function App() {
     // untouched (reference-equal to EMPTY_FORM) so it never clobbers an
     // in-progress edit.
     getSettings().then((data) => {
+      setDisplayPreferences(data.display)
       const runByDefault = data?.analysis?.run_by_default
       if (typeof runByDefault !== 'boolean') return
       setForm((prev) => (prev === EMPTY_FORM ? { ...prev, analysis: runByDefault } : prev))
@@ -440,25 +492,30 @@ export default function App() {
   }, [user, selectedProject])
 
   useEffect(() => {
-    if (!user || user.must_change_password) return
-    if (selected?.run_uuid) {
-      refreshSelected(selected.run_uuid)
-    }
-  }, [user, selected?.run_uuid])
-
-  // Re-fetch detail when user navigates back to the scans section
-  useEffect(() => {
-    if (!user || user.must_change_password) return
-    if (section === 'scans' && selected?.run_uuid) {
-      refreshSelected(selected.run_uuid)
-    }
-  }, [user, section])
+    if (!user || user.must_change_password || !selected?.run_uuid) return
+    if (section === 'scans' || section === 'queued' || section === 'completed') refreshSelected(selected.run_uuid)
+  }, [user, section, selected?.run_uuid])
 
   const previousSelectedStatusRef = useRef(null)
+  useEffect(() => {
+    if (!submittedQueuedRun || section !== 'queued') return
+    const current = runs.find(run => run.run_uuid === submittedQueuedRun)
+    if (!current || current.status === 'queued') return
+    setSubmittedQueuedRun(null)
+    setSection(ACTIVE_SCAN_STATUSES.has(current.status) ? 'scans' : 'completed')
+    setSelected(current)
+    setSelectedDetail(null)
+    setSelectedArtifacts(null)
+    setSelectedLog('')
+  }, [runs, section, submittedQueuedRun])
+
   useEffect(() => {
     const currentStatus = selectedDetail?.status || null
     const previousStatus = previousSelectedStatusRef.current
     previousSelectedStatusRef.current = currentStatus
+    if (currentStatus && currentStatus !== 'queued' && section === 'queued' && selectedDetail?.run_uuid) {
+      setSection(ACTIVE_SCAN_STATUSES.has(currentStatus) ? 'scans' : 'completed')
+    }
     if (ACTIVE_SCAN_STATUSES.has(previousStatus) && currentStatus && !ACTIVE_SCAN_STATUSES.has(currentStatus)) {
       setSection('completed')
       refreshRuns()
@@ -474,10 +531,13 @@ export default function App() {
     const timer = setInterval(() => {
       refreshRuns()
       refreshOverview()
-      if (selected?.run_uuid) refreshSelected(selected.run_uuid)
+      if (selected?.run_uuid) {
+        const visible = section === 'scans' || section === 'queued' || section === 'completed'
+        if (visible || ACTIVE_SCAN_STATUSES.has(selectedDetail?.status || selected.status)) refreshSelected(selected.run_uuid, visible)
+      }
     }, intervalMs)
     return () => clearInterval(timer)
-  }, [user, hasActiveRun, selected?.run_uuid, selected?.status, selectedProject])
+  }, [user, hasActiveRun, selected?.run_uuid, selected?.status, selectedDetail?.status, selectedProject, section])
 
   /* ── Page title mapping ── */
   const pageTitles = {
@@ -485,6 +545,7 @@ export default function App() {
     projects: 'Projects',
     newScan: 'New scan',
     scans: 'Active scans',
+    queued: 'Queued scans',
     completed: 'Completed scans',
     system: 'System',
     settings: 'Settings',
@@ -492,8 +553,8 @@ export default function App() {
     about: 'About DakshSCRA',
   }
 
-  const showingScanWorkspace = (section === 'scans' || section === 'completed') && !!selectedDetail?.run_uuid
-  const activeRuns = useMemo(() => runs.filter((run) => ACTIVE_SCAN_STATUSES.has(run.status)), [runs])
+  const showingScanWorkspace = ['scans', 'queued', 'completed'].includes(section) && !!selectedDetail?.run_uuid
+  const activeRuns = useMemo(() => runs.filter((run) => ['running', 'stopping'].includes(run.status)), [runs])
   const completedRuns = useMemo(() => runs.filter((run) => !ACTIVE_SCAN_STATUSES.has(run.status)), [runs])
 
   function handleNewScan() {
@@ -528,13 +589,16 @@ export default function App() {
       <Sidebar
         active={section}
         onChange={(s) => {
-          if (s === 'scans' || s === 'completed' || s === 'newScan' || s === 'projects') handleBackToScans()
+          navigationGeneration.current++
+          setSubmittedQueuedRun(null)
+          if (s === 'scans' || s === 'queued' || s === 'completed' || s === 'newScan' || s === 'projects') handleBackToScans()
           if (s === 'projects') setViewedProject('')
           setSection(s)
           setError('')
         }}
         health={health}
         runningCount={runningCount}
+        queuedCount={queuedRuns.length}
         completedCount={completedRuns.length}
         user={user}
         version={versionInfo?.version}
@@ -551,7 +615,7 @@ export default function App() {
           <div className="topbar-right">
             {section === 'projects' && (
               <>
-                <button className="btn btn-primary btn-sm" onClick={handleNewScan}>
+                <button className="btn btn-primary scan-create-button" onClick={handleNewScan}>
                   + New Scan
                 </button>
                 <button className="btn btn-ghost btn-sm" onClick={() => setSection('scans')}>
@@ -642,22 +706,27 @@ export default function App() {
               />
             </div>
           )}
-          {section === 'scans' && (
+          {(section === 'scans' || section === 'queued') && (
             <div className="scans-layout workspace">
               {!showingScanWorkspace ? (
                 <>
                   <div className="scans-main">
                     <div className="scans-panel-head">
                       <div>
-                        <div className="scans-panel-title">Active scan queue</div>
-                        <div className="scans-panel-copy">Only the running scan and scans waiting in the queue appear here.</div>
+                        <div className="scans-panel-title">{section === 'queued' ? 'Queued scans' : 'Active scans'}</div>
+                        <div className="scans-panel-copy">{section === 'queued' ? 'Next to run is at the top; the most recently queued scan is at the bottom. Scans move to Active Scans automatically when their turn comes.' : 'Running and stopping scans appear here. Scans waiting to start are listed under Queued Scans.'}</div>
                       </div>
-                      <button className="btn btn-primary btn-sm" onClick={handleNewScan}>+ New Scan</button>
+                      <button className="btn btn-primary scan-create-button" onClick={handleNewScan}>+ New Scan</button>
                     </div>
                     <ScanTable
-                      runs={activeRuns}
+                      key={section}
+                      queuedOnly={section === 'queued'}
+                      runs={section === 'queued' ? queuedRuns : activeRuns}
                       selected={selected}
                       onSelect={(r) => {
+                        navigationGeneration.current++
+                        setSubmittedQueuedRun(null)
+                        setSection(r.status === 'queued' ? 'queued' : 'scans')
                         setSelectedDetail(null)
                         setSelectedArtifacts(null)
                         setSelectedLog('')
@@ -671,13 +740,22 @@ export default function App() {
               ) : (
                 <>
                   <div className="scans-main scans-main-detail scans-main-detail-full">
-                    <ScanDetail
+                    {selectedDetail.status === 'queued' ? <QueuedScanDetail
+                      key={selectedDetail.run_uuid}
+                      run={selectedDetail}
+                      position={queuedRuns.findIndex(run => run.run_uuid === selectedDetail.run_uuid) + 1}
+                      defaults={EMPTY_FORM}
+                      onBack={handleBackToScans}
+                      onChanged={(includeDetail = true) => { refreshRuns(); if (includeDetail) refreshSelected(selectedDetail.run_uuid, false) }}
+                      onDeleteData={handleDeleteScanData}
+                      onDeleteRecord={handleDeleteScanRecord}
+                    /> : <ScanDetail
                       key={selectedDetail.run_uuid}
                       run={selectedDetail}
                       log={selectedLog}
                       artifactIndex={selectedArtifacts}
                       onStopped={refreshSelected}
-                    />
+                    />}
                   </div>
                 </>
               )}
@@ -724,6 +802,7 @@ export default function App() {
       {/* Directory browser modal */}
       <DirectoryBrowserModal
         open={browserOpen}
+        initialPath={form.target_dir}
         onClose={() => setBrowserOpen(false)}
         onSelect={(path) => {
           setForm((p) => ({ ...p, target_dir: path }))

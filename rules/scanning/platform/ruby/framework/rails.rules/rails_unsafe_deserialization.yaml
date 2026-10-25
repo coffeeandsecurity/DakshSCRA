@@ -1,0 +1,39 @@
+format: daksh-pattern-rule/v1
+id: ruby.framework.rails.rails_unsafe_deserialization
+title: "Object Deserialization Review"
+order: 2
+category: Framework-Specific Security
+detection:
+  pattern: YAML\.load\(|Marshal\.load\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:YAML\.safe_load|Marshal\.restore.*trusted|allowlist
+reporting:
+  type: area_of_interest
+  reason: Detects unsafe deserialization primitives.
+  trace:
+  - Externalized rule logic for Rails Unsafe Deserialization.
+  description: The application reads serialized objects or uses a parser that may construct runtime types. Identify
+    the input’s trust and the effective parser and type restrictions.
+  impact: A crafted untrusted payload may instantiate dangerous types or trigger object behavior that executes code,
+    modifies state, or exhausts resources when the parser permits those operations.
+  remediation: Use a data-only format and a safe loader for untrusted input. Disable automatic object or type construction,
+    allowlist required types, and bound parsing size and complexity.
+  reviewer: Review user input flow to deserialization APIs. This can be confirmed as an issue when the matched path
+    is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify the serializer, accepted data format and whether external input controls type selection or object construction.
+  - Inspect allowed types, converters, polymorphic handling and object hooks; distinguish ordinary data parsing
+    from unsafe object reconstruction.
+  - Verify reachable callers, integrity checks and failure paths before treating deserialization as exploitable.
+  recommendations:
+  - Prefer a data-only format mapped to explicit application types; avoid reconstructing arbitrary runtime objects
+    from untrusted input.
+  - Restrict allowed types and converters, limit input size and nesting, and test rejection of unexpected type metadata.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

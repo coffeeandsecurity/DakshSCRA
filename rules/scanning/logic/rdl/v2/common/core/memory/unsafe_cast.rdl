@@ -3,7 +3,7 @@ RULE memory.unsafe-cast VERSION 1
 IN FUNCTION
 LET value BE EXPRESSION MATCHES type.unsafe-cast
 WHEN layout.incompatible value AND memory.access value
-REPORT "unsafe cast used for incompatible memory access"
+REPORT "Unsafe Cast Used for Incompatible Memory Access"
 SEVERITY HIGH
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

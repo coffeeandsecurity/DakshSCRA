@@ -1,6 +1,10 @@
+import { groupFindings, familyTotals } from '../lib/rdlFindingFamilies'
+import MobileReviewView from './MobileReviewView'
+import { MOBILE_GROUPS, mobileRecordScope } from '../lib/mobileReview'
 import RetainedTab from './RetainedTab'
 import { useId, useMemo, useState } from 'react'
 import RdlTrace from './RdlTrace'
+import { ReviewGuidance } from './ReportAudience'
 
 function Metric({ label, value }) {
   return <div className="rdl-shadow-metric"><div className="rdl-shadow-metric-value">{Number(value || 0).toLocaleString()}</div><div className="rdl-shadow-metric-label">{label}</div></div>
@@ -20,8 +24,8 @@ function Finding({ finding, index, item, onNavigate }) {
     <div className="rdl-lead-heading"><strong>Finding {index + 1}: {finding.title}</strong><span className="rdl-shadow-badge warning">{finding.severity} · {finding.cwe || 'Security review'}</span></div>
     <div className="rdl-assessment-grid"><div><span className="aa-simple-stage-title">Affected location</span><code className="rdl-source-location">{finding.location?.path || finding.path || item?.record.context?.file_path || 'Not recorded'}{finding.location?.line ? ':' + finding.location.line : ''}</code></div><div><span className="aa-simple-stage-title">Confidence · {finding.confidence || 'Unspecified'}</span><p>{finding.confidence_reason || 'Review the available evidence before confirming this issue.'}</p></div></div>
     <h4>Issue description</h4><p>{finding.description || 'This saved result does not contain an issue description. Review the recorded rule evidence.'}</p>
-    <h4>Security impact</h4><p>{finding.impact || 'No rule-specific security consequence was recorded.'}</p>
-    <div className="rdl-remediation"><strong>Recommended correction</strong><p>{finding.remediation || 'No correction guidance was recorded.'}</p></div>
+    <h4>Security impact</h4>{String(finding.impact || 'No rule-specific security consequence was recorded.').split(/\n\n+/).map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+    <ReviewGuidance developer={finding.remediation} reviewer={finding.reviewer_note} />
     <RdlTrace finding={finding} />
   </section>
 }
@@ -37,7 +41,7 @@ function Comparison({ item, showFindings = true }) {
     <div className="rdl-shadow-record-body">
       <code className="rdl-source-location">{context.file_path || 'No file recorded'}</code>
       {item.security_review ? <p><strong>Recorded review:</strong> {item.security_review.status} · {item.security_review.reviewer} · {item.security_review.reason}</p> : null}
-      <p><strong>{item.comparison_kind === 'custom' ? 'App-specific custom RDL check' : item.comparison_kind === 'baseline' ? 'Baseline source review' : item.comparison_kind === 'supplemental' ? 'Additional v2 check (no v1 counterpart)' : 'Semantic analysis'}</strong></p>
+      <p><strong>{item.comparison_kind === 'custom' ? 'App-specific custom RDL check' : item.comparison_kind === 'baseline' ? 'Baseline source review' : item.comparison_kind === 'supplemental' ? 'Additional source or configuration review' : 'Semantic analysis'}</strong></p>
       {item.manual_review ? <section><h4>Observed evidence</h4><p>{item.manual_review.observed}</p><h4>What remains uncertain</h4><p>{item.manual_review.uncertainty}</p><h4>What to investigate</h4><p>{item.manual_review.investigate}</p><Evidence items={item.manual_review.evidence} /></section> : null}
       {!item.manual_review ? <p>{item.v2_explanation || 'This older scan contains predicate evidence only. Run a new scan for source excerpts and remediation.'}</p> : null}
       {showFindings ? (item.v2_findings || []).map((finding, index) => <Finding finding={finding} index={index} key={index} />) : null}
@@ -61,12 +65,12 @@ function Comparison({ item, showFindings = true }) {
 
 function FindingFamily({ family, focusId, onNavigate, open, onToggle }) {
   const [selectedId, setSelectedId] = useState(null)
-  const selected = family.items.find(item => item.id === selectedId) || family.items.find(item => item.id === focusId) || family.items[0]
+  const selected = family.items.find(item => item.id === selectedId) || family.items.find(item => (item.id === focusId || item.focusIds.includes(focusId))) || family.items[0]
   const detailId = useId()
   return <section className={`vg-family${open ? ' open' : ''}`}>
     <button className="vg-family-head" aria-expanded={open} aria-controls={detailId} onClick={onToggle}>
       <div className="vg-family-head-main">
-        <div className="vg-family-title-row"><span className={`aa-pill severity ${String(family.severity || 'unknown').toLowerCase()}`}>{family.severity || 'Review'}</span><span className="vg-family-title">{family.title}</span><span className="vg-family-count">{family.items.length} instance{family.items.length === 1 ? '' : 's'}</span></div>
+        <div className="vg-family-title-row"><span className={`aa-pill severity ${String(family.severity || 'unknown').toLowerCase()}`}>{family.severity || 'Review'}</span><span className="vg-family-title">{family.title}</span><span className="vg-family-count">{family.totals ? `${family.totals.instances} total instance${family.totals.instances === 1 ? '' : 's'} · ${family.items.length} on this page` : `${family.items.length} instances on this page`}</span></div>
         <div className="vg-family-meta"><span>{family.cwe || 'Security review'}</span><span>{new Set(family.items.map(item => item.finding.location?.path || item.finding.path || item.record.context?.file_path)).size} file(s) on this page</span><span>RDL v2 evidence</span></div>
       </div><span className="vg-caret">{open ? '▲' : '▼'}</span>
     </button>
@@ -79,7 +83,12 @@ function FindingFamily({ family, focusId, onNavigate, open, onToggle }) {
       </div>
       <div className="vg-detail" key={selected.id}>
         <Finding finding={selected.finding} index={family.items.indexOf(selected)} item={selected} onNavigate={onNavigate} />
-        <details className="rdl-decision-details"><summary>Analysis decision and evidence</summary><Comparison item={selected.record} showFindings={false} /></details>
+        <details className="rdl-decision-details"><summary>Contributing rule evidence on this page ({selected.contributions.length})</summary>
+          {selected.contributions.map((contribution, index) => <section key={index}><h5>{contribution.record.v2_rule_id || contribution.record.v2_rule}</h5>
+            <Finding finding={contribution.finding} index={index} item={contribution} onNavigate={onNavigate} />
+            <Comparison item={contribution.record} showFindings={false} />
+          </section>)}
+        </details>
       </div>
     </div> : null}
   </section>
@@ -88,7 +97,7 @@ function FindingFamily({ family, focusId, onNavigate, open, onToggle }) {
 function FindingGroups({ families, focusId, onNavigate, navigation }) {
   const [expanded, setExpanded] = useState({})
   const listId = useId()
-  const isOpen = family => expanded[family.key] ?? Boolean(focusId && family.items.some(item => item.id === focusId))
+  const isOpen = family => expanded[family.key] ?? Boolean(focusId && family.items.some(item => (item.id === focusId || item.focusIds.includes(focusId))))
   const allExpanded = families.length > 0 && families.every(isOpen)
   return <>
     <div className="rdl-findings-actions">
@@ -102,29 +111,6 @@ function FindingGroups({ families, focusId, onNavigate, navigation }) {
   </>
 }
 
-function severityRank(value) {
-  return ({ CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3, INFO: 4, INFORMATIONAL: 4, INFORMATION: 4 })[String(value || '').trim().toUpperCase()] ?? 5
-}
-
-function groupFindings(records) {
-  const families = new Map()
-  const seen = new Set()
-  for (const record of records || []) {
-    if (record.v2_outcome !== 'MATCH') continue
-    for (const finding of record.v2_findings || []) {
-      const id = JSON.stringify([record.v2_rule_id || record.v2_rule, finding.location, finding.path || record.context?.file_path, finding.evidence?.length ? finding.evidence : finding.trace?.steps])
-      if (seen.has(id)) continue
-      seen.add(id)
-      const key = `${finding.cwe || ''}:${finding.title}`
-      if (!families.has(key)) families.set(key, { key, title: finding.title, cwe: finding.cwe, severity: finding.severity, items: [] })
-      const family = families.get(key)
-      if (severityRank(finding.severity) < severityRank(family.severity)) family.severity = finding.severity
-      family.items.push({ id, finding, record })
-    }
-  }
-  for (const family of families.values()) family.items.sort((a, b) => severityRank(a.finding.severity) - severityRank(b.finding.severity) || a.id.localeCompare(b.id))
-  return [...families.values()].sort((a, b) => severityRank(a.severity) - severityRank(b.severity) || a.title.localeCompare(b.title) || a.key.localeCompare(b.key))
-}
 
 const SECTIONS = [
   { key: 'summary', label: 'Summary', note: 'RDL v2 analysis outcome overview', tone: 'summary', icon: 'summary' },
@@ -148,7 +134,16 @@ export default function VulnerabilityAnalysis({ data, loading, onQuery, onRefres
   const [appliedSearch, setAppliedSearch] = useState(focusItem?.record.context?.file_path || '')
   const [kind, setKind] = useState(focusItem?.record.comparison_kind || 'all')
   const prefix = useId()
-  const families = useMemo(() => groupFindings(data?.comparisons), [data?.comparisons])
+  const families = useMemo(() => groupFindings(data?.comparisons, data?.confirmed_families), [data?.comparisons, data?.confirmed_families])
+  const mobileBuckets = useMemo(() => {
+    const buckets = Object.fromEntries(MOBILE_GROUPS.map(group => [group.id, []]))
+    for (const record of data?.comparisons || []) {
+      if (record.v2_outcome === 'MATCH' && record.v2_findings?.length) {
+        for (const finding of record.v2_findings) buckets[mobileRecordScope(record, finding)].push({ ...record, v2_findings: [finding] })
+      } else buckets[mobileRecordScope(record)].push(record)
+    }
+    return buckets
+  }, [data?.comparisons])
   function query(nextSection = section, nextSearch = appliedSearch, nextKind = kind, offset = 0, after = null) {
     onQuery?.({ view: 'all', search: nextSearch, kind: nextKind, section: nextSection === 'summary' ? 'all' : nextSection, offset, ...(after ? { after } : {}) })
   }
@@ -169,6 +164,17 @@ export default function VulnerabilityAnalysis({ data, loading, onQuery, onRefres
   if (data?.error) return <div className="rdl-shadow-callout warning" role="alert">{data.error} <button onClick={() => query()}>Retry</button></div>
   if (!data?.enabled) return <div className="empty-state"><div className="empty-title">RDL v2 was not enabled for this scan</div><p>Run a scan with RDL v2 to populate Vulnerability Analysis. Legacy analyzer verdicts are retired; historical artifacts remain available under Reports.</p></div>
   const counts = data.assessment_counts || {}
+  const totalFamilies = familyTotals(data.confirmed_families)
+  const confirmedTotal = totalFamilies.ambiguous ? null : data.confirmed_finding_count ?? data.section_counts?.findings
+  const familyCount = data.confirmed_families ? totalFamilies.totals.length : data.confirmed_family_count
+  const confirmedTotalsLabel = `${familyCount == null ? '—' : Number(familyCount).toLocaleString()} ${familyCount === 1 ? 'category' : 'categories'} · ${confirmedTotal == null ? '—' : Number(confirmedTotal).toLocaleString()} total ${confirmedTotal === 1 ? 'instance' : 'instances'}`
+  const sectionTotalsLabel = key => {
+    if (key === 'summary' || key === 'confirmed') return confirmedTotalsLabel
+    const ruleCount = data.assessment_rule_counts?.[key] ?? (counts[key] === 0 ? 0 : null)
+    const evaluations = counts[key]
+    return `${ruleCount == null ? '—' : Number(ruleCount).toLocaleString()} rule ${ruleCount === 1 ? 'category' : 'categories'} · ${evaluations == null ? '—' : Number(evaluations).toLocaleString()} total ${evaluations === 1 ? 'evaluation' : 'evaluations'}`
+  }
+  const pageInstances = families.reduce((total, family) => total + family.items.length, 0)
   const summary = data.summary || {}
   const ordered = data.comparisons || [], offset = data.offset || 0, limit = data.limit || 50
   const info = SECTIONS.find(item => item.key === section)
@@ -179,28 +185,33 @@ export default function VulnerabilityAnalysis({ data, loading, onQuery, onRefres
     <header className="rdl-panel-heading"><div><h3>Vulnerability Analysis</h3><p>RDL v2 findings, recorded reviews and mitigation evidence</p></div></header>
     <div className="rdl-shadow-callout">Confirmed Findings are recorded RDL rule matches, not proof of exploitation. Manual Inspection lists partial security evidence with a specific investigation step. Analyzer failures alone are coverage limits. Negative checks are listed as mitigated only when control evidence was recorded.</div>
     <div className="aa-subtabs rdl-subtabs vulnerability-subtabs" role="tablist" aria-label="Vulnerability Analysis sections">{SECTIONS.map((item, index) => <button type="button" role="tab" id={`${prefix}-tab-${item.key}`} aria-controls={`${prefix}-panel-${item.key}`} aria-selected={section === item.key} tabIndex={section === item.key ? 0 : -1} className={`aa-subtab tone-${item.tone}${section === item.key ? ' active' : ''}`} key={item.key} onClick={() => selectSection(item.key)} onKeyDown={event => tabKeys(event, index)}>
-      <span className="aa-subtab-icon"><SectionIcon name={item.icon} /></span><span className="aa-subtab-copy"><span className="aa-subtab-title">{item.label}</span><span className="aa-subtab-meta">{item.note}</span></span><span className="aa-subtab-count">{item.key === 'summary' ? data.confirmed_finding_count ?? data.section_counts?.findings ?? '—' : counts[item.key] ?? '—'}</span><span aria-hidden="true">›</span>
+      <span className="aa-subtab-icon"><SectionIcon name={item.icon} /></span><span className="aa-subtab-copy"><span className="aa-subtab-title">{item.label}</span><span className="aa-subtab-meta">{sectionTotalsLabel(item.key)}</span></span><span aria-hidden="true">›</span>
     </button>)}</div>
     <form className="rdl-review-filters" onSubmit={event => { event.preventDefault(); setAppliedSearch(search); query(section, search) }}>
       <label>Analysis type<select aria-label="Analysis type" value={kind} disabled={loading} onChange={event => { setKind(event.target.value); query(section, appliedSearch, event.target.value) }}><option value="all">All types</option><option value="baseline">Baseline source review</option><option value="semantic">Semantic analysis</option><option value="supplemental">Additional v2 checks</option><option value="custom">App-specific custom RDL</option></select></label>
       <label>Find file or rule<input value={search} maxLength={200} onChange={event => setSearch(event.target.value)} placeholder="Path, property, or rule title" /></label><button type="submit" disabled={loading}>Search</button>
     </form>
-    <p className="rdl-coverage-note">Counts represent distinct rule/file evaluations across the filtered scan, before pagination. Duplicate evaluations are grouped; affected locations are retained within each issue family.</p>
+    <p className="rdl-coverage-note">Summary and Confirmed Findings show distinct issue categories and total finding instances across the filtered scan. Other cards show distinct rule categories and total rule/file evaluations for their outcome. Counts follow the search and analysis-type filters across all pages.</p>
+    {totalFamilies.ambiguous ? <p className="rdl-coverage-note">Older totals split this issue across rule classifications. Refresh results or regenerate the export for unique scan-wide counts; page occurrences remain available.</p> : null}
     {summary.storage_error ? <div className="rdl-shadow-callout warning">Some results could not be saved. This scan is incomplete; inspect the scan log.</div> : null}
     {summary.malformed || summary.telemetry_truncated ? <div className="rdl-shadow-callout warning">Some saved evidence is missing or unreadable; totals may be incomplete.</div> : null}
     <RetainedTab active role="tabpanel" id={`${prefix}-panel-${section}`} aria-labelledby={`${prefix}-tab-${section}`} tabIndex={0} className="rdl-section-panel">
-      <div className="rdl-results-heading"><div className="vg-section-head"><h3>{info.label}</h3><p>{info.note}</p></div><button type="button" className="btn btn-ghost" disabled={loading} onClick={onRefresh}>Refresh analysis results</button></div>
+      <div className="rdl-results-heading"><div className="vg-section-head"><h3>{info.label}</h3><p>{sectionTotalsLabel(section)}</p><p>{info.note}</p></div><button type="button" className="btn btn-ghost" disabled={loading} onClick={onRefresh}>Refresh analysis results</button></div>
       {!ready ? <div className="fr-loading" role="status"><div className="fr-spinner" /><span>Loading {info.label.toLowerCase()}...</span></div> : section === 'summary' ? <>
-        <p className="rdl-coverage-note">{data.confirmed_finding_count ?? data.section_counts?.findings ?? 0} distinct matched findings in {counts.confirmed || 0} rule/file evaluations. Unresolved checks are counted separately below.</p>
+        <p className="rdl-coverage-note">{confirmedTotalsLabel} in {counts.confirmed || 0} rule/file evaluations. Unresolved checks are counted separately below.</p>
         <div className="rdl-shadow-metrics"><Metric label="Checks with coverage limits (not findings)" value={summary.coverage_limit_groups} /><Metric label="Matched rule/file evaluations" value={counts.confirmed} /><Metric label="Suppressed false-positive evaluations" value={counts.suppressed} /><Metric label="Actionable manual review evaluations" value={counts.manual} /><Metric label="Mitigated evaluations" value={counts.mitigated} /></div>
-        <div className="rdl-summary-actions">{SECTIONS.slice(1).map(item => <button key={item.key} onClick={() => selectSection(item.key)}><SectionIcon name={item.icon} /><strong>{counts[item.key] || 0} {item.label}</strong><span>{item.note} →</span></button>)}</div>
+        {data.confirmed_families?.length > 0 && <div style={{ overflowX: 'auto' }}><table className="rdl-family-totals"><caption>Finding totals across the filtered scan</caption><thead><tr><th scope="col">Finding</th><th scope="col">Instances</th><th scope="col">Files</th></tr></thead><tbody>{totalFamilies.totals.map(family => <tr key={family.key}><td>{family.title}</td><td>{family.instances ?? '—'}</td><td>{family.files ?? '—'}</td></tr>)}</tbody><tfoot><tr><th scope="row">Total finding instances</th><td>{confirmedTotal ?? '—'}</td><td /></tr></tfoot></table></div>}
+        <div className="rdl-summary-actions">{SECTIONS.slice(1).map(item => <button key={item.key} onClick={() => selectSection(item.key)}><SectionIcon name={item.icon} /><strong>{item.label}: {sectionTotalsLabel(item.key)}</strong><span>{item.note} →</span></button>)}</div>
         <p className="rdl-coverage-note">{summary.evaluated_properties || 0} properties evaluated across {summary.evaluated_files || 0} files. Checks without an applicable issue or recorded control are excluded from the four outcome categories.</p>
         <p className="rdl-coverage-note">Baseline: {data.evaluation_kinds?.baseline || 0} · Semantic: {data.evaluation_kinds?.semantic || 0} · Supplemental: {data.evaluation_kinds?.supplemental || 0} · Custom: {data.evaluation_kinds?.custom || 0}. These counts describe evaluated properties, not whole-application security coverage.</p>
       </> : <>
 
         {ordered.some(item => item.v2_findings_truncated) ? <div className="rdl-shadow-callout warning">Some evaluations contain more locations than were retained. Counts reflect recorded evidence only.</div> : null}
-        <FindingGroups key={`${section}:${offset}:${data.query?.search}:${data.query?.kind}`} families={families} navigation={<div className="rdl-page-navigation"><span role="status">{data.filtered_total || 0} rule/file evaluations · showing {ordered.length ? offset + 1 : 0}–{offset + ordered.length}</span><button disabled={offset === 0} onClick={() => query(section, appliedSearch, kind, Math.max(0, offset - limit))}>Previous</button><button disabled={!data.truncated} onClick={() => query(section, appliedSearch, kind, offset + limit, data.next_cursor)}>Next</button></div>} focusId={section === 'confirmed' ? focusItem?.id : null} />
-        {ordered.filter(item => !item.v2_findings?.length).map((item, index) => <Comparison item={item} key={index} />)}
+        <MobileReviewView buckets={mobileBuckets} unit="records" pageOnly>{scope => <>
+        <FindingGroups key={`${section}:${offset}:${data.query?.search}:${data.query?.kind}`} families={scope ? groupFindings(mobileBuckets[scope]) : families} focusId={section === 'confirmed' ? focusItem?.id : null} />
+        {(scope ? mobileBuckets[scope] : ordered).filter(item => !item.v2_findings?.length).map((item, index) => <Comparison item={item} key={index} />)}
+        </>}</MobileReviewView>
+        <div className="rdl-page-navigation"><span role="status">{sectionTotalsLabel(section)}. {section === 'confirmed' ? `This page: ${pageInstances} instances in ${families.length} categories. ` : ''}Evaluations {ordered.length ? offset + 1 : 0}–{offset + ordered.length} of {data.filtered_total || 0}</span><button disabled={offset === 0} onClick={() => query(section, appliedSearch, kind, Math.max(0, offset - limit))}>Previous</button><button disabled={!data.truncated} onClick={() => query(section, appliedSearch, kind, offset + limit, data.next_cursor)}>Next</button></div>
         {!ordered.length ? <div className="empty-state">No recorded RDL outcomes in this category match the filters.</div> : null}
       </>}
     </RetainedTab>

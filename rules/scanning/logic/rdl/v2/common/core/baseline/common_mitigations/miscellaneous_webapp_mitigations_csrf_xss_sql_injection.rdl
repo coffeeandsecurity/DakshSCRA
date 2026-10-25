@@ -3,7 +3,7 @@ RULE baseline.common.core.miscellaneous_webapp_mitigations_csrf_xss_sql_injectio
 IN FILE
 WHEN TEXT_MATCHES "(?i)(CSRF|XSS|SQLi)" "im"
 WHEN (TEXT_MATCHES "(?i)(ToLower|ToUpper)" "im" AND TEXT_MISSING "(?i)(sanitize|escape|encode|prepared|parameterized)" "im")
-REPORT "Miscellaneous Webapp Mitigations: CSRF, XSS, SQL Injection"
+REPORT "Security Control Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

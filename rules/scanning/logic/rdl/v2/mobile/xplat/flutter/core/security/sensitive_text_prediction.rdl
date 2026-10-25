@@ -1,0 +1,8 @@
+VERSION 2
+RULE flutter.sensitive-text-prediction VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:autocorrect|enableSuggestions)\\s*:\\s*true\\b" ""
+REPORT "Sensitive Input Prediction Review"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

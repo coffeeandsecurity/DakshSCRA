@@ -2,7 +2,7 @@ VERSION 2
 RULE ios.minimum-tls-version VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:tlsMinimumSupportedProtocolVersion\\s*=\\s*\\.TLSv1[01]|tlsMinimumSupportedProtocol\\s*=\\s*\\.(?:tlsProtocol1|tlsProtocol11))\\b" ""
-REPORT "Legacy TLS Minimum Configured"
+REPORT "TLS Protocol Version Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

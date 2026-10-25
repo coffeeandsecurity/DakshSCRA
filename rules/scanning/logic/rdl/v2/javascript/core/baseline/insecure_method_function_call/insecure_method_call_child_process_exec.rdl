@@ -3,7 +3,7 @@ RULE baseline.javascript.core.insecure_method_call_child_process_exec VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(^|\\s|=\\s?)require\\(\\s*('|\")child_process('|\")\\s*\\)(\\s*\\.(?:\\s*\\w[\\s\\w]*)?\\()?\\s*\\)" "im"
 WHEN (TEXT_MISSING "execFile|spawn\\s*\\(|validate|sanitize|allowlist|escapeShellArg" "im" AND TEXT_MISSING "test|example|spec" "im")
-REPORT "Insecure Method Call: child_process.exec()"
+REPORT "OS Command Injection Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

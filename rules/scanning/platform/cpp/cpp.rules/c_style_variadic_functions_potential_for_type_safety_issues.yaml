@@ -1,0 +1,41 @@
+format: daksh-pattern-rule/v1
+id: cpp.core.c_style_variadic_functions_potential_for_type_safety_issues
+title: "Variadic Function Type Safety Review"
+order: 27
+category: Declarations and Initialization
+detection:
+  pattern: \b(__attribute__\s*\(\s*format\s*\(\s*__variadic\s*,)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:va_list|va_start|va_arg|va_end && MISSING:vsnprintf|type_safe|fmt::|std::format && MISSING:test|example
+reporting:
+  type: area_of_interest
+  reason: Detects the definition of C-style variadic functions, which can lead to type safety issues.
+  trace:
+  - 'Externalized rule logic for C-style Variadic Functions: Potential for Type Safety Issues.'
+  description: The code uses a low-level memory, formatting, allocation, or type-conversion operation whose safety
+    depends on bounds, types, initialization, and caller invariants.
+  impact: A violated memory or formatting invariant may expose process memory, corrupt application state, crash
+    the process, or permit code execution when an attacker can influence the relevant inputs.
+  remediation: Validate sizes and types before use, use bounded and type-safe APIs, and keep format strings fixed.
+    Prefer checked conversions and safe ownership abstractions; document and test every remaining unsafe invariant.
+  reviewer: Investigate the use of variadic functions and assess their impact on type safety and security. This
+    can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or
+    inconsistent.
+  review_steps:
+  - Inspect buffer capacity, index bounds, integer conversions and ownership at the matched operation and its callers.
+  - Check initialization, aliases, lifetime and cleanup on success, exception and early-return paths; identify external
+    influence over sizes or values.
+  - Verify a concrete unsafe access or lifetime condition. A low-level API or allocation alone does not prove memory
+    corruption.
+  recommendations:
+  - Use bounded operations, checked size calculations and explicit ownership or automatic resource management appropriate
+    to the language.
+  - Test boundary sizes and failure paths; use memory diagnostics where available to verify the specific correction.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

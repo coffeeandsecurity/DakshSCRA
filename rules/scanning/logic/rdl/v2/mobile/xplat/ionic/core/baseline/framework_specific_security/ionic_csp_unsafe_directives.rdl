@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.mobile.xplat.ionic.core.ionic_csp_unsafe_directives VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "unsafe-inline|unsafe-eval" "im"
-WHEN TEXT_MISSING "nonce-|sha256-" "im"
-REPORT "Ionic/CSP Unsafe Directives"
+REPORT "Content Security Policy Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

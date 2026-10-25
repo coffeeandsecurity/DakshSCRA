@@ -1,0 +1,40 @@
+format: daksh-pattern-rule/v1
+id: php.core.regular_expression_injection_preg_replace_with_e_modifier_or_untrusted_input
+title: "Dynamic Code Evaluation Review"
+order: 5
+category: Untrusted Input Handling or Injection Flaws
+detection:
+  pattern: preg_replace\(([^,]+,\s*)?[^/]*e[^/]*|preg_replace\(\$_(GET|POST|REQUEST|COOKIE)
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects usage of preg_replace() with the /e modifier or direct use of untrusted inputs, leading to regular
+    expression injection.
+  trace:
+  - 'Externalized rule logic for Regular Expression Injection: preg_replace with /e Modifier or Untrusted Input.'
+  description: The rule identifies preg_replace code-evaluation or externally constructed pattern usage. The legacy
+    /e modifier evaluated replacements and was removed in PHP 7; user-controlled patterns require a separate regex
+    assessment.
+  impact: If an attacker controls interpreted syntax or the operation selected, code or commands may run with the
+    application’s privileges, allowing data theft, state changes, or service disruption.
+  remediation: Replace legacy /e expressions with preg_replace_callback and a fixed application callback. Use preg_quote
+    with the correct delimiter for literal pattern data. Bound input and pattern complexity when user-defined expressions
+    are intentional.
+  reviewer: Verify PHP version, pattern delimiters, modifiers and replacement text. Separate legacy /e execution
+    from regex injection or excessive backtracking. A fixed pattern or a runtime where /e is unavailable does not
+    establish code execution.
+  review_steps:
+  - Identify the full pattern and replacement.
+  - Check whether the deployed PHP version supports /e evaluation.
+  - Trace pattern and replacement control independently and assess the applicable execution or resource-use risk.
+  recommendations:
+  - Use a fixed callback rather than executable replacement text.
+  - Quote literal pattern data and set practical processing limits for configurable expressions.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

@@ -9,7 +9,7 @@ function FolderIcon() {
   )
 }
 
-export default function DirectoryBrowserModal({ open, onClose, onSelect }) {
+export default function DirectoryBrowserModal({ open, onClose, onSelect, initialPath = '' }) {
   const [current, setCurrent] = useState('')
   const [roots, setRoots] = useState([])
   const [dirs, setDirs] = useState([])
@@ -19,6 +19,7 @@ export default function DirectoryBrowserModal({ open, onClose, onSelect }) {
   const [loading, setLoading] = useState(false)
   const [pathInput, setPathInput] = useState('')
   const requestId = useRef(0)
+  const activeRequest = useRef(null)
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -28,10 +29,15 @@ export default function DirectoryBrowserModal({ open, onClose, onSelect }) {
 
   async function load(path = '') {
     const id = ++requestId.current
+    activeRequest.current?.abort()
+    const controller = new AbortController()
+    activeRequest.current = controller
+    const timeout = setTimeout(() => controller.abort(), 15000)
     setLoading(true)
     setError('')
+    setPathInput(path)
     try {
-      const data = await listDirectories(path)
+      const data = await listDirectories(path, { signal: controller.signal })
       if (id !== requestId.current) return
       setCurrent(data.current)
       setPathInput(data.current)
@@ -41,16 +47,18 @@ export default function DirectoryBrowserModal({ open, onClose, onSelect }) {
       setQuery('')
     } catch (err) {
       if (id !== requestId.current) return
-      setPathInput(current)
-      setError(err.message || 'Unable to browse this directory. Check path permissions.')
+      setError(err.name === 'AbortError'
+        ? 'This folder is taking too long to respond. Enter a more specific path or try another mounted folder.'
+        : err.message || 'Unable to browse this directory. Check path permissions.')
     } finally {
+      clearTimeout(timeout)
       if (id === requestId.current) setLoading(false)
     }
   }
 
   useEffect(() => {
-    if (open) load(current || '')
-    return () => { requestId.current += 1 }
+    if (open) load(initialPath || current || '')
+    return () => { requestId.current += 1; activeRequest.current?.abort() }
   }, [open])
 
   useEffect(() => {
@@ -108,6 +116,7 @@ export default function DirectoryBrowserModal({ open, onClose, onSelect }) {
                 className="path-display"
                 aria-label="Directory path"
                 value={pathInput}
+                placeholder={loading && !pathInput ? 'Finding the default scan folder…' : 'Enter a folder path'}
                 onChange={(e) => setPathInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') load(pathInput) }}
                 title="Enter a path and press Enter"
@@ -138,7 +147,7 @@ export default function DirectoryBrowserModal({ open, onClose, onSelect }) {
             {loading && (
               <div style={{ padding: 16, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-3)' }}>
                 <span className="spinner" />
-                Loading…
+                <span role="status">Reading folders… You can enter a specific path above.</span>
               </div>
             )}
             {!loading && !error && visible.length === 0 && (

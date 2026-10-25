@@ -2,7 +2,7 @@ VERSION 2
 RULE ios.sensitive-public-log VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(?i)\\b(?:logger|log)\\s*\\.\\s*(?:debug|info|notice|warning|error|critical|log)\\s*\\([^\\n]{0,200}?\\\\\\(\\s*(?:[A-Za-z_][A-Za-z0-9_]{0,60}\\.){0,4}(?:password|token|secret|credential)\\w*[^)\\n]{0,100}\\bprivacy\\s*:\\s*\\.public\\b" ""
-REPORT "Sensitive Value Logged With Public Privacy"
+REPORT "Sensitive Value Logged with Public Privacy"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

@@ -5,6 +5,7 @@ merge their environments. Calls resolved to project bodies never receive an
 opaque argument-to-return shortcut. Unknown calls retain explicit limitations.
 """
 import re
+import time
 from dataclasses import replace
 from pathlib import Path
 from utils.source_cache import read_source_text
@@ -66,6 +67,23 @@ class Walker:
         self.tokens = _lex(_normalized(self.source, language), php=language == 'php', hash_comments=language in {'ruby','bash','powershell'}, javascript=language == 'javascript', kotlin=language == 'kotlin')
         if len(self.tokens) > max_tokens:
             raise AnalysisBudgetExceeded('portable flow token budget exceeded')
+        self.operation_imports={}
+        if language in {'java','kotlin'}:
+            for index,token in enumerate(self.tokens):
+                if token.kind!='identifier' or token.text!='import':continue
+                words=[]
+                for item in self.tokens[index+1:index+40]:
+                    if item.line!=token.line or item.text==';':break
+                    if item.kind!='string':words.append(item.text)
+                if 'as' in words:
+                    alias=words[words.index('as')+1] if words.index('as')+1<len(words) else ''
+                    words=words[:words.index('as')]
+                else:alias=words[-1] if words else ''
+                qualified=''.join(words)
+                if qualified in {'org.springframework.beans.BeanUtils','org.apache.commons.beanutils.BeanUtils',
+                                 'org.apache.commons.beanutils2.BeanUtils','org.apache.commons.beanutils.BeanUtilsBean',
+                                 'org.apache.commons.beanutils2.BeanUtilsBean'}:
+                    self.operation_imports[alias]=qualified
         self.builder = IRBuilder(language, language + '-project-flow', '1')
         self.pairs, stack = {}, []
         unmatched = False
@@ -82,6 +100,7 @@ class Walker:
         self.opening_by_close = {end: start for start, end in self.pairs.items()}
         self.functions = []
         self.scope = '<module>'
+        self.default_keys = set()
         self.owner = ''
         self.limits = set()
         for token in self.tokens:
@@ -113,7 +132,7 @@ class Walker:
         self.mobile_fields = {}
         if language in {'java', 'kotlin'}:
             for index, token in enumerate(self.tokens[:-1]):
-                if token.text not in MOBILE_INPUT_TYPES or any(f['start'] <= index <= f['end'] for f in self.functions):
+                if token.text not in MOBILE_INPUT_TYPES | {'ZipEntry', 'ZipInputStream'} or any(f['start'] <= index <= f['end'] for f in self.functions):
                     continue
                 owner = next((name for start,end,name in reversed(self.classes) if start < index < end), '')
                 if index > 1 and self.tokens[index-1].text == ':':
@@ -198,7 +217,12 @@ class Walker:
             if j>=len(ts) or ts[j].text!='{' or j not in self.pairs:
                 continue
             prev = ts[i-2].text if i>=2 else ''
-            if prev in {'.','::','->','new','return','='}:
+            if prev in {'.','::','->','new','return','=','@'}:
+                continue
+            if self.language in {'java', 'kotlin', 'csharp'} and (
+                    prev in {'(', '!', '&&', '||', '?'}
+                    or any(t.text == ')' for t in ts[close+1:j])):
+                # A call inside a control condition is not a declaration.
                 continue
             # Braced declarations, including typed methods and named functions.
             start=i-1
@@ -214,6 +238,8 @@ class Walker:
             spring_route = self.language == 'java' and bool(re.search(
                 r'@(?:RequestMapping|GetMapping|PostMapping|PutMapping|PatchMapping|DeleteMapping)\b',
                 self.text(header_start, i-1)))
+            action_header = self.text(header_start, i-1)
+            csharp_route = self.language == 'csharp' and bool(re.search(r'\[(?:HttpGet|HttpPost|HttpPut|HttpPatch|HttpDelete|HttpHead|HttpOptions)\b', action_header)) and not re.search(r'\[NonAction\b', action_header)
             params=[]
             for a,b in self.segments(i+1,close):
                 cutoff=next(iter(self.top(a,b,{'='})),b)
@@ -239,6 +265,8 @@ class Walker:
                                           'Authentication', 'Locale', 'WebRequest', 'SessionStatus',
                                           'RedirectAttributes', 'UriComponentsBuilder'}
                         source = not any(ts[x].text in infrastructure for x in range(a,b))
+                    if csharp_route and not any(ts[x].text in {'CancellationToken', 'HttpContext', 'HttpRequest', 'HttpResponse', 'ClaimsPrincipal', 'IServiceProvider'} for x in range(a,b)) and 'FromServices' not in parameter_text:
+                        source = True
                     params.append((k,ts[k].text,source))
             if self.language == 'powershell' and not params and j+1 < self.pairs[j] and ts[j+1].text.lower() == 'param':
                 popen=j+2
@@ -279,18 +307,21 @@ class Walker:
                 self.functions.append(dict(start=a-2 if named else a,opening=a,body=i+1 if expression else i+2,end=end,name=name,owner='',params=params,expression=expression))
 
     def parse(self):
+        if self.language == 'csharp':
+            from .dotnet_security import token_policy_settings
+            token_policy_settings(self)
         # Function ranges also keep top-level execution out of function bodies.
         for f in self.functions:
             self.scope='{}:{}'.format(f['name'],self.tokens[f['start']].line);self.owner=f['owner']
             f['scope']=self.scope
             env={}; params=[]
             for k,name,source in f['params']:
-                if self.language == 'java' and k and self.tokens[k-1].kind == 'identifier':
+                if self.language in {'java', 'csharp'} and k and self.tokens[k-1].kind == 'identifier':
                     self.types[(self.scope,name)] = self.tokens[k-1].text
                 elif self.language == 'kotlin' and k+2 < len(self.tokens) and self.tokens[k+1].text == ':':
                     self.types[(self.scope,name)] = self.tokens[k+2].text
                 parameter_concepts = set(INPUT if source else {'input.parameter'})
-                if source and self.language == 'java' and self.types.get((self.scope,name)) in {'byte', 'short', 'int', 'long', 'Byte', 'Short', 'Integer', 'Long'}:
+                if source and self.language in {'java', 'csharp'} and self.types.get((self.scope,name)) in {'byte', 'short', 'int', 'long', 'Byte', 'Short', 'Integer', 'Long'}:
                     parameter_concepts.add('sanitizer.sql-numeric')
                 n=self.node(k,name,'parameter',parameter_concepts,EntityType.PARAMETER)
                 params.append(n);env[name]={n}
@@ -306,7 +337,8 @@ class Walker:
         self.block(0,len(self.tokens),{})
         if self.limits:
             self.node(0,'coverage','coverage',attrs={'flow_limits':tuple(sorted(self.limits))})
-        return self.builder.build({Capability.ENTITIES})
+        return self.builder.build({Capability.ENTITIES, Capability.CONFIGURATION}
+                                  if self.language == 'csharp' else {Capability.ENTITIES})
 
     def block(self,a,b,env,depth=0):
         if depth>64:raise AnalysisBudgetExceeded('portable block depth budget exceeded')
@@ -326,7 +358,17 @@ class Walker:
                     end=self.pairs[j]
                     self.expr(i+1,j,env)
                     branch={k:set(v) for k,v in env.items()}
-                    self.block(j+1,end,branch,depth+1)
+                    before_defaults=self.default_keys
+                    condition=[token for token in self.tokens[i+1:j] if token.text not in {'(',')'}]
+                    if (t.text == 'if' and len(condition)==3 and condition[0].kind=='identifier'
+                            and condition[1].text=='==' and condition[2].kind=='string' and condition[2].text==''):
+                        key=condition[0].text
+                        lookup=any(value.attribute('environment_lookup') for value in env.get(key,()))
+                        if lookup:self.default_keys=before_defaults|{key}
+                    try:
+                        self.block(j+1,end,branch,depth+1)
+                    finally:
+                        self.default_keys=before_defaults
                     after=end+1
                     if t.text in {'if','unless'} and after+1<b and self.tokens[after].text=='else' and self.tokens[after+1].text=='{' and after+1 in self.pairs:
                         alternate={k:set(v) for k,v in env.items()}
@@ -388,11 +430,22 @@ class Walker:
                 if left:
                     k=left[-1];name=ts[k].text
                     values=self.expr(equal+1,b,env)
-                    node=self.node(k,name,'assignment')
+                    from .security_operations import token_fallback, token_environment, FALLBACK
+                    rhs=ts[equal+1:b]
+                    explicit_default = name in self.default_keys and len(rhs)==1 and rhs[0].kind=='string' and bool(rhs[0].text)
+                    fallback = {FALLBACK} if token_fallback(rhs) or explicit_default else ()
+                    node=self.node(k,name,'assignment',fallback,attrs={'environment_lookup':token_environment(rhs)})
                     for v in values:self.edge(v,node,'assignment')
-                    env[name]={node} if values else set()
+                    env[name]={node} if values or fallback else set()
                     constructed=re.match(r'(?:new)?([\w:]+)\(',self.text(equal+1,b))
                     if constructed:self.types[(self.scope,name)]=constructed[1]
+                    if self.language == 'java' and k and ts[k-1].kind == 'identifier' and ts[k-1].text[:1].isupper():
+                        self.types[(self.scope,name)] = ts[k-1].text
+                    elif self.language == 'kotlin' and colon is not None and colon+1 < equal:
+                        self.types[(self.scope,name)] = ts[colon+1].text
+                    archive = re.fullmatch(r'(\w+)\??\.(?:getNextEntry\(\)|nextEntry)', self.text(equal+1,b))
+                    if archive and self.types.get((self.scope, archive[1]), self.mobile_fields.get((self.owner, archive[1]), '')) == 'ZipInputStream':
+                        self.types[(self.scope,name)] = 'ZipEntry'
                     return
         if self.language in {'bash','powershell','ruby'} and ts[a].kind=='identifier' and (a+1>=b or ts[a+1].text!='(') and (self.language!='ruby' or a+1<b and ts[a+1].text not in {'.','[','+', '-', '*', '/'}):
             # Shell command syntax has whitespace arguments, not C call syntax.
@@ -411,15 +464,85 @@ class Walker:
             return
         self.expr(a,b,env)
 
-    def call(self,i,name,arguments,env,receiver=()):
+    def javascript_regexp_receiver(self, index, name):
+        if self.language != 'javascript' or not re.fullmatch(r'\w+\.exec', name):
+            return False
+        receiver = name.split('.')[0]
+        def scopes(position):
+            return tuple(f['start'] for f in self.functions if f['start'] <= position < f['end'])
+        active = scopes(index)
+        for function in self.functions:
+            if function['start'] in active and any(parameter[1] == receiver for parameter in function['params']):
+                return False
+        binding = None
+        for position in range(index):
+            if self.tokens[position].text != receiver or not set(scopes(position)) <= set(active):
+                continue
+            if position and self.tokens[position-1].text in {'.', '?.'}:
+                continue
+            if self.text(position+1, min(position+4,len(self.tokens))) == '.exec=':
+                return False
+            if position+2 < len(self.tokens) and self.tokens[position+1].text == '=':
+                value = self.tokens[position+2]
+                binding = value.kind == 'string' and value.quote == '/'
+        return bool(binding)
+
+    def call(self,i,name,arguments,env,receiver=(),unsafe_type_resolution=False,argument_spans=(),generic_type=''):
         concepts=sink_concepts(self.language,name)
+        if self.language == 'javascript' and name.endswith('.postMessage.send'):
+            concepts.discard('output.html')
+            concepts.add('data.message-send')
+        if self.javascript_regexp_receiver(i, name):
+            concepts.discard('command.execution')
+            concepts.add('data.regex-matching')
+        from .security_operations import operation_arguments, token_arguments, token_labels
+        operation_name = name
+        first,dot,rest=name.partition('.')
+        if first in self.operation_imports:
+            operation_name=self.operation_imports[first]+(dot+rest if dot else '')
+        operations = operation_arguments(self.language, operation_name, token_arguments(self.tokens, argument_spans),len(arguments),token_labels(self.tokens,argument_spans))
+        if (self.language == 'csharp' and name in {'JsonConvert.DeserializeObject','Newtonsoft.Json.JsonConvert.DeserializeObject'}
+                and generic_type and generic_type not in {'string','String','int','Int32','long','Int64','double','float','bool','Boolean','byte','object','JObject','JToken'}):
+            from .security_operations import MASS
+            operations[MASS] = (0,)
+        concepts.update(operations)
+        if self.language == 'csharp' and name.endswith('DeserializeObject'):
+            if unsafe_type_resolution: concepts.add('deserialization.object-construction')
+            elif len(arguments) > 1:
+                self.limits.add('JSON serializer settings require review at ' + str(self.path) + ':' + str(self.tokens[i].line))
+            if name not in {'JsonConvert.DeserializeObject', 'Newtonsoft.Json.JsonConvert.DeserializeObject'}:
+                self.limits.add('Custom JSON reader configuration requires review at ' + str(self.path) + ':' + str(self.tokens[i].line))
         if name in HTML_ENCODERS.get(self.language, ()):
             concepts.add('sanitizer.contextual-output-encoding')
         if is_source(self.language,name+'('):concepts = set(INPUT)
         receiver_type = self.types.get((self.scope,name.split('.')[0]),
                                       self.declared_types.get(name.split('.')[-2] if '.' in name else '', ''))
+        if self.language == 'csharp' and receiver_type.rsplit('.', 1)[-1] == 'HttpClient' and name.rsplit('.', 1)[-1] in {
+            'GetStringAsync', 'GetByteArrayAsync', 'SendAsync', 'PutAsync', 'DeleteAsync', 'PatchAsync'
+        }:
+            concepts.add('network.outbound-request')
+        if self.language == 'csharp' and receiver_type.rsplit('.', 1)[-1] in {
+            'IDbConnection', 'DbConnection', 'SqlConnection', 'NpgsqlConnection', 'MySqlConnection', 'SqliteConnection'
+        } and name.rsplit('.', 1)[-1] in {
+            'ExecuteAsync', 'QueryAsync', 'QueryFirstAsync', 'QueryFirstOrDefaultAsync', 'QuerySingleAsync', 'QuerySingleOrDefaultAsync'
+        }:
+            concepts.add('sql.execution')
         receiver_name = name.split('.')[-2] if '.' in name else ''
         mobile_type = self.types.get((self.scope,receiver_name), self.mobile_fields.get((self.owner,receiver_name), ''))
+        if name in {'if','while','for','switch','when'}:
+            concepts.add('language.control')
+        if not concepts:
+            from .mobile_library import modeled_call
+            from .source_review import source_views
+            if not hasattr(self,'_mobile_library_views'):
+                self._mobile_library_views=source_views(str(self.path),self.source)
+            comments,code=self._mobile_library_views
+            if modeled_call(self.language,name,receiver_type or mobile_type,comments,code):
+                concepts.add('library.mobile-opaque')
+        archive_receiver = receiver_name.rstrip('?')
+        archive_type = self.types.get((self.scope, archive_receiver), self.mobile_fields.get((self.owner, archive_receiver), ''))
+        if self.language in {'java', 'kotlin'} and name.endswith('.getName') and archive_type == 'ZipEntry':
+            concepts = set(INPUT)
         # Reading an editable widget is an input boundary. Display-only
         # TextView.getText and arbitrary application getText methods are not.
         if self.language in {'java', 'kotlin'} and (
@@ -430,8 +553,10 @@ class Walker:
         n=self.node(i,name,'call',concepts,EntityType.CALL,
                     {'callee':name,'argument_count':len(arguments),'receiver_type':receiver_type})
         sensitive = None
-        if concepts - INPUT:
-            sensitive = {1} if name.endswith(('QueryContext', 'ExecContext')) or name == 'sqlite3_exec' else {0}
+        if concepts - INPUT - {'library.mobile-opaque','language.control'}:
+            sensitive = {1} if name.endswith(('QueryContext', 'QueryRowContext', 'ExecContext', 'Select', 'SelectOne')) or name == 'sqlite3_exec' else {0}
+        if operations:
+            sensitive = {position for positions in operations.values() for position in positions}
         for position,values in enumerate(arguments):
             if sensitive is None or position in sensitive:
                 for v in values:self.edge(v,n,'argument',position)
@@ -479,14 +604,47 @@ class Walker:
                 i+=1;continue
             if t.kind=='identifier' and t.text not in TYPES:
                 j=i+1;name=t.text
-                while j+1<b and ts[j].text in {'.','::','->','?'} and ts[j+1].kind=='identifier':
-                    name+=ts[j].text+ts[j+1].text;j+=2
+                while j+1<b:
+                    if j+2<b and ts[j].text=='?' and ts[j+1].text=='.' and ts[j+2].kind=='identifier':
+                        name+='.'+ts[j+2].text; j+=3
+                    elif ts[j].text in {'.','::','->','?.'} and ts[j+1].kind=='identifier':
+                        name+=('.' if ts[j].text=='?.' else ts[j].text)+ts[j+1].text; j+=2
+                    else:
+                        break
+                generic_type = ''
+                if self.language == 'csharp' and j < b and ts[j].text == '<':
+                    cursor, level = j+1, 1
+                    while cursor < min(b, j+128) and level:
+                        level += (ts[cursor].text == '<') - (ts[cursor].text == '>')
+                        cursor += 1
+                    if not level and cursor < b and ts[cursor].text == '(':
+                        generic_type = self.text(j+1,cursor-1)
+                        j = cursor
                 if j<b and ts[j].text=='!' and j+1<b and ts[j+1].text=='(':j+=1
                 if j<b and ts[j].text=='(' and j in self.pairs:
                     close=self.pairs[j]
-                    args=[self.expr(x,y,env,depth+1) for x,y in self.segments(j+1,close)]
+                    argument_spans = list(self.segments(j+1,close))
+                    args=[self.expr(x,y,env,depth+1) for x,y in argument_spans]
+                    from .security_operations import token_fallback, FALLBACK
+                    for position,(first,end) in enumerate(argument_spans):
+                        if token_fallback(ts[first:end]):
+                            marker=self.node(first,'literal configuration fallback','fallback',{FALLBACK})
+                            for value in args[position]:self.edge(value,marker,'configuration-fallback')
+                            args[position]={marker}
+                    if (self.language == 'csharp' and name == t.text
+                            and name in {'if', 'for', 'foreach', 'while', 'switch', 'catch', 'lock', 'using'}
+                            and not (i > 0 and ts[i - 1].text == '@')):
+                        # A control keyword encountered inside an expression
+                        # region is unsupported single-statement/block syntax,
+                        # not an unresolved application API. Retain provenance
+                        # and uncertainty instead of inventing a call graph node.
+                        values.update(set().union(*args) if args else set())
+                        self.limits.add('Single-statement control flow needs review at {}:{}'.format(self.path,t.line))
+                        i=close+1
+                        continue
                     receivers=env.get(t.text,()) if name!=t.text else ()
-                    returned=self.call(i,name,args,env,receivers)
+                    unsafe_types = self.language == 'csharp' and bool(re.search(r'TypeNameHandling\s*=\s*TypeNameHandling\s*\.\s*(?:All|Auto|Objects|Arrays)\b', self.text(j+1,close)))
+                    returned=self.call(i,name,args,env,receivers,unsafe_type_resolution=unsafe_types,argument_spans=argument_spans,generic_type=generic_type)
                     values.update(returned)
                     if self.language in {'c','cpp'} and name.split('::')[-1] in {'gets','fgets','getline','read','recv'}:
                         position=1 if name in {'read','recv'} else 0
@@ -502,7 +660,8 @@ class Walker:
                 end=j
                 while end<b and ts[end].text=='[' and end in self.pairs:end=self.pairs[end]+1
                 expression=self.text(i,end)
-                if is_source(self.language,expression):
+                archive_name = (self.language in {'java','kotlin'} and expression.endswith('.name') and self.types.get((self.scope, expression.split('.')[-2].rstrip('?')), self.mobile_fields.get((self.owner, expression.split('.')[-2].rstrip('?')), '')) == 'ZipEntry')
+                if archive_name or is_source(self.language,expression):
                     values.add(self.node(i,expression,'input',INPUT))
                 elif t.text in env:
                     n=self.node(i,expression,'read')
@@ -530,8 +689,9 @@ def parse_portable(path, language):
     return Walker(path,language).parse()
 
 
-def build_project_flow(ir):
+def build_project_flow(ir, max_seconds=None):
     """Resolve only unique, visible local definitions; never join by name alone."""
+    deadline = time.monotonic() + max_seconds if max_seconds is not None else None
     entities={e.entity_id:e for e in ir.entities}
     edges=[FlowEdge(e.source_id,e.target_id,dict(e.attributes)['flow_kind'],dict(e.attributes).get('argument'))
            for e in ir.edges if 'flow_kind' in dict(e.attributes)]
@@ -561,6 +721,9 @@ def build_project_flow(ir):
     reference_cache = {}
     candidate_cache = {}
     for call in calls:
+        if deadline is not None and time.monotonic() >= deadline:
+            limits.add('Project call-resolution time budget reached; remaining calls are unresolved')
+            break
         name=call.attribute('callee');parts=re.split(r'\.|::|->',name);short=parts[-1]
         import_key = (call.location.path, name)
         if import_key not in import_cache:
@@ -610,7 +773,8 @@ def build_project_flow(ir):
                     edges.append(FlowEdge(edge.source_id,params[edge.argument],'argument-parameter',edge.argument,call.entity_id))
             for result in returns.get((f.location.path,f.attribute('body_scope')),()):
                 edges.append(FlowEdge(result,call.entity_id,'return-call',callsite=call.entity_id))
-            entities[call.entity_id]=replace(call,concepts=call.concepts-INPUT-set(sink_concepts(ir.language,name))-{'sanitizer.contextual-output-encoding'})
+            from .security_operations import CORS, MASS, KEY
+            entities[call.entity_id]=replace(call,concepts=call.concepts-INPUT-set(sink_concepts(ir.language,name))-{CORS, MASS, KEY, 'network.outbound-request', 'sql.execution', 'data.encoding-transform', 'sanitizer.contextual-output-encoding'})
         elif len(candidates)>1:
             limits.add('Ambiguous project call {} at {}:{}'.format(name,call.location.path,call.location.line))
         elif not call.concepts and incoming.get(call.entity_id):

@@ -1,3 +1,4 @@
+import { formatDateTime } from '../lib/datetime'
 import FlowView from './FlowView'
 import { createQueryCache, queryKey } from '../lib/queryCache'
 import { useEffect, useId, useRef, useState } from 'react'
@@ -129,7 +130,7 @@ export default function RdlCrossReferences({ runUuid, onCount }) {
     <button type="button" className="btn btn-ghost" disabled={loading || building} onClick={refresh}>Refresh cross-references</button>
     {error ? <div role="alert" className="rdl-shadow-callout warning">{error} <button disabled={building} onClick={() => refresh()}>Retry</button></div> : null}
     {!data?.available ? <div className="xref-not-indexed"><h4>This scan has no symbol index yet</h4><p>Earlier scans saved taint handoffs only. Build a separate function, method and class index to explore incoming and outgoing calls.</p><p className="xref-muted">Uses the currently available project source. Saved findings stay unchanged; this index will be dated separately from the scan.</p><button disabled={building || loading || !runUuid} onClick={build}>{building ? 'Indexing project source…' : 'Build symbol index'}</button></div> : <>
-      <div className="xref-status"><span><strong>{data.summary.symbols.toLocaleString()} symbols</strong> · {data.summary.calls.toLocaleString()} calls · {data.summary.files.toLocaleString()} files</span><span>{data.provenance === 'scan' ? 'Captured during scan' : 'Current-source snapshot'} · {new Date(data.created_at).toLocaleString()}</span></div>
+      <div className="xref-status"><span><strong>{data.summary.symbols.toLocaleString()} symbols</strong> · {data.summary.calls.toLocaleString()} calls · {data.summary.files.toLocaleString()} files</span><span>{data.provenance === 'scan' ? 'Captured during scan' : 'Current-source snapshot'} · {formatDateTime(data.created_at)}</span></div>
       {data.provenance !== 'scan' ? <p className="xref-snapshot-note">This index describes source available when it was built, which may differ from the original scan.</p> : null}
       <div className="xref-workspace">
         <aside className="xref-symbols" aria-label="Symbols">

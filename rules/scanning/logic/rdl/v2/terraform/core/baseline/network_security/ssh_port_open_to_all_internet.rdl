@@ -3,7 +3,7 @@ RULE baseline.terraform.core.ssh_port_open_to_all_internet VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "from_port\\s*=\\s*22[^\\d][^}]*cidr_blocks\\s*=\\s*\\[\"0\\.0\\.0\\.0/0\"\\]" "im"
 WHEN (TEXT_MATCHES "from_port\\s*=\\s*22|to_port\\s*=\\s*22" "im" AND TEXT_MATCHES "cidr_blocks.*0\\.0\\.0\\.0/0|cidr_ipv6.*::/0" "im" AND TEXT_MISSING "# intentional|# bastion|# jump-host" "im")
-REPORT "SSH Port Open to All Internet"
+REPORT "Public SSH Access Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -3,7 +3,7 @@ RULE baseline.kotlin.framework.springkotlin.springkotlin_debug_development_build
 IN FILE
 WHEN TEXT_MATCHES "BuildConfig\\.DEBUG|debuggable\\s+true" "im"
 WHEN TEXT_MISSING "release|production" "im"
-REPORT "Springkotlin Debug/Development Build Exposure"
+REPORT "Debug Mode Configuration Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

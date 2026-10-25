@@ -3,7 +3,7 @@ RULE baseline.cpp.core.manual_memory_allocation_use_with_caution VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(new|malloc)\\s*\\(" "im"
 WHEN TEXT_MISSING "free\\s*\\(|delete\\s+|unique_ptr|shared_ptr|RAII" "im"
-REPORT "Manual Memory Allocation: Use with Caution"
+REPORT "Memory Allocation Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

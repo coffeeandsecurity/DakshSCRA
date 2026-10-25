@@ -3,7 +3,7 @@ RULE baseline.filepaths.core.sensitive_data_handling VERSION 1
 IN PATH
 WHEN TEXT_MATCHES "(?i)(sensitive|secret|private_key)" "im"
 WHEN (TEXT_MATCHES "(?i)(/|\\\\\\\\).*(secret|key|vault|credential|token)" "im" AND TEXT_MISSING "(?i)(/docs?/|/examples?/|/samples?/|/tests?/|example|sample|dummy|test|placeholder)" "im")
-REPORT "Sensitive Data Handling"
+REPORT "Sensitive Data Handling Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

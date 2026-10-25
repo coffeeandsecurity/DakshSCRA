@@ -3,7 +3,7 @@ RULE baseline.python.core.ssrf_urllib_with_user_controlled_url VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "urllib\\.request\\.urlopen\\s*\\(|urllib\\.urlopen\\s*\\(" "im"
 WHEN (TEXT_MATCHES "request\\.|input\\(|argv|\\+" "im" AND TEXT_MISSING "allowlist|whitelist|urlparse|is_private" "im")
-REPORT "SSRF: urllib with User-Controlled URL"
+REPORT "Server-Side Request Forgery Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.mobile.ios.core.uipasteboard_write_with_sensitive_data VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "UIPasteboard\\.general\\.(string|setValue|setData|setObjects)\\s*[=\\(]" "im"
-WHEN (TEXT_MATCHES "password|token|secret|key|credential|auth" "im" AND TEXT_MISSING "localOnly|expirationDate|UIPasteboardOption" "im")
-REPORT "UIPasteboard Write with Sensitive Data"
+REPORT "Clipboard Data Exposure Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

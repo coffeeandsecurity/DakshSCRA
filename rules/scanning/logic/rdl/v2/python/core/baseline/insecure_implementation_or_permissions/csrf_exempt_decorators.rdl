@@ -3,7 +3,7 @@ RULE baseline.python.core.csrf_exempt_decorators VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "@(csrf_exempt)" "im"
 WHEN (TEXT_MISSING "@login_required|token_required|api_key|JWT|Bearer" "im" AND TEXT_MISSING "test|example" "im")
-REPORT "CSRF Exempt Decorators"
+REPORT "CSRF Protection Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

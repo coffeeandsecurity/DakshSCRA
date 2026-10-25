@@ -7,17 +7,52 @@ import base64
 import gzip
 import hashlib
 import json
+import os
+import re
 import sqlite3
 import time
 import zlib
 from contextlib import contextmanager
 from pathlib import Path
+from functools import lru_cache
 
 from .review_views import finding_identity, flow_traits, location_key, symbol
 from .assessment import CATEGORIES, classify_record, combined_category, manual_review_direction
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 7
 ASSESSMENT_POLICY_VERSION = 6
+
+
+@lru_cache(maxsize=256)
+def _local_wal_filesystem(parent):
+    """Enable WAL only on recognized local Linux filesystems, never host shares."""
+    if os.name != 'posix':return False
+    try:
+        path=str(Path(parent).resolve())
+        mounts=Path('/proc/self/mountinfo').read_text().splitlines()
+        candidates=[]
+        for line in mounts:
+            left,right=line.split(' - ',1)
+            point=re.sub(r'\\([0-7]{3})',lambda match:chr(int(match[1],8)),left.split()[4])
+            if path==point or path.startswith(point.rstrip('/')+'/'):
+                candidates.append((len(point),right.split()[0]))
+        filesystem=max(candidates)[1] if candidates else ''
+        return filesystem in {'ext2','ext3','ext4','xfs','btrfs','tmpfs','overlay','zfs'}
+    except (OSError,ValueError,IndexError):
+        return False
+
+
+def _record_pages(db, maximum, page_size=64):
+    """Close each SQLite cursor before decoding or yielding immutable records."""
+    last=0
+    while last<maximum:
+        cursor=db.execute('SELECT id,group_id,payload FROM records WHERE id>? AND id<=? ORDER BY id LIMIT ?',
+                          (last,maximum,page_size))
+        try:rows=cursor.fetchall()
+        finally:cursor.close()
+        if not rows:break
+        for row in rows:yield row
+        last=rows[-1][0]
 
 
 def severity_rank(value):
@@ -60,6 +95,14 @@ CREATE TABLE IF NOT EXISTS entities (
  group_id INTEGER NOT NULL REFERENCES groups(id), kind TEXT NOT NULL, identity TEXT NOT NULL,
  PRIMARY KEY(group_id,kind,identity));
 CREATE INDEX IF NOT EXISTS entities_kind ON entities(kind,identity,group_id);
+CREATE TABLE IF NOT EXISTS finding_families (
+ group_id INTEGER NOT NULL, identity TEXT NOT NULL, title TEXT NOT NULL,
+ cwe TEXT NOT NULL, file TEXT NOT NULL, family TEXT NOT NULL DEFAULT '', PRIMARY KEY(group_id,identity));
+CREATE TABLE IF NOT EXISTS finding_occurrence_links (
+ group_id INTEGER NOT NULL, evidence TEXT NOT NULL, identity TEXT NOT NULL, anchor TEXT,
+ PRIMARY KEY(group_id,evidence));
+CREATE INDEX IF NOT EXISTS finding_families_group ON finding_families(group_id);
+
 """
 
 
@@ -69,7 +112,7 @@ class ResultStore:
         self.path = database_path(path)
 
     @contextmanager
-    def connect(self):
+    def connect(self, write=False):
         self.path.parent.mkdir(parents=True, exist_ok=True)
         connection = sqlite3.connect(str(self.path), timeout=30)
         connection.row_factory = sqlite3.Row
@@ -78,6 +121,8 @@ class ResultStore:
         connection.execute('PRAGMA cache_size=-4096')
         connection.execute('PRAGMA temp_store=FILE')
         try:
+            if write and _local_wal_filesystem(str(self.path.parent)):
+                connection.execute('PRAGMA journal_mode=WAL')
             # Existing databases need no schema writes or writer lock on reads.
             try:
                 current = connection.execute("SELECT value FROM metadata WHERE key='schema_version'").fetchone()
@@ -91,7 +136,7 @@ class ResultStore:
                 connection.execute('BEGIN IMMEDIATE')
                 row = connection.execute("SELECT value FROM metadata WHERE key='schema_version'").fetchone()
                 version = int(row[0]) if row else SCHEMA_VERSION
-                if version not in {1, 2, 3, 4, 5}:
+                if version not in {1, 2, 3, 4, 5, 6, 7}:
                     raise ResultStorageError('Unsupported scan result storage version')
                 columns = {item[1] for item in connection.execute('PRAGMA table_info(groups)')}
                 if 'severity_rank' not in columns:
@@ -110,6 +155,26 @@ class ResultStore:
                             if review: record['security_review'] = json.loads(review[0])
                             categories.append(classify_record(record))
                         connection.execute('UPDATE groups SET assessment=? WHERE id=?', (combined_category(categories), group['id']))
+                if 'family' not in {row[1] for row in connection.execute('PRAGMA table_info(finding_families)')}:
+                    connection.execute("ALTER TABLE finding_families ADD COLUMN family TEXT NOT NULL DEFAULT ''")
+                if version < 7:
+                    connection.execute('CREATE TEMP TABLE occurrence_source_lines (file TEXT,line INTEGER,body TEXT,conflict INTEGER DEFAULT 0,PRIMARY KEY(file,line))')
+                    for stored in connection.execute("SELECT r.payload FROM records r JOIN groups g ON g.id=r.group_id WHERE g.outcome='MATCH'"):
+                        manifest=json.loads(stored['payload'])
+                        for finding in self._get(connection,manifest['v2_findings']) if 'v2_findings' in manifest else []:
+                            for step in finding.get('evidence') or []:
+                                file=(step.get('location') or finding.get('location') or {}).get('path')
+                                for line in step.get('snippet') or []:
+                                    if file and isinstance(line.get('line'),int):
+                                        connection.execute('INSERT INTO occurrence_source_lines(file,line,body) VALUES (?,?,?) ON CONFLICT(file,line) DO UPDATE SET conflict=conflict OR body!=excluded.body',(file,line['line'],line.get('text','')))
+                    connection.execute('DELETE FROM finding_occurrence_links')
+                    connection.execute("DELETE FROM finding_families")
+                    connection.execute("DELETE FROM entities WHERE kind='findings' OR (kind='lead' AND group_id IN (SELECT id FROM groups WHERE outcome='MATCH'))")
+                    for stored in connection.execute("SELECT r.group_id,r.payload FROM records r JOIN groups g ON g.id=r.group_id WHERE g.outcome='MATCH'"):
+                        manifest = json.loads(stored['payload'])
+                        fields = ('v2_outcome', 'v2_rule_id', 'v2_rule', 'context', 'v2_findings')
+                        record = {key: self._get(connection, manifest[key]) for key in fields if key in manifest}
+                        self._index_families(connection, stored['group_id'], record)
                 if version == 1:
                     for record in connection.execute('SELECT group_id,payload FROM records ORDER BY id'):
                         manifest = json.loads(record['payload'])
@@ -161,6 +226,32 @@ class ResultStore:
             return value
         return unpack(json.loads(zlib.decompress(row[0])))
 
+    def _index_families(self, db, group_id, record):
+        if record.get('v2_outcome') != 'MATCH':
+            return
+        for finding in record.get('v2_findings') or []:
+            from .issue_families import occurrence_identity, family_title, family_key
+            from .issue_families import _configuration_anchor
+            located = dict(finding)
+            location = finding.get('location') or {}
+            if not located.get('occurrence_anchor') and location.get('path') and isinstance(location.get('line'),int):
+                has_context = db.execute("SELECT 1 FROM sqlite_temp_master WHERE name='occurrence_source_lines'").fetchone()
+                if has_context:
+                    rows=db.execute('SELECT line,body,conflict FROM occurrence_source_lines WHERE file=? AND line BETWEEN ? AND ? ORDER BY line',(location['path'],max(1,location['line']-100),location['line']+100)).fetchall()
+                    if rows:
+                        first,last=rows[0][0],rows[-1][0]
+                        lines={r[0]:r[1] for r in rows if not r[2]}
+                        text='\n'.join(lines.get(n,'<evidence-gap/>') for n in range(first,last+1))
+                        anchor=_configuration_anchor(finding,text,first)
+                        if anchor:located['occurrence_anchor']=anchor
+            identity = digest(occurrence_identity(record, located))
+            db.execute('INSERT OR REPLACE INTO finding_occurrence_links VALUES (?,?,?,?)',(group_id,digest(finding_identity(record,finding)),identity,dumps(located.get('occurrence_anchor'))))
+            db.execute("INSERT OR IGNORE INTO entities VALUES (?,?,?)", (group_id,'findings',identity))
+            db.execute("INSERT OR IGNORE INTO entities VALUES (?,?,?)", (group_id,'lead',identity))
+            path = (finding.get('location') or {}).get('path') or finding.get('path') or (record.get('context') or {}).get('file_path') or ''
+            db.execute('INSERT OR IGNORE INTO finding_families(group_id,identity,title,cwe,file,family) VALUES (?,?,?,?,?,?)',
+                       (group_id, identity, family_title(finding), finding.get('cwe') or '', str(path), family_key(finding)))
+
     def _append(self, db, record):
         if not isinstance(record, dict) or not isinstance(record.get('context') or {}, dict):
             raise ValueError('Invalid evaluation record')
@@ -196,14 +287,14 @@ class ResultStore:
             db.execute('UPDATE groups SET severity_rank=MIN(severity_rank,?) WHERE id=?', (rank,group_id))
         manifest = {key: self._put(db, value) for key, value in record.items()}
         db.execute('INSERT INTO records(group_id,status,kind,payload) VALUES (?,?,?,?)', (group_id,status,kind,dumps(manifest)))
+        self._index_families(db, group_id, record)
         def entity(kind, identity):
             db.execute('INSERT OR IGNORE INTO entities VALUES (?,?,?)', (group_id,kind,digest(identity)))
         for finding in record.get('v2_findings') or []:
             loc = finding.get('location') or {}
-            entity('lead', dumps([rule,str(loc.get('path') or file),loc.get('line'),loc.get('column')]))
             if outcome != 'MATCH':
+                entity('lead', dumps([rule,str(loc.get('path') or file),loc.get('line'),loc.get('column')]))
                 continue
-            entity('findings', finding_identity(record, finding))
             traits = flow_traits(finding)
             if traits['taint']:
                 entity('taint', traits['path_key'])
@@ -282,7 +373,7 @@ class ResultStore:
 
     def append(self, record):
         try:
-            with self.connect() as db, db:
+            with self.connect(write=True) as db, db:
                 self._sync_legacy(db)
                 if not db.in_transaction:
                     db.execute('BEGIN IMMEDIATE')
@@ -298,7 +389,11 @@ class ResultStore:
         elif view == 'disagreements': terms.append("g.status='DISAGREEMENT'")
         elif view == 'unresolved': terms.append("g.status IN ('INDETERMINATE','RULE_ERROR','SHADOW_ERROR')")
         if kind != 'all': terms.append('g.kind=?'); args.append(kind)
-        if search: terms.append('instr(g.search,?)>0'); args.append(search.casefold())
+        if search:
+            from core.issue_titles import title_search_aliases
+            aliases = [search.casefold(), *title_search_aliases(search)]
+            terms.append('(' + ' OR '.join('instr(g.search,?)>0' for _ in aliases) + ')')
+            args.extend(aliases)
         if section == 'findings': terms.append("g.outcome='MATCH'")
         elif section in CATEGORIES:
             terms.append('g.assessment=?')
@@ -309,10 +404,16 @@ class ResultStore:
             args.append('taint' if section == 'vectors' else section)
         return (' AND '.join(terms) or '1=1'), args
 
-    def _group(self, db, group):
+    def _group(self, db, group, maximum=None):
         result, decisions, findings, seen = None, [], [], {}
         direction = None
-        for row in db.execute('SELECT payload FROM records WHERE group_id=? ORDER BY id', (group['id'],)):
+        query='SELECT payload FROM records WHERE group_id=?'
+        parameters=[group['id']]
+        if maximum is not None:query+=' AND id<=?';parameters.append(maximum)
+        cursor=db.execute(query+' ORDER BY id',parameters)
+        try:rows=cursor.fetchall()
+        finally:cursor.close()
+        for row in rows:
             manifest = json.loads(row[0])
             if result is None:
                 result = {key:self._get(db,value) for key,value in manifest.items()}
@@ -335,6 +436,11 @@ class ResultStore:
             result['manual_review'] = direction
         if result.get('comparison_retained') is not False:
             result.update(v1_outcome=group['v1_outcome'], v1_decisions=decisions)
+        from .issue_families import decorate
+        for finding in findings:
+            link=db.execute('SELECT anchor FROM finding_occurrence_links WHERE group_id=? AND evidence=?',(group['id'],digest(finding_identity(result,finding)))).fetchone()
+            if link and link[0] and link[0]!='null':finding['occurrence_anchor']=json.loads(link[0])
+            decorate(result,finding)
         if findings or 'v2_findings' in result: result['v2_findings']=findings
         return result
 
@@ -354,12 +460,16 @@ class ResultStore:
             # Counts use the same indexed property/file groups as the paginated lists.
             category_where, category_args = self._where('all',kind,search)
             assessment_counts = dict.fromkeys(CATEGORIES, 0)
-            for name, count in db.execute('SELECT g.assessment,COUNT(*) FROM groups g WHERE '+category_where+' GROUP BY g.assessment', category_args):
+            assessment_rule_counts = dict.fromkeys(CATEGORIES, 0)
+            for name, count, rule_count in db.execute('SELECT g.assessment,COUNT(*),COUNT(DISTINCT g.rule) FROM groups g WHERE '+category_where+' GROUP BY g.assessment', category_args):
                 if name in assessment_counts:
                     assessment_counts[name] = count
+                    assessment_rule_counts[name] = rule_count
             summary['coverage_limit_groups'] = db.execute("SELECT COUNT(*) FROM groups g WHERE "+category_where+" AND g.assessment='coverage_limit'", category_args).fetchone()[0]
             data_assessments = dict(assessment_counts, total=sum(assessment_counts.values()))
             confirmed_finding_count = db.execute("SELECT COUNT(DISTINCT e.identity) FROM entities e JOIN groups g ON g.id=e.group_id WHERE "+category_where+" AND g.assessment='confirmed' AND e.kind='findings'", category_args).fetchone()[0]
+            confirmed_families = [dict(title=row[0], cwe=', '.join(sorted(filter(None,(row[1] or '').split(',')))), cwes=sorted(filter(None,(row[1] or '').split(','))), instances=row[2], files=row[3], rule_matches=row[4], issue_family=row[5])
+                for row in db.execute("SELECT MIN(f.title),GROUP_CONCAT(DISTINCT NULLIF(f.cwe,'')),COUNT(DISTINCT f.identity),COUNT(DISTINCT f.file),COUNT(*),f.family FROM finding_families f JOIN groups g ON g.id=f.group_id WHERE "+category_where+" AND g.assessment='confirmed' GROUP BY f.family ORDER BY COUNT(DISTINCT f.identity) DESC,MIN(f.title)", category_args)]
             global_confirmed_finding_count = db.execute("SELECT COUNT(DISTINCT e.identity) FROM entities e JOIN groups g ON g.id=e.group_id WHERE g.assessment='confirmed' AND e.kind='findings'").fetchone()[0]
             base, args = self._where(view,kind,search)
             base += " AND g.assessment!='suppressed'"
@@ -389,7 +499,7 @@ class ResultStore:
             records = [self._group(db,row) for row in rows]
             records, _ = review_sections(records, 'all' if section in CATEGORIES else section)
             cursor = base64.urlsafe_b64encode(dumps([rows[-1]['severity_rank'],rows[-1]['priority'],rows[-1]['id']]).encode()).decode() if more and rows else None
-            return dict(summary=summary,comparisons=records,evaluation_kinds=kinds,section_counts=counts,assessment_counts=data_assessments,confirmed_finding_count=confirmed_finding_count,global_confirmed_finding_count=global_confirmed_finding_count,query=dict(view=view,search=search,kind=kind,section=section),filtered_total=total,offset=offset,limit=limit,truncated=more,next_cursor=cursor)
+            return dict(summary=summary,comparisons=records,evaluation_kinds=kinds,section_counts=counts,assessment_counts=data_assessments,assessment_rule_counts=assessment_rule_counts,confirmed_families=confirmed_families,confirmed_family_count=len(confirmed_families),confirmed_finding_count=confirmed_finding_count,global_confirmed_finding_count=global_confirmed_finding_count,query=dict(view=view,search=search,kind=kind,section=section),filtered_total=total,offset=offset,limit=limit,truncated=more,next_cursor=cursor)
 
     def record_false_positive_review(self, rule, file, reviewer, reason):
         """Keep review metadata separately from immutable scan records."""
@@ -409,19 +519,69 @@ class ResultStore:
     def iter_records(self, reviewed=False):
         with self.connect() as db:
             with db: self._sync_legacy(db)
-            for row in db.execute('SELECT group_id,payload FROM records ORDER BY id'):
+            maximum=db.execute('SELECT COALESCE(MAX(id),0) FROM records').fetchone()[0]
+            for row in _record_pages(db,maximum):
                 record = {key:self._get(db,value) for key,value in json.loads(row['payload']).items()}
                 if reviewed:
                     review = db.execute('SELECT payload FROM security_reviews WHERE group_id=?', (row['group_id'],)).fetchone()
                     if review: record['security_review'] = json.loads(review[0])
                 yield record
 
+    def iter_records_readonly(self):
+        """Read original decisions and reviews without migrations or imports.
+
+        Planning and export consumers must not change retained scan data. Read
+        unimported journal tails separately using the saved legacy offsets.
+        """
+        offsets = {}
+        if self.path.is_file():
+            connection = sqlite3.connect(self.path.resolve().as_uri() + '?mode=ro', uri=True)
+            try:
+                connection.execute('PRAGMA query_only=ON')
+                tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+                if 'metadata' in tables:
+                    for key, value in connection.execute("SELECT key,value FROM metadata WHERE key LIKE 'legacy:%'").fetchall():
+                        offsets[key[7:]] = json.loads(value).get('offset', 0)
+                maximum=connection.execute('SELECT COALESCE(MAX(id),0) FROM records').fetchone()[0]
+                for _,group_id,payload in _record_pages(connection,maximum):
+                    record = {key: self._get(connection, value) for key, value in json.loads(payload).items()}
+                    if 'security_reviews' in tables:
+                        review = connection.execute('SELECT payload FROM security_reviews WHERE group_id=?', (group_id,)).fetchone()
+                        if review:
+                            record['security_review'] = json.loads(review[0])
+                    yield record
+            finally:
+                connection.close()
+        for journal, compressed in ((self.source, False), (self.source.with_suffix('.findings.jsonl.gz'), True)):
+            if not journal.is_file():
+                continue
+            opener = gzip.open if compressed else open
+            with opener(journal, 'rb') as handle:
+                handle.seek(offsets.get(journal.name, 0))
+                for line in handle:
+                    if not line.strip():
+                        continue
+                    record = json.loads(line)
+                    if not isinstance(record, dict):
+                        raise ResultStorageError('Invalid retained RDL decision')
+                    yield record
+
     def iter_groups(self):
         with self.connect() as db:
             with db: self._sync_legacy(db)
-            db.execute('BEGIN')
-            for group in db.execute('SELECT * FROM groups ORDER BY severity_rank,priority,id'):
-                yield self._group(db,group)
+            maximum=db.execute('SELECT COALESCE(MAX(id),0) FROM records').fetchone()[0]
+            # Freeze the small group metadata in a temporary database. Payload
+            # decoding and a paused export must not keep the scan DB locked.
+            db.execute('CREATE TEMP TABLE export_groups AS SELECT * FROM groups ORDER BY severity_rank,priority,id')
+            db.commit()
+            last=0
+            while True:
+                cursor=db.execute('SELECT rowid AS export_order,* FROM export_groups WHERE rowid>? ORDER BY rowid LIMIT 32',(last,))
+                try:groups=cursor.fetchall()
+                finally:cursor.close()
+                if not groups:break
+                for group in groups:yield self._group(db,group,maximum)
+                last=groups[-1]['export_order']
 
 
 class ResultWriter:
@@ -467,7 +627,7 @@ class ResultWriter:
             return
         try:
             if self._db is None:
-                self._context = self.store.connect()
+                self._context = self.store.connect(write=True)
                 self._db = self._context.__enter__()
             with self._db:
                 self.store._sync_legacy(self._db)

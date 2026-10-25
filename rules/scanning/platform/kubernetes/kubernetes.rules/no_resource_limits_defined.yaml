@@ -1,0 +1,37 @@
+format: daksh-pattern-rule/v1
+id: kubernetes.core.no_resource_limits_defined
+title: "Container Resource Limits Review"
+order: 12
+category: Resource Management
+detection:
+  pattern: 'containers\s*:'
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - 'WHEN EXPR MISSING:resources\s*:|limits\s*:|requests\s*:'
+reporting:
+  type: area_of_interest
+  reason: Detects container specifications missing resource limits and requests.
+  trace:
+  - Externalized rule logic for No Resource Limits Defined.
+  description: The code configures failure handling or resource consumption. Determine whether failure paths preserve
+    security invariants and whether work is bounded.
+  impact: Unhandled failures or unbounded work may disrupt availability or leave security-relevant state inconsistent.
+    The presence or absence of a named handler alone does not establish a reachable security defect.
+  remediation: Bound resource use, handle failures at the correct ownership boundary, and fail safely before updating
+    trusted state. Test exceptional paths, cancellation, timeouts, and recovery behavior.
+  reviewer: Confirm all containers have defined resource limits. This can be confirmed as an issue when the matched
+    path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Trace who controls the operation count, input size, duration or resource allocation.
+  - Inspect limits, cancellation, cleanup and error paths, including concurrency and deployment quotas.
+  - Establish a reachable way to exhaust or retain a relevant resource before confirming an availability issue.
+  recommendations:
+  - Set limits and timeouts appropriate to the operation and release resources on success, failure and cancellation.
+  - Test oversized input and concurrent requests against the intended limits and verify cleanup under failure.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

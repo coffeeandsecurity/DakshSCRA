@@ -1,0 +1,40 @@
+format: daksh-pattern-rule/v1
+id: filepaths.core.authentication
+title: "Authentication Review"
+order: 1
+detection:
+  pattern: (?i)(Login|Signin|Authentication|Authenticated|Oauth|JWT)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:(?i)(/|\\\\).*(auth|login|signin|oauth|jwt) && MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/)
+reporting:
+  type: area_of_interest
+  reason: Detects file paths related to authentication functionality.
+  description: A file or directory name matches the authentication review area. This check inspects paths, not the
+    implementation or a reachable execution path.
+  impact: If identity or resource authorization can be bypassed, an attacker may impersonate a user, access another
+    user’s data, or perform restricted operations. A control’s presence alone does not establish a weakness. A filename
+    match alone does not establish this consequence.
+  remediation: Enforce authentication and object-level authorization on the trusted server or privileged boundary.
+    Use strong verifier material, appropriate rate limits and recovery controls, and test access by unauthenticated
+    and insufficiently privileged callers.
+  reviewer: Verify the presence and correctness of authentication-related code. This can be confirmed as an issue
+    when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the matched file or directory contents and determine whether it is deployed or externally accessible.
+  - Identify whether sensitive data, configuration or executable content is present; a name match alone does not
+    establish exposure.
+  - Check effective access controls and build or packaging exclusions and record the specific content and exposure
+    path.
+  recommendations:
+  - Where exposure is verified, remove unnecessary files from deployment or restrict access to the intended users
+    and processes.
+  - Verify the deployed artifact and access behavior after the change; retain required application files with appropriate
+    controls.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

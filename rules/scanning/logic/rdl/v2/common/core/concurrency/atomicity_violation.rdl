@@ -4,7 +4,7 @@ IN PROJECT
 LET operation BE FUNCTION MATCHES concurrency.compound-operation
 WHEN interleaving.breaks_invariant operation
 REQUIRE NOT synchronization.atomic operation
-REPORT "atomicity violation"
+REPORT "Atomicity Violation"
 SEVERITY HIGH
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

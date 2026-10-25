@@ -1,0 +1,11 @@
+VERSION 2
+RULE python.untrusted-redirect-target VERSION 1
+IN DATA_FLOW
+LET input BE VARIABLE MATCHES input.untrusted
+LET target BE CALL MATCHES navigation.redirect
+WHEN input FLOWS TO target
+REQUIRE NOT policy.destination-allowlist input
+REPORT "Redirect Destination Review"
+SEVERITY MEDIUM
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

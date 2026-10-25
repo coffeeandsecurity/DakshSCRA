@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: java.framework.mybatis.orderby_clause_with_dynamic_substitution
+title: "SQL Sorting Review"
+order: 2
+category: Framework-Specific Issues - MyBatis
+detection:
+  pattern: ORDER\s+BY\s+\$\{|order\s+by\s+\$\{
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:allowlist|whitelist|validateColumn|allowedColumns|escapeSQL
+reporting:
+  type: area_of_interest
+  reason: Detects dynamic ORDER BY clauses using MyBatis string substitution.
+  trace:
+  - Externalized rule logic for OrderBy Clause with Dynamic Substitution.
+  description: The code constructs a query, selection, or ordering clause with values that may be externally controlled.
+    Resolve whether those values enter syntax or bound data.
+  impact: Attacker-controlled query syntax may change selected records, bypass intended filters, or modify stored
+    data with the connection or provider’s privileges.
+  remediation: Bind data values using the query API’s parameter mechanism. Choose ordering columns and other identifiers
+    from a fixed allowlist, and enforce record-level authorization.
+  reviewer: Confirm ORDER BY ${} values are validated against a strict allowlist and cannot be directly supplied
+    by end users. This can be confirmed as an issue when the matched path is reachable and required controls are
+    missing, weak, or inconsistent.
+  review_steps:
+  - Locate the final query and determine whether caller-controlled data can alter its structure; inspect interpolated
+    fragments and raw-query helpers.
+  - Verify that values are bound by the database driver. For identifiers or sort directions that cannot be bound,
+    inspect a fixed mapping of allowed choices.
+  - Record the reachable caller and effective controls; a constant query or correctly bound value does not establish
+    injection.
+  recommendations:
+  - Bind data values with the driver or ORM parameter API; avoid constructing query syntax from external strings.
+  - Use fixed mappings for dynamic identifiers and ordering. Test that unusual input remains data and that the database
+    account has only required privileges.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: magenta

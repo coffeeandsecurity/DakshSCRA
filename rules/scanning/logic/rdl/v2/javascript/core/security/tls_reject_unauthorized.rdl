@@ -2,7 +2,7 @@ VERSION 2
 RULE javascript.tls-reject-unauthorized VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\brejectUnauthorized\\s*:\\s*false\\b" ""
-REPORT "Node TLS Certificate Rejection Disabled"
+REPORT "TLS Certificate Validation Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

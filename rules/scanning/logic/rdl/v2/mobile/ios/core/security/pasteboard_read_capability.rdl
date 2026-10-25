@@ -2,7 +2,7 @@ VERSION 2
 RULE ios.pasteboard-read-capability VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:UIPasteboard\\s*\\.\\s*general\\s*\\.\\s*(?:string|strings|items|data)|generalPasteboard\\s*\\]\\s*(?:\\.\\s*(?:string|items)|\\s+(?:string|items)\\s*\\]))" ""
-REPORT "Cross-Application Pasteboard Read"
+REPORT "Clipboard Read Capability"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

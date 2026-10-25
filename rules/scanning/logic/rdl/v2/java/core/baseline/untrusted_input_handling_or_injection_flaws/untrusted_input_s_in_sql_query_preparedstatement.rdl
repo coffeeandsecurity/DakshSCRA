@@ -3,7 +3,7 @@ RULE baseline.java.core.untrusted_input_s_in_sql_query_preparedstatement VERSION
 IN FILE
 WHEN TEXT_MATCHES "PreparedStatement(\\s)*(\\.|->)execute( |Query|Update)" "im"
 WHEN (TEXT_MATCHES "(\\+|String\\.format|MessageFormat|append\\()" "im" AND TEXT_MISSING "setString\\(|setInt\\(|setLong\\(|setObject\\(" "im")
-REPORT "Untrusted Input(s) in SQL Query (PreparedStatement)"
+REPORT "SQL Injection Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

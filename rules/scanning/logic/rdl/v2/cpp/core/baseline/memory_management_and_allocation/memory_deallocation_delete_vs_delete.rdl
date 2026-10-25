@@ -3,7 +3,7 @@ RULE baseline.cpp.core.memory_deallocation_delete_vs_delete VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\bdelete\\s+\\[?\\]?" "im"
 WHEN TEXT_MISSING "=\\s*nullptr|=\\s*NULL|unique_ptr|shared_ptr" "im"
-REPORT "Memory Deallocation: delete vs. delete[]"
+REPORT "Allocation and Deallocation Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

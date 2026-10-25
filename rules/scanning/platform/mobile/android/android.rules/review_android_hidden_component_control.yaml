@@ -1,0 +1,38 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.review_android_hidden_component_control
+title: "Component Visibility Review"
+order: 64
+category: RESILIENCE Review
+detection:
+  pattern: \bsetComponentEnabledSetting\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: The application changes whether a component is enabled or visible to the user. Resolve the exact
+    declaration or operation in the selected build and identify its security boundary.
+  impact: Concealing an application entry point may reduce user visibility or interfere with access to controls
+    if used without consent; the API itself does not establish malicious persistence or an authorization bypass.
+  remediation: Keep component visibility changes tied to documented user choices or application lifecycle needs.
+    Preserve accessible settings and removal controls, and verify that changes cannot conceal unauthorized behavior.
+    Apply the least-privilege platform control appropriate to the matched operation and verify the production configuration.
+  reviewer: Check debug/release and product flavors, generated/native code, plugin boundaries and failure paths;
+    source evidence alone does not establish shipped or runtime behavior.
+  review_steps:
+  - Trace the matched candidate to its actual value, caller or resource.
+  - Check debug/release and product flavors, generated/native code, plugin boundaries and failure paths; source
+    evidence alone does not establish shipped or runtime behavior.
+  - Resolve release configuration and runtime assumptions before confirming an issue.
+  recommendations:
+  - Keep component visibility changes tied to documented user choices or application lifecycle needs. Preserve accessible
+    settings and removal controls, and verify that changes cannot conceal unauthorized behavior. Apply the least-privilege
+    platform control appropriate to the matched operation and verify the production configuration.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

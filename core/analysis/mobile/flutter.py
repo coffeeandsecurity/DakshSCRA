@@ -5,7 +5,7 @@ from typing import Dict, List
 import re
 
 import state.runtime_state as state
-from core.analysis.mobile.common import annotate_flows, first_match_line, flow, line_text, output_dir
+from core.analysis.mobile.common import read_mobile_lines, annotate_flows, first_match_line, flow, line_text, output_dir
 from core.analysis.report import write_reports
 
 
@@ -36,7 +36,7 @@ def _method_channel_flows(source_root: Path, dart_files: List[Path], progress_ca
                 "current_file": str(file_path),
             })
         try:
-            lines = file_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+            lines = read_mobile_lines(file_path)
         except OSError:
             continue
         handler_line = first_match_line(lines, METHOD_CHANNEL_RE, 1)
@@ -45,8 +45,7 @@ def _method_channel_flows(source_root: Path, dart_files: List[Path], progress_ca
         end_line = min(len(lines), handler_line + 40)
         method_guard = first_match_line(lines, CALL_METHOD_GUARD_RE, handler_line, end_line)
         args_guard = first_match_line(lines, CALL_ARGS_GUARD_RE, handler_line, end_line)
-        if method_guard and args_guard:
-            continue
+        # Method names and type assertions are not caller authorization.
         flows.append(
             flow(
                 source_root=source_root,
@@ -92,84 +91,26 @@ def _method_channel_flows(source_root: Path, dart_files: List[Path], progress_ca
 
 
 def _webview_flows(source_root: Path, dart_files: List[Path]) -> List[Dict]:
-    flows: List[Dict] = []
+    from core.mobile_model import views, build_scope
+    flows = []
     for file_path in dart_files:
         try:
-            lines = file_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+            text = file_path.read_text(encoding='utf-8', errors='replace')
         except OSError:
             continue
-        js_line = first_match_line(lines, WEBVIEW_JS_RE, 1)
-        load_line = first_match_line(lines, WEBVIEW_LOAD_RE, 1)
-        guard_line = first_match_line(lines, WEBVIEW_GUARD_RE, 1)
-
-        if js_line and not guard_line:
-            flows.append(
-                flow(
-                    source_root=source_root,
-                    file_path=file_path,
-                    function="WebViewController",
-                    sink="flutter webview unrestricted javascript",
-                    description="A Flutter WebView enables unrestricted JavaScript without visible navigation or scheme restrictions.",
-                    explanation="Unrestricted JavaScript combined with weak navigation controls increases WebView script-injection and bridge-abuse risk.",
-                    path=[
-                        {
-                            "file": None,
-                            "line": js_line,
-                            "role": "source",
-                            "code": "[flutter config] WebView JavaScript mode configured for content loading.",
-                            "source_symbol": "webview_config",
-                            "variables": ["webview_config"],
-                        },
-                        {
-                            "file": None,
-                            "line": js_line,
-                            "role": "sink",
-                            "code": line_text(lines, js_line, "JavaScriptMode.unrestricted"),
-                        },
-                    ],
-                    confidence="medium",
-                    methods=["WEBVIEW"],
-                    uris=["https://<WEBVIEW-URL>"],
-                    params=["javascriptMode"],
-                    attack_label="WebView JavaScript Exposure",
-                    attack_reason="The WebView permits unrestricted script execution with no visible navigation guard.",
-                )
-            )
-
-        if load_line and not guard_line:
-            flows.append(
-                flow(
-                    source_root=source_root,
-                    file_path=file_path,
-                    function="WebViewController",
-                    sink="flutter webview user controlled url",
-                    description="A Flutter WebView loads a URL without visible scheme or origin validation.",
-                    explanation="Unvalidated WebView navigation can allow phishing content, `javascript:` URLs, or unsafe local/resource access.",
-                    path=[
-                        {
-                            "file": None,
-                            "line": load_line,
-                            "role": "source",
-                            "code": "[flutter input] Application-controlled or external URL reaches WebView navigation.",
-                            "source_symbol": "web_url",
-                            "variables": ["web_url"],
-                        },
-                        {
-                            "file": None,
-                            "line": load_line,
-                            "role": "sink",
-                            "code": line_text(lines, load_line, "loadRequest("),
-                        },
-                    ],
-                    confidence="medium",
-                    methods=["WEBVIEW"],
-                    uris=["https://<WEBVIEW-URL>"],
-                    params=["url"],
-                    attack_label="WebView Navigation Exposure",
-                    attack_reason="A user-controlled URL reaches WebView loading without a visible validation hook.",
-                    attack_example="https://attacker.example/path?payload=<PAYLOAD>",
-                )
-            )
+        comments, code = views(file_path, text)
+        for pattern, sink in ((WEBVIEW_JS_RE, 'flutter webview unrestricted javascript'),
+                              (WEBVIEW_LOAD_RE, 'flutter webview external content')):
+            for hit in pattern.finditer(code):
+                line = text.count('\n',0,hit.start())+1
+                description = 'WebView operation: resolve this controller, destination and enforced navigation policy. An unrelated allowlist or callback name does not establish protection.'
+                item = flow(source_root=source_root,file_path=file_path,function='WebViewController',
+                            sink=sink,description=description,explanation=description,
+                            path=[dict(file=None,line=line,role='source',code='[mobile review] Resolve content provenance.'),
+                                  dict(file=None,line=line,role='sink',code=text.splitlines()[line-1])],
+                            confidence='low', methods=['WEBVIEW'],params=['destination'])
+                item.update(control_status='unresolved',build_scope=build_scope(file_path),analysis_kind='heuristic')
+                flows.append(item)
     return flows
 
 
@@ -177,7 +118,7 @@ def _cert_flows(source_root: Path, dart_files: List[Path]) -> List[Dict]:
     flows: List[Dict] = []
     for file_path in dart_files:
         try:
-            lines = file_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+            lines = read_mobile_lines(file_path)
         except OSError:
             continue
         line_no = first_match_line(lines, CERT_BYPASS_RE, 1)
@@ -226,7 +167,7 @@ def _transport_and_spawn_flows(source_root: Path, dart_files: List[Path]) -> Lis
     flows: List[Dict] = []
     for file_path in dart_files:
         try:
-            lines = file_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+            lines = read_mobile_lines(file_path)
         except OSError:
             continue
         http_line = first_match_line(lines, HTTP_LITERAL_RE, 1)

@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.python.core.network_calls_urllib2_and_socket VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(?i)(urllib2|socket)" "im"
-WHEN (TEXT_MATCHES "(connect|send|recv|urlopen|request)" "im" AND TEXT_MISSING "(timeout=|ssl|TLS|verify=True|cert_reqs)" "im")
-REPORT "Network Calls: urllib2 and socket"
+REPORT "Network Request Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

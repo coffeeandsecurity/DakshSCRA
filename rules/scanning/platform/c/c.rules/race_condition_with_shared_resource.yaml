@@ -1,0 +1,37 @@
+format: daksh-pattern-rule/v1
+id: c.core.race_condition_with_shared_resource
+title: Race Condition with Shared Resource
+order: 22
+category: Concurrency and Race Conditions
+detection:
+  pattern: \bpthread_create\s*\(.*\);\s*.*\s*=.*shared_var
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:mutex|lock|atomic|std::mutex|pthread_mutex|synchronized|volatile\s+std::atomic
+reporting:
+  type: area_of_interest
+  reason: Detects potential race conditions in multi-threaded applications.
+  trace:
+  - Externalized rule logic for Race Condition with Shared Resource.
+  description: The code accesses a shared resource or creates concurrent work. Identify the ownership and synchronization
+    guarantees for every reader and writer.
+  impact: Concurrent state changes may bypass checks, corrupt data, or expose inconsistent security decisions if
+    a check and its use are not protected by the required synchronization.
+  remediation: Protect shared invariants with appropriate synchronization or atomic operations. Keep security checks
+    and dependent updates in the same transaction or critical section, including filesystem races.
+  reviewer: Check that shared resources are properly synchronized. This can be confirmed as an issue when the matched
+    path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify shared state, ownership and the sequence of checks and updates around the matched operation.
+  - Inspect synchronization, transaction boundaries and cancellation or exception paths under concurrent execution.
+  - Demonstrate an interleaving that violates a required invariant before confirming a race or security impact.
+  recommendations:
+  - Keep related checks and updates within an appropriate lock, atomic operation or transaction.
+  - Test concurrent and failure-path behavior and verify that the protected invariant holds under repeated execution.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

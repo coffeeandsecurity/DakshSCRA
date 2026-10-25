@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.android.core.review_android_notification_capture_capability VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:onNotificationPosted|onNotificationRemoved)\\s*\\(" "im"
+REPORT "Notification Access Capability"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

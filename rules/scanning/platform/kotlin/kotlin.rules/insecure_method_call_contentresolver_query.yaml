@@ -1,0 +1,43 @@
+format: daksh-pattern-rule/v1
+id: kotlin.core.insecure_method_call_contentresolver_query
+title: "Content Provider Query Review"
+order: 7
+category: Insecure Method/Function Call
+detection:
+  pattern: ContentResolver\.query\(".*"\)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:selectionArgs|bindArgs|\?,\s*arrayOf|validate|sanitize
+reporting:
+  type: area_of_interest
+  reason: Detects insecure usage of ContentResolver.query() method, which may lead to SQL injection vulnerabilities.
+  trace:
+  - 'Externalized rule logic for Insecure Method Call: ContentResolver.query().'
+  description: The code constructs a query, selection, or ordering clause with values that may be externally controlled.
+    Resolve whether those values enter syntax or bound data.
+  impact: Attacker-controlled query syntax may change selected records, bypass intended filters, or modify stored
+    data with the connection or provider’s privileges.
+  remediation: Bind data values using the query API’s parameter mechanism. Choose ordering columns and other identifiers
+    from a fixed allowlist, and enforce record-level authorization.
+  reviewer: Verify that ContentResolver.query() is used securely and that any user input incorporated into query
+    parameters is properly validated, sanitized, and parameterized to prevent SQL injection vulnerabilities. Also
+    ensure that developers follow best practices for securely accessing and querying content providers. This can
+    be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Locate the final query and determine whether caller-controlled data can alter its structure; inspect interpolated
+    fragments and raw-query helpers.
+  - Verify that values are bound by the database driver. For identifiers or sort directions that cannot be bound,
+    inspect a fixed mapping of allowed choices.
+  - Record the reachable caller and effective controls; a constant query or correctly bound value does not establish
+    injection.
+  recommendations:
+  - Bind data values with the driver or ORM parameter API; avoid constructing query syntax from external strings.
+  - Use fixed mappings for dynamic identifiers and ordering. Test that unusual input remains data and that the database
+    account has only required privileges.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

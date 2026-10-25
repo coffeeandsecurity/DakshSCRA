@@ -1,0 +1,40 @@
+format: daksh-pattern-rule/v1
+id: cpp.core.access_to_freed_memory_2
+title: "Deallocation Lifetime Review"
+order: 12
+category: Memory Management and Allocation
+detection:
+  pattern: \bdelete\s*(?:\[\s*\]\s*)?(?:[A-Za-z_]\w*)
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: A memory-release operation is present. Trace aliases and subsequent lifetime use; release alone does not
+    establish use-after-free.
+  trace:
+  - Externalized rule logic for Access to Freed Memory.
+  description: The code releases memory. Review ownership, aliases and uses after this specific operation; the release
+    call alone does not establish use-after-free.
+  impact: An invalid lifetime or out-of-range access may corrupt memory, disclose process data, or crash the application.
+    Unbounded or unreleased resources may exhaust memory and deny service under repeated use.
+  remediation: Enforce bounds and lifetime invariants, handle allocation failure, and use appropriate automatic
+    resource ownership. Confirm a leak or invalid access before adding cleanup that could introduce double release.
+  reviewer: Look for any use-after-free patterns in the code, especially in complex control flows. This can be confirmed
+    as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect buffer capacity, index bounds, integer conversions and ownership at the matched operation and its callers.
+  - Check initialization, aliases, lifetime and cleanup on success, exception and early-return paths; identify external
+    influence over sizes or values.
+  - Verify a concrete unsafe access or lifetime condition. A low-level API or allocation alone does not prove memory
+    corruption.
+  recommendations:
+  - Use bounded operations, checked size calculations and explicit ownership or automatic resource management appropriate
+    to the language.
+  - Test boundary sizes and failure paths; use memory diagnostics where available to verify the specific correction.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

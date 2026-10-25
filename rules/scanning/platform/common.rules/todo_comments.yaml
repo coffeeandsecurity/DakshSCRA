@@ -1,0 +1,41 @@
+format: daksh-pattern-rule/v1
+id: common.core.todo_comments
+title: TODO Comments
+order: 19
+category: Code Quality and Documentation
+detection:
+  pattern: (?i)\bTODO\b
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects TODO comments in the code.
+  trace:
+  - Externalized rule logic for TODO Comments.
+  description: The code contains a maintainability, accessibility, or build-configuration review marker. Establish
+    a concrete affected behavior before assigning security severity.
+  impact: No direct confidentiality or integrity consequence is established by this marker alone. A related implementation
+    defect could affect availability or prevent users from using essential controls, depending on the actual behavior.
+  remediation: Resolve the specific unfinished behavior, accessibility requirement, or build hygiene concern. Confirm
+    its real operational effect and test the corrected behavior before classifying it as a security defect.
+  reviewer: Check for the presence of TODO comments and verify if they have been properly addressed during code
+    reviews and inspections. This can be confirmed as an issue when the matched path is reachable and required controls
+    are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the matched construct in its containing function or configuration and identify the security-sensitive
+    behavior under review.
+  - Verify reachable callers, external influence and effective protections, including deployment overrides and failure
+    paths.
+  - Record concrete evidence for a confirmed issue or a justified suppression; retain an unresolved outcome when
+    the required evidence is unavailable.
+  recommendations:
+  - Apply the rule-specific correction above only after verifying the affected behavior and required control.
+  - Add a regression case for the unsafe condition and a valid protected case; verify the effective behavior in
+    the relevant deployment.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.mobile.ios.core.evaluatejavascript_with_potentially_user_controlled_input VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\.evaluateJavaScript\\s*\\(" "im"
-WHEN TEXT_MISSING "sanitize|escape|encode|htmlEncode|jsEncode|allowList|trustedScript|#\\ safe" "im"
-REPORT "evaluateJavaScript with Potentially User-Controlled Input"
+REPORT "WebView Script Execution Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

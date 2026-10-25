@@ -2,7 +2,13 @@
 export function flowEvidence(finding) {
   const select = items => (Array.isArray(items) ? items : []).filter(item => item.matched !== false && ['SOURCE', 'PROPAGATION', 'SINK'].includes(item.predicate))
   const traced = select(finding.trace?.steps)
-  return traced.some(item => item.predicate === 'SOURCE') ? traced : select(finding.evidence)
+  const evidence = select(finding.evidence)
+  // Keep each recorded path intact. Never stitch unrelated observations into
+  // a path, but do not let an older source-only trace hide fuller evidence.
+  const quality = steps => steps.some(item => item.predicate === 'SOURCE')
+    ? (steps.some(item => item.predicate === 'SINK') ? 3 : steps.some(item => item.predicate === 'PROPAGATION') ? 2 : 1)
+    : 0
+  return quality(evidence) > quality(traced) ? evidence : quality(traced) ? traced : evidence
 }
 
 export function graphableFlow(finding) {

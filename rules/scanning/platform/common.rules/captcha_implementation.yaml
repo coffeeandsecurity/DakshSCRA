@@ -1,0 +1,41 @@
+format: daksh-pattern-rule/v1
+id: common.core.captcha_implementation
+title: "CAPTCHA Review"
+order: 23
+category: Common Mitigations
+detection:
+  pattern: (?i)(captcha|recaptcha)(\s+(?!secure|strong|reliable|safe)\w+)*
+  conditions:
+  - WHEN PRESENT (?i)(captcha|recaptcha)
+  - WHEN EXPR MISSING:(?i)\b(hcaptcha|recaptcha-enterprise|turnstile)\b
+reporting:
+  type: area_of_interest
+  reason: Detects the presence of CAPTCHA implementations that are potentially insecure or weak.
+  trace:
+  - Externalized rule logic for CAPTCHA Implementation.
+  description: The checked code implements an identity, access-control, or abuse-prevention decision. Determine
+    the trusted verifier, protected resources, and whether the control is enforced on every relevant path.
+  impact: If identity or resource authorization can be bypassed, an attacker may impersonate a user, access another
+    user’s data, or perform restricted operations. A control’s presence alone does not establish a weakness.
+  remediation: Enforce authentication and object-level authorization on the trusted server or privileged boundary.
+    Use strong verifier material, appropriate rate limits and recovery controls, and test access by unauthenticated
+    and insufficiently privileged callers.
+  reviewer: Assess the strength and security of the CAPTCHA implementation to ensure it provides adequate protection
+    against automated or malicious activities. This can be confirmed as an issue when the matched path is reachable
+    and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify the trusted identity verifier, protected resources and decision made by the matched control.
+  - Inspect effective middleware and service checks, alternate routes and failure paths; validate the supplied evidence
+    before issuing privileges.
+  - Test invalid identity evidence, insufficient permissions and access to another user or tenant before confirming
+    a bypass.
+  recommendations:
+  - Use a trusted verifier and enforce the applicable server-side identity and resource checks consistently.
+  - Fail closed on invalid evidence and test that alternate routes and error paths cannot issue unintended access.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: green

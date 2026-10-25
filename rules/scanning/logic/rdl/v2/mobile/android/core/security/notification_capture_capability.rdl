@@ -2,7 +2,7 @@ VERSION 2
 RULE android.notification-capture-capability VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:onNotificationPosted|onNotificationRemoved)\\s*\\(" ""
-REPORT "Notification Capture Capability"
+REPORT "Notification Access Capability"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

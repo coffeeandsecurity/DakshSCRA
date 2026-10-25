@@ -3,7 +3,7 @@ RULE baseline.rust.framework.actix.actix_permissive_cors VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "allow_any_origin\\(\\)|Any\\s*,\\s*allow_origin|allow_origin\\(Any\\)" "im"
 WHEN (TEXT_MATCHES "allow_any_origin\\(\\)|AllowOrigin::any\\(\\)|allow_origin.*Any" "im" AND TEXT_MISSING "AllowOrigin::exact|AllowOrigin::predicate|allow_origin.*https?://[^*]" "im" AND TEXT_MISSING "test|example" "im")
-REPORT "Actix Permissive CORS"
+REPORT "Cross-Origin Access Policy Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

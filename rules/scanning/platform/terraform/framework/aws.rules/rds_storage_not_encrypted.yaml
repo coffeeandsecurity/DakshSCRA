@@ -1,0 +1,39 @@
+format: daksh-pattern-rule/v1
+id: terraform.framework.aws.rds_storage_not_encrypted
+title: RDS Storage Not Encrypted
+order: 4
+category: AWS Database Security
+detection:
+  pattern: resource\s+"aws_db_instance"[^}]*storage_encrypted\s*=\s*false
+  conditions:
+  - WHEN PRESENT resource\s+"aws_db_instance"
+  - WHEN EXPR MISSING:storage_encrypted\s*=\s*true
+reporting:
+  type: area_of_interest
+  reason: Detects RDS instances without storage encryption enabled.
+  trace:
+  - Externalized rule logic for RDS Storage Not Encrypted.
+  description: Storage encryption is disabled or not established by the checked configuration. Resolve provider
+    defaults and the effective deployed encryption policy.
+  impact: Someone who obtains unauthorized access to underlying storage or snapshots may recover private records
+    without the intended encryption-at-rest boundary.
+  remediation: Enable appropriate storage and snapshot encryption with controlled key access. Verify the effective
+    deployed state and plan migration of existing unencrypted data.
+  reviewer: Confirm all RDS instances have storage encryption enabled. This can be confirmed as an issue when the
+    matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify the sensitive data, actual storage location, backup inclusion and lock-state or account access policy.
+  - Inspect encryption, key access and data retention, including copies in caches, backups and exported artifacts.
+  - Verify access under the relevant attacker model; a storage API alone does not establish an exposure.
+  recommendations:
+  - Store secrets using the platform credential store and apply appropriate access controls and protection to other
+    private data.
+  - Limit retention and unnecessary copies, configure backup handling deliberately, and verify access and recovery
+    behavior in the deployed environment.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

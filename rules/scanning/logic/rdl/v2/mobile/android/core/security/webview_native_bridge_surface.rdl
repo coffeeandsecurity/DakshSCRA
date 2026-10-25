@@ -2,7 +2,7 @@ VERSION 2
 RULE android.webview-native-bridge-surface VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:addJavascriptInterface|addWebMessageListener)\\s*\\(" ""
-REPORT "WebView Native Bridge Review Surface"
+REPORT "WebView Native Bridge Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

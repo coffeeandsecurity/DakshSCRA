@@ -3,7 +3,7 @@ RULE baseline.common.core.sql_query_select_statement_with_order_by_and_inputname
 IN FILE
 WHEN TEXT_MATCHES "(?i)\\bSELECT\\b.*\\bORDER BY\\b.*\\s@\\w+" "im"
 WHEN TEXT_MATCHES "(?i)\\b(exec|sp_executesql|query|command)\\b" "im"
-REPORT "SQL Query: SELECT Statement with ORDER BY and @InputName"
+REPORT "SQL Sorting Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

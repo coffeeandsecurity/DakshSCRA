@@ -1,5 +1,0 @@
-VERSION 1
-WHEN PRESENT @CrossOrigin\(.*\*|allowedOrigins\s*=\s*\{?\s*"\*"
-REPORT AS area_of_interest
-REASON Detects wildcard CORS in controller/global config.
-TRACE Externalized rule logic for Hibernate Permissive CORS.

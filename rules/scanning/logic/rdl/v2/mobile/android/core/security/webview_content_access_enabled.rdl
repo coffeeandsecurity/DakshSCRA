@@ -2,7 +2,7 @@ VERSION 2
 RULE android.webview-content-access-enabled VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:setAllowContentAccess\\s*\\(\\s*true\\s*\\)|allowContentAccess\\s*=\\s*true\\b)" ""
-REPORT "WebView Content Provider Access Enabled"
+REPORT "WebView Content Access Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

@@ -1,0 +1,8 @@
+VERSION 2
+RULE android.webview-permission-grant-all VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?P<receiver>\\w+)\\s*\\.\\s*grant\\s*\\(\\s*(?P=receiver)\\s*\\.\\s*(?:getResources\\s*\\(\\s*\\)|resources\\b)\\s*\\)" ""
+REPORT "WebView Permission Policy Review"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

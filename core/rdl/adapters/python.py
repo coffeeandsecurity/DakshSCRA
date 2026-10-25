@@ -1,6 +1,7 @@
 """Python AST adapter for the RDL semantic IR."""
 
 import ast
+import re
 from pathlib import Path
 from utils.source_cache import read_source_text
 
@@ -33,6 +34,9 @@ class _Visitor(ast.NodeVisitor):
         self.guards = {}
         self.call_depth = 0
         self.local_callables = set()
+        self.local_bindings = []
+        self.resource_classes = []
+        self.fallback_fields = set()
 
     def location(self, node):
         return SourceLocation(
@@ -74,17 +78,24 @@ class _Visitor(ast.NodeVisitor):
         self.parents.append(entity)
         self.scopes.append(entity)
         arguments = node.args.posonlyargs + node.args.args + node.args.kwonlyargs
+        bindings = {argument.arg for argument in arguments}
+        bindings.update(child.id for statement in node.body for child in ast.walk(statement)
+                        if isinstance(child, ast.Name) and isinstance(child.ctx, ast.Store))
+        self.local_bindings.append(bindings)
         route = any(isinstance(d, ast.Call) and isinstance(d.func, ast.Attribute) and d.func.attr in {'route', 'get', 'post', 'put', 'delete', 'patch', 'api_route'} for d in node.decorator_list)
+        route = route or (bool(self.resource_classes and self.resource_classes[-1])
+                          and node.name.lower() in {'get', 'post', 'put', 'patch', 'delete', 'head', 'options'})
         self.parameter_names.append({argument.arg for argument in arguments})
         for argument in arguments:
             concepts = {'input.parameter'}
-            if route or argument.arg.lower() in {'request', 'req', 'input', 'payload', 'user_input', 'data', 'body', 'query', 'params'}:
+            if argument.arg not in {'self', 'cls'} and (route or argument.arg.lower() in {'request', 'req', 'input', 'payload', 'user_input', 'data', 'body', 'query', 'params'}):
                 concepts.update(INPUT_CONCEPTS)
             parameter = self.add(EntityType.PARAMETER, argument.arg, argument, concepts=concepts)
             self.builder.add_edge(entity, parameter, EdgeKind.DECLARES)
         for statement in node.body:
             self.visit(statement)
         self.parameter_names.pop()
+        self.local_bindings.pop()
         self.scopes.pop()
         self.parents.pop()
 
@@ -98,9 +109,15 @@ class _Visitor(ast.NodeVisitor):
         entity = self.add(EntityType.CLASS, node.name, node, concepts={"program.type"})
         self.parents.append(entity)
         self.scopes.append(entity)
+        bases = [_qualified_name(base) for base in node.bases]
+        self.resource_classes.append(any(
+            self.aliases.get(base.partition('.')[0], '') +
+            ('.' + base.partition('.')[2] if '.' in base else '') == 'flask_restful.Resource'
+            and base.partition('.')[0] not in self.local_callables for base in bases))
         for statement in node.body:
             self.visit(statement)
         self.scopes.pop()
+        self.resource_classes.pop()
         self.parents.pop()
 
     def visit_Call(self, node):
@@ -113,9 +130,17 @@ class _Visitor(ast.NodeVisitor):
         if shadowed:
             resolved = '<local>.' + name
         concepts = set() if shadowed else self.catalog.concepts_for_call("python", resolved)
+        if (not shadowed and first in self.aliases
+                and not any(first in bindings for bindings in self.local_bindings)
+                and resolved in {'random.random', 'random.choice', 'random.choices', 'random.randint',
+                                 'random.randrange', 'random.getrandbits', 'random.uniform'}):
+            concepts.add('random.predictable')
         concepts = {item for item in concepts if not item.startswith(('sanitizer.', 'policy.'))}
         concepts.update(self.guards.get(name, ()))
-        concepts, attributes = call_semantics(node, resolved, concepts, self.aliases)
+        visible_aliases = {key: value for key, value in self.aliases.items()
+                           if key not in self.local_callables
+                           and not any(key in bindings for bindings in self.local_bindings)}
+        concepts, attributes = call_semantics(node, resolved, concepts, visible_aliases)
         attributes.update(callee=name, resolved_callee=resolved)
         entity = self.add(EntityType.CALL, name.split(".")[-1], node, concepts=concepts, attributes=attributes)
         if self.parents:
@@ -147,6 +172,11 @@ class _Visitor(ast.NodeVisitor):
         names = [self.assignment_name(target) for target in node.targets]
         name = next((item for item in names if item), "<assignment>")
         concepts = set()
+        from ..security_operations import python_fallback, FALLBACK
+        visible_aliases = {key:value for key,value in self.aliases.items() if key not in self.local_callables
+                           and not any(key in bindings for bindings in self.local_bindings)}
+        if python_fallback(node.value, visible_aliases):
+            concepts.add(FALLBACK)
         if name.upper().split('.')[-1] in {'DEBUG', 'TESTING', 'VERIFY_SSL', 'SSL_VERIFY', 'SESSION_COOKIE_SECURE', 'SESSION_COOKIE_HTTPONLY'}:
             concepts.add("config.security-control")
             insecure_value = name.upper().split('.')[-1] in {'DEBUG', 'TESTING'}
@@ -160,7 +190,16 @@ class _Visitor(ast.NodeVisitor):
         self.assignment_names.append(name)
         self.visit(node.value)
         for target in node.targets:
+            if FALLBACK in concepts and isinstance(target, ast.Attribute):
+                self.fallback_fields.add(_qualified_name(target))
+            start = len(self.builder.entities)
             self.visit(target)
+            if FALLBACK in concepts:
+                from dataclasses import replace
+                for index in range(start, len(self.builder.entities)):
+                    value = self.builder.entities[index]
+                    if value.kind == EntityType.VARIABLE and value.attribute('context') == 'Store':
+                        self.builder.entities[index] = replace(value, concepts=value.concepts | {FALLBACK})
         self.assignment_names.pop()
         self.parents.pop()
 
@@ -173,6 +212,8 @@ class _Visitor(ast.NodeVisitor):
 
     def visit_Name(self, node):
         concepts = {"variable.reference"}
+        if isinstance(node.ctx, ast.Store) and self.security_value_name(node.id):
+            concepts.add('auth.token-material')
         self.add(EntityType.VARIABLE, node.id, node, concepts=concepts, attributes={"context": type(node.ctx).__name__})
 
     def visit_Attribute(self, node):
@@ -181,7 +222,22 @@ class _Visitor(ast.NodeVisitor):
         resolved = self.aliases.get(first, first) + dot + rest
         if resolved.startswith('flask.request.') or resolved == 'sys.argv':
             self.add(EntityType.VARIABLE, name, node, concepts=INPUT_CONCEPTS)
+        elif name in self.fallback_fields:
+            concepts = {'variable.reference'}
+            if isinstance(node.ctx, ast.Store) and self.security_value_name(name):
+                concepts.add('auth.token-material')
+            self.add(EntityType.VARIABLE, name, node, concepts=concepts, attributes={'context':type(node.ctx).__name__})
+        elif self.security_value_name(name):
+            concepts = {'variable.reference'}
+            if isinstance(node.ctx, ast.Store):
+                concepts.add('auth.token-material')
+            self.add(EntityType.VARIABLE, name, node, concepts=concepts)
         self.generic_visit(node)
+
+    @staticmethod
+    def security_value_name(name):
+        name = re.sub(r'(?<=[a-z0-9])(?=[A-Z])', '_', name)
+        return bool(re.search(r'(?:^|[._])(?:token|api_token|access_token|auth_token|refresh_token|reset_token|session_id|session_token|csrf_token|nonce|otp|password|passwd|secret)(?:$|_)', name, re.I))
 
     @staticmethod
     def assignment_name(node):
@@ -212,6 +268,24 @@ class _Visitor(ast.NodeVisitor):
         if node.value:
             self.visit(node.value)
         self.parents.pop()
+
+    def visit_Compare(self, node):
+        def password_operand(value):
+            if isinstance(value, ast.Attribute):
+                return value.attr.lower() in {'password', 'passwd', 'pwd'}
+            if isinstance(value, ast.Subscript):
+                key = value.slice.value if isinstance(value.slice, ast.Index) else value.slice
+                return isinstance(key, ast.Constant) and str(key.value).lower() in {'password', 'passwd', 'pwd'}
+            return False
+        operands = [node.left] + list(node.comparators)
+        for index, operator in enumerate(node.ops):
+            pair = operands[index:index + 2]
+            if (isinstance(operator, (ast.Eq, ast.NotEq)) and all(password_operand(v) for v in pair)
+                    and any(isinstance(v, ast.Attribute) for v in pair)):
+                self.add(EntityType.EXPRESSION, 'password comparison', node,
+                         concepts={'auth.direct-password-comparison'})
+                break
+        self.generic_visit(node)
 
 
 class PythonAdapter(LanguageAdapter):

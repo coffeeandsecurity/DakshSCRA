@@ -3,7 +3,7 @@ RULE baseline.dockerfile.core.private_key_or_certificate_copied_into_image VERSI
 IN FILE
 WHEN TEXT_MATCHES "^(?:COPY|ADD)\\s+[^\\n]*(?:\\.pem|\\.key|\\.p12|\\.pfx|\\.jks|id_rsa|id_dsa|id_ecdsa|\\.ppk)\\b" "im"
 WHEN TEXT_MISSING "\\.pub\\b|public|example|test|dummy|placeholder" "im"
-REPORT "Private Key or Certificate Copied into Image"
+REPORT "Image Credential Material Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

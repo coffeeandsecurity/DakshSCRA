@@ -4,7 +4,7 @@ IN DATA_FLOW
 LET input BE VARIABLE MATCHES input.untrusted
 LET sink BE CALL MATCHES xml.external-entities
 WHEN input FLOWS TO sink
-REPORT "XML external entity expansion"
+REPORT "XML External Entity Review"
 SEVERITY HIGH
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

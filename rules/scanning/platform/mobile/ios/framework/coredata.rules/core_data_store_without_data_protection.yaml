@@ -1,0 +1,51 @@
+format: daksh-pattern-rule/v1
+id: mobile.ios.framework.coredata.core_data_store_without_data_protection
+title: "Core Data Protection Review"
+order: 2
+category: Framework-Specific Issues - Core Data (iOS)
+detection:
+  pattern: NSPersistentStoreCoordinator|addPersistentStore|NSPersistentContainer\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects Core Data persistent store creation without file protection attributes.
+  trace:
+  - Externalized mobile rule logic for Core Data Store Without Data Protection.
+  description: 'Review target: Core Data Store Without Data Protection. The application stores sensitive values
+    or configures protection for persistent data. Determine the actual storage location, backup policy, and lock-state
+    access restrictions. Resolve the exact declaration or operation in the selected build and identify its security
+    boundary.'
+  impact: An actor with access to unprotected application files, backups, or overly broad keychain access may recover
+    credentials or private records and use them outside the intended trust boundary.
+  remediation: Use the platform credential or key store for secrets and appropriate authenticated encryption and
+    file protection for private records. Minimize stored data, backup exposure, and lock-state accessibility. Apply
+    the least-privilege platform control appropriate to the matched operation and verify the production configuration.
+  reviewer: Confirm Core Data stores containing sensitive data have appropriate file protection levels. This can
+    be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+    Check debug/release and product flavors, generated/native code, plugin boundaries and failure paths; source
+    evidence alone does not establish shipped or runtime behavior.
+  review_steps:
+  - Identify the sensitive data, actual storage location, backup inclusion and lock-state or account access policy.
+  - Inspect encryption, key access and data retention, including copies in caches, backups and exported artifacts.
+  - Verify access under the relevant attacker model; a storage API alone does not establish an exposure.
+  - Resolve the exact declaration or operation in the selected build and identify its security boundary.
+  - Check debug/release and product flavors, generated/native code, plugin boundaries and failure paths; source
+    evidence alone does not establish shipped or runtime behavior.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Store secrets using the platform credential store and apply appropriate access controls and protection to other
+    private data.
+  - Limit retention and unnecessary copies, configure backup handling deliberately, and verify access and recovery
+    behavior in the deployed environment.
+  - Apply the least-privilege platform control appropriate to the matched operation and verify the production configuration.
+scan_config:
+  match_mode: file
+  context_type: lines
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  report_format: default
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: yellow

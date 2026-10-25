@@ -3,7 +3,7 @@ RULE baseline.java.core.deprecated_mode_world_writeable_usage VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "M(?:ODE_)?WORLD_WRITEABLE" "im"
 WHEN TEXT_MISSING "EncryptedSharedPreferences|EncryptedFile|KeyStore|test|example" "im"
-REPORT "Deprecated MODE_WORLD_WRITEABLE Usage"
+REPORT "World-Writable Storage Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

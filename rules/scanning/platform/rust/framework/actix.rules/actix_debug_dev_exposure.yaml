@@ -1,0 +1,37 @@
+format: daksh-pattern-rule/v1
+id: rust.framework.actix.actix_debug_dev_exposure
+title: "Debug Mode Configuration Review"
+order: 1
+category: Framework-Specific Security
+detection:
+  pattern: RUST_LOG\s*=\s*"debug"|env_logger::init\(\)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:release|production
+reporting:
+  type: area_of_interest
+  reason: Detects potential debug logging exposure points requiring review.
+  trace:
+  - Externalized rule logic for Actix Debug/Dev Exposure.
+  description: A configuration or API enables development diagnostics, process inspection, or debugging. Verify
+    whether it applies to a deployed production artifact.
+  impact: An actor with access to an enabled debugging interface may inspect private state or influence application
+    execution; exposed development endpoints may disclose internal implementation details.
+  remediation: Disable debugging and development endpoints in production, bind necessary diagnostic services to
+    restricted interfaces, and verify the final deployed artifact and access policy.
+  reviewer: Review logger initialization and production env defaults. This can be confirmed as an issue when the
+    matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the effective production configuration and determine who can reach debugging or development functionality.
+  - Check environment guards, deployment overrides and the information or capabilities exposed by the feature.
+  - Verify the actual production behavior; a development-only setting is not itself a production vulnerability.
+  recommendations:
+  - Disable development-only functionality in production and enforce the environment boundary in deployment configuration.
+  - Restrict operational diagnostics and add a production-configuration check covering the exposed route or feature.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

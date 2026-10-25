@@ -15,6 +15,11 @@ def _normalize_text(value):
     return str(value or "").strip().lower()
 
 
+def _normalize_rule_title(value):
+    value = re.sub(r'^RDL(?:\s+v?[12])?(?:\s+(?:conditional|semantic|pattern|rule))?\s*(?::|[-–—])\s*', '', str(value or '').strip(), flags=re.I)
+    return _normalize_text(value)
+
+
 def _safe_compile(pattern):
     if not pattern:
         return None
@@ -42,7 +47,8 @@ def load_suppressions(path):
             continue
         normalized.append({
             "platform": _normalize_text(entry.get("platform")),
-            "rule_title": _normalize_text(entry.get("rule_title")),
+            "rule_title": _normalize_rule_title(entry.get("rule_title")),
+            "rule_source": str(entry.get("rule_source") or entry.get("logic_source") or "").replace('\\', '/').strip(),
             "category": _normalize_text(entry.get("category")),
             "file": _normalize_path(entry.get("file")),
             "line": entry.get("line"),
@@ -53,12 +59,18 @@ def load_suppressions(path):
     return normalized
 
 
-def is_suppressed(entries, platform, rule_title, category, file_path, line_no, code):
+def is_suppressed(entries, platform, rule_title, category, file_path, line_no, code, rule_source=None):
     if not entries:
         return False
 
     platform_n = _normalize_text(platform)
-    rule_title_n = _normalize_text(rule_title)
+    rule_title_n = _normalize_rule_title(rule_title)
+    names = {rule_title_n}
+    source = str(rule_source or '').replace('\\', '/').strip()
+    if source:
+        from core.issue_titles import rule_identity, rule_title_aliases
+        names.update(_normalize_rule_title(title) for title in rule_title_aliases(source))
+        source = rule_identity(source)
     category_n = _normalize_text(category)
     file_n = _normalize_path(file_path)
     code_t = str(code or "")
@@ -66,7 +78,14 @@ def is_suppressed(entries, platform, rule_title, category, file_path, line_no, c
     for entry in entries:
         if entry["platform"] and entry["platform"] != platform_n:
             continue
-        if entry["rule_title"] and entry["rule_title"] != rule_title_n:
+        entry_source = entry.get('rule_source')
+        if entry_source:
+            if not source:
+                continue
+            from core.issue_titles import rule_identity
+            if rule_identity(entry_source) != source:
+                continue
+        elif entry['rule_title'] and _normalize_rule_title(entry['rule_title']) not in names:
             continue
         if entry["category"] and entry["category"] != category_n:
             continue
@@ -106,6 +125,7 @@ def build_baseline_from_findings(findings_json_path, baseline_path):
                 _normalize_text(finding.get("platform")),
                 _normalize_text(finding.get("rule_title")),
                 _normalize_text(finding.get("category")),
+                str(finding.get("logic_source") or ""),
                 file_path,
                 int(line_no) if isinstance(line_no, int) else line_no,
             )
@@ -118,6 +138,7 @@ def build_baseline_from_findings(findings_json_path, baseline_path):
                 "category": finding.get("category", ""),
                 "file": evidence.get("file", ""),
                 "line": line_no,
+                **({"rule_source": finding["logic_source"]} if finding.get("logic_source") else {}),
             })
 
     out = {

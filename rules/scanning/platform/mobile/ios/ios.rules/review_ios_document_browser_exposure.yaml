@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: mobile.ios.core.review_ios_document_browser_exposure
+title: "Application File Sharing Review"
+order: 53
+category: STORAGE Review
+detection:
+  pattern: <key>LSSupportsOpeningDocumentsInPlace</key>
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: Application configuration makes its document directory available through file sharing or document
+    browsing. Identify the value written, backing store and access class, including backup, restore, reinstall and
+    logout behavior.
+  impact: Private files stored in the exposed directory may be read or copied outside the application’s intended
+    access boundary by users or other applications with permitted document access.
+  remediation: Keep credentials and private internal files outside shared document directories. Disable unnecessary
+    sharing or expose only documents deliberately approved for external access. Keep privileged secrets on the server,
+    use appropriate device-backed secure storage for local credentials, and restrict backup and sharing to intended
+    non-sensitive data.
+  reviewer: Test device lock state, cloud backup versus device transfer, restored keys, keychain persistence after
+    reinstall, and secure-storage failure; do not silently fall back to plaintext or treat an unrelated secure store
+    as protection.
+  review_steps:
+  - Trace the matched candidate to its actual value, caller or resource.
+  - Test device lock state, cloud backup versus device transfer, restored keys, keychain persistence after reinstall,
+    and secure-storage failure; do not silently fall back to plaintext or treat an unrelated secure store as protection.
+  - Resolve release configuration and runtime assumptions before confirming an issue.
+  recommendations:
+  - Keep credentials and private internal files outside shared document directories. Disable unnecessary sharing
+    or expose only documents deliberately approved for external access. Keep privileged secrets on the server, use
+    appropriate device-backed secure storage for local credentials, and restrict backup and sharing to intended
+    non-sensitive data.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

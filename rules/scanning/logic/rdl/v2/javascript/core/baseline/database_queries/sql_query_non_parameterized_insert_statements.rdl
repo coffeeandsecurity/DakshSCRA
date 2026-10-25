@@ -3,7 +3,7 @@ RULE baseline.javascript.core.sql_query_non_parameterized_insert_statements VERS
 IN FILE
 WHEN TEXT_MATCHES "(?i)\\bINSERT\\s+INTO\\s+[^\\s]+\\s+\\(.*=.*\\$.*\\)" "im"
 WHEN TEXT_MISSING "\\?|prepare|bind|replacements|sequelize\\.query\\s*\\(.*replacements|mysql\\.escape|pg\\.escape" "im"
-REPORT "SQL Query: Non-parameterized INSERT Statements"
+REPORT "SQL Parameterization Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

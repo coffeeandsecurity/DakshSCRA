@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.ios.core.review_ios_tracking_identifier_access VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:advertisingIdentifier|advertisingIdentifier\\s*\\])\\b" "im"
+REPORT "Advertising Identifier Access"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

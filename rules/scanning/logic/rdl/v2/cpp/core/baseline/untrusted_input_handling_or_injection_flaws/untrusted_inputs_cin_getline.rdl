@@ -3,7 +3,7 @@ RULE baseline.cpp.core.untrusted_inputs_cin_getline VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:std::cin|getline)\\b" "im"
 WHEN (TEXT_MISSING "validate|sanitize|check|regex|isdigit|isalpha|stoi|stol|stof" "im" AND TEXT_MISSING "cin\\.ignore|cin\\.clear" "im")
-REPORT "Untrusted Inputs: cin / getline"
+REPORT "Untrusted Input Entry Point"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

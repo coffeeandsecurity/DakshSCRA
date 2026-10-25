@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.ios.core.review_ios_privacy_tracking_declared VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "<key>NSPrivacyTracking</key>" "im"
+REPORT "Privacy Tracking Declaration"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

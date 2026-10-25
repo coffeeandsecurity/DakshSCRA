@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: dotnet.core.cors_mitigation_allow_specific_origins
+title: "Cross-Origin Access Policy Review"
+order: 22
+category: Effective/Standard Mitigations Implemented
+detection:
+  pattern: \[EnableCors\s*\(\s*\"AllowSpecificOrigins\"\s*\)\]
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:AllowAnyOrigin\s*\(\s*\)|WithOrigins\s*\(\s*"\*"|Access-Control-Allow-Origin.*\* && MISSING:WithOrigins\s*\(\s*"https?://[^*]|AllowCredentials|SetIsOriginAllowed
+reporting:
+  type: area_of_interest
+  reason: Detects the usage of specific origin-based CORS configuration.
+  trace:
+  - 'Externalized rule logic for CORS Mitigation: Allow Specific Origins.'
+  description: The code contains a security-control marker. Its presence is a review surface rather than evidence
+    that the control is defective or consistently enforced.
+  impact: No adverse security consequence follows from the presence of a protection alone. If it is bypassed or
+    applied outside the correct context, the protected operation may still permit injection or unauthorized access.
+  remediation: Verify that the control applies to every relevant entry point and uses the required context and policy.
+    Retain effective protections; test bypass cases before recommending a change.
+  reviewer: The CORS configuration restricts resource access to specific origins in a secure and controlled manner.
+    Ensure that the list of allowed origins is reviewed and approved, and that additional CORS-related security
+    measures are in place to prevent unauthorized cross-origin requests and protect sensitive data. This can be
+    confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the effective origin policy together with credentials, allowed methods and headers, including environment
+    overrides.
+  - Determine which sensitive responses are exposed to browsers and whether origins are reflected or broadly trusted.
+  - Test preflight and actual responses using an unapproved origin; a broad policy alone does not prove access to
+    protected data.
+  recommendations:
+  - Allow only the origins and browser capabilities required by the application; avoid reflecting arbitrary origins.
+  - Test both preflight and actual responses and ensure authentication and authorization remain enforced independently
+    of CORS.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: green

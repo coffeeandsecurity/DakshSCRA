@@ -1,4 +1,5 @@
 import BrandLogo from './BrandLogo'
+import { Fragment } from 'react'
 
 const NAV_ITEMS = [
   {
@@ -22,23 +23,27 @@ const NAV_ITEMS = [
   },
   {
     id: 'newScan',
-    label: 'Scan',
+    label: 'New Scan',
+    title: 'Configure and start a new scan',
     icon: (
       <svg className="nav-icon" viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm2 2V5h1v1H5zM3 13a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1v-3zm2 2v-1h1v1H5zM13 3a1 1 0 00-1 1v3a1 1 0 001 1h3a1 1 0 001-1V4a1 1 0 00-1-1h-3zm1 2v1h1V5h-1zM11 13a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-3zm2 2v-1h1v1h-1z" clipRule="evenodd" />
+        <path d="M9 3h2v6h6v2h-6v6H9v-6H3V9h6V3z" />
       </svg>
     ),
   },
   {
     id: 'scans',
     label: 'Active Scans',
-    child: true,
     icon: <svg className="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l3 2"/></svg>,
   },
   {
+    id: 'queued',
+    label: 'Queued Scans',
+    icon: <svg className="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M3 5h10M3 10h7M3 15h7"/><circle cx="14" cy="13" r="4"/><path d="M14 11v2l1 1"/></svg>,
+  },
+  {
     id: 'completed',
-    label: 'Completed',
-    child: true,
+    label: 'Completed Scans',
     icon: (
       <svg className="nav-icon" viewBox="0 0 20 20" fill="currentColor">
         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414 0L9 11.586 7.707 10.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4a1 1 0 000-1.414z" clipRule="evenodd" />
@@ -88,7 +93,7 @@ function LogoutIcon() {
   )
 }
 
-export default function Sidebar({ active, onChange, health, runningCount = 0, completedCount = 0, user, version, onLogout }) {
+export default function Sidebar({ active, onChange, health, runningCount = 0, queuedCount = 0, completedCount = 0, user, version, onLogout }) {
   const initial = String(user?.username || '?').trim().charAt(0).toUpperCase()
   return (
     <aside className="sidebar">
@@ -100,7 +105,7 @@ export default function Sidebar({ active, onChange, health, runningCount = 0, co
         <div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
             <span className="brand-name">DAKSH SCRA</span>
-            {version ? <span className="sidebar-version">v{version}</span> : null}
+            {version ? <span className="sidebar-version">v{String(version).trim().replace(/^v+/i, '')}</span> : null}
           </div>
           <span className="brand-sub">Code Security Review</span>
         </div>
@@ -109,9 +114,13 @@ export default function Sidebar({ active, onChange, health, runningCount = 0, co
       {/* Navigation */}
       <nav className="sidebar-nav">
         {NAV_ITEMS.map((item) => (
+          <Fragment key={item.id}>
+          {item.id === 'newScan' && <div className="nav-section-label">Scan</div>}
           <button
-            key={item.id}
-            className={`nav-item${item.child ? ' nav-child' : ''}${active === item.id ? ' active' : ''}`}
+            type="button"
+            title={item.title}
+            aria-current={active === item.id ? 'page' : undefined}
+            className={`nav-item${['newScan', 'scans', 'queued', 'completed'].includes(item.id) ? ' nav-child' : ''}${active === item.id ? ' active' : ''}`}
             onClick={() => onChange(item.id)}
           >
             {item.icon}
@@ -119,8 +128,10 @@ export default function Sidebar({ active, onChange, health, runningCount = 0, co
             {item.id === 'scans' && runningCount > 0 && (
               <span className="nav-badge">{runningCount}</span>
             )}
-            {item.id === 'completed' && <span className="nav-badge">{completedCount}</span>}
+            {item.id === 'completed' && completedCount > 0 && <span className="nav-badge">{completedCount}</span>}
+            {item.id === 'queued' && queuedCount > 0 && <span className="nav-badge">{queuedCount}</span>}
           </button>
+          </Fragment>
         ))}
       </nav>
 

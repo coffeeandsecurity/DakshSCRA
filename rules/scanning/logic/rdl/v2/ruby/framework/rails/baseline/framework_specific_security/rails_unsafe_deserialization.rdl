@@ -3,7 +3,7 @@ RULE baseline.ruby.framework.rails.rails_unsafe_deserialization VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "YAML\\.load\\(|Marshal\\.load\\(" "im"
 WHEN TEXT_MISSING "YAML\\.safe_load|Marshal\\.restore.*trusted|allowlist" "im"
-REPORT "Rails Unsafe Deserialization"
+REPORT "Object Deserialization Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

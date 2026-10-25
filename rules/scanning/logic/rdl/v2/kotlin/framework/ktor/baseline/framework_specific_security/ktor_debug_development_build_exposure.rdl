@@ -3,7 +3,7 @@ RULE baseline.kotlin.framework.ktor.ktor_debug_development_build_exposure VERSIO
 IN FILE
 WHEN TEXT_MATCHES "BuildConfig\\.DEBUG|debuggable\\s+true" "im"
 WHEN TEXT_MISSING "release|production" "im"
-REPORT "Ktor Debug/Development Build Exposure"
+REPORT "Debug Mode Configuration Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

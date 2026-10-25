@@ -1,0 +1,36 @@
+format: daksh-pattern-rule/v1
+id: java.framework.struts.literal_key_fallback_review
+title: "Security Configuration Fallback Review"
+order: 950
+category: Security Operation Context
+detection:
+  pattern: (?i)\b(?:[A-Za-z_]*key|[A-Za-z_]*secret|[A-Za-z_]*token)\b[^\r\n;]{0,160}(?:getenv|GetEnvironmentVariable|process\s*\.\s*env|Platform\s*\.\s*environment|ENV\s*\[|env::var)[^\r\n;]{0,256}(?:\?\?|\|\||\?:|\bor\b|unwrap_or\s*\(|,\s*)\s*["'][^"'\r\n]+["']
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Security-named configuration has a literal fallback candidate. Determine whether that value reaches a
+    cryptographic key or an authentication secret.
+  description: Security-named configuration has a literal fallback candidate. Determine whether that value reaches
+    a cryptographic key or an authentication secret.
+  impact: A predictable fallback used as an active key can enable forgery or disclosure. A fixture, unused value
+    or non-secret identifier does not establish that impact.
+  remediation: Fail closed when required security configuration is missing; load production keys from an appropriate
+    secret store and verify the failure path.
+  reviewer: Verify the exact source, operation and applicable controls. This is a review candidate, not a confirmed
+    vulnerability.
+  review_steps:
+  - Security-named configuration has a literal fallback candidate. Determine whether that value reaches a cryptographic
+    key or an authentication secret.
+  - Check the control on the actual path; unrelated markers must not suppress the candidate.
+  - Validate a reachable unsafe case and a protected control before confirming the issue.
+  recommendations:
+  - Fail closed when required security configuration is missing; load production keys from an appropriate secret
+    store and verify the failure path.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

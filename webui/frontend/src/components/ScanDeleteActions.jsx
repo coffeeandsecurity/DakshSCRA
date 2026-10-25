@@ -1,9 +1,11 @@
+import DeleteButton from './DeleteButton'
 import { useState } from 'react'
 
 export default function ScanDeleteActions({ run, onDeleteData, onDeleteRecord, compact = false }) {
   const [confirming, setConfirming] = useState(false)
   const [busy, setBusy] = useState(false)
-  const isActive = ['running', 'queued', 'stopping'].includes(run.status)
+  const isActive = ['running', 'stopping'].includes(run.status)
+  const isQueued = run.status === 'queued'
   const dataRemoved = Boolean(run.data_removed)
 
   async function confirmDelete(event) {
@@ -24,11 +26,11 @@ export default function ScanDeleteActions({ run, onDeleteData, onDeleteRecord, c
   if (confirming) {
     return (
       <div className={`scan-delete-confirm${compact ? ' compact' : ''}`} onClick={(event) => event.stopPropagation()}>
-        <span>{dataRemoved ? 'Clear this history record?' : 'Delete all scan data?'}</span>
-        <button type="button" className="btn btn-danger btn-xs" disabled={busy} onClick={confirmDelete}>
-          {busy ? 'Deleting…' : dataRemoved ? 'Clear record' : 'Delete data'}
-        </button>
-        <button type="button" className="btn btn-ghost btn-xs" disabled={busy} onClick={() => setConfirming(false)}>
+        <span>{isQueued ? 'Delete this queued scan? It will not run.' : dataRemoved ? 'Clear this history record?' : 'Delete all scan data?'}</span>
+        <DeleteButton disabled={busy} onClick={confirmDelete}>
+          {busy ? 'Deleting…' : isQueued ? 'Delete queued scan' : dataRemoved ? 'Clear record' : 'Delete data'}
+        </DeleteButton>
+        <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => setConfirming(false)}>
           Cancel
         </button>
       </div>
@@ -36,15 +38,13 @@ export default function ScanDeleteActions({ run, onDeleteData, onDeleteRecord, c
   }
 
   return (
-    <button
-      type="button"
-      className={`btn scan-delete-action ${dataRemoved ? 'btn-ghost' : 'btn-danger'} btn-xs`}
+    <DeleteButton
+      className="scan-delete-action"
       disabled={isActive}
-      title={isActive ? 'Stop this scan before deleting its data' : dataRemoved ? 'Permanently remove this history record' : 'Delete reports, findings, logs, and runtime data'}
+      title={isActive ? 'Stop this scan before deleting its data' : isQueued ? 'Remove this scan from the queue and delete its record' : dataRemoved ? 'Permanently remove this history record' : 'Delete reports, findings, logs, and runtime data'}
       onClick={(event) => { event.stopPropagation(); setConfirming(true) }}
     >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6" /></svg>
-      <span>{dataRemoved ? 'Clear record' : 'Delete scan'}</span>
-    </button>
+      {dataRemoved ? 'Clear record' : 'Delete scan'}
+    </DeleteButton>
   )
 }

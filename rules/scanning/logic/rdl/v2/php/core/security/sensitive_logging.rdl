@@ -2,7 +2,7 @@ VERSION 2
 RULE php.sensitive-value-logging VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:log_message|error_log)\\s*\\(" "i"
-REPORT "Sensitive Value Written To PHP Log"
+REPORT "Sensitive Data Logging Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

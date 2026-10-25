@@ -2,7 +2,7 @@ VERSION 2
 RULE rust.unchecked-utf8 VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:from_utf8_unchecked|from_utf8_unchecked_mut)\\s*\\(" ""
-REPORT "Rust Unchecked UTF-8 Construction"
+REPORT "Unchecked UTF-8 Conversion Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

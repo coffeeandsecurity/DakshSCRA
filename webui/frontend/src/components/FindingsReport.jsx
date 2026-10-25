@@ -1,4 +1,10 @@
+import MobileReviewView from './MobileReviewView'
+import { splitMobileFindings } from '../lib/mobileReview'
+import { findingCheckKey, findingCheckLabel, groupFindingFamilies } from '../lib/findingFamilies'
+import { formatDateTime } from '../lib/datetime'
 import { useMemo, useState } from 'react'
+import { HighlightedSource } from './PatternEvidence'
+import { ReviewGuidance } from './ReportAudience'
 
 /* ─── Confidence helpers ─────────────────────────────────────── */
 const CONF_ORDER = ['critical', 'high', 'medium', 'low', 'info', 'unknown']
@@ -85,17 +91,17 @@ function FileIcon() {
   )
 }
 
-function CodeViewer({ lines, matchLineNums }) {
+function CodeViewer({ lines, matchLineNums, highlightEnabled }) {
   if (!lines.length) return null
   const maxLen = String(Math.max(...lines.map(l => l.line || 0))).length
   return (
     <div className="fr-code-viewer">
       {lines.map((l, i) => {
-        const isMatch = matchLineNums.has(l.line)
+        const isMatch = highlightEnabled && matchLineNums.has(l.line)
         return (
           <div key={i} className={`fr-cv-row${isMatch ? ' fr-cv-match' : ''}`}>
             <span className="fr-cv-ln">{l.line != null ? String(l.line).padStart(maxLen) : ''}</span>
-            <code className="fr-cv-code">{l.code}</code>
+            <code className="fr-cv-code"><HighlightedSource code={l.code} highlights={highlightEnabled ? l.highlights : []} /></code>
           </div>
         )
       })}
@@ -103,36 +109,78 @@ function CodeViewer({ lines, matchLineNums }) {
   )
 }
 
-function CodeEvidence({ evidence }) {
+function SnippetList({ evidence, scanConfig }) {
   if (!evidence?.length) return null
   return (
     <div className="fr-evidence-list">
       {evidence.map((e, i) => {
         let lines, matchLineNums
         if (e.aggregated) {
-          lines = (e.matches || []).map(m => ({ line: m.line, code: m.code }))
-          matchLineNums = new Set(lines.map(l => l.line))
+          const rows = new Map()
+          for (const match of e.matches || []) {
+            for (const row of [...(match.context_before || []), ...(match.context_after || [])]) {
+              if (!rows.has(row.line)) rows.set(row.line, row)
+            }
+          }
+          for (const match of e.matches || []) rows.set(match.line, match)
+          lines = [...rows.values()].sort((a, b) => a.line - b.line)
+          matchLineNums = new Set((e.matches || []).map(match => match.line))
         } else {
           lines = [
             ...(e.context_before || []),
-            { line: e.line, code: e.code },
+            { line: e.line, code: e.code, highlights: e.highlights },
             ...(e.context_after || []),
           ]
           matchLineNums = new Set([e.line])
         }
         return (
-          <div key={i} className="fr-evidence-item">
-            <div className="fr-evidence-header">
+          <details key={i} className="fr-evidence-item">
+            <summary className="fr-evidence-header">
               <FileIcon />
-              <span className="fr-evidence-file">{e.file || '-'}</span>
-              {!e.aggregated && e.line && <span className="fr-evidence-line">:{e.line}</span>}
-            </div>
-            <CodeViewer lines={lines} matchLineNums={matchLineNums} />
-          </div>
+              <span className="fr-evidence-file">{`Lines ${lines[0]?.line ?? e.line ?? '?'}–${lines[lines.length - 1]?.line ?? e.line ?? '?'}`}</span>
+              <span className="fr-category-chip">{e.matches?.length || 1} {(e.matches?.length || 1) === 1 ? 'instance' : 'instances'}</span>
+              {(e.code_truncated || e.matches?.some(match => match.code_truncated)) && <span className="fr-evidence-line">Excerpt shortened</span>}
+              <span className="fr-disclosure-icon" aria-hidden="true">▸</span>
+            </summary>
+            <CodeViewer lines={lines} matchLineNums={matchLineNums} highlightEnabled={!['false', '0', 'no'].includes(String(scanConfig?.highlight_enabled ?? true).toLowerCase())} />
+          </details>
         )
       })}
     </div>
   )
+}
+
+function CodeEvidence({ evidence, scanConfig }) {
+  const [openFiles, setOpenFiles] = useState(new Set())
+  const groups = useMemo(() => {
+    const files = new Map()
+    for (const item of evidence || []) {
+      const file = item.file || 'Source file'
+      if (!files.has(file)) files.set(file, [])
+      files.get(file).push(item)
+    }
+    return [...files]
+  }, [evidence])
+  if (!groups.length) return null
+  const allOpen = groups.every(([file]) => openFiles.has(file))
+  return <div className="fr-code-groups">
+    <div className="fr-code-group-toolbar">
+      <span>Code evidence · {groups.length} {groups.length === 1 ? 'file' : 'files'}</span>
+      <button type="button" className="btn btn-ghost btn-sm" onClick={() => setOpenFiles(allOpen ? new Set() : new Set(groups.map(([file]) => file)))}>{allOpen ? 'Collapse code groups' : 'Expand code groups'}</button>
+    </div>
+    {groups.map(([file, items]) => <details className="fr-file-group" key={file} open={openFiles.has(file)} onToggle={event => {
+      const expanded = event.currentTarget.open
+      setOpenFiles(previous => {
+        if (previous.has(file) === expanded) return previous
+        const next = new Set(previous)
+        expanded ? next.add(file) : next.delete(file)
+        return next
+      })
+    }}>
+      <summary className="fr-evidence-header"><FileIcon /><span className="fr-evidence-file" title={file}>{file}</span><span className="fr-category-chip">{items.reduce((total, item) => total + (item.matches?.length || 1), 0)} {items.reduce((total, item) => total + (item.matches?.length || 1), 0) === 1 ? 'instance' : 'instances'}</span><span className="fr-disclosure-icon" aria-hidden="true">▸</span></summary>
+      {openFiles.has(file) && <SnippetList evidence={items} scanConfig={scanConfig} />}
+    </details>)}
+  </div>
 }
 
 function buildAnalyzerReviewIndex(analysis) {
@@ -151,19 +199,19 @@ function buildAnalyzerReviewIndex(analysis) {
 }
 
 /* ─── Single area-of-interest card ───────────────────────────── */
-function FindingCard({ finding, index, open, onToggle, review, onViewAnalysis }) {
+function FindingCard({ finding, index, open, onToggle, review, onViewAnalysis, nested = false, instanceCount, heading }) {
+  const Header = 'button'
   const level = confLevel(finding)
   const score = confScore(finding)
   const showAnalysisLink = review?.status === 'confirmed_vulnerability' && onViewAnalysis
   const logicEngine = finding.logic_engine || ''
-  const logicTrace = Array.isArray(finding.logic_trace) ? finding.logic_trace : []
-  const consultedFiles = Array.isArray(finding.logic_consulted_files) ? finding.logic_consulted_files : []
   return (
     <div className={`fr-card${open ? ' open' : ''}`} style={{ '--conf-color': confColor(level) }}>
-      <button className="fr-card-header" onClick={onToggle}>
+      <Header className="fr-card-header" type="button" onClick={onToggle} aria-expanded={open}>
         <span className={confClass(level)}>{level}</span>
-        {score > 0 && <span className="fr-score">{score}%</span>}
-        <span className="fr-card-title">{finding.rule_title || finding.rule_id || `Area of Interest #${index + 1}`}</span>
+        {score > 0 && <span className="fr-score" title="Heuristic evidence confidence, not probability or severity">{score}/100</span>}
+        <span className="fr-card-title">{heading || (nested ? findingCheckLabel(finding) : finding.rule_title || finding.rule_id || `Area of Interest #${index + 1}`)}</span>
+        {instanceCount != null && <span className="fr-category-chip">{instanceCount} {instanceCount === 1 ? 'instance' : 'instances'}</span>}
         {finding.category && <span className="fr-category-chip">{finding.category}</span>}
         {finding.platform && <span className="fr-platform-chip">{finding.platform}</span>}
         {logicEngine ? <span className="fr-platform-chip">{logicEngine.toUpperCase()}</span> : null}
@@ -193,7 +241,7 @@ function FindingCard({ finding, index, open, onToggle, review, onViewAnalysis })
         {review?.status === 'suppressed_false_positive' && <span className="fr-category-chip">Suppressed False Positive</span>}
         {review?.status === 'manual_review_recommended' && <span className="fr-category-chip">Manual Inspection Recommended</span>}
         <span className="fr-card-caret">{open ? '▲' : '▼'}</span>
-      </button>
+      </Header>
 
       {open && (
         <div className="fr-card-body">
@@ -218,39 +266,10 @@ function FindingCard({ finding, index, open, onToggle, review, onViewAnalysis })
             <div className="fr-note"><div className="fr-note-label">Security impact</div><p className="fr-issue-desc">{finding.security_impact}</p></div>
           )}
 
-          {(finding.logic_reason || logicTrace.length || consultedFiles.length) ? (
-            <div className="fr-note logic">
-              <div className="fr-note-label">Rule Logic{logicEngine ? ` (${logicEngine.toUpperCase()})` : ''}</div>
-              {finding.logic_reason ? <div className="fr-note-text">{finding.logic_reason}</div> : null}
-              {logicTrace.length ? (
-                <div className="fr-logic-list">
-                  {logicTrace.map((entry, idx) => <div key={idx} className="fr-note-text">{entry}</div>)}
-                </div>
-              ) : null}
-              {consultedFiles.length ? (
-                <div className="fr-note-text">Consulted files: {consultedFiles.join(', ')}</div>
-              ) : null}
-            </div>
-          ) : null}
+          <ReviewGuidance developer={finding.developer_note} reviewer={finding.reviewer_note} />
 
-          <CodeEvidence evidence={finding.evidence} />
+          <CodeEvidence evidence={finding.evidence} scanConfig={finding.scan_config} />
 
-          {(finding.developer_note || finding.reviewer_note) && (
-            <div className="fr-notes-row">
-              {finding.developer_note && (
-                <div className="fr-note dev">
-                  <div className="fr-note-label">Recommended correction</div>
-                  <div className="fr-note-text">{finding.developer_note}</div>
-                </div>
-              )}
-              {finding.reviewer_note && (
-                <div className="fr-note rev">
-                  <div className="fr-note-label">Reviewer Note</div>
-                  <div className="fr-note-text">{finding.reviewer_note}</div>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       )}
     </div>
@@ -271,8 +290,8 @@ function ScanMeta({ summary, scanMeta }) {
     { label: 'Files with Areas of Interest', value: detection.files_with_aoi },
     { label: 'Rules Applied', value: detection.rules_applied },
     { label: 'Scan Duration', value: timeline.scan_completed_in },
-    { label: 'Start Time', value: timeline.scan_start_time },
-    { label: 'End Time', value: timeline.scan_end_time },
+    { label: 'Start Time', value: formatDateTime(timeline.scan_start_time) },
+    { label: 'End Time', value: formatDateTime(timeline.scan_end_time) },
   ].filter((i) => i.value != null)
 
   if (!items.length) return null
@@ -314,10 +333,12 @@ export default function FindingsReport({ data, status, onViewAnalysis }) {
   const [search, setSearch] = useState('')
   const [filterLevel, setFilterLevel] = useState('all')
   const [filterCategory, setFilterCategory] = useState('all')
+  const [filterPlatform, setFilterPlatform] = useState('all')
   const [openIds, setOpenIds] = useState(new Set())
   const [expandAll, setExpandAll] = useState(false)
 
   const findings = data?.findings || []
+  const families = useMemo(() => groupFindingFamilies(findings), [findings])
   const summary = data?.summary
   const scanMeta = data?.scan_meta
   const analyzerReviewIndex = useMemo(() => buildAnalyzerReviewIndex(data?.analysis), [data?.analysis])
@@ -325,27 +346,31 @@ export default function FindingsReport({ data, status, onViewAnalysis }) {
   /* ── counts ── */
   const counts = useMemo(() => {
     const c = {}
-    for (const f of findings) {
+    for (const { representative: f } of families) {
       const l = confLevel(f)
       c[l] = (c[l] || 0) + 1
     }
     return c
-  }, [findings])
+  }, [families])
 
   const categories = useMemo(() => {
     const s = new Set(findings.map((f) => f.category).filter(Boolean))
     return ['all', ...Array.from(s).sort()]
   }, [findings])
 
+  const platforms = useMemo(() => [...new Set(findings.map(finding => String(finding.platform || 'Unspecified').trim().toLowerCase()))].sort(), [findings])
+  const levelCounts = useMemo(() => Object.fromEntries(CONF_ORDER.map(level => [level, families.filter(group => group.members.some(member => confLevel(member) === level)).length])), [families])
+
   /* ── filter ── */
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
     return findings.filter((f) => {
+      if (filterPlatform !== 'all' && String(f.platform || 'Unspecified').trim().toLowerCase() !== filterPlatform) return false
       if (filterLevel !== 'all' && confLevel(f) !== filterLevel) return false
       if (filterCategory !== 'all' && f.category !== filterCategory) return false
       if (q) {
         const haystack = [
-          f.rule_title, f.rule_id, f.category, f.issue_desc,
+          f.rule_title, f.rule_id, f.category, f.issue_desc, f.platform,
           ...(f.evidence || []).map((e) => e.file),
         ].join(' ').toLowerCase()
         if (!haystack.includes(q)) return false
@@ -358,7 +383,12 @@ export default function FindingsReport({ data, status, onViewAnalysis }) {
       }
       return rank(a) - rank(b) || confScore(b) - confScore(a)
     })
-  }, [findings, filterLevel, filterCategory, search])
+  }, [findings, filterLevel, filterCategory, filterPlatform, search])
+
+  const filteredFamilies = useMemo(() => groupFindingFamilies(filtered), [filtered])
+
+  const mobileBuckets = useMemo(() => splitMobileFindings(filtered), [filtered])
+  const mobileFamilies = useMemo(() => Object.fromEntries(Object.entries(mobileBuckets).map(([key, items]) => [key, groupFindingFamilies(items)])), [mobileBuckets])
 
   function toggleCard(id) {
     setOpenIds((prev) => {
@@ -372,7 +402,7 @@ export default function FindingsReport({ data, status, onViewAnalysis }) {
     if (expandAll) {
       setOpenIds(new Set())
     } else {
-      setOpenIds(new Set(filtered.map((_, i) => i)))
+      setOpenIds(new Set(filteredFamilies.flatMap(group => [group.key, ...group.members.map((member, index) => findingCheckKey(group.key, member, index)), ...group.platforms.flatMap(platform => [platform.key, ...platform.members.map((member, index) => findingCheckKey(platform.key, member, index))])])))
     }
     setExpandAll((v) => !v)
   }
@@ -389,8 +419,8 @@ export default function FindingsReport({ data, status, onViewAnalysis }) {
       {/* ── Stats Row ── */}
       <div className="fr-stats-row">
         <StatCard
-          label="Total Areas of Interest"
-          value={findings.length}
+          label="Areas of Interest"
+          value={families.length}
           color="var(--primary)"
           icon={
             <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
@@ -421,7 +451,8 @@ export default function FindingsReport({ data, status, onViewAnalysis }) {
       </div>
 
       {/* ── Distribution bar ── */}
-      <DistributionBar counts={counts} total={findings.length} />
+      <p className="fr-family-summary">{families.length} {families.length === 1 ? 'issue family' : 'issue families'} · {platforms.length} {platforms.length === 1 ? 'platform' : 'platforms'} · {findings.length} recorded checks · {families.reduce((sum, group) => sum + group.instanceCount, 0)} instances. Instances are distinct source locations within each platform. Parent confidence is the highest recorded check confidence.</p>
+      <DistributionBar counts={counts} total={families.length} />
 
       {/* ── Scan meta ── */}
       <ScanMeta summary={summary} scanMeta={scanMeta} />
@@ -431,7 +462,7 @@ export default function FindingsReport({ data, status, onViewAnalysis }) {
         <div>
           <div className="fr-findings-title">
             Areas of Interest
-            <span className="fr-findings-count">{filtered.length}{filtered.length !== findings.length ? ` / ${findings.length}` : ''}</span>
+            <span className="fr-findings-count">{filteredFamilies.length}{filteredFamilies.length !== families.length ? ` / ${families.length}` : ''}</span>
           </div>
           <div className="fr-section-subcopy">Potential issues pending analyzer confirmation, false-positive suppression, or manual inspection where automatic analysis is not supported yet.</div>
         </div>
@@ -451,10 +482,14 @@ export default function FindingsReport({ data, status, onViewAnalysis }) {
           {/* Level filter */}
           <select className="fr-select" value={filterLevel} onChange={(e) => setFilterLevel(e.target.value)}>
             <option value="all">All levels</option>
-            {CONF_ORDER.filter((l) => counts[l] > 0).map((l) => (
-              <option key={l} value={l}>{l} ({counts[l]})</option>
+            {CONF_ORDER.filter((l) => levelCounts[l] > 0).map((l) => (
+              <option key={l} value={l}>{l} ({levelCounts[l]})</option>
             ))}
           </select>
+          {platforms.length > 1 && <select className="fr-select" aria-label="Filter by platform" value={filterPlatform} onChange={event => setFilterPlatform(event.target.value)}>
+            <option value="all">All platforms</option>
+            {platforms.map(platform => <option key={platform} value={platform}>{platform.toUpperCase()}</option>)}
+          </select>}
           {/* Category filter */}
           {categories.length > 1 && (
             <select className="fr-select" value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
@@ -477,19 +512,45 @@ export default function FindingsReport({ data, status, onViewAnalysis }) {
           <div className="empty-msg">Try adjusting your search or filters.</div>
         </div>
       ) : (
-        <div className="fr-findings-list">
-          {filtered.map((f, i) => (
-            <FindingCard
-              key={i}
-              finding={f}
-              index={i}
-              open={openIds.has(i)}
-              onToggle={() => toggleCard(i)}
-              review={analyzerReviewIndex.get([f.platform || '', f.rule_title || '', f.rule_id || ''].join('::').toLowerCase())}
-              onViewAnalysis={() => onViewAnalysis?.(f)}
-            />
-          ))}
-        </div>
+        <MobileReviewView buckets={mobileBuckets}>{scope => <div className="fr-findings-list">
+          {(scope ? mobileFamilies[scope] : filteredFamilies).map((group, i) => {
+            const f = group.representative
+            const renderCheck = (member, index, nested = false, parentKey = group.key, heading) => {
+              const key = nested ? findingCheckKey(parentKey, member, index) : group.key
+              return <FindingCard key={key} finding={member} index={index} nested={nested} heading={heading} instanceCount={nested ? groupFindingFamilies([member])[0].instanceCount : group.instanceCount} open={openIds.has(key)} onToggle={() => toggleCard(key)} review={analyzerReviewIndex.get([member.platform || '', member.rule_title || '', member.rule_id || ''].join('::').toLowerCase())} onViewAnalysis={() => onViewAnalysis?.(member)} />
+            }
+            if (group.members.length === 1) return <div key={group.key}>{renderCheck(f, i)}</div>
+            return <section key={group.key} className="fr-card fr-family" style={{ '--conf-color': confColor(confLevel(f)) }}>
+              <button type="button" className="fr-card-header" aria-expanded={openIds.has(group.key)} onClick={() => toggleCard(group.key)}>
+                <span className="fr-confidence-label">Highest confidence</span>
+                <span className={confClass(confLevel(f))}>{confLevel(f)}</span>
+                {confScore(f) > 0 && <span className="fr-score" title="Heuristic evidence confidence, not probability or severity">{confScore(f)}/100</span>}
+                <span className="fr-card-title">{f.rule_title}</span>
+                <span className="fr-category-chip">{group.instanceCount} {group.instanceCount === 1 ? 'instance' : 'instances'} · {group.platforms.length} {group.platforms.length === 1 ? 'platform' : 'platforms'} · {group.members.length} checks</span>
+                {group.platforms.map(platform => <span key={platform.key} className="fr-platform-chip">{platform.name.toUpperCase()} {platform.instanceCount}</span>)}
+                <span className="fr-card-caret">{openIds.has(group.key) ? '▲' : '▼'}</span>
+              </button>
+              {openIds.has(group.key) && <div className="fr-family-checks">
+                <p>Expand a platform or source operation to review its guidance and code evidence.</p>
+                {group.platforms.length === 1 ? group.members.map((member, index) => renderCheck(member, index, true)) : group.platforms.map(platform => {
+                  const primary = platform.representative
+                  const open = openIds.has(platform.key)
+                  return <section className="fr-card fr-platform-group" key={platform.key} style={{ '--conf-color': confColor(confLevel(primary)) }}>
+                    <button type="button" className="fr-card-header" aria-expanded={open} onClick={() => toggleCard(platform.key)}>
+                      {platform.members.length > 1 && <span className="fr-confidence-label">Highest confidence</span>}
+                      <span className={confClass(confLevel(primary))}>{confLevel(primary)}</span>
+                      {confScore(primary) > 0 && <span className="fr-score" title="Heuristic evidence confidence, not probability or severity">{confScore(primary)}/100</span>}
+                      <span className="fr-card-title">{platform.name.toUpperCase()}</span>
+                      <span className="fr-category-chip">{platform.instanceCount} {platform.instanceCount === 1 ? 'instance' : 'instances'} · {platform.members.length} {platform.members.length === 1 ? 'check' : 'checks'}</span>
+                      <span className="fr-card-caret">{open ? '▲' : '▼'}</span>
+                    </button>
+                    {open && <div className="fr-family-checks">{platform.members.map((member, index) => renderCheck(member, index, true, platform.key))}</div>}
+                  </section>
+                })}
+              </div>}
+            </section>
+          })}
+        </div>}</MobileReviewView>
       )}
     </div>
   )

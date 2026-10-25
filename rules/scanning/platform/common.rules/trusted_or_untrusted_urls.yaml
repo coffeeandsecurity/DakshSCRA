@@ -1,0 +1,44 @@
+format: daksh-pattern-rule/v1
+id: common.core.trusted_or_untrusted_urls
+title: "URL Usage Review"
+order: 16
+category: Trust-boundary Validation or 3rd-Party Interactions
+detection:
+  pattern: (?i)(?:\b(?:redirect|forward|sendRedirect|Response\.Redirect|res\.redirect|window\.location|location\.href|location\.replace|window\.open)\b[^\n]{0,220}https?://|\b(?:fetch|axios|httpclient|xmlhttprequest|request)\b[^\n]{0,220}(https?://|\+|\$\{)|\b(?:url|uri|endpoint|baseurl|api[_-]?url|callback[_-]?url|redirect[_-]?url|host|server)\b\s*[:=]\s*["']?\s*https?://)
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects the presence of URLs in the application that may pose security risks or indicate potential trust
+    issues with third-party URLs.
+  trace:
+  - Externalized rule logic for Trusted Or Untrusted URLs.
+  description: The code declares an entry point, model, destination, or configuration value that may cross a trust
+    boundary. Identify callers, recipients, and the required data-access policy.
+  impact: A boundary that trusts unauthorized callers or exposes private output may permit data disclosure or state
+    changes. A declaration, address, or architectural marker alone does not establish such a failure.
+  remediation: Trace the actual boundary, restrict accepted inputs and recipients, and enforce authentication and
+    object-level authorization where required. Verify both authorized and denied use cases.
+  reviewer: Verify the implementation of secure URL handling practices and assess if additional security measures
+    are necessary. thoroughly investigate the presence of these URLs, determine their purpose, and ensure they undergo
+    appropriate taint validation. Reviewers should pay special attention to URLs associated with data exfiltration
+    concerns and assess the trustworthiness of third-party URLs to mitigate potential security risks. This can be
+    confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the matched construct in its containing function or configuration and identify the security-sensitive
+    behavior under review.
+  - Verify reachable callers, external influence and effective protections, including deployment overrides and failure
+    paths.
+  - Record concrete evidence for a confirmed issue or a justified suppression; retain an unresolved outcome when
+    the required evidence is unavailable.
+  recommendations:
+  - Apply the rule-specific correction above only after verifying the affected behavior and required control.
+  - Add a regression case for the unsafe condition and a valid protected case; verify the effective behavior in
+    the relevant deployment.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

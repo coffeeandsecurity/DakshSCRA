@@ -2,7 +2,7 @@ VERSION 2
 RULE ios.webview-file-access VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\bsetValue\\s*\\(\\s*true\\s*,\\s*forKey\\s*:\\s*\"(?:allowFileAccessFromFileURLs|allowUniversalAccessFromFileURLs)\"" ""
-REPORT "WKWebView File Access Enabled Through Preferences"
+REPORT "WebView File Access Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

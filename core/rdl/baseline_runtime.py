@@ -5,6 +5,7 @@ from utils.source_cache import read_source_text, source_stat
 from utils.scan_scope import allows_check
 
 from .compiler import compile_rdl
+from core.pattern_rules import read_logic
 from .scratch import DiskIndex
 from .result_store import ResultStorageError
 from .explanation import explain_result
@@ -12,15 +13,21 @@ from .executor import SemanticExecutor
 
 
 class BaselineRunner:
-    def __init__(self, root):
+    def __init__(self, root, semantic_only=False):
         self.root = Path(root)
-        payload = json.loads((self.root / 'config/rdl_baseline.json').read_text())
+        self.semantic_only = bool(semantic_only)
+        if self.semantic_only:
+            self.pattern_definitions = {}
+            payload = json.loads((self.root/'rules/scanning/metadata/rdl/baseline.json').read_text())
+        else:
+            from .baseline import inventory
+            self.pattern_definitions, payload = inventory(self.root)
         self.packs = {}
-        additional = json.loads((self.root / 'config/rdl_additional.json').read_text())
+        additional = json.loads((self.root / 'rules/scanning/metadata/rdl/additional.json').read_text())
         for entry in payload['entries'] + additional['entries']:
             self.packs.setdefault(entry['xml_pack'], []).append(entry)
         self.overlays = {}
-        overlay_config = json.loads((self.root / 'config/rdl_platform_overlays.json').read_text())
+        overlay_config = json.loads((self.root / 'rules/scanning/metadata/rdl/platform-overlays.json').read_text())
         for overlay in overlay_config['entries']:
             if overlay['source_pack'] not in self.packs or overlay['target_pack'] not in self.packs:
                 raise ValueError('Mobile overlay references an unregistered native pack')
@@ -35,7 +42,9 @@ class BaselineRunner:
         # Traverse selected pack overlays once. Shared mobile/native files still
         # use the per-pack/file identity below, so auto selection cannot duplicate work.
         import fnmatch
-        pending = [(Path(pack).resolve().relative_to(self.root.resolve()).as_posix(), list(files))]
+        pack = Path(pack)
+        if pack.suffix == '.rules': pack = pack.with_suffix('.xml')
+        pending = [(pack.resolve().relative_to(self.root.resolve()).as_posix(), list(files))]
         visited = set()
         while pending:
             pack_key, selected = pending.pop(0)
@@ -54,6 +63,11 @@ class BaselineRunner:
         from .shadow import append_shadow_record, shadow_record_batch
         pack_key = Path(pack).resolve().relative_to(self.root.resolve()).as_posix()
         entries = [entry for entry in self.packs.get(pack_key, []) if allows_check(entry.get('title', ''), entry.get('category', ''), entry.get('rule_id', ''))]
+        if self.semantic_only:
+            entries = [entry for entry in entries if entry['source_kind'] == 'v2_additional' and
+                       any(entry.get(key) for key in ('mobile_check','project_check','client_check','java_check','php_check'))]
+        if not entries:
+            return
         with shadow_record_batch(telemetry):
             for index, file in enumerate(files, 1):
                 path = Path(file)
@@ -62,7 +76,7 @@ class BaselineRunner:
                     continue
                 self.seen.add(identity)
                 if callable(progress):
-                    progress(dict(scope='source_parser', platform=Path(pack).stem.upper(), category='RDL v2 baseline',
+                    progress(dict(scope='source_parser', platform=Path(pack).stem.upper(), category='Pattern Rule baseline',
                                   rule_title='Native v2 rule comparison', file_index=index, filepath=str(path),
                                   status='parsing', total_items=len(files), matched_evidence_count=0))
                 try:
@@ -105,7 +119,7 @@ class BaselineRunner:
     def evaluate(self, entry, target, content, project_root, include_v1, refine=False, source_path=None):
         relative = entry['v2_rule']
         if relative not in self.documents:
-            self.documents[relative] = compile_rdl(read_source_text(self.root / relative), relative)
+            self.documents[relative] = compile_rdl(self.pattern_definitions[relative] if relative in self.pattern_definitions else read_source_text(self.root / relative), relative)
         document = self.documents[relative]
         result = self.executor.execute(document, target, 'text', project_root=project_root, file_text=content)
         baseline_outcome = result.outcome.value
@@ -129,7 +143,7 @@ class BaselineRunner:
             if entry['v1_ref']:
                 reference = entry['v1_ref']
                 if reference not in self.sources:
-                    self.sources[reference] = read_source_text(self.root/'rules/scanning'/reference)
+                    self.sources[reference] = read_logic(self.root, reference)
                 from core.rdl_engine import evaluate_rdl_with_reason
                 old = evaluate_rdl_with_reason(self.sources[reference], file_text=content, file_path=target, project_root=str(project_root))
                 legacy_outcome = 'MATCH' if old['passes'] else 'NO_MATCH'
@@ -138,8 +152,7 @@ class BaselineRunner:
                 # decision explicitly, rather than claiming a legacy RDL result.
                 import re
                 regex = re.compile(entry['pattern'])
-                exclude = re.compile(entry['exclude'], re.I) if entry['exclude'] else None
-                hit = any(regex.search(line) and not (exclude and exclude.search(line)) for line in content.splitlines())
+                hit = any(regex.search(line) for line in content.splitlines())
                 legacy_outcome = 'MATCH' if hit else 'NO_MATCH'
         status = result.outcome.value
         if status in {'MATCH','NO_MATCH'}:
@@ -154,18 +167,28 @@ class BaselineRunner:
             explanation['v2_explanation'] += ' ' + ' '.join(review_notes)
         # Keep rule-specific review guidance alongside native text evidence.
         for finding in explanation.get('v2_findings', []):
+            from .ratings import apply_rating_context
+            apply_rating_context(finding, entry['rule_id'], target, content)
             finding['cwe'] = entry.get('cwe') or finding['cwe']
             finding['description'] = entry.get('description') or finding['description']
             finding['impact'] = entry.get('impact') or finding['impact']
+            from core.mobile_impact import mobile_impact
+            finding['impact'] = mobile_impact(finding['impact'], entry['rule_id'])
             finding['remediation'] = entry.get('remediation') or entry.get('reviewer') or finding['remediation']
+            finding['reviewer_note'] = entry.get('reviewer') or finding.get('reviewer_note', '')
             finding['review_area'] = entry.get('review_area') or entry.get('category', '')
             if guidance:
-                finding.update(title=explanation['v2_title'], description=guidance[1], reviewer_note=guidance[2])
+                from .narratives import review_guidance
+                finding.update(title=explanation['v2_title'], description=guidance[1],
+                               reviewer_note=review_guidance(finding['reviewer_note'], guidance[2]))
             if entry['path_rule']:
                 finding['path_only'] = True
                 finding['path'] = source_path or target
                 finding['confidence_reason'] = 'Filename/path review only; no source operation or vulnerable execution is established.'
                 finding['trace']['review_note'] = 'Matched path: ' + (source_path or target) + '. No source line applies to a path-only check.'
+        from .issue_families import decorate
+        for finding in explanation.get('v2_findings') or []:
+            decorate(dict(v2_rule_id=entry['rule_id']),finding,content)
         from .assessment import classify_record
         assessment = classify_record(dict(v2_outcome=result.outcome.value, **explanation))
         if result.outcome.value == 'NO_MATCH' and assessment != 'mitigated':

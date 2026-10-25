@@ -1,0 +1,51 @@
+format: daksh-pattern-rule/v1
+id: mobile.xplat.cordova.core.cordova_wildcard_access_origin
+title: "Cordova Origin Policy Review"
+order: 4
+category: Framework-Specific Security
+detection:
+  pattern: <access\s+origin=\"\*\"
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects wildcard access origin in Cordova config.
+  trace:
+  - Externalized mobile rule logic for Cordova Wildcard Access Origin.
+  description: 'Review target: Cordova Wildcard Access Origin. The application network allowlist permits requests
+    to any origin. Resolve the loaded content and frame origin, the exact WebView instance, and the native operations
+    available to that content.'
+  impact: A compromised web context may send application data to an attacker-controlled endpoint if unrestricted
+    outbound requests and access to sensitive data are both available.
+  remediation: Limit outbound origins to required trusted services. Keep sensitive values out of untrusted web contexts
+    and apply a restrictive content-security policy and independent native access checks. Restrict schemes and parsed
+    hosts, isolate external content, and validate messages and permissions on the native side.
+  reviewer: Review config.xml access policy entries. This can be confirmed as an issue when the matched path is
+    reachable and required controls are missing, weak, or inconsistent. Test subframes, redirects, javascript/data/content
+    URLs, deceptive host suffixes, and a safe WebView beside an unsafe instance; JavaScript enablement alone is
+    not a vulnerability.
+  review_steps:
+  - Verify the operation makes a server-side request, then trace external control over the URL, host, port and redirects.
+  - Inspect destination restrictions, DNS resolution and redirect handling; distinguish fixed destinations from
+    caller-controlled requests.
+  - Check deployment egress controls and whether internal services or local files are reachable from the requesting
+    process.
+  - Resolve the loaded content and frame origin, the exact WebView instance, and the native operations available
+    to that content.
+  - Test subframes, redirects, javascript/data/content URLs, deceptive host suffixes, and a safe WebView beside
+    an unsafe instance; JavaScript enablement alone is not a vulnerability.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Prefer fixed destinations or a restricted set of permitted services; validate schemes, hosts and ports before
+    the request.
+  - Apply destination checks to redirects and resolved addresses where applicable, restrict network egress, and
+    test prohibited destinations.
+  - Restrict schemes and parsed hosts, isolate external content, and validate messages and permissions on the native
+    side.
+scan_config:
+  match_mode: file
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

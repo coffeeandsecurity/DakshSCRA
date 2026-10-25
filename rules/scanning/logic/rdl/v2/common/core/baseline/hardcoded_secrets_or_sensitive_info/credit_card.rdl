@@ -3,7 +3,7 @@ RULE baseline.common.core.credit_card VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(?:6011|5\\d\\d\\d|4\\d\\d\\d|3\\d\\d\\d)\\d{11,12}" "im"
 WHEN TEXT_MATCHES "(?i)\\b(card|credit|payment|pan|cvv)\\b" "im"
-REPORT "Credit Card"
+REPORT "Payment Card Data Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

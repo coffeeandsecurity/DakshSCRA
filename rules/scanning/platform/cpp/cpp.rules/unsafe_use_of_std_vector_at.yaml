@@ -1,0 +1,40 @@
+format: daksh-pattern-rule/v1
+id: cpp.core.unsafe_use_of_std_vector_at
+title: "Container Bounds Review"
+order: 6
+category: Memory Safety Issues
+detection:
+  pattern: \bstd::vector<.*>::at\(\s*\d+\s*\)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:try\s*\{|catch\s*\(|std::out_of_range
+reporting:
+  type: area_of_interest
+  reason: Detects unsafe access to `std::vector` elements without boundary checks.
+  trace:
+  - Externalized rule logic for Unsafe Use of std::vector::at().
+  description: The code performs checked vector indexing. Verify index provenance and handling of the std::out_of_range
+    exception; at() itself performs a bounds check.
+  impact: An unhandled out-of-range exception may terminate the operation or process and affect availability. The
+    checked accessor alone does not establish a buffer overflow or undefined behavior.
+  remediation: Validate external indexes against the current vector size and handle expected range failures at the
+    appropriate boundary. Retain checked access rather than replacing it with unchecked indexing.
+  reviewer: Check for proper error handling during vector access. This can be confirmed as an issue when the matched
+    path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect buffer capacity, index bounds, integer conversions and ownership at the matched operation and its callers.
+  - Check initialization, aliases, lifetime and cleanup on success, exception and early-return paths; identify external
+    influence over sizes or values.
+  - Verify a concrete unsafe access or lifetime condition. A low-level API or allocation alone does not prove memory
+    corruption.
+  recommendations:
+  - Use bounded operations, checked size calculations and explicit ownership or automatic resource management appropriate
+    to the language.
+  - Test boundary sizes and failure paths; use memory diagnostics where available to verify the specific correction.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

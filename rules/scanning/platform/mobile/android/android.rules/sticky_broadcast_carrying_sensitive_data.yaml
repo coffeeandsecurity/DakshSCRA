@@ -1,0 +1,53 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.sticky_broadcast_carrying_sensitive_data
+title: Sticky Broadcast Carrying Sensitive Data
+order: 25
+category: IPC Attack Surface
+detection:
+  pattern: sendStickyBroadcast\s*\(|sendStickyOrderedBroadcast\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects sticky broadcasts that carry sensitive data in Intent extras.
+  trace:
+  - Externalized mobile rule logic for Sticky Broadcast Carrying Sensitive Data.
+  description: 'Review target: Sticky Broadcast Carrying Sensitive Data. The application exposes or invokes an inter-process
+    interface. Resolve export settings, permissions, intent recipients, URI grants, and runtime caller checks. Resolve
+    the exact declaration or operation in the selected build and identify its security boundary.'
+  impact: An untrusted application may read private data, alter state, or invoke operations under the application’s
+    identity if an externally reachable interface lacks effective caller authorization or permits unsafe mutation.
+  remediation: Disable unnecessary export and prefer explicit recipients and immutable PendingIntents. Apply appropriate
+    caller permissions and authorization, bind query arguments, and validate every incoming payload. Apply the least-privilege
+    platform control appropriate to the matched operation and verify the production configuration.
+  reviewer: Confirm that sensitive extras are never placed in sticky broadcast intents. Any use of sendStickyBroadcast
+    with credential-related keys should be treated as high severity. This can be confirmed as an issue when the
+    matched path is reachable and required controls are missing, weak, or inconsistent. Check debug/release and
+    product flavors, generated/native code, plugin boundaries and failure paths; source evidence alone does not
+    establish shipped or runtime behavior.
+  review_steps:
+  - Inspect the effective export status, permission requirements and runtime identity checks on the inter-process
+    interface.
+  - Trace untrusted callers and received values to sensitive actions, including indirect recipients and granted
+    resource access.
+  - Verify unauthorized callers cannot invoke the protected operation; a declared component or intent alone is not
+    an issue.
+  - Resolve the exact declaration or operation in the selected build and identify its security boundary.
+  - Check debug/release and product flavors, generated/native code, plugin boundaries and failure paths; source
+    evidence alone does not establish shipped or runtime behavior.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Keep internal components private where possible; enforce caller permissions and resource authorization on exposed
+    operations.
+  - Constrain recipients and granted access and test calls from an untrusted process or application.
+  - Apply the least-privilege platform control appropriate to the matched operation and verify the production configuration.
+scan_config:
+  match_mode: file
+  context_type: lines
+  context_lines_before: '3'
+  context_lines_after: '1'
+  aggregate: none
+  report_format: default
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

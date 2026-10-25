@@ -3,7 +3,7 @@ RULE baseline.dotnet.core.server_certificate_validation_insecure_configuration V
 IN FILE
 WHEN TEXT_MATCHES "ServerCertificateValidationCallback\\s*?\\(.*?(\\=|false|true)" "im"
 WHEN TEXT_MISSING "test|development|localhost|staging|// intentional" "im"
-REPORT "Server Certificate Validation: Insecure Configuration"
+REPORT "TLS Certificate Validation Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -1,0 +1,46 @@
+format: daksh-pattern-rule/v1
+id: java.core.serialization_deserialization_handling
+title: "Object Serialization Review"
+order: 5
+category: Untrusted Input Handling or Injection Flaws
+detection:
+  pattern: \.readObject|\.writeObject|ObjectInputStream|ObjectOutputStream
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:SerialKiller|ValidatingObjectInputStream|ObjectInputFilter|allowlist|whitelist|trusted
+reporting:
+  type: area_of_interest
+  reason: Detects potential serialization/deserialization vulnerabilities in Java code.
+  trace:
+  - Externalized rule logic for Serialization/Deserialization Handling.
+  description: The application reads serialized objects or uses a parser that may construct runtime types. Identify
+    the input’s trust and the effective parser and type restrictions.
+  impact: A crafted untrusted payload may instantiate dangerous types or trigger object behavior that executes code,
+    modifies state, or exhausts resources when the parser permits those operations.
+  remediation: Use a data-only format and a safe loader for untrusted input. Disable automatic object or type construction,
+    allowlist required types, and bound parsing size and complexity.
+  reviewer: Verify that appropriate measures are taken to mitigate serialization/deserialization vulnerabilities.
+    Ensure that input validation, integrity checks, and secure coding practices are implemented for serialization
+    and deserialization operations. Also assess the sensitivity of the serialized data and confirm that safeguards,
+    such as input validation, proper exception handling, and the use of secure serialization/deserialization frameworks
+    or libraries, are in place to prevent serialization/deserialization attacks. This can be confirmed as an issue
+    when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify who can supply the matched input, including stored values and upstream services; record its type, size
+    limits and trust boundary.
+  - Trace the value through transformations to each sensitive operation. Check the protection at that destination
+    and resource-level authorization.
+  - Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side
+    check alone is insufficient evidence.
+  recommendations:
+  - Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve
+    legitimate characters and protect each destination separately.
+  - Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations
+    where applicable. Test rejected input and unauthorized access.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

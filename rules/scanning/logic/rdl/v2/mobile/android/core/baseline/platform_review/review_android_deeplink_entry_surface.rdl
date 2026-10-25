@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.android.core.review_android_deeplink_entry_surface VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "<intent-filter\\b" "im"
+REPORT "Android Deep-Link Entry Point"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

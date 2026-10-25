@@ -1,0 +1,54 @@
+format: daksh-pattern-rule/v1
+id: mobile.xplat.flutter.core.flutter_methodchannel_handler_without_input_validation
+title: "Native Bridge Input Validation Review"
+order: 5
+category: Framework-Specific Issues - Flutter
+detection:
+  pattern: \bsetMethodCallHandler\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects MethodChannel handlers that may not validate the incoming method name or arguments.
+  trace:
+  - Externalized mobile rule logic for Flutter MethodChannel Handler Without Input Validation.
+  description: 'Review target: Flutter MethodChannel Handler Without Input Validation. The application renders web
+    content, executes scripts, or exposes a native messaging interface. Resolve navigation trust, origin isolation,
+    and validation at the native boundary. Identify the actual sensitive value and the recipients, retention and
+    user-consent context of this exposure or capability.'
+  impact: Attacker-controlled web content may execute in a trusted context or invoke native operations, exposing
+    session data or application privileges when isolation and per-operation checks are insufficient.
+  remediation: Restrict navigation and message origins to required trusted sources. Avoid dynamic script construction,
+    minimize native bridge methods, validate message inputs, and authorize sensitive native operations. Minimize
+    collection and retention, redact secret values, and apply the platform controls needed for sensitive UI and
+    data sharing.
+  reviewer: Inspect the handler body to confirm method name and argument validation are present before any action.
+    This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak,
+    or inconsistent. Test release logging, crash-report payloads, screenshot/background snapshots and clipboard
+    lifetime; permission or API capability alone does not establish collection or malicious behavior.
+  review_steps:
+  - Identify the loaded content, permitted origins and script-to-native operations exposed by the application.
+  - Inspect navigation, message validation and resource or operation authorization on the native side.
+  - Test untrusted content and unexpected messages; a bridge declaration alone does not prove unauthorized native
+    access.
+  - Identify the actual sensitive value and the recipients, retention and user-consent context of this exposure
+    or capability.
+  - Test release logging, crash-report payloads, screenshot/background snapshots and clipboard lifetime; permission
+    or API capability alone does not establish collection or malicious behavior.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Restrict trusted content and navigation and expose only the native operations required by the application.
+  - Validate messages and enforce native-side authorization; test rejection of unapproved origins and unexpected
+    operations.
+  - Minimize collection and retention, redact secret values, and apply the platform controls needed for sensitive
+    UI and data sharing.
+scan_config:
+  match_mode: file
+  context_type: lines
+  context_lines_before: '2'
+  context_lines_after: '5'
+  aggregate: none
+  report_format: default
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: yellow

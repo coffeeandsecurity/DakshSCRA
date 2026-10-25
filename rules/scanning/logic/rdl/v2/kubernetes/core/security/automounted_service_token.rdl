@@ -2,7 +2,7 @@ VERSION 2
 RULE kubernetes.automounted-service-token VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(?m)^\\s*automountServiceAccountToken\\s*:\\s*true\\b" ""
-REPORT "Kubernetes Service Account Token Automount Enabled"
+REPORT "Service Account Token Automount"
 SEVERITY LOW
 CONFIDENCE LOW
 WITH TRACE

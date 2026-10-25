@@ -3,7 +3,7 @@ RULE baseline.python.core.http_decorators_insecure_or_commonly_abused_methods VE
 IN FILE
 WHEN TEXT_MATCHES "(@require_http_methods\\s*\\(\\s*\\[\"(?:GET|PUT|DELETE|.*?)\"\\]\\))|(@require_GET)" "im"
 WHEN TEXT_MISSING "@login_required|@permission_required|validate|sanitize" "im"
-REPORT "HTTP Decorators: Insecure or Commonly Abused Methods"
+REPORT "HTTP Method Handling Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

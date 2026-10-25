@@ -2,7 +2,7 @@ VERSION 2
 RULE ios.ats-media-exception VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "<key>NSAllowsArbitraryLoadsForMedia</key>" ""
-REPORT "ATS Media Transport Exception"
+REPORT "App Transport Security Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

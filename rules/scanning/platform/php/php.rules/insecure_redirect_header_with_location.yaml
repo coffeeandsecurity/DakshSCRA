@@ -1,0 +1,39 @@
+format: daksh-pattern-rule/v1
+id: php.core.insecure_redirect_header_with_location
+title: "Redirect Destination Review"
+order: 8
+category: Insecure Method/Function Call
+detection:
+  pattern: header\s*\(\s*['\"]\s*Location\s*:\s*['\"]\s*\.\s*\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:parse_url|filter_var\s*\(.*FILTER_VALIDATE_URL|allowlist|whitelist
+reporting:
+  type: area_of_interest
+  reason: Detects usage of the header() function with the "Location" parameter, which can lead to insecure redirects.
+  trace:
+  - 'Externalized rule logic for Insecure Redirect: header() with Location.'
+  description: The code handles a link, redirect, or externally selected navigation target. Validate the effective
+    destination and any action triggered by the receiving handler.
+  impact: A crafted destination or link may direct users to a phishing site, leak URL-carried secrets, or trigger
+    unauthorized operations if routing trusts external parameters without the required access checks.
+  remediation: Allowlist schemes, hosts, paths, and operations. Validate parsed link parameters, avoid credentials
+    in URLs, and require authentication and authorization before sensitive actions.
+  reviewer: Inspect Location header construction and validation controls for open redirect risk. This can be confirmed
+    as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Determine whether untrusted input controls the redirect destination and whether the redirect is reachable.
+  - Inspect URL parsing, relative versus absolute destinations, scheme handling and authorization around the redirect.
+  - Check how encoded or ambiguous URLs are interpreted by the framework and browser before confirming an unsafe
+    redirect.
+  recommendations:
+  - Prefer application route identifiers mapped to fixed destinations; permit only necessary relative paths or explicitly
+    allowed external destinations.
+  - Reject unsupported schemes and ambiguous destinations and test redirect handling after decoding and normalization.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

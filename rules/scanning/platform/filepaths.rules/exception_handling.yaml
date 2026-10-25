@@ -1,0 +1,39 @@
+format: daksh-pattern-rule/v1
+id: filepaths.core.exception_handling
+title: "Exception Handling Review"
+order: 25
+detection:
+  pattern: (?i)(exception|error_handling)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:(?i)(/|\\\\).*(exception|errors?|handling|fault)
+reporting:
+  type: area_of_interest
+  reason: Detects file paths related to exception handling functionality.
+  description: A file or directory name matches the exception handling review area. This check inspects paths, not
+    the implementation or a reachable execution path.
+  impact: Unhandled failures or unbounded work may disrupt availability or leave security-relevant state inconsistent.
+    The presence or absence of a named handler alone does not establish a reachable security defect. A filename
+    match alone does not establish this consequence.
+  remediation: Bound resource use, handle failures at the correct ownership boundary, and fail safely before updating
+    trusted state. Test exceptional paths, cancellation, timeouts, and recovery behavior.
+  reviewer: Verify the presence and secure implementation of exception handling functionality. This can be confirmed
+    as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the matched file or directory contents and determine whether it is deployed or externally accessible.
+  - Identify whether sensitive data, configuration or executable content is present; a name match alone does not
+    establish exposure.
+  - Check effective access controls and build or packaging exclusions and record the specific content and exposure
+    path.
+  recommendations:
+  - Where exposure is verified, remove unnecessary files from deployment or restrict access to the intended users
+    and processes.
+  - Verify the deployed artifact and access behavior after the change; retain required application files with appropriate
+    controls.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

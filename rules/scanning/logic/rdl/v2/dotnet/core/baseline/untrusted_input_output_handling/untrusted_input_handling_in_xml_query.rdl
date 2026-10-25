@@ -3,7 +3,7 @@ RULE baseline.dotnet.core.untrusted_input_handling_in_xml_query VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(?i)(XmlDocument\\.Load|XmlDocument\\.LoadXml|XmlTextReader\\.Create|XmlReader\\.Create|XmlSerializer\\.Deserialize|XDocument\\.Load|XDocument\\.Parse|XElement\\.Load|XElement\\.Parse|XPathDocument\\.Create|XPathDocument\\.Load|XPathDocument\\.LoadXml|XPathNavigator\\.Create|XPathNavigator\\.Load|XPathNavigator\\.LoadXml|XslCompiledTransform\\.Load|XslCompiledTransform\\.LoadXml|XslTransform\\.Load|XslTransform\\.LoadXml|XmlSchema\\.Read|XmlSchemaSet\\.Add|XmlSchemaSet\\.Read)" "im"
 WHEN TEXT_MISSING "(DtdProcessing\\s*=\\s*Prohibit|XmlResolver\\s*=\\s*null|MaxCharactersFromEntities|ProhibitDtd\\s*=\\s*true)" "im"
-REPORT "Untrusted Input Handling in XML Query"
+REPORT "XML Query Input Handling Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

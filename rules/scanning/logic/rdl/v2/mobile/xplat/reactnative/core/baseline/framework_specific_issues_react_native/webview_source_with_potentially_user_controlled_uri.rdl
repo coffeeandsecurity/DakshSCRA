@@ -2,7 +2,7 @@ VERSION 2
 RULE baseline.mobile.xplat.reactnative.core.webview_source_with_potentially_user_controlled_uri VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "<WebView[^>]*source\\s*=\\s*\\{\\{?\\s*uri\\s*:" "im"
-REPORT "WebView Source with Potentially User-Controlled URI"
+REPORT "WebView Navigation Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

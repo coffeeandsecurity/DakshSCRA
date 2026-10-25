@@ -17,7 +17,7 @@ from .catalog import SemanticCatalog
 
 INPUTS = {'$_GET', '$_POST', '$_REQUEST', '$_COOKIE', '$_FILES', '$_SERVER'}
 INPUT_CONCEPTS = {'input.untrusted', 'input.untrusted-url', 'input.untrusted-path'}
-SINK_CONCEPTS = {'command.execution', 'sql.execution', 'network.outbound-request',
+SINK_CONCEPTS = {'web.origin-response', 'model.bulk-binding', 'crypto.key-material', 'command.execution', 'sql.execution', 'network.outbound-request',
                  'filesystem.access', 'deserialization.object-construction',
                  'dynamic.evaluation', 'output.html', 'redirect.destination',
                  'code.inclusion', 'model.mass-assignment', 'variable.extraction', 'regex.execution', 'xml.external-entities'}
@@ -79,6 +79,7 @@ class _Walker:
         self.scope = '<module>'
         self.limits = _Limits(self)
         self.class_name = ''
+        self.opencart_request_scope = False
         self.namespace = ''
         self.imports = {}
         self.return_ids = set()
@@ -147,6 +148,8 @@ class _Walker:
     def call_concepts(self, callee, args, argument_names=()):
         lower = callee.lower().lstrip('\\')
         concepts = self.catalog.concepts_for_call('php', lower)
+        from .security_operations import operation_arguments, token_arguments
+        concepts.update(operation_arguments('php', callee, token_arguments(self.tokens, args)))
         if (lower.endswith(('->input->get', '->input->post', '->input->get_post', '->input->post_get', '->input->cookie', '->input->raw_input_stream'))
                 or re.search(r'\$(?:request|req)->(?:input|get|post|query|all|cookie|file|json|param)$', lower)
                 or lower in {'request::input', 'request::get', 'request::query', 'request', 'input::get', 'filter_input'}
@@ -158,6 +161,18 @@ class _Walker:
         if lower in {'htmlspecialchars', 'htmlentities', 'esc_html', 'esc_attr', 'html_escape', 'e'}:
             if not any(self.text(i) == 'ENT_NOQUOTES' for a, b in args for i in range(a, b)):
                 concepts.add('sanitizer.contextual-output-encoding')
+        if lower == 'print_r' and len(args) > 1 and ''.join(self.text(i) for i in range(*args[1])).lower() in {'true','1'}:
+            concepts.discard('error.disclosure')
+        if self.opencart_request_scope and lower in {'md5','sha1'} and args:
+            index = args[0][0]-2
+            enclosing = [opening for opening,closing in self.pairs.items()
+                         if self.text(opening) == '(' and opening < index < closing]
+            if enclosing:
+                parent = max(enclosing)
+                name = ''.join(self.text(i) for i in range(max(0,parent-5),parent))
+                arguments = self.split(parent+1,self.pairs[parent])
+                if name in {'$this->cache->get','$this->cache->set'} and arguments and arguments[0][0] <= index < arguments[0][1] and not re.search(r'password|passwd|secret|token|key', ''.join(self.text(i) for i in range(*args[0])), re.I):
+                    concepts.discard('crypto.weak-operation')
         if lower in {'intval', 'floatval'}:
             concepts.update({'sanitizer.sql-parameterization', 'sanitizer.command-approved', 'sanitizer.contextual-output-encoding'})
         if lower == 'escapeshellarg':
@@ -239,11 +254,13 @@ class _Walker:
                 if target_end != b:
                     values |= self.expression(a, target_end, env)
                 self.configuration(a,key,b+1,end)
-                node = self.node(a, 'Assignment', key)
+                from .security_operations import token_fallback, FALLBACK
+                node = self.node(a, 'Assignment', key, {FALLBACK} if token_fallback(self.tokens[b+1:end]) else ())
                 env[key] = self.attach(values, node, 'assignment')
                 if '[' in key:
                     base = key.split('[',1)[0]
-                    env[base] = set().union(*(v for k,v in env.items() if k.startswith(base+'[')))
+                    slots = set().union(*(v for k,v in env.items() if k.startswith(base+'[')))
+                    env[base] = env.get(base,set()) | slots if self.opencart_request_scope and re.fullmatch(r'\$this->request->(?:get|post|cookie|files|server)', base) else slots
                 return env[key]
         values, cursor = set(), start
         while cursor < end:
@@ -282,6 +299,8 @@ class _Walker:
                     call = self.node(tail, 'Call', callee, concepts,
                                      {'callee': callee, 'php_class': self.class_name, 'php_namespace':self.namespace, 'php_imports':tuple(sorted(self.imports.items())), 'php_receiver_type': self.object_types.get((self.scope,callee.rsplit('->',1)[0]),''), 'php_arguments': len(args), 'php_argument_names':argument_names}, EntityType.CALL)
                     arguments = [self.expression(a, b, env) for a, b in args]
+                    if self.opencart_request_scope and callee.lower().endswith('->db->escape'):
+                        self.limits.add('OpenCart database escaping requires quoted-query and connection review at '+str(self.path)+':'+str(token.line))
                     lower = callee.lower()
                     if lower == 'define' and len(args) > 1:
                         self.configuration(tail,''.join(self.text(i) for i in range(*args[0])),*args[1])
@@ -304,6 +323,10 @@ class _Walker:
                             selected = [1]
                         if lower in {'printf', 'vprintf'}:
                             selected = list(range(len(args)))
+                    from .security_operations import operation_arguments, token_arguments
+                    operations = operation_arguments('php', callee, token_arguments(self.tokens, args))
+                    if operations:
+                        selected = sorted({position for positions in operations.values() for position in positions})
                     # Preserve all call arguments for resolved project methods, but keep sink roles precise.
                     for number, sources in enumerate(arguments):
                         for source in sources:
@@ -348,6 +371,8 @@ class _Walker:
                     concepts = INPUT_CONCEPTS if token.text in INPUTS else set()
                     upload_temporary = (token.text == '$_FILES' and
                             re.fullmatch(r'\$_FILES\[[^\[\]]+\]\[tmp_name\](?:\[[^\[\]]+\])*', key))
+                    upload_temporary = upload_temporary or bool(self.opencart_request_scope and
+                            re.fullmatch(r'\$this->request->files\[[^\[\]]+\]\[tmp_name\](?:\[[^\[\]]+\])*', key))
                     if upload_temporary:
                         # PHP assigns upload temporary paths. The uploaded contents
                         # become untrusted when read, but this path is not a
@@ -356,6 +381,8 @@ class _Walker:
                     node = self.node(cursor, 'Reference', key, concepts,
                                      {'php_upload_temporary_path': bool(upload_temporary)})
                     sources = env.get(key, env.get(callee,set()))
+                    if upload_temporary and key not in env:
+                        sources = set()
                     values |= self.attach(sources, node, 'reference')
                     cursor = after
                     continue
@@ -421,10 +448,14 @@ class _Walker:
         if word in {'class','trait','interface'}:
             opening = next((i for i in range(start+1,end) if self.text(i) == '{'),end)
             close = self.pairs.get(opening,end-1)
-            previous = self.class_name
+            previous = self.class_name, self.opencart_request_scope
+            extends = next((i for i in range(start+2, opening) if self.text(i).lower() == 'extends'), None)
+            parent = ''.join(self.text(i) for i in range(extends+1, opening)).split('implements', 1)[0].lstrip('\\').lower() if extends is not None else ''
+            parent = self.imports.get(parent, parent)
+            self.opencart_request_scope = parent in {'opencart\\system\\engine\\controller', 'opencart\\system\\engine\\model'}
             self.class_name = (self.namespace+'\\' if self.namespace else '')+self.text(start+1)
             self.block(opening+1,close,{},depth+1)
-            self.class_name = previous
+            self.class_name, self.opencart_request_scope = previous
             return close+1,env,''
         if word == 'function':
             opening = next((i for i in range(start+1,end) if self.text(i) == '('),end)
@@ -450,6 +481,14 @@ class _Walker:
                 route = 'controllers' in self.path.parts and not name.startswith('_')
                 parameter = self.node(index,'Parameter',concepts=INPUT_CONCEPTS if route else (),kind=EntityType.PARAMETER)
                 params.append(parameter.entity_id);parameter_names.append(self.text(index).lstrip('$'));local[self.text(index)]={parameter.entity_id}
+            if self.opencart_request_scope:
+                # Initialize only referenced request fields. Ordinary environment
+                # writes and branch joins then preserve or kill their provenance.
+                for index in range(body+1, close-4):
+                    base = ''.join(self.text(i) for i in range(index,index+5))
+                    if re.fullmatch(r'\$this->request->(?:get|post|cookie|files|server)', base) and base not in local:
+                        boundary = self.node(index, 'RequestBoundary:'+base, base, INPUT_CONCEPTS)
+                        local[base] = {boundary.entity_id}
             self.block(body+1,close,local,depth+1)
             function = self.node(start,'Function',name,attributes={'php_name':(self.namespace+'\\' if self.namespace and not self.class_name else '')+name.lower(), 'php_class':self.class_name.lower(), 'php_parameters':tuple(params), 'php_parameter_names':tuple(parameter_names), 'php_returns':tuple(sorted(self.return_ids))},kind=EntityType.FUNCTION)
             self.functions.append(function)

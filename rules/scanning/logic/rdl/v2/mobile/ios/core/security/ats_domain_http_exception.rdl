@@ -2,7 +2,7 @@ VERSION 2
 RULE ios.ats-domain-http-exception VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "<key>NSExceptionAllowsInsecureHTTPLoads</key>" ""
-REPORT "Domain-Specific ATS HTTP Exception"
+REPORT "ATS HTTP Exception Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

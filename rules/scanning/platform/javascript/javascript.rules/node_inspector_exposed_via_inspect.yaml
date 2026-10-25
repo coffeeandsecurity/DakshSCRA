@@ -1,0 +1,38 @@
+format: daksh-pattern-rule/v1
+id: javascript.core.node_inspector_exposed_via_inspect
+title: "Node Inspector Exposure Review"
+order: 11
+category: Node Runtime Hardening
+detection:
+  pattern: \B--inspect(?:-brk)?(?:=\S+)?\b
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:--inspect|--inspect-brk && MISSING:development|localhost|127\.0\.0\.1|test
+reporting:
+  type: area_of_interest
+  reason: Detects Node.js debug inspector flags that may expose a remotely reachable debug endpoint.
+  trace:
+  - Externalized rule logic for Node Inspector Exposed via --inspect.
+  description: A configuration or API enables development diagnostics, process inspection, or debugging. Verify
+    whether it applies to a deployed production artifact.
+  impact: An actor with access to an enabled debugging interface may inspect private state or influence application
+    execution; exposed development endpoints may disclose internal implementation details.
+  remediation: Disable debugging and development endpoints in production, bind necessary diagnostic services to
+    restricted interfaces, and verify the final deployed artifact and access policy.
+  reviewer: Verify runtime scripts and deployment manifests do not expose inspector endpoints in production environments.
+    This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak,
+    or inconsistent.
+  review_steps:
+  - Inspect the effective production configuration and determine who can reach debugging or development functionality.
+  - Check environment guards, deployment overrides and the information or capabilities exposed by the feature.
+  - Verify the actual production behavior; a development-only setting is not itself a production vulnerability.
+  recommendations:
+  - Disable development-only functionality in production and enforce the environment boundary in deployment configuration.
+  - Restrict operational diagnostics and add a production-configuration check covering the exposed route or feature.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

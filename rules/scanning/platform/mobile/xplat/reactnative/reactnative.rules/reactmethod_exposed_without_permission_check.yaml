@@ -1,0 +1,55 @@
+format: daksh-pattern-rule/v1
+id: mobile.xplat.reactnative.core.reactmethod_exposed_without_permission_check
+title: "Native Bridge Authorization Review"
+order: 5
+category: Framework-Specific Issues - React Native
+detection:
+  pattern: '@ReactMethod'
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects @ReactMethod annotated native module methods that may lack permission or authentication checks.
+  trace:
+  - Externalized mobile rule logic for ReactMethod Exposed Without Permission Check.
+  description: 'Review target: ReactMethod Exposed Without Permission Check. The application renders web content,
+    executes scripts, or exposes a native messaging interface. Resolve navigation trust, origin isolation, and validation
+    at the native boundary. Resolve the external entry point, its caller or URI grant, and the sensitive operation
+    or resource reached.'
+  impact: Attacker-controlled web content may execute in a trusted context or invoke native operations, exposing
+    session data or application privileges when isolation and per-operation checks are insufficient.
+  remediation: Restrict navigation and message origins to required trusted sources. Avoid dynamic script construction,
+    minimize native bridge methods, validate message inputs, and authorize sensitive native operations. Minimize
+    exported surfaces and URI grants; validate parsed schemes, hosts and paths, use verified links where appropriate,
+    and authorize each sensitive action.
+  reviewer: Review each @ReactMethod body for authorization checks before sensitive operations. This can be confirmed
+    as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent. Resolve
+    merged manifests, aliases and SDK defaults; test custom-scheme collision, malformed URLs, encoded paths, nested
+    intents, read/write grants and permission inheritance. Registration or permission presence alone does not prove
+    unauthorized access.
+  review_steps:
+  - Identify the loaded content, permitted origins and script-to-native operations exposed by the application.
+  - Inspect navigation, message validation and resource or operation authorization on the native side.
+  - Test untrusted content and unexpected messages; a bridge declaration alone does not prove unauthorized native
+    access.
+  - Resolve the external entry point, its caller or URI grant, and the sensitive operation or resource reached.
+  - Resolve merged manifests, aliases and SDK defaults; test custom-scheme collision, malformed URLs, encoded paths,
+    nested intents, read/write grants and permission inheritance. Registration or permission presence alone does
+    not prove unauthorized access.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Restrict trusted content and navigation and expose only the native operations required by the application.
+  - Validate messages and enforce native-side authorization; test rejection of unapproved origins and unexpected
+    operations.
+  - Minimize exported surfaces and URI grants; validate parsed schemes, hosts and paths, use verified links where
+    appropriate, and authorize each sensitive action.
+scan_config:
+  match_mode: file
+  context_type: lines
+  context_lines_before: '1'
+  context_lines_after: '8'
+  aggregate: none
+  report_format: default
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: yellow

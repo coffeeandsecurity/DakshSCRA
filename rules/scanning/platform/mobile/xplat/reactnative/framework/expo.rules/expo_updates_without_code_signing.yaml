@@ -1,0 +1,55 @@
+format: daksh-pattern-rule/v1
+id: mobile.xplat.reactnative.framework.expo.expo_updates_without_code_signing
+title: "Expo Update Signature Review"
+order: 1
+category: Framework-Specific Issues - Expo (React Native)
+detection:
+  pattern: '"expo-updates"|expoConfig(?:[^\n]*|[^;{}]*?)updates|updates\.url|runtimeVersion'
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects Expo OTA updates configuration without code signing enabled.
+  trace:
+  - Externalized mobile rule logic for Expo Updates Without Code Signing.
+  description: 'Review target: Expo Updates Without Code Signing. The code configures an additional server or update
+    authenticity mechanism. Confirm the intended trust boundary and effective verification policy. Identify the
+    untrusted input or update supplier and the precise executable, object or destination file it controls.'
+  impact: If the intended authenticity check is absent or can be bypassed, a party controlling an otherwise accepted
+    certificate or update source may impersonate a trusted endpoint or supply unauthorized code. Pinning absence
+    alone does not prove broken TLS.
+  remediation: Document the required authenticity policy, verify signatures or the intended certificate or public-key
+    pins, and test key rotation and failure behavior without disabling normal platform validation. Verify signed
+    updates and compatibility, restrict decoded types, and enforce canonical destination containment before extraction
+    or execution.
+  reviewer: Confirm expo-updates is configured with code signing for production builds. This can be confirmed as
+    an issue when the matched path is reachable and required controls are missing, weak, or inconsistent. Test tampered
+    updates, downgrade/replay, absolute paths, traversal, sibling-prefix and symlink escapes, size limits and partial
+    failure; an unrelated validation call does not protect this operation.
+  review_steps:
+  - Inspect the matched construct in its containing function or configuration and identify the security-sensitive
+    behavior under review.
+  - Verify reachable callers, external influence and effective protections, including deployment overrides and failure
+    paths.
+  - Record concrete evidence for a confirmed issue or a justified suppression; retain an unresolved outcome when
+    the required evidence is unavailable.
+  - Identify the untrusted input or update supplier and the precise executable, object or destination file it controls.
+  - Test tampered updates, downgrade/replay, absolute paths, traversal, sibling-prefix and symlink escapes, size
+    limits and partial failure; an unrelated validation call does not protect this operation.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Apply the rule-specific correction above only after verifying the affected behavior and required control.
+  - Add a regression case for the unsafe condition and a valid protected case; verify the effective behavior in
+    the relevant deployment.
+  - Verify signed updates and compatibility, restrict decoded types, and enforce canonical destination containment
+    before extraction or execution.
+scan_config:
+  match_mode: file
+  context_type: lines
+  context_lines_before: '3'
+  context_lines_after: '0'
+  aggregate: none
+  report_format: default
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: yellow

@@ -17,16 +17,40 @@ def _views(path, content):
                          lambda: source_views(path, content))
 
 
-def review_text(reference, path, content):
+def review_text(reference, path, content, project_root=None):
     """Keep unknown/custom and intentional review-surface rules unchanged."""
     ref = str(reference).replace('\\', '/')
     if not ref.startswith('logic/rdl/v1/'):
         return content
     stem = Path(ref).stem
     scope = ref[len('logic/rdl/v1/'):].rsplit('/', 1)[0]
+    from .mobile_precision import refine
+    content = refine(stem, path, content, project_root)
+    if scope == 'common/core' and stem == 'ipv4_ipv6_address':
+        from .ip_literals import address_view
+        selected, code = _views(str(path), content)
+        return address_view(path, content, selected, code)
+    if scope == 'common/core' and stem == 'todo_comments':
+        from .source_review import comments_only
+        without_comments, _ = _views(str(path), content)
+        return comments_only(content, without_comments)
     # Broad review surfaces intentionally include documentation and examples.
     if scope.startswith('filepaths') or (scope == 'common/core' and stem not in {'insecure_http_communication', 'insecure_cryptographic_algorithm'}):
         return content
+    if stem in {'fast_hashing_of_passwords', 'password_self_comparison', 'reversible_password_storage'}:
+        from .literal_review import password_security_operations
+        selected, code = _views(str(path), content)
+        return password_security_operations(selected, code, stem)
+    if scope.startswith('javascript/framework/') and stem.endswith('_hardcoded_secret_material'):
+        from .literal_review import javascript_secret_values
+        return javascript_secret_values(content)
+    if stem == 'jwt_claims_read_without_local_validation':
+        from .literal_review import jwt_claim_operations
+        selected, code = _views(str(path), content)
+        return jwt_claim_operations(selected, code)
+    if scope.startswith('dotnet/framework/') and stem.endswith('_hardcoded_secret_material'):
+        from .accuracy_review import review_operations
+        return review_operations('dotnet.' + stem, path, content)
     # Embedded secrets remain relevant even when commented out.
     if any(word in stem for word in ('secret', 'password', 'credential', 'private_key', 'access_key', 'hardcoded')):
         if scope.startswith('java/framework/') and stem.endswith('_hardcoded_secret_material'):
@@ -34,6 +58,30 @@ def review_text(reference, path, content):
             return secret_placeholders(content)
         return content
     selected, code = _views(str(path), content)
+    from .accuracy_review import review_operations
+    selected = review_operations(stem, path, selected)
+    from .security_patterns import PATTERNS, candidate_view
+    if stem in PATTERNS:
+        selected = candidate_view(stem, selected, code)
+    if scope == 'python/core' and stem in {'predictable_randomness_review', 'flask_request_data_review'}:
+        selected = code
+    if scope == 'javascript/core' and stem == 'server_side_request_forgery_ssrf':
+        from .literal_review import javascript_request_operations
+        selected = javascript_request_operations(selected, code)
+    if scope == 'java/core' and stem == 'sensitive_values_in_log_output':
+        from .literal_review import java_sensitive_logs
+        selected = java_sensitive_logs(selected, code)
+    if scope == 'java/core' and stem in {'disabled_csrf_protection', 'insecure_package_java_util_random'}:
+        from .literal_review import java_security_operations
+        selected = java_security_operations(selected, code, stem)
+    if scope == 'java/core' and stem == 'jsp_unescaped_expression_output':
+        from .literal_review import jsp_output_expressions
+        selected = jsp_output_expressions(path, content)
+    if scope in {'c/core', 'cpp/core'} and stem in {'access_to_freed_memory', 'access_to_freed_memory_2', 'memory_copy_size_and_overlap_review'}:
+        selected = code
+    if scope in {'c/core', 'cpp/core'} and stem in {'potential_format_string_attack', 'potential_format_string_attack_printf_fprintf_etc', 'format_string_misuse_in_c_streams'}:
+        from .native_call_review import dynamic_format_calls
+        selected = dynamic_format_calls(selected, code)
     if scope == 'java/core' and stem == 'file_inclusion_vulnerability':
         from .literal_review import java_fixed_destinations
         selected = java_fixed_destinations(selected)

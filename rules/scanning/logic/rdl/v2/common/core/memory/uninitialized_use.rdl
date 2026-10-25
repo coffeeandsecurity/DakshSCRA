@@ -4,7 +4,7 @@ IN FUNCTION
 LET value BE VARIABLE MATCHES memory.uninitialized
 WHEN EXISTS CALL MATCHES memory.use AS use
 REQUIRE use READS value AND NOT initialized value
-REPORT "use of uninitialized memory"
+REPORT "Use of Uninitialized Memory"
 SEVERITY HIGH
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

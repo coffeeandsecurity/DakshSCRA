@@ -5,7 +5,7 @@ LET input BE VARIABLE MATCHES input.untrusted
 LET sink BE CALL MATCHES output.html
 WHEN input FLOWS TO sink
 REQUIRE NOT sanitizer.contextual-output-encoding input
-REPORT "cross site scripting"
+REPORT "HTML Output Encoding Review"
 SEVERITY HIGH
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

@@ -1,0 +1,41 @@
+format: daksh-pattern-rule/v1
+id: terraform.core.vpc_flow_logs_disabled
+title: VPC Flow Logs Disabled
+order: 9
+category: Logging and Monitoring
+detection:
+  pattern: resource\s+"aws_vpc"[^}]*\}(?![^}]*aws_flow_log)
+  conditions:
+  - WHEN PRESENT resource\s+"aws_vpc"\b
+  - WHEN EXPR MISSING:aws_flow_log|enable_flow_logs|flow_log
+reporting:
+  type: area_of_interest
+  reason: Detects VPC resources without associated VPC Flow Logs configuration.
+  trace:
+  - Externalized rule logic for VPC Flow Logs Disabled.
+  description: Network flow logging is disabled in the checked configuration. Resolve any equivalent telemetry and
+    coverage.
+  impact: Missing traffic evidence may delay detection and limit investigation of unauthorized connections or data
+    exfiltration; disabling this log does not itself grant network access.
+  remediation: Enable appropriately scoped flow telemetry or equivalent monitoring, protect log access and retention,
+    and test alerts for relevant anomalous traffic.
+  reviewer: Confirm VPC flow logging is enabled and logs are being captured. This can be confirmed as an issue when
+    the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the matched construct in its containing function or configuration and identify the security-sensitive
+    behavior under review.
+  - Verify reachable callers, external influence and effective protections, including deployment overrides and failure
+    paths.
+  - Record concrete evidence for a confirmed issue or a justified suppression; retain an unresolved outcome when
+    the required evidence is unavailable.
+  recommendations:
+  - Apply the rule-specific correction above only after verifying the affected behavior and required control.
+  - Add a regression case for the unsafe condition and a valid protected case; verify the effective behavior in
+    the relevant deployment.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

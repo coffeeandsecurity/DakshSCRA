@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.xplat.reactnative.framework.expo.review_reactnative_expo_oauth_pkce_disabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\busePKCE\\s*:\\s*false\\b" "im"
+REPORT "Native OAuth Proof-Key Protection Disabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,38 @@
+format: daksh-pattern-rule/v1
+id: java.core.sensitive_values_in_log_output
+title: "Sensitive Data Logging Review"
+order: 31
+category: Information Disclosure
+detection:
+  pattern: \b(?:System\s*\.\s*(?:out|err)\s*\.\s*(?:print|println|printf)|(?:log|logger)\s*\.\s*(?:trace|debug|info|warn|error|fatal))\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Credential-valued identifiers are passed to a logging sink; verify value semantics, redaction and recipients.
+  trace:
+  - Source review scopes identifiers to the balanced arguments of each logging call.
+  description: A console or logger call emits an identifier associated with credential or authentication material.
+    Literal message labels alone are excluded. Resolve the value and log audience.
+  impact: Log readers may recover passwords, active authentication tokens or one-time codes when those values are
+    emitted without redaction. A variable name does not prove the value is an active credential.
+  remediation: Remove credential values from diagnostics. Log event identifiers and non-sensitive metadata, and
+    redact sensitive fields before they reach a logging sink.
+  reviewer: Check the emitted value, masking or hashing, production reachability, retention and access controls.
+    Custom logging wrappers and unresolved argument expressions require separate review.
+  review_steps:
+  - Determine whether the matched path logs sensitive data or exposes diagnostics to an untrusted recipient.
+  - Trace the actual values, redaction and error handling, including production configuration and log retention
+    or access.
+  - Distinguish internal operational diagnostics from client-visible output and record the reachable disclosure
+    path without reproducing secrets.
+  recommendations:
+  - Log only the operational details needed, redact sensitive values, and return limited error messages to clients.
+  - Restrict diagnostic and log access and test production error responses and representative log output.
+scan_config:
+  match_mode: file
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

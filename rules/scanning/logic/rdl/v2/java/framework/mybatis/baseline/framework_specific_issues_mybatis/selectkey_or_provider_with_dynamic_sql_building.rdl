@@ -3,7 +3,7 @@ RULE baseline.java.framework.mybatis.selectkey_or_provider_with_dynamic_sql_buil
 IN FILE
 WHEN TEXT_MATCHES "@SelectProvider\\s*\\(|@UpdateProvider\\s*\\(|@InsertProvider\\s*\\(|@DeleteProvider\\s*\\(" "im"
 WHEN TEXT_MISSING "escapeSQL|sanitize|allowlist|validateColumn" "im"
-REPORT "selectKey or Provider with Dynamic SQL Building"
+REPORT "Dynamic SQL Provider Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

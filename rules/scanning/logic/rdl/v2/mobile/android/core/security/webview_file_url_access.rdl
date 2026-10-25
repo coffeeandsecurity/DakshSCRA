@@ -2,7 +2,7 @@ VERSION 2
 RULE android.webview-file-url-access VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:setAllowFileAccessFromFileURLs\\s*\\(\\s*true\\s*\\)|allowFileAccessFromFileURLs\\s*=\\s*true\\b)" ""
-REPORT "WebView File-Origin Access Enabled"
+REPORT "WebView File Access Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

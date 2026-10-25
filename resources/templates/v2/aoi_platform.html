@@ -31,7 +31,7 @@
                 <div class="finding-header">
                     <div class="finding-id">{{ entry.rulecount }}</div>
                     <div class="finding-title">{{ entry.keyword }}</div>
-                    <div class="pill">Confidence {{ entry.confidence_score }}%{% if entry.confidence_label %} ({{ entry.confidence_label }}){% endif %}</div>
+                    <div class="pill">Confidence {{ entry.confidence_score }}/100{% if entry.confidence_label %} ({{ entry.confidence_label }}){% endif %}</div>
                 </div>
             </summary>
             <div class="aoi-body">
@@ -68,12 +68,12 @@
 
                 {% if entry.dev_note %}
                 <div class="note-block">
-                    <span class="note-title">Recommended correction:</span> {{ entry.dev_note }}
+                    <span class="note-title">Recommended correction:</span><div class="pattern-report-guidance">{{ entry.dev_note|guidance }}</div>
                 </div>
                 {% endif %}
                 {% if entry.rev_note %}
                 <div class="note-block">
-                    <span class="note-title">Reviewer note:</span> {{ entry.rev_note }}
+                    <span class="note-title">Review guidance:</span><div class="pattern-report-guidance">{{ entry.rev_note|guidance }}</div>
                 </div>
                 {% endif %}
                 {% if entry.logic_engine or entry.logic_reason or entry.logic_trace %}

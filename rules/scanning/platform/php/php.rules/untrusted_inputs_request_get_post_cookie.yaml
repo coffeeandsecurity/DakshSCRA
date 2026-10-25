@@ -1,0 +1,37 @@
+format: daksh-pattern-rule/v1
+id: php.core.untrusted_inputs_request_get_post_cookie
+title: "Untrusted Input Entry Point"
+order: 1
+category: Untrusted Input Handling or Injection Flaws
+detection:
+  pattern: \$_(REQUEST|GET|POST|COOKIE)
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects the use of common PHP superglobals that can introduce untrusted input into the code.
+  trace:
+  - 'Externalized rule logic for Untrusted Inputs: $_REQUEST, $_GET, $_POST, $_COOKIE.'
+  description: The code reads PHP request parameters or cookies. These are input entry points, not vulnerabilities
+    by themselves.
+  impact: If caller-controlled values reach a sensitive operation without suitable constraints, they may alter queries,
+    filesystem paths, output or application state. The actual data flow and trust boundary must be established.
+  remediation: 'Validate expected types, lengths and allowed values. Apply destination-specific protection separately:
+    SQL bindings, context-aware output encoding, path containment or a network destination policy.'
+  reviewer: Follow the relevant $_GET, $_POST, $_REQUEST or $_COOKIE value to its use, including included files
+    and stored values. Check authorization at the destination. Missing handlers or helper source leave the trace
+    unresolved rather than establishing safety or exploitation.
+  review_steps:
+  - Identify the specific external parameter.
+  - Follow assignments and included helpers to its destination.
+  - Check the protection at that use and record unresolved calls or missing source.
+  recommendations:
+  - Keep request validation separate from destination-specific controls.
+  - Treat cookies as externally controlled even when the normal UI generates them.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

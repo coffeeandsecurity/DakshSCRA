@@ -2,7 +2,7 @@ VERSION 2
 RULE ios.document-browser-exposure VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "<key>LSSupportsOpeningDocumentsInPlace</key>" ""
-REPORT "Documents Exposed To Other Applications"
+REPORT "Application File Sharing Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

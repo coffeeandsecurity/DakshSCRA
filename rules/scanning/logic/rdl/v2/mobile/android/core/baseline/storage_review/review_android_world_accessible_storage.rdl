@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.android.core.review_android_world_accessible_storage VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:Context\\s*\\.\\s*)?MODE_WORLD_(?:READABLE|WRITEABLE)\\b" "im"
+REPORT "World-Accessible Android Storage"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

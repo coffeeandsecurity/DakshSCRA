@@ -3,7 +3,7 @@ RULE baseline.javascript.framework.electron.contextisolation_disabled VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "contextIsolation\\s*:\\s*false" "im"
 WHEN (TEXT_MATCHES "contextIsolation:\\s*false" "im" AND TEXT_MISSING "test|development" "im")
-REPORT "contextIsolation Disabled"
+REPORT "Renderer Context Isolation Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

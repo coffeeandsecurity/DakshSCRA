@@ -1,0 +1,39 @@
+format: daksh-pattern-rule/v1
+id: mobile.ios.core.review_ios_tls_chain_validation_disabled
+title: "TLS Certificate Validation Review"
+order: 56
+category: NETWORK Review
+detection:
+  pattern: \bkCFStreamSSLValidatesCertificateChain\s*(?:\]\s*=|:|=)\s*(?:false\b|kCFBooleanFalse\b|@NO\b)
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: A stream SSL configuration explicitly disables certificate-chain validation. Confirm the setting
+    is applied to a network connection and whether equivalent trust validation exists. Resolve the particular connection,
+    host and client configuration selected by the shipped build.
+  impact: A network attacker may use an untrusted certificate to intercept or modify traffic when the disabled platform
+    check is not replaced with effective validation.
+  remediation: Use platform certificate-chain and hostname validation. Keep development trust exceptions isolated
+    from distributed releases. Use platform trust and hostname validation and encrypted transport. Remove permissive
+    callbacks and narrow necessary exceptions to the intended hosts.
+  reviewer: Test invalid chains, wrong hostnames, redirects and build-specific exceptions; an unrelated trusted
+    client or HTTPS URL does not protect this connection. Missing pinning alone is not proof of insecurity.
+  review_steps:
+  - Trace the matched candidate to its actual value, caller or resource.
+  - Test invalid chains, wrong hostnames, redirects and build-specific exceptions; an unrelated trusted client or
+    HTTPS URL does not protect this connection. Missing pinning alone is not proof of insecurity.
+  - Resolve release configuration and runtime assumptions before confirming an issue.
+  recommendations:
+  - Use platform certificate-chain and hostname validation. Keep development trust exceptions isolated from distributed
+    releases. Use platform trust and hostname validation and encrypted transport. Remove permissive callbacks and
+    narrow necessary exceptions to the intended hosts.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

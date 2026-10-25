@@ -4,7 +4,7 @@ IN FUNCTION
 LET index BE EXPRESSION MATCHES numeric.signed
 WHEN converted.to_unsigned index
 REQUIRE index FLOWS TO memory.index AND NOT bounds.proven index
-REPORT "signedness conversion permits out of bounds access"
+REPORT "Signedness Conversion Review"
 SEVERITY HIGH
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

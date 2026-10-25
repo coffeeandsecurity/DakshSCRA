@@ -2,7 +2,7 @@ VERSION 2
 RULE android.unsafe-fileprovider-root VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "<(?:root-path|external-path)\\b[^>]{0,300}\\bpath\\s*=\\s*[\"\\x27](?:/|\\.|\\./)[\"\\x27]" ""
-REPORT "FileProvider Exposes Broad Filesystem Root"
+REPORT "FileProvider Root Scope Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

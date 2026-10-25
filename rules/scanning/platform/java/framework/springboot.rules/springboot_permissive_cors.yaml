@@ -1,0 +1,39 @@
+format: daksh-pattern-rule/v1
+id: java.framework.springboot.springboot_permissive_cors
+title: "Cross-Origin Access Policy Review"
+order: 3
+category: Framework-Specific Security
+detection:
+  pattern: '@CrossOrigin\(.*\*|allowedOrigins\s*=\s*\{?\s*"\*"'
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects wildcard CORS in controller/global config.
+  trace:
+  - Externalized rule logic for Springboot Permissive CORS.
+  description: A browser-origin or navigation policy permits a broad set of external origins or destinations. Identify
+    the resources and privileged interfaces covered by the effective policy.
+  impact: An untrusted site may read protected responses or invoke privileged interfaces if a permissive policy
+    admits it and independent authentication or authorization does not prevent the operation.
+  remediation: Allow only required trusted origins and destinations. Validate origin and message schemas, handle
+    credentials deliberately, and enforce access controls independently of the origin policy.
+  reviewer: Validate CORS settings across all controllers and profiles. This can be confirmed as an issue when the
+    matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the effective origin policy together with credentials, allowed methods and headers, including environment
+    overrides.
+  - Determine which sensitive responses are exposed to browsers and whether origins are reflected or broadly trusted.
+  - Test preflight and actual responses using an unapproved origin; a broad policy alone does not prove access to
+    protected data.
+  recommendations:
+  - Allow only the origins and browser capabilities required by the application; avoid reflecting arbitrary origins.
+  - Test both preflight and actual responses and ensure authentication and authorization remain enforced independently
+    of CORS.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

@@ -3,7 +3,7 @@ RULE baseline.cpp.core.information_leakage_across_trust_boundaries_security_risk
 IN FILE
 WHEN TEXT_MATCHES "\\bclass\\s+\\w+\\s*\\(" "im"
 WHEN (TEXT_MISSING "memset\\s*\\(|sanitize|redact|encrypt|mask" "im" AND TEXT_MISSING "test|example" "im")
-REPORT "Information Leakage Across Trust Boundaries: Security Risk"
+REPORT "Trust Boundary Data Exposure Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

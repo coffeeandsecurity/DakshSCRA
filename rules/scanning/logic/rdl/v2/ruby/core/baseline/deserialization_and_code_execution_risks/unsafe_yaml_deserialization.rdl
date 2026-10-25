@@ -3,7 +3,7 @@ RULE baseline.ruby.core.unsafe_yaml_deserialization VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\bYAML\\.load\\s*\\(" "im"
 WHEN TEXT_MISSING "YAML\\.safe_load|Psych\\.safe_load|permitted_classes|allowed_classes" "im"
-REPORT "Unsafe YAML Deserialization"
+REPORT "Object Deserialization Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

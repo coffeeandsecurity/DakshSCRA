@@ -140,3 +140,8 @@
 
 {% include "flow_graph.css" %}
 @media print { .report-flow-shell .flow-view-heading,[data-flow-graph] { display:none!important; } [data-flow-text] { display:block!important; } }
+
+{% include "program_graph.css" %}
+.report-program-svg svg { display:block; width:100%; height:auto; max-width:100%; }
+.report-program-view pre { white-space:pre-wrap; overflow-wrap:anywhere; }
+@media print { [data-program-explorer],[data-program-root] { display:none !important; } .report-program-view { display:block; } .report-program-view > summary { display:block; } }

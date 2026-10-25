@@ -3,7 +3,7 @@ RULE baseline.java.framework.mybatis.string_substitution_in_mybatis_mapper_synta
 IN FILE
 WHEN TEXT_MATCHES "\\$\\{(?!__frch_|index|item|foreach)[^}]+\\}" "im"
 WHEN (TEXT_MISSING "#\\{|@Param|parameterType" "im" AND TEXT_MISSING "validate|sanitize" "im")
-REPORT "String Substitution in MyBatis Mapper (${} Syntax)"
+REPORT "SQL Template Substitution Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

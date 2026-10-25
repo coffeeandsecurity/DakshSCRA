@@ -4,7 +4,7 @@ IN PROJECT
 LET transaction BE RESOURCE MATCHES business.transaction
 WHEN transaction.commits transaction
 REQUIRE NOT invariant.preserved transaction
-REPORT "transaction violates a business invariant"
+REPORT "Transaction Violates A Business Invariant"
 SEVERITY HIGH
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

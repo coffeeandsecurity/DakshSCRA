@@ -1,10 +1,13 @@
+import { formatDateTime } from '../lib/datetime'
 import { useEffect, useState } from 'react'
 import { reportProgress } from '../lib/reportProgress'
 import { generateReport, listReports, reportDownloadUrl } from '../api'
+import { AudienceSelector, AUDIENCE_LABELS } from './ReportAudience'
 
 const scopes = { full: 'Full scan', findings: 'Areas of interest', analysis: 'Advanced analysis', suppressed: 'Suppressed findings' }
 
-export default function ReportGenerator({ runUuid }) {
+export default function ReportGenerator({ runUuid, defaultAudience = 'both' }) {
+  const [audience, setAudience] = useState(defaultAudience)
   const [scope, setScope] = useState('full')
   const [format, setFormat] = useState('html')
   const [reports, setReports] = useState([])
@@ -31,7 +34,7 @@ export default function ReportGenerator({ runUuid }) {
   async function generate() {
     setBusy(true); setError('')
     try {
-      const item = await generateReport(runUuid, { scope, format })
+      const item = await generateReport(runUuid, { scope, format, report_audience: audience })
       setReports(items => [item, ...items.filter(existing => existing.id !== item.id)])
       setVersion(value => value + 1)
     } catch (err) { setError(err.message) }
@@ -40,6 +43,7 @@ export default function ReportGenerator({ runUuid }) {
   return <section className="report-generator" aria-label="Generate reports">
     <h3>Generate a report</h3>
     <p>Create a report from this scan’s saved results. Reports are generated only when requested.</p>
+    <AudienceSelector value={audience} onChange={setAudience} disabled={busy} />
     <div className="report-controls">
       <label>Report type<select aria-label="Report type" value={scope} onChange={event => setScope(event.target.value)}>{Object.entries(scopes).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
       <label>Format<select aria-label="Format" value={format} onChange={event => setFormat(event.target.value)}><option value="html">HTML package (.zip)</option><option value="pdf">PDF</option><option value="docx">Word (.docx)</option><option value="json">JSON</option></select></label>
@@ -60,8 +64,8 @@ function ReportJob({ item, runUuid }) {
   const stage = stages.indexOf(status.phase)
   return <li className={`report-job report-job--${item.status}`}>
     <div className="report-job-content">
-      <strong>{scopes[item.scope]} · {item.format.toUpperCase()}</strong>
-      <small>{new Date(item.created_at).toLocaleString()}{item.size != null ? ` · ${(item.size / 1024).toFixed(1)} KB` : ''}</small>
+      <strong>{scopes[item.scope]} · {item.format.toUpperCase()} · {AUDIENCE_LABELS[item.report_audience || 'both']}</strong>
+      <small>{formatDateTime(item.created_at)}{item.size != null ? ` · ${(item.size / 1024).toFixed(1)} KB` : ''}</small>
       <p className="report-job-status" role="status"><span className={status.active ? 'report-spinner' : 'report-status-dot'} aria-hidden="true"/>{status.message}</p>
       {status.active && <>
         <div className={`report-progress ${status.counted ? '' : 'report-progress--indeterminate'}`} role="progressbar" aria-label="Report generation" aria-valuemin={status.counted ? 0 : undefined} aria-valuemax={status.counted ? status.total : undefined} aria-valuenow={status.counted ? status.completed : undefined} aria-valuetext={status.message}>

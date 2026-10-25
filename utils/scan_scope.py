@@ -6,7 +6,7 @@ from pathlib import Path
 from core.scan_catalog import CHECK_IDS, check_class, registered_classes
 
 OPTION_FIELDS = ('exclude_checks', 'exclude_paths', 'exclude_types', 'exclude_keywords',
-                 'recon_strict', 'baseline_mode', 'baseline_file', 'review_config', 'state_mode')
+                 'recon_strict', 'baseline_mode', 'baseline_file', 'review_config', 'state_mode', 'estimate_assumptions', 'rule_mode', 'report_audience')
 
 
 class ScanScope:

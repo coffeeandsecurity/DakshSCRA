@@ -1,3 +1,5 @@
+import DeleteButton from './DeleteButton'
+import { formatDateTime } from '../lib/datetime'
 import { formatDuration as niceDuration } from '../lib/duration'
 import { useState } from 'react'
 import ScanDeleteActions from './ScanDeleteActions'
@@ -24,12 +26,12 @@ function ActivityChart({ data = [] }) {
   return (
     <div className="activity-chart">
       {data.map((d) => (
-        <div key={d.date} className="bar-wrap" title={`${d.date}: ${d.count} scans`}>
+        <div key={d.date} className="bar-wrap" title={`${formatDateTime(d.date, true)}: ${d.count} scans`}>
           <div
             className="bar-fill"
             style={{ height: `${Math.max(4, (d.count / max) * 68)}px` }}
           />
-          <span className="bar-label">{d.date.slice(5)}</span>
+          <span className="bar-label">{formatDateTime(d.date, true)}</span>
         </div>
       ))}
     </div>
@@ -128,14 +130,15 @@ function StatusDonut({ counts = {} }) {
 function ProjectsTable({ projects = [], onNavigate, onOpenProject, onDeleteProject }) {
   const [confirming, setConfirming] = useState(null)
   if (projects.length === 0) return null
+  const preview = [...projects].sort((a, b) => (Date.parse(b.latest_scan_at) || 0) - (Date.parse(a.latest_scan_at) || 0)).slice(0, 5)
   return (
     <div className="card">
       <div className="card-header">
         <div>
           <div className="card-title">Projects</div>
-          <div className="card-subtitle">{projects.length} project{projects.length !== 1 ? 's' : ''}</div>
+          <div className="card-subtitle">Reusable scan setups · Showing {preview.length} of {projects.length} projects</div>
         </div>
-        <button className="btn btn-ghost btn-sm" onClick={() => onNavigate('projects')}>Manage →</button>
+        <button className="btn btn-ghost btn-sm" onClick={() => onNavigate('projects')}>View all projects →</button>
       </div>
       <div className="card-body p0">
         <div className="table-wrap">
@@ -147,11 +150,11 @@ function ProjectsTable({ projects = [], onNavigate, onOpenProject, onDeleteProje
                 <th>Rules</th>
                 <th>Scans</th>
                 <th>Last Scan</th>
-                <th style={{ width: 40 }}></th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              {projects.map((p) => (
+              {preview.map((p) => (
                 <tr key={p.project_key}>
                   <td style={{ fontWeight: 600, color: 'var(--text)', cursor: 'pointer' }}
                     onClick={() => onOpenProject(p)}>
@@ -174,24 +177,16 @@ function ProjectsTable({ projects = [], onNavigate, onOpenProject, onDeleteProje
                   </td>
                   <td><span className="code-inline">{p.rules || '-'}</span></td>
                   <td className="text-muted">{p.total_scans}</td>
-                  <td className="text-muted">{p.latest_scan_at ? new Date(p.latest_scan_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '-'}</td>
+                  <td className="text-muted">{p.latest_scan_at ? formatDateTime(p.latest_scan_at, true) : '-'}</td>
                   <td>
                     {confirming === p.project_key ? (
                       <div className="dash-del-confirm">
                         <span className="project-delete-confirm-text">Delete project data? History records remain.</span>
-                        <button className="btn btn-danger btn-xs" onClick={() => { onDeleteProject(p.project_key); setConfirming(null) }}>Delete</button>
-                        <button className="btn btn-ghost btn-xs" onClick={() => setConfirming(null)}>Cancel</button>
+                        <DeleteButton onClick={() => { onDeleteProject(p.project_key); setConfirming(null) }}>Delete project</DeleteButton>
+                        <button className="btn btn-secondary" onClick={() => setConfirming(null)}>Cancel</button>
                       </div>
                     ) : (
-                      <button
-                        className="btn-icon dash-del-btn"
-                        title="Delete project"
-                        onClick={() => setConfirming(p.project_key)}
-                      >
-                        <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                      </button>
+                      <DeleteButton title="Delete project" onClick={() => setConfirming(p.project_key)}>Delete project</DeleteButton>
                     )}
                   </td>
                 </tr>
@@ -206,10 +201,7 @@ function ProjectsTable({ projects = [], onNavigate, onOpenProject, onDeleteProje
 
 
 
-function niceDate(iso) {
-  if (!iso) return '-'
-  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-}
+const niceDate = formatDateTime
 
 /* ─── localStorage keys ──────────────────────────────────────── */
 const LS_UPDATE   = 'daksh_update_pref'     // { dontShowTag: string }
@@ -266,13 +258,24 @@ function VersionNotification({ versionInfo, latestRelease, githubChecked }) {
     const pref = lsGet(LS_UPDATE)
     if (pref?.dontShowTag === latestNumericKey) return null
 
+    // v1.0 is the first release under the Daksh SCA name. Anyone still on a 0.x
+    // release sees the rename notice instead of the generic update text.
+    const isRenameRelease = numericVer(latest)[0] >= 1 && numericVer(current)[0] < 1
+
     return (
       <div className="update-banner update-banner-new">
         <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" className="update-banner-icon">
           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
         </svg>
         <span className="update-banner-text">
-          New version available - <strong>{latestRelease.tag}</strong>
+          {isRenameRelease ? (
+            <>
+              Daksh SCRA is now called <strong>Daksh SCA</strong>. The first release under the new name,
+              <strong> {latestRelease.tag}</strong>, is available to download.
+            </>
+          ) : (
+            <>New version available - <strong>{latestRelease.tag}</strong></>
+          )}
           <span className="update-banner-sub"> (you are on v{current})</span>
         </span>
         <a href={latestRelease.url} target="_blank" rel="noreferrer" className="btn btn-sm update-banner-btn">
@@ -331,10 +334,10 @@ export default function Dashboard({ metrics, projects = [], runs = [], onNavigat
     failed: metrics?.failed_scans || 0,
   }
 
-  const recentRuns = runs.slice(0, 6)
+  const recentRuns = [...runs].sort((a, b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0)).slice(0, 5)
 
   return (
-    <div>
+    <div className="dashboard-sections">
       <VersionNotification
         versionInfo={versionInfo}
         latestRelease={latestRelease}
@@ -419,13 +422,10 @@ export default function Dashboard({ metrics, projects = [], runs = [], onNavigat
         </div>
       </div>
 
-      {/* Projects */}
-      <ProjectsTable projects={projects} onNavigate={onNavigate} onOpenProject={onOpenProject} onDeleteProject={onDeleteProject} />
-
       {/* Recent Scans */}
       <div className="card">
         <div className="card-header">
-          <div className="card-title">Recent Scans</div>
+          <div><div className="card-title">Recent Scans</div><div className="card-subtitle">Latest scan activity · Showing {recentRuns.length} of {runs.length} scans</div></div>
           <button
             className="btn btn-ghost btn-sm"
             onClick={() => onNavigate('scans')}
@@ -490,6 +490,9 @@ export default function Dashboard({ metrics, projects = [], runs = [], onNavigat
           )}
         </div>
       </div>
+      {/* Projects */}
+      <ProjectsTable projects={projects} onNavigate={onNavigate} onOpenProject={onOpenProject} onDeleteProject={onDeleteProject} />
+
     </div>
   )
 }

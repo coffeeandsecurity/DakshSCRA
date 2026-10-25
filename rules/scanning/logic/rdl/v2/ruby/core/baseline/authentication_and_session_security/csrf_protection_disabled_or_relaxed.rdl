@@ -3,7 +3,7 @@ RULE baseline.ruby.core.csrf_protection_disabled_or_relaxed VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(?i)\\b(?:skip_before_action\\s*:verify_authenticity_token|protect_from_forgery\\s+with:\\s*:null_session|protect_from_forgery\\s+except:)" "im"
 WHEN TEXT_MISSING "before_action\\s*:verify_authenticity_token|api_key|JWT|Bearer" "im"
-REPORT "CSRF Protection Disabled or Relaxed"
+REPORT "CSRF Protection Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

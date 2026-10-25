@@ -1,0 +1,47 @@
+format: daksh-pattern-rule/v1
+id: javascript.core.handlebars_unescaped_string
+title: "HTML Output Encoding Review"
+order: 4
+category: Untrusted Input in Web/API Response
+detection:
+  pattern: \{\{\{.*?\}\}\}
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:(sanitize|escape|xss|safeHtml)
+reporting:
+  type: area_of_interest
+  reason: Detects instances of unescaped Handlebars strings in the code, which can indicate a potential security
+    vulnerability.
+  trace:
+  - Externalized rule logic for Handlebars Unescaped String.
+  summary: Detects unescaped Handlebars strings in code.
+  description: Application data is inserted into an HTML or script rendering context, or marked safe in a way that
+    may bypass automatic encoding.
+  impact: If attacker-controlled content reaches an executable browser context, it may run under the application’s
+    origin, read accessible session data, or perform actions with the victim’s permissions.
+  remediation: Use automatic context-aware output encoding and data-only DOM APIs. Sanitize deliberately accepted
+    rich HTML with a maintained allowlist sanitizer and avoid marking untrusted content as safe.
+  reviewer: Verify that proper input sanitization techniques are applied when using Handlebars strings. Ensure that
+    developers use Handlebars' built-in escaping mechanisms or equivalent custom sanitization methods to mitigate
+    the risk of XSS vulnerabilities. Also assess the implementation of output encoding and confirm that user input
+    is properly sanitized before rendering it in the application. This can be confirmed as an issue when the matched
+    path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify who can supply the matched input, including stored values and upstream services; record its type, size
+    limits and trust boundary.
+  - Trace the value through transformations to each sensitive operation. Check the protection at that destination
+    and resource-level authorization.
+  - Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side
+    check alone is insufficient evidence.
+  recommendations:
+  - Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve
+    legitimate characters and protect each destination separately.
+  - Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations
+    where applicable. Test rejected input and unauthorized access.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

@@ -1,0 +1,8 @@
+VERSION 2
+RULE nativescript.remote-modules-enabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\ballowRemoteModules\\s*:\\s*true\\b" ""
+REPORT "Remote Native Module Policy Review"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

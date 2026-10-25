@@ -1,0 +1,40 @@
+format: daksh-pattern-rule/v1
+id: php.core.rdl_conditional_sql_query_with_untrusted_input_and_missing_parameterization
+title: "SQL Injection Review"
+order: 22
+category: Database Queries
+detection:
+  pattern: (?i)\b(?:mysql_query|mysqli_query|pg_query|sqlite_query|->query)\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:\$_(GET|POST|REQUEST|COOKIE)|\.\s*\$|sprintf\s*\(|format\s*\(
+reporting:
+  type: area_of_interest
+  reason: Flags SQL query execution in files that also process untrusted PHP input without evidence of parameterized
+    query APIs.
+  trace:
+  - Externalized rule logic for SQL Query with Untrusted Input and Missing Parameterization.
+  description: A PHP database operation and input-related markers occur in the checked context. This pattern alone
+    does not prove that external values reach SQL syntax.
+  impact: If externally controlled values enter query syntax, an attacker may read, change, or delete records or
+    bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound
+    parameters do not establish this condition.
+  remediation: Bind values through the exact PDO or mysqli statement that executes the query. Use fixed mappings
+    for identifiers and sort directions. Follow helpers before concluding that parameter binding is absent.
+  reviewer: Trace final statement construction, external fragments and execution across included helpers. Check
+    placeholders, bindings, caller authorization and database permissions. Missing source-to-query links must remain
+    unresolved.
+  review_steps:
+  - Locate the executing statement and follow query construction.
+  - Check bindings on that statement and fixed mappings for identifiers.
+  - Record the reachable caller, database permissions and unresolved trace links.
+  recommendations:
+  - Bind data with the executing driver or ORM API.
+  - Allowlist dynamic SQL structure and verify record-level access.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

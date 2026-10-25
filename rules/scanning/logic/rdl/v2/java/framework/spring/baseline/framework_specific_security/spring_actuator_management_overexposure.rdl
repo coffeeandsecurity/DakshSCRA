@@ -3,7 +3,7 @@ RULE baseline.java.framework.spring.spring_actuator_management_overexposure VERS
 IN FILE
 WHEN TEXT_MATCHES "management\\.endpoints\\.web\\.exposure\\.include\\s*=\\s*\\*|/actuator" "im"
 WHEN TEXT_MISSING "management\\.endpoint\\..*\\.enabled\\s*=\\s*false|spring\\.security|@PreAuthorize|hasRole|authentication" "im"
-REPORT "Spring Actuator/Management Overexposure"
+REPORT "Management Endpoint Exposure Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

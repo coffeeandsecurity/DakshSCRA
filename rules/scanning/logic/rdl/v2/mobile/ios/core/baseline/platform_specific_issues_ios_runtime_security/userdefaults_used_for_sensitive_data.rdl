@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.mobile.ios.core.userdefaults_used_for_sensitive_data VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:UserDefaults\\.standard|NSUserDefaults\\s+standardUserDefaults)" "im"
-WHEN (TEXT_MATCHES "UserDefaults.*(?:password|token|secret|key|credential|auth)|set\\s*\\(\\s*\\w+\\s*,\\s*forKey:\\s*\"(?:password|token|secret|key|auth)" "im" AND TEXT_MISSING "Keychain|CryptoKit|encrypt|SecItem" "im")
-REPORT "UserDefaults Used for Sensitive Data"
+REPORT "Preferences Data Storage Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -42,11 +42,18 @@ def _module_paths(origin, specifier, paths):
 def _import_declarations(origin, text, paths, language):
     declarations = []
     if language == 'javascript':
-        for match in re.finditer(r'\bimport\s+(.+?)\s+from\s*[\'"]([^\'"]+)[\'"]', text):
+        from .source_review import source_views
+        _, code = source_views(origin, text)
+        clause = r'(?:[A-Za-z_$][\w$]*\s*,\s*)?(?:\{[^}]*\}|\*\s+as\s+[A-Za-z_$][\w$]*|[A-Za-z_$][\w$]*)'
+        for match in re.finditer(r'\bimport\s+('+clause+r')\s+from\s*[\'"]([^\'"]+)[\'"]', text):
+            if code[match.start():match.start()+6] != 'import':
+                continue
             clause, specifier = match.groups()
             if specifier.startswith('.'):
                 declarations.append(('import', clause, _module_paths(origin, specifier, paths)))
         for match in re.finditer(r'(?:const|let|var)\s+(\{[^}]+\}|\w+)\s*=\s*require\s*\(\s*[\'"]([^\'"]+)[\'"]', text):
+            if not code[match.start():match.start()+1].strip():
+                continue
             clause, specifier = match.groups()
             if specifier.startswith('.'):
                 declarations.append(('require', clause, _module_paths(origin, specifier, paths)))
@@ -70,9 +77,11 @@ def imported_target(origin, text, name, paths, language, declaration_cache=None)
         declarations = declaration_cache[origin]
     for kind, clause, targets in declarations:
         if kind == 'import':
-            if clause.strip()==head:
+            default = re.match(r'\s*([A-Za-z_$][\w$]*)\s*(?:,|$)', clause)
+            if default and default.group(1) == head:
                 return targets, tail if len(parts)>1 else '<default>'
-            for item in clause.strip('{} ').split(','):
+            named = re.search(r'\{([^}]*)\}', clause, re.S)
+            for item in named.group(1).split(',') if named else ():
                 item = item.strip()
                 names = re.split(r'\s+as\s+', item)
                 if names[-1].strip()==head:
@@ -111,10 +120,10 @@ def visible(function, call, contents, language, explicit=None, reference_cache=N
         implements = re.search(r'\bimplements\s+(.+)', headers.get(owner, ''))
         if not implements or not re.search(r'\b'+re.escape(typed)+r'\b', implements[1]):
             return False
-    if target == origin:
-        return True
     if explicit is not None:
         return target in explicit[0]
+    if target == origin:
+        return True
     text, target_text = contents[str(origin)], contents[str(target)]
     if language in {'java','kotlin','csharp','vb','groovy'}:
         pattern = r'\b(?:package|namespace|Namespace)\s+([\w.]+)'

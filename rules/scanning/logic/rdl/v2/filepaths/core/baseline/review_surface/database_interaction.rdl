@@ -3,7 +3,7 @@ RULE baseline.filepaths.core.database_interaction VERSION 1
 IN PATH
 WHEN TEXT_MATCHES "(?-i:(?:(?<![A-Za-z])(?i:database|db|sql)(?=[A-Z_. /\\\\-]|ite|$)|(?<=[a-z])(?:Database|DB|Sql|SQL)(?=[A-Z_. /\\\\-]|ite|$)))" "im"
 WHEN TEXT_MISSING "(?i)(/docs?/|/examples?/|/samples?/|/tests?/)" "im"
-REPORT "Database Interaction"
+REPORT "Database Access Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

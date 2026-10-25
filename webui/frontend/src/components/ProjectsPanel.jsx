@@ -1,9 +1,11 @@
+import DeleteButton from './DeleteButton'
+import { formatDateTime } from '../lib/datetime'
 import { useState } from 'react'
 import ProjectHistory from './ProjectHistory'
 import ProjectMetrics from './ProjectMetrics'
 
 function niceDate(iso) {
-  return iso ? new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'No scans'
+  return iso ? formatDateTime(iso, true) : 'No scans'
 }
 
 
@@ -45,9 +47,9 @@ export default function ProjectsPanel({ projects, projectKey, onSelectProject, o
         <ProjectMetrics project={item} />
         <div className="project-row-meta"><span className="code-inline">{item.rules || 'auto'}</span><span>Last scan {niceDate(item.latest_scan_at)}</span></div>
       </button>
-      <button type="button" className="btn-icon project-row-delete" aria-label={`Delete project ${item.project_name}`} onClick={() => setConfirming(item.project_key)}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6" /></svg></button>
-      {confirming === item.project_key && <div className="project-row-confirm"><span>Delete this project and its scan data? History records will remain.</span><button className="btn btn-danger btn-xs" disabled={deleting} onClick={() => removeProject(item.project_key)}>{deleting ? 'Deleting…' : 'Delete project'}</button><button className="btn btn-ghost btn-xs" disabled={deleting} onClick={() => setConfirming(null)}>Cancel</button></div>}
+      <DeleteButton className="project-row-delete" aria-label={`Delete project ${item.project_name}`} onClick={() => setConfirming(item.project_key)}>Delete project</DeleteButton>
+      {confirming === item.project_key && <div className="project-row-confirm"><span>Delete this project and its scan data? History records will remain.</span><DeleteButton disabled={deleting} onClick={() => removeProject(item.project_key)}>{deleting ? 'Deleting…' : 'Delete project'}</DeleteButton><button className="btn btn-secondary" disabled={deleting} onClick={() => setConfirming(null)}>Cancel</button></div>}
     </article>)}</div>
-    {!filtered.length && <div className="card empty-state"><div className="empty-title">{projects.length ? 'No matching projects' : 'No projects yet'}</div><p>{projects.length ? 'Adjust your search or filter.' : 'Start a scan to create your first project.'}</p>{!projects.length && <button className="btn btn-primary btn-sm" onClick={onNewScan}>+ New Scan</button>}</div>}
+    {!filtered.length && <div className="card empty-state"><div className="empty-title">{projects.length ? 'No matching projects' : 'No projects yet'}</div><p>{projects.length ? 'Adjust your search or filter.' : 'Start a scan to create your first project.'}</p>{!projects.length && <button className="btn btn-primary scan-create-button" onClick={onNewScan}>+ New Scan</button>}</div>}
   </section>
 }

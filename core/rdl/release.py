@@ -22,6 +22,13 @@ def audit_rule_tree(root):
     started = time.perf_counter()
     tracemalloc.start()
     errors = []
+    pattern_paths = sorted(p for p in (root / 'rules/scanning/platform').rglob('*.yaml') if p.name != '_pack.yaml')
+    from core.pattern_rules import load_rule
+    for path in pattern_paths:
+        try:
+            load_rule(path)
+        except (OSError, ValueError) as exc:
+            errors.append(str(exc))
     for paths in groups.values():
         for path in paths:
             document = compile_rdl(path.read_text(encoding="utf-8"), str(path))
@@ -33,6 +40,7 @@ def audit_rule_tree(root):
     tracemalloc.stop()
     return {
         "v1_rules": len(groups["v1"]),
+        "pattern_rules": len(pattern_paths),
         "v2_rules": len(groups["v2"]),
         "errors": len(errors),
         "error_details": errors,
@@ -43,7 +51,7 @@ def audit_rule_tree(root):
 
 def run_release_gates(root, config_path=None, repeat=2):
     root = Path(root)
-    config_path = Path(config_path or root / "config" / "rdl_release_gates.json")
+    config_path = Path(config_path or root / "tests/rdl/data/release-gates.json")
     config = json.loads(config_path.read_text(encoding="utf-8"))
     if config.get("schema_version") != 1:
         raise ValueError("unsupported release-gate schema")
@@ -76,7 +84,8 @@ def run_release_gates(root, config_path=None, repeat=2):
         if actual < config[key]:
             failures.append("{0} below {1}".format(label, key))
 
-    minimum("v1 rule count", rule_audit["v1_rules"], "minimum_v1_rules")
+    config.setdefault('minimum_pattern_rules', config.get('minimum_v1_rules', 0))
+    minimum("Pattern Rule count", rule_audit["pattern_rules"], "minimum_pattern_rules")
     minimum("v2 rule count", rule_audit["v2_rules"], "minimum_v2_rules")
     maximum("rule errors", rule_audit["errors"], "maximum_rule_errors")
     maximum("compile elapsed time", rule_audit["elapsed_ms"], "maximum_compile_elapsed_ms")

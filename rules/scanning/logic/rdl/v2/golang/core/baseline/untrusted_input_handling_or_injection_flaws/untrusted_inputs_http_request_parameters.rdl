@@ -3,7 +3,7 @@ RULE baseline.golang.core.untrusted_inputs_http_request_parameters VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "http\\.Request|http\\.RequestForm|http\\.FormValue" "im"
 WHEN TEXT_MISSING "Validate|validate|sanitize|regexp\\.MustCompile|strconv\\.Atoi|strconv\\.ParseInt|json\\.Unmarshal" "im"
-REPORT "Untrusted Inputs: HTTP Request Parameters"
+REPORT "Untrusted Input Entry Point"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

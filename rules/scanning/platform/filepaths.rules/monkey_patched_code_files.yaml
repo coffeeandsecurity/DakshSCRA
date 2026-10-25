@@ -1,0 +1,40 @@
+format: daksh-pattern-rule/v1
+id: filepaths.core.monkey_patched_code_files
+title: "Monkey Patching Review"
+order: 14
+detection:
+  pattern: (?i)(?:monkey_patch|patched_code|custom_patch)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:(?i)(/tests?/|/fixtures?/|/mocks?/)
+reporting:
+  type: area_of_interest
+  reason: Detects the presence of monkey patched code in a project.
+  description: A file or directory name matches the monkey patched code files review area. This check inspects paths,
+    not the implementation or a reachable execution path.
+  impact: A party able to substitute executable material or a runtime hook may run code with application privileges,
+    inspect protected data, or alter security checks. A filename match alone does not establish this consequence.
+  remediation: Load only approved code from trusted locations, verify signatures or integrity before execution,
+    and restrict runtime replacement to documented, authorized behavior.
+  reviewer: Verify the presence of monkey patched code in the project and assess its impact on code stability and
+    security. Particular attention should be paid to patches affecting security-critical components like authentication,
+    authorization, or database queries. This can be confirmed as an issue when the matched path is reachable and
+    required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the matched file or directory contents and determine whether it is deployed or externally accessible.
+  - Identify whether sensitive data, configuration or executable content is present; a name match alone does not
+    establish exposure.
+  - Check effective access controls and build or packaging exclusions and record the specific content and exposure
+    path.
+  recommendations:
+  - Where exposure is verified, remove unnecessary files from deployment or restrict access to the intended users
+    and processes.
+  - Verify the deployed artifact and access behavior after the change; retain required application files with appropriate
+    controls.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

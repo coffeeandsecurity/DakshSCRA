@@ -461,7 +461,9 @@
             body { background: #fff; }
             .panel, .card { box-shadow: none; }
         }
-    </style>
+        .pattern-source-mark { color: inherit; background: color-mix(in srgb, var(--pattern-mark-color) 24%, transparent); border-bottom: 2px solid var(--pattern-mark-color); padding: 0; }
+    .pattern-report-guidance { white-space: pre-line; }
+</style>
     {% block extra_head %}{% endblock %}
 </head>
 <body>

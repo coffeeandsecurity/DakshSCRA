@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: python.core.predictable_randomness_review
+title: "Random Number Generation Review"
+order: 38
+category: Authentication and Session Security
+detection:
+  pattern: \bimport\s+[^;\n]{0,200}\brandom\b|\bfrom\s+random\s+import\b|\brandom\.(?:random|choice|choices|randint|randrange|getrandbits|uniform|Random)\b
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: A general-purpose random generator is used or imported. Investigate whether
+    its output supplies authentication tokens, passwords, nonces or other security-sensitive
+    values. This candidate alone does not establish security use.
+  description: A general-purpose random generator is used or imported. Investigate
+    whether its output supplies authentication tokens, passwords, nonces or other
+    security-sensitive values. This candidate alone does not establish security use.
+  impact: Predictable security values may let another party guess or reproduce credentials
+    or tokens. Simulation, sampling and non-security identifiers may legitimately
+    use this generator.
+  remediation: Use secrets.token_urlsafe or another operating-system-backed cryptographic
+    generator for security values. Review entropy, expiry, storage and invalidation
+    independently.
+  reviewer: Follow returned helper values and comprehensions to token or password
+    assignments. A secure generator elsewhere in the same file does not protect this
+    operation; confirm aliases and local shadowing.
+  review_steps:
+  - Trace the matched operation to its caller and verify whether that path is registered
+    and reachable in the deployed application.
+  - Follow returned helper values and comprehensions to token or password assignments.
+    A secure generator elsewhere in the same file does not protect this operation;
+    confirm aliases and local shadowing.
+  recommendations:
+  - Use secrets.token_urlsafe or another operating-system-backed cryptographic generator
+    for security values. Review entropy, expiry, storage and invalidation independently.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

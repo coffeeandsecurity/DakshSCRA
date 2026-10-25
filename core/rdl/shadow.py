@@ -1,6 +1,7 @@
 """Fail-isolated v1/v2 shadow comparison for controlled production rollout."""
 
 import json
+import yaml
 import os
 import tempfile
 import zlib
@@ -30,8 +31,11 @@ _TRUE = {"1", "true", "yes", "on"}
 class ShadowRunner:
     def __init__(self, repository_root, config_path=None, enabled=None, executor=None, config=None):
         self.root = Path(repository_root)
-        self.config_path = Path(config_path or self.root / "config" / "rdl_shadow.json")
+        self.config_path = Path(config_path or self.root / "rules/scanning/metadata/rdl/shadow-mappings.json")
         self.config = dict(config) if config is not None else self._load_config(self.config_path)
+        if config is None and config_path is None:
+            settings = yaml.safe_load(read_source_text(self.root / 'config/tool.yaml', encoding='utf-8')) or {}
+            self.config['enabled'] = bool((settings.get('rdl') or {}).get('shadow_enabled', False))
         self.project_mappings = project_mappings() if self.config.get("project_flow", False) else {}
         self.enabled_override = enabled
         self.v1_enabled = True
@@ -45,10 +49,16 @@ class ShadowRunner:
     def review_pack_once(self, pack, files, project_root, telemetry_path, progress=None):
         if not self.enabled:
             return
+        if getattr(self, 'semantic_only', False):
+            try:
+                if Path(pack).resolve().relative_to((self.root/'rules/scanning/platform').resolve()).parts[0] != 'mobile':
+                    return
+            except (ValueError, IndexError):
+                return
         try:
             if not hasattr(self, '_baseline'):
                 from .baseline_runtime import BaselineRunner
-                self._baseline = BaselineRunner(self.root)
+                self._baseline = BaselineRunner(self.root, semantic_only=getattr(self, 'semantic_only', False))
             self._baseline.review(pack, files, project_root, telemetry_path, self.v1_enabled, progress)
         except ResultStorageError:
             raise
@@ -92,7 +102,8 @@ class ShadowRunner:
                         ):
                             legacy = None
                             if self.v1_enabled and not mapping.get('semantic_only'):
-                                legacy_source = read_source_text(self.root / 'rules/scanning' / reference, encoding='utf-8')
+                                from core.pattern_rules import read_logic
+                                legacy_source = read_logic(self.root, reference)
                                 legacy = evaluate_rdl_with_reason(legacy_source, file_text=source, file_path=str(path), project_root=str(project_root))
                             comparison = self.compare(legacy, reference, path, project_root, _dependency_scopes=dependency_scopes)
                     except ResultStorageError:
@@ -256,6 +267,9 @@ class ShadowRunner:
                 else:
                     result = self.executor.execute(document, path, language)
                 explanation = explain_result(document, result)
+                if explanation.get('v2_findings'):
+                    from .security_context import annotate_findings
+                    annotate_findings(explanation['v2_findings'], language, source_paths or ())
                 cached = (result, explanation)
             result, explanation = cached
             self._results[identity] = cached
@@ -437,6 +451,8 @@ def read_shadow_results(path, limit=500, offset=0, view='all', search='', kind='
     data = ResultStore(path).read(limit=limit,offset=offset,view=view,search=search,kind=kind,section=section,after=after)
     records = data['comparisons']
     _refresh_presentation(records)
+    for family in data.get('confirmed_families', []):
+        family['title'] = format_issue_title(family.get('title', ''))
     data['summary']['storage_error'] = Path(path).with_suffix('.storage-error').exists()
     return data
 
@@ -449,10 +465,18 @@ def _refresh_presentation(records):
         if record.get('v2_title'):
             record['v2_title'] = format_issue_title(record['v2_title'])
         for finding in record.get('v2_findings') or []:
+            from .issue_families import decorate
+            decorate(record,finding)
             if finding.get('title'):
                 finding['title'] = format_issue_title(finding['title'])
             # Refresh presentation for older scans without changing recorded evidence.
-            if finding.get('evidence') or not finding.get('trace'):
+            def flow_quality(steps):
+                roles = {step.get('predicate') for step in steps or [] if step.get('matched') is not False}
+                return (3 if 'SINK' in roles else 2 if 'PROPAGATION' in roles else 1) if 'SOURCE' in roles else 0
+            # Some saved records carry richer paths only in trace.steps. A
+            # presentation refresh must not erase those paths with text checks.
+            trace = finding.get('trace') or {}
+            if (finding.get('evidence') or not trace) and flow_quality(finding.get('evidence')) >= flow_quality(trace.get('steps')):
                 finding['trace'] = build_trace(finding.get('evidence') or [], finding.get('cwe', ''))
             if finding.get('path_only') or str(record.get('v2_rule_id', '')).startswith('baseline.filepaths.'):
                 finding['path_only'] = True

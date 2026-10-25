@@ -1,0 +1,46 @@
+format: daksh-pattern-rule/v1
+id: mobile.xplat.cordova.core.overly_permissive_cordova_whitelist
+title: "Cordova Origin Policy Review"
+order: 1
+category: Framework-Specific Issues - Cordova
+detection:
+  pattern: <allow-navigation\s+href="\*"\s*/>|<access\s+origin="\*"\s*/>
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects wildcard navigation/network whitelist entries in Cordova config.
+  trace:
+  - Externalized mobile rule logic for Overly Permissive Cordova Whitelist.
+  description: 'Review target: Overly Permissive Cordova Whitelist. A browser-origin or navigation policy permits
+    a broad set of external origins or destinations. Identify the resources and privileged interfaces covered by
+    the effective policy. Resolve the exact declaration or operation in the selected build and identify its security
+    boundary.'
+  impact: An untrusted site may read protected responses or invoke privileged interfaces if a permissive policy
+    admits it and independent authentication or authorization does not prevent the operation.
+  remediation: Allow only required trusted origins and destinations. Validate origin and message schemas, handle
+    credentials deliberately, and enforce access controls independently of the origin policy. Apply the least-privilege
+    platform control appropriate to the matched operation and verify the production configuration.
+  reviewer: Verify whitelist rules are limited to approved domains and protocols. This can be confirmed as an issue
+    when the matched path is reachable and required controls are missing, weak, or inconsistent. Check debug/release
+    and product flavors, generated/native code, plugin boundaries and failure paths; source evidence alone does
+    not establish shipped or runtime behavior.
+  review_steps:
+  - Determine what capability or review marker is declared and whether it changes the deployed application’s behavior.
+  - Inspect the effective runtime policy and the content, actors or operations that can use the capability.
+  - Record a concrete security consequence where established; otherwise keep the result as an investigation area.
+  - Resolve the exact declaration or operation in the selected build and identify its security boundary.
+  - Check debug/release and product flavors, generated/native code, plugin boundaries and failure paths; source
+    evidence alone does not establish shipped or runtime behavior.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Limit the capability to the application’s required behavior and enforce the relevant runtime controls.
+  - Verify the deployed artifact and add a regression check for the behavior that justified any correction.
+  - Apply the least-privilege platform control appropriate to the matched operation and verify the production configuration.
+scan_config:
+  match_mode: file
+  context_lines_before: '2'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

@@ -1,0 +1,40 @@
+format: daksh-pattern-rule/v1
+id: common.core.file_upload_functionality
+title: "File Upload Review"
+order: 4
+category: Commonly Targeted Functionalities
+detection:
+  pattern: (?i)(file[\s_-]*upload|upload[\s_-]*file|upload[_-](?:handler|service|controller|module)|move_uploaded_file\s*\(|\$_FILES\b|multipart/form-data|\btype\s*=\s*["']file["'])
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects likely implementations of file upload functionality by matching common terms associated with file
+    upload services or modules.
+  trace:
+  - Externalized rule logic for File Upload Functionality.
+  description: The application accepts uploaded content. Identify storage destinations, execution behavior, filename
+    handling, and the effective size and type checks.
+  impact: A crafted upload may execute as application code, overwrite files, disclose data through later processing,
+    or exhaust storage if the upload crosses the intended content and filesystem boundaries.
+  remediation: Allowlist required file types, inspect content rather than trusting extensions, bound sizes, generate
+    server-side names, and store uploads outside executable paths with appropriate access controls.
+  reviewer: Verify that secure file upload practices are followed, including file type validation, size restrictions,
+    and appropriate access controls to prevent unauthorized file uploads. This can be confirmed as an issue when
+    the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Trace who supplies the upload and inspect size limits, filename handling, storage destination and downstream
+    processing.
+  - Check whether uploaded content can execute, be rendered as active content or overwrite a protected file.
+  - Inspect file-type checks and authorization to create and retrieve the content; record the reachable unsafe behavior.
+  recommendations:
+  - Apply permitted type and size limits, use application-controlled storage names and keep uploaded content outside
+    executable locations.
+  - Authorize upload and retrieval independently and test disallowed content, oversized input and filename traversal.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.ios.core.review_ios_pasteboard_read_capability VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:UIPasteboard\\s*\\.\\s*general\\s*\\.\\s*(?:string|strings|items|data)|generalPasteboard\\s*\\]\\s*(?:\\.\\s*(?:string|items)|\\s+(?:string|items)\\s*\\]))" "im"
+REPORT "Clipboard Read Capability"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -3,7 +3,7 @@ RULE baseline.kotlin.core.insecure_method_call_runtime_exec VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "Runtime\\.exec\\(\".*\"\\)" "im"
 WHEN TEXT_MISSING "validate|sanitize|allowlist|ProcessBuilder\\s*\\(listOf" "im"
-REPORT "Insecure Method Call: Runtime.exec()"
+REPORT "OS Command Injection Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

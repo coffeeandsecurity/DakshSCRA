@@ -1,0 +1,41 @@
+format: daksh-pattern-rule/v1
+id: cpp.core.unsafe_type_conversion_reinterpret_cast
+title: "Pointer Cast Review"
+order: 16
+category: Type Safety and Casting
+detection:
+  pattern: \breinterpret_cast<[^>]+>\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:static_assert|static_cast|bit_cast|is_trivially_copyable
+reporting:
+  type: area_of_interest
+  reason: Detects the usage of `reinterpret_cast`, which can lead to unsafe type conversions.
+  trace:
+  - 'Externalized rule logic for Unsafe Type Conversion: reinterpret_cast.'
+  description: The code uses a low-level memory, formatting, allocation, or type-conversion operation whose safety
+    depends on bounds, types, initialization, and caller invariants.
+  impact: A violated memory or formatting invariant may expose process memory, corrupt application state, crash
+    the process, or permit code execution when an attacker can influence the relevant inputs.
+  remediation: Validate sizes and types before use, use bounded and type-safe APIs, and keep format strings fixed.
+    Prefer checked conversions and safe ownership abstractions; document and test every remaining unsafe invariant.
+  reviewer: Reviewers should check for the proper use of `reinterpret_cast` and assess whether safer casting techniques
+    could be applied. Also validate the correctness of such casts. This can be confirmed as an issue when the matched
+    path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect buffer capacity, index bounds, integer conversions and ownership at the matched operation and its callers.
+  - Check initialization, aliases, lifetime and cleanup on success, exception and early-return paths; identify external
+    influence over sizes or values.
+  - Verify a concrete unsafe access or lifetime condition. A low-level API or allocation alone does not prove memory
+    corruption.
+  recommendations:
+  - Use bounded operations, checked size calculations and explicit ownership or automatic resource management appropriate
+    to the language.
+  - Test boundary sizes and failure paths; use memory diagnostics where available to verify the specific correction.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

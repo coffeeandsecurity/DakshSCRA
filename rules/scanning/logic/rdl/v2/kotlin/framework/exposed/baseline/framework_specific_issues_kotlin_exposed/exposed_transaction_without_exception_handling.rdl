@@ -3,7 +3,7 @@ RULE baseline.kotlin.framework.exposed.exposed_transaction_without_exception_han
 IN FILE
 WHEN TEXT_MATCHES "transaction\\s*\\{" "im"
 WHEN TEXT_MISSING "try|catch|runCatching|rollback" "im"
-REPORT "Exposed Transaction Without Exception Handling"
+REPORT "Transaction Error Handling Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

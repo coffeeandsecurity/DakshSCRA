@@ -3,7 +3,7 @@ RULE baseline.common.core.detect_rsa_private_keys VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "BEGIN RSA PRIVATE KEY" "im"
 WHEN TEXT_MISSING "example|sample|test|dummy|placeholder|README|\\.md:" "im"
-REPORT "Detect RSA Private Keys"
+REPORT "Embedded Private Key Material"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

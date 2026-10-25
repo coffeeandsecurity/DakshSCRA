@@ -3,7 +3,7 @@ RULE baseline.terraform.framework.azure.azure_sql_server_allows_all_azure_servic
 IN FILE
 WHEN TEXT_MATCHES "start_ip_address\\s*=\\s*\"0\\.0\\.0\\.0\"[^}]*end_ip_address\\s*=\\s*\"0\\.0\\.0\\.0\"" "im"
 WHEN (TEXT_MATCHES "start_ip_address\\s*=\\s*\"0\\.0\\.0\\.0\".*end_ip_address\\s*=\\s*\"0\\.0\\.0\\.0\"" "im" AND TEXT_MISSING "# intentional|# development|firewall_rule" "im")
-REPORT "Azure SQL Server Allows All Azure Services"
+REPORT "Azure SQL Network Access Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

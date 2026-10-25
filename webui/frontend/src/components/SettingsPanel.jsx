@@ -1,5 +1,14 @@
-import { useEffect, useState } from 'react'
+import { setDisplayPreferences } from '../lib/datetime'
+import { useEffect, useId, useState } from 'react'
 import { getSettings, saveSettings } from '../api'
+import EffortAssumptions from './EffortAssumptions'
+
+const SETTINGS_TABS = [
+  { id: 'general', title: 'General', sections: ['project', 'display'], description: 'Project defaults and date and time preferences.' },
+  { id: 'analysis', title: 'Analysis', sections: ['analysis'], description: 'Analysis coverage, framework rules and report appearance.' },
+  { id: 'recovery', title: 'Scan recovery', sections: ['state_management'], description: 'Checkpoints and resume options for interrupted scans.' },
+  { id: 'effort', title: 'Effort estimation', sections: ['estimation'], description: 'Default rates and planning assumptions for review estimates.' },
+]
 
 const TIMEZONES = [
   '', 'UTC',
@@ -21,12 +30,18 @@ const RESUME_MODES = [
   { value: 'auto', label: 'Auto (resume automatically if interrupted)' },
 ]
 
-function SettingGroup({ title, children }) {
+function SettingGroup({ title, children, defaultExpanded = true }) {
+  const [expanded, setExpanded] = useState(defaultExpanded)
+  const bodyId = useId()
   return (
-    <div className="settings-group">
-      <div className="settings-group-title">{title}</div>
-      <div className="settings-group-body">{children}</div>
-    </div>
+    <section className="settings-group">
+      <h3 className="settings-group-heading">
+        <button type="button" className="settings-group-title" aria-expanded={expanded} aria-controls={bodyId} onClick={() => setExpanded(value => !value)}>
+          <span>{title}</span><span className="settings-group-action">{expanded ? 'Collapse' : 'Expand'} <span aria-hidden="true">{expanded ? '−' : '+'}</span></span>
+        </button>
+      </h3>
+      <div id={bodyId} className="settings-group-body" hidden={!expanded}>{children}</div>
+    </section>
   )
 }
 
@@ -93,9 +108,7 @@ function ReadOnlyField({ label, value }) {
   return (
     <div className="settings-field">
       <label className="settings-label">{label}</label>
-      <div className="settings-control">
-        <span className="settings-readonly">{value}</span>
-      </div>
+      <div className="settings-control"><span className="settings-readonly">{value}</span></div>
     </div>
   )
 }
@@ -105,11 +118,15 @@ export default function SettingsPanel({ onToast }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [dirty, setDirty] = useState(false)
+  const [baseline, setBaseline] = useState(null)
+  const [activeTab, setActiveTab] = useState('general')
+  const currentTab = SETTINGS_TABS.find(tab => tab.id === activeTab)
+  const isDirty = tab => tab.sections.some(section => JSON.stringify(data?.[section]) !== JSON.stringify(baseline?.[section]))
+  const dirty = isDirty(currentTab)
 
   useEffect(() => {
     getSettings()
-      .then((d) => { setData(d); setLoading(false) })
+      .then((d) => { setData(d); setBaseline(d); setLoading(false) })
       .catch((e) => {
         setLoading(false)
         onToast?.(e.message, 'error', 'Failed to load settings')
@@ -118,16 +135,18 @@ export default function SettingsPanel({ onToast }) {
 
   function update(section, key, value) {
     setData((prev) => ({ ...prev, [section]: { ...prev[section], [key]: value } }))
-    setDirty(true)
   }
 
   async function handleSave() {
     setSaving(true)
     try {
-      const saved = await saveSettings(data)
-      setData(saved)
-      setDirty(false)
-      onToast?.('Settings saved successfully', 'success', 'Saved')
+      const latest = await getSettings()
+      const changes = Object.fromEntries(currentTab.sections.map(section => [section, data[section]]))
+      const saved = await saveSettings({ ...latest, ...changes })
+      setBaseline(saved)
+      setData(previous => ({ ...previous, ...Object.fromEntries(currentTab.sections.map(section => [section, saved[section]])) }))
+      if (currentTab.sections.includes('display')) setDisplayPreferences(saved.display)
+      onToast?.(`${currentTab.title} settings saved`, 'success', 'Saved')
     } catch (e) {
       onToast?.(e.message, 'error', 'Save Failed')
     } finally {
@@ -148,17 +167,24 @@ export default function SettingsPanel({ onToast }) {
           <div className="settings-title">Settings</div>
           <div className="settings-subtitle">Configure tool behaviour, analysis limits, and display preferences. Changes apply to the next scan run.</div>
         </div>
-        <button
-          className={`btn btn-primary${dirty ? '' : ' btn-disabled'}`}
-          onClick={handleSave}
-          disabled={saving || !dirty}
-        >
-          {saving ? 'Saving...' : 'Save Changes'}
-        </button>
+
       </div>
 
-      <div className="settings-body">
+      <div className="settings-tabs" role="tablist" aria-label="Settings categories" onKeyDown={event => {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key) || saving) return
+        event.preventDefault()
+        const index = SETTINGS_TABS.findIndex(tab => tab.id === activeTab)
+        const next = event.key === 'Home' ? SETTINGS_TABS[0] : event.key === 'End' ? SETTINGS_TABS.at(-1) : SETTINGS_TABS[(index + (event.key === 'ArrowRight' ? 1 : SETTINGS_TABS.length - 1)) % SETTINGS_TABS.length]
+        setActiveTab(next.id); document.getElementById(`settings-tab-${next.id}`)?.focus()
+      }}>
+        {SETTINGS_TABS.map(tab => <button key={tab.id} type="button" role="tab" id={`settings-tab-${tab.id}`} aria-selected={activeTab === tab.id} aria-controls="settings-category-panel" tabIndex={activeTab === tab.id ? 0 : -1} disabled={saving} onClick={() => setActiveTab(tab.id)}>{tab.title}{isDirty(tab) && <span className="settings-unsaved" aria-label="Unsaved changes"> •</span>}</button>)}
+      </div>
+      <div role="tabpanel" id="settings-category-panel" aria-labelledby={`settings-tab-${activeTab}`}>
+        <div className="settings-category-heading"><div><h2>{currentTab.title}</h2><p>{currentTab.description}</p></div><button type="button" className="btn btn-primary" disabled={saving || !dirty} onClick={handleSave}>{saving ? 'Saving…' : 'Save Changes'}</button></div>
+        <p className="settings-save-note" role="status">{dirty ? 'Unsaved changes in this tab. Save Changes applies only to this category.' : 'No unsaved changes in this tab.'}</p>
+      <fieldset className="settings-body settings-fields" disabled={saving}>
 
+        {activeTab === 'general' && <>
         {/* Tool info - read only */}
         <SettingGroup title="Tool">
           <ReadOnlyField label="Name" value={data.tool_info.tool_name} />
@@ -176,23 +202,24 @@ export default function SettingsPanel({ onToast }) {
         </SettingGroup>
 
         {/* Display */}
-        <SettingGroup title="Display">
+        <SettingGroup title="Global date and time">
+          <Field label="Date format" hint="Used throughout the web UI, CLI and generated reports.">
+            <select value={data.display.date_format || 'MM-DD-YYYY'} onChange={e => update('display', 'date_format', e.target.value)}>
+              {['MM-DD-YYYY', 'DD-MM-YYYY', 'YYYY-MM-DD'].map(value => <option key={value}>{value}</option>)}
+            </select>
+          </Field>
+          <Field label="Time format">
+            <select value={data.display.time_format || '24h'} onChange={e => update('display', 'time_format', e.target.value)}>
+              <option value="24h">24-hour</option><option value="12h">12-hour (AM/PM)</option>
+            </select>
+          </Field>
           <Field
             label="Timezone"
-            hint="Timestamps in CLI output and reports use this timezone. Leave empty to use the server's local time."
+            hint="Timestamps in the web UI, CLI and reports use this timezone. Use an IANA time zone; UTC is the default."
           >
-            <select
-              className="form-select"
-              value={data.display.timezone}
-              onChange={(e) => update('display', 'timezone', e.target.value)}
-            >
-              <option value="">Server local time (default)</option>
-              <optgroup label="Common timezones">
-                {TIMEZONES.filter(Boolean).map((tz) => (
-                  <option key={tz} value={tz}>{tz}</option>
-                ))}
-              </optgroup>
-            </select>
+            <input list="global-timezones" value={data.display.timezone || 'UTC'}
+              onChange={e => update('display', 'timezone', e.target.value)} aria-label="Time zone" />
+            <datalist id="global-timezones">{TIMEZONES.filter(Boolean).map(tz => <option key={tz} value={tz} />)}</datalist>
           </Field>
           {data.display.timezone && (
             <div className="settings-callout">
@@ -201,6 +228,8 @@ export default function SettingsPanel({ onToast }) {
           )}
         </SettingGroup>
 
+        </>}
+        {activeTab === 'analysis' && <>
         {/* Analysis */}
         <SettingGroup title="Analysis">
           <Field label="Run by default" hint="Enable taint analysis automatically on every scan">
@@ -240,6 +269,8 @@ export default function SettingsPanel({ onToast }) {
           </Field>
         </SettingGroup>
 
+        </>}
+        {activeTab === 'recovery' && <>
         {/* State management */}
         <SettingGroup title="Scan State Management">
           <Field label="Enable checkpointing" hint="Save scan progress to disk so interrupted scans can be resumed">
@@ -279,24 +310,16 @@ export default function SettingsPanel({ onToast }) {
           </Field>
         </SettingGroup>
 
+        </>}
+        {activeTab === 'effort' && <>
         {/* Effort estimation */}
         <SettingGroup title="Effort Estimation">
-          <Field label="Efficiency factor (%)" hint="Reviewer efficiency percentage used in effort calculations">
-            <NumberInput
-              value={data.estimation.efficiency_factor}
-              onChange={(v) => update('estimation', 'efficiency_factor', v)}
-              min={1} max={100}
-            />
-          </Field>
-          <Field label="Buffer (days)" hint="Extra days added to the estimated effort as a buffer">
-            <NumberInput
-              value={data.estimation.buffer}
-              onChange={(v) => update('estimation', 'buffer', v)}
-              min={0} max={30}
-            />
-          </Field>
+          <p className="settings-intro">Organization-wide review baseline. Set separate issue rates for areas of interest, confirmed/RDL-supported findings and fully manual review. Enter the same low and high value for a fixed rate. These defaults apply unless a reviewer overrides them in Insights → Effort Estimate; planning assumptions are not measured productivity.</p>
+          <EffortAssumptions values={data.estimation.assumptions} onChange={(values) => update('estimation', 'assumptions', values)} />
         </SettingGroup>
 
+        </>}
+      </fieldset>
       </div>
     </div>
   )

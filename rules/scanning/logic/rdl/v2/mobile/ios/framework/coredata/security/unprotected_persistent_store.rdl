@@ -2,7 +2,7 @@ VERSION 2
 RULE ios.coredata.unprotected-persistent-store VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\bsetOption\\s*\\(\\s*FileProtectionType\\.none\\b[^\\n]{0,160}\\bNSPersistentStoreFileProtectionKey\\b" ""
-REPORT "Core Data Store Explicitly Disables File Protection"
+REPORT "Core Data Protection Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

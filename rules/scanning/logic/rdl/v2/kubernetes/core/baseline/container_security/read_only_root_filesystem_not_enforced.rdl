@@ -3,7 +3,7 @@ RULE baseline.kubernetes.core.read_only_root_filesystem_not_enforced VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "readOnlyRootFilesystem\\s*:\\s*false" "im"
 WHEN (TEXT_MISSING "readOnlyRootFilesystem:\\s*true|emptyDir|tmpfs:|volumeMounts" "im" AND TEXT_MATCHES "kind:\\s*Deployment|kind:\\s*StatefulSet|kind:\\s*DaemonSet|kind:\\s*Pod" "im")
-REPORT "Read-Only Root Filesystem Not Enforced"
+REPORT "Container Filesystem Write Access"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

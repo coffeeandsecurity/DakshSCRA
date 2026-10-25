@@ -3,7 +3,7 @@ RULE baseline.cpp.core.unsafe_file_handling_insecure_file_path_usage VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:ifstream|ofstream|fstream)\\b.*\\.open\\s*\\(.*\\)" "im"
 WHEN TEXT_MISSING "validate|sanitize|canonical|realpath|filesystem::path" "im"
-REPORT "Unsafe File Handling: Insecure File Path Usage"
+REPORT "File Path and Access Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

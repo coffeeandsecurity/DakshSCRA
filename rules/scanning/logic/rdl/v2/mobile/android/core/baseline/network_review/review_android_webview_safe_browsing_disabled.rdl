@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.android.core.review_android_webview_safe_browsing_disabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:setSafeBrowsingEnabled\\s*\\(\\s*false\\s*\\)|safeBrowsingEnabled\\s*=\\s*false\\b)" "im"
+REPORT "WebView Safe Browsing Disabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

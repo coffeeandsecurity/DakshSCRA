@@ -1,3 +1,4 @@
+import { formatDateTime } from '../lib/datetime'
 import { useEffect, useState } from 'react'
 import { listScans } from '../api'
 import { formatDuration } from '../lib/duration'
@@ -46,7 +47,7 @@ export default function ProjectHistory({ project, onBack, onOpenScan, onDeleteDa
     {error && <div className="error-banner" role="alert">Could not load scan history: {error}<button className="btn btn-ghost btn-xs" onClick={() => setVersion(value => value + 1)}>Retry</button></div>}
     {loading ? <p role="status" className="project-history-loading">Loading scan history…</p> : <div className="project-run-list">{runs.map(run => <article className="project-run" key={run.run_uuid}>
       <div className="project-run-status"><span className={`badge ${run.status}`}><span className={`badge-dot${run.status === 'running' ? ' pulse' : ''}`} />{run.status}</span>{run.data_removed && <span className="badge removed">data removed</span>}</div>
-      <div className="project-run-identity"><code>{run.run_uuid}</code><time dateTime={run.created_at}>{run.created_at ? new Date(run.created_at).toLocaleString() : 'Date not recorded'}</time></div>
+      <div className="project-run-identity"><code>{run.run_uuid}</code><time dateTime={run.created_at}>{run.created_at ? formatDateTime(run.created_at) : 'Date not recorded'}</time></div>
       <div className="project-run-config"><span className="code-inline">{run.rules || 'auto'}</span><span title="Scan duration">{formatDuration(run.duration_sec)}</span></div>
       <div className="project-run-actions">{!run.data_removed ? <button className="btn btn-primary btn-sm" onClick={() => onOpenScan(run)}>{ACTIVE.has(run.status) ? (run.status === 'queued' ? 'View queued scan' : 'View active scan') : 'View results'}</button> : <span className="scan-record-note">History only</span>}<ScanDeleteActions run={run} onDeleteData={item => remove(item, false)} onDeleteRecord={item => remove(item, true)} compact /></div>
     </article>)}{!runs.length && !error && <div className="card empty-state"><div className="empty-title">{query || status ? 'No matching scans' : 'No scans yet'}</div><p>{query || status ? 'Adjust your search or filter.' : 'Scans for this project will appear here.'}</p></div>}</div>}

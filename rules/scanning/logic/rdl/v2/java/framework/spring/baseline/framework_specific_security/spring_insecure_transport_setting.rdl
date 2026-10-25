@@ -2,7 +2,7 @@ VERSION 2
 RULE baseline.java.framework.spring.spring_insecure_transport_setting VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "http://|server\\.ssl\\.enabled\\s*=\\s*false|allowInsecureProtocol\\s*=\\s*true" "im"
-REPORT "Spring Insecure Transport Setting"
+REPORT "Cleartext HTTP Communication Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

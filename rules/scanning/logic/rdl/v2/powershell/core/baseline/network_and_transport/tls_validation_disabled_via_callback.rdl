@@ -3,7 +3,7 @@ RULE baseline.powershell.core.tls_validation_disabled_via_callback VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "ServerCertificateValidationCallback\\s*=\\s*\\{[^}]*\\$true\\}|ServerCertificateValidationCallback\\s*=\\s*\\{\\s*\\$true\\s*\\}" "im"
 WHEN TEXT_MISSING "test|development|localhost|staging" "im"
-REPORT "TLS Validation Disabled via Callback"
+REPORT "TLS Certificate Validation Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

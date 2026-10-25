@@ -1,6 +1,23 @@
 from utils.scan_scope import walk_source, allows_file
 from pathlib import Path
 import os
+import json
+import hashlib
+
+
+def observation_digest(finding):
+    payload = {key: value for key, value in finding.items()
+               if key not in {'id', 'target', 'platform', 'framework', 'review_status'}}
+    digest = hashlib.sha256()
+    for chunk in json.JSONEncoder(sort_keys=True, ensure_ascii=False).iterencode(payload):
+        digest.update(chunk.encode('utf-8'))
+    return digest.digest()
+
+
+def unique_observation_count(results):
+    """Count evidence once when framework views inherit platform findings."""
+    return len({observation_digest(finding) for result in results
+                for finding in result.get('findings', []) if isinstance(finding, dict)})
 
 
 def project_language_hints(source_root):
@@ -66,3 +83,9 @@ def analysis_failure_message(payload):
             for item in failed)
     count = int(payload.get('summary', {}).get('targets_failed', 0) or 0)
     return '{} analyzer target(s) failed'.format(count) if count else ''
+
+
+def analyzer_exception_message(error):
+    """Blank exception messages must still identify an incomplete analyzer run."""
+    message = str(error).strip()
+    return '{}: {}'.format(type(error).__name__, message) if message else type(error).__name__

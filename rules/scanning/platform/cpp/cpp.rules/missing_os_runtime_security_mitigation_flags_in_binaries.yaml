@@ -1,0 +1,41 @@
+format: daksh-pattern-rule/v1
+id: cpp.core.missing_os_runtime_security_mitigation_flags_in_binaries
+title: "Binary Hardening Review"
+order: 32
+category: Compiler and Build Configuration Issues
+detection:
+  pattern: /NXCOMPAT|/DYNAMICBASE|/GS|/guard:cf
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:CFLAGS|LDFLAGS|cmake_minimum_required|add_compile_options|target_compile_options && MISSING:-fstack-protector|-D_FORTIFY_SOURCE|-pie|-fPIE|-Wl.*now|-Wl.*relro
+reporting:
+  type: area_of_interest
+  reason: Detects missing compiler flags that enforce runtime security mitigations.
+  trace:
+  - Externalized rule logic for Missing OS Runtime Security Mitigation Flags in Binaries.
+  description: The code handles private data or configures build and process hardening. Determine which information
+    is retained and what protection the deployed artifact actually supplies.
+  impact: Insufficient memory, diagnostic, or build protections may make private values easier to recover or increase
+    the consequences of another defect. Their absence alone does not establish an exploit path.
+  remediation: Minimize private data lifetimes and diagnostic exposure, apply the platform’s appropriate hardening
+    controls, and verify the final binary rather than inferring protection from source markers alone.
+  reviewer: Ensure these flags are present in build configurations. This can be confirmed as an issue when the matched
+    path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the matched construct in its containing function or configuration and identify the security-sensitive
+    behavior under review.
+  - Verify reachable callers, external influence and effective protections, including deployment overrides and failure
+    paths.
+  - Record concrete evidence for a confirmed issue or a justified suppression; retain an unresolved outcome when
+    the required evidence is unavailable.
+  recommendations:
+  - Apply the rule-specific correction above only after verifying the affected behavior and required control.
+  - Add a regression case for the unsafe condition and a valid protected case; verify the effective behavior in
+    the relevant deployment.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

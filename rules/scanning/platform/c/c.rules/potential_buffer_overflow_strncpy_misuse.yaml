@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: c.core.potential_buffer_overflow_strncpy_misuse
+title: "String Copy Bounds Review"
+order: 2
+category: Untrusted Input Handling and Buffer Overflow
+detection:
+  pattern: \bstrncpy\s*\(\s*\w+\s*,\s*\w+\s*,\s*\w+\s*\-\s*1\s*\)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:strlcpy|memcpy|snprintf
+reporting:
+  type: area_of_interest
+  reason: Detects misuse of `strncpy()` with potentially unsafe size calculations.
+  trace:
+  - 'Externalized rule logic for Potential Buffer Overflow: strncpy() Misuse.'
+  description: The code uses a low-level memory, formatting, allocation, or type-conversion operation whose safety
+    depends on bounds, types, initialization, and caller invariants.
+  impact: A violated memory or formatting invariant may expose process memory, corrupt application state, crash
+    the process, or permit code execution when an attacker can influence the relevant inputs.
+  remediation: Validate sizes and types before use, use bounded and type-safe APIs, and keep format strings fixed.
+    Prefer checked conversions and safe ownership abstractions; document and test every remaining unsafe invariant.
+  reviewer: Confirm proper use of `strncpy()` and size calculations to avoid off-by-one errors. This can be confirmed
+    as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify who can supply the matched input, including stored values and upstream services; record its type, size
+    limits and trust boundary.
+  - Trace the value through transformations to each sensitive operation. Check the protection at that destination
+    and resource-level authorization.
+  - Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side
+    check alone is insufficient evidence.
+  recommendations:
+  - Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve
+    legitimate characters and protect each destination separately.
+  - Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations
+    where applicable. Test rejected input and unauthorized access.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

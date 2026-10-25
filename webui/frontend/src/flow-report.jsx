@@ -2,9 +2,22 @@ import React, { Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import FlowGraph from './components/FlowGraph'
 import { GraphBoundary } from './components/FlowView'
+import ProgramGraphsPanel from './components/ProgramGraphsPanel'
 const roots = new WeakMap()
 const positions = new WeakMap()
 let active = null
+document.addEventListener('click', event => {
+  const button = event.target.closest('[data-program-explorer]')
+  if (!button) return
+  const shell = button.closest('.report-program-graphs'), target = shell.querySelector('[data-program-root]')
+  if (roots.has(target)) return
+  try {
+    const catalog = JSON.parse(shell.querySelector('script[data-program-data]').textContent)
+    const root = createRoot(target); roots.set(target, root)
+    root.render(<Suspense fallback={<p>Loading saved program graphs…</p>}><GraphBoundary><ProgramGraphsPanel catalog={catalog} /></GraphBoundary></Suspense>)
+    target.hidden = false; button.hidden = true
+  } catch { target.hidden = false; target.textContent = 'Program graph viewer could not load. The complete saved node and edge tables remain available below.' }
+})
 document.addEventListener('click', event => {
   const button = event.target.closest('[data-flow-mode]')
   if (!button) return

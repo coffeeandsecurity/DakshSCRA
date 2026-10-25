@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.mobile.xplat.cordova.core.cordova_wildcard_access_origin VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "<access\\s+origin=\\\"\\*\\\"" "im"
-WHEN TEXT_MISSING "Content-Security-Policy" "im"
-REPORT "Cordova Wildcard Access Origin"
+REPORT "Cordova Origin Policy Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

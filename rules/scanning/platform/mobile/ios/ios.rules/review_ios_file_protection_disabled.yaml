@@ -1,0 +1,43 @@
+format: daksh-pattern-rule/v1
+id: mobile.ios.core.review_ios_file_protection_disabled
+title: File Data Protection Explicitly Disabled
+order: 20
+category: STORAGE Review
+detection:
+  pattern: \b(?:NSFileProtectionNone|FileProtectionType\s*\.\s*none|URLFileProtection\s*\.\s*none|noFileProtection)\b
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: Source explicitly selects a file protection option that does not restrict access when the device
+    is locked. Identify the affected file and whether it contains sensitive information. Identify the value written,
+    backing store and access class, including backup, restore, reinstall and logout behavior.
+  impact: An actor with sufficient device or process access may read sensitive files while the device is locked
+    if the selected protection class leaves their keys available. This does not mean the device stores all files
+    unencrypted.
+  remediation: Use an appropriate protected file class for sensitive content, accounting for background access requirements.
+    Inspect the effective attributes on the shipped app’s files on a locked device. Keep privileged secrets on the
+    server, use appropriate device-backed secure storage for local credentials, and restrict backup and sharing
+    to intended non-sensitive data.
+  reviewer: Test device lock state, cloud backup versus device transfer, restored keys, keychain persistence after
+    reinstall, and secure-storage failure; do not silently fall back to plaintext or treat an unrelated secure store
+    as protection.
+  review_steps:
+  - Trace the matched candidate to its actual value, caller or resource.
+  - Test device lock state, cloud backup versus device transfer, restored keys, keychain persistence after reinstall,
+    and secure-storage failure; do not silently fall back to plaintext or treat an unrelated secure store as protection.
+  - Resolve release configuration and runtime assumptions before confirming an issue.
+  recommendations:
+  - Use an appropriate protected file class for sensitive content, accounting for background access requirements.
+    Inspect the effective attributes on the shipped app’s files on a locked device. Keep privileged secrets on the
+    server, use appropriate device-backed secure storage for local credentials, and restrict backup and sharing
+    to intended non-sensitive data.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

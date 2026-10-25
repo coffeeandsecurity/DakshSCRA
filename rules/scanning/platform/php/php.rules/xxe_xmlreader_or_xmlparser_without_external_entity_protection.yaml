@@ -1,0 +1,39 @@
+format: daksh-pattern-rule/v1
+id: php.core.xxe_xmlreader_or_xmlparser_without_external_entity_protection
+title: "XML External Entity Review"
+order: 29
+category: XML External Entity (XXE)
+detection:
+  pattern: xml_parser_create\s*\(|XMLReader::open\s*\(|new\s+XMLReader\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:libxml_disable_entity_loader|XML_OPTION_SKIP_WHITE|LIBXML_NOENT\s*=\s*0
+reporting:
+  type: area_of_interest
+  reason: Detects XMLReader and xml_parser_create usage without external entity protection.
+  trace:
+  - 'Externalized rule logic for XXE: XMLReader or XMLParser Without External Entity Protection.'
+  description: The code parses or transforms XML. Resolve external entity, DTD, and resource-loading settings for
+    the actual parser instance.
+  impact: If external resources or entity expansion are permitted for untrusted XML, an attacker may read local
+    files, make requests to internal services, or exhaust parser resources.
+  remediation: Disable external entities and DTD loading for untrusted XML, use a restrictive resolver, and enforce
+    input-size and expansion limits on the effective parser.
+  reviewer: Verify entity loading is disabled for all XML reader instances that process external data. This can
+    be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify the parser and whether untrusted XML reaches it; inspect its effective settings rather than relying
+    on library defaults.
+  - Check external entity resolution, DTD processing, network or file access, and limits for document size and expansion.
+  - Inspect all parser construction paths and error handling; record which reachable path lacks the required restrictions.
+  recommendations:
+  - Configure the parser to disable unneeded external entities and DTD processing; restrict resolvers when those
+    features are necessary.
+  - Apply document and expansion limits and test prohibited file or network resolution in the deployed parser configuration.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

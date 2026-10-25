@@ -1,0 +1,57 @@
+format: daksh-pattern-rule/v1
+id: mobile.ios.framework.swiftui.swiftui_pasteboard_sensitive_data_marker
+title: "Clipboard Data Exposure Review"
+order: 6
+category: Framework-Specific Security
+detection:
+  pattern: UIPasteboard
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects pasteboard usage that may expose sensitive data.
+  trace:
+  - Externalized mobile rule logic for SwiftUI Pasteboard Sensitive Data Marker.
+  description: 'Review target: SwiftUI Pasteboard Sensitive Data Marker. The application reads the shared clipboard
+    or pasteboard. Review whether the read follows an explicit paste action and whether the returned content enters
+    logs, storage, or network requests. Identify the actual sensitive value and the recipients, retention and user-consent
+    context of this exposure or capability.'
+  impact: Passwords, payment details, or other private content copied from another application could be collected
+    or disclosed if clipboard reads occur without user intent or the content is sent to an unauthorized recipient.
+    Platform access restrictions and the actual handling of the data determine exposure.
+  remediation: Read clipboard content only for an explicit user paste action. Process only the value needed for
+    that action, avoid logging or transmitting it unnecessarily, and respect platform clipboard access restrictions.
+    Minimize collection and retention, redact secret values, and apply the platform controls needed for sensitive
+    UI and data sharing.
+  reviewer: Audit clipboard operations and data classification. This can be confirmed as an issue when the matched
+    path is reachable and required controls are missing, weak, or inconsistent. Test release logging, crash-report
+    payloads, screenshot/background snapshots and clipboard lifetime; permission or API capability alone does not
+    establish collection or malicious behavior.
+  review_steps:
+  - Inspect the matched construct in its containing function or configuration and identify the security-sensitive
+    behavior under review.
+  - Verify reachable callers, external influence and effective protections, including deployment overrides and failure
+    paths.
+  - Record concrete evidence for a confirmed issue or a justified suppression; retain an unresolved outcome when
+    the required evidence is unavailable.
+  - Identify the actual sensitive value and the recipients, retention and user-consent context of this exposure
+    or capability.
+  - Test release logging, crash-report payloads, screenshot/background snapshots and clipboard lifetime; permission
+    or API capability alone does not establish collection or malicious behavior.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Apply the rule-specific correction above only after verifying the affected behavior and required control.
+  - Add a regression case for the unsafe condition and a valid protected case; verify the effective behavior in
+    the relevant deployment.
+  - Minimize collection and retention, redact secret values, and apply the platform controls needed for sensitive
+    UI and data sharing.
+scan_config:
+  match_mode: file
+  context_type: lines
+  context_lines_before: '2'
+  context_lines_after: '0'
+  aggregate: none
+  report_format: default
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: yellow

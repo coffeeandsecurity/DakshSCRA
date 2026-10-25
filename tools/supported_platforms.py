@@ -6,6 +6,8 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from core.pattern_rules import resolve_pack
 START = '<!-- supported-platforms:start -->'
 END = '<!-- supported-platforms:end -->'
 
@@ -16,7 +18,7 @@ def platform_table(root=ROOT):
     for node in ET.parse(scanning / 'rulesconfig.xml').getroot():
         name = (node.findtext('platform') or '').strip()
         path = scanning / 'platform' / (node.findtext('path') or '').strip().lstrip('/')
-        if not name or name in platforms or not path.is_file():
+        if not name or name in platforms or not resolve_pack(path).exists():
             raise ValueError('Invalid or missing platform rule pack: {}'.format(name))
         platforms[name] = (path, set())
     for node in ET.parse(scanning / 'frameworkconfig.xml').getroot():
@@ -27,7 +29,7 @@ def platform_table(root=ROOT):
             raise ValueError('Invalid framework mapping: {}'.format(name))
         path, frameworks = platforms[platform]
         # Some mobile registry entries reuse the platform pack under its own name.
-        pack_exists = (path.parent / 'framework' / rule_file).is_file() or path.name == rule_file
+        pack_exists = resolve_pack(path.parent / 'framework' / rule_file).exists() or path.name == rule_file
         if name in frameworks or not pack_exists:
             raise ValueError('Duplicate or missing framework rule pack: {}'.format(name))
         frameworks.add(name)

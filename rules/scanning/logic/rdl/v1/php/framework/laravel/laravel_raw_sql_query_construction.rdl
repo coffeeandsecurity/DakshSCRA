@@ -1,5 +1,0 @@
-VERSION 1
-WHEN PRESENT DB::raw\(|selectRaw\(|whereRaw\(|->query\(\s*\$|mysqli_query\(|PDO::query\(
-REPORT AS area_of_interest
-REASON Detects raw/dynamic SQL construction in framework and DB access calls.
-TRACE Externalized rule logic for Laravel Raw SQL Query Construction.

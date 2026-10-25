@@ -2,7 +2,7 @@ VERSION 2
 RULE ios.webview-app-bound-disabled VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\blimitsNavigationsToAppBoundDomains\\s*(?:=\\s*(?:false|NO)\\b|:\\s*NO\\b)" ""
-REPORT "WKWebView App-Bound Navigation Disabled"
+REPORT "App-Bound WebView Navigation Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

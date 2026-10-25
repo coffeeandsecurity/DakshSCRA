@@ -1,0 +1,27 @@
+format: daksh-pattern-rule/v1
+id: javascript.core.logout_retained_state
+title: Persisted Account State Retained During Local Logout Review
+order: 1101
+category: Authentication Issues
+detection:
+  pattern: \b(?:SignOut|signOut|logout)\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: An imported logout action clears a token while the locally bound reducer spread preserves account-related
+    fields in an AsyncStorage-persisted root reducer.
+  description: An imported logout action clears a token while the locally bound reducer spread preserves account-related
+    fields in an AsyncStorage-persisted root reducer.
+  impact: Account-related data may remain on the device or be reused across account changes if no other cleanup
+    occurs. This does not establish server-session reuse or actual cross-account disclosure.
+  remediation: Reset account-scoped memory and persisted state on logout/account change, await persistent cleanup,
+    and verify backend session revocation. Check delegated cleanup and persistence transforms.
+  reviewer: Resolve active callers, delegated verification/cleanup and backend controls. The recorded client transition
+    alone does not establish an exploitable server vulnerability.
+scan_config:
+  match_mode: file
+  context_lines_before: '2'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'

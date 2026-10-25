@@ -3,7 +3,7 @@ RULE baseline.cpp.framework.qt.qt_unsafe_memory_string_api VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(strcpy|strcat|sprintf|gets|memcpy)\\s*\\(" "im"
 WHEN (TEXT_MISSING "QByteArray|QString::fromUtf8|bounds|size|length" "im" AND TEXT_MISSING "test|example" "im")
-REPORT "Qt Unsafe Memory/String API"
+REPORT "Buffer Bounds Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

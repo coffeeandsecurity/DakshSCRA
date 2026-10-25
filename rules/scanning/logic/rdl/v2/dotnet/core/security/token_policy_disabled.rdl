@@ -1,0 +1,8 @@
+VERSION 2
+RULE dotnet.token-policy-disabled VERSION 1
+IN FILE
+WHEN EXISTS CONFIGURATION_ENTRY MATCHES config.jwt-validation-disabled AS setting
+REPORT "JWT Validation Policy Review"
+SEVERITY HIGH
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

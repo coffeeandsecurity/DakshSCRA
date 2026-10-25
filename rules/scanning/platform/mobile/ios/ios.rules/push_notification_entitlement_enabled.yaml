@@ -1,0 +1,52 @@
+format: daksh-pattern-rule/v1
+id: mobile.ios.core.push_notification_entitlement_enabled
+title: Push Notification Entitlement Enabled
+order: 14
+category: Platform-Specific Issues - iOS Build and Entitlements
+detection:
+  pattern: aps-environment
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects push notification entitlement usage.
+  trace:
+  - Externalized mobile rule logic for Push Notification Entitlement Enabled.
+  description: 'Review target: Push Notification Entitlement Enabled. The application declares push-notification
+    support. This is a capability declaration rather than evidence of insecure notification handling. Resolve the
+    exact declaration or operation in the selected build and identify its security boundary.'
+  impact: Private notification payloads may be disclosed on lock screens or through an unauthorized recipient, and
+    crafted notification actions may affect state if handler authorization is inadequate.
+  remediation: Keep secrets out of notification payloads, verify device-token ownership and delivery recipients,
+    and require authorization before executing sensitive notification actions. Apply the least-privilege platform
+    control appropriate to the matched operation and verify the production configuration.
+  reviewer: Review push handlers for sensitive data exposure and authorization checks. This can be confirmed as
+    an issue when the matched path is reachable and required controls are missing, weak, or inconsistent. Check
+    debug/release and product flavors, generated/native code, plugin boundaries and failure paths; source evidence
+    alone does not establish shipped or runtime behavior.
+  review_steps:
+  - Inspect the matched construct in its containing function or configuration and identify the security-sensitive
+    behavior under review.
+  - Verify reachable callers, external influence and effective protections, including deployment overrides and failure
+    paths.
+  - Record concrete evidence for a confirmed issue or a justified suppression; retain an unresolved outcome when
+    the required evidence is unavailable.
+  - Resolve the exact declaration or operation in the selected build and identify its security boundary.
+  - Check debug/release and product flavors, generated/native code, plugin boundaries and failure paths; source
+    evidence alone does not establish shipped or runtime behavior.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Apply the rule-specific correction above only after verifying the affected behavior and required control.
+  - Add a regression case for the unsafe condition and a valid protected case; verify the effective behavior in
+    the relevant deployment.
+  - Apply the least-privilege platform control appropriate to the matched operation and verify the production configuration.
+scan_config:
+  match_mode: file
+  context_type: lines
+  context_lines_before: '1'
+  context_lines_after: '0'
+  aggregate: file
+  report_format: default
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: yellow

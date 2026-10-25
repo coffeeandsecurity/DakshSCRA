@@ -74,6 +74,11 @@ def proven_guards(tree, catalog):
 
 def call_semantics(node, name, concepts, aliases=None):
     concepts = set(concepts)
+    from ..security_operations import python_operations
+    operations, operation_positions = python_operations(node, name)
+    concepts.update(operations)
+    if name in {'flask.redirect', 'werkzeug.utils.redirect', 'django.shortcuts.redirect'}:
+        concepts.add('navigation.redirect')
     attributes = {}
     if name in {'input', 'builtins.input', 'request.get_json'} or name.startswith(('request.args.', 'request.form.', 'request.GET.', 'request.POST.', 'request.query_params.')):
         concepts.update(INPUT_CONCEPTS)
@@ -110,16 +115,30 @@ def call_semantics(node, name, concepts, aliases=None):
     if name.endswith(('.execute', '.executemany', '.executescript')):
         concepts.add('sql.execution')
     arguments_by_concept = {
+        'navigation.redirect': (0, 'location', 'to', 'url'),
         'sql.execution': (0, 'query', 'sql', 'statement', 'operation'),
         'network.outbound-request': (0, 'url', 'fullurl'),
         'filesystem.access': (0, 'file', 'filename', 'path'),
         'deserialization.object-construction': (0, 'data', 's', 'stream'),
         'command.execution': (0, 'args', 'command', 'source'),
     }
-    sensitive = set()
+    sensitive = set(operation_positions)
     for concept, arguments in arguments_by_concept.items():
         if concept in concepts:
             sensitive.update(arguments)
     if sensitive:
         attributes['sensitive_arguments'] = tuple(sorted(sensitive, key=str))
+    if name in {'flask.redirect', 'werkzeug.utils.redirect'}:
+        target = node.args[0] if node.args else next((kw.value for kw in node.keywords if kw.arg == 'location'), None)
+        builder = qualified_name(target.func) if isinstance(target, ast.Call) else ''
+        first, dot, rest = builder.partition('.')
+        builder = (aliases or {}).get(first, first) + (dot + rest if dot else '')
+        options = {kw.arg: kw.value for kw in target.keywords} if isinstance(target, ast.Call) else {}
+        external = options.get('_external')
+        if (builder == 'flask.url_for' and target.args and isinstance(target.args[0], ast.Constant)
+                and '_scheme' not in options and (external is None or isinstance(external, ast.Constant) and external.value is False)):
+            # Query/fragment arguments can vary without selecting a different
+            # origin for this fixed local route. Keep them as input evidence,
+            # but do not turn them into an open-redirect destination path.
+            attributes['sensitive_arguments'] = ()
     return concepts, attributes

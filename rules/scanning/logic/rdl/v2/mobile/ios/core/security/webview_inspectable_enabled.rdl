@@ -2,7 +2,7 @@ VERSION 2
 RULE ios.webview-inspectable-enabled VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:isInspectable\\s*=\\s*true\\b|inspectable\\s*=\\s*YES\\b|setInspectable\\s*:\\s*YES\\b)" ""
-REPORT "Release WebView Inspection Enabled"
+REPORT "WebView Debugging Policy Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

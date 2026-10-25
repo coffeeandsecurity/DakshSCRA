@@ -1,0 +1,52 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.missing_content_descriptions
+title: "Accessibility Label Review"
+order: 13
+category: Layout XML - UI and Accessibility Issues
+detection:
+  pattern: '[A-Za-z_][\w.-]*:contentDescription\s*=\s*["'']["'']'
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects UI elements with missing or empty content descriptions.
+  trace:
+  - Externalized mobile rule logic for Missing Content Descriptions.
+  description: 'Review target: Missing Content Descriptions. The code contains a maintainability, accessibility,
+    or build-configuration review marker. Establish a concrete affected behavior before assigning security severity.
+    Resolve the exact declaration or operation in the selected build and identify its security boundary.'
+  impact: No direct confidentiality or integrity consequence is established by this marker alone. A related implementation
+    defect could affect availability or prevent users from using essential controls, depending on the actual behavior.
+  remediation: Resolve the specific unfinished behavior, accessibility requirement, or build hygiene concern. Confirm
+    its real operational effect and test the corrected behavior before classifying it as a security defect. Apply
+    the least-privilege platform control appropriate to the matched operation and verify the production configuration.
+  reviewer: Check that all interactive or visual elements in layout XML files have appropriate content descriptions.
+    This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak,
+    or inconsistent. Check debug/release and product flavors, generated/native code, plugin boundaries and failure
+    paths; source evidence alone does not establish shipped or runtime behavior.
+  review_steps:
+  - Inspect the matched construct in its containing function or configuration and identify the security-sensitive
+    behavior under review.
+  - Verify reachable callers, external influence and effective protections, including deployment overrides and failure
+    paths.
+  - Record concrete evidence for a confirmed issue or a justified suppression; retain an unresolved outcome when
+    the required evidence is unavailable.
+  - Resolve the exact declaration or operation in the selected build and identify its security boundary.
+  - Check debug/release and product flavors, generated/native code, plugin boundaries and failure paths; source
+    evidence alone does not establish shipped or runtime behavior.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Apply the rule-specific correction above only after verifying the affected behavior and required control.
+  - Add a regression case for the unsafe condition and a valid protected case; verify the effective behavior in
+    the relevant deployment.
+  - Apply the least-privilege platform control appropriate to the matched operation and verify the production configuration.
+scan_config:
+  match_mode: file
+  context_type: lines
+  context_lines_before: '1'
+  context_lines_after: '0'
+  aggregate: file
+  report_format: default
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: yellow

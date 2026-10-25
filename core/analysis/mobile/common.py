@@ -3,6 +3,22 @@ from pathlib import Path
 from utils.scan_scope import glob_source, allows_file, allows_check
 from typing import Dict, Iterable, List
 import re
+from core.mobile_model import build_scope
+
+
+class MobileSourceLines(list):
+    def __init__(self, comments, code=None):
+        super().__init__(comments.splitlines())
+        self.code = code.splitlines() if code is not None else None
+
+
+def read_mobile_lines(path):
+    """Discard comment examples before heuristic operation discovery."""
+    from core.mobile_model import views
+    from utils.source_cache import read_source_text
+    text=read_source_text(path,errors='replace')
+    comments,code=views(path,text)
+    return MobileSourceLines(comments,code if Path(path).suffix in {'.java','.kt','.swift','.m','.mm','.js','.jsx','.ts','.tsx','.dart','.cs'} else None)
 
 
 def annotate_flows(flows: Iterable[Dict], *, platform: str, variant: str) -> List[Dict]:
@@ -31,7 +47,10 @@ def rel_path(file_path: Path, source_root: Path) -> str:
 def first_match_line(lines: List[str], pattern: re.Pattern, start: int = 1, end: int = 0) -> int:
     upper = end or len(lines)
     for idx in range(max(1, start), upper + 1):
-        if pattern.search(lines[idx - 1]):
+        for match in pattern.finditer(lines[idx - 1]):
+            code=getattr(lines,'code',None)
+            if code and match.group()[:1].isalnum() and not code[idx-1][match.start():match.start()+1].strip():
+                continue
             return idx
     return 0
 
@@ -79,6 +98,9 @@ def flow(
         "explanation": explanation,
         "path": path,
         "trace_status": "complete",
+        "analysis_kind": "heuristic",
+        "control_status": "unresolved",
+        "build_scope": build_scope(file_path),
         "confidence": confidence,
         "xref": [],
         "input_surface": {

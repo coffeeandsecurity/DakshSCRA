@@ -3,7 +3,7 @@ RULE memory.mismatched-deallocation VERSION 1
 IN FUNCTION
 LET object BE RESOURCE MATCHES memory.allocation
 WHEN allocation.family object AND NOT deallocation.compatible object
-REPORT "mismatched allocation and deallocation"
+REPORT "Mismatched Allocation and Deallocation"
 SEVERITY HIGH
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

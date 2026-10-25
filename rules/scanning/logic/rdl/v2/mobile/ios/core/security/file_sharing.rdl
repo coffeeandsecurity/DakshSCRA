@@ -2,7 +2,7 @@ VERSION 2
 RULE ios.file-sharing VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "<key>\\s*UIFileSharingEnabled\\s*</key>\\s*<true\\s*/>" ""
-REPORT "Application Documents Exposed Through File Sharing"
+REPORT "Application File Sharing Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

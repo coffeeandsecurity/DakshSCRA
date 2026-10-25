@@ -3,7 +3,7 @@ RULE baseline.cpp.core.potential_memory_leak_use_of_new_without_delete VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\bnew\\s+\\w+(?![^<>]*\\s*>)" "im"
 WHEN TEXT_MISSING "free\\s*\\(|delete\\s+|unique_ptr|shared_ptr|RAII" "im"
-REPORT "Potential Memory Leak: Use of `new` Without `delete`"
+REPORT "Allocation Ownership Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

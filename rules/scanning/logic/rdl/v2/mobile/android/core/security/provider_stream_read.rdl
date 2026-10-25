@@ -1,0 +1,8 @@
+VERSION 2
+RULE android.provider-stream-read VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bopenInputStream\\s*\\(" ""
+REPORT "Provider Stream Read Review"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

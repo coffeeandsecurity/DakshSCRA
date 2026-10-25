@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from .compiler import _compile_v1, _regex_parts
+from core.pattern_rules import load_pack
 
 
 def slug(value):
@@ -66,12 +67,17 @@ def translate(source, identifier, title, path_rule=False, warnings=None):
 
 def inventory(root):
     root = Path(root)
-    definitions, entries, referenced = {}, [], set()
-    for xml in sorted((root / 'rules/scanning/platform').rglob('*.xml')):
-        tree = ET.parse(xml).getroot()
+    definitions, entries, referenced, identities = {}, [], set(), set()
+    for marker in sorted((root / 'rules/scanning/platform').rglob('_pack.yaml')):
+        pack = marker.parent
+        xml = pack.with_suffix('.xml')
+        tree = load_pack(pack)
         for element in tree.iter():
             if element.find('name') is None or (element.find('regex') is None and element.find('rdl_ref') is None):
                 continue
+            identity = element.get('pattern_id')
+            if identity in identities: raise ValueError('Duplicate Pattern Rule identity: ' + identity)
+            identities.add(identity)
             title = element.findtext('name').strip()
             reference = (element.findtext('rdl_ref') or '').strip()
             path_rule = xml.name == 'filepaths.xml'
@@ -80,15 +86,12 @@ def inventory(root):
                 legacy = root / 'rules/scanning' / reference
                 relative = Path(reference).relative_to('logic/rdl/v1')
                 scope, stem = relative.parent, relative.stem
-                source = legacy.read_text()
+                source = element.findtext("pattern_logic") or legacy.read_text()
                 referenced.add(legacy.resolve())
             else:
                 scope = xml.parent.relative_to(root / 'rules/scanning/platform') / 'core'
                 stem = slug(title)
                 source = 'VERSION 1\nWHEN PRESENT ' + (element.findtext('regex') or '') + '\n'
-                exclude = (element.findtext('exclude') or '').strip()
-                if exclude:
-                    source += 'WHEN MISSING ' + exclude + '\n'
             identifier = 'baseline.' + '.'.join(scope.parts) + '.' + stem
             family = slug(category or ('review_surface' if path_rule else 'security'))
             relative_v2 = Path('rules/scanning/logic/rdl/v2') / scope / 'baseline' / family / (stem + '.rdl')
@@ -106,16 +109,17 @@ def inventory(root):
             definitions[str(relative_v2)] = text
             entries.append(dict(translation_notes=warnings, rule_id=identifier, title=title, source_kind='rdl_v1' if reference else 'xml_pattern',
                 v1_ref=reference, xml_pack=xml.relative_to(root).as_posix(), v2_rule=relative_v2.as_posix(),
+                pattern_file=Path(element.get('pattern_file')).relative_to(root).as_posix(), rule_type='pattern',
                 scope=scope.as_posix(), category=category or 'Review surface', path_rule=path_rule,
                 source_sha256=hashlib.sha256(source.encode()).hexdigest(),
-                pattern=element.findtext('regex') or '', exclude=element.findtext('exclude') or '',
+                pattern=element.findtext('regex') or '',
                 description=element.findtext('rule_desc') or '',
                 impact=element.findtext('vuln_desc') or '',
                 remediation=element.findtext('developer') or '',
                 reviewer=element.findtext('reviewer') or ''))
     actual = {p.resolve() for p in (root / 'rules/scanning/logic/rdl/v1').rglob('*.rdl')}
-    if actual != referenced:
-        raise ValueError('V1 inventory not fully mapped: ' + str(actual - referenced))
+    if actual - referenced:
+        raise ValueError('Unmapped legacy definitions: ' + str(actual - referenced))
     return definitions, dict(schema_version=1, coverage_kind='native_v2_rule_predicate_parity',
         limitations=['Rule-predicate parity is not proof of semantic/data-flow parity or runtime exploitability.',
                       'V1 report grouping, confidence ranking, baselines and human suppressions are separate layers.'],

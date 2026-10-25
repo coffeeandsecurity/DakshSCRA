@@ -1,0 +1,44 @@
+format: daksh-pattern-rule/v1
+id: cpp.core.unsafe_file_handling_insecure_file_path_usage
+title: "File Path and Access Review"
+order: 19
+category: File Handling and Permissions
+detection:
+  pattern: \b(?:ifstream|ofstream|fstream)\b.*\.open\s*\(.*\)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:validate|sanitize|canonical|realpath|filesystem::path
+reporting:
+  type: area_of_interest
+  reason: Detects file handling operations (`ifstream`, `ofstream`, `fstream`) to ensure they are secure and protected
+    against path traversal vulnerabilities.
+  trace:
+  - 'Externalized rule logic for Unsafe File Handling: Insecure File Path Usage.'
+  description: The code accesses, creates, deletes, or shares filesystem data. Resolve path provenance, destination
+    containment, permission modes, and any concurrent access.
+  impact: An attacker controlling a path or shared file may read or replace private files, delete data, or redirect
+    an operation outside its intended directory if containment and access controls are ineffective.
+  remediation: Resolve paths beneath a fixed permitted root and verify containment and effective permissions. Use
+    safe exclusive temporary-file creation, restrict sharing, and account for symlinks and concurrent changes.
+  reviewer: Verify that file paths are sanitized to prevent traversal attacks. Look for proper error handling for
+    file operations and confirm that all streams are closed after use. Ensure that user input is not directly passed
+    into `open()` without validation. This can be confirmed as an issue when the matched path is reachable and required
+    controls are missing, weak, or inconsistent.
+  review_steps:
+  - Trace external influence over the path and resolve it as the filesystem will, including relative segments and
+    symbolic links.
+  - Check the resolved destination remains within the permitted root and that the caller is authorized for the specific
+    file operation.
+  - Inspect read, write and extraction paths separately; record the effective path restrictions and deployment permissions.
+  recommendations:
+  - Resolve paths against a fixed permitted root and enforce containment with filesystem-aware checks; avoid simple
+    prefix checks.
+  - Use application-controlled file identifiers where possible, restrict filesystem privileges, and test traversal
+    and archive extraction boundaries.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

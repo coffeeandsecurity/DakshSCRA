@@ -4,6 +4,9 @@ Python uses its AST; other executable profiles use the structural token parser.
 Only unique visible declarations resolve. Dynamic/external calls stay explicit.
 """
 import ast
+import base64
+import gzip
+import io
 import hashlib
 import json
 import os
@@ -21,6 +24,8 @@ from .portable_profiles import EXTENSIONS
 from .cache import AnalysisBudgetExceeded
 
 INDEX_NAME = 'rdl_xref.json'
+MAX_INDEX_BYTES = 64 * 1024 * 1024
+MAX_DECODED_INDEX_BYTES = 128 * 1024 * 1024
 IGNORE = {'.git', '.hg', '.svn', 'node_modules', 'vendor', '.venv', 'venv',
           '__pycache__', 'dist', 'build', 'target', 'bin', 'obj', 'Pods', '.dart_tool'}
 SUFFIXES = {suffix: language for language, suffixes in EXTENSIONS.items() for suffix in suffixes}
@@ -171,7 +176,8 @@ def token_index(path, text, language, absolute):
             args.append(dict(expression=rendered(a+2 if named else a,b), name=ts[a].text if named else ''))
         callee=walker.text(start,i)
         calls.append(dict(caller_id=caller['id'], callee=callee, path=path, line=ts[start].line,
-                          column=ts[start].column, arguments=args, language=language, owner=caller['owner']))
+                          column=ts[start].column, arguments=args, language=language, owner=caller['owner'],
+                          receiver_unresolved=bool(start >= 2 and ts[start-1].text in {'.','->','?->','::'} and ts[start-2].text in {')',']'})))
     if language=='php':
         for i,t in enumerate(ts[:-1]):
             if t.kind!='identifier' or t.text.lower() not in {'include','include_once','require','require_once'} or ts[i+1].text=='(': continue
@@ -196,6 +202,7 @@ def resolve_calls(symbols, calls, contents, imports, deadline=None):
         if s['kind'] != 'module': by_name.setdefault((s['language'], s['name'].lower() if s['language']=='php' else s['name']), []).append(s)
     by_id = {s['id']:s for s in symbols}
     import_cache = {}
+    declaration_cache = {}
     source_paths = {Path('/index')/p for p in contents}
     for call in calls:
         language, name = call['language'], call['callee']
@@ -227,7 +234,7 @@ def resolve_calls(symbols, calls, contents, imports, deadline=None):
             origin=Path('/index')/call['path']
             key=(call['path'],name)
             if key not in import_cache:
-                import_cache[key]=imported_target(origin,contents[call['path']],name,source_paths,language)
+                import_cache[key]=imported_target(origin,contents[call['path']],name,source_paths,language,declaration_cache)
             bound=import_cache[key]
             if bound is not None:
                 explicit={p.relative_to('/index').as_posix() for p in bound[0]}
@@ -260,6 +267,10 @@ def resolve_calls(symbols, calls, contents, imports, deadline=None):
                     targets=[relative] if relative in contents else [root_relative]
                     pool=[s for s in symbols if s['kind']=='module' and s['path'] in targets]
             call['reference_kind']='include'
+        if call.get('receiver_unresolved'):
+            # A return value or indexed receiver is not the enclosing object.
+            # Its type needs a modeled return/element binding before resolution.
+            pool=[]
         candidates=[]
         for target in pool:
             if explicit is not None:
@@ -333,7 +344,7 @@ def build_index(root, provenance='scan', max_files=2000, max_bytes=32*1024*1024,
     symbols,calls,contents,imports,diagnostics,files=[],[],{},{},[],[]
     started=time.monotonic(); total=0; truncated=False; visited=0
     for directory, children, names in walk_source(root,followlinks=False):
-        children[:]=sorted(n for n in children if n not in IGNORE and not (Path(directory)/n).is_symlink())
+        children[:]=sorted((n for n in children if n not in IGNORE and not (Path(directory)/n).is_symlink()), key=lambda n: (0 if n.lower() in {'websites', 'controllers', 'handlers', 'routes'} else 1, n))
         visited+=1
         if visited>20000 or time.monotonic()-started>max_seconds: truncated=True; break
         for name in sorted(names):
@@ -374,7 +385,9 @@ def build_index(root, provenance='scan', max_files=2000, max_bytes=32*1024*1024,
     for item in symbols:
         item['callers']=incoming[item['id']]; item['callees']=outgoing[item['id']]
     symbols.sort(key=lambda s:(s['path'],s['line'],s['column']))
-    return dict(version=1,provenance=provenance,created_at=datetime.now(timezone.utc).isoformat(),
+    from .advanced import build_inventory
+    inventory = build_inventory(root, files)
+    return dict(input_inventory=inventory, version=1,provenance=provenance,created_at=datetime.now(timezone.utc).isoformat(),
                 symbols=symbols,calls=calls,files=files,diagnostics=diagnostics[:200],truncated=truncated,
                 summary=dict(symbols=len(symbols),calls=len(calls),resolved=sum(c['resolution']=='resolved' for c in calls),
                              unresolved=sum(c['resolution']=='unresolved' for c in calls),ambiguous=sum(c['resolution']=='ambiguous' for c in calls),files=len(files)))
@@ -383,8 +396,12 @@ def build_index(root, provenance='scan', max_files=2000, max_bytes=32*1024*1024,
 def write_index(path,index):
     import tempfile
     path=Path(path); path.parent.mkdir(parents=True,exist_ok=True)
-    payload=json.dumps(index,ensure_ascii=False)
-    if len(payload.encode('utf-8'))>64*1024*1024: raise ValueError('Reference index exceeds storage budget')
+    payload=json.dumps(index,ensure_ascii=False,separators=(',', ':'))
+    raw = payload.encode('utf-8')
+    if len(raw) > MAX_DECODED_INDEX_BYTES: raise ValueError('Reference index exceeds decoded storage budget')
+    if len(raw) > 8 * 1024 * 1024:
+        payload = json.dumps(dict(version=1, storage_encoding='gzip-json-v1', payload=base64.b64encode(gzip.compress(raw, mtime=0)).decode('ascii')))
+    if len(payload.encode('utf-8')) > MAX_INDEX_BYTES: raise ValueError('Reference index exceeds storage budget')
     temporary=None
     try:
         with tempfile.NamedTemporaryFile(mode='w',encoding='utf-8',dir=path.parent,delete=False) as handle:
@@ -397,7 +414,7 @@ def write_index(path,index):
 def read_index(path):
     path=Path(path)
     if not path.exists(): return None
-    if path.stat().st_size>64*1024*1024: raise ValueError('Reference index exceeds storage budget')
+    if path.stat().st_size>MAX_INDEX_BYTES: raise ValueError('Reference index exceeds storage budget')
     stat=path.stat()
     return _read_snapshot(str(path),stat.st_mtime_ns,stat.st_ctime_ns,stat.st_size)
 
@@ -405,6 +422,15 @@ def read_index(path):
 @lru_cache(maxsize=2)
 def _read_snapshot(path,mtime,ctime,size):
     index=json.loads(Path(path).read_text(encoding='utf-8'))
+    if index.get('storage_encoding') == 'gzip-json-v1':
+        try:
+            encoded = base64.b64decode(index['payload'], validate=True)
+            with gzip.GzipFile(fileobj=io.BytesIO(encoded)) as stream:
+                raw = stream.read(MAX_DECODED_INDEX_BYTES + 1)
+            if len(raw) > MAX_DECODED_INDEX_BYTES: raise ValueError('Reference index exceeds decoded storage budget')
+            index = json.loads(raw)
+        except (OSError, EOFError, KeyError, TypeError) as exc:
+            raise ValueError('Invalid compressed reference index') from exc
     if index.get('version')!=1: raise ValueError('Unsupported reference index version')
     return index
 

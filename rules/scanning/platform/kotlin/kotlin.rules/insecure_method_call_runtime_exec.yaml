@@ -1,0 +1,44 @@
+format: daksh-pattern-rule/v1
+id: kotlin.core.insecure_method_call_runtime_exec
+title: "OS Command Injection Review"
+order: 5
+category: Insecure Method/Function Call
+detection:
+  pattern: Runtime\.exec\(".*"\)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:validate|sanitize|allowlist|ProcessBuilder\s*\(listOf
+reporting:
+  type: area_of_interest
+  reason: Detects insecure usage of the Runtime.exec() method for executing shell commands.
+  trace:
+  - 'Externalized rule logic for Insecure Method Call: Runtime.exec().'
+  description: The code invokes a process or shell execution API. Trace the executable, arguments, shell use, and
+    source of externally supplied values.
+  impact: If attacker-controlled data changes command syntax or executable selection, an attacker may execute commands
+    with application privileges, read or modify files, or disrupt service.
+  remediation: Use a fixed executable with a separate argument array and avoid a shell where possible. Validate
+    arguments for the selected program and allowlist permitted operations.
+  reviewer: Check for the secure usage of Runtime. exec() and assess if user input is properly validated, sanitized,
+    and appropriately used as command parameters. Ensure that developers have implemented strong input validation
+    measures, command parameterization techniques, and proper context-aware security controls to mitigate command
+    injection vulnerabilities. This can be confirmed as an issue when the matched path is reachable and required
+    controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify the executable, arguments, shell use and working directory; trace external influence over each.
+  - Check whether a shell interprets metacharacters or whether options can change command behavior even without
+    a shell.
+  - Verify the operation is reachable and examine validation, executable selection and process privileges before
+    confirming an issue.
+  recommendations:
+  - Prefer a library API or a fixed executable with a separate argument array; avoid passing external text to a
+    shell.
+  - Restrict permitted operations and arguments, constrain option handling, and test rejected input under the actual
+    deployment privileges.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

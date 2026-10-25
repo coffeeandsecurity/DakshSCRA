@@ -1,12 +1,14 @@
+import { countFindingFamilies } from '../lib/findingFamilies'
 import { useEffect, useId, useRef, useState } from 'react'
 import FindingsReport from './FindingsReport'
 import { FilePaths } from './InsightsPanel'
 import RetainedTab from './RetainedTab'
+import SuppressedPanel from './SuppressedPanel'
 
 const SECTIONS = [
   {
     id: 'code', label: 'Code Matches', tone: 'summary',
-    description: 'Rules matched against source code',
+    description: 'Issue families with platform-specific evidence',
     icon: <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="m6 5-5 5 5 5m8-10 5 5-5 5m-3-13L9 18" /></svg>,
   },
   {
@@ -14,14 +16,19 @@ const SECTIONS = [
     description: 'Rules matched against file and directory names',
     icon: <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M2 5h6l2 2h8v9H2z" /><path d="M2 5V3h6l2 2h7v2" /></svg>,
   },
+  {
+    id: 'suppressed', label: 'Suppressed Areas of Interests', tone: 'vectors',
+    description: 'Source matches excluded by RDL v1 logic',
+    icon: <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M3 3h14v14H3zM6 10h8" /></svg>,
+  },
 ]
 
-export default function AreasOfInterest({ data, status, rdlEngine, onViewAnalysis, requestedSection }) {
-  const [section, setSection] = useState(requestedSection?.section === 'paths' ? 'paths' : 'code')
-  useEffect(() => { if (requestedSection?.section === 'code' || requestedSection?.section === 'paths') setSection(requestedSection.section) }, [requestedSection])
+export default function AreasOfInterest({ data, status, rdlEngine, onViewAnalysis, requestedSection, runUuid, suppressedCount, onSuppressedLoaded }) {
+  const [section, setSection] = useState(SECTIONS.some(item => item.id === requestedSection?.section) ? requestedSection.section : 'code')
+  useEffect(() => { if (SECTIONS.some(item => item.id === requestedSection?.section)) setSection(requestedSection.section) }, [requestedSection])
   const id = useId()
   const buttons = useRef([])
-  const counts = { code: data?.findings?.length ?? 0, paths: data?.filepaths?.length ?? 0 }
+  const counts = { code: countFindingFamilies(data?.findings), paths: data?.filepaths?.length ?? 0, suppressed: suppressedCount }
 
   function handleKey(event, index) {
     let next
@@ -50,7 +57,7 @@ export default function AreasOfInterest({ data, status, rdlEngine, onViewAnalysi
               <span className="aa-subtab-title">{item.label}</span>
               <span className="aa-subtab-meta">{item.description}</span>
             </span>
-            <span className="aa-subtab-count" aria-label={`${counts[item.id]} matched rules`}>{counts[item.id]}</span>
+            <span className="aa-subtab-count" aria-label={`${counts[item.id] ?? 0} ${item.id === 'suppressed' ? 'suppressed records' : item.id === 'code' ? 'issue families' : 'matched rules'}`}>{counts[item.id] ?? '…'}</span>
             <span className="aa-subtab-arrow" aria-hidden="true">
               <svg viewBox="0 0 20 20" fill="currentColor"><path d="m7 5 5 5-5 5 1 1 6-6-6-6z" /></svg>
             </span>
@@ -66,6 +73,10 @@ export default function AreasOfInterest({ data, status, rdlEngine, onViewAnalysi
       <RetainedTab active={section === 'paths'} role="tabpanel" className="ip-content"
         id={`${id}-panel-paths`} aria-labelledby={`${id}-tab-paths`}>
         <FilePaths filepaths={data?.filepaths} />
+      </RetainedTab>
+      <RetainedTab active={section === 'suppressed'} role="tabpanel"
+        id={`${id}-panel-suppressed`} aria-labelledby={`${id}-tab-suppressed`}>
+        {rdlEngine === 'v2' ? <div className="empty-state"><div className="empty-title">RDL v1 was not run for this scan</div><p>RDL v1 suppressions require a scan with Both or RDL v1 selected.</p></div> : <SuppressedPanel runUuid={runUuid} onLoaded={onSuppressedLoaded} />}
       </RetainedTab>
     </div>
   )

@@ -3,7 +3,7 @@ RULE baseline.golang.framework.echo.echo_tls_validation_bypass VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "InsecureSkipVerify\\s*:\\s*true" "im"
 WHEN TEXT_MISSING "test|development|localhost|staging" "im"
-REPORT "Echo TLS Validation Bypass"
+REPORT "TLS Certificate Validation Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

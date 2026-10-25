@@ -1,0 +1,41 @@
+format: daksh-pattern-rule/v1
+id: python.core.ssrf_urllib_with_user_controlled_url
+title: "Server-Side Request Forgery Review"
+order: 32
+category: Server-Side Request Forgery (SSRF)
+detection:
+  pattern: urllib\.request\.urlopen\s*\(|urllib\.urlopen\s*\(|httplib|http\.client\.HTTPConnection\s*\(
+  conditions:
+  - WHEN PRESENT urllib\.request\.urlopen\s*\(|urllib\.urlopen\s*\(
+  - WHEN EXPR PRESENT:request\.|input\(|argv|\+ && MISSING:allowlist|whitelist|urlparse|is_private
+reporting:
+  type: area_of_interest
+  reason: Detects urllib-based outbound requests potentially influenced by user input.
+  trace:
+  - 'Externalized rule logic for SSRF: urllib with User-Controlled URL.'
+  description: The application makes an outbound request whose destination may be influenced by external data. Resolve
+    URL construction, redirects, DNS results, and network reachability.
+  impact: If an attacker can select a reachable destination, the application may expose internal services or metadata
+    credentials, or send protected data to an unauthorized recipient.
+  remediation: Allowlist required destinations and protocols, validate resolved addresses and every redirect, and
+    restrict outbound access to internal and metadata services.
+  reviewer: Inspect urllib call sites for user-input paths and verify URL destination controls. This can be confirmed
+    as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Verify the operation makes a server-side request, then trace external control over the URL, host, port and redirects.
+  - Inspect destination restrictions, DNS resolution and redirect handling; distinguish fixed destinations from
+    caller-controlled requests.
+  - Check deployment egress controls and whether internal services or local files are reachable from the requesting
+    process.
+  recommendations:
+  - Prefer fixed destinations or a restricted set of permitted services; validate schemes, hosts and ports before
+    the request.
+  - Apply destination checks to redirects and resolved addresses where applicable, restrict network egress, and
+    test prohibited destinations.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

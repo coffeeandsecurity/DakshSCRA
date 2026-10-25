@@ -5,7 +5,7 @@ LET resource BE RESOURCE MATCHES resource.closeable
 STATE resource STARTS open
 TRANSITION resource.close(resource) FROM open TO closed
 VIOLATION resource.use(resource) WHILE closed
-REPORT "resource used after close"
+REPORT "Resource Used After Close"
 SEVERITY MEDIUM
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

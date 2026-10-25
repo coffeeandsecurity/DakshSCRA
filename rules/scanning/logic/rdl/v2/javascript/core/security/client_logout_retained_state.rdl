@@ -1,0 +1,8 @@
+VERSION 2
+RULE javascript.client.logout-retained-state VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:SignOut|signOut|logout)\\s*\\(" ""
+REPORT "Persisted Account State Retained During Local Logout Review"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

@@ -1,9 +1,8 @@
 VERSION 2
 RULE baseline.mobile.android.core.deep_link_without_app_link_verification VERSION 1
 IN FILE
-WHEN TEXT_MATCHES "android:scheme\\s*=\\s*\"(?!https?)[^\"]+\"|<data\\s[^>]*android:host\\s*=" "im"
-WHEN (TEXT_MISSING "android:autoVerify\\s*=\\s*\"true\"" "im" AND TEXT_MISSING "android:exported\\s*=\\s*\"false\"" "im")
-REPORT "Deep Link Without App Link Verification"
+WHEN TEXT_MATCHES "[A-Za-z_][\\w.-]*:scheme\\s*=\\s*\"(?!https?)[^\"]+\"|<data\\s[^>]*[A-Za-z_][\\w.-]*:host\\s*=" "im"
+REPORT "Deep Link without App Link Verification"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

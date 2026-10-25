@@ -1,0 +1,8 @@
+VERSION 2
+RULE flutter.certificate-callback-accepts-all VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bbadCertificateCallback\\s*=\\s*\\([^)]{0,300}\\)\\s*(?:=>\\s*true\\b|\\{\\s*return\\s+true\\b)" ""
+REPORT "TLS Certificate Validation Review"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

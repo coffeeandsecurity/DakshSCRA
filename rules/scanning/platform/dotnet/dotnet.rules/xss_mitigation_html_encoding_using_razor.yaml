@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: dotnet.core.xss_mitigation_html_encoding_using_razor
+title: "HTML Output Encoding Review"
+order: 21
+category: Effective/Standard Mitigations Implemented
+detection:
+  pattern: Html\.Encode\s*\(|HttpUtility\.HtmlEncode\s*\(|AntiXssEncoder\.HtmlEncode\s*\(|HtmlEncoder\.Default\.Encode\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:Html\.Encode\s*\(|HttpUtility\.HtmlEncode\s*\(|AntiXssEncoder\.HtmlEncode\s*\(|HtmlEncoder\.Default\.Encode\s*\(
+    && MISSING:test|example
+reporting:
+  type: area_of_interest
+  reason: Detects .NET HTML encoding helpers that act as XSS mitigations in Razor and related rendering paths.
+  trace:
+  - 'Externalized rule logic for XSS Mitigation: HTML Encoding using Razor.'
+  description: The code contains a security-control marker. Its presence is a review surface rather than evidence
+    that the control is defective or consistently enforced.
+  impact: No adverse security consequence follows from the presence of a protection alone. If it is bypassed or
+    applied outside the correct context, the protected operation may still permit injection or unauthorized access.
+  remediation: Verify that the control applies to every relevant entry point and uses the required context and policy.
+    Retain effective protections; test bypass cases before recommending a change.
+  reviewer: Check that user-controlled content is passed through an appropriate .NET HTML encoder before rendering,
+    and confirm that raw rendering helpers are not being mistaken for XSS defenses. This can be confirmed as an
+    issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - 'Trace the matched value to its browser rendering context: text, attribute, URL, script or DOM operation.'
+  - Inspect the exact encoder or safe rendering API and any bypass of automatic escaping; verify it protects that
+    context.
+  - Distinguish literal trusted content from externally influenced markup. Record the reachable rendering path and
+    any effective sanitizer configuration.
+  recommendations:
+  - Use safe text or template APIs and context-appropriate encoding at the rendering boundary.
+  - If rich HTML is required, use a maintained sanitizer with a restricted policy; validate URL schemes and test
+    the actual browser output.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: green

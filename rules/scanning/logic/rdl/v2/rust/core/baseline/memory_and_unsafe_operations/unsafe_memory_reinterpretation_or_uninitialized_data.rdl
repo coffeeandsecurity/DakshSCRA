@@ -3,7 +3,7 @@ RULE baseline.rust.core.unsafe_memory_reinterpretation_or_uninitialized_data VER
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:std::mem::transmute|core::mem::transmute|mem::transmute|mem::uninitialized|MaybeUninit::assume_init)\\s*(?:<[^>]+>)?\\s*\\(" "im"
 WHEN TEXT_MISSING "// SAFETY:|// Safety:|bytemuck|pod_read_unaligned|std::mem::zeroed" "im"
-REPORT "Unsafe Memory Reinterpretation or Uninitialized Data"
+REPORT "Unsafe Memory Operation Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

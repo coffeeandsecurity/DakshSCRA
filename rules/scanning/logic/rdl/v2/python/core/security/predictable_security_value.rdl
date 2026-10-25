@@ -1,0 +1,10 @@
+VERSION 2
+RULE python.predictable-security-value VERSION 1
+IN DATA_FLOW
+LET generator BE CALL MATCHES random.predictable
+LET value BE VARIABLE MATCHES auth.token-material
+WHEN generator FLOWS TO value
+REPORT "Security-Sensitive Randomness Review"
+SEVERITY HIGH
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

@@ -3,7 +3,7 @@ RULE memory.dangling-pointer VERSION 1
 IN FUNCTION
 LET pointer BE VARIABLE MATCHES memory.pointer
 WHEN pointee.lifetime-ended pointer AND pointer.escapes pointer
-REPORT "dangling pointer escapes its pointee lifetime"
+REPORT "Dangling Pointer Escape"
 SEVERITY HIGH
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

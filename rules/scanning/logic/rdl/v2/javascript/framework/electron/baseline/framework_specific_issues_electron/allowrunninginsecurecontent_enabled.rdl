@@ -3,7 +3,7 @@ RULE baseline.javascript.framework.electron.allowrunninginsecurecontent_enabled 
 IN FILE
 WHEN TEXT_MATCHES "allowRunningInsecureContent\\s*:\\s*true" "im"
 WHEN (TEXT_MATCHES "allowRunningInsecureContent:\\s*true" "im" AND TEXT_MISSING "test|development|localhost" "im")
-REPORT "allowRunningInsecureContent Enabled"
+REPORT "Mixed Content Policy Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -1,3 +1,4 @@
+import { groupFindingFamilies, countFindingFamilies } from './findingFamilies'
 export function recordedNumber(value) {
   if (!['number', 'string'].includes(typeof value) || (typeof value === 'string' && !value.trim())) return null
   const number = Number(value)
@@ -16,17 +17,16 @@ export function buildScanSummary(run = {}, data, suppressedCount) {
   }
   const detection = meta.detection_summary || {}, inputs = meta.inputs_received || {}, analysis = meta.analyzer_summary || {}, progress = meta.live_progress || {}, timeline = meta.scanning_timeline || {}
   const removed = Boolean(data?.data_removed || run.data_removed_at)
-  const code = removed ? null : Array.isArray(data?.findings) ? data.findings.length : recordedNumber(detection.areas_of_interest_identified)
+  const code = removed ? null : Array.isArray(data?.findings) ? countFindingFamilies(data.findings) : recordedNumber(detection.areas_of_interest_identified)
   const paths = removed ? null : Array.isArray(data?.filepaths) ? data.filepaths.length : recordedNumber(detection.file_paths_areas_of_interest_identified)
   const files = recordedNumber(detection.total_files_scanned)
   const identified = recordedNumber(detection.total_files_identified)
   const discovered = recordedNumber(detection.total_project_files_identified)
   const languages = new Map(), evidenceFiles = new Set()
-  let locations = 0
+  const locations = groupFindingFamilies(removed ? [] : data?.findings || []).reduce((sum, group) => sum + group.instanceCount, 0)
   for (const rule of removed ? [] : data?.findings || []) {
     for (const entry of rule.evidence || []) {
       if (entry.file) evidenceFiles.add(String(entry.file).replace(/\\/g, '/'))
-      locations += Array.isArray(entry.matches) ? entry.matches.length : 1
     }
   }
   for (const row of removed ? [] : data?.loc_breakdown || []) {

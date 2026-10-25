@@ -1,6 +1,7 @@
 """Structural token adapters for JavaScript, Go, C++, and PHP."""
 
 import heapq
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from utils.source_cache import read_source_text
@@ -330,7 +331,22 @@ class _TokenAdapter(LanguageAdapter):
         def literal_entity(name, literal, token_index):
             literal_value = literal.text
             interpolated = self.language_id == 'php' and literal.quote == '"' and '$' in literal_value.replace('\\$', '')
-            concepts = {'secret.credential'} if (not interpolated and self.secret_name_candidate(name) and self.catalog.weak_secret_literal(literal_value, name)) else set()
+            translation = (self.language_id == 'php' and 'language' in path.parts
+                           and token_index >= 4 and tokens[token_index-4].text == '$_'
+                           and tokens[token_index-3].text == '['
+                           and re.match(r'^(?:entry|text|help|error|button|column|heading)_', name))
+            pagination_field = (self.language_id == 'php' and path.name == 'paginators-1.json.php'
+                                and tokens[token_index].text == '=>'
+                                and name in {'input_token','output_token','limit_key','result_key'})
+            grammar_field = path.name == 'Lexer.php' and tokens[token_index].text == '=>' and name == 'lex_tokens_start' and literal_value.startswith('{')
+            resource_identifier = path.name == 'smoke.json.php' and tokens[token_index].text == '=>' and name == 'SecretId'
+            environment_name = (name.startswith('ENV_') and re.fullmatch(r'[A-Z][A-Z0-9]*_[A-Z0-9_]+', literal_value)
+                                and any(token.text.lower() == 'getenv' and tokens[index+1].text == '('
+                                        and ''.join(item.text for item in tokens[index+2:index+6]).startswith(('self::'+name+')','static::'+name+')',name+')'))
+                                        for index,token in enumerate(tokens[:-6]) if token.kind == 'identifier'))
+            redaction = (tokens[token_index].text == '=>' and name.startswith('/')
+                         and re.search(r'\[(?:TOKEN|KEY|SIGNATURE|CONTENT KEY)\]', literal_value))
+            concepts = {'secret.credential'} if (not grammar_field and not resource_identifier and not pagination_field and not environment_name and not redaction and not translation and not interpolated and self.secret_name_candidate(name) and self.catalog.weak_secret_literal(literal_value, name)) else set()
             entity = builder.add_entity(EntityType.LITERAL, repr(literal_value), name, SourceLocation(path.as_posix(), literal.line, literal.column, literal.line, literal.column + len(literal_value) + 2), 'StringLiteral', type_name='string', concepts=concepts, attributes={'value': literal_value})
             builder.add_edge(owner(token_index), entity, EdgeKind.CONTAINS)
 
@@ -416,7 +432,7 @@ class CppAdapter(_TokenAdapter):
 class PHPAdapter(_TokenAdapter):
     language_id = "php"
     adapter_name = "php-structural"
-    adapter_version = "3"
+    adapter_version = "4"
     extensions = (".php",)
     declaration_words = frozenset({"function", "public", "protected", "private", "static", "final", "abstract", "const", "var"})
     reject_delimiter_errors = False

@@ -1,0 +1,40 @@
+format: daksh-pattern-rule/v1
+id: kotlin.core.dynamic_code_loading
+title: "Dynamic Code Loading Review"
+order: 22
+category: Data Leakage
+detection:
+  pattern: DexClassLoader\s*\(|PathClassLoader\s*\(|URLClassLoader\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:android_asset|getFilesDir\(\)|getCodeCacheDir\(\)|getCacheDir\(\)|Context\.getDir\(
+reporting:
+  type: area_of_interest
+  reason: Detects dynamic class loading from potentially untrusted paths.
+  trace:
+  - Externalized rule logic for Dynamic Code Loading.
+  description: The code obtains executable material or replaces application behavior at runtime. Determine the origin,
+    integrity checks, and intended deployment scope.
+  impact: A party able to substitute executable material or a runtime hook may run code with application privileges,
+    inspect protected data, or alter security checks.
+  remediation: Load only approved code from trusted locations, verify signatures or integrity before execution,
+    and restrict runtime replacement to documented, authorized behavior.
+  reviewer: Identify all dynamic class loader instantiations and confirm the source path is within the app's own
+    internal storage or assets. Verify signature checks are in place if loading from downloaded content. This can
+    be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Determine whether the matched operation interprets code, expressions or templates; identify its execution context
+    and permissions.
+  - Trace control over the executed text and distinguish fixed application code from externally influenced content.
+  - Inspect restrictions and failure paths; record a reachable input-to-execution path before confirming code execution.
+  recommendations:
+  - Replace externally assembled code with fixed operations and data-only inputs where possible.
+  - Keep template or expression sources under application control; restrict exposed capabilities and test rejection
+    of unexpected syntax.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

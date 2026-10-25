@@ -3,7 +3,7 @@ RULE baseline.java.core.serialization_deserialization_handling VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\.readObject|\\.writeObject|ObjectInputStream|ObjectOutputStream" "im"
 WHEN TEXT_MISSING "SerialKiller|ValidatingObjectInputStream|ObjectInputFilter|allowlist|whitelist|trusted" "im"
-REPORT "Serialization/Deserialization Handling"
+REPORT "Object Serialization Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

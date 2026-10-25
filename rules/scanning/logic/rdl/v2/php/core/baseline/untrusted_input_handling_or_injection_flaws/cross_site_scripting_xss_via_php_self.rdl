@@ -3,7 +3,7 @@ RULE baseline.php.core.cross_site_scripting_xss_via_php_self VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\$_SERVER\\['PHP_SELF'" "im"
 WHEN (TEXT_MATCHES "(echo|print|action\\s*=|header\\s*\\()" "im" AND TEXT_MISSING "htmlspecialchars|htmlentities|basename" "im")
-REPORT "Cross-Site Scripting (XSS) via PHP_SELF"
+REPORT "HTML Output Encoding Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

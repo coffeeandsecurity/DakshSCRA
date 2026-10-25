@@ -5,7 +5,7 @@ LET input BE VARIABLE MATCHES input.untrusted
 LET sink BE CALL MATCHES deserialization.object-construction
 WHEN input FLOWS TO sink
 REQUIRE NOT policy.type-allowlist sink
-REPORT "unsafe deserialization of untrusted data"
+REPORT "Object Deserialization Review"
 SEVERITY CRITICAL
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

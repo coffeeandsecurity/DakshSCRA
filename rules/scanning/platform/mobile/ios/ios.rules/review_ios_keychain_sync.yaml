@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: mobile.ios.core.review_ios_keychain_sync
+title: Keychain Synchronization Enabled
+order: 21
+category: STORAGE Review
+detection:
+  pattern: \bkSecAttrSynchronizable\s*(?:\]\s*=|:|=)\s*(?:true\b|kCFBooleanTrue\b|@YES\b)
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: A keychain query explicitly enables synchronization. Determine whether this operation creates or
+    updates sensitive items or merely searches existing items. Identify the value written, backing store and access
+    class, including backup, restore, reinstall and logout behavior.
+  impact: Sensitive items created with synchronization enabled may be replicated beyond the current device. Exposure
+    depends on the item operation, account security, and the application’s intended trust boundary.
+  remediation: Keep device-bound secrets non-synchronizing when required by their threat model. Use suitable ThisDeviceOnly
+    accessibility and authentication controls; verify the actual SecItemAdd or update operation. Keep privileged
+    secrets on the server, use appropriate device-backed secure storage for local credentials, and restrict backup
+    and sharing to intended non-sensitive data.
+  reviewer: Test device lock state, cloud backup versus device transfer, restored keys, keychain persistence after
+    reinstall, and secure-storage failure; do not silently fall back to plaintext or treat an unrelated secure store
+    as protection.
+  review_steps:
+  - Trace the matched candidate to its actual value, caller or resource.
+  - Test device lock state, cloud backup versus device transfer, restored keys, keychain persistence after reinstall,
+    and secure-storage failure; do not silently fall back to plaintext or treat an unrelated secure store as protection.
+  - Resolve release configuration and runtime assumptions before confirming an issue.
+  recommendations:
+  - Keep device-bound secrets non-synchronizing when required by their threat model. Use suitable ThisDeviceOnly
+    accessibility and authentication controls; verify the actual SecItemAdd or update operation. Keep privileged
+    secrets on the server, use appropriate device-backed secure storage for local credentials, and restrict backup
+    and sharing to intended non-sensitive data.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

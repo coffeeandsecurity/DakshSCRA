@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: terraform.framework.gcp.gcp_storage_bucket_publicly_accessible
+title: GCP Storage Bucket Publicly Accessible
+order: 3
+category: GCP Storage Security
+detection:
+  pattern: resource\s+"google_storage_bucket_iam_(?:binding|member)"[^}]*allUsers|resource\s+"google_storage_bucket_iam_(?:binding|member)"[^}]*allAuthenticatedUsers
+  conditions:
+  - WHEN PRESENT allUsers|allAuthenticatedUsers
+  - WHEN EXPR PRESENT:role\s*=\s*"roles/storage\.objectViewer".*allUsers|allAuthenticatedUsers && MISSING:# intentional|#
+    static-website|website\s*\{
+reporting:
+  type: area_of_interest
+  reason: Detects GCS bucket IAM bindings that grant access to allUsers or allAuthenticatedUsers.
+  trace:
+  - Externalized rule logic for GCP Storage Bucket Publicly Accessible.
+  description: Storage configuration may permit public object access. Resolve bucket or container policies, object
+    ACLs, and provider-level public-access controls.
+  impact: Unauthenticated users may read private objects or modify publicly writable content if effective access
+    rules grant those operations. A permissive account-level option alone does not establish that every object is
+    public.
+  remediation: Disable unnecessary public access, enforce narrow identity-based permissions, and verify effective
+    object access from an unauthenticated client. Separate intentionally public content from private storage.
+  reviewer: Confirm public bucket access is intentional and contents are appropriate for public access. This can
+    be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Resolve the effective privileges, filesystem modes or identity grants, including inherited and deployment-level
+    permissions.
+  - Determine which operations are required and whether an untrusted actor can exercise the excess access.
+  - Record the affected resource and effective policy; distinguish a declared capability from an exploitable authorization
+    gap.
+  recommendations:
+  - Limit access and privileges to the operations and resources the application requires; remove unnecessary broad
+    grants.
+  - Test permitted operations and denied access with the actual deployment identity and effective policy.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

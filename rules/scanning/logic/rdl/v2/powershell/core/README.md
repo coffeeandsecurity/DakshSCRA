@@ -26,17 +26,17 @@ Status: 10 owned rule(s), 10 runtime mapping(s). No claim of complete coverage.
 
 ## Current runtime mappings
 
-Baseline and semantic comparisons link the v1 source; additional checks link the selected XML pack. Shared properties retain a single owning definition.
+Pattern baselines and semantic comparisons link the unified rule source; additional checks link the selected pack metadata. Shared properties retain a single owning definition.
 
-| V1 definition or selected pack | V2 property |
+| Unified rule or selected pack | V2 property |
 |---|---|
-| [invoke_expression_with_variable_input.rdl](../../../v1/powershell/core/invoke_expression_with_variable_input.rdl) | [baseline.powershell.core.invoke_expression_with_variable_input](baseline/injection/invoke_expression_with_variable_input.rdl) |
-| [start_process_or_cmd_exe_with_variable_arguments.rdl](../../../v1/powershell/core/start_process_or_cmd_exe_with_variable_arguments.rdl) | [baseline.powershell.core.start_process_or_cmd_exe_with_variable_arguments](baseline/injection/start_process_or_cmd_exe_with_variable_arguments.rdl) |
-| [hardcoded_credential_in_powershell_script.rdl](../../../v1/powershell/core/hardcoded_credential_in_powershell_script.rdl) | [baseline.powershell.core.hardcoded_credential_in_powershell_script](baseline/sensitive_data_exposure/hardcoded_credential_in_powershell_script.rdl) |
-| [convertto_securestring_with_plaintext.rdl](../../../v1/powershell/core/convertto_securestring_with_plaintext.rdl) | [baseline.powershell.core.convertto_securestring_with_plaintext](baseline/sensitive_data_exposure/convertto_securestring_with_plaintext.rdl) |
-| [download_cradle_pattern.rdl](../../../v1/powershell/core/download_cradle_pattern.rdl) | [baseline.powershell.core.download_cradle_pattern](baseline/download_and_execution/download_cradle_pattern.rdl) |
-| [webclient_downloadstring_execution.rdl](../../../v1/powershell/core/webclient_downloadstring_execution.rdl) | [baseline.powershell.core.webclient_downloadstring_execution](baseline/download_and_execution/webclient_downloadstring_execution.rdl) |
-| [bypass_execution_policy.rdl](../../../v1/powershell/core/bypass_execution_policy.rdl) | [baseline.powershell.core.bypass_execution_policy](baseline/execution_policy_and_security_controls/bypass_execution_policy.rdl) |
-| [amsi_bypass_attempt.rdl](../../../v1/powershell/core/amsi_bypass_attempt.rdl) | [baseline.powershell.core.amsi_bypass_attempt](baseline/execution_policy_and_security_controls/amsi_bypass_attempt.rdl) |
-| [tls_validation_disabled_via_callback.rdl](../../../v1/powershell/core/tls_validation_disabled_via_callback.rdl) | [baseline.powershell.core.tls_validation_disabled_via_callback](baseline/network_and_transport/tls_validation_disabled_via_callback.rdl) |
-| [powershell.xml](../../../../../platform/powershell/powershell.xml) | [powershell.skip-certificate-check](security/skip_certificate_check.rdl) |
+| [invoke_expression_with_variable_input.yaml](../../../../../platform/powershell/powershell.rules/invoke_expression_with_variable_input.yaml) | [baseline.powershell.core.invoke_expression_with_variable_input](baseline/injection/invoke_expression_with_variable_input.rdl) |
+| [start_process_or_cmd_exe_with_variable_arguments.yaml](../../../../../platform/powershell/powershell.rules/start_process_or_cmd_exe_with_variable_arguments.yaml) | [baseline.powershell.core.start_process_or_cmd_exe_with_variable_arguments](baseline/injection/start_process_or_cmd_exe_with_variable_arguments.rdl) |
+| [hardcoded_credential_in_powershell_script.yaml](../../../../../platform/powershell/powershell.rules/hardcoded_credential_in_powershell_script.yaml) | [baseline.powershell.core.hardcoded_credential_in_powershell_script](baseline/sensitive_data_exposure/hardcoded_credential_in_powershell_script.rdl) |
+| [convertto_securestring_with_plaintext.yaml](../../../../../platform/powershell/powershell.rules/convertto_securestring_with_plaintext.yaml) | [baseline.powershell.core.convertto_securestring_with_plaintext](baseline/sensitive_data_exposure/convertto_securestring_with_plaintext.rdl) |
+| [download_cradle_pattern.yaml](../../../../../platform/powershell/powershell.rules/download_cradle_pattern.yaml) | [baseline.powershell.core.download_cradle_pattern](baseline/download_and_execution/download_cradle_pattern.rdl) |
+| [webclient_downloadstring_execution.yaml](../../../../../platform/powershell/powershell.rules/webclient_downloadstring_execution.yaml) | [baseline.powershell.core.webclient_downloadstring_execution](baseline/download_and_execution/webclient_downloadstring_execution.rdl) |
+| [bypass_execution_policy.yaml](../../../../../platform/powershell/powershell.rules/bypass_execution_policy.yaml) | [baseline.powershell.core.bypass_execution_policy](baseline/execution_policy_and_security_controls/bypass_execution_policy.rdl) |
+| [amsi_bypass_attempt.yaml](../../../../../platform/powershell/powershell.rules/amsi_bypass_attempt.yaml) | [baseline.powershell.core.amsi_bypass_attempt](baseline/execution_policy_and_security_controls/amsi_bypass_attempt.rdl) |
+| [tls_validation_disabled_via_callback.yaml](../../../../../platform/powershell/powershell.rules/tls_validation_disabled_via_callback.yaml) | [baseline.powershell.core.tls_validation_disabled_via_callback](baseline/network_and_transport/tls_validation_disabled_via_callback.rdl) |
+| [_pack.yaml](../../../../../platform/powershell/powershell.rules/_pack.yaml) | [powershell.skip-certificate-check](security/skip_certificate_check.rdl) |

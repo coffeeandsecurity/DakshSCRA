@@ -1,0 +1,40 @@
+format: daksh-pattern-rule/v1
+id: python.core.deprecated_python_functions
+title: "Legacy Python API Review"
+order: 22
+category: Deprecated Functions
+detection:
+  pattern: (?i)\b(urllib2|commands)\b
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:urllib2|commands\.getoutput|commands\.getstatusoutput|urllib\.urlopen && MISSING:test|example|migration|legacy
+reporting:
+  type: area_of_interest
+  reason: Detects the use of deprecated Python functions and modules.
+  trace:
+  - Externalized rule logic for Deprecated Python Functions.
+  description: The source references a dependency, version, or deprecated API. Resolve the actual deployed version
+    and supported behavior before deciding whether it needs replacement.
+  impact: A reachable vulnerability in an unsupported or affected dependency may compromise the application with
+    its privileges. A version declaration or deprecated API alone does not establish that such a vulnerability is
+    present.
+  remediation: Inventory resolved dependencies and runtime versions, compare them with authoritative advisories
+    and support policy, and migrate affected or unsupported components to tested supported replacements.
+  reviewer: Identify and flag the use of deprecated Python functions or modules in the codebase and recommend updating
+    them to modern alternatives. This can be confirmed as an issue when the matched path is reachable and required
+    controls are missing, weak, or inconsistent.
+  review_steps:
+  - Resolve the dependency or deprecated API version actually included in the deployed artifact.
+  - Inspect the affected functionality and its callers; a declaration or API name alone does not establish a reachable
+    vulnerability.
+  - Check supported replacements and compatibility requirements, and record evidence for any affected deployed behavior.
+  recommendations:
+  - Replace unsupported APIs or affected dependencies with a supported option after checking application compatibility.
+  - Pin and verify the deployed version and test the affected behavior and error paths after the update.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

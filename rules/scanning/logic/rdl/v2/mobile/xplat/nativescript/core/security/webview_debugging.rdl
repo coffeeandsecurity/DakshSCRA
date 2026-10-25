@@ -2,7 +2,7 @@ VERSION 2
 RULE nativescript.webview-debugging VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\bsetWebContentsDebuggingEnabled\\s*\\(\\s*true\\s*\\)" ""
-REPORT "NativeScript Android WebView Debugging Enabled"
+REPORT "WebView Debugging Policy Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

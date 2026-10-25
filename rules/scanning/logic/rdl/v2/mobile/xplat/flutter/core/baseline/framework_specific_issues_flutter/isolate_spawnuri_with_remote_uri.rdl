@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.mobile.xplat.flutter.core.isolate_spawnuri_with_remote_uri VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\bIsolate\\.spawnUri\\s*\\(" "im"
-WHEN (TEXT_MATCHES "http://|https://|Uri\\.parse.*http" "im" AND TEXT_MISSING "// trusted|// internal" "im")
-REPORT "Isolate.spawnUri with Remote URI"
+REPORT "Remote Isolate Loading Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

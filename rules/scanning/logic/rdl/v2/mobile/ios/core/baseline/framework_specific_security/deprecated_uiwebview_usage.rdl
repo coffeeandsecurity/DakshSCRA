@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.mobile.ios.core.deprecated_uiwebview_usage VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\bUIWebView\\b|UIWebViewDelegate" "im"
-WHEN TEXT_MISSING "WKWebView|WKNavigationDelegate" "im"
-REPORT "Deprecated UIWebView Usage"
+REPORT "Legacy WebView API Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

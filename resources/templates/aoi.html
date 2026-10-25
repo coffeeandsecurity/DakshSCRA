@@ -35,8 +35,8 @@
             {% endif %}
             <p><b>Issue Description</b> : {{ snippet["issue_desc"] }}</p>
             <p><b>Security Impact</b> : {{ snippet["security_impact"] }}</p>
-            <p><b>Recommended Correction</b>    : {{ snippet["dev_note"] }}</p>
-            <p><b>Reviewer Note</b>     : {{ snippet["rev_note"] }}</p>
+            {% if show_reviewer_guidance|default(true) and snippet.get('rev_note') %}<div class="pattern-report-guidance"><b>Review guidance:</b> {{ snippet["rev_note"]|guidance }}</div>{% endif %}
+            {% if show_developer_guidance|default(true) and snippet.get('dev_note') %}<div class="pattern-report-guidance"><b>Recommendations:</b> {{ snippet["dev_note"]|guidance }}</div>{% endif %}
 
             <hr />
             {% for source in snippet["sources"] %}

@@ -3,7 +3,7 @@ RULE baseline.c.framework.freertos.freertos_command_execution_sink VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(system|popen|execv|execl)\\s*\\(" "im"
 WHEN TEXT_MISSING "validate|sanitize|allowlist" "im"
-REPORT "Freertos Command Execution Sink"
+REPORT "OS Command Injection Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -3,7 +3,7 @@ RULE baseline.dotnet.framework.entityframework.entityframework_insecure_certific
 IN FILE
 WHEN TEXT_MATCHES "ServerCertificateCustomValidationCallback\\s*=\\s*\\(.*=>\\s*true" "im"
 WHEN TEXT_MISSING "test|development|localhost|staging" "im"
-REPORT "Entityframework Insecure Certificate Validation Callback"
+REPORT "TLS Certificate Validation Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

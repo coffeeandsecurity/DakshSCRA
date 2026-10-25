@@ -1,0 +1,27 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.release_debug_signing
+title: Release Debug Signing Review
+order: 1100
+category: Mobile Security
+detection:
+  pattern: \bsigningConfig\b
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: The release build directly references the debug signing configuration. Resolve CI overrides and verify
+    the certificate in the distributed artifact.
+  description: The release build directly references the debug signing configuration. Resolve CI overrides and verify
+    the certificate in the distributed artifact.
+  impact: A distributed application signed with a known or development key can lose release identity assurance and
+    may be unsuitable for trusted distribution.
+  remediation: Use the authorized release signing identity or app-signing workflow, protect signing access and verify
+    the resulting certificate.
+  reviewer: Verify the selected build and active callers. Retain unresolved evidence when runtime, backend or generated
+    configuration is unavailable.
+scan_config:
+  match_mode: file
+  context_lines_before: '2'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'

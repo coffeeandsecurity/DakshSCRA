@@ -3,7 +3,7 @@ RULE baseline.dotnet.core.ssrf_webrequest_webclient_with_user_controlled_url VER
 IN FILE
 WHEN TEXT_MATCHES "WebRequest\\.Create\\s*\\(|new\\s+WebClient\\s*\\(\\s*\\)|new\\s+HttpWebRequest\\s*\\(" "im"
 WHEN (TEXT_MATCHES "Request\\.|QueryString|Form|userInput|\\+" "im" AND TEXT_MISSING "allowlist|whitelist|Uri\\.IsWellFormedUriString" "im")
-REPORT "SSRF: WebRequest/WebClient with User-Controlled URL"
+REPORT "Server-Side Request Forgery Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

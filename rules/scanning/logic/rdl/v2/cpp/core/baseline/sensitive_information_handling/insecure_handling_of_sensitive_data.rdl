@@ -3,7 +3,7 @@ RULE baseline.cpp.core.insecure_handling_of_sensitive_data VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(memset|mlock|setrlimit|unlink|remove|std::string)\\s*\\(" "im"
 WHEN (TEXT_MISSING "memset\\s*\\(|SecureZeroMemory|explicit_bzero|sodium_memzero|encrypt|cipher|redact" "im" AND TEXT_MISSING "test|example" "im")
-REPORT "Insecure Handling of Sensitive Data"
+REPORT "Sensitive Data Handling Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

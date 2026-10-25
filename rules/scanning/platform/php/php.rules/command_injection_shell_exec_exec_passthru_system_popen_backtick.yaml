@@ -1,0 +1,39 @@
+format: daksh-pattern-rule/v1
+id: php.core.command_injection_shell_exec_exec_passthru_system_popen_backtick
+title: "OS Command Injection Review"
+order: 2
+category: Untrusted Input Handling or Injection Flaws
+detection:
+  pattern: \b(?:shell_exec|exec|passthru|system|popen)\s*\(|`[^`\r\n]*\$[^`\r\n]*`
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Review PHP process calls and variable-bearing backticks. Input may arrive through parameters or other
+    files; the absence of a local request keyword does not establish trust.
+  trace:
+  - 'Externalized rule logic for Command Injection: shell_exec, exec, passthru, system, popen, backtick.'
+  description: A PHP process or shell operation is present. Review external influence over executable selection,
+    command text and arguments.
+  impact: If an attacker controls interpreted syntax or the operation selected, code or commands may run with the
+    application’s privileges, allowing data theft, state changes, or service disruption.
+  remediation: Prefer a fixed executable and separate arguments through an API and runtime that support bypassing
+    the shell. Allowlist operations and validate options. If a shell is unavoidable, verify argument escaping for
+    the deployed operating system.
+  reviewer: Trace command text and backtick expressions into shell_exec, exec, passthru, system or popen. Verify
+    whether a shell is used and assess argument injection as well as shell syntax. Establish the reachable caller
+    and process privileges before confirming an issue.
+  review_steps:
+  - Resolve the complete command and all external fragments.
+  - Check shell invocation and argument parsing on the deployed operating system.
+  - Test whether a caller can alter command structure or inject executable options.
+  recommendations:
+  - Use fixed operations and avoid shell command text where possible.
+  - Constrain arguments and process privileges; escaping does not authorize an operation.
+scan_config:
+  match_mode: line
+  context_lines_before: '4'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

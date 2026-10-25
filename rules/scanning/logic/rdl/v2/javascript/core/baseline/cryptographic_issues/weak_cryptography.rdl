@@ -2,7 +2,7 @@ VERSION 2
 RULE baseline.javascript.core.weak_cryptography VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(CryptoJS\\.DES\\.encrypt|MD5|SHA-1|RC4)\\(.+\\)" "im"
-REPORT "Weak Cryptography"
+REPORT "Weak Cryptographic Operation Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

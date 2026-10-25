@@ -1,0 +1,41 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.review_android_screenshot_protection_disabled
+title: "Screen Capture Protection Review"
+order: 42
+category: PRIVACY Review
+detection:
+  pattern: \bclearFlags\s*\([^\n;]{0,160}\bFLAG_SECURE\b
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: The checked code clears secure-window protection or invokes screen-capture APIs. Determine what content
+    can be captured and how consent and resulting images are handled. Identify the actual sensitive value and the
+    recipients, retention and user-consent context of this exposure or capability.
+  impact: Captured screens may expose passwords, one-time codes, financial information, or private communications
+    to capture recipients or insecure storage when sensitive content is included.
+  remediation: Protect sensitive screens where required by the threat model. Require clear user consent for capture,
+    limit the captured content and retention, and keep captured images out of logs and unauthorized uploads. Minimize
+    collection and retention, redact secret values, and apply the platform controls needed for sensitive UI and
+    data sharing.
+  reviewer: Test release logging, crash-report payloads, screenshot/background snapshots and clipboard lifetime;
+    permission or API capability alone does not establish collection or malicious behavior.
+  review_steps:
+  - Trace the matched candidate to its actual value, caller or resource.
+  - Test release logging, crash-report payloads, screenshot/background snapshots and clipboard lifetime; permission
+    or API capability alone does not establish collection or malicious behavior.
+  - Resolve release configuration and runtime assumptions before confirming an issue.
+  recommendations:
+  - Protect sensitive screens where required by the threat model. Require clear user consent for capture, limit
+    the captured content and retention, and keep captured images out of logs and unauthorized uploads. Minimize
+    collection and retention, redact secret values, and apply the platform controls needed for sensitive UI and
+    data sharing.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

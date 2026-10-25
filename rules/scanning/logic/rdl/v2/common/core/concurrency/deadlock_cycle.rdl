@@ -4,7 +4,7 @@ IN PROJECT
 LET lock BE RESOURCE MATCHES concurrency.lock
 WHEN lock_graph.cycle lock
 REQUIRE paths.concurrently_reachable lock
-REPORT "potential deadlock cycle"
+REPORT "Potential Deadlock Cycle"
 SEVERITY HIGH
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

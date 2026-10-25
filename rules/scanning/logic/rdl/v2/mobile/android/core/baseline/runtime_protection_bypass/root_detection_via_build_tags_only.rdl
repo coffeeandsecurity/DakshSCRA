@@ -2,7 +2,6 @@ VERSION 2
 RULE baseline.mobile.android.core.root_detection_via_build_tags_only VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "Build\\.TAGS\\.contains\\s*\\(\\s*\"test-keys\"\\s*\\)|\"test-keys\"\\.equals\\s*\\(\\s*Build\\.TAGS\\s*\\)" "im"
-WHEN TEXT_MISSING "new\\s+File.*bin/su|new\\s+File.*xbin/su|Runtime\\.getRuntime\\(\\)\\.exec|RootBeer|RootTools|whichSu" "im"
 REPORT "Root Detection via Build Tags Only"
 SEVERITY INFO
 CONFIDENCE LOW

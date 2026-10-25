@@ -336,7 +336,7 @@ def detect_mobile_rule_types(sourcepath, progress_callback=None):
     return detected
 
 
-def detect_framework_rule_files(sourcepath, selected_platforms=None):
+def detect_framework_rule_files(sourcepath, selected_platforms=None, progress_callback=None):
     """
     Detect framework rule files to apply per selected platform using marker validation.
 
@@ -401,40 +401,73 @@ def detect_framework_rule_files(sourcepath, selected_platforms=None):
         return entries
 
     registry = _load_framework_registry()
+    registry = [entry for entry in registry if not selected or entry['platform'] in selected]
     if not registry:
         return {}
+
+    # Filename markers do not require content. Preserve the old supported
+    # content types and wildcard semantics, but avoid unrelated source reads.
+    content_types = {".toml", ".txt", ".xml", ".yml", ".yaml", ".gradle", ".kts", ".csproj", ".sln", ".rb", ".py", ".php", ".js", ".ts", ".java", ".go", ".rs", ".c", ".cpp", ".h", ".hpp", ".m", ".swift", ".config", ".ini", ".plist"}
+    started=time.monotonic();last_progress=0;directories=0;visited=0;inspected=0
+    def emit(path,force=False,completed=False):
+        nonlocal last_progress
+        now=time.monotonic()
+        if callable(progress_callback) and (force or now-last_progress>=0.25):
+            progress_callback(dict(phase='frameworks_detected' if completed else 'detecting_frameworks',
+                                   status='running',message='Framework markers mapped' if completed else 'Inspecting applicable framework markers',
+                                   current_file=str(path),directories_scanned=directories,files_discovered=visited,
+                                   files_selected=0,marker_files_inspected=inspected,current_index=visited,total_items=visited if completed else 0,
+                                   elapsed_seconds=int(now-started)))
+            last_progress=now
+    emit(sourcepath,force=True)
 
     file_index = {}
     dep_index = {}
     content_cache = {}
 
+    def candidates(pattern, json_only=False):
+        for filename,paths in file_index.items():
+            if json_only and not filename.endswith('.json'):continue
+            if fnmatch.fnmatch(filename,pattern):
+                yield from paths
+
+    def content(path):
+        nonlocal inspected
+        if path not in content_cache:
+            suffix=Path(path).suffix.lower()
+            if suffix!='.json' and suffix not in content_types:
+                content_cache[path]=None
+            else:
+                emit(path)
+                raw=_read_text_limited(path)
+                content_cache[path]=raw or None
+                inspected+=1
+        return content_cache[path]
+
+    def dependencies(path):
+        if path not in dep_index:
+            keys=set()
+            raw=content(path)
+            if raw:
+                try:data=json.loads(raw)
+                except json.JSONDecodeError:data={}
+                if isinstance(data,dict):
+                    for section in JSON_DEP_SECTIONS:
+                        value=data.get(section,{})
+                        if isinstance(value,dict):keys.update(str(key).lower() for key in value)
+            dep_index[path]=keys
+        return dep_index[path]
+
     for root, _, files in walk_source(sourcepath):
+        directories+=1
+        emit(root)
         for fname in files:
             fpath = os.path.join(root, fname)
             lower_name = fname.lower()
             file_index.setdefault(lower_name, []).append(fpath)
 
-            if lower_name.endswith(".json"):
-                raw = _read_text_limited(fpath)
-                if raw:
-                    content_cache[fpath] = raw
-                    try:
-                        data = json.loads(raw)
-                    except json.JSONDecodeError:
-                        data = {}
-                    if isinstance(data, dict):
-                        dep_keys = set()
-                        for section in JSON_DEP_SECTIONS:
-                            section_value = data.get(section, {})
-                            if isinstance(section_value, dict):
-                                dep_keys.update(str(k).lower() for k in section_value.keys())
-                        dep_index[fpath] = dep_keys
-            else:
-                ext = os.path.splitext(lower_name)[1]
-                if ext in {".toml", ".txt", ".xml", ".yml", ".yaml", ".gradle", ".kts", ".csproj", ".sln", ".rb", ".py", ".php", ".js", ".ts", ".java", ".go", ".rs", ".c", ".cpp", ".h", ".hpp", ".m", ".swift", ".config", ".ini", ".plist"}:
-                    raw = _read_text_limited(fpath)
-                    if raw:
-                        content_cache[fpath] = raw
+            visited+=1
+            emit(fpath)
 
     platform_to_files = {}
     for entry in registry:
@@ -451,17 +484,9 @@ def detect_framework_rule_files(sourcepath, selected_platforms=None):
 
         if not matched and entry["dep_rules"]:
             for dep_file, dep_key in entry["dep_rules"]:
-                if dep_file == "*":
-                    candidate_paths = dep_index.keys()
-                elif any(token in dep_file for token in ("*", "?", "[")):
-                    candidate_paths = []
-                    for fname, paths in file_index.items():
-                        if fnmatch.fnmatch(fname, dep_file):
-                            candidate_paths.extend([p for p in paths if p in dep_index])
-                else:
-                    candidate_paths = [p for p in file_index.get(dep_file, []) if p in dep_index]
+                candidate_paths = candidates(dep_file,json_only=True)
                 for path_item in candidate_paths:
-                    keys = dep_index.get(path_item, set())
+                    keys = dependencies(path_item)
                     if dep_key in keys:
                         matched = True
                         break
@@ -470,26 +495,17 @@ def detect_framework_rule_files(sourcepath, selected_platforms=None):
 
         if not matched and entry["regex_rules"]:
             for target_file, regex_obj in entry["regex_rules"]:
-                if target_file == "*":
-                    candidates = content_cache.items()
-                elif any(token in target_file for token in ("*", "?", "[")):
-                    candidates = []
-                    for fname, paths in file_index.items():
-                        if fnmatch.fnmatch(fname, target_file):
-                            for p in paths:
-                                if p in content_cache:
-                                    candidates.append((p, content_cache[p]))
-                else:
-                    candidates = [(p, content_cache[p]) for p in file_index.get(target_file, []) if p in content_cache]
-                for candidate_path, content in candidates:
+                for candidate_path in candidates(target_file):
+                    candidate_content = content(candidate_path)
+                    if candidate_content is None:continue
                     if entry['name'] == 'wordpress' and str(candidate_path).lower().endswith('.php'):
                         from core.rdl.source_review import source_views
-                        _, content = source_views(candidate_path, content)
+                        _, candidate_content = source_views(candidate_path, candidate_content)
                     if entry['name'] == 'spring' and str(candidate_path).lower().endswith(('.java', '.xml')):
                         from core.rdl.source_review import source_views
-                        comments, code = source_views(candidate_path, content)
-                        content = code if str(candidate_path).lower().endswith('.java') else comments
-                    if regex_obj.search(content):
+                        comments, code = source_views(candidate_path, candidate_content)
+                        candidate_content = code if str(candidate_path).lower().endswith('.java') else comments
+                    if regex_obj.search(candidate_content):
                         matched = True
                         break
                 if matched:
@@ -504,7 +520,8 @@ def detect_framework_rule_files(sourcepath, selected_platforms=None):
         parent_rel = os.path.dirname(rules_rel_path.strip("/"))
         if not parent_rel:
             continue
-        fw_path = runtime.rulesRootDir / parent_rel / "framework" / entry["rule_file"]
+        from core.pattern_rules import resolve_pack
+        fw_path = resolve_pack(runtime.rulesRootDir / parent_rel / "framework" / entry["rule_file"])
         if fw_path.exists():
             platform_to_files.setdefault(platform, []).append({
                 "name": entry["name"],
@@ -512,6 +529,7 @@ def detect_framework_rule_files(sourcepath, selected_platforms=None):
                 "scan_ftypes": entry.get("scan_ftypes", []),
             })
 
+    emit(sourcepath,force=True,completed=True)
     # De-duplicate per platform/rule file.
     # Multiple framework markers (e.g., reactnative-ios, ionic-ios) can intentionally
     # map to the same native pack (e.g., ios/uikit.xml). Apply each pack once.
@@ -572,6 +590,8 @@ def discover_files(codebase, sourcepath, mode, progress_callback=None):
     platform_filetypes = {}  # Store platform-specific filetypes
     platform_extensions = {}  # Store identified extensions per platform
     matches, total_files_count = [], 0
+    seen_master = set()
+    seen_by_platform = {platform: set() for platform in platforms}
     identified_files_count = 0
     directories_scanned = 0
     walk_started = time.monotonic()
@@ -600,6 +620,8 @@ def discover_files(codebase, sourcepath, mode, progress_callback=None):
 
     master_file_paths = runtime.runtime_dirpath / "filepaths.log"
     platform_file_paths = []  # List to store paths of platform-specific logs
+    from core.analysis_coverage import CoverageAudit
+    coverage = CoverageAudit(sourcepath)
 
     try:
         with open(master_file_paths, "w+") as master_log:
@@ -619,7 +641,9 @@ def discover_files(codebase, sourcepath, mode, progress_callback=None):
                 })
 
             # Traverse the source path to discover and log files
-            for root, _, filenames in walk_source(sourcepath):
+            for root, _, filenames in walk_source(sourcepath, onerror=lambda exc: coverage.add(
+                    exc.filename or sourcepath, 'Directory could not be enumerated.',
+                    'Restore directory read access, then rescan.')):
                 directories_scanned += 1
                 total_files_count += len(filenames)
 
@@ -636,18 +660,27 @@ def discover_files(codebase, sourcepath, mode, progress_callback=None):
 
                                 for filename in matched_files:
                                     full_path = os.path.join(root, filename)
-
+                                    if full_path in seen_by_platform[platform]:
+                                        continue
+                                    seen_by_platform[platform].add(full_path)
                                     platform_log.write(full_path + "\n")
-                                    master_log.write(full_path + "\n")
-
-                                    matches.append(full_path)
-                                    identified_files_count += 1
+                                    # A shared header needs both language checks,
+                                    # but counts once in the repository inventory.
+                                    if full_path not in seen_master:
+                                        seen_master.add(full_path)
+                                        master_log.write(full_path + "\n")
+                                        matches.append(full_path)
+                                        identified_files_count += 1
 
                                     ext_value = fileops.get_file_extension(full_path)
                                     if ext_value and ext_value not in platform_extensions[platform]:
                                         platform_extensions[platform].append(ext_value)
                     except OSError as exc:
                         logger.error("Failed to write platform log %s: %s", platform_log_path, exc)
+
+                for filename in filenames:
+                    full_path = os.path.join(root, filename)
+                    coverage.inspect(full_path, selected=full_path in seen_master)
 
                 now = time.monotonic()
                 if callable(progress_callback) and (directories_scanned == 1 or now - last_progress >= 0.35):
@@ -667,6 +700,12 @@ def discover_files(codebase, sourcepath, mode, progress_callback=None):
     except OSError as exc:
         logger.error("Failed to write master filepath log at %s: %s", master_file_paths, exc)
         return master_file_paths, platform_file_paths  # Early return; nothing else to do
+
+    coverage_report = coverage.report()
+    (runtime.runtime_dirpath / 'analysis_coverage.json').write_text(
+        json.dumps(coverage_report, indent=2), encoding='utf-8')
+    result.update_scan_summary('analysis_coverage.status', coverage_report['status'])
+    result.update_scan_summary('analysis_coverage.affected_files', coverage_report['affected_files'])
 
     # Filter out platforms with no valid extensions before writing to summary
     platform_extensions_filtered = {

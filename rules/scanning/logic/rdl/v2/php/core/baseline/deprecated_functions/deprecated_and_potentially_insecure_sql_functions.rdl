@@ -2,7 +2,7 @@ VERSION 2
 RULE baseline.php.core.deprecated_and_potentially_insecure_sql_functions VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(?i)\\b(mysql_query|mysqli_query|new\\s+PDO\\(|pg_connect\\(|mysql_connect\\(|mysqli_connect\\(|sqlite3_open|mysql_fetch_array|mysql_fetch_assoc|mysql_num_rows)\\b|(?:mysql_query|pg_query|sqlite_query|mysqli_query|pdo->query)\\s*\\(\\s*['\\\"]?\\b(SELECT|INSERT|UPDATE|DELETE)\\b\\s+.*\\s*['\\\"]?\\s*\\.\\s*\\$([a-zA-Z_\\x7f-\\xff][a-zA-Z0-9_\\x7f-\\xff]*)" "im"
-REPORT "Deprecated and Potentially Insecure SQL Functions"
+REPORT "Legacy Database API Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

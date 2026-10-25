@@ -2,7 +2,7 @@ VERSION 2
 RULE baseline.java.framework.spring.spring_sql_query_concatenation_sink VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(?i)create(?:Native)?Query\\(\\s*\"[^\"]*\"\\s*\\+|Statement\\s+\\w+\\s*=\\s*.*createStatement\\(|\\b(?:String\\s+)?\\w+\\s*=\\s*\"\\s*(?:SELECT|INSERT|UPDATE|DELETE)\\b[^\"\\r\\n]*\"\\s*\\+|\\bjdbcTemplate\\.(?:query\\w*|update|execute|batchUpdate)\\s*\\(\\s*\"[^\"\\r\\n]*\"\\s*\\+" "im"
-REPORT "Spring SQL Query Concatenation Sink"
+REPORT "SQL Injection Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

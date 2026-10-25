@@ -103,7 +103,14 @@ def public_unit(item):
 def inventory(scans, projects, root, run_root, reports_root, active_runs):
     groups = {p.project_key: dict(project_key=p.project_key, project_name=p.project_name, scans=[]) for p in projects}
     tracked = []
+    deleted_scans = []
     for scan in scans:
+        if scan.data_removed_at is not None:
+            deleted_scans.append(dict(run_uuid=scan.run_uuid, project_key=scan.project_key,
+                                      project_name=scan.project_name or scan.project_key, status=scan.status,
+                                      created_at=scan.created_at.isoformat() if scan.created_at else None,
+                                      data_removed_at=scan.data_removed_at.isoformat()))
+            continue
         group = groups.setdefault(scan.project_key, dict(project_key=scan.project_key, project_name=scan.project_name or scan.project_key, scans=[]))
         items = units(scan, root, run_root, reports_root)
         tracked.extend(item['_path'] for item in items)
@@ -132,7 +139,8 @@ def inventory(scans, projects, root, run_root, reports_root, active_runs):
             size, count = measure(p)
             other.append(dict(path=str(p.relative_to(root)), bytes=size, file_count=count, label='Unassigned application files', removable=False))
     usage = shutil.disk_usage(run_root if run_root.exists() else root)
-    return dict(projects=sorted(groups.values(), key=lambda g: g['bytes'], reverse=True), unassigned=other,
+    return dict(projects=sorted((g for g in groups.values() if g['scans']), key=lambda g: g['bytes'], reverse=True),
+                deleted_scans=sorted(deleted_scans, key=lambda s: s['data_removed_at'], reverse=True), unassigned=other,
                 managed_bytes=sum(g['bytes'] for g in groups.values()) + sum(i['bytes'] for i in other),
                 filesystem=dict(total=usage.total, used=usage.used, free=usage.free),
                 note='Sizes are logical file sizes. Filesystem usage also includes other applications. Source directories, account databases and settings are excluded from cleanup. Active report scratch files are released automatically when generation ends.')

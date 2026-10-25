@@ -3,7 +3,7 @@ RULE baseline.golang.framework.fiber.fiber_sql_query_concatenation_sink VERSION 
 IN FILE
 WHEN TEXT_MATCHES "Query\\(\\s*fmt\\.Sprintf|Exec\\(\\s*fmt\\.Sprintf|Raw\\(\\s*fmt\\.Sprintf" "im"
 WHEN TEXT_MISSING "Prepare\\s*\\(|QueryContext\\s*\\(.*\\?|db\\.Raw\\s*\\(.*\\?|squirrel|sqlx\\.NamedExec|bindParams" "im"
-REPORT "Fiber SQL Query Concatenation Sink"
+REPORT "SQL Injection Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

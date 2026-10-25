@@ -5,7 +5,7 @@ LET input BE VARIABLE MATCHES input.untrusted
 LET sink BE CALL MATCHES command.execution
 WHEN input FLOWS TO sink
 REQUIRE NOT sanitizer.command-approved input
-REPORT "command injection"
+REPORT "OS Command Injection Review"
 SEVERITY CRITICAL
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

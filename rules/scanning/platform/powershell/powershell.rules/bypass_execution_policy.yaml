@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: powershell.core.bypass_execution_policy
+title: "PowerShell Execution Policy Review"
+order: 7
+category: Execution Policy and Security Controls
+detection:
+  pattern: (?i)-ExecutionPolicy\s+(?:Bypass|Unrestricted)|Set-ExecutionPolicy\s+(?:Bypass|Unrestricted)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:-ExecutionPolicy\s+Bypass|Set-ExecutionPolicy\s+Bypass|executionpolicy.*bypass && MISSING:test|CI|pipeline|development|example
+reporting:
+  type: area_of_interest
+  reason: Detects PowerShell execution policy bypass or unrestricted policy settings.
+  trace:
+  - Externalized rule logic for Bypass Execution Policy.
+  description: The script contains an attempt to bypass an execution-policy or anti-malware inspection mechanism.
+    Determine actual effectiveness and deployment context.
+  impact: If the bypass is effective, unauthorized or malicious script behavior may evade a configured inspection
+    or execution restriction. A textual marker alone does not prove that protection was bypassed.
+  remediation: Remove unnecessary bypass behavior, retain applicable inspection controls, and enforce signing, application
+    control, and least privilege independently of execution-policy settings.
+  reviewer: Verify whether the bypass is used in authorized automation or represents a security control bypass.
+    This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak,
+    or inconsistent.
+  review_steps:
+  - Inspect the matched construct in its containing function or configuration and identify the security-sensitive
+    behavior under review.
+  - Verify reachable callers, external influence and effective protections, including deployment overrides and failure
+    paths.
+  - Record concrete evidence for a confirmed issue or a justified suppression; retain an unresolved outcome when
+    the required evidence is unavailable.
+  recommendations:
+  - Apply the rule-specific correction above only after verifying the affected behavior and required control.
+  - Add a regression case for the unsafe condition and a valid protected case; verify the effective behavior in
+    the relevant deployment.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

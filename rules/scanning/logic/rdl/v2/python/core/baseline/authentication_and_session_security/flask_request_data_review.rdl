@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.python.core.flask_request_data_review VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\brequest\\s*\\.\\s*(?:args|form|json|values|cookies|headers|files|get_json|get_data|data)\\b" "im"
+REPORT "Untrusted Input Entry Point"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

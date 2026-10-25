@@ -1,0 +1,38 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.review_android_sms_send_capability
+title: SMS Transmission Capability
+order: 61
+category: PRIVACY Review
+detection:
+  pattern: \b(?:sendTextMessage|sendMultipartTextMessage|sendDataMessage)\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: The application sends SMS messages or declares a capability to receive or inspect SMS content. Identify
+    the actual sensitive value and the recipients, retention and user-consent context of this exposure or capability.
+  impact: Unauthorized SMS handling may expose verification codes or private messages, cause unwanted messaging
+    charges, or affect account recovery if the relevant permission and execution path are available.
+  remediation: Request only the SMS capabilities needed by a user-visible feature. Require explicit intent for sending,
+    protect received message content, and prevent logs or unauthorized uploads of verification codes. Minimize collection
+    and retention, redact secret values, and apply the platform controls needed for sensitive UI and data sharing.
+  reviewer: Test release logging, crash-report payloads, screenshot/background snapshots and clipboard lifetime;
+    permission or API capability alone does not establish collection or malicious behavior.
+  review_steps:
+  - Trace the matched candidate to its actual value, caller or resource.
+  - Test release logging, crash-report payloads, screenshot/background snapshots and clipboard lifetime; permission
+    or API capability alone does not establish collection or malicious behavior.
+  - Resolve release configuration and runtime assumptions before confirming an issue.
+  recommendations:
+  - Request only the SMS capabilities needed by a user-visible feature. Require explicit intent for sending, protect
+    received message content, and prevent logs or unauthorized uploads of verification codes. Minimize collection
+    and retention, redact secret values, and apply the platform controls needed for sensitive UI and data sharing.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

@@ -1,4 +1,6 @@
 import { suppressionDetails } from '../lib/suppression'
+import { HighlightedSource } from './PatternEvidence'
+import { ReviewGuidance } from './ReportAudience'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   getSuppressedFindings,
@@ -226,6 +228,7 @@ function SuppressedRow({ item, runUuid, onPromoted }) {
       <div className="suppression-overview">
         <div className="suppression-location">{item.file || 'File not recorded'}:{item.line ?? '?'}</div>
         <p><strong>{promoted ? 'Original suppression reason' : 'Why suppressed'}:</strong> {details.reason}</p>
+        <p className="suppression-coverage"><strong>Trace coverage:</strong> {details.traceSummary}</p>
       </div>
       {open && <div className="fr-card-body">
         <dl className="suppression-metadata">
@@ -239,12 +242,20 @@ function SuppressedRow({ item, runUuid, onPromoted }) {
         <section className="fr-note logic">
           <h4 className="fr-note-label">Suppression decision</h4>
           <p className="fr-note-text">{details.reason}</p>
+          {details.scope && <p className="fr-note-text"><strong>Decision scope:</strong> {details.scope}</p>}
+          {details.limitations.length > 0 && <ul>{details.limitations.map((limit, index) => <li key={index}>{limit}</li>)}</ul>}
+          <details className="suppression-rule"><summary>Technical rule decision</summary><p className="fr-note-text">{details.technicalReason}</p>
           {trace.length > 0 && <><h4 className="fr-note-label suppression-subheading">Evaluation trace</h4><ol className="suppression-trace">{trace.map((entry, index) => <li key={index}>{asText(entry)}</li>)}</ol></>}
           {consulted.length > 0 && <><h4 className="fr-note-label suppression-subheading">Consulted files</h4><ul className="suppression-trace">{consulted.map((file, index) => <li key={index}>{asText(file)}</li>)}</ul></>}
+          </details>
         </section>
         <section><h4 className="fr-note-label">Source evidence</h4>
-          <pre className="suppression-code">{safeLines(item.context_before).map((line, index) => <span key={`before-${index}`}>{line}{'\n'}</span>)}<mark>{item.line ?? '?'}: {item.code || '(Source text not recorded)'}</mark>{'\n'}{safeLines(item.context_after).map((line, index) => <span key={`after-${index}`}>{line}{'\n'}</span>)}</pre>
+          {item.code_truncated && <p className="fr-note-text">Excerpt shortened; inspect the source file for the remaining code.</p>}
+          <pre className="suppression-code">{safeLines(item.context_before).map((line, index) => <span key={`before-${index}`}>{line}{'\n'}</span>)}{item.highlights === undefined && !['false', '0', 'no'].includes(String(item.scan_config?.highlight_enabled ?? true).toLowerCase()) ? <mark>{item.line ?? '?'}: {item.code || '(Source text not recorded)'}</mark> : <span>{item.line ?? '?'}: <HighlightedSource code={item.code || '(Source text not recorded)'} highlights={['false', '0', 'no'].includes(String(item.scan_config?.highlight_enabled ?? true).toLowerCase()) ? [] : item.highlights} /></span>}{'\n'}{safeLines(item.context_after).map((line, index) => <span key={`after-${index}`}>{line}{'\n'}</span>)}</pre>
         </section>
+        {item.issue_desc && <section className="fr-note"><h4 className="fr-note-label">Issue description</h4><p className="fr-note-text">{item.issue_desc}</p></section>}
+        {item.security_impact && <section className="fr-note"><h4 className="fr-note-label">Security impact</h4><p className="fr-note-text">{item.security_impact}</p></section>}
+        <ReviewGuidance developer={item.developer_note} reviewer={item.reviewer_note} />
         {item.rdl_text && <details className="suppression-rule"><summary>Full RDL rule</summary><pre className="suppression-code">{item.rdl_text}</pre></details>}
         {item.logic_reason && <p className="fr-note-text"><strong>Rule intent:</strong> {item.logic_reason}</p>}
         {promoted && item.notes && <div className="fr-note dev"><h4 className="fr-note-label">Analyst note</h4><p>{item.notes}</p></div>}
@@ -281,7 +292,7 @@ export default function SuppressedPanel({ runUuid, onLoaded }) {
     const query = search.trim().toLowerCase()
     return items.filter(item => (filterStatus === 'all' || item.status === filterStatus) &&
       (filterEngine === 'all' || item.details.engine === filterEngine) &&
-      (!query || [item.rule_title, item.rule_id, item.file, item.platform, item.category, item.details.source, item.details.engine, item.details.reason, item.rdl_text].some(value => String(value || '').toLowerCase().includes(query))))
+      (!query || [item.rule_title, item.rule_id, item.file, item.platform, item.category, item.details.source, item.details.engine, item.details.reason, item.details.technicalReason, item.details.traceSummary, ...item.details.limitations, item.rdl_text].some(value => String(value || '').toLowerCase().includes(query))))
   }, [items, search, filterStatus, filterEngine])
   function handlePromoted(id, fields) {
     setData(previous => ({ ...previous, suppressed: previous.suppressed.map(item => item.id === id ? { ...item, ...fields, status: 'confirmed_finding' } : item) }))
@@ -290,11 +301,11 @@ export default function SuppressedPanel({ runUuid, onLoaded }) {
   const pages = Math.max(1, Math.ceil(filtered.length / 50))
   const currentPage = Math.min(page, pages - 1)
   const promoted = items.filter(item => item.status === 'confirmed_finding').length
-  if (loading) return <div className="empty-state"><div className="fr-spinner" />Loading suppressed findings…</div>
+  if (loading) return <div className="empty-state"><div className="fr-spinner" />Loading suppressed areas of interest…</div>
   if (error) return <div className="error-banner" role="alert">{error}</div>
-  if (!items.length) return <div className="empty-state"><div className="empty-title">No suppressed findings</div><div className="empty-msg">No suppression decisions were recorded for this scan.</div></div>
+  if (!items.length) return <div className="empty-state"><div className="empty-title">No suppressed areas of interest</div><div className="empty-msg">No suppression decisions were recorded for this scan.</div></div>
   return <div className="suppression-panel">
-    <div className="suppression-intro"><h3>Suppressed Findings</h3><p>Matches excluded by recorded rule logic. Suppression does not by itself confirm a false positive; review the decision and evidence below.</p></div>
+    <div className="suppression-intro"><h3>Suppressed Areas of Interests</h3><p>Matches excluded by recorded rule logic. Suppression does not by itself confirm a false positive; review the decision and evidence below.</p></div>
     <div className="fr-stats-row">
       <SummaryCard value={items.length - promoted} label="Currently suppressed" color="var(--warning-color)" />
       <SummaryCard value={ruleCount} label="Rules with suppressions" color="var(--primary)" />

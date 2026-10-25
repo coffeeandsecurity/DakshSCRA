@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "id": "dotnet.core.untrusted_input_handling_in_sql_query_sqlcommand",
+      "platform": "dotnet",
+      "authored_title": "Untrusted Input Handling in SQL Query: SqlCommand",
+      "source": "rules/scanning/platform/dotnet/dotnet.rules/untrusted_input_handling_in_sql_query_sqlcommand.yaml",
+      "previous": {
+        "issue_desc": "The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.",
+        "rule_desc": "The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.",
+        "developer_note": "Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.\n\nRecommended actions:\n1. Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve legitimate characters and protect each destination separately.\n2. Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations where applicable. Test rejected input and unauthorized access.",
+        "reviewer_note": "Carefully examine the usage of SqlCommand and verify if proper parameterization techniques are employed to mitigate SQL injection vulnerabilities. assess the input handling and SQL query construction to ensure that user input is properly validated, sanitized, and used in a secure manner. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.\n\nReview steps:\n1. Identify who can supply the matched input, including stored values and upstream services; record its type, size limits and trust boundary.\n2. Trace the value through transformations to each sensitive operation. Check the protection at that destination and resource-level authorization.\n3. Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side check alone is insufficient evidence."
+      },
+      "current": {
+        "issue_desc": "A SqlCommand operation is present near input or query-construction markers. Its constructor alone does not establish SQL injection.",
+        "rule_desc": "A SqlCommand operation is present near input or query-construction markers. Its constructor alone does not establish SQL injection.",
+        "developer_note": "Use SqlParameter bindings on the exact SqlCommand that executes the query. Keep dynamic identifiers in fixed mappings. Follow CommandText assignments and helper returns before changing constant or correctly parameterized SQL.\n\nRecommended actions:\n1. Bind values with SqlParameter rather than constructing SQL syntax.\n2. Use fixed identifier mappings and verify access to the selected records.",
+        "reviewer_note": "Trace external values to CommandText and execution. Match placeholders to Parameters on the same command. Distinguish constant SQL from dynamic syntax; missing callers or frontend code leave the trace incomplete rather than proving the command safe.\n\nReview steps:\n1. Resolve final CommandText and the execution call.\n2. Match placeholders to bindings on the same command.\n3. Check reachable attacker control and unresolved caller or helper code."
+      }
+    },
+    {
+      "id": "javascript.core.insecure_method_call_eval_settimeout_setinterval",
+      "platform": "javascript",
+      "authored_title": "Insecure Method Call: eval|setTimeout|setInterval",
+      "source": "rules/scanning/platform/javascript/javascript.rules/insecure_method_call_eval_settimeout_setinterval.yaml",
+      "previous": {
+        "issue_desc": "The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.",
+        "rule_desc": "The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.",
+        "developer_note": "Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates or expressions.\n\nRecommended actions:\n1. Replace externally assembled code with fixed operations and data-only inputs where possible.\n2. Keep template or expression sources under application control; restrict exposed capabilities and test rejection of unexpected syntax.",
+        "reviewer_note": "Verify whether the code uses the `eval`, `setTimeout`, or `setInterval` functions. Assess whether the usage is justified and if proper input validation and sanitization techniques are implemented to prevent code injection vulnerabilities. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.\n\nReview steps:\n1. Determine whether the matched operation interprets code, expressions or templates; identify its execution context and permissions.\n2. Trace control over the executed text and distinguish fixed application code from externally influenced content.\n3. Inspect restrictions and failure paths; record a reachable input-to-execution path before confirming code execution."
+      },
+      "current": {
+        "issue_desc": "The code calls eval or a timer API. eval interprets code; setTimeout and setInterval evaluate code only when the callback argument is a string.",
+        "rule_desc": "The code calls eval or a timer API. eval interprets code; setTimeout and setInterval evaluate code only when the callback argument is a string.",
+        "developer_note": "Replace dynamic evaluation with fixed operations and data-only parsing. Pass function callbacks to setTimeout and setInterval and keep external values out of executable strings.\n\nRecommended actions:\n1. Use function callbacks for timers.\n2. Use JSON.parse for JSON data and fixed dispatch tables for permitted operations.",
+        "reviewer_note": "Inspect the actual argument type. A function callback passed to a timer is not string evaluation. For eval or a string callback, trace who controls the executed text and verify the reachable browser or server context.\n\nReview steps:\n1. Distinguish eval from timer calls.\n2. Determine whether a timer callback is a function or a string.\n3. Trace control over interpreted text and the privileges of execution."
+      }
+    },
+    {
+      "id": "javascript.core.untrusted_data_in_document_write",
+      "platform": "javascript",
+      "authored_title": "Untrusted Data in 'document.write'",
+      "source": "rules/scanning/platform/javascript/javascript.rules/untrusted_data_in_document_write.yaml",
+      "previous": {
+        "issue_desc": "Application data is inserted into an HTML or script rendering context, or marked safe in a way that may bypass automatic encoding.",
+        "rule_desc": "Application data is inserted into an HTML or script rendering context, or marked safe in a way that may bypass automatic encoding.",
+        "developer_note": "Use automatic context-aware output encoding and data-only DOM APIs. Sanitize deliberately accepted rich HTML with a maintained allowlist sanitizer and avoid marking untrusted content as safe.\n\nRecommended actions:\n1. Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve legitimate characters and protect each destination separately.\n2. Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations where applicable. Test rejected input and unauthorized access.",
+        "reviewer_note": "The code uses `document. write()` or assigns potentially untrusted values to the `innerHTML` property. Assess whether proper input validation and output encoding techniques are implemented to prevent DOM-based cross-site scripting vulnerabilities. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.\n\nReview steps:\n1. Identify who can supply the matched input, including stored values and upstream services; record its type, size limits and trust boundary.\n2. Trace the value through transformations to each sensitive operation. Check the protection at that destination and resource-level authorization.\n3. Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side check alone is insufficient evidence."
+      },
+      "current": {
+        "issue_desc": "document.write passes content to the document parser. Review each dynamic fragment and its rendering context.",
+        "rule_desc": "document.write passes content to the document parser. Review each dynamic fragment and its rendering context.",
+        "developer_note": "Replace document.write with DOM construction and textContent for text. Keep external values out of script and event-handler syntax; sanitize deliberately accepted HTML at the insertion boundary.\n\nRecommended actions:\n1. Construct elements explicitly and set text properties.\n2. Remove string-built scripts and event handlers; HTML sanitization does not make arbitrary JavaScript strings safe.",
+        "reviewer_note": "Trace each document.write argument, decoding step and concatenated fragment. Determine whether an attacker can introduce executable markup in the actual parser context and document lifecycle. Fixed application markup is not a confirmed vulnerability.\n\nReview steps:\n1. Identify dynamic fragments in document.write arguments.\n2. Trace their origin, decoding and sanitization.\n3. Verify the parser context and a reachable payload that bypasses the relevant protection."
+      }
+    },
+    {
+      "id": "javascript.core.untrusted_data_in_innerhtml",
+      "platform": "javascript",
+      "authored_title": "Untrusted Data in InnerHTML",
+      "source": "rules/scanning/platform/javascript/javascript.rules/untrusted_data_in_innerhtml.yaml",
+      "previous": {
+        "issue_desc": "Application data is inserted into an HTML or script rendering context, or marked safe in a way that may bypass automatic encoding.",
+        "rule_desc": "Application data is inserted into an HTML or script rendering context, or marked safe in a way that may bypass automatic encoding.",
+        "developer_note": "Use automatic context-aware output encoding and data-only DOM APIs. Sanitize deliberately accepted rich HTML with a maintained allowlist sanitizer and avoid marking untrusted content as safe.\n\nRecommended actions:\n1. Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve legitimate characters and protect each destination separately.\n2. Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations where applicable. Test rejected input and unauthorized access.",
+        "reviewer_note": "Potentially untrusted data is assigned to the innerHTML property. Assess whether the code implements proper input validation and output encoding techniques to prevent XSS vulnerabilities when updating element content. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.\n\nReview steps:\n1. Identify who can supply the matched input, including stored values and upstream services; record its type, size limits and trust boundary.\n2. Trace the value through transformations to each sensitive operation. Check the protection at that destination and resource-level authorization.\n3. Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side check alone is insufficient evidence."
+      },
+      "current": {
+        "issue_desc": "A value is assigned to innerHTML. The browser parses this value as HTML; the assignment alone does not establish attacker control.",
+        "rule_desc": "A value is assigned to innerHTML. The browser parses this value as HTML; the assignment alone does not establish attacker control.",
+        "developer_note": "Use textContent for text. If HTML is required, sanitize it with a maintained HTML allowlist sanitizer immediately before insertion. Review Trusted Types policies for unsafe pass-through behavior.\n\nRecommended actions:\n1. Use textContent or createElement for ordinary content.\n2. Sanitize deliberately accepted HTML at its insertion boundary; input validation or CSP alone is not output encoding.",
+        "reviewer_note": "Trace the assigned expression to URL data, messages, form values, storage and server responses. Check whether executable markup survives sanitization in the actual element context. Fixed markup and correctly sanitized content do not establish cross-site scripting.\n\nReview steps:\n1. Follow every value used to build the innerHTML assignment.\n2. Inspect sanitization and any transformations after it.\n3. Verify a reachable input-to-HTML path under the effective browser policy."
+      }
+    },
+    {
+      "id": "php.core.command_injection_shell_exec_exec_passthru_system_popen_backtick",
+      "platform": "php",
+      "authored_title": "Command Injection: shell_exec, exec, passthru, system, popen, backtick",
+      "source": "rules/scanning/platform/php/php.rules/command_injection_shell_exec_exec_passthru_system_popen_backtick.yaml",
+      "previous": {
+        "issue_desc": "The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.",
+        "rule_desc": "The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.",
+        "developer_note": "Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates or expressions.\n\nRecommended actions:\n1. Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve legitimate characters and protect each destination separately.\n2. Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations where applicable. Test rejected input and unauthorized access.",
+        "reviewer_note": "Inspect shell_exec, exec, passthru, system, popen, and backtick usage for untrusted input flow and control enforcement. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.\n\nReview steps:\n1. Identify who can supply the matched input, including stored values and upstream services; record its type, size limits and trust boundary.\n2. Trace the value through transformations to each sensitive operation. Check the protection at that destination and resource-level authorization.\n3. Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side check alone is insufficient evidence."
+      },
+      "current": {
+        "issue_desc": "A PHP process or shell operation is present. Review external influence over executable selection, command text and arguments.",
+        "rule_desc": "A PHP process or shell operation is present. Review external influence over executable selection, command text and arguments.",
+        "developer_note": "Prefer a fixed executable and separate arguments through an API and runtime that support bypassing the shell. Allowlist operations and validate options. If a shell is unavoidable, verify argument escaping for the deployed operating system.\n\nRecommended actions:\n1. Use fixed operations and avoid shell command text where possible.\n2. Constrain arguments and process privileges; escaping does not authorize an operation.",
+        "reviewer_note": "Trace command text and backtick expressions into shell_exec, exec, passthru, system or popen. Verify whether a shell is used and assess argument injection as well as shell syntax. Establish the reachable caller and process privileges before confirming an issue.\n\nReview steps:\n1. Resolve the complete command and all external fragments.\n2. Check shell invocation and argument parsing on the deployed operating system.\n3. Test whether a caller can alter command structure or inject executable options."
+      }
+    },
+    {
+      "id": "php.core.insecure_file_inclusion_include_require",
+      "platform": "php",
+      "authored_title": "Insecure File Inclusion: include(), require()",
+      "source": "rules/scanning/platform/php/php.rules/insecure_file_inclusion_include_require.yaml",
+      "previous": {
+        "issue_desc": "The code accesses, creates, deletes, or shares filesystem data. Resolve path provenance, destination containment, permission modes, and any concurrent access.",
+        "rule_desc": "The code accesses, creates, deletes, or shares filesystem data. Resolve path provenance, destination containment, permission modes, and any concurrent access.",
+        "developer_note": "Resolve paths beneath a fixed permitted root and verify containment and effective permissions. Use safe exclusive temporary-file creation, restrict sharing, and account for symlinks and concurrent changes.\n\nRecommended actions:\n1. Resolve paths against a fixed permitted root and enforce containment with filesystem-aware checks; avoid simple prefix checks.\n2. Use application-controlled file identifiers where possible, restrict filesystem privileges, and test traversal and archive extraction boundaries.",
+        "reviewer_note": "Trace input usage in include and require path construction and verify canonical validation and allowlisting controls. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.\n\nReview steps:\n1. Trace external influence over the path and resolve it as the filesystem will, including relative segments and symbolic links.\n2. Check the resolved destination remains within the permitted root and that the caller is authorized for the specific file operation.\n3. Inspect read, write and extraction paths separately; record the effective path restrictions and deployment permissions."
+      },
+      "current": {
+        "issue_desc": "The code includes or requires a PHP file. Review external influence over the selected path and stream wrapper.",
+        "rule_desc": "The code includes or requires a PHP file. Review external influence over the selected path and stream wrapper.",
+        "developer_note": "Map permitted include choices to fixed application paths. Enforce canonical directory containment, exclude external stream wrappers and review allow_url_include and filesystem privileges.\n\nRecommended actions:\n1. Select includes through fixed mappings.\n2. Keep uploads and writable content outside executable include paths.",
+        "reviewer_note": "Trace the include operand through configuration and helpers. Determine whether an attacker can select a local file, uploaded PHP content or a remote wrapper supported by the runtime. Fixed application includes do not establish inclusion abuse.\n\nReview steps:\n1. Resolve the final include or require operand.\n2. Check canonical path containment and permitted file mappings.\n3. Inspect wrappers, writable destinations and reachable attacker control."
+      }
+    },
+    {
+      "id": "php.core.rdl_conditional_sql_query_with_untrusted_input_and_missing_parameterization",
+      "platform": "php",
+      "authored_title": "SQL Query with Untrusted Input and Missing Parameterization",
+      "source": "rules/scanning/platform/php/php.rules/rdl_conditional_sql_query_with_untrusted_input_and_missing_parameterization.yaml",
+      "previous": {
+        "issue_desc": "The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.",
+        "rule_desc": "The checked source contains a database query or query-construction operation. Determine whether untrusted values can change statement structure and whether record access is authorized.",
+        "developer_note": "Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level access checks. Trace the complete query construction before replacing a safe query.\n\nRecommended actions:\n1. Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve legitimate characters and protect each destination separately.\n2. Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations where applicable. Test rejected input and unauthorized access.",
+        "reviewer_note": "Inspect SQL construction and execution for direct input concatenation and parameterization gaps. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.\n\nReview steps:\n1. Identify who can supply the matched input, including stored values and upstream services; record its type, size limits and trust boundary.\n2. Trace the value through transformations to each sensitive operation. Check the protection at that destination and resource-level authorization.\n3. Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side check alone is insufficient evidence."
+      },
+      "current": {
+        "issue_desc": "A PHP database operation and input-related markers occur in the checked context. This pattern alone does not prove that external values reach SQL syntax.",
+        "rule_desc": "A PHP database operation and input-related markers occur in the checked context. This pattern alone does not prove that external values reach SQL syntax.",
+        "developer_note": "Bind values through the exact PDO or mysqli statement that executes the query. Use fixed mappings for identifiers and sort directions. Follow helpers before concluding that parameter binding is absent.\n\nRecommended actions:\n1. Bind data with the executing driver or ORM API.\n2. Allowlist dynamic SQL structure and verify record-level access.",
+        "reviewer_note": "Trace final statement construction, external fragments and execution across included helpers. Check placeholders, bindings, caller authorization and database permissions. Missing source-to-query links must remain unresolved.\n\nReview steps:\n1. Locate the executing statement and follow query construction.\n2. Check bindings on that statement and fixed mappings for identifiers.\n3. Record the reachable caller, database permissions and unresolved trace links."
+      }
+    },
+    {
+      "id": "php.core.regular_expression_injection_preg_replace_with_e_modifier_or_untrusted_input",
+      "platform": "php",
+      "authored_title": "Regular Expression Injection: preg_replace with /e Modifier or Untrusted Input",
+      "source": "rules/scanning/platform/php/php.rules/regular_expression_injection_preg_replace_with_e_modifier_or_untrusted_input.yaml",
+      "previous": {
+        "issue_desc": "The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.",
+        "rule_desc": "The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace executable selection and evaluated content to their trust boundaries.",
+        "developer_note": "Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates or expressions.\n\nRecommended actions:\n1. Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve legitimate characters and protect each destination separately.\n2. Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations where applicable. Test rejected input and unauthorized access.",
+        "reviewer_note": "Verify that preg_replace does not use insecure execution behavior and that untrusted regex input is controlled. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.\n\nReview steps:\n1. Identify who can supply the matched input, including stored values and upstream services; record its type, size limits and trust boundary.\n2. Trace the value through transformations to each sensitive operation. Check the protection at that destination and resource-level authorization.\n3. Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side check alone is insufficient evidence."
+      },
+      "current": {
+        "issue_desc": "The rule identifies preg_replace code-evaluation or externally constructed pattern usage. The legacy /e modifier evaluated replacements and was removed in PHP 7; user-controlled patterns require a separate regex assessment.",
+        "rule_desc": "The rule identifies preg_replace code-evaluation or externally constructed pattern usage. The legacy /e modifier evaluated replacements and was removed in PHP 7; user-controlled patterns require a separate regex assessment.",
+        "developer_note": "Replace legacy /e expressions with preg_replace_callback and a fixed application callback. Use preg_quote with the correct delimiter for literal pattern data. Bound input and pattern complexity when user-defined expressions are intentional.\n\nRecommended actions:\n1. Use a fixed callback rather than executable replacement text.\n2. Quote literal pattern data and set practical processing limits for configurable expressions.",
+        "reviewer_note": "Verify PHP version, pattern delimiters, modifiers and replacement text. Separate legacy /e execution from regex injection or excessive backtracking. A fixed pattern or a runtime where /e is unavailable does not establish code execution.\n\nReview steps:\n1. Identify the full pattern and replacement.\n2. Check whether the deployed PHP version supports /e evaluation.\n3. Trace pattern and replacement control independently and assess the applicable execution or resource-use risk."
+      }
+    },
+    {
+      "id": "php.core.untrusted_inputs_request_get_post_cookie",
+      "platform": "php",
+      "authored_title": "Untrusted Inputs: $_REQUEST, $_GET, $_POST, $_COOKIE",
+      "source": "rules/scanning/platform/php/php.rules/untrusted_inputs_request_get_post_cookie.yaml",
+      "previous": {
+        "issue_desc": "The code reads request, query, form or cookie input through a PHP superglobal. Reading input alone does not establish an unsafe use or a vulnerability.",
+        "rule_desc": "The code reads request, query, form or cookie input through a PHP superglobal. Reading input alone does not establish an unsafe use or a vulnerability.",
+        "developer_note": "Validate input against the operation's intended type and policy, bind query values, encode output for its destination and enforce authorization at sensitive operations.\n\nRecommended actions:\n1. Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve legitimate characters and protect each destination separately.\n2. Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations where applicable. Test rejected input and unauthorized access.",
+        "reviewer_note": "Trace superglobal input flow to sensitive sinks and verify validation and sanitization coverage. This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.\n\nReview steps:\n1. Identify who can supply the matched input, including stored values and upstream services; record its type, size limits and trust boundary.\n2. Trace the value through transformations to each sensitive operation. Check the protection at that destination and resource-level authorization.\n3. Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side check alone is insufficient evidence."
+      },
+      "current": {
+        "issue_desc": "The code reads PHP request parameters or cookies. These are input entry points, not vulnerabilities by themselves.",
+        "rule_desc": "The code reads PHP request parameters or cookies. These are input entry points, not vulnerabilities by themselves.",
+        "developer_note": "Validate expected types, lengths and allowed values. Apply destination-specific protection separately: SQL bindings, context-aware output encoding, path containment or a network destination policy.\n\nRecommended actions:\n1. Keep request validation separate from destination-specific controls.\n2. Treat cookies as externally controlled even when the normal UI generates them.",
+        "reviewer_note": "Follow the relevant $_GET, $_POST, $_REQUEST or $_COOKIE value to its use, including included files and stored values. Check authorization at the destination. Missing handlers or helper source leave the trace unresolved rather than establishing safety or exploitation.\n\nReview steps:\n1. Identify the specific external parameter.\n2. Follow assignments and included helpers to its destination.\n3. Check the protection at that use and record unresolved calls or missing source."
+      }
+    }
+  ]
+}

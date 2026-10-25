@@ -3,7 +3,7 @@ RULE baseline.ruby.framework.sinatra.sinatra_development_debug_mode_enabled VERS
 IN FILE
 WHEN TEXT_MATCHES "RAILS_ENV\\s*=\\s*[\\'\\\"]development[\\'\\\"]|config\\.consider_all_requests_local\\s*=\\s*true" "im"
 WHEN TEXT_MISSING "release|production" "im"
-REPORT "Sinatra Development/Debug Mode Enabled"
+REPORT "Debug Mode Configuration Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.android.core.review_android_user_trust_anchors VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "<certificates\\b[^>]{0,300}\\bsrc\\s*=\\s*[\"\\x27]user[\"\\x27]" "im"
+REPORT "User-Installed Certificates Trusted"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -2,7 +2,7 @@ VERSION 2
 RULE baseline.php.core.object_injection_via_serialization VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(?i)\\bunserialize\\s*\\(" "im"
-REPORT "Object Injection via Serialization"
+REPORT "Object Deserialization Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

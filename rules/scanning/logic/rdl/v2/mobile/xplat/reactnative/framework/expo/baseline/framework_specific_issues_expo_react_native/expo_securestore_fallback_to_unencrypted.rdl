@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.mobile.xplat.reactnative.framework.expo.expo_securestore_fallback_to_unencrypted VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "SecureStore\\.setItemAsync|SecureStore\\.getItemAsync" "im"
-WHEN TEXT_MISSING "keychainAccessible|keychainService|requireAuthentication" "im"
-REPORT "Expo SecureStore Fallback to Unencrypted"
+REPORT "Secure Storage Fallback Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: terraform.framework.azure.azure_storage_account_without_secure_transfer_required
+title: "Azure Storage Secure Transfer Review"
+order: 3
+category: Azure Storage Security
+detection:
+  pattern: resource\s+"azurerm_storage_account"[^}]*enable_https_traffic_only\s*=\s*false
+  conditions:
+  - WHEN PRESENT enable_https_traffic_only\s*=\s*false
+  - WHEN EXPR PRESENT:enable_https_traffic_only\s*=\s*false|min_tls_version\s*=\s*"TLS1_0" && MISSING:# intentional|#
+    legacy
+reporting:
+  type: area_of_interest
+  reason: Detects storage accounts that allow unencrypted HTTP access.
+  trace:
+  - Externalized rule logic for Azure Storage Account Without Secure Transfer Required.
+  description: Storage configuration does not require authenticated encrypted transport for client access.
+  impact: A network attacker may intercept storage data or URL-carried access tokens if clients use permitted cleartext
+    requests.
+  remediation: Require secure transfer and verify HTTPS on all storage clients, redirects, and shared-access URLs.
+    Remove cleartext exceptions for private data.
+  reviewer: Confirm all storage accounts enforce HTTPS. This can be confirmed as an issue when the matched path
+    is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the effective connection settings, certificate-chain validation and hostname verification for the deployed
+    client or server.
+  - Trace configuration overrides, custom trust handlers and error paths; determine whether untrusted networks can
+    affect the connection.
+  - Verify the actual handshake and failure behavior against an untrusted or mismatched certificate before confirming
+    a transport issue.
+  recommendations:
+  - Use authenticated encrypted transport and retain certificate and hostname verification; limit any development
+    exception to a verified non-production scope.
+  - Configure trust through the platform trust mechanism and test that invalid certificates and insecure protocol
+    downgrades are rejected.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

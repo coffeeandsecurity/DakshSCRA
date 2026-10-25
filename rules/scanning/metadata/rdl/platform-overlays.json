@@ -1,0 +1,508 @@
+{
+  "schema_version": 1,
+  "description": "Additional v2-only pack dispatch for mobile projects. Original v1 pack selection is unchanged.",
+  "entries": [
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/reactnative/reactnative.xml",
+      "target_pack": "rules/scanning/platform/javascript/javascript.xml",
+      "patterns": [
+        "*.js",
+        "*.jsx",
+        "*.ts",
+        "*.tsx",
+        "*.mjs",
+        "*.cjs"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/cordova/cordova.xml",
+      "target_pack": "rules/scanning/platform/javascript/javascript.xml",
+      "patterns": [
+        "*.js",
+        "*.jsx",
+        "*.ts",
+        "*.tsx",
+        "*.mjs",
+        "*.cjs"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/ionic/ionic.xml",
+      "target_pack": "rules/scanning/platform/javascript/javascript.xml",
+      "patterns": [
+        "*.js",
+        "*.jsx",
+        "*.ts",
+        "*.tsx",
+        "*.mjs",
+        "*.cjs"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/nativescript/nativescript.xml",
+      "target_pack": "rules/scanning/platform/javascript/javascript.xml",
+      "patterns": [
+        "*.js",
+        "*.jsx",
+        "*.ts",
+        "*.tsx",
+        "*.mjs",
+        "*.cjs"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/maui/maui.xml",
+      "target_pack": "rules/scanning/platform/dotnet/dotnet.xml",
+      "patterns": [
+        "*.cs",
+        "*.vb",
+        "*.cshtml",
+        "*.config"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/xamarin/xamarin.xml",
+      "target_pack": "rules/scanning/platform/dotnet/dotnet.xml",
+      "patterns": [
+        "*.cs",
+        "*.vb",
+        "*.cshtml",
+        "*.config"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/kmp/kmp.xml",
+      "target_pack": "rules/scanning/platform/kotlin/kotlin.xml",
+      "patterns": [
+        "*.kt",
+        "*.kts"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/kmp/kmp.xml",
+      "target_pack": "rules/scanning/platform/java/java.xml",
+      "patterns": [
+        "*.java"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/android/android.xml",
+      "target_pack": "rules/scanning/platform/kotlin/kotlin.xml",
+      "patterns": [
+        "*.kt",
+        "*.kts"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/android/android.xml",
+      "target_pack": "rules/scanning/platform/java/java.xml",
+      "patterns": [
+        "*.java"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/reactnative/reactnative.xml",
+      "target_pack": "rules/scanning/platform/mobile/android/android.xml",
+      "patterns": [
+        "AndroidManifest.xml",
+        "*.xml",
+        "*.java",
+        "*.kt",
+        "*.gradle",
+        "*.gradle.kts",
+        "*.c",
+        "*.cpp",
+        "*.h",
+        "*.hpp"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/reactnative/reactnative.xml",
+      "target_pack": "rules/scanning/platform/mobile/ios/ios.xml",
+      "patterns": [
+        "*.swift",
+        "*.m",
+        "*.mm",
+        "*.plist",
+        "*.entitlements",
+        "*.xcprivacy",
+        "*.h",
+        "*.c",
+        "*.cpp",
+        "*.hpp"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/flutter/flutter.xml",
+      "target_pack": "rules/scanning/platform/mobile/android/android.xml",
+      "patterns": [
+        "AndroidManifest.xml",
+        "*.xml",
+        "*.java",
+        "*.kt",
+        "*.gradle",
+        "*.gradle.kts",
+        "*.c",
+        "*.cpp",
+        "*.h",
+        "*.hpp"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/flutter/flutter.xml",
+      "target_pack": "rules/scanning/platform/mobile/ios/ios.xml",
+      "patterns": [
+        "*.swift",
+        "*.m",
+        "*.mm",
+        "*.plist",
+        "*.entitlements",
+        "*.xcprivacy",
+        "*.h",
+        "*.c",
+        "*.cpp",
+        "*.hpp"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/cordova/cordova.xml",
+      "target_pack": "rules/scanning/platform/mobile/android/android.xml",
+      "patterns": [
+        "AndroidManifest.xml",
+        "*.xml",
+        "*.java",
+        "*.kt",
+        "*.gradle",
+        "*.gradle.kts",
+        "*.c",
+        "*.cpp",
+        "*.h",
+        "*.hpp"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/cordova/cordova.xml",
+      "target_pack": "rules/scanning/platform/mobile/ios/ios.xml",
+      "patterns": [
+        "*.swift",
+        "*.m",
+        "*.mm",
+        "*.plist",
+        "*.entitlements",
+        "*.xcprivacy",
+        "*.h",
+        "*.c",
+        "*.cpp",
+        "*.hpp"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/ionic/ionic.xml",
+      "target_pack": "rules/scanning/platform/mobile/android/android.xml",
+      "patterns": [
+        "AndroidManifest.xml",
+        "*.xml",
+        "*.java",
+        "*.kt",
+        "*.gradle",
+        "*.gradle.kts",
+        "*.c",
+        "*.cpp",
+        "*.h",
+        "*.hpp"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/ionic/ionic.xml",
+      "target_pack": "rules/scanning/platform/mobile/ios/ios.xml",
+      "patterns": [
+        "*.swift",
+        "*.m",
+        "*.mm",
+        "*.plist",
+        "*.entitlements",
+        "*.xcprivacy",
+        "*.h",
+        "*.c",
+        "*.cpp",
+        "*.hpp"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/nativescript/nativescript.xml",
+      "target_pack": "rules/scanning/platform/mobile/android/android.xml",
+      "patterns": [
+        "AndroidManifest.xml",
+        "*.xml",
+        "*.java",
+        "*.kt",
+        "*.gradle",
+        "*.gradle.kts",
+        "*.c",
+        "*.cpp",
+        "*.h",
+        "*.hpp"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/nativescript/nativescript.xml",
+      "target_pack": "rules/scanning/platform/mobile/ios/ios.xml",
+      "patterns": [
+        "*.swift",
+        "*.m",
+        "*.mm",
+        "*.plist",
+        "*.entitlements",
+        "*.xcprivacy",
+        "*.h",
+        "*.c",
+        "*.cpp",
+        "*.hpp"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/xamarin/xamarin.xml",
+      "target_pack": "rules/scanning/platform/mobile/android/android.xml",
+      "patterns": [
+        "AndroidManifest.xml",
+        "*.xml",
+        "*.java",
+        "*.kt",
+        "*.gradle",
+        "*.gradle.kts",
+        "*.c",
+        "*.cpp",
+        "*.h",
+        "*.hpp"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/xamarin/xamarin.xml",
+      "target_pack": "rules/scanning/platform/mobile/ios/ios.xml",
+      "patterns": [
+        "*.swift",
+        "*.m",
+        "*.mm",
+        "*.plist",
+        "*.entitlements",
+        "*.xcprivacy",
+        "*.h",
+        "*.c",
+        "*.cpp",
+        "*.hpp"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/maui/maui.xml",
+      "target_pack": "rules/scanning/platform/mobile/android/android.xml",
+      "patterns": [
+        "AndroidManifest.xml",
+        "*.xml",
+        "*.java",
+        "*.kt",
+        "*.gradle",
+        "*.gradle.kts",
+        "*.c",
+        "*.cpp",
+        "*.h",
+        "*.hpp"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/maui/maui.xml",
+      "target_pack": "rules/scanning/platform/mobile/ios/ios.xml",
+      "patterns": [
+        "*.swift",
+        "*.m",
+        "*.mm",
+        "*.plist",
+        "*.entitlements",
+        "*.xcprivacy",
+        "*.h",
+        "*.c",
+        "*.cpp",
+        "*.hpp"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/kmp/kmp.xml",
+      "target_pack": "rules/scanning/platform/mobile/android/android.xml",
+      "patterns": [
+        "AndroidManifest.xml",
+        "*.xml",
+        "*.java",
+        "*.kt",
+        "*.gradle",
+        "*.gradle.kts",
+        "*.c",
+        "*.cpp",
+        "*.h",
+        "*.hpp"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/kmp/kmp.xml",
+      "target_pack": "rules/scanning/platform/mobile/ios/ios.xml",
+      "patterns": [
+        "*.swift",
+        "*.m",
+        "*.mm",
+        "*.plist",
+        "*.entitlements",
+        "*.xcprivacy",
+        "*.h",
+        "*.c",
+        "*.cpp",
+        "*.hpp"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/android/android.xml",
+      "target_pack": "rules/scanning/platform/c/c.xml",
+      "patterns": [
+        "*.c",
+        "*.h"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/android/android.xml",
+      "target_pack": "rules/scanning/platform/cpp/cpp.xml",
+      "patterns": [
+        "*.cpp",
+        "*.cc",
+        "*.cxx",
+        "*.hpp"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/ios/ios.xml",
+      "target_pack": "rules/scanning/platform/c/c.xml",
+      "patterns": [
+        "*.c",
+        "*.h",
+        "*.m"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/ios/ios.xml",
+      "target_pack": "rules/scanning/platform/cpp/cpp.xml",
+      "patterns": [
+        "*.cpp",
+        "*.cc",
+        "*.cxx",
+        "*.hpp",
+        "*.mm"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/android/android.xml",
+      "target_pack": "rules/scanning/platform/mobile/android/framework/jetpack.xml",
+      "patterns": [
+        "AndroidManifest.xml",
+        "android/app/src/main/AndroidManifest.xml",
+        "build.gradle",
+        "build.gradle.kts",
+        "network_security_config.xml",
+        "*.kt",
+        "*.java",
+        "*.xml"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/ios/ios.xml",
+      "target_pack": "rules/scanning/platform/mobile/ios/framework/uikit.xml",
+      "patterns": [
+        "Info.plist",
+        "*.entitlements",
+        "Podfile",
+        "project.pbxproj",
+        "*.swift",
+        "*.m",
+        "*.mm",
+        "*.plist"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/ios/ios.xml",
+      "target_pack": "rules/scanning/platform/mobile/ios/framework/swiftui.xml",
+      "patterns": [
+        "Info.plist",
+        "*.entitlements",
+        "Podfile",
+        "project.pbxproj",
+        "*.swift",
+        "*.m",
+        "*.mm",
+        "*.plist",
+        "pubspec.yaml"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/flutter/flutter.xml",
+      "target_pack": "rules/scanning/platform/mobile/xplat/flutter/framework/dio.xml",
+      "patterns": [
+        "*.dart",
+        "pubspec.yaml"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/flutter/flutter.xml",
+      "target_pack": "rules/scanning/platform/mobile/xplat/flutter/framework/hive.xml",
+      "patterns": [
+        "*.dart",
+        "pubspec.yaml"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/xplat/reactnative/reactnative.xml",
+      "target_pack": "rules/scanning/platform/mobile/xplat/reactnative/framework/expo.xml",
+      "patterns": [
+        "*.js",
+        "*.jsx",
+        "*.ts",
+        "*.tsx",
+        "app.json",
+        "package.json"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/android/android.xml",
+      "target_pack": "rules/scanning/platform/mobile/android/framework/room.xml",
+      "patterns": [
+        "*.kt",
+        "*.java",
+        "build.gradle",
+        "build.gradle.kts"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/android/android.xml",
+      "target_pack": "rules/scanning/platform/mobile/android/framework/retrofit.xml",
+      "patterns": [
+        "*.kt",
+        "*.java",
+        "build.gradle",
+        "build.gradle.kts"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/ios/ios.xml",
+      "target_pack": "rules/scanning/platform/mobile/ios/framework/alamofire.xml",
+      "patterns": [
+        "*.swift",
+        "Podfile",
+        "Package.swift"
+      ]
+    },
+    {
+      "source_pack": "rules/scanning/platform/mobile/ios/ios.xml",
+      "target_pack": "rules/scanning/platform/mobile/ios/framework/coredata.xml",
+      "patterns": [
+        "*.swift",
+        "*.m",
+        "*.mm",
+        "*.xcdatamodeld"
+      ]
+    }
+  ]
+}

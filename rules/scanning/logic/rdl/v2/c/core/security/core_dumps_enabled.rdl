@@ -2,7 +2,7 @@ VERSION 2
 RULE c.core-dumps-enabled VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(?s)\\brlim_cur\\s*=\\s*RLIM_INFINITY\\b.{0,300}\\bsetrlimit\\s*\\(\\s*RLIMIT_CORE\\b" ""
-REPORT "Core Dump Limit Set to Unlimited"
+REPORT "Core Dump Policy Review"
 SEVERITY LOW
 CONFIDENCE LOW
 WITH TRACE

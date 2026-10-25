@@ -6,7 +6,7 @@ STATE workflow STARTS initiated
 TRANSITION business.approve(workflow) FROM initiated TO approved
 TRANSITION business.execute(workflow) FROM approved TO completed
 VIOLATION business.execute(workflow) WHILE initiated
-REPORT "workflow operation bypasses required approval"
+REPORT "Workflow Operation Bypasses Required Approval"
 SEVERITY HIGH
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

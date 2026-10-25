@@ -3,7 +3,7 @@ RULE baseline.c.core.temporary_files_use_of_mkstemp VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "^[^*/]*\\bmktemp\\s*\\(" "im"
 WHEN TEXT_MISSING "mkstemp|tmpfile|O_EXCL" "im"
-REPORT "Temporary Files: Use of mkstemp()"
+REPORT "Temporary File Creation Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

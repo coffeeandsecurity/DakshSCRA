@@ -3,7 +3,7 @@ RULE baseline.cpp.core.unsafe_use_of_std_vector_at VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\bstd::vector<.*>::at\\(\\s*\\d+\\s*\\)" "im"
 WHEN TEXT_MISSING "try\\s*\\{|catch\\s*\\(|std::out_of_range" "im"
-REPORT "Unsafe Use of std::vector::at()"
+REPORT "Container Bounds Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

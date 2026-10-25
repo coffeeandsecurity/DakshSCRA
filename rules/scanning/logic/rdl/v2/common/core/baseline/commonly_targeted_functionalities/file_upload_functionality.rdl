@@ -2,7 +2,7 @@ VERSION 2
 RULE baseline.common.core.file_upload_functionality VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(?i)(file[\\s_-]*upload|upload[\\s_-]*file|upload[_-](?:handler|service|controller|module)|move_uploaded_file\\s*\\(|\\$_FILES\\b|multipart/form-data|\\btype\\s*=\\s*[\"']file[\"'])" "im"
-REPORT "File Upload Functionality"
+REPORT "File Upload Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: php.framework.yii.unsafe_mass_assignment_via_load_or_setattributes
+title: "Bulk Object Field Binding Review"
+order: 2
+category: Framework-Specific Issues - Yii Framework
+detection:
+  pattern: ->load\s*\(\s*\$_(?:POST|GET|REQUEST)|->setAttributes\s*\(\s*\$_(?:POST|GET|REQUEST)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:safeAttributes|rules|scenarios|safe\s*=>
+reporting:
+  type: area_of_interest
+  reason: Detects Yii model load() or setAttributes() calls directly using superglobal input arrays.
+  trace:
+  - Externalized rule logic for Unsafe Mass Assignment via load() or setAttributes().
+  description: Request-derived fields enter a bulk model-assignment operation. Resolve the model’s effective safe-attribute
+    and validation rules.
+  impact: An attacker may set privilege, ownership, or other protected attributes and gain unauthorized access or
+    alter trusted state if those fields are assignable.
+  remediation: Allowlist writable fields for each operation, exclude privilege and ownership attributes, and set
+    protected values on the trusted server after authorization.
+  reviewer: Verify model rules() define appropriate safe attributes and that sensitive fields are excluded from
+    mass assignment. This can be confirmed as an issue when the matched path is reachable and required controls
+    are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the matched construct in its containing function or configuration and identify the security-sensitive
+    behavior under review.
+  - Verify reachable callers, external influence and effective protections, including deployment overrides and failure
+    paths.
+  - Record concrete evidence for a confirmed issue or a justified suppression; retain an unresolved outcome when
+    the required evidence is unavailable.
+  recommendations:
+  - Apply the rule-specific correction above only after verifying the affected behavior and required control.
+  - Add a regression case for the unsafe condition and a valid protected case; verify the effective behavior in
+    the relevant deployment.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

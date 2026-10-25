@@ -2,7 +2,7 @@ VERSION 2
 RULE baseline.dockerfile.core.using_latest_tag_for_base_image VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "^FROM\\s+\\S+:latest\\b|^FROM\\s+(?!scratch\\b)\\S+\\s*$" "im"
-REPORT "Using latest Tag for Base Image"
+REPORT "Unpinned Container Image Tag"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

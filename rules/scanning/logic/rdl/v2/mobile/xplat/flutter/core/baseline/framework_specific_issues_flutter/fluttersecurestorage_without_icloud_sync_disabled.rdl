@@ -2,7 +2,7 @@ VERSION 2
 RULE baseline.mobile.xplat.flutter.core.fluttersecurestorage_without_icloud_sync_disabled VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\bFlutterSecureStorage\\s*\\(|\\bconst\\s+FlutterSecureStorage\\b" "im"
-REPORT "FlutterSecureStorage Without iCloud Sync Disabled"
+REPORT "Secure Storage Synchronization Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

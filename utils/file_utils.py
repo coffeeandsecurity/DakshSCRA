@@ -204,10 +204,17 @@ def clean_file_paths(filepaths_source, count_loc=False):
     dest_json = runtime.output_Fpaths_JSON
 
     cleaned = []
+    seen = set()
     total_loc = 0
     with open(source_file, "r") as h_sf:
         for eachfilepath in h_sf:
             filepath = eachfilepath.rstrip()
+            if not filepath:
+                continue
+            identity = os.path.normcase(os.path.abspath(filepath))
+            if identity in seen:
+                continue
+            seen.add(identity)
             rel = get_source_file_path(runtime.sourcedir, filepath)
             if count_loc:
                 loc = count_effective_lines(filepath)

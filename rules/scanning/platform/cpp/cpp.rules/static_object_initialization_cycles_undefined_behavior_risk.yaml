@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: cpp.core.static_object_initialization_cycles_undefined_behavior_risk
+title: "Static Initialization Order Review"
+order: 29
+category: Declarations and Initialization
+detection:
+  pattern: \bstatic\s+\w+\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:static\s+\w+.*=\s*\w+::|static\s+\w+.*getInstance\(\)|Singleton && MISSING:constexpr|constinit|test|example
+reporting:
+  type: area_of_interest
+  reason: Detects potential cycles during the initialization of static objects, which can lead to undefined behavior.
+  trace:
+  - 'Externalized rule logic for Static Object Initialization Cycles: Undefined Behavior Risk.'
+  description: The code contains a maintainability, accessibility, or build-configuration review marker. Establish
+    a concrete affected behavior before assigning security severity.
+  impact: No direct confidentiality or integrity consequence is established by this marker alone. A related implementation
+    defect could affect availability or prevent users from using essential controls, depending on the actual behavior.
+  remediation: Resolve the specific unfinished behavior, accessibility requirement, or build hygiene concern. Confirm
+    its real operational effect and test the corrected behavior before classifying it as a security defect.
+  reviewer: Investigate static object initializations for potential cycles that could lead to undefined behavior.
+    This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak,
+    or inconsistent.
+  review_steps:
+  - Inspect the matched construct in its containing function or configuration and identify the security-sensitive
+    behavior under review.
+  - Verify reachable callers, external influence and effective protections, including deployment overrides and failure
+    paths.
+  - Record concrete evidence for a confirmed issue or a justified suppression; retain an unresolved outcome when
+    the required evidence is unavailable.
+  recommendations:
+  - Apply the rule-specific correction above only after verifying the affected behavior and required control.
+  - Add a regression case for the unsafe condition and a valid protected case; verify the effective behavior in
+    the relevant deployment.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

@@ -1,0 +1,36 @@
+format: daksh-pattern-rule/v1
+id: java.core.tenant_data_scope_review
+title: Tenant Data Constraint Review
+order: 950
+category: Security Operation Context
+detection:
+  pattern: (?i)\b(?:where|filter|find|query|select|update|delete|find_by|findOne|Find|Where)\b[^\r\n;]{0,256}\b(?:tenant_?id|organization_?id|organisation_?id)\b
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: A tenant or organization identifier is associated with a data operation. Verify its provenance and application-specific
+    isolation invariant.
+  description: A tenant or organization identifier is associated with a data operation. Verify its provenance and
+    application-specific isolation invariant.
+  impact: Caller-selected tenant identity or an incomplete constraint may expose another tenant's records. Marker
+    presence and absence do not establish isolation.
+  remediation: Derive the effective tenant from trusted authenticated context, apply it to the exact data operation
+    and verify access using two distinct tenants.
+  reviewer: Verify the exact source, operation and applicable controls. This is a review candidate, not a confirmed
+    vulnerability.
+  review_steps:
+  - A tenant or organization identifier is associated with a data operation. Verify its provenance and application-specific
+    isolation invariant.
+  - Check the control on the actual path; unrelated markers must not suppress the candidate.
+  - Validate a reachable unsafe case and a protected control before confirming the issue.
+  recommendations:
+  - Derive the effective tenant from trusted authenticated context, apply it to the exact data operation and verify
+    access using two distinct tenants.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

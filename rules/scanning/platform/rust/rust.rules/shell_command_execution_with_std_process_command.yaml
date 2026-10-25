@@ -1,0 +1,43 @@
+format: daksh-pattern-rule/v1
+id: rust.core.shell_command_execution_with_std_process_command
+title: "OS Command Injection Review"
+order: 1
+category: Untrusted Input and Injection
+detection:
+  pattern: \b(?:std::process::)?Command::new\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:validate|sanitize|allowlist|whitelist|args\s*\(\s*&\s*\[|arg\s*\(\s*"[^"]*" && MISSING:test|example
+reporting:
+  type: area_of_interest
+  reason: Detects command execution entry points in Rust applications.
+  trace:
+  - Externalized rule logic for Shell Command Execution with std::process::Command.
+  description: The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace
+    executable selection and evaluated content to their trust boundaries.
+  impact: If an attacker controls interpreted syntax or the operation selected, code or commands may run with the
+    application’s privileges, allowing data theft, state changes, or service disruption.
+  remediation: Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate
+    argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates
+    or expressions.
+  reviewer: Review command construction and argument handling for untrusted data flow and sanitization. This can
+    be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify who can supply the matched input, including stored values and upstream services; record its type, size
+    limits and trust boundary.
+  - Trace the value through transformations to each sensitive operation. Check the protection at that destination
+    and resource-level authorization.
+  - Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side
+    check alone is insufficient evidence.
+  recommendations:
+  - Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve
+    legitimate characters and protect each destination separately.
+  - Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations
+    where applicable. Test rejected input and unauthorized access.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

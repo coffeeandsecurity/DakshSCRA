@@ -1,0 +1,51 @@
+format: daksh-pattern-rule/v1
+id: mobile.xplat.cordova.core.sensitive_data_stored_in_web_storage
+title: Sensitive Data Stored in Web Storage
+order: 3
+category: Framework-Specific Issues - Cordova
+detection:
+  pattern: \b(?:localStorage\.setItem|sessionStorage\.setItem)\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects web storage writes that may include sensitive values.
+  trace:
+  - Externalized mobile rule logic for Sensitive Data Stored in Web Storage.
+  description: 'Review target: Sensitive Data Stored in Web Storage. The application stores sensitive values or
+    configures protection for persistent data. Determine the actual storage location, backup policy, and lock-state
+    access restrictions. Identify the value written, backing store and access class, including backup, restore,
+    reinstall and logout behavior.'
+  impact: An actor with access to unprotected application files, backups, or overly broad keychain access may recover
+    credentials or private records and use them outside the intended trust boundary.
+  remediation: Use the platform credential or key store for secrets and appropriate authenticated encryption and
+    file protection for private records. Minimize stored data, backup exposure, and lock-state accessibility. Keep
+    privileged secrets on the server, use appropriate device-backed secure storage for local credentials, and restrict
+    backup and sharing to intended non-sensitive data.
+  reviewer: Verify sensitive data classes are excluded from web storage usage. This can be confirmed as an issue
+    when the matched path is reachable and required controls are missing, weak, or inconsistent. Test device lock
+    state, cloud backup versus device transfer, restored keys, keychain persistence after reinstall, and secure-storage
+    failure; do not silently fall back to plaintext or treat an unrelated secure store as protection.
+  review_steps:
+  - Identify the sensitive data, actual storage location, backup inclusion and lock-state or account access policy.
+  - Inspect encryption, key access and data retention, including copies in caches, backups and exported artifacts.
+  - Verify access under the relevant attacker model; a storage API alone does not establish an exposure.
+  - Identify the value written, backing store and access class, including backup, restore, reinstall and logout
+    behavior.
+  - Test device lock state, cloud backup versus device transfer, restored keys, keychain persistence after reinstall,
+    and secure-storage failure; do not silently fall back to plaintext or treat an unrelated secure store as protection.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Store secrets using the platform credential store and apply appropriate access controls and protection to other
+    private data.
+  - Limit retention and unnecessary copies, configure backup handling deliberately, and verify access and recovery
+    behavior in the deployed environment.
+  - Keep privileged secrets on the server, use appropriate device-backed secure storage for local credentials, and
+    restrict backup and sharing to intended non-sensitive data.
+scan_config:
+  match_mode: file
+  context_lines_before: '2'
+  context_lines_after: '1'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

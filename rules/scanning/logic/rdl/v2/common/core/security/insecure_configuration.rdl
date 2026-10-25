@@ -3,7 +3,7 @@ RULE configuration.insecure-default VERSION 1
 IN PROJECT
 WHEN EXISTS CONFIGURATION_ENTRY MATCHES config.security-control AS setting
 REQUIRE config.insecure setting
-REPORT "insecure security configuration"
+REPORT "Security Configuration Review"
 SEVERITY HIGH
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

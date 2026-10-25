@@ -3,7 +3,7 @@ RULE baseline.python.core.insecure_use_of_python_input_function VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "input\\(\\)" "im"
 WHEN (TEXT_MATCHES "(eval\\(|exec\\(|subprocess|os\\.system|os\\.popen|sql|execute)" "im" AND TEXT_MISSING "(strip\\(|isdigit\\(|isnumeric\\(|re\\.match|re\\.fullmatch)" "im")
-REPORT "Insecure Use of Python input() Function"
+REPORT "Python Input Handling Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

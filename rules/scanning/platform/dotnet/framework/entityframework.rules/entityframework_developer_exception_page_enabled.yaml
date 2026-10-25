@@ -1,0 +1,38 @@
+format: daksh-pattern-rule/v1
+id: dotnet.framework.entityframework.entityframework_developer_exception_page_enabled
+title: "Developer Exception Page Enabled"
+order: 1
+category: Framework-Specific Security
+detection:
+  pattern: UseDeveloperExceptionPage\(\)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:app\.Environment\.IsProduction\(\)|ASPNETCORE_ENVIRONMENT.*Production|IsDevelopment\(\).*false
+    && PRESENT:UseDeveloperExceptionPage\s*\(\s*\)
+reporting:
+  type: area_of_interest
+  reason: Detects developer exception middleware usage.
+  trace:
+  - Externalized rule logic for Entityframework Developer Exception Page Enabled.
+  description: The code writes diagnostic data or exposes detailed errors. Establish the values emitted, production
+    configuration, and recipients of the output.
+  impact: Readers of exposed diagnostics may obtain credentials, private records, internal paths, or implementation
+    details that enable account misuse or targeted attacks.
+  remediation: Keep sensitive values and detailed errors out of user-facing responses and routine logs. Redact before
+    emission, restrict diagnostic access, and verify production logging configuration.
+  reviewer: Verify environment guard around UseDeveloperExceptionPage. This can be confirmed as an issue when the
+    matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the effective production configuration and determine who can reach debugging or development functionality.
+  - Check environment guards, deployment overrides and the information or capabilities exposed by the feature.
+  - Verify the actual production behavior; a development-only setting is not itself a production vulnerability.
+  recommendations:
+  - Disable development-only functionality in production and enforce the environment boundary in deployment configuration.
+  - Restrict operational diagnostics and add a production-configuration check covering the exposed route or feature.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

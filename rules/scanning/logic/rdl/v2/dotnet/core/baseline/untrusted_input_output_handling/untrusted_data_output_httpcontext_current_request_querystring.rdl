@@ -3,7 +3,7 @@ RULE baseline.dotnet.core.untrusted_data_output_httpcontext_current_request_quer
 IN FILE
 WHEN TEXT_MATCHES "\\.Append\\(.*HttpContext\\.Current\\.Request\\.QueryString" "im"
 WHEN TEXT_MISSING "(HtmlEncode|UrlEncode|Sanitize|AntiXssEncoder)" "im"
-REPORT "Untrusted Data Output: HttpContext.Current.Request.QueryString"
+REPORT "Untrusted Input Entry Point"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

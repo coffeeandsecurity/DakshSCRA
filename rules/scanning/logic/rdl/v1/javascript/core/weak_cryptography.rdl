@@ -1,5 +1,0 @@
-VERSION 1
-WHEN PRESENT (CryptoJS\.DES\.encrypt|MD5|SHA-1|RC4)\(.+\)
-REPORT AS area_of_interest
-REASON Detects the usage of weak cryptographic functions.
-TRACE Externalized rule logic for Weak Cryptography.

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { GRAPH_WINDOW, graphWindow, visibleNodes, evidenceText, graphSvg, shortFile } from '../lib/flowGraphModel'
+import { GRAPH_WINDOW, graphWindow, visibleNodes, evidenceLines, codeSegments, graphSvg, shortFile } from '../lib/flowGraphModel'
 const colors = { source: '#38d9a9', sink: '#ff8796', guard: '#ffd166', review: '#ffd166', step: '#76aaff' }
 const clamp = (value, low, high) => Math.max(low, Math.min(high, value))
 const preview = (value, count = 34) => String(value || '').slice(0, count * 4).replace(/\s+/g, ' ').slice(0, count)
@@ -8,9 +8,29 @@ export default function FlowGraph({ steps = [], blocks = [], title, initialStep 
   const total = Array.isArray(steps) ? steps.length : 0
   const index = clamp(selected, 0, Math.max(0, total - 1))
   const start = Math.floor(index / GRAPH_WINDOW) * GRAPH_WINDOW
-  const model = useMemo(() => graphWindow(steps, start), [steps, start])
+  const model = useMemo(() => graphWindow(steps, start, blocks), [steps, start, blocks])
   const node = model.nodes.find(item => item.index === index)
-  const code = useMemo(() => evidenceText(node, blocks), [node, blocks])
+  const evidence = useMemo(() => evidenceLines(node, blocks), [node, blocks])
+  const sourceCode = useRef(null)
+  useEffect(() => {
+    const panel = sourceCode.current
+    if (!panel) return
+    let active = true
+    const focusExpression = () => {
+      if (!active) return
+      const selectedLine = panel.querySelector('[data-selected="true"]')
+      if (!selectedLine) return
+      panel.scrollTop += selectedLine.getBoundingClientRect().top - panel.getBoundingClientRect().top - 36
+      panel.scrollLeft = 0
+      const expression = selectedLine.querySelector('mark')
+      if (expression) panel.scrollLeft = Math.max(0, expression.getBoundingClientRect().left - panel.getBoundingClientRect().left - Math.min(80,panel.clientWidth/3))
+    }
+    focusExpression()
+    document.fonts?.ready.then(focusExpression)
+    const observer = new ResizeObserver(focusExpression)
+    observer.observe(panel)
+    return () => { active = false; observer.disconnect() }
+  }, [index, evidence])
   const workspace = useRef(null)
   const canvas = useRef(null), mini = useRef(null), surface = useRef(null)
   const view = useRef({ x: 24, y: 24, zoom: 1 }), size = useRef({ width: 700, height: 440 }), raf = useRef(null), pointers = useRef(new Map()), gesture = useRef(null)
@@ -44,7 +64,12 @@ export default function FlowGraph({ steps = [], blocks = [], title, initialStep 
       if(v.zoom>.28){ctx.font='bold 11px monospace';ctx.fillText(`${n.index+1} · ${n.role.toUpperCase()}${n.inferred?' · INFERRED':''}`,n.x+14,n.y+22)
         ctx.fillStyle='#f0f5ff';ctx.font='bold 12px monospace';ctx.fillText(preview(n.symbol||n.title),n.x+14,n.y+45)
         ctx.fillStyle='#99b0ce';ctx.font='11px monospace';ctx.fillText(preview(shortFile(n.path),30)+(n.line?':'+n.line:''),n.x+14,n.y+68)
-        ctx.fillStyle='#c1d0e7';ctx.fillText(preview(n.code||n.transition||'Select to inspect evidence'),n.x+14,n.y+92)}
+        let left=n.x+14
+        const syntaxColors={keyword:'#c5a7ff',string:'#b5de9b',number:'#ffcb8b',comment:'#8698b4'}
+        const parts=n.codePreview?.length?n.codePreview:[{text:preview(n.transition||'Select to inspect evidence')}]
+        for(const part of parts){const width=ctx.measureText(part.text).width
+          if(part.tainted){ctx.fillStyle=colors[n.tone]+'33';ctx.fillRect(left-1,n.y+80,width+2,16)}
+          ctx.fillStyle=part.tainted?colors[n.tone]:syntaxColors[part.tone]||'#c1d0e7';ctx.fillText(part.text,left,n.y+92);left+=width}}
     }
     ctx.restore()
     mc.clearRect(0,0,160,112);mc.fillStyle='#101c2c';mc.fillRect(0,0,160,112)
@@ -109,8 +134,13 @@ export default function FlowGraph({ steps = [], blocks = [], title, initialStep 
       {node?.inferred && <p className="flow-scope-note">This step is marked inferred in the recorded analysis.</p>}
       {node?.transition && <p><strong>Transfer: </strong>{node.transition}</p>}
       {node?.original.source_symbol && <p><strong>Source symbol: </strong>{node.original.source_symbol}</p>}{node?.original.target_symbol && <p><strong>Target symbol: </strong>{node.original.target_symbol}</p>}
-      <h5>Recorded source evidence</h5>{code ? <pre className="flow-selected-code" tabIndex={0}>{code}</pre> : <p>No code excerpt was recorded for this step.</p>}
-      {code.length>=16000 && <p className="flow-scope-note">This inspector shows the first 16,000 characters. Text mode retains the full recorded evidence.</p>}
+      <h5>Recorded source evidence</h5>{evidence.lines.length ? <>
+        <p className="flow-code-legend">Highlighted row: selected step. {evidence.precise ? 'Marked text: recorded expression.' : evidence.symbolMatched ? 'Marked text: recorded symbol in this line.' : 'The exact expression span is unavailable in this excerpt.'}</p>
+        <pre className={`flow-selected-code ${node?.tone}`} ref={sourceCode} tabIndex={0} aria-label="Source code with recorded expression highlights">{evidence.lines.map((line,i) => <span key={`${line.line}-${i}`} className={`flow-code-line${line.selected?' selected':line.highlighted?' recorded':''}`} data-selected={line.selected}>
+          <span className="flow-code-number">{line.line || '?'}</span><code>{line.offset>0 && <span className="flow-code-omitted">…</span>}{codeSegments(line.text,line.spans).map((part,j) => part.tainted ? <mark className={`flow-taint flow-syntax-${part.tone}`} title="Recorded expression at this step" key={j}>{part.text}</mark> : <span className={`flow-syntax-${part.tone}`} key={j}>{part.text}</span>)}{line.clipped && <span className="flow-code-omitted">…</span>}</code>
+        </span>)}</pre>
+      </> : <p>No code excerpt was recorded for this step.</p>}
+      {evidence.truncated && <p className="flow-scope-note">This panel shows a bounded excerpt around the selected location. Text mode retains the saved context.</p>}
       <div className="flow-step-navigation"><button disabled={index===0} onClick={()=>setSelected(index-1)}>Previous step</button><button disabled={index+1===total} onClick={()=>setSelected(index+1)}>Next step</button></div>
       <form className="flow-jump" onSubmit={e=>{e.preventDefault();const value=Number(jump);if(Number.isInteger(value)&&value>=1&&value<=total)setSelected(value-1)}}><label>Go to step<input aria-label="Go to step" type="number" min="1" max={total} value={jump} onChange={e=>setJump(e.target.value)}/></label><button>Go</button></form>
     </aside></div>

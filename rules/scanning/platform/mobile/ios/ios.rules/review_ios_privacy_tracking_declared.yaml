@@ -1,0 +1,39 @@
+format: daksh-pattern-rule/v1
+id: mobile.ios.core.review_ios_privacy_tracking_declared
+title: "Privacy Tracking Declaration"
+order: 45
+category: PRIVACY Review
+detection:
+  pattern: <key>NSPrivacyTracking</key>
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: The application accesses a persistent or advertising identifier, or declares tracking in its privacy
+    configuration. Identify the actual sensitive value and the recipients, retention and user-consent context of
+    this exposure or capability.
+  impact: Linking identifiers to activity across sessions or services may expose a user’s behavior or enable unwanted
+    tracking when collection and sharing exceed the user’s consent.
+  remediation: Collect identifiers only for a justified, consented purpose. Prefer scoped resettable identifiers,
+    respect tracking authorization and reset behavior, and minimize sharing and retention. Minimize collection and
+    retention, redact secret values, and apply the platform controls needed for sensitive UI and data sharing.
+  reviewer: Test release logging, crash-report payloads, screenshot/background snapshots and clipboard lifetime;
+    permission or API capability alone does not establish collection or malicious behavior.
+  review_steps:
+  - Trace the matched candidate to its actual value, caller or resource.
+  - Test release logging, crash-report payloads, screenshot/background snapshots and clipboard lifetime; permission
+    or API capability alone does not establish collection or malicious behavior.
+  - Resolve release configuration and runtime assumptions before confirming an issue.
+  recommendations:
+  - Collect identifiers only for a justified, consented purpose. Prefer scoped resettable identifiers, respect tracking
+    authorization and reset behavior, and minimize sharing and retention. Minimize collection and retention, redact
+    secret values, and apply the platform controls needed for sensitive UI and data sharing.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

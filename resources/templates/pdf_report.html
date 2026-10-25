@@ -449,7 +449,9 @@
       .panel { box-shadow: none; }
     }
     {% include "report_analysis.css" %}
-  </style>
+      .pattern-source-mark { color: inherit; background: color-mix(in srgb, var(--pattern-mark-color) 24%, transparent); border-bottom: 2px solid var(--pattern-mark-color); padding: 0; }
+    .pattern-report-guidance { white-space: pre-line; }
+</style>
 </head>
 <body>
   <div class="page">
@@ -462,6 +464,7 @@
           <h1 class="title">{{ reportTitle }}</h1>
           {% if reportSubTitle %}<p class="subtitle">{{ reportSubTitle }}</p>{% endif %}
           <p class="subtitle">{{ report_scope }}{% if report_scan.get('project') %} · {{ report_scan.project }}{% endif %}</p>
+          {% if report_audience is defined %}<p class="subtitle">Report audience: {{ {'both':'Both','developer':'Developer Mode','code_review':'Code Review Mode'}[report_audience] }}</p>{% endif %}
           {% if report_scan.get('run_uuid') %}<div class="meta">Scan: {{ report_scan.run_uuid }}</div>{% endif %}
           <div class="meta">
             Generated: {{ generated_at }} | Report Date: {{ report_date }}
@@ -707,24 +710,24 @@
             <div class="rule-head">
               <div><b>{{ finding.rule_title }}</b></div>
               <div class="rule-head-meta">
-                <span class="confidence-chip confidence-{{ finding.confidence_label|lower }}">Confidence {{ finding.confidence_score }}% ({{ finding.confidence_label }})</span>
+                <span class="confidence-chip confidence-{{ finding.confidence_label|lower }}">Confidence {{ finding.confidence_score }}/100 ({{ finding.confidence_label }})</span>
                 <span class="pill">{{ finding.evidence_count }} source(s)</span>
               </div>
             </div>
             <div class="finding-details">
-              <div class="detail-row"><b>Confidence Score:</b> {{ finding.confidence_score }}% ({{ finding.confidence_label }})</div>
+              <div class="detail-row"><b>Heuristic confidence:</b> {{ finding.confidence_score }}/100 ({{ finding.confidence_label }})</div>
               {% if finding.rule_id %}<div class="detail-row"><b>ID:</b> {{ finding.rule_id }}</div>{% endif %}
               {% if finding.rule_desc %}<div class="detail-row"><b>Rule Description:</b> {{ finding.rule_desc }}</div>{% endif %}
               {% if finding.category %}<div class="detail-row"><b>Issue Category:</b> {{ finding.category }}</div>{% endif %}
               {% if finding.issue_scope %}<div class="detail-row"><b>Issue Scope:</b> {{ finding.issue_scope }}</div>{% endif %}
               {% if finding.issue_desc %}<div class="detail-row"><b>Issue Description:</b> {{ finding.issue_desc }}</div>{% endif %}
               {% if finding.security_impact %}<div class="detail-row"><b>Security Impact:</b> {{ finding.security_impact }}</div>{% endif %}
-              {% if finding.developer_note %}<div class="detail-row"><b>Recommended Correction:</b> {{ finding.developer_note }}</div>{% endif %}
+              {% if show_reviewer_guidance|default(true) and finding.get('reviewer_note') %}<div class="detail-row pattern-report-guidance"><b>Review guidance:</b> {{ finding.reviewer_note|guidance }}</div>{% endif %}
+              {% if show_developer_guidance|default(true) and finding.get('developer_note') %}<div class="detail-row pattern-report-guidance"><b>Recommendations:</b> {{ finding.developer_note|guidance }}</div>{% endif %}
               {% if finding.logic_reason %}<div class="detail-row"><b>Rule logic ({{ finding.logic_engine }}):</b> {{ finding.logic_reason }}</div>{% endif %}
               {% if finding.logic_source %}<div class="detail-row"><b>Rule source:</b> {{ finding.logic_source }}</div>{% endif %}
               {% if finding.logic_trace %}<ul>{% for line in finding.logic_trace %}<li>{{ line }}</li>{% endfor %}</ul>{% endif %}
               {% if finding.logic_consulted_files %}<div class="detail-row"><b>Consulted files:</b> {{ finding.logic_consulted_files|join(', ') }}</div>{% endif %}
-              {% if finding.reviewer_note %}<div class="detail-row"><b>Reviewer Note:</b> {{ finding.reviewer_note }}</div>{% endif %}
             </div>
             {% if finding.files %}
             <div style="margin-top:5px;"><b>Flagged Files (Rule Matches):</b></div>
@@ -762,7 +765,7 @@
           <div class="rule-head">
             <div><b>{{ item.keyword }}</b></div>
             <div class="rule-head-meta">
-              <span class="confidence-chip confidence-{{ item.confidence_label|lower }}">Confidence {{ item.confidence_score }}% ({{ item.confidence_label }})</span>
+              <span class="confidence-chip confidence-{{ item.confidence_label|lower }}">Confidence {{ item.confidence_score }}/100 ({{ item.confidence_label }})</span>
               <span class="pill">{{ item.count }} path(s)</span>
             </div>
           </div>

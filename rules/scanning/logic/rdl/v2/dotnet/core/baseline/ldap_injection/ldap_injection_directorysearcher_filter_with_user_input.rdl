@@ -3,7 +3,7 @@ RULE baseline.dotnet.core.ldap_injection_directorysearcher_filter_with_user_inpu
 IN FILE
 WHEN TEXT_MATCHES "new\\s+DirectorySearcher\\s*\\(|DirectorySearcher\\.Filter\\s*=" "im"
 WHEN (TEXT_MATCHES "Request\\.|QueryString|Form|userInput|\\+" "im" AND TEXT_MISSING "EscapeLdapFilter|ldapEscape|Encoder\\.LdapFilterEncode|AntiXss\\.LdapFilterEncode" "im")
-REPORT "LDAP Injection: DirectorySearcher Filter with User Input"
+REPORT "LDAP Injection Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

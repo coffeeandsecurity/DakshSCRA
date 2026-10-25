@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.mobile.android.core.outdated_dependencies VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "implementation\\s+['\"][\\w\\.-]+:\\w+:\\d+\\.\\d+\\.\\d+['\"]" "im"
-WHEN TEXT_MATCHES "com\\.android\\.tools|androidx|google|okhttp|retrofit|firebase" "im"
-REPORT "Outdated Dependencies"
+REPORT "Dependency Version Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

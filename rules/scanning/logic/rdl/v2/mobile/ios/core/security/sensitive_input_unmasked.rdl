@@ -2,7 +2,7 @@ VERSION 2
 RULE ios.sensitive-input-unmasked VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(?i)\\b(?:password|passwd|pin|secret|token)\\w*\\s*\\.\\s*isSecureTextEntry\\s*=\\s*(?:false|NO)\\b" ""
-REPORT "Sensitive Text Input Explicitly Unmasked"
+REPORT "Sensitive Input Masking Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

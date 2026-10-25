@@ -3,7 +3,7 @@ RULE baseline.java.framework.hibernate.hibernate_actuator_management_overexposur
 IN FILE
 WHEN TEXT_MATCHES "management\\.endpoints\\.web\\.exposure\\.include\\s*=\\s*\\*|/actuator" "im"
 WHEN TEXT_MISSING "management\\.endpoint\\..*\\.enabled\\s*=\\s*false|spring\\.security|@PreAuthorize|hasRole|authentication" "im"
-REPORT "Hibernate Actuator/Management Overexposure"
+REPORT "Management Endpoint Exposure Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

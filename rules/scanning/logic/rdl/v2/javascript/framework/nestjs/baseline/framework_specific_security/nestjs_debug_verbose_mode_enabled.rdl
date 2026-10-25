@@ -3,7 +3,7 @@ RULE baseline.javascript.framework.nestjs.nestjs_debug_verbose_mode_enabled VERS
 IN FILE
 WHEN TEXT_MATCHES "NODE_ENV\\s*=\\s*[\\'\\\"]development[\\'\\\"]|debug\\s*:\\s*true|logger\\(\\s*[\\'\\\"]dev[\\'\\\"]" "im"
 WHEN TEXT_MISSING "release|production" "im"
-REPORT "Nestjs Debug/Verbose Mode Enabled"
+REPORT "Debug Mode Configuration Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

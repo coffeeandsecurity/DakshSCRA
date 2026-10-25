@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 from collections import Counter
 from pathlib import Path
 
+from core.pattern_rules import resolve_pack
 from .baseline import inventory
 from .baseline_runtime import BaselineRunner
 
@@ -23,7 +24,7 @@ def registered_packs(root):
         platform = item.findtext('platform')
         parent = Path(platforms[platform]['pack']).parent
         path = parent / 'framework' / item.findtext('rule_file')
-        if not (root / path).is_file():
+        if not resolve_pack(root / path).exists():
             path = parent / item.findtext('rule_file')
         key = path.as_posix()
         filters = [p.strip() for p in item.findtext('scan_ftypes', '').split(',') if p.strip()]
@@ -44,9 +45,9 @@ def audit_coverage(root, run_pairs=True):
     root = Path(root)
     failures = []
     definitions, expected = inventory(root)
-    baseline = json.loads((root / 'config/rdl_baseline.json').read_text())['entries']
-    additional = json.loads((root / 'config/rdl_additional.json').read_text())['entries']
-    shadow_config = json.loads((root / 'config/rdl_shadow.json').read_text())
+    baseline = json.loads((root / 'rules/scanning/metadata/rdl/baseline.json').read_text())['entries']
+    additional = json.loads((root / 'rules/scanning/metadata/rdl/additional.json').read_text())['entries']
+    shadow_config = json.loads((root / 'rules/scanning/metadata/rdl/shadow-mappings.json').read_text())
     semantic = shadow_config['mappings']
     if shadow_config.get('project_flow'):
         from .portable_profiles import project_mappings
@@ -62,7 +63,7 @@ def audit_coverage(root, run_pairs=True):
         if not (root / path).is_file() or (root / path).read_text() != content:
             failures.append('Stale or missing baseline: ' + path)
     known_packs = {e['xml_pack'] for e in baseline}
-    overlays = json.loads((root / 'config/rdl_platform_overlays.json').read_text())['entries']
+    overlays = json.loads((root / 'rules/scanning/metadata/rdl/platform-overlays.json').read_text())['entries']
     for overlay in overlays:
         if overlay['source_pack'] not in known_packs or overlay['target_pack'] not in known_packs:
             failures.append('Invalid mobile overlay: ' + str(overlay))
@@ -115,13 +116,20 @@ def audit_coverage(root, run_pairs=True):
                 info = packs.get(entry['xml_pack'])
                 if entry['rule_id'] in case_index and (not info or not selected_file(info, case['file_name'])):
                     failures.append('Fixture cannot reach registered pack: ' + entry['rule_id'] + ' (' + case['file_name'] + ')')
-                path = Path(temporary) / str(index) / case['file_name']
-                path.parent.mkdir()
                 for label, expected_outcome in [('positive', 'MATCH'), ('negative', 'NO_MATCH')]:
                     for number, content in enumerate(case[label]):
+                        project = Path(temporary) / str(index) / label / str(number)
+                        path = project / case['file_name']
+                        path.parent.mkdir(parents=True)
+                        for relative,source in case.get('project_files',{}).get(label,{}).items():
+                            fixture=project/relative
+                            if project.resolve() not in fixture.resolve().parents:
+                                raise ValueError('Project fixture escapes its isolated directory')
+                            fixture.parent.mkdir(parents=True,exist_ok=True)
+                            fixture.write_text(source)
                         path.write_text(content)
-                        record = runner.evaluate(entry, str(path), content, temporary, False,
-                                                 refine=bool(entry.get('mobile_check') or entry.get('client_check') or entry.get('php_check') or entry.get('java_check')))
+                        record = runner.evaluate(entry, str(path), content, project, False,
+                                                 refine=bool(entry.get('mobile_check') or entry.get('project_check') or entry.get('client_check') or entry.get('php_check') or entry.get('java_check')))
                         passed = record['v2_outcome'] == expected_outcome
                         if not passed:
                             failures.append('{} {}{}: {} {}'.format(entry['rule_id'], label, number, record['v2_outcome'], record['v2_errors']))
@@ -169,7 +177,7 @@ def markdown_report(report):
         '| Review area | New mobile definitions |', '|---|---:|']
     lines += ['| {} | {} |'.format(key, value) for key, value in sorted(report['mobile_review_areas'].items())]
     lines += ['', 'Source selection includes Android Java/Kotlin/XML/Gradle Kotlin DSL, JavaScript JSX/TSX/module variants, Kotlin scripts, and hybrid native manifests/plists. Source selection is exercised by regression tests; platform and framework filters are checked for every new paired fixture.', '',
-        'Mobile selections also dispatch applicable native-language v2 packs through `config/rdl_platform_overlays.json` (for example React Native → JavaScript, MAUI → .NET, KMP → Kotlin, and native Android/iOS bridge files). Duplicate pack/file evaluations are skipped. V1 pack selection and rule predicates remain independent.', '', '## Evidence handling', '',
+        'Mobile selections also dispatch applicable native-language v2 packs through `rules/scanning/metadata/rdl/platform-overlays.json` (for example React Native → JavaScript, MAUI → .NET, KMP → Kotlin, and native Android/iOS bridge files). Duplicate pack/file evaluations are skipped. V1 pack selection and rule predicates remain independent.', '', '## Evidence handling', '',
         'Source snippets retain original credential and sensitive values, including unquoted configuration values. JSON and HTML downloads retain the same evidence. HTML still escapes source markup so code is displayed as text. File/evaluation/telemetry resource limits remain in force; absent or incomplete evidence is not a safety verdict.', '',
         '## Remaining boundaries', '']
     lines += ['- '+item for item in report['limitations']]

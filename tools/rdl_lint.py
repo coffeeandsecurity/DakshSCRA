@@ -18,23 +18,34 @@ def _paths(values):
     for value in values:
         path = Path(value)
         if path.is_dir():
-            yield from sorted(path.rglob("*.rdl"))
+            yield from sorted(p for p in path.rglob("*") if p.suffix in {".rdl", ".yaml", ".yml"})
         else:
             yield path
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Lint RDL source files.")
-    parser.add_argument("paths", nargs="+", help="RDL file or directory")
+    parser = argparse.ArgumentParser(description="Validate Pattern Rules and Semantic RDL source files.")
+    parser.add_argument("paths", nargs="+", help="Pattern Rule YAML, RDL file, or directory")
     parser.add_argument("--json", action="store_true", dest="as_json", help="emit machine-readable JSON")
     args = parser.parse_args(argv)
 
     records = []
     error_count = 0
+    identities = set()
     for path in _paths(args.paths):
         try:
+            if path.suffix in {'.yaml', '.yml'}:
+                from core.pattern_rules import load_rule, load_pack
+                if path.name == '_pack.yaml':
+                    load_pack(path.parent)
+                    continue
+                rule = load_rule(path)
+                if rule['id'] in identities:
+                    raise ValueError('Duplicate Pattern Rule identity: ' + rule['id'])
+                identities.add(rule['id'])
+                continue
             document = compile_rdl(path.read_text(encoding="utf-8"), str(path))
-        except OSError as exc:
+        except (OSError, ValueError) as exc:
             records.append({"path": str(path), "line": 1, "severity": "error", "code": "RDL000", "message": str(exc), "hint": ""})
             error_count += 1
             continue

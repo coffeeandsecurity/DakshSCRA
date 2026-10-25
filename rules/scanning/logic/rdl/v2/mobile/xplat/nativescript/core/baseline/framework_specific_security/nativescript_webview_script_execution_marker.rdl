@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.mobile.xplat.nativescript.core.nativescript_webview_script_execution_marker VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "WebView|evaluateJavaScript\\(|javaScriptEnabled" "im"
-WHEN TEXT_MISSING "originWhitelist|onShouldOverrideUrlLoading" "im"
-REPORT "NativeScript WebView Script Execution Marker"
+REPORT "WebView Script Execution Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -24,14 +24,14 @@
                         <span class="source-ht">Security Impact</span> : {{filepath["attack_desc"]}}
                     </div>
                 {% endif %}
-                {% if filepath["reviewer_note"] %}
+                {% if show_reviewer_guidance|default(true) and filepath.get('reviewer_note') %}
                     <div class="source-file-block">
-                        <span class="source-ht">Reviewer Focus</span> : {{filepath["reviewer_note"]}}
+                        <span class="source-ht">Review guidance</span> : {{ filepath["reviewer_note"]|guidance }}
                     </div>
                 {% endif %}
-                {% if filepath["developer_note"] %}
+                {% if show_developer_guidance|default(true) and filepath.get('developer_note') %}
                     <div class="source-file-block">
-                        <span class="source-ht">Recommended Correction</span> : {{filepath["developer_note"]}}
+                        <span class="source-ht">Recommendations</span> : {{ filepath["developer_note"]|guidance }}
                     </div>
                 {% endif %}
                 {% for path in filepath["paths"] %}

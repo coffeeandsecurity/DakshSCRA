@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.ruby.core.stack_trace_or_sensitive_exception_disclosure VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:puts|print|logger\\.(?:debug|info|error)|Rails\\.logger\\.(?:debug|info|error))\\s*\\(?.*(?:exception|backtrace)" "im"
-WHEN TEXT_MISSING "release|production" "im"
-REPORT "Stack Trace or Sensitive Exception Disclosure"
+REPORT "Error Detail Disclosure Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

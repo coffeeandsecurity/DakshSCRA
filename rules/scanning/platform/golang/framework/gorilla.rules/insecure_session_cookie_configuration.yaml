@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: golang.framework.gorilla.insecure_session_cookie_configuration
+title: "Session Cookie Protection Review"
+order: 2
+category: Framework-Specific Issues - Gorilla Toolkit
+detection:
+  pattern: sessions\.NewCookieStore|securecookie\.New[^;)]*\n[^;)]*(?:HttpOnly\s*:\s*false|Secure\s*:\s*false)|Options\s*:\s*&sessions\.Options\s*\{[^}]*(?:HttpOnly\s*:\s*false|Secure\s*:\s*false)
+  conditions:
+  - WHEN PRESENT sessions\.NewCookieStore|sessions\.NewFilesystemStore
+  - WHEN EXPR MISSING:Secure\s*:\s*true|HttpOnly\s*:\s*true
+reporting:
+  type: area_of_interest
+  reason: Detects Gorilla sessions configured without Secure or HttpOnly flags.
+  trace:
+  - Externalized rule logic for Insecure Session Cookie Configuration.
+  description: The code handles session state or configures cookies and session secrets. Resolve cookie attributes,
+    token generation, lifetime, and server-side validation.
+  impact: Weak session secrets, exposed cookies, or inadequate expiry may allow session theft, token forgery, or
+    continued access after the user’s intended authorization ends.
+  remediation: Use strong unpredictable session secrets, rotate tokens on privilege changes, and enforce expiry
+    and revocation. Set Secure, HttpOnly, and appropriate SameSite attributes for sensitive browser cookies.
+  reviewer: Verify session cookie options enforce Secure, HttpOnly, and appropriate SameSite policy. This can be
+    confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify whether the cookie carries a session or other sensitive value and inspect the flags on every issuance
+    and update path.
+  - Check effective Secure, HttpOnly and SameSite behavior, domain and path scope, expiry and session rotation in
+    the deployed flow.
+  - Distinguish intended browser access from a missing protection; verify actual response headers and cross-site
+    behavior.
+  recommendations:
+  - Set cookie protections appropriate to its purpose and deployed HTTPS flow; keep sensitive session cookies inaccessible
+    to scripts where required.
+  - Limit cookie scope and lifetime, rotate sessions at authentication changes, and test actual browser and response-header
+    behavior.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

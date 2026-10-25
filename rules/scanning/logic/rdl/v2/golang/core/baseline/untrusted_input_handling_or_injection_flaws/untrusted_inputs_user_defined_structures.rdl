@@ -3,7 +3,7 @@ RULE baseline.golang.core.untrusted_inputs_user_defined_structures VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "struct" "im"
 WHEN (TEXT_MATCHES "r\\.FormValue|r\\.URL\\.Query|json\\.Unmarshal|c\\.Bind|c\\.ShouldBind" "im" AND TEXT_MISSING "validate|Validate|binding:|required:" "im")
-REPORT "Untrusted Inputs: User-Defined Structures"
+REPORT "Untrusted Input Entry Point"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

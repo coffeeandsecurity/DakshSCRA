@@ -1,0 +1,38 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.review_android_device_admin_control
+title: "Device Administration Capability"
+order: 66
+category: PLATFORM Review
+detection:
+  pattern: \b(?:wipeData|resetPassword|lockNow)\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: The code uses device-administrator or lock-control functionality. Resolve the exact declaration or
+    operation in the selected build and identify its security boundary.
+  impact: Misuse of an activated administrator capability may lock the device, alter device policy, or disrupt user
+    access, depending on the privileges actually granted.
+  remediation: Use device-management privileges only for clearly authorized management features. Minimize requested
+    policies and provide transparent activation, recovery, and deactivation behavior. Apply the least-privilege
+    platform control appropriate to the matched operation and verify the production configuration.
+  reviewer: Check debug/release and product flavors, generated/native code, plugin boundaries and failure paths;
+    source evidence alone does not establish shipped or runtime behavior.
+  review_steps:
+  - Trace the matched candidate to its actual value, caller or resource.
+  - Check debug/release and product flavors, generated/native code, plugin boundaries and failure paths; source
+    evidence alone does not establish shipped or runtime behavior.
+  - Resolve release configuration and runtime assumptions before confirming an issue.
+  recommendations:
+  - Use device-management privileges only for clearly authorized management features. Minimize requested policies
+    and provide transparent activation, recovery, and deactivation behavior. Apply the least-privilege platform
+    control appropriate to the matched operation and verify the production configuration.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

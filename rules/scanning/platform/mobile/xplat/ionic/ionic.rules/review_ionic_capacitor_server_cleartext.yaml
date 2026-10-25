@@ -1,0 +1,36 @@
+format: daksh-pattern-rule/v1
+id: mobile.xplat.ionic.core.review_ionic_capacitor_server_cleartext
+title: "Cleartext HTTP Communication Review"
+order: 16
+category: NETWORK Review
+detection:
+  pattern: '["\x27]?cleartext["\x27]?\s*:\s*true\b'
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: Hybrid server configuration enables cleartext traffic, commonly for live reload. Confirm whether
+    the setting reaches a production build and which sensitive requests or content use that server.
+  impact: A weak trust decision or sensitive cleartext request can expose credentials or let an intermediary alter
+    application data.
+  remediation: Use platform trust and hostname validation and encrypted transport. Remove permissive callbacks and
+    narrow necessary exceptions to the intended hosts.
+  reviewer: Test invalid chains, wrong hostnames, redirects and build-specific exceptions; an unrelated trusted
+    client or HTTPS URL does not protect this connection. Missing pinning alone is not proof of insecurity.
+  review_steps:
+  - Resolve the exact instance, declaration, value and release configuration.
+  - Test invalid chains, wrong hostnames, redirects and build-specific exceptions; an unrelated trusted client or
+    HTTPS URL does not protect this connection. Missing pinning alone is not proof of insecurity.
+  - Confirm reachability and security impact before confirming an issue.
+  recommendations:
+  - Use platform trust and hostname validation and encrypted transport. Remove permissive callbacks and narrow necessary
+    exceptions to the intended hosts.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

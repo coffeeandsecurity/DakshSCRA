@@ -1,0 +1,45 @@
+format: daksh-pattern-rule/v1
+id: mobile.xplat.flutter.framework.dio.dio_baseoptions_without_connection_timeout
+title: "Dio BaseOptions without Connection Timeout"
+order: 3
+category: Framework-Specific Issues - Dio (Flutter)
+detection:
+  pattern: BaseOptions\s*\(|Dio\s*\(\s*BaseOptions\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects Dio BaseOptions configured without connection or receive timeouts.
+  trace:
+  - Externalized mobile rule logic for Dio BaseOptions Without Connection Timeout.
+  description: 'Review target: Dio BaseOptions Without Connection Timeout. The code configures failure handling
+    or resource consumption. Determine whether failure paths preserve security invariants and whether work is bounded.
+    Resolve the exact declaration or operation in the selected build and identify its security boundary.'
+  impact: Unhandled failures or unbounded work may disrupt availability or leave security-relevant state inconsistent.
+    The presence or absence of a named handler alone does not establish a reachable security defect.
+  remediation: Bound resource use, handle failures at the correct ownership boundary, and fail safely before updating
+    trusted state. Test exceptional paths, cancellation, timeouts, and recovery behavior. Apply the least-privilege
+    platform control appropriate to the matched operation and verify the production configuration.
+  reviewer: Confirm all Dio instances have timeouts configured. This can be confirmed as an issue when the matched
+    path is reachable and required controls are missing, weak, or inconsistent. Check debug/release and product
+    flavors, generated/native code, plugin boundaries and failure paths; source evidence alone does not establish
+    shipped or runtime behavior.
+  review_steps:
+  - Trace who controls the operation count, input size, duration or resource allocation.
+  - Inspect limits, cancellation, cleanup and error paths, including concurrency and deployment quotas.
+  - Establish a reachable way to exhaust or retain a relevant resource before confirming an availability issue.
+  - Resolve the exact declaration or operation in the selected build and identify its security boundary.
+  - Check debug/release and product flavors, generated/native code, plugin boundaries and failure paths; source
+    evidence alone does not establish shipped or runtime behavior.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Set limits and timeouts appropriate to the operation and release resources on success, failure and cancellation.
+  - Test oversized input and concurrent requests against the intended limits and verify cleanup under failure.
+  - Apply the least-privilege platform control appropriate to the matched operation and verify the production configuration.
+scan_config:
+  match_mode: file
+  context_lines_before: '2'
+  context_lines_after: '4'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

@@ -1,0 +1,39 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.review_android_high_risk_package_permission
+title: "Package Management Capability"
+order: 76
+category: PRIVACY Review
+detection:
+  pattern: <uses-permission(?:-sdk-23)?\b[^>]{0,500}\b[A-Za-z_][\w.-]*:name\s*=\s*["\x27](?:android\.permission\.REQUEST_INSTALL_PACKAGES|android\.permission\.QUERY_ALL_PACKAGES)["\x27]
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: The application requests or uses package installation or broad package-discovery capabilities. Identify
+    the actual sensitive value and the recipients, retention and user-consent context of this exposure or capability.
+  impact: Unapproved installation may introduce executable software, and broad package discovery may reveal sensitive
+    information about the user’s installed applications when consent or data-use controls are inadequate.
+  remediation: Use scoped package queries and platform installation prompts. Require clear user intent for installation,
+    verify the package source and integrity, and avoid collecting an unnecessary application inventory. Minimize
+    collection and retention, redact secret values, and apply the platform controls needed for sensitive UI and
+    data sharing.
+  reviewer: Test release logging, crash-report payloads, screenshot/background snapshots and clipboard lifetime;
+    permission or API capability alone does not establish collection or malicious behavior.
+  review_steps:
+  - Trace the matched candidate to its actual value, caller or resource.
+  - Test release logging, crash-report payloads, screenshot/background snapshots and clipboard lifetime; permission
+    or API capability alone does not establish collection or malicious behavior.
+  - Resolve release configuration and runtime assumptions before confirming an issue.
+  recommendations:
+  - Use scoped package queries and platform installation prompts. Require clear user intent for installation, verify
+    the package source and integrity, and avoid collecting an unnecessary application inventory. Minimize collection
+    and retention, redact secret values, and apply the platform controls needed for sensitive UI and data sharing.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

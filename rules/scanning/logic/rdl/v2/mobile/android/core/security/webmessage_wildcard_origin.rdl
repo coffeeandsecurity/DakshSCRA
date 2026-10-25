@@ -2,7 +2,7 @@ VERSION 2
 RULE android.webmessage-wildcard-origin VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:postWebMessage|addWebMessageListener)\\s*\\([^;\\n]{0,500}(?:[\"\\x27]\\*[\"\\x27])" ""
-REPORT "WebMessage Wildcard Origin"
+REPORT "Message Origin Policy Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

@@ -3,7 +3,7 @@ RULE baseline.java.core.debugging_and_logging_statements VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(System\\.out\\.print|System\\.err\\.print|System\\.out\\.println|System\\.err\\.println|log\\.(debug|trace))" "im"
 WHEN TEXT_MISSING "release|production" "im"
-REPORT "Debugging and Logging Statements"
+REPORT "Application Logging Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

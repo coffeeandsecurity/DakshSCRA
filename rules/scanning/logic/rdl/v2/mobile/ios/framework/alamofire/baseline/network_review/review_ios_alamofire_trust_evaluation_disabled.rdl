@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.ios.framework.alamofire.review_ios_alamofire_trust_evaluation_disabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:DisabledTrustEvaluator\\s*\\(|allHostsMustBeEvaluated\\s*:\\s*false)" "im"
+REPORT "TLS Certificate Validation Review"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

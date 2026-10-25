@@ -1,0 +1,57 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.insecure_pendingintent_missing_immutability_flag
+title: "PendingIntent Mutability Review"
+order: 18
+category: Framework-Specific Security
+detection:
+  pattern: PendingIntent\.(getBroadcast|getActivity|getService|getForegroundService)\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects PendingIntent creation without the FLAG_IMMUTABLE flag, enabling intent injection on Android 12+.
+  trace:
+  - 'Externalized mobile rule logic for Insecure PendingIntent: Missing Immutability Flag.'
+  description: 'Review target: Insecure PendingIntent: Missing Immutability Flag. The application exposes or invokes
+    an inter-process interface. Resolve export settings, permissions, intent recipients, URI grants, and runtime
+    caller checks. Resolve the external entry point, its caller or URI grant, and the sensitive operation or resource
+    reached.'
+  impact: An untrusted application may read private data, alter state, or invoke operations under the application’s
+    identity if an externally reachable interface lacks effective caller authorization or permits unsafe mutation.
+  remediation: Disable unnecessary export and prefer explicit recipients and immutable PendingIntents. Apply appropriate
+    caller permissions and authorization, bind query arguments, and validate every incoming payload. Minimize exported
+    surfaces and URI grants; validate parsed schemes, hosts and paths, use verified links where appropriate, and
+    authorize each sensitive action.
+  reviewer: Confirm all PendingIntent creations specify FLAG_IMMUTABLE where appropriate. This can be confirmed
+    as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent. Resolve
+    merged manifests, aliases and SDK defaults; test custom-scheme collision, malformed URLs, encoded paths, nested
+    intents, read/write grants and permission inheritance. Registration or permission presence alone does not prove
+    unauthorized access.
+  review_steps:
+  - Inspect the effective export status, permission requirements and runtime identity checks on the inter-process
+    interface.
+  - Trace untrusted callers and received values to sensitive actions, including indirect recipients and granted
+    resource access.
+  - Verify unauthorized callers cannot invoke the protected operation; a declared component or intent alone is not
+    an issue.
+  - Resolve the external entry point, its caller or URI grant, and the sensitive operation or resource reached.
+  - Resolve merged manifests, aliases and SDK defaults; test custom-scheme collision, malformed URLs, encoded paths,
+    nested intents, read/write grants and permission inheritance. Registration or permission presence alone does
+    not prove unauthorized access.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Keep internal components private where possible; enforce caller permissions and resource authorization on exposed
+    operations.
+  - Constrain recipients and granted access and test calls from an untrusted process or application.
+  - Minimize exported surfaces and URI grants; validate parsed schemes, hosts and paths, use verified links where
+    appropriate, and authorize each sensitive action.
+scan_config:
+  match_mode: file
+  context_type: lines
+  context_lines_before: '3'
+  context_lines_after: '0'
+  aggregate: none
+  report_format: default
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: yellow

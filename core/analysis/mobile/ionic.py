@@ -5,7 +5,7 @@ import re
 
 import state.runtime_state as state
 from core.analysis.javascript.analyzer import analyze_js_flows
-from core.analysis.mobile.common import annotate_flows, collect_files, first_match_line, flow, line_text, output_dir
+from core.analysis.mobile.common import read_mobile_lines, annotate_flows, collect_files, first_match_line, flow, line_text, output_dir
 from core.analysis.report import write_reports
 
 
@@ -22,7 +22,7 @@ def _semantic_flows(source_root: Path) -> List[dict]:
     files = collect_files(source_root, ("*.js", "*.jsx", "*.ts", "*.tsx", "*.html", "*.xml", "*.json"))
     for file_path in files:
         try:
-            lines = file_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+            lines = read_mobile_lines(file_path)
         except OSError:
             continue
 
@@ -72,7 +72,7 @@ def _semantic_flows(source_root: Path) -> List[dict]:
             )
 
         open_line = first_match_line(lines, OPEN_RE)
-        if open_line and not first_match_line(lines, OPEN_GUARD_RE, open_line, min(len(lines), open_line + 20)):
+        if open_line:
             flows.append(
                 flow(
                     source_root=source_root,

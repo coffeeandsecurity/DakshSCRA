@@ -1,0 +1,43 @@
+format: daksh-pattern-rule/v1
+id: python.core.csrf_exempt_decorators
+title: "CSRF Protection Review"
+order: 24
+category: Insecure Implementation or Permissions
+detection:
+  pattern: '@(csrf_exempt)'
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:@login_required|token_required|api_key|JWT|Bearer && MISSING:test|example
+reporting:
+  type: area_of_interest
+  reason: Detects decorators that exempt views from CSRF protection.
+  trace:
+  - Externalized rule logic for CSRF Exempt Decorators.
+  description: The code disables, exempts, or configures request-forgery protection. Verify whether a reachable
+    state-changing operation authenticates through automatically sent browser credentials.
+  impact: An attacker may cause a victim’s browser to perform unwanted authenticated actions if the endpoint relies
+    on ambient credentials and lacks an effective anti-forgery check.
+  remediation: Enforce anti-forgery protection on cookie-authenticated state changes, validate origins where appropriate,
+    and justify exemptions only for independently authenticated non-browser flows.
+  reviewer: Verify the usage of CSRF exempt decorators in the codebase. Ensure that these decorators are correctly
+    applied and consider their impact on security. Pay particular attention to exemptions that may introduce security
+    risks. This can be confirmed as an issue when the matched path is reachable and required controls are missing,
+    weak, or inconsistent.
+  review_steps:
+  - Identify whether the reachable endpoint changes state and whether browsers attach authentication credentials
+    automatically.
+  - Inspect the effective anti-forgery check, accepted methods and content types, origin checks and intentional
+    exemptions.
+  - Test a cross-site request against the deployed authentication flow; distinguish token-based APIs from cookie-authenticated
+    operations.
+  recommendations:
+  - Enforce the framework anti-forgery mechanism on state-changing browser-authenticated requests; keep exemptions
+    narrow and documented.
+  - Use appropriate cookie and origin protections as additional controls and test rejected cross-site requests.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

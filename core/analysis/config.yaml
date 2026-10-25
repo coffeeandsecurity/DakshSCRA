@@ -1011,9 +1011,9 @@ c:
 # ─── C++ ───────────────────────────────────────────────────────────────────────
 cpp:
   analyzer:
-    globs: ["*.cpp", "*.cc", "*.cxx", "*.hpp", "*.hh"]
+    globs: ["*.cpp", "*.cc", "*.cxx", "*.h", "*.hpp", "*.hh", "*.hxx"]
     mode: brace
-    function_def_re: '^(?:(?:static|inline|virtual|explicit|constexpr|noexcept|override|const|friend|extern)\s+)*(?:[\w\*\&:<>~]+\s+)+([A-Za-z_~][A-Za-z0-9_]*)\s*\(([^;{=]*)\)\s*(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:\{|$)'
+    function_def_re: '^\s*(?!(?:else|return|throw|case|new|delete)\b)(?:(?:static|inline|virtual|explicit|constexpr|noexcept|override|const|friend|extern)\s+)*(?:[\w:<>~]+\s+)*[\w:<>~]+(?:\s+|\s*[\*&]\s*)(?:[\*&]\s*)*((?:[A-Za-z_][A-Za-z0-9_]*::)*[A-Za-z_~][A-Za-z0-9_]*)\s*\(([^;{=]*)\)\s*(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:\{|$)'
   sources:
     - "\\bstd::cin\\b"
     - "\\bgetenv\\s*\\("
@@ -1033,15 +1033,9 @@ cpp:
     - ["SQL", "SQL injection", "\\bsqlite3_exec\\s*\\(|\\bmysql_query\\s*\\(|\\bPQexec\\s*\\("]
     - ["printf (format)", "Format string injection", "\\bprintf\\s*\\(\\s*[^'\"]"]
     - ["std::system", "OS command injection", "\\bstd::system\\s*\\("]
-  sanitizers:
-    - "\\bsnprintf\\b"
-    - "\\bstd::regex_replace\\b"
-    - "\\bstd::string\\b"
-    - "\\bboost::regex_replace\\b"
-    - "\\bsanitize\\b"
-    - "\\bvalidate\\b"
-    - "\\bstrcpy_s\\b"
-    - "\\bsprintf_s\\b"
+    - ["desktop process launch", "Process executable and argument control", "\\b(?:CreateProcess(?:A|W)?|ShellExecute(?:Ex)?(?:A|W)?|WinExec|(?:g_)?spawn_command_line_(?:async|sync))\\s*\\("]
+  # String construction, bounded writes and helper names do not prove sink-specific validation.
+  sanitizers: []
   safe_callees:
     - "std::cout"
     - "std::cerr"

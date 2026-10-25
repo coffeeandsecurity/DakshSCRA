@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.mobile.xplat.cordova.core.overly_permissive_cordova_whitelist VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "<allow-navigation\\s+href=\"\\*\"\\s*/>|<access\\s+origin=\"\\*\"\\s*/>" "im"
-WHEN TEXT_MISSING "allowlist|whitelist|trusted" "im"
-REPORT "Overly Permissive Cordova Whitelist"
+REPORT "Cordova Origin Policy Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

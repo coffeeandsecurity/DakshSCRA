@@ -3,7 +3,7 @@ RULE baseline.kotlin.framework.springkotlin.springkotlin_permissive_cors_origin 
 IN FILE
 WHEN TEXT_MATCHES "allowedOrigins\\s*=\\s*arrayOf\\(\\s*\"\\*\"\\s*\\)|origin\\s*=\\s*\"\\*\"" "im"
 WHEN (TEXT_MATCHES "allowedOrigins.*\"\\*\"|corsConfiguration.*allowedOrigins\\s*=\\s*\"\\*\"" "im" AND TEXT_MISSING "allowedOrigins\\s*=\\s*\"\\s*https?://[^*]|allowCredentials.*false" "im")
-REPORT "Springkotlin Permissive CORS/Origin"
+REPORT "Cross-Origin Access Policy Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -3,7 +3,7 @@ RULE baseline.dotnet.framework.blazor.blazor_webassembly_with_sensitive_logic VE
 IN FILE
 WHEN TEXT_MATCHES "\\[Authorize\\]" "im"
 WHEN TEXT_MISSING "@rendermode\\s+InteractiveServer|HttpContext|server-side" "im"
-REPORT "Blazor WebAssembly with Sensitive Logic"
+REPORT "Client-Side Security Logic Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

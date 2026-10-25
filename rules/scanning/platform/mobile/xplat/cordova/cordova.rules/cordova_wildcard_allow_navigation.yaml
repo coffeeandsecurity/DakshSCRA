@@ -1,0 +1,48 @@
+format: daksh-pattern-rule/v1
+id: mobile.xplat.cordova.core.cordova_wildcard_allow_navigation
+title: "WebView Navigation Policy Review"
+order: 5
+category: Framework-Specific Security
+detection:
+  pattern: <allow-navigation\s+href=\"\*\"
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects wildcard navigation policy in Cordova config.
+  trace:
+  - Externalized mobile rule logic for Cordova Wildcard Allow Navigation.
+  description: 'Review target: Cordova Wildcard Allow Navigation. A browser-origin or navigation policy permits
+    a broad set of external origins or destinations. Identify the resources and privileged interfaces covered by
+    the effective policy. Resolve the loaded content and frame origin, the exact WebView instance, and the native
+    operations available to that content.'
+  impact: An untrusted site may read protected responses or invoke privileged interfaces if a permissive policy
+    admits it and independent authentication or authorization does not prevent the operation.
+  remediation: Allow only required trusted origins and destinations. Validate origin and message schemas, handle
+    credentials deliberately, and enforce access controls independently of the origin policy. Restrict schemes and
+    parsed hosts, isolate external content, and validate messages and permissions on the native side.
+  reviewer: Validate navigation allowlist for least privilege. This can be confirmed as an issue when the matched
+    path is reachable and required controls are missing, weak, or inconsistent. Test subframes, redirects, javascript/data/content
+    URLs, deceptive host suffixes, and a safe WebView beside an unsafe instance; JavaScript enablement alone is
+    not a vulnerability.
+  review_steps:
+  - Determine what capability or review marker is declared and whether it changes the deployed application’s behavior.
+  - Inspect the effective runtime policy and the content, actors or operations that can use the capability.
+  - Record a concrete security consequence where established; otherwise keep the result as an investigation area.
+  - Resolve the loaded content and frame origin, the exact WebView instance, and the native operations available
+    to that content.
+  - Test subframes, redirects, javascript/data/content URLs, deceptive host suffixes, and a safe WebView beside
+    an unsafe instance; JavaScript enablement alone is not a vulnerability.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Limit the capability to the application’s required behavior and enforce the relevant runtime controls.
+  - Verify the deployed artifact and add a regression check for the behavior that justified any correction.
+  - Restrict schemes and parsed hosts, isolate external content, and validate messages and permissions on the native
+    side.
+scan_config:
+  match_mode: file
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

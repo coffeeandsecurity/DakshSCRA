@@ -3,7 +3,7 @@ RULE baseline.filepaths.core.libraries_extensions_plugins VERSION 1
 IN PATH
 WHEN TEXT_MATCHES "(?i)(Libraries|Extension|Plugin)" "im"
 WHEN TEXT_MATCHES "(?i)(/|\\\\\\\\).*(lib|libs|extension|plugin|addons?)" "im"
-REPORT "Libraries | Extensions | Plugins"
+REPORT "Extension Code Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

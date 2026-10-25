@@ -1,0 +1,40 @@
+format: daksh-pattern-rule/v1
+id: javascript.core.stack_trace_or_error_disclosure_node_express
+title: "Error Detail Disclosure Review"
+order: 10
+category: Information Disclosure
+detection:
+  pattern: res\.(?:send|json|end)\s*\(\s*err(?:or)?(?:\.stack|\.message)?\s*\)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:statusCode|status\s*\(\s*[45]|genericMessage|sanitize|message\s*:\s*["']
+reporting:
+  type: area_of_interest
+  reason: Detects Node/Express response patterns that send raw error objects or stack traces directly to HTTP clients.
+  trace:
+  - Externalized rule logic for Stack Trace or Error Disclosure (Node/Express).
+  description: The code writes diagnostic data or exposes detailed errors. Establish the values emitted, production
+    configuration, and recipients of the output.
+  impact: Readers of exposed diagnostics may obtain credentials, private records, internal paths, or implementation
+    details that enable account misuse or targeted attacks.
+  remediation: Keep sensitive values and detailed errors out of user-facing responses and routine logs. Redact before
+    emission, restrict diagnostic access, and verify production logging configuration.
+  reviewer: Confirm that HTTP responses never include raw error objects, stack traces, or internal diagnostic details.
+    This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak,
+    or inconsistent.
+  review_steps:
+  - Determine whether the matched path logs sensitive data or exposes diagnostics to an untrusted recipient.
+  - Trace the actual values, redaction and error handling, including production configuration and log retention
+    or access.
+  - Distinguish internal operational diagnostics from client-visible output and record the reachable disclosure
+    path without reproducing secrets.
+  recommendations:
+  - Log only the operational details needed, redact sensitive values, and return limited error messages to clients.
+  - Restrict diagnostic and log access and test production error responses and representative log output.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

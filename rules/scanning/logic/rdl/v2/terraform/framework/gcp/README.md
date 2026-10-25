@@ -22,13 +22,13 @@ Status: 6 owned rule(s), 6 runtime mapping(s). No claim of complete coverage.
 
 ## Current runtime mappings
 
-Baseline and semantic comparisons link the v1 source; additional checks link the selected XML pack. Shared properties retain a single owning definition.
+Pattern baselines and semantic comparisons link the unified rule source; additional checks link the selected pack metadata. Shared properties retain a single owning definition.
 
-| V1 definition or selected pack | V2 property |
+| Unified rule or selected pack | V2 property |
 |---|---|
-| [gcp_vm_instance_with_public_ip.rdl](../../../../v1/terraform/framework/gcp/gcp_vm_instance_with_public_ip.rdl) | [baseline.terraform.framework.gcp.gcp_vm_instance_with_public_ip](baseline/gcp_compute_security/gcp_vm_instance_with_public_ip.rdl) |
-| [gcp_vm_with_os_login_disabled.rdl](../../../../v1/terraform/framework/gcp/gcp_vm_with_os_login_disabled.rdl) | [baseline.terraform.framework.gcp.gcp_vm_with_os_login_disabled](baseline/gcp_compute_security/gcp_vm_with_os_login_disabled.rdl) |
-| [gcp_storage_bucket_publicly_accessible.rdl](../../../../v1/terraform/framework/gcp/gcp_storage_bucket_publicly_accessible.rdl) | [baseline.terraform.framework.gcp.gcp_storage_bucket_publicly_accessible](baseline/gcp_storage_security/gcp_storage_bucket_publicly_accessible.rdl) |
-| [gcp_storage_bucket_without_uniform_access.rdl](../../../../v1/terraform/framework/gcp/gcp_storage_bucket_without_uniform_access.rdl) | [baseline.terraform.framework.gcp.gcp_storage_bucket_without_uniform_access](baseline/gcp_storage_security/gcp_storage_bucket_without_uniform_access.rdl) |
-| [cloud_sql_instance_publicly_exposed.rdl](../../../../v1/terraform/framework/gcp/cloud_sql_instance_publicly_exposed.rdl) | [baseline.terraform.framework.gcp.cloud_sql_instance_publicly_exposed](baseline/gcp_database_security/cloud_sql_instance_publicly_exposed.rdl) |
-| [primitive_iam_role_owner_editor_assigned.rdl](../../../../v1/terraform/framework/gcp/primitive_iam_role_owner_editor_assigned.rdl) | [baseline.terraform.framework.gcp.primitive_iam_role_owner_editor_assigned](baseline/gcp_iam_security/primitive_iam_role_owner_editor_assigned.rdl) |
+| [gcp_vm_instance_with_public_ip.yaml](../../../../../../platform/terraform/framework/gcp.rules/gcp_vm_instance_with_public_ip.yaml) | [baseline.terraform.framework.gcp.gcp_vm_instance_with_public_ip](baseline/gcp_compute_security/gcp_vm_instance_with_public_ip.rdl) |
+| [gcp_vm_with_os_login_disabled.yaml](../../../../../../platform/terraform/framework/gcp.rules/gcp_vm_with_os_login_disabled.yaml) | [baseline.terraform.framework.gcp.gcp_vm_with_os_login_disabled](baseline/gcp_compute_security/gcp_vm_with_os_login_disabled.rdl) |
+| [gcp_storage_bucket_publicly_accessible.yaml](../../../../../../platform/terraform/framework/gcp.rules/gcp_storage_bucket_publicly_accessible.yaml) | [baseline.terraform.framework.gcp.gcp_storage_bucket_publicly_accessible](baseline/gcp_storage_security/gcp_storage_bucket_publicly_accessible.rdl) |
+| [gcp_storage_bucket_without_uniform_access.yaml](../../../../../../platform/terraform/framework/gcp.rules/gcp_storage_bucket_without_uniform_access.yaml) | [baseline.terraform.framework.gcp.gcp_storage_bucket_without_uniform_access](baseline/gcp_storage_security/gcp_storage_bucket_without_uniform_access.rdl) |
+| [cloud_sql_instance_publicly_exposed.yaml](../../../../../../platform/terraform/framework/gcp.rules/cloud_sql_instance_publicly_exposed.yaml) | [baseline.terraform.framework.gcp.cloud_sql_instance_publicly_exposed](baseline/gcp_database_security/cloud_sql_instance_publicly_exposed.rdl) |
+| [primitive_iam_role_owner_editor_assigned.yaml](../../../../../../platform/terraform/framework/gcp.rules/primitive_iam_role_owner_editor_assigned.yaml) | [baseline.terraform.framework.gcp.primitive_iam_role_owner_editor_assigned](baseline/gcp_iam_security/primitive_iam_role_owner_editor_assigned.rdl) |

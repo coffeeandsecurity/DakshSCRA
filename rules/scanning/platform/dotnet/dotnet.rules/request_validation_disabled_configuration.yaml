@@ -1,0 +1,45 @@
+format: daksh-pattern-rule/v1
+id: dotnet.core.request_validation_disabled_configuration
+title: "Request Validation Policy Review"
+order: 19
+category: Disabled/Missing Security Controls
+detection:
+  pattern: '%@\s?Page\s?.*\s?ValidateRequest\s?=\s?(\''|\")false(\''|\")'
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:validateRequest\s*=\s*"false"|ValidateInput\s*\(\s*false|RequestValidationMode && MISSING:test|example|AntiXssEncoder|HtmlEncode
+reporting:
+  type: area_of_interest
+  reason: Detects the disabled configuration of request validation in ASP.NET Web Forms, which may lead to security
+    vulnerabilities.
+  trace:
+  - 'Externalized rule logic for Request Validation: Disabled Configuration.'
+  description: The code accepts or reads externally influenced data. Trace it to security-sensitive operations and
+    identify the validation and authorization required by each destination.
+  impact: External input may cause injection, incorrect decisions, or unauthorized data access if it reaches a sensitive
+    operation without the controls required by that operation. Reading input alone does not establish a vulnerability.
+  remediation: Validate type, size, and allowed values at trust boundaries, and apply destination-specific parameter
+    binding or output encoding. Enforce authorization independently of input validation.
+  reviewer: Check for the presence of disabled request validation in ASP. NET Web Forms pages. Verify if developers
+    have provided a valid reason for disabling request validation and have implemented appropriate input validation
+    and output encoding techniques to prevent security vulnerabilities related to user input. This can be confirmed
+    as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify who can supply the matched input, including stored values and upstream services; record its type, size
+    limits and trust boundary.
+  - Trace the value through transformations to each sensitive operation. Check the protection at that destination
+    and resource-level authorization.
+  - Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side
+    check alone is insufficient evidence.
+  recommendations:
+  - Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve
+    legitimate characters and protect each destination separately.
+  - Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations
+    where applicable. Test rejected input and unauthorized access.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: kotlin.core.javascript_bridge_exposure_webview_addjavascriptinterface
+title: "WebView Native Bridge Review"
+order: 19
+category: Insecure Mitigations
+detection:
+  pattern: \.addJavascriptInterface\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:@JavascriptInterface|setAllowFileAccess\s*\(\s*false|setAllowUniversalAccessFromFileURLs\s*\(\s*false|trustedOrigin|allowlist
+reporting:
+  type: area_of_interest
+  reason: Detects any call to addJavascriptInterface(), which exposes a native object to JavaScript running in a
+    WebView.
+  trace:
+  - 'Externalized rule logic for JavaScript Bridge Exposure: WebView.addJavascriptInterface().'
+  description: The application renders web content, executes scripts, or exposes a native messaging interface. Resolve
+    navigation trust, origin isolation, and validation at the native boundary.
+  impact: Attacker-controlled web content may execute in a trusted context or invoke native operations, exposing
+    session data or application privileges when isolation and per-operation checks are insufficient.
+  remediation: Restrict navigation and message origins to required trusted sources. Avoid dynamic script construction,
+    minimize native bridge methods, validate message inputs, and authorize sensitive native operations.
+  reviewer: 'Review every addJavascriptInterface() call: identify all @JavascriptInterface-annotated methods, confirm
+    content origins are trusted, and verify that returned data is validated before use in sensitive operations.
+    This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak,
+    or inconsistent.'
+  review_steps:
+  - Identify the loaded content, permitted origins and script-to-native operations exposed by the application.
+  - Inspect navigation, message validation and resource or operation authorization on the native side.
+  - Test untrusted content and unexpected messages; a bridge declaration alone does not prove unauthorized native
+    access.
+  recommendations:
+  - Restrict trusted content and navigation and expose only the native operations required by the application.
+  - Validate messages and enforce native-side authorization; test rejection of unapproved origins and unexpected
+    operations.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

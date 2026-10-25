@@ -2,7 +2,7 @@ VERSION 2
 RULE kmp.ios-trust-callback VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:NSURLSessionAuthChallengeUseCredential|useCredential)\\b[^\\n]{0,200}\\b(?:NSURLCredential|credentialForTrust)\\b" ""
-REPORT "KMP Native Apple Trust Challenge Accepts Credential"
+REPORT "TLS Certificate Validation Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

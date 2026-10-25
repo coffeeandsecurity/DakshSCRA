@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: terraform.framework.gcp.gcp_vm_with_os_login_disabled
+title: GCP VM with OS Login Disabled
+order: 2
+category: GCP Compute Security
+detection:
+  pattern: enable-oslogin\s*=\s*"FALSE"|enable-oslogin\s*=\s*"false"
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:enable-oslogin\s*=\s*"false"|enable-oslogin\s*=\s*false && MISSING:# intentional|# legacy|#
+    migration
+reporting:
+  type: area_of_interest
+  reason: Detects GCP instances with OS Login disabled, falling back to SSH key management.
+  trace:
+  - Externalized rule logic for GCP VM with OS Login Disabled.
+  description: VM configuration does not enable centralized OS Login. Other SSH authentication controls may still
+    apply.
+  impact: Stale or overly broad manually managed SSH keys may retain unauthorized host access when revocation and
+    account lifecycle controls are ineffective.
+  remediation: Use centralized identity-based login where appropriate, or enforce an equivalent audited SSH-key
+    lifecycle. Restrict login principals and verify revocation and privilege boundaries.
+  reviewer: Confirm OS Login is enabled for all instances that allow SSH access. This can be confirmed as an issue
+    when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the matched construct in its containing function or configuration and identify the security-sensitive
+    behavior under review.
+  - Verify reachable callers, external influence and effective protections, including deployment overrides and failure
+    paths.
+  - Record concrete evidence for a confirmed issue or a justified suppression; retain an unresolved outcome when
+    the required evidence is unavailable.
+  recommendations:
+  - Apply the rule-specific correction above only after verifying the affected behavior and required control.
+  - Add a regression case for the unsafe condition and a valid protected case; verify the effective behavior in
+    the relevant deployment.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

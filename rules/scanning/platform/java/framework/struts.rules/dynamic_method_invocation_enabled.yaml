@@ -1,0 +1,40 @@
+format: daksh-pattern-rule/v1
+id: java.framework.struts.dynamic_method_invocation_enabled
+title: Dynamic Method Invocation Enabled
+order: 2
+category: Framework-Specific Issues - Apache Struts
+detection:
+  pattern: struts\.enable\.DynamicMethodInvocation\s*=\s*true|<constant\s+name="struts\.enable\.DynamicMethodInvocation"\s+value="true"
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:SecurityMemberAccess|OgnlContextState|allowlist|xwork\.security\.excludedClasses
+reporting:
+  type: area_of_interest
+  reason: Detects Struts configuration with Dynamic Method Invocation (DMI) enabled.
+  trace:
+  - Externalized rule logic for Dynamic Method Invocation Enabled.
+  description: The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace
+    executable selection and evaluated content to their trust boundaries.
+  impact: If an attacker controls interpreted syntax or the operation selected, code or commands may run with the
+    application’s privileges, allowing data theft, state changes, or service disruption.
+  remediation: Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate
+    argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates
+    or expressions.
+  reviewer: Confirm DMI is disabled in all Struts configuration files. This can be confirmed as an issue when the
+    matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Determine whether the matched operation interprets code, expressions or templates; identify its execution context
+    and permissions.
+  - Trace control over the executed text and distinguish fixed application code from externally influenced content.
+  - Inspect restrictions and failure paths; record a reachable input-to-execution path before confirming code execution.
+  recommendations:
+  - Replace externally assembled code with fixed operations and data-only inputs where possible.
+  - Keep template or expression sources under application control; restrict exposed capabilities and test rejection
+    of unexpected syntax.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

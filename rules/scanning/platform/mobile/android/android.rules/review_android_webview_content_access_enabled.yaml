@@ -1,0 +1,39 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.review_android_webview_content_access_enabled
+title: "WebView Content Access Review"
+order: 85
+category: PLATFORM Review
+detection:
+  pattern: \b(?:setAllowContentAccess\s*\(\s*true\s*\)|allowContentAccess\s*=\s*true\b)
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: WebView settings explicitly enable content-provider URL access. Identify loaded origins, provider
+    permissions and whether untrusted content can request sensitive content URIs. Resolve the loaded content and
+    frame origin, the exact WebView instance, and the native operations available to that content.
+  impact: Untrusted content may access provider data reachable through the WebView when origin restrictions and
+    provider controls are insufficient. Enabling this capability alone does not prove a data leak.
+  remediation: Disable content access when unnecessary. Restrict loaded origins and provider access, and test content-URI
+    reads from untrusted WebView pages. Restrict schemes and parsed hosts, isolate external content, and validate
+    messages and permissions on the native side.
+  reviewer: Test subframes, redirects, javascript/data/content URLs, deceptive host suffixes, and a safe WebView
+    beside an unsafe instance; JavaScript enablement alone is not a vulnerability.
+  review_steps:
+  - Trace the matched candidate to its actual value, caller or resource.
+  - Test subframes, redirects, javascript/data/content URLs, deceptive host suffixes, and a safe WebView beside
+    an unsafe instance; JavaScript enablement alone is not a vulnerability.
+  - Resolve release configuration and runtime assumptions before confirming an issue.
+  recommendations:
+  - Disable content access when unnecessary. Restrict loaded origins and provider access, and test content-URI reads
+    from untrusted WebView pages. Restrict schemes and parsed hosts, isolate external content, and validate messages
+    and permissions on the native side.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

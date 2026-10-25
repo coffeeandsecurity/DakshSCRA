@@ -1,5 +1,0 @@
-VERSION 1
-WHEN PRESENT (?i)create(?:Native)?Query\(\s*"[^"]*"\s*\+|Statement\s+\w+\s*=\s*.*createStatement\(|\b(?:String\s+)?\w+\s*=\s*"\s*(?:SELECT|INSERT|UPDATE|DELETE)\b[^"\r\n]*"\s*\+|\bjdbcTemplate\.(?:query\w*|update|execute|batchUpdate)\s*\(\s*"[^"\r\n]*"\s*\+
-REPORT AS area_of_interest
-REASON Detects dynamic SQL/HQL query concatenation patterns.
-TRACE Externalized rule logic for Spring SQL Query Concatenation Sink.

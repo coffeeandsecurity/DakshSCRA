@@ -1,0 +1,54 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.exported_components
+title: "Exported Component Access Review"
+order: 3
+category: AndroidManifest.xml - Insecure Misconfiguration
+detection:
+  pattern: '[A-Za-z_][\w.-]*:exported\s*=\s*"(true|TRUE)"'
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Exported Android components should be reviewed at component scope for missing permission or access-control
+    boundaries.
+  trace:
+  - Mobile RDL pilot evaluated this finding against Android manifest context instead of relying on inline RDL only.
+  description: 'Review target: Exported Components. The application exposes or invokes an inter-process interface.
+    Resolve export settings, permissions, intent recipients, URI grants, and runtime caller checks. Resolve the
+    exact declaration or operation in the selected build and identify its security boundary.'
+  impact: An untrusted application may read private data, alter state, or invoke operations under the application’s
+    identity if an externally reachable interface lacks effective caller authorization or permits unsafe mutation.
+  remediation: Disable unnecessary export and prefer explicit recipients and immutable PendingIntents. Apply appropriate
+    caller permissions and authorization, bind query arguments, and validate every incoming payload. Apply the least-privilege
+    platform control appropriate to the matched operation and verify the production configuration.
+  reviewer: Verify that only necessary components are marked as exported in the AndroidManifest.xml file. Ensure
+    that sensitive functionality or data is not exposed to unauthorized entities through exported components. This
+    can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or
+    inconsistent. Check debug/release and product flavors, generated/native code, plugin boundaries and failure
+    paths; source evidence alone does not establish shipped or runtime behavior.
+  review_steps:
+  - Inspect the effective export status, permission requirements and runtime identity checks on the inter-process
+    interface.
+  - Trace untrusted callers and received values to sensitive actions, including indirect recipients and granted
+    resource access.
+  - Verify unauthorized callers cannot invoke the protected operation; a declared component or intent alone is not
+    an issue.
+  - Resolve the exact declaration or operation in the selected build and identify its security boundary.
+  - Check debug/release and product flavors, generated/native code, plugin boundaries and failure paths; source
+    evidence alone does not establish shipped or runtime behavior.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Keep internal components private where possible; enforce caller permissions and resource authorization on exposed
+    operations.
+  - Constrain recipients and granted access and test calls from an untrusted process or application.
+  - Apply the least-privilege platform control appropriate to the matched operation and verify the production configuration.
+scan_config:
+  match_mode: file
+  context_type: lines
+  context_lines_before: '3'
+  context_lines_after: '1'
+  aggregate: none
+  report_format: default
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: yellow

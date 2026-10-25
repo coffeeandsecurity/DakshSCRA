@@ -3,7 +3,7 @@ RULE baseline.powershell.core.convertto_securestring_with_plaintext VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "ConvertTo-SecureString\\s+.*-AsPlainText\\s+-Force" "im"
 WHEN TEXT_MISSING "Get-Secret|[System\\.Environment]::GetEnvironmentVariable|$env:|placeholder|example|test" "im"
-REPORT "ConvertTo-SecureString with PlainText"
+REPORT "Plaintext Credential Conversion Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

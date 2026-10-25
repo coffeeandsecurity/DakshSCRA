@@ -1,4 +1,5 @@
 import os
+import json
 import shlex
 import shutil
 import subprocess
@@ -78,12 +79,23 @@ def build_cmd(payload: dict) -> List[str]:
     mode = payload.get("rdl_engine", "both")
     if mode not in {"v1", "v2", "both"}:
         raise ValueError("RDL engine must be v1, v2, or both")
-    cmd += ["--rdl-engine", mode]
+    rule_mode = payload.get('rule_mode')
+    if rule_mode is not None:
+        from core.rdl.selection import RULE_MODES
+        if rule_mode not in RULE_MODES:
+            raise ValueError('Rule mode must be pattern, semantic, or both')
+        selected = RULE_MODES[rule_mode]
+        if 'rdl_engine' in payload and mode != selected:
+            raise ValueError('Rule mode and legacy engine selection conflict')
+        mode = selected
+        cmd += ['--rule-mode', rule_mode]
+    else:
+        cmd += ["--rdl-engine", mode]
     custom = payload.get('custom_rdl') or []
     if not isinstance(custom, list) or len(custom) > 8 or not all(isinstance(p, str) and p.strip() for p in custom):
         raise ValueError('Custom RDL must be a list of up to 8 pack paths')
     if custom and mode == 'v1':
-        raise ValueError('Custom RDL packs require v2 or both engines')
+        raise ValueError('Custom Semantic Rule packs require semantic or both mode')
     for pack in custom:
         cmd += ['--custom-rdl', pack]
     ft = (payload.get("file_types") or "").strip()
@@ -95,17 +107,20 @@ def build_cmd(payload: dict) -> List[str]:
         cmd.append("-" + ("v" * min(v, 3)))
 
 
-    if payload.get("recon"):
+    if payload.get("recon", True) or payload.get('estimate'):
         cmd.append("--recon")
     if payload.get("estimate"):
         cmd.append("--estimate")
+        if payload.get('estimate_assumptions'):
+            cmd += ['--estimate-assumptions', json.dumps(payload['estimate_assumptions'])]
     if payload.get("analysis") is False:
         cmd.append("--skip-analysis")
-    if payload.get("loc"):
+    if payload.get("loc", True) or payload.get('estimate'):
         cmd.append("--loc")
 
     from .schemas import ScanOptions
     options = ScanOptions.model_validate(payload)
+    cmd += ['--report-audience', options.report_audience]
     for field, flag in [('exclude_checks', '--exclude-check'), ('exclude_paths', '--exclude-path'),
                         ('exclude_types', '--exclude-type'), ('exclude_keywords', '--exclude-keyword')]:
         for token in getattr(options, field):

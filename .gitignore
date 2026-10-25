@@ -51,14 +51,40 @@ Thumbs.db
 !/docs/usage-guide.md
 
 # Local validation files.
+## Legacy compatibility copies are local while an active scan finishes.
+/config/rdl_*.json
+/config/analysis_finding_guidance.json
 /tests/
 /examples/
+**/tests/
+**/__tests__/
+test_*.py
+*_test.py
+conftest.py
+*.test.*
+*.spec.*
 
 # Public utilities; other tools remain local.
 /tools/*
 !/tools/start_webui.py
+!/tools/clean_project_docker.py
+!/tools/purge_all_docker.py
 !/tools/rdl_lint.py
 !/tools/rdl_migrate.py
 !/tools/supported_platforms.py
 !/tools/rdl_shadow_report.py
 !/tools/prune_rdl_comparisons.py
+
+!/tools/cleanup_storage.py
+
+# Keep required public root configuration eligible for staging.
+!/.gitignore
+!/.gitattributes
+!/.dockerignore
+!/.env.example
+
+# Retired files remain available in the local archive.
+/docker/webui.Dockerfile
+/webui/deploy/docker-compose.yml
+/resources/logo.jpg
+/resources/static/logo_for_report.jpg

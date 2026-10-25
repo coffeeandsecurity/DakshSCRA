@@ -1,0 +1,55 @@
+format: daksh-pattern-rule/v1
+id: mobile.ios.framework.coredata.nsfetchrequest_predicate_from_user_input
+title: "Core Data Predicate Review"
+order: 1
+category: Framework-Specific Issues - Core Data (iOS)
+detection:
+  pattern: NSPredicate\s*\(\s*format\s*:\s*["'][^"']*%@|NSPredicate\s*\(\s*format\s*:\s*["'][^"']*\\\(|predicateWithFormat\s*:\s*[@][^,)]*\+
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects NSPredicate format strings that interpolate values without using the argument array pattern.
+  trace:
+  - Externalized mobile rule logic for NSFetchRequest Predicate from User Input.
+  description: 'Review target: NSFetchRequest Predicate from User Input. A Core Data predicate may be constructed
+    from external values. Distinguish safely bound values from input that changes predicate format or structure.
+    Identify the actual sensitive value and the recipients, retention and user-consent context of this exposure
+    or capability.'
+  impact: If an attacker controls predicate syntax, they may alter filtering and retrieve records outside the intended
+    selection or authorization boundary.
+  remediation: Keep predicate formats fixed and bind values using the supported placeholder mechanism. Allowlist
+    dynamic fields and enforce record-level authorization independently. Minimize collection and retention, redact
+    secret values, and apply the platform controls needed for sensitive UI and data sharing.
+  reviewer: Confirm all NSPredicate format strings use proper argument array binding for user-supplied values. This
+    can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or
+    inconsistent. Test release logging, crash-report payloads, screenshot/background snapshots and clipboard lifetime;
+    permission or API capability alone does not establish collection or malicious behavior.
+  review_steps:
+  - Locate the final query and determine whether caller-controlled data can alter its structure; inspect interpolated
+    fragments and raw-query helpers.
+  - Verify that values are bound by the database driver. For identifiers or sort directions that cannot be bound,
+    inspect a fixed mapping of allowed choices.
+  - Record the reachable caller and effective controls; a constant query or correctly bound value does not establish
+    injection.
+  - Identify the actual sensitive value and the recipients, retention and user-consent context of this exposure
+    or capability.
+  - Test release logging, crash-report payloads, screenshot/background snapshots and clipboard lifetime; permission
+    or API capability alone does not establish collection or malicious behavior.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Bind data values with the driver or ORM parameter API; avoid constructing query syntax from external strings.
+  - Use fixed mappings for dynamic identifiers and ordering. Test that unusual input remains data and that the database
+    account has only required privileges.
+  - Minimize collection and retention, redact secret values, and apply the platform controls needed for sensitive
+    UI and data sharing.
+scan_config:
+  match_mode: file
+  context_type: lines
+  context_lines_before: '3'
+  context_lines_after: '0'
+  aggregate: none
+  report_format: default
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

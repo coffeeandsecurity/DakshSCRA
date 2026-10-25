@@ -3,7 +3,7 @@ RULE crypto.weak-operation VERSION 1
 IN FILE
 WHEN EXISTS CALL MATCHES crypto.weak-operation AS operation
 REQUIRE security.relevant operation
-REPORT "weak cryptographic operation"
+REPORT "Weak Cryptographic Operation Review"
 SEVERITY HIGH
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

@@ -3,7 +3,7 @@ RULE baseline.php.framework.yii.activerecord_query_with_raw_condition_string VER
 IN FILE
 WHEN TEXT_MATCHES "->where\\s*\\(\\s*[\"'][^\"']*[\"']\\s*\\.\\s*\\$|->andWhere\\s*\\(\\s*[\"'][^\"']*[\"']\\s*\\.\\s*\\$|->orWhere\\s*\\(\\s*[\"'][^\"']*[\"']\\s*\\.\\s*\\$|->where\\s*\\(\\s*[\"'][^\"']*\\$\\{?|->andWhere\\s*\\(\\s*[\"'][^\"']*\\$\\{?" "im"
 WHEN (TEXT_MISSING "where\\s*\\(.*\\?|where\\s*\\(.*:|\\$this->db->query.*\\?|prepared|PDO::" "im" AND TEXT_MISSING "test|example" "im")
-REPORT "ActiveRecord Query with Raw Condition String"
+REPORT "SQL Query Construction Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

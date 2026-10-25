@@ -1,0 +1,55 @@
+format: daksh-pattern-rule/v1
+id: mobile.xplat.flutter.core.webview_loading_user_controlled_url_without_scheme_validation
+title: "WebView Navigation Review"
+order: 8
+category: Framework-Specific Issues - Flutter
+detection:
+  pattern: \bWebViewController\b|\bWebViewWidget\b
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects Flutter WebView usage that may load user-controlled URLs without scheme or origin validation.
+  trace:
+  - Externalized mobile rule logic for WebView Loading User-Controlled URL Without Scheme Validation.
+  description: 'Review target: WebView Loading User-Controlled URL Without Scheme Validation. The application makes
+    an outbound request whose destination may be influenced by external data. Resolve URL construction, redirects,
+    DNS results, and network reachability. Resolve the loaded content and frame origin, the exact WebView instance,
+    and the native operations available to that content.'
+  impact: If an attacker can select a reachable destination, the application may expose internal services or metadata
+    credentials, or send protected data to an unauthorized recipient.
+  remediation: Allowlist required destinations and protocols, validate resolved addresses and every redirect, and
+    restrict outbound access to internal and metadata services. Restrict schemes and parsed hosts, isolate external
+    content, and validate messages and permissions on the native side.
+  reviewer: Trace all URL sources into WebViewController.loadRequest and confirm scheme/host validation guards are
+    present. This can be confirmed as an issue when the matched path is reachable and required controls are missing,
+    weak, or inconsistent. Test subframes, redirects, javascript/data/content URLs, deceptive host suffixes, and
+    a safe WebView beside an unsafe instance; JavaScript enablement alone is not a vulnerability.
+  review_steps:
+  - Verify the operation makes a server-side request, then trace external control over the URL, host, port and redirects.
+  - Inspect destination restrictions, DNS resolution and redirect handling; distinguish fixed destinations from
+    caller-controlled requests.
+  - Check deployment egress controls and whether internal services or local files are reachable from the requesting
+    process.
+  - Resolve the loaded content and frame origin, the exact WebView instance, and the native operations available
+    to that content.
+  - Test subframes, redirects, javascript/data/content URLs, deceptive host suffixes, and a safe WebView beside
+    an unsafe instance; JavaScript enablement alone is not a vulnerability.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Prefer fixed destinations or a restricted set of permitted services; validate schemes, hosts and ports before
+    the request.
+  - Apply destination checks to redirects and resolved addresses where applicable, restrict network egress, and
+    test prohibited destinations.
+  - Restrict schemes and parsed hosts, isolate external content, and validate messages and permissions on the native
+    side.
+scan_config:
+  match_mode: file
+  context_type: lines
+  context_lines_before: '2'
+  context_lines_after: '5'
+  aggregate: none
+  report_format: default
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: yellow

@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: mobile.xplat.flutter.framework.hive.review_flutter_hive_constant_encryption_key
+title: Hive Uses a Constant Encryption Key
+order: 3
+category: CRYPTO Review
+detection:
+  pattern: \bHiveAesCipher\s*\(\s*(?:List(?:<int>)?\.filled\s*\(|\[\s*\d)
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: The checked cryptographic configuration uses a constant embedded key, ECB mode, or a legacy algorithm.
+    Establish whether the operation protects confidential or integrity-sensitive data. Determine whether the operation
+    protects secrets, authenticates data or serves a non-security purpose; resolve algorithm, mode and key provenance.
+  impact: Embedded keys can be recovered from distributed code, and unsuitable algorithms or ECB mode may expose
+    plaintext relationships or weaken confidentiality. Consequences depend on key handling, data format, and the
+    security purpose of the operation.
+  remediation: Keep encryption keys in an appropriate key-management facility and use modern authenticated encryption
+    for confidential data. Migrate legacy ciphertext safely, with unique nonces and keys appropriate to the selected
+    algorithm. Use supported authenticated cryptography, securely generated keys and nonces, and platform-backed
+    key storage; replace hardcoded or constant key material.
+  reviewer: Distinguish checksums from authentication, asymmetric RSA transformations from symmetric ECB, and test
+    IV/nonce reuse, fixed keys and algorithm migration.
+  review_steps:
+  - Trace the matched candidate to its actual value, caller or resource.
+  - Distinguish checksums from authentication, asymmetric RSA transformations from symmetric ECB, and test IV/nonce
+    reuse, fixed keys and algorithm migration.
+  - Resolve release configuration and runtime assumptions before confirming an issue.
+  recommendations:
+  - Keep encryption keys in an appropriate key-management facility and use modern authenticated encryption for confidential
+    data. Migrate legacy ciphertext safely, with unique nonces and keys appropriate to the selected algorithm. Use
+    supported authenticated cryptography, securely generated keys and nonces, and platform-backed key storage; replace
+    hardcoded or constant key material.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

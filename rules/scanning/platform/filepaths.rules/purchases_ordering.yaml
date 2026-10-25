@@ -1,0 +1,41 @@
+format: daksh-pattern-rule/v1
+id: filepaths.core.purchases_ordering
+title: "Ordering Review"
+order: 18
+detection:
+  pattern: (?-i:(?:(?<![A-Za-z0-9])(?i:purchases?|purchasing|orders?|ordering|cart|checkout)(?=[A-Z_. /\\-]|$)|(?<=[a-z0-9])(?:Purchases?|Purchasing|Orders?|Ordering|Cart|Checkout)(?=[A-Z_.
+    /\\-]|$)))
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:(?i)(/docs?/|/examples?/|/samples?/|/tests?/)
+reporting:
+  type: area_of_interest
+  reason: Detects file paths related to purchasing or ordering functionality.
+  description: A file or directory name identifies a payment or ordering review area; this path check does not inspect
+    transaction implementation.
+  impact: If the actual transaction workflow trusts client-supplied prices, ownership, or payment status, an attacker
+    may manipulate charges, obtain goods without payment, or expose financial data. A filename match does not establish
+    these failures.
+  remediation: Trace price calculation, order ownership, payment confirmation, and idempotency on the trusted server.
+    Authenticate payment notifications and test tampered values and repeated submissions.
+  reviewer: Verify the presence and correctness of code paths related to purchasing or ordering functionality. This
+    can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or
+    inconsistent.
+  review_steps:
+  - Inspect the matched file or directory contents and determine whether it is deployed or externally accessible.
+  - Identify whether sensitive data, configuration or executable content is present; a name match alone does not
+    establish exposure.
+  - Check effective access controls and build or packaging exclusions and record the specific content and exposure
+    path.
+  recommendations:
+  - Where exposure is verified, remove unnecessary files from deployment or restrict access to the intended users
+    and processes.
+  - Verify the deployed artifact and access behavior after the change; retain required application files with appropriate
+    controls.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

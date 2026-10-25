@@ -3,7 +3,7 @@ RULE baseline.common.core.api_endpoint_detection VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(?i)/\\w+/\\{\\w+\\}" "im"
 WHEN TEXT_MATCHES "(?i)\\b(route|router|controller|handler|get|post|put|delete)\\b" "im"
-REPORT "API Endpoint Detection"
+REPORT "API Endpoint Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

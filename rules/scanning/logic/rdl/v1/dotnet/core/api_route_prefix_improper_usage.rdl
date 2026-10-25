@@ -1,5 +1,0 @@
-VERSION 1
-WHEN PRESENT \[RoutePrefix\("
-REPORT AS area_of_interest
-REASON Review route-prefixed API endpoints and their effective authorization. Route metadata alone does not establish missing authorization; unrelated controller attributes cannot settle this endpoint.
-TRACE Externalized rule logic for API Route Prefix: Improper Usage.

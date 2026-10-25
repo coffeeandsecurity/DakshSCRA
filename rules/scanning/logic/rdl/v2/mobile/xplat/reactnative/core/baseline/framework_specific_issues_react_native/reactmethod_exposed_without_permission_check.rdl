@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.mobile.xplat.reactnative.core.reactmethod_exposed_without_permission_check VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "@ReactMethod" "im"
-WHEN TEXT_MISSING "checkSelfPermission|enforcePermission|hasPermission|isAuthenticated|verifyCallerIdentity|requiresPermission|// auth" "im"
-REPORT "ReactMethod Exposed Without Permission Check"
+REPORT "Native Bridge Authorization Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

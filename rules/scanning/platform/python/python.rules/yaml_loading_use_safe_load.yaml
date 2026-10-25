@@ -1,0 +1,45 @@
+format: daksh-pattern-rule/v1
+id: python.core.yaml_loading_use_safe_load
+title: "YAML Deserialization Review"
+order: 9
+category: Untrusted Input Handling or Injection Flaws
+detection:
+  pattern: yaml\.load\((?!.*Loader=yaml\.FullLoader)(.*?)\)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:yaml\.safe_load|Loader=yaml\.SafeLoader
+reporting:
+  type: area_of_interest
+  reason: Detects the usage of yaml.load without specifying the Loader as yaml.FullLoader, which may lead to potential
+    security risks.
+  trace:
+  - 'Externalized rule logic for YAML Loading: Use safe_load.'
+  description: The application reads serialized objects or uses a parser that may construct runtime types. Identify
+    the input’s trust and the effective parser and type restrictions.
+  impact: A crafted untrusted payload may instantiate dangerous types or trigger object behavior that executes code,
+    modifies state, or exhausts resources when the parser permits those operations.
+  remediation: Use a data-only format and a safe loader for untrusted input. Disable automatic object or type construction,
+    allowlist required types, and bound parsing size and complexity.
+  reviewer: Verify that YAML loading in the codebase uses yaml. safe_load or specifies yaml. FullLoader to ensure
+    the safe handling of YAML data and mitigate potential security risks related to arbitrary code execution or
+    dangerous object construction. This can be confirmed as an issue when the matched path is reachable and required
+    controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify who can supply the matched input, including stored values and upstream services; record its type, size
+    limits and trust boundary.
+  - Trace the value through transformations to each sensitive operation. Check the protection at that destination
+    and resource-level authorization.
+  - Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side
+    check alone is insufficient evidence.
+  recommendations:
+  - Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve
+    legitimate characters and protect each destination separately.
+  - Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations
+    where applicable. Test rejected input and unauthorized access.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

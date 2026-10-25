@@ -2,7 +2,7 @@ VERSION 2
 RULE baseline.php.core.untrusted_inputs_request_get_post_cookie VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\$_(REQUEST|GET|POST|COOKIE)" "im"
-REPORT "Untrusted Inputs: $_REQUEST, $_GET, $_POST, $_COOKIE"
+REPORT "Untrusted Input Entry Point"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -3,7 +3,7 @@ RULE baseline.java.core.command_injection VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(Runtime(\\s)*\\.getRuntime(\\s)*(\\.|->)exec|ProcessBuilder(\\s)*(\\.|->)start)" "im"
 WHEN (TEXT_MATCHES "(getParameter|requestParameters|System\\.getProperty|args\\[)" "im" AND TEXT_MISSING "(allowlist|whitelist)" "im")
-REPORT "Command Injection"
+REPORT "OS Command Injection Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

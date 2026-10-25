@@ -1,0 +1,40 @@
+format: daksh-pattern-rule/v1
+id: cpp.core.unsafe_string_manipulation_strcpy_strcat_sprintf
+title: "String Buffer Bounds Review"
+order: 5
+category: Memory Safety Issues
+detection:
+  pattern: \b(strcpy|strcat|sprintf)\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: An unbounded string or formatting API is present. Review destination capacity and argument provenance;
+    another bounded API in this file does not establish safety of this call.
+  trace:
+  - 'Externalized rule logic for Unsafe String Manipulation: strcpy(), strcat(), sprintf().'
+  description: The code calls a string-copy or formatting API without an explicit destination capacity. Review the
+    actual buffer size, terminator space and source length for each call.
+  impact: A write exceeding the destination capacity may corrupt memory or crash the process. The API call alone
+    does not prove an overflow; constant strings and correctly sized buffers can be safe.
+  remediation: Prefer bounded operations and verify their size and termination contracts. Where an unbounded call
+    remains, establish and test the destination-capacity invariant.
+  reviewer: Compare the exact destination capacity with every possible input length. Do not infer either a vulnerability
+    or a mitigation from unrelated calls elsewhere in the file.
+  review_steps:
+  - Inspect buffer capacity, index bounds, integer conversions and ownership at the matched operation and its callers.
+  - Check initialization, aliases, lifetime and cleanup on success, exception and early-return paths; identify external
+    influence over sizes or values.
+  - Verify a concrete unsafe access or lifetime condition. A low-level API or allocation alone does not prove memory
+    corruption.
+  recommendations:
+  - Use bounded operations, checked size calculations and explicit ownership or automatic resource management appropriate
+    to the language.
+  - Test boundary sizes and failure paths; use memory diagnostics where available to verify the specific correction.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

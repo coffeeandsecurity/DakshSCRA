@@ -1,0 +1,38 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.review_android_install_package_capability
+title: Package Installation Capability
+order: 65
+category: PLATFORM Review
+detection:
+  pattern: \b(?:PackageInstaller\s*\.\s*Session|ACTION_INSTALL_PACKAGE|canRequestPackageInstalls)\b
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: The application requests or uses package installation or broad package-discovery capabilities. Resolve
+    the exact declaration or operation in the selected build and identify its security boundary.
+  impact: Unapproved installation may introduce executable software, and broad package discovery may reveal sensitive
+    information about the user’s installed applications when consent or data-use controls are inadequate.
+  remediation: Use scoped package queries and platform installation prompts. Require clear user intent for installation,
+    verify the package source and integrity, and avoid collecting an unnecessary application inventory. Apply the
+    least-privilege platform control appropriate to the matched operation and verify the production configuration.
+  reviewer: Check debug/release and product flavors, generated/native code, plugin boundaries and failure paths;
+    source evidence alone does not establish shipped or runtime behavior.
+  review_steps:
+  - Trace the matched candidate to its actual value, caller or resource.
+  - Check debug/release and product flavors, generated/native code, plugin boundaries and failure paths; source
+    evidence alone does not establish shipped or runtime behavior.
+  - Resolve release configuration and runtime assumptions before confirming an issue.
+  recommendations:
+  - Use scoped package queries and platform installation prompts. Require clear user intent for installation, verify
+    the package source and integrity, and avoid collecting an unnecessary application inventory. Apply the least-privilege
+    platform control appropriate to the matched operation and verify the production configuration.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

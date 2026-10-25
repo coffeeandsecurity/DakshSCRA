@@ -39,6 +39,18 @@ def print_parts(context, page_size=100):
                   ('source-evidence', 'Saved Source Evidence', ['evidence_sources'])]
     if context['show_suppressed']:
         specs.append(('suppressed-findings', 'Suppressed Findings', ['suppressed']))
+    if context['show_analysis'] and context.get('program_graph_catalog'):
+        from core.rdl.program_graphs import graph_svg
+        from markupsafe import Markup
+        for view in context.get('program_graph_views', []):
+            nodes, edges = view.get('nodes', []), view.get('edges', [])
+            count = max(1, (len(nodes)+39)//40, (len(edges)+79)//80)
+            for index in range(count):
+                current = dict(view, nodes=nodes[index*40:(index+1)*40], edges=edges[index*80:(index+1)*80],
+                               window_note=f'Node/edge window {index+1} of {count}. All recorded nodes and edges are retained across these windows.')
+                current['svg'] = Markup(graph_svg(current)) if current['nodes'] else ''
+                title = view['kind'].upper()+' · '+view['path']+f' · Part {index+1} of {count}'
+                yield title, part('program-graphs', title, {'program_graph_views': [current], 'report_graph_enabled': False})
     graph = context['cross_reference']
     context = dict(context, pdf_symbols=graph.get('symbols', []), pdf_calls=graph.get('calls', []))
     for key, title, fields in specs:

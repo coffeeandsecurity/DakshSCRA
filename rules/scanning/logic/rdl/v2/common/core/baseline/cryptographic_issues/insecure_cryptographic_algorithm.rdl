@@ -2,7 +2,7 @@ VERSION 2
 RULE baseline.common.core.insecure_cryptographic_algorithm VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(?i)\\b(MD2|MD4|MD5|SHA1|SHA-1|DES|RC2|RC4|RC5)\\b" "im"
-REPORT "Insecure Cryptographic Algorithm"
+REPORT "Cryptographic Algorithm Use Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

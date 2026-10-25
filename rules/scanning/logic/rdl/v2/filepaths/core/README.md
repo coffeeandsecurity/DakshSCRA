@@ -42,33 +42,33 @@ Status: 26 owned rule(s), 26 runtime mapping(s). No claim of complete coverage.
 
 ## Current runtime mappings
 
-Baseline and semantic comparisons link the v1 source; additional checks link the selected XML pack. Shared properties retain a single owning definition.
+Pattern baselines and semantic comparisons link the unified rule source; additional checks link the selected pack metadata. Shared properties retain a single owning definition.
 
-| V1 definition or selected pack | V2 property |
+| Unified rule or selected pack | V2 property |
 |---|---|
-| [authentication.rdl](../../../v1/filepaths/core/authentication.rdl) | [baseline.filepaths.core.authentication](baseline/review_surface/authentication.rdl) |
-| [authorization.rdl](../../../v1/filepaths/core/authorization.rdl) | [baseline.filepaths.core.authorization](baseline/review_surface/authorization.rdl) |
-| [session_management.rdl](../../../v1/filepaths/core/session_management.rdl) | [baseline.filepaths.core.session_management](baseline/review_surface/session_management.rdl) |
-| [permission_management_or_handling.rdl](../../../v1/filepaths/core/permission_management_or_handling.rdl) | [baseline.filepaths.core.permission_management_or_handling](baseline/review_surface/permission_management_or_handling.rdl) |
-| [multi_factor_validation.rdl](../../../v1/filepaths/core/multi_factor_validation.rdl) | [baseline.filepaths.core.multi_factor_validation](baseline/review_surface/multi_factor_validation.rdl) |
-| [admin_section.rdl](../../../v1/filepaths/core/admin_section.rdl) | [baseline.filepaths.core.admin_section](baseline/review_surface/admin_section.rdl) |
-| [user_section.rdl](../../../v1/filepaths/core/user_section.rdl) | [baseline.filepaths.core.user_section](baseline/review_surface/user_section.rdl) |
-| [password_related_functionality.rdl](../../../v1/filepaths/core/password_related_functionality.rdl) | [baseline.filepaths.core.password_related_functionality](baseline/review_surface/password_related_functionality.rdl) |
-| [sensitive_data_handling.rdl](../../../v1/filepaths/core/sensitive_data_handling.rdl) | [baseline.filepaths.core.sensitive_data_handling](baseline/review_surface/sensitive_data_handling.rdl) |
-| [security_functionality.rdl](../../../v1/filepaths/core/security_functionality.rdl) | [baseline.filepaths.core.security_functionality](baseline/review_surface/security_functionality.rdl) |
-| [input_validation.rdl](../../../v1/filepaths/core/input_validation.rdl) | [baseline.filepaths.core.input_validation](baseline/review_surface/input_validation.rdl) |
-| [api.rdl](../../../v1/filepaths/core/api.rdl) | [baseline.filepaths.core.api](baseline/review_surface/api.rdl) |
-| [libraries_extensions_plugins.rdl](../../../v1/filepaths/core/libraries_extensions_plugins.rdl) | [baseline.filepaths.core.libraries_extensions_plugins](baseline/review_surface/libraries_extensions_plugins.rdl) |
-| [monkey_patched_code_files.rdl](../../../v1/filepaths/core/monkey_patched_code_files.rdl) | [baseline.filepaths.core.monkey_patched_code_files](baseline/review_surface/monkey_patched_code_files.rdl) |
-| [captcha.rdl](../../../v1/filepaths/core/captcha.rdl) | [baseline.filepaths.core.captcha](baseline/review_surface/captcha.rdl) |
-| [file_upload.rdl](../../../v1/filepaths/core/file_upload.rdl) | [baseline.filepaths.core.file_upload](baseline/review_surface/file_upload.rdl) |
-| [payment_functionality.rdl](../../../v1/filepaths/core/payment_functionality.rdl) | [baseline.filepaths.core.payment_functionality](baseline/review_surface/payment_functionality.rdl) |
-| [purchases_ordering.rdl](../../../v1/filepaths/core/purchases_ordering.rdl) | [baseline.filepaths.core.purchases_ordering](baseline/review_surface/purchases_ordering.rdl) |
-| [models.rdl](../../../v1/filepaths/core/models.rdl) | [baseline.filepaths.core.models](baseline/review_surface/models.rdl) |
-| [views.rdl](../../../v1/filepaths/core/views.rdl) | [baseline.filepaths.core.views](baseline/review_surface/views.rdl) |
-| [viewmodel.rdl](../../../v1/filepaths/core/viewmodel.rdl) | [baseline.filepaths.core.viewmodel](baseline/review_surface/viewmodel.rdl) |
-| [controllers.rdl](../../../v1/filepaths/core/controllers.rdl) | [baseline.filepaths.core.controllers](baseline/review_surface/controllers.rdl) |
-| [presenter.rdl](../../../v1/filepaths/core/presenter.rdl) | [baseline.filepaths.core.presenter](baseline/review_surface/presenter.rdl) |
-| [logging.rdl](../../../v1/filepaths/core/logging.rdl) | [baseline.filepaths.core.logging](baseline/review_surface/logging.rdl) |
-| [exception_handling.rdl](../../../v1/filepaths/core/exception_handling.rdl) | [baseline.filepaths.core.exception_handling](baseline/review_surface/exception_handling.rdl) |
-| [database_interaction.rdl](../../../v1/filepaths/core/database_interaction.rdl) | [baseline.filepaths.core.database_interaction](baseline/review_surface/database_interaction.rdl) |
+| [authentication.yaml](../../../../../platform/filepaths.rules/authentication.yaml) | [baseline.filepaths.core.authentication](baseline/review_surface/authentication.rdl) |
+| [authorization.yaml](../../../../../platform/filepaths.rules/authorization.yaml) | [baseline.filepaths.core.authorization](baseline/review_surface/authorization.rdl) |
+| [session_management.yaml](../../../../../platform/filepaths.rules/session_management.yaml) | [baseline.filepaths.core.session_management](baseline/review_surface/session_management.rdl) |
+| [permission_management_or_handling.yaml](../../../../../platform/filepaths.rules/permission_management_or_handling.yaml) | [baseline.filepaths.core.permission_management_or_handling](baseline/review_surface/permission_management_or_handling.rdl) |
+| [multi_factor_validation.yaml](../../../../../platform/filepaths.rules/multi_factor_validation.yaml) | [baseline.filepaths.core.multi_factor_validation](baseline/review_surface/multi_factor_validation.rdl) |
+| [admin_section.yaml](../../../../../platform/filepaths.rules/admin_section.yaml) | [baseline.filepaths.core.admin_section](baseline/review_surface/admin_section.rdl) |
+| [user_section.yaml](../../../../../platform/filepaths.rules/user_section.yaml) | [baseline.filepaths.core.user_section](baseline/review_surface/user_section.rdl) |
+| [password_related_functionality.yaml](../../../../../platform/filepaths.rules/password_related_functionality.yaml) | [baseline.filepaths.core.password_related_functionality](baseline/review_surface/password_related_functionality.rdl) |
+| [sensitive_data_handling.yaml](../../../../../platform/filepaths.rules/sensitive_data_handling.yaml) | [baseline.filepaths.core.sensitive_data_handling](baseline/review_surface/sensitive_data_handling.rdl) |
+| [security_functionality.yaml](../../../../../platform/filepaths.rules/security_functionality.yaml) | [baseline.filepaths.core.security_functionality](baseline/review_surface/security_functionality.rdl) |
+| [input_validation.yaml](../../../../../platform/filepaths.rules/input_validation.yaml) | [baseline.filepaths.core.input_validation](baseline/review_surface/input_validation.rdl) |
+| [api.yaml](../../../../../platform/filepaths.rules/api.yaml) | [baseline.filepaths.core.api](baseline/review_surface/api.rdl) |
+| [libraries_extensions_plugins.yaml](../../../../../platform/filepaths.rules/libraries_extensions_plugins.yaml) | [baseline.filepaths.core.libraries_extensions_plugins](baseline/review_surface/libraries_extensions_plugins.rdl) |
+| [monkey_patched_code_files.yaml](../../../../../platform/filepaths.rules/monkey_patched_code_files.yaml) | [baseline.filepaths.core.monkey_patched_code_files](baseline/review_surface/monkey_patched_code_files.rdl) |
+| [captcha.yaml](../../../../../platform/filepaths.rules/captcha.yaml) | [baseline.filepaths.core.captcha](baseline/review_surface/captcha.rdl) |
+| [file_upload.yaml](../../../../../platform/filepaths.rules/file_upload.yaml) | [baseline.filepaths.core.file_upload](baseline/review_surface/file_upload.rdl) |
+| [payment_functionality.yaml](../../../../../platform/filepaths.rules/payment_functionality.yaml) | [baseline.filepaths.core.payment_functionality](baseline/review_surface/payment_functionality.rdl) |
+| [purchases_ordering.yaml](../../../../../platform/filepaths.rules/purchases_ordering.yaml) | [baseline.filepaths.core.purchases_ordering](baseline/review_surface/purchases_ordering.rdl) |
+| [models.yaml](../../../../../platform/filepaths.rules/models.yaml) | [baseline.filepaths.core.models](baseline/review_surface/models.rdl) |
+| [views.yaml](../../../../../platform/filepaths.rules/views.yaml) | [baseline.filepaths.core.views](baseline/review_surface/views.rdl) |
+| [viewmodel.yaml](../../../../../platform/filepaths.rules/viewmodel.yaml) | [baseline.filepaths.core.viewmodel](baseline/review_surface/viewmodel.rdl) |
+| [controllers.yaml](../../../../../platform/filepaths.rules/controllers.yaml) | [baseline.filepaths.core.controllers](baseline/review_surface/controllers.rdl) |
+| [presenter.yaml](../../../../../platform/filepaths.rules/presenter.yaml) | [baseline.filepaths.core.presenter](baseline/review_surface/presenter.rdl) |
+| [logging.yaml](../../../../../platform/filepaths.rules/logging.yaml) | [baseline.filepaths.core.logging](baseline/review_surface/logging.rdl) |
+| [exception_handling.yaml](../../../../../platform/filepaths.rules/exception_handling.yaml) | [baseline.filepaths.core.exception_handling](baseline/review_surface/exception_handling.rdl) |
+| [database_interaction.yaml](../../../../../platform/filepaths.rules/database_interaction.yaml) | [baseline.filepaths.core.database_interaction](baseline/review_surface/database_interaction.rdl) |

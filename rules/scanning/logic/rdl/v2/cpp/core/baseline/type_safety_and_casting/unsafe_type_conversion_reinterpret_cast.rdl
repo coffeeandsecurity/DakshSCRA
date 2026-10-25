@@ -3,7 +3,7 @@ RULE baseline.cpp.core.unsafe_type_conversion_reinterpret_cast VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\breinterpret_cast<[^>]+>\\(" "im"
 WHEN TEXT_MISSING "static_assert|static_cast|bit_cast|is_trivially_copyable" "im"
-REPORT "Unsafe Type Conversion: reinterpret_cast"
+REPORT "Pointer Cast Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

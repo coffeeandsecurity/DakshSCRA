@@ -47,6 +47,13 @@ def execute_text(document, source, project_root=None, file_text=None, max_elapse
                 file_text = read_source_text(source, encoding=detect_encoding_type(source))
         if len(file_text) > 4 * 1024 * 1024:
             raise AnalysisBudgetExceeded('text input exceeds 4 MiB budget')
+        if plan.rule_id == 'baseline.common.core.ipv4_ipv6_address':
+            from .ip_literals import address_view
+            file_text = address_view(source, file_text)
+
+        if plan.rule_id.startswith('baseline.'):
+            from .accuracy_review import review_operations
+            file_text = review_operations(plan.rule_id, source, file_text)
 
         def check_budget():
             if time.perf_counter() > deadline:

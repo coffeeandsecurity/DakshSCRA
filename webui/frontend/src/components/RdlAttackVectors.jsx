@@ -75,7 +75,7 @@ export default function RdlAttackVectors({ items, onNavigate }) {
             <p>{selectedCategory?.description}. {paths.length} linked propagation path(s) on this page.</p>
             {selected.category === 'other' ? <p className="rdl-vector-origin-note">The recorded symbol does not establish whether this input comes from an HTTP request or another source.</p> : null}
           </header>
-          <div className="rdl-input-facts"><div><strong>{paths.length}</strong><span>Recorded paths</span></div><div><strong>{destinationCount}</strong><span>Distinct destinations</span></div><div><strong>{selected.items.length}</strong><span>Linked findings</span></div></div>
+          <div className="rdl-input-facts"><div><strong>{paths.length}</strong><span>Recorded paths</span></div><div><strong>{destinationCount}</strong><span>Distinct destinations</span></div><div><strong>{selected.items.length}</strong><span>Evidence records</span></div></div>
           <p className="rdl-coverage-note">External reachability and request routing are not established by this input record. Inputs without a resolved origin are kept under Other inputs.</p>
           <RdlSourceEvidence finding={review.finding} step={selected.source} title="Input source evidence" />
           <section className="rdl-vector-destinations"><h4>Reachable destinations</h4><p className="rdl-coverage-note">Only destinations connected by recorded propagation are listed. Open a path to inspect every handoff.</p>
@@ -84,7 +84,7 @@ export default function RdlAttackVectors({ items, onNavigate }) {
               <FlowView steps={path.flow} blocks={path.items[0]?.finding.trace?.blocks || []} title="Input-to-sink path">{() => <button className="rdl-context-link" onClick={() => onNavigate('taint', path.items[0])}>Inspect full text taint flow →</button>}</FlowView>
             </div>)}
           </section>
-          <section className="rdl-related-findings"><h4>Review findings linked to this input</h4>{selected.items.map(item => <button className="rdl-context-link" key={item.id} onClick={() => onNavigate('findings', item)}><span className="aa-pill plain">{item.finding.severity || 'Review'}</span><span>{item.finding.title}</span><span>Review →</span></button>)}</section>
+          {selected.items.some(item => !item.record.analysis_only) ? <section className="rdl-related-findings"><h4>Review findings linked to this input</h4>{selected.items.filter(item => !item.record.analysis_only).map(item => <button className="rdl-context-link" key={item.id} onClick={() => onNavigate('findings', item)}><span className="aa-pill plain">{item.finding.severity || 'Review'}</span><span>{item.finding.title}</span><span>Review →</span></button>)}</section> : <p className="rdl-coverage-note">Recorded input evidence. Rule outcomes are available under Vulnerability Analysis.</p>}
         </> : <div className="empty-state"><div className="empty-title">No inputs match these filters</div><p>Try another symbol, source file or category.</p><button className="rdl-vector-reset" onClick={clearFilters}>Clear input filters</button></div>}
       </div>
     </div>

@@ -1,5 +1,8 @@
+import { formatDateTime } from '../lib/datetime'
 import { useMemo, useState } from 'react'
+import { ReviewGuidance } from './ReportAudience'
 import { artifactUrl } from '../api'
+import EffortPlanner from './EffortPlanner'
 
 /* ─── Confidence helpers ─────────────────────────────────────── */
 const CONF_COLOR = { high: '#f85149', medium: '#d29922', low: '#3fb950', critical: '#f85149', info: '#58a6ff' }
@@ -91,22 +94,7 @@ export function FilePaths({ filepaths }) {
                       ) : null}
                     </div>
                   )}
-                  {(item.reviewer_note || item.developer_note) && (
-                    <div className="ip-fp-summary">
-                      {item.reviewer_note ? (
-                        <div className="ip-fp-note reviewer">
-                          <div className="ip-fp-note-label">Reviewer Focus</div>
-                          <div className="ip-fp-note-text">{item.reviewer_note}</div>
-                        </div>
-                      ) : null}
-                      {item.developer_note ? (
-                        <div className="ip-fp-note developer">
-                          <div className="ip-fp-note-label">Recommended correction</div>
-                          <div className="ip-fp-note-text">{item.developer_note}</div>
-                        </div>
-                      ) : null}
-                    </div>
-                  )}
+                  <ReviewGuidance developer={item.developer_note} reviewer={item.reviewer_note} />
                   {paths.map((p, pi) => (
                     <div key={pi} className="ip-fp-path">
                       <svg width="11" height="11" viewBox="0 0 20 20" fill="currentColor" style={{ color: 'var(--text-3)', flexShrink: 0 }}>
@@ -232,7 +220,7 @@ function Recon({ recon }) {
           {meta.generated_at && (
             <div className="ip-meta-item">
               <span className="ip-meta-label">Generated</span>
-              <span className="ip-meta-val">{meta.generated_at}</span>
+              <span className="ip-meta-val">{formatDateTime(meta.generated_at)}</span>
             </div>
           )}
         </div>
@@ -264,79 +252,6 @@ function Recon({ recon }) {
 /* ═══════════════════════════════════════════════════════════════
    EFFORT ESTIMATE SECTION
 ═══════════════════════════════════════════════════════════════ */
-function EffortEstimate({ artifactIndex, ranEstimate }) {
-  const estimateArtifacts = useMemo(() => {
-    const all = [
-      ...(artifactIndex?.other_html || []),
-      ...(artifactIndex?.pdf_files || []),
-    ]
-    return all.filter((a) => a.toLowerCase().includes('estimate'))
-  }, [artifactIndex])
-
-  if (!ranEstimate && !estimateArtifacts.length) {
-    return (
-      <div className="empty-state" style={{ padding: '40px 20px' }}>
-        <svg className="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <div className="empty-title">Effort estimate not run</div>
-        <div className="empty-msg">Enable <strong>Effort Estimate</strong> in scan options to generate a manual review effort estimate based on findings complexity and volume.</div>
-      </div>
-    )
-  }
-
-  if (!estimateArtifacts.length) {
-    return (
-      <div className="empty-state" style={{ padding: '40px 20px' }}>
-        <div className="empty-title">Estimate report not yet available</div>
-        <div className="empty-msg">The scan ran with effort estimation enabled. The report may still be generating, or was not saved to the output directory.</div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="ip-section-body">
-      <div className="ip-estimate-intro">
-        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" style={{ color: 'var(--primary)', flexShrink: 0 }}>
-          <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-        </svg>
-        <span>Effort estimate reports show estimated manual review days broken down by language and component.</span>
-      </div>
-
-      <div className="ip-estimate-list">
-        {estimateArtifacts.map((a) => {
-          const name = a.split('/').slice(-1)[0]
-          const isPdf = a.toLowerCase().endsWith('.pdf')
-          return (
-            <div key={a} className="ip-estimate-card">
-              <div className="ip-estimate-card-icon">
-                {isPdf ? (
-                  <svg width="28" height="28" viewBox="0 0 20 20" fill="currentColor" style={{ color: '#f85149' }}>
-                    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-                  </svg>
-                ) : (
-                  <svg width="28" height="28" viewBox="0 0 20 20" fill="currentColor" style={{ color: 'var(--primary)' }}>
-                    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
-                  </svg>
-                )}
-              </div>
-              <div className="ip-estimate-card-info">
-                <div className="ip-estimate-card-name">{name}</div>
-                <div className="ip-estimate-card-path">{a}</div>
-              </div>
-              <div className="ip-estimate-card-actions">
-                <a href={artifactUrl(a)} target="_blank" rel="noreferrer" className="btn btn-primary btn-sm">
-                  Open Report ↗
-                </a>
-                <a href={artifactUrl(a)} download className="btn btn-ghost btn-sm">Download</a>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
 
 /* ═══════════════════════════════════════════════════════════════
    LINES OF CODE SECTION
@@ -498,16 +413,25 @@ const SECTIONS = [
 export default function InsightsPanel({ findingsData, artifactIndex, run }) {
   const [activeSection, setActiveSection] = useState('recon')
 
+  const [estimatedRunId, setEstimatedRunId] = useState(null)
   const recon = findingsData?.recon
-  const ranEstimate = run?.estimate
+  const ranEstimate = run?.estimate === true || run?.estimate === 'true'
   const locBreakdown = findingsData?.loc_breakdown || []
   const scanMeta = findingsData?.scan_meta
   const hasLoc = run?.loc || (scanMeta?.detection_summary?.total_loc != null)
 
+  const estimateArtifacts = [...new Set([
+    ...(artifactIndex?.other_html || []), ...(artifactIndex?.pdf_files || []),
+    ...(artifactIndex?.json_files || []), ...(artifactIndex?.all_artifacts || []), ...(run?.artifacts || []),
+  ])].filter((path) => /^(?:estimate|estimation|review[-_]effort[-_](?:plan|report)|effort[-_](?:plan|report))(?:[._-]|$)/i.test(String(path).split(/[\\/]/).pop()))
+  const canPlan = !['queued', 'running', 'stopping'].includes(run?.status) && !run?.data_removed &&
+    (hasLoc || locBreakdown.some((row) => typeof row?.loc === 'number'))
+  const estimateAvailable = ranEstimate || estimateArtifacts.length > 0 || canPlan ||
+    (run?.run_uuid != null && estimatedRunId === run.run_uuid)
+
   const counts = {
     recon: recon ? Object.keys(recon.categories || recon).filter((k) => k !== 'meta').length : 0,
-    estimate: (artifactIndex?.other_html || []).filter((a) => a.toLowerCase().includes('estimate')).length
-      + (artifactIndex?.pdf_files || []).filter((a) => a.toLowerCase().includes('estimate')).length,
+    estimate: estimateArtifacts.length,
     loc: locBreakdown.filter((r) => typeof r === 'object').length,
   }
 
@@ -517,7 +441,7 @@ export default function InsightsPanel({ findingsData, artifactIndex, run }) {
       <div className="ip-nav">
         {SECTIONS.map(({ id, label, icon }) => {
           const count = counts[id]
-          const hasData = count > 0 || (id === 'estimate' && ranEstimate) || (id === 'loc' && hasLoc)
+          const hasData = count > 0 || (id === 'estimate' && estimateAvailable) || (id === 'loc' && hasLoc)
           return (
             <button
               key={id}
@@ -527,8 +451,8 @@ export default function InsightsPanel({ findingsData, artifactIndex, run }) {
               <span className="ip-nav-icon">{icon}</span>
               <span className="ip-nav-label">{label}</span>
               {count > 0 && <span className="ip-nav-count">{count}</span>}
-              {id === 'estimate' && ranEstimate && count === 0 && (
-                <span className="ip-nav-dot" title="Estimate was run" />
+              {id === 'estimate' && estimateAvailable && count === 0 && (
+                <span className="ip-nav-dot" title="Effort estimate available" />
               )}
               {id === 'loc' && hasLoc && count === 0 && (
                 <span className="ip-nav-dot" title="LoC counted" />
@@ -542,7 +466,7 @@ export default function InsightsPanel({ findingsData, artifactIndex, run }) {
       <div className="ip-content">
         {activeSection === 'recon' && <Recon recon={recon} />}
         {activeSection === 'estimate' && (
-          <EffortEstimate artifactIndex={artifactIndex} ranEstimate={ranEstimate} />
+          <EffortPlanner key={run?.run_uuid} artifactIndex={artifactIndex} run={run} onReady={() => setEstimatedRunId(run?.run_uuid)} />
         )}
         {activeSection === 'loc' && (
           <LoCSection locBreakdown={locBreakdown} scanMeta={scanMeta} />

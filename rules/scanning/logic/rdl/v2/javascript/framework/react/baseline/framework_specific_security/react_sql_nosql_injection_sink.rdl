@@ -3,7 +3,7 @@ RULE baseline.javascript.framework.react.react_sql_nosql_injection_sink VERSION 
 IN FILE
 WHEN TEXT_MATCHES "\\.(query|execute)\\(\\s*`|\\$where\\s*:\\s*|sequelize\\.query\\(" "im"
 WHEN TEXT_MISSING "prepare|parameterize|\\?.*params|mysql\\.escape|pg\\.escape" "im"
-REPORT "React SQL/NoSQL Injection Sink"
+REPORT "SQL Injection Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

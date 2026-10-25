@@ -1,0 +1,43 @@
+format: daksh-pattern-rule/v1
+id: java.core.jsp_unescaped_expression_output
+title: "HTML Output Encoding Review"
+order: 7
+category: Untrusted Input Handling or Injection Flaws
+detection:
+  pattern: \$\{[^}]{1,500}\}
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Raw JSP expression output requires provenance and context encoding review; a source match is not proof
+    of XSS.
+  trace:
+  - Output candidates are filtered by JSP source context and known tag-library escaping behavior.
+  description: The JSP template contains a raw expression in a potentially rendered output position. Known JSTL
+    control attributes and default escaping output are excluded; source provenance and output context require review.
+  impact: If externally influenced text reaches browser output without the required context encoding, it may inject
+    markup or script. A model value or expression alone does not establish attacker control.
+  remediation: Encode untrusted values for their HTML, attribute, URL or script context. Prefer escaping output
+    helpers for HTML text, and validate URL destinations separately.
+  reviewer: Trace the model or session value to its origin and identify the rendering context. Verify tag-library
+    bindings and explicit escapeXml settings. Imported templates, custom tags and expression nesting require separate
+    review.
+  review_steps:
+  - Identify who can supply the matched input, including stored values and upstream services; record its type, size
+    limits and trust boundary.
+  - Trace the value through transformations to each sensitive operation. Check the protection at that destination
+    and resource-level authorization.
+  - Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side
+    check alone is insufficient evidence.
+  recommendations:
+  - Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve
+    legitimate characters and protect each destination separately.
+  - Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations
+    where applicable. Test rejected input and unauthorized access.
+scan_config:
+  match_mode: file
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

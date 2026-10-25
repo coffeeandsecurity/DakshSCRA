@@ -58,7 +58,7 @@
     <rule>
         <platform>cpp</platform>
         <path>/cpp/cpp.xml</path>
-        <platform_ftypes>*.cpp, *.cc, *.cxx, *.hpp, *.hxx</platform_ftypes>
+        <platform_ftypes>*.cpp, *.cc, *.cxx, *.h, *.hpp, *.hh, *.hxx</platform_ftypes>
         <project_config_ftypes>Makefile, CMakeLists.txt, *.vcxproj, *.props</project_config_ftypes>
         <common_ftypes>*.h, Makefile, CMakeLists.txt, *.vcxproj, *.props, *.config, *.json, *.log</common_ftypes>
     </rule>

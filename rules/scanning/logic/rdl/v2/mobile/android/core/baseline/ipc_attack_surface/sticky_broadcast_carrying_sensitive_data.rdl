@@ -2,7 +2,6 @@ VERSION 2
 RULE baseline.mobile.android.core.sticky_broadcast_carrying_sensitive_data VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "sendStickyBroadcast\\s*\\(|sendStickyOrderedBroadcast\\s*\\(" "im"
-WHEN TEXT_MATCHES "putExtra.*(?:token|password|secret|key|data|user|account|credential)" "im"
 REPORT "Sticky Broadcast Carrying Sensitive Data"
 SEVERITY INFO
 CONFIDENCE LOW

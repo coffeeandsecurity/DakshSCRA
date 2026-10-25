@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.c.core.improper_use_of_memset_for_sensitive_data VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\bmemset\\s*\\(\\s*(?:\\w*(?:password|passwd|secret|token|api[_-]?key|private[_-]?key)\\w*|\\w+_buffer)\\s*,\\s*[^,]+,\\s*[^)]+\\)" "im"
-WHEN TEXT_MISSING "example|sample|dummy|test|placeholder" "im"
-REPORT "Improper Use of `memset` for Sensitive Data"
+REPORT "Sensitive Memory Clearing Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

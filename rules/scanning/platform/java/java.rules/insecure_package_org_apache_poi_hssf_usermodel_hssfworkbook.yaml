@@ -1,0 +1,40 @@
+format: daksh-pattern-rule/v1
+id: java.core.insecure_package_org_apache_poi_hssf_usermodel_hssfworkbook
+title: "Spreadsheet File Handling Review"
+order: 23
+category: Insecure/Deprecated Libraries
+detection:
+  pattern: org\.apache\.poi\.hssf\.usermodel\.HSSFWorkbook
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:XSSFWorkbook|validate|allowlist && MISSING:test|example
+reporting:
+  type: area_of_interest
+  reason: Detects the use of HSSFWorkbook for Excel file manipulation, which may expose applications to vulnerabilities
+    due to outdated libraries.
+  trace:
+  - 'Externalized rule logic for Insecure Package: org.apache.poi.hssf.usermodel.HSSFWorkbook.'
+  description: The application uses a spreadsheet-processing library. This rule does not resolve the deployed version
+    or compare it with security advisories.
+  impact: A crafted spreadsheet may exploit a reachable defect in an affected library version or exhaust parsing
+    resources; use of this class alone does not establish a known vulnerability.
+  remediation: Resolve the deployed library version and consult its official security advisories. Upgrade affected
+    or unsupported versions and bound the size and complexity of untrusted documents.
+  reviewer: Confirm that the latest secure libraries are used for handling file formats and assess any associated
+    vulnerabilities. This can be confirmed as an issue when the matched path is reachable and required controls
+    are missing, weak, or inconsistent.
+  review_steps:
+  - Resolve the dependency or deprecated API version actually included in the deployed artifact.
+  - Inspect the affected functionality and its callers; a declaration or API name alone does not establish a reachable
+    vulnerability.
+  - Check supported replacements and compatibility requirements, and record evidence for any affected deployed behavior.
+  recommendations:
+  - Replace unsupported APIs or affected dependencies with a supported option after checking application compatibility.
+  - Pin and verify the deployed version and test the affected behavior and error paths after the update.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

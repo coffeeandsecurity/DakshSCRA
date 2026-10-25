@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.mobile.xplat.flutter.core.flutter_webview_javascript_unrestricted VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "JavaScriptMode\\.unrestricted|evaluateJavascript\\(" "im"
-WHEN TEXT_MISSING "NavigationDelegate" "im"
-REPORT "Flutter WebView JavaScript Unrestricted"
+REPORT "WebView JavaScript Policy Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

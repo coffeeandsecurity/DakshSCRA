@@ -1,0 +1,40 @@
+format: daksh-pattern-rule/v1
+id: java.framework.struts.ognl_expression_injection_via_action_name
+title: "OGNL Expression Review"
+order: 1
+category: Framework-Specific Issues - Apache Struts
+detection:
+  pattern: ActionContext\.getContext\(\)\.getValueStack\(\)|getValue\s*\(\s*[^)]*\+|findValue\s*\(\s*[^)]*(?:request|param|getParameter)
+  conditions:
+  - WHEN PRESENT getValue\s*\(\s*[^)]*\+|findValue\s*\(\s*[^)]*(?:request|param|getParameter)
+  - WHEN EXPR MISSING:ESAPI\.encoder|AntiXss|sanitize|escapeHtml
+reporting:
+  type: area_of_interest
+  reason: Detects OGNL expression evaluation with user-controlled input via the ValueStack.
+  trace:
+  - Externalized rule logic for OGNL Expression Injection via Action Name.
+  description: The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace
+    executable selection and evaluated content to their trust boundaries.
+  impact: If an attacker controls interpreted syntax or the operation selected, code or commands may run with the
+    application’s privileges, allowing data theft, state changes, or service disruption.
+  remediation: Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate
+    argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates
+    or expressions.
+  reviewer: Confirm no user-controlled data is passed to ValueStack evaluation methods. This can be confirmed as
+    an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Determine whether the matched operation interprets code, expressions or templates; identify its execution context
+    and permissions.
+  - Trace control over the executed text and distinguish fixed application code from externally influenced content.
+  - Inspect restrictions and failure paths; record a reachable input-to-execution path before confirming code execution.
+  recommendations:
+  - Replace externally assembled code with fixed operations and data-only inputs where possible.
+  - Keep template or expression sources under application control; restrict exposed capabilities and test rejection
+    of unexpected syntax.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: magenta

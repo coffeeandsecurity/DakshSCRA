@@ -1,0 +1,40 @@
+format: daksh-pattern-rule/v1
+id: java.core.insecure_package_org_springframework_web_multipart_multipartfile
+title: "Multipart Upload Review"
+order: 22
+category: Insecure/Deprecated Libraries
+detection:
+  pattern: org\.springframework\.web\.multipart\.MultipartFile
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:validate|allowlist|getOriginalFilename.*replace|ContentType|getSize\s*\(\s*\) && MISSING:test|example
+reporting:
+  type: area_of_interest
+  reason: Detects the use of MultipartFile for file uploads without validation, which can lead to file upload vulnerabilities.
+  trace:
+  - 'Externalized rule logic for Insecure Package: org.springframework.web.multipart.MultipartFile.'
+  description: The application accepts uploaded content. Identify storage destinations, execution behavior, filename
+    handling, and the effective size and type checks.
+  impact: A crafted upload may execute as application code, overwrite files, disclose data through later processing,
+    or exhaust storage if the upload crosses the intended content and filesystem boundaries.
+  remediation: Allowlist required file types, inspect content rather than trusting extensions, bound sizes, generate
+    server-side names, and store uploads outside executable paths with appropriate access controls.
+  reviewer: Assess the file upload implementation and confirm that appropriate validation and sanitization processes
+    are in place to mitigate risks. This can be confirmed as an issue when the matched path is reachable and required
+    controls are missing, weak, or inconsistent.
+  review_steps:
+  - Trace who supplies the upload and inspect size limits, filename handling, storage destination and downstream
+    processing.
+  - Check whether uploaded content can execute, be rendered as active content or overwrite a protected file.
+  - Inspect file-type checks and authorization to create and retrieve the content; record the reachable unsafe behavior.
+  recommendations:
+  - Apply permitted type and size limits, use application-controlled storage names and keep uploaded content outside
+    executable locations.
+  - Authorize upload and retrieval independently and test disallowed content, oversized input and filename traversal.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

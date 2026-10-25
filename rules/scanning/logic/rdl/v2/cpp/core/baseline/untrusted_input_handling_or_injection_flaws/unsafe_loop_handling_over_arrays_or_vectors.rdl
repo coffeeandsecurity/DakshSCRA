@@ -3,7 +3,7 @@ RULE baseline.cpp.core.unsafe_loop_handling_over_arrays_or_vectors VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:for|while)\\s*\\([^)]*(?:<|<=|>|>=)[^)]*(?:size|length|count|index|idx|i|j|k)[^)]*\\)" "im"
 WHEN TEXT_MISSING "size\\(\\)|length\\(\\)|\\.end\\(\\)|bounds|assert|sizeof\\s*\\(.*\\)/sizeof" "im"
-REPORT "Unsafe Loop Handling Over Arrays or Vectors"
+REPORT "Loop Bounds Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

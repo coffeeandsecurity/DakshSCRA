@@ -11,6 +11,10 @@ from docx.oxml.ns import qn
 
 
 def render_word(document, destination, progress=None):
+    from core.report_document import prepare_document
+    document = prepare_document(document)
+    from utils.datetime_utils import presentation_dates
+    document = presentation_dates(document)
     from core.report_progress import report_progress
     report_progress(progress, 'building', 'Preparing Word report evidence')
     from core.report_document import presentation_context
@@ -21,6 +25,7 @@ def render_word(document, destination, progress=None):
               'suppressed_findings':'Suppressed Findings', 'recon':'Reconnaissance',
               'source_excerpt_catalogue':'Source Excerpt Catalogue'}
     labels.update(native_reference_catalogue='Flow Reference Catalogue', review_text_catalogue='Review Text & Diagnostics')
+    labels['program_graphs'] = 'Control Flow Graphs & Data Flow Graphs'
     doc = Document()
     generated = datetime.now(timezone.utc).replace(tzinfo=None)
     doc.core_properties.author = doc.core_properties.last_modified_by = 'Daksh SCRA'
@@ -45,12 +50,14 @@ def render_word(document, destination, progress=None):
     field = OxmlElement('w:fldSimple'); field.set(qn('w:instr'), 'PAGE'); footer._p.append(field)
     doc.add_heading('Security Analysis Report', 0)
     doc.add_paragraph(document.get('report', 'Full scan'), 'Subtitle')
+    from utils.report_audience import LABELS
+    doc.add_paragraph('Report audience: ' + LABELS[document.get('report_audience', 'both')])
     scan = document.get('scan', {})
     for label, value in [('Project', scan.get('project')), ('Scan', scan.get('run_uuid'))]:
         if value:
             doc.add_paragraph(f'{label}: {value}')
     doc.add_paragraph('Areas of interest and static analysis evidence support human review. Recorded outcomes, assessment status, and coverage limits are preserved.')
-    doc.add_paragraph('The readable evidence follows the HTML and PDF reports. Complete original saved fields are available in the JSON export and HTML package.')
+    doc.add_paragraph('The readable evidence follows the HTML and PDF reports. Recorded evidence and the selected guidance are available in the JSON export and HTML package. The saved scan retains both guidance perspectives.')
     summary = document.get('sections', {}).get('summary', {})
     metrics = summary.get('detection_summary', {}) if isinstance(summary, dict) else {}
     table = doc.add_table(rows=0, cols=2)
@@ -134,7 +141,9 @@ def render_word(document, destination, progress=None):
     def lines(value, prefix='', indent=0):
         if isinstance(value, dict):
             for key, child in value.items():
-                label = str(key).replace('_', ' ').title()
+                label = {'developer_note': 'Recommendations', 'remediation': 'Recommendations',
+                         'recommendation': 'Recommendations', 'reviewer_note': 'Review guidance',
+                         'impact': 'Security impact'}.get(key, str(key).replace('_', ' ').title())
                 label = (prefix + ' / ' if prefix else '') + label
                 if isinstance(child, (dict, list)):
                     yield '  '*indent + label + ':'
@@ -203,11 +212,15 @@ def render_word(document, destination, progress=None):
             table.append(row)
         body.append(table)
     sections = dict(document.get('sections', {}))
+    if 'suppressed_findings' in sections:
+        sections['suppressed_findings'] = context['suppressed']
     from core.rdl.narratives import enrich_source_findings
     if isinstance(sections.get('areas_of_interest'), list):
         sections['areas_of_interest'] = enrich_source_findings(sections['areas_of_interest'])
     if isinstance(sections.get('filepaths_aoi'), list):
         sections['filepaths_aoi'] = enrich_source_findings(sections['filepaths_aoi'], path_only=True)
+    from utils.report_audience import filter_guidance
+    sections = filter_guidance(sections, document.get('report_audience', 'both'))
     native_references = {}
     def select(row, keys):
         return {key: row[key] for key in keys if key in row}
@@ -229,7 +242,7 @@ def render_word(document, destination, progress=None):
     def rdl_record(row):
         result = select(row, ('title', 'rule_title', 'severity', 'location', 'report_path', 'report_kind',
                              'message', 'description', 'report_explanation', 'cwe', 'confidence',
-                             'confidence_reason', 'impact', 'remediation', 'review_area', 'source', 'sink',
+                             'confidence_reason', 'impact', 'reviewer_note', 'remediation', 'review_area', 'source', 'sink',
                              'limitations', 'report_locations'))
         result['trace'] = select(row.get('trace') or {}, ('summary', 'review_note', 'protection_note'))
         result['review_evidence'] = []
@@ -366,6 +379,26 @@ def render_word(document, destination, progress=None):
     for section_index, (key, value) in enumerate(sections.items(), 1):
         report_progress(progress, 'building', 'Building ' + labels.get(key, key.replace('_',' ').title()), section_index-1, len(sections), 'sections')
         heading(labels.get(key, key.replace('_',' ').title()), 1, (section_index, 'section_' + key))
+        if key == 'program_graphs':
+            from core.rdl.program_graphs import report_views
+            paragraph('Snapshot', str(value.get('provenance','Not recorded'))+' · '+str(value.get('created_at','')))
+            paragraph('', 'CFG records modeled control transfers; DFG records value dependencies. These are not vulnerability verdicts. Full node and edge tables are included. Use the HTML explorer or SVG export for an interactive graphical view.')
+            if value.get('truncated'):
+                paragraph('Coverage', 'The original graph capture reached its recorded analysis budget.')
+            for note in value.get('diagnostics', []):
+                paragraph('Limitation', note)
+            record_table(['Language / format','CFG','DFG','Scope'], [[row['language'],row['cfg'],row['dfg'],row['note']] for row in value.get('coverage',[])])
+            for view in report_views(value):
+                heading(view['kind'].upper()+' · '+view['path'], 2)
+                paragraph('Model status', view.get('status','Not recorded'))
+                for note in view.get('diagnostics', []) + view.get('limitations', []):
+                    paragraph('Limitation', note)
+                record_table(['Node / kind','Operation','Source / code'], [
+                    [row['id']+'\n'+row.get('kind',''),row.get('label',''),
+                     str(row.get('location',{}).get('path',''))+':'+str(row.get('location',{}).get('line',''))+'\n'+row.get('code','')]
+                    for row in view.get('nodes',[])])
+                record_table(['From node','Relationship','To node'], [[edge['source'],edge.get('label') or edge['kind'],edge['target']] for edge in view.get('edges',[])])
+            continue
         if key == 'recon':
             recon = context['recon_report']
             number = lambda value: str(value) if value is not None else 'Not recorded'

@@ -3,7 +3,7 @@ RULE baseline.java.core.unencrypted_data_transmission_over_http VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "new\\s*HttpGet|new\\s*HttpPost|new\\s*HttpPut|new\\s*HttpDelete|new\\s*HttpURLConnection" "im"
 WHEN (TEXT_MATCHES "http://" "im" AND TEXT_MISSING "https://" "im")
-REPORT "Unencrypted Data Transmission over HTTP"
+REPORT "Cleartext HTTP Communication Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

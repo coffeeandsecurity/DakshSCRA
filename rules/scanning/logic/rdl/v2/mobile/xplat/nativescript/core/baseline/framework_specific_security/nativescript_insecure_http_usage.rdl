@@ -2,7 +2,7 @@ VERSION 2
 RULE baseline.mobile.xplat.nativescript.core.nativescript_insecure_http_usage VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "http://" "im"
-REPORT "NativeScript Insecure HTTP Usage"
+REPORT "Cleartext HTTP Communication Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

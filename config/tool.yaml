@@ -1,10 +1,13 @@
 tool_name: Daksh SCRA (Source Code Review Assist)
 author: Debasis Mohanty (d3basis.m0hanty@gmail.com)
-release: 0.39
-release_date: 2026-10-10
+release: v0.40
+release_date: '10-10-2026'
+rdl:
+  # Comparison default; explicit and environment overrides take precedence.
+  shadow_enabled: false
 display:
   # Timezone used for all timestamps in CLI output and reports.
-  # Leave empty to use the server's local time (default).
+  # Defaults: UTC, MM-DD-YYYY, and 24-hour time.
   # Examples:
   #   timezone: UTC
   #   timezone: America/New_York
@@ -12,7 +15,9 @@ display:
   #   timezone: Asia/Kolkata
   #   timezone: Asia/Singapore
   #   timezone: Australia/Sydney
-  timezone: ''
+  timezone: UTC
+  date_format: MM-DD-YYYY
+  time_format: 24h
 state_management:
   enabled: false
   resume_mode: manual

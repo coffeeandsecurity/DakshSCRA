@@ -2,7 +2,7 @@ VERSION 2
 RULE xamarin.weak-crypto VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\bMode\\s*=\\s*CipherMode\\.ECB\\b" ""
-REPORT "Xamarin Explicit ECB Cipher Mode"
+REPORT "ECB Cipher Mode Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

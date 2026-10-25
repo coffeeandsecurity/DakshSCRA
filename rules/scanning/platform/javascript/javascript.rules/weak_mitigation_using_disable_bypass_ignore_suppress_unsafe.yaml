@@ -1,0 +1,43 @@
+format: daksh-pattern-rule/v1
+id: javascript.core.weak_mitigation_using_disable_bypass_ignore_suppress_unsafe
+title: "Security Control Bypass Review"
+order: 13
+category: Insecure/Weak Mitigations
+detection:
+  pattern: \b(disable|bypass|ignore|suppress|unsafe)\b
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:(auth|csrf|xss|cors|tls|ssl|verify|validation|sanitize|security) && MISSING:(example|sample|dummy|test|placeholder)
+reporting:
+  type: area_of_interest
+  reason: Detects weak or inadequate security mitigations.
+  trace:
+  - 'Externalized rule logic for Weak Mitigation: Using disable|bypass|ignore|suppress|unsafe.'
+  description: The code contains a security-control marker. Its presence is a review surface rather than evidence
+    that the control is defective or consistently enforced.
+  impact: No adverse security consequence follows from the presence of a protection alone. If it is bypassed or
+    applied outside the correct context, the protected operation may still permit injection or unauthorized access.
+  remediation: Verify that the control applies to every relevant entry point and uses the required context and policy.
+    Retain effective protections; test bypass cases before recommending a change.
+  reviewer: Identify weak or inadequate security mitigations in the code and recommend implementing stronger security
+    measures. Assess whether the application applies appropriate security controls and avoids relying on weak mitigations
+    that may be easily bypassed by attackers. This can be confirmed as an issue when the matched path is reachable
+    and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the matched construct in its containing function or configuration and identify the security-sensitive
+    behavior under review.
+  - Verify reachable callers, external influence and effective protections, including deployment overrides and failure
+    paths.
+  - Record concrete evidence for a confirmed issue or a justified suppression; retain an unresolved outcome when
+    the required evidence is unavailable.
+  recommendations:
+  - Apply the rule-specific correction above only after verifying the affected behavior and required control.
+  - Add a regression case for the unsafe condition and a valid protected case; verify the effective behavior in
+    the relevant deployment.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

@@ -19,7 +19,8 @@ def symbol(step):
 
 
 def flow_traits(finding):
-    evidence = finding.get('evidence') or (finding.get('trace') or {}).get('steps') or []
+    traced = (finding.get('trace') or {}).get('steps') or []
+    evidence = traced if any(s.get('predicate') == 'SOURCE' and s.get('matched') is not False for s in traced) else finding.get('evidence') or traced
     steps = [item for item in evidence if item.get('matched') is not False
              and item.get('predicate') in {'SOURCE', 'PROPAGATION', 'SINK'}]
     sources = [item for item in steps if item.get('predicate') == 'SOURCE']
@@ -45,9 +46,10 @@ def review_sections(records, section='all'):
     for record in records:
         findings = []
         for finding in record.get('v2_findings') or []:
-            if record.get('v2_outcome') != 'MATCH':
+            if record.get('v2_outcome') != 'MATCH' and not (record.get('analysis_only') and record.get('v2_outcome') == 'RECORDED'):
                 continue
-            identity = finding_identity(record, finding)
+            from .issue_families import occurrence_identity
+            identity = occurrence_identity(record, finding)
             traits = flow_traits(finding)
             if identity not in seen:
                 seen.add(identity)

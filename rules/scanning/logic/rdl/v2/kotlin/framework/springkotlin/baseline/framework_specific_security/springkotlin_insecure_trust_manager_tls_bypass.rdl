@@ -3,7 +3,7 @@ RULE baseline.kotlin.framework.springkotlin.springkotlin_insecure_trust_manager_
 IN FILE
 WHEN TEXT_MATCHES "HostnameVerifier\\s*\\{\\s*.*true\\s*\\}|TrustAllCerts|setHostnameVerifier\\(" "im"
 WHEN TEXT_MISSING "test|development|localhost|staging" "im"
-REPORT "Springkotlin Insecure Trust Manager / TLS Bypass"
+REPORT "TLS Certificate Validation Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

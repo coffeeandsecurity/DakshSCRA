@@ -1,0 +1,38 @@
+format: daksh-pattern-rule/v1
+id: php.core.insecure_file_inclusion_include_require
+title: "File Inclusion Review"
+order: 9
+category: Insecure Method/Function Call
+detection:
+  pattern: \b(?:include|require)(_once)?\s*\(\s*(?:(?:\'[^\']*\'|\"[^\"]*\")\s*\.\s*)?\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\.\s*(?:\'[^\']*\'|\"[^\"]*\"))?\s*\)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:realpath|basename|__DIR__|allowlist|whitelist|in_array
+reporting:
+  type: area_of_interest
+  reason: Detects insecure usage of include() and require() functions, especially with user input in file paths.
+  trace:
+  - 'Externalized rule logic for Insecure File Inclusion: include(), require().'
+  description: The code includes or requires a PHP file. Review external influence over the selected path and stream
+    wrapper.
+  impact: An attacker controlling a path or shared file may read or replace private files, delete data, or redirect
+    an operation outside its intended directory if containment and access controls are ineffective.
+  remediation: Map permitted include choices to fixed application paths. Enforce canonical directory containment,
+    exclude external stream wrappers and review allow_url_include and filesystem privileges.
+  reviewer: Trace the include operand through configuration and helpers. Determine whether an attacker can select
+    a local file, uploaded PHP content or a remote wrapper supported by the runtime. Fixed application includes
+    do not establish inclusion abuse.
+  review_steps:
+  - Resolve the final include or require operand.
+  - Check canonical path containment and permitted file mappings.
+  - Inspect wrappers, writable destinations and reachable attacker control.
+  recommendations:
+  - Select includes through fixed mappings.
+  - Keep uploads and writable content outside executable include paths.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

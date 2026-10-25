@@ -10,6 +10,8 @@ from timeit import default_timer as timer
 # Local application imports
 from utils.scan_scope import allows_check, allows_file
 from core import rdl_engine
+from core.pattern_rules import load_pack
+from core.evidence_highlights import source_highlights
 from core.rdl.selection import v1_enabled
 from core.rdl.shadow import append_shadow_record, default_shadow_runner
 import state.runtime_state as state
@@ -57,6 +59,16 @@ def _build_logic_meta(engine, logic_ref, logic_result=None, comparison=None):
     if comparison:
         meta["logic_comparison"] = comparison
     return meta
+
+
+def _pattern_source(rule, fallback):
+    filename = rule.get('pattern_file')
+    if not filename:
+        return fallback
+    try:
+        return Path(filename).resolve().relative_to(Path(state.root_dir).resolve()).as_posix()
+    except ValueError:
+        return str(filename)
 
 
 def _merge_logic_meta(target, meta):
@@ -223,7 +235,15 @@ def _collect_context_lines(file_lines, linecount, lines_before, lines_after):
     return before, after
 
 
-def _match_full_file(pattern, content, file_lines, exclude):
+class _FileMatch(tuple):
+    """Preserve source spans without changing the legacy evidence tuple shape."""
+    def __new__(cls, line, text, groups, start, end):
+        item = super().__new__(cls, (line, text, groups))
+        item.span = (start, end)
+        return item
+
+
+def _match_full_file(pattern, content, file_lines):
     """
     Apply pattern to full file content with MULTILINE|DOTALL.
     Returns list of (linecount, matched_text, groups_dict) tuples.
@@ -243,14 +263,11 @@ def _match_full_file(pattern, content, file_lines, exclude):
         matched_text = m.group(0)
         first_line = matched_text.split('\n', 1)[0]
 
-        if exclude and exclude.search(first_line):
-            continue
-
         groups = m.groupdict() if m.groupdict() else {}
         # Remove None values from named groups
         groups = {k: v for k, v in groups.items() if v is not None}
 
-        results.append((linecount, first_line, groups))
+        results.append(_FileMatch(linecount, first_line, groups, m.start(), m.end()))
 
     return results
 
@@ -370,13 +387,13 @@ def _compute_paths_confidence_score(path_count):
 
 def _file_path_guidance():
     import xml.etree.ElementTree as ET
-    path = Path(__file__).resolve().parents[1] / 'rules/scanning/platform/filepaths.xml'
+    path = Path(__file__).resolve().parents[1] / 'rules/scanning/platform/filepaths.rules'
     return {rule.findtext('name'): {
         'brief_desc': rule.findtext('rule_desc') or '',
         'attack_desc': rule.findtext('vuln_desc') or '',
         'developer_note': rule.findtext('developer') or '',
         'reviewer_note': rule.findtext('reviewer') or '',
-    } for rule in ET.parse(path).getroot().iter('rule')}
+    } for rule in load_pack(path).iter('rule')}
 
 
 FILEPATH_RULE_GUIDANCE = _file_path_guidance()
@@ -401,7 +418,7 @@ def _file_path_rule_meta(rule_elem):
 
 def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=None, suppressed_json_path=None, progress_callback=None):
     """
-    Parses rules from XML files and applies them to target files.
+    Applies unified Pattern Rule packs to target files.
     Supports both individual Path and dictionary of Paths as input.
 
     Parameters:
@@ -427,13 +444,13 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
         for index, filepath in enumerate(files, 1):
             if callable(progress_callback):
                 progress_callback(dict(scope="source_parser", platform="RDL v2", category="Semantic review",
-                                       rule_title="Experimental RDL v2", file_index=index, filepath=filepath,
+                                       rule_title="Semantic Rule review", file_index=index, filepath=filepath,
                                        status="parsing", total_items=len(files), matched_evidence_count=0))
             runner.review_file_once(filepath, state.source_root or state.sourcedir,
                                     Path(state.runtime_dirpath) / "rdl_shadow_comparisons.jsonl",
                                     progress_callback=(lambda details: progress_callback(dict(
                                         scope="source_parser", platform="RDL v2", category="Semantic review",
-                                        rule_title="Experimental RDL v2", file_index=index, filepath=filepath,
+                                        rule_title="Semantic Rule review", file_index=index, filepath=filepath,
                                         status="parsing", total_items=len(files), **details
                                     ))) if callable(progress_callback) else None)
         return [], []
@@ -475,8 +492,7 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
 
     for rule_path in rule_paths:
         try:
-            xmltree = ET.parse(rule_path)
-            root = xmltree.getroot()
+            root = load_pack(rule_path)
         except ET.ParseError as exc:
             logger.error("Failed to parse rules file %s: %s", rule_path, exc)
             continue
@@ -499,11 +515,11 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                 pattern_text = (rule.findtext("regex") or "").strip()
                 rdl_text = (rule.findtext("rdl") or "").strip()
                 rdl_ref = (rule.findtext("rdl_ref") or "").strip()
+                rule_source = _pattern_source(rule, rdl_ref)
                 rule_desc = (rule.findtext("rule_desc") or "").strip()
                 vuln_desc = (rule.findtext("vuln_desc") or "").strip()
                 dev_note = (rule.findtext("developer") or "").strip()
                 rev_note = (rule.findtext("reviewer") or "").strip()
-                exclude_text = (rule.findtext("exclude") or "").strip()
                 scan_cfg = _parse_scan_config(rule)
 
                 if not rule_title or (not pattern_text and not rdl_ref):
@@ -519,14 +535,6 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                         unmatched_rules.append(rule_title)
                         continue
 
-                exclude = None
-                if exclude_text:
-                    try:
-                        exclude = re.compile(exclude_text, re.IGNORECASE)
-                    except re.error as exc:
-                        logger.error("Invalid exclude regex in rule %s (%s): %s", rule_title, rule_path, exc)
-                        exclude = None
-
                 if str(state.verbosity) in ('1', '2'):
                     print(f"         [-] Applying Rule: {rule_title}", end='\r')
                 else:
@@ -536,8 +544,8 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                 finding_index = None
                 rule_has_unsuppressed_match = False
                 logic_file_path = _resolve_logic_file(rule_path, rdl_ref) if rdl_ref else None
-                rdl_logic_text = ""
-                if logic_file_path and logic_file_path.exists():
+                rdl_logic_text = rule.findtext("pattern_logic") or ""
+                if not rdl_logic_text and logic_file_path and logic_file_path.exists():
                     try:
                         rdl_logic_text = rdl_engine.load_rdl(logic_file_path)
                     except OSError as exc:
@@ -566,6 +574,9 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                             content = fo_target.read()
                     except (FileNotFoundError, PermissionError, UnicodeError, IOError) as exc:
                         print(f"Error processing {filepath}: {exc}")
+                        from core.analysis_coverage import record_read_failure
+                        record_read_failure(state.runtime_dirpath, state.source_root or state.sourcedir,
+                                            filepath, exc)
                         error_count += 1
                         state.parseErrorCnt += 1
                         if callable(progress_callback):
@@ -620,8 +631,7 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
 
                     if pattern is not None:
                         if use_file_mode:
-                            for linecount, line, groups in _match_full_file(pattern, content, file_lines, exclude):
-                                candidate_evidence.append((linecount, line, groups))
+                            candidate_evidence.extend(_match_full_file(pattern, content, file_lines))
                         else:
                             for linecount, line in enumerate(file_lines, start=1):
                                 if len(line) > 500:
@@ -629,14 +639,12 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                                 m = pattern.search(line)
                                 if not m:
                                     continue
-                                if exclude and exclude.search(line):
-                                    continue
                                 groups = m.groupdict() if m else {}
                                 groups = {k: v for k, v in groups.items() if v is not None}
                                 candidate_evidence.append((linecount, line, groups))
 
                     from core.rdl.v1_source import review_text
-                    review_content = review_text(rdl_ref, filepath, content) if candidate_evidence or pattern is None else content
+                    review_content = review_text(rdl_ref, filepath, content, state.source_root or state.sourcedir) if candidate_evidence or pattern is None else content
                     rdl_result = None
                     use_rdl_logic = bool(rdl_logic_text)
                     if use_rdl_logic:
@@ -665,8 +673,8 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                             Path(state.runtime_dirpath) / 'rdl_shadow_comparisons.jsonl',
                         )
                         active_logic_meta = _build_logic_meta(
-                            "rdl",
-                            rdl_ref,
+                            "pattern" if rule.get('pattern_file') else "rdl",
+                            rule_source,
                             logic_result=rdl_result,
                             comparison=shadow_comparison,
                         )
@@ -683,8 +691,6 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                                         if len(line) > 500:
                                             continue
                                         if not flag_regex.search(line):
-                                            continue
-                                        if exclude and exclude.search(line):
                                             continue
                                         if not any(ev[0] == linecount for ev in candidate_evidence):
                                             candidate_evidence.append((linecount, line, {}))
@@ -710,15 +716,13 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                                             continue
                                         if not flag_regex.search(line):
                                             continue
-                                        if exclude and exclude.search(line):
-                                            continue
                                         if not any(ev[0] == linecount for ev in rdl_suppressed_evidence):
                                             rdl_suppressed_evidence.append((linecount, line, {}))
                                 except re.error:
                                     pass
 
                             if rdl_suppressed_evidence:
-                                rdl_condition = f"RDL:{rdl_ref}"
+                                rdl_condition = f"Pattern:{rule_source}" if rule.get('pattern_file') else f"RDL:{rdl_ref}"
                                 logic_text = rdl_logic_text
 
                                 rel_path = futils.get_source_file_path(state.sourcedir, filepath)
@@ -735,13 +739,21 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                                         "category": category_name,
                                         "file": rel_path,
                                         "line": linecount,
-                                        "code": short_line.strip(),
+                                        "code": (line[:4000] + '..' if len(line) > 4000 else line).strip(),
+                                        "code_truncated": len(line) > 4000,
                                         "rdl_text": logic_text,
                                         "rdl_condition": rdl_condition,
                                         "suppression_reason": active_logic_reason,
                                         "suppressed_at": None,
                                         "status": "suppressed",
+                                        "scan_config": scan_cfg,
+                                        "rule_desc": rule_desc,
+                                        "issue_desc": rule_desc,
+                                        "security_impact": vuln_desc,
+                                        "developer_note": dev_note,
+                                        "reviewer_note": rev_note,
                                     }
+                                    sup_entry['highlights'] = source_highlights(sup_entry['code'], pattern, scan_cfg)
                                     _merge_logic_meta(sup_entry, active_logic_meta)
                                     if ctx_type == "lines" and (lines_before > 0 or lines_after > 0):
                                         ctx_before, ctx_after = _collect_context_lines(
@@ -774,17 +786,22 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                         if evidence_regex is None and rdl_logic_evidence_pattern:
                             evidence_regex = re.compile(rdl_logic_evidence_pattern, re.I)
                         reviewed_match_lines = None
+                        reviewed_match_spans = None
                         if use_file_mode and evidence_regex is not None:
-                            reviewed_match_lines = {item[0] for item in _match_full_file(
-                                evidence_regex, review_content, reviewed_lines, exclude)}
+                            reviewed_matches = _match_full_file(evidence_regex, review_content, reviewed_lines)
+                            reviewed_match_lines = {item[0] for item in reviewed_matches}
+                            reviewed_match_spans = {item.span for item in reviewed_matches}
                         retained = []
-                        for linecount, line, groups in candidate_evidence:
+                        for candidate in candidate_evidence:
+                            linecount, line, groups = candidate
                             reviewed_line = reviewed_lines[linecount - 1] if linecount <= len(reviewed_lines) else ''
                             # Replay multiline matches on the offset-preserving view.
                             # Other code on a line does not validate a comment match.
                             valid = linecount in reviewed_match_lines if reviewed_match_lines is not None else evidence_regex is None or bool(evidence_regex.search(reviewed_line))
+                            if reviewed_match_spans is not None and hasattr(candidate, 'span'):
+                                valid = candidate.span in reviewed_match_spans
                             if valid:
-                                retained.append((linecount, line, groups))
+                                retained.append(candidate)
                                 continue
                             state.suppressedFindingsCnt += 1
                             if suppressed_json_path:
@@ -793,8 +810,8 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                                     'rule_title': rule_title, 'category': category_name,
                                     'file': futils.get_source_file_path(state.sourcedir, filepath),
                                     'line': linecount, 'code': line.strip(),
-                                    'rdl_text': rdl_logic_text, 'rdl_condition': f'RDL:{rdl_ref}',
-                                    'suppression_reason': 'Source evidence is a comment, document identifier or supported non-executable/safe call form.',
+                                    'rdl_text': rdl_logic_text, 'rdl_condition': f'Pattern:{rule_source}' if rule.get('pattern_file') else f'RDL:{rdl_ref}',
+                                    'suppression_reason': ('The token is an invalid address, recognized version metadata, or non-address source syntax. No complete taint trace was performed by this literal check.' if str(rdl_ref).endswith('/ipv4_ipv6_address.rdl') else 'Source evidence is a comment, document identifier or supported non-executable/safe call form.'),
                                     'suppressed_at': None, 'status': 'suppressed',
                                 }
                                 _merge_logic_meta(rejection, active_logic_meta)
@@ -828,6 +845,7 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                             rel_path,
                             linecount,
                             short_line.strip(),
+                            rule_source=rule_source,
                         ):
                             state.suppressedFindingsCnt += 1
                             continue
@@ -835,8 +853,10 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                         ev_item = {
                             "file": rel_path,
                             "line": linecount,
-                            "code": short_line.strip(),
+                            "code": (line[:4000] + '..' if len(line) > 4000 else line).strip(),
+                            "code_truncated": len(line) > 4000,
                         }
+                        ev_item['highlights'] = source_highlights(ev_item['code'], pattern, scan_cfg)
 
                         if ctx_type == "named_groups" and groups:
                             ev_item["groups"] = groups
@@ -920,8 +940,7 @@ def source_parser(rule_input, targetfile, outputfile=None, findings_json_path=No
                             "file": rel_path,
                             "aggregated": True,
                             "matches": [
-                                {"line": ev["line"], "code": ev["code"], **
-                                 ({"groups": ev["groups"]} if "groups" in ev else {})}
+                                {key: value for key, value in ev.items() if key != 'file'}
                                 for ev in file_evidence_items
                             ],
                         }
@@ -1036,8 +1055,7 @@ def paths_parser(rule_path, targetfile, outputfile=None, rule_no=None, findings_
 
     # Load rules from XML file
     try:
-        xmltree = ET.parse(rule_path)
-        rule = xmltree.getroot()
+        rule = load_pack(rule_path)
     except ET.ParseError as exc:
         logger.error("Failed to parse file path rules %s: %s", rule_path, exc)
         return matched_rules, unmatched_rules
@@ -1065,11 +1083,11 @@ def paths_parser(rule_path, targetfile, outputfile=None, rule_no=None, findings_
             continue
         pattern_text = (r.findtext("regex") or "").strip()
         rdl_ref = (r.findtext("rdl_ref") or "").strip()
-        exclude_text = (r.findtext("exclude") or "").strip()
+        rule_source = _pattern_source(r, rdl_ref)
         rule_meta = _file_path_rule_meta(r)
         logic_file_path = _resolve_logic_file(rule_path, rdl_ref) if rdl_ref else None
-        rdl_logic_text = ""
-        if logic_file_path and logic_file_path.exists():
+        rdl_logic_text = r.findtext("pattern_logic") or ""
+        if not rdl_logic_text and logic_file_path and logic_file_path.exists():
             try:
                 rdl_logic_text = rdl_engine.load_rdl(logic_file_path)
             except OSError as exc:
@@ -1085,14 +1103,6 @@ def paths_parser(rule_path, targetfile, outputfile=None, rule_no=None, findings_
                 unmatched_rules.append(pattern_name)
                 continue
 
-        exclude = None
-        if exclude_text:
-            try:
-                exclude = re.compile(exclude_text, re.IGNORECASE)
-            except re.error as exc:
-                logger.error("Invalid file path exclude regex in rule %s (%s): %s", pattern_name, rule_path, exc)
-                exclude = None
-
         rule_has_match = False
         for file_index, eachfilepath in enumerate(f_targetfilepaths, start=1):  # Read each line (file path) in the file
             filepath = eachfilepath.rstrip()    # strip out '\r' or '\n' from the file paths
@@ -1106,8 +1116,6 @@ def paths_parser(rule_path, targetfile, outputfile=None, rule_no=None, findings_
                 except Exception:
                     match_path = str(filepath).replace("\\", "/")
             rule_match_text = "/" + str(match_path).lstrip("/")
-            if exclude and exclude.search(filepath):
-                continue
 
             matched = False
             active_logic_meta = {}
@@ -1132,8 +1140,8 @@ def paths_parser(rule_path, targetfile, outputfile=None, rule_no=None, findings_
                     default_shadow_runner(state.root_dir).config.get("maximum_telemetry_bytes", 64 * 1024 * 1024),
                 )
                 active_logic_meta = _build_logic_meta(
-                    "rdl",
-                    rdl_ref,
+                    "pattern" if r.get('pattern_file') else "rdl",
+                    rule_source,
                     logic_result=rdl_result,
                     comparison=shadow_comparison,
                 )

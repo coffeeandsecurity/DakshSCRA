@@ -3,7 +3,7 @@ RULE baseline.kotlin.core.insecure_method_call_sethtmltext VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "setHtmlText\\s*\\(.*\\)" "im"
 WHEN TEXT_MISSING "HtmlUtils\\.htmlEscape|StringEscapeUtils\\.escapeHtml|ESAPI\\.encoder|Jsoup\\.clean|sanitize" "im"
-REPORT "Insecure Method Call: setHtmlText"
+REPORT "HTML Output Encoding Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

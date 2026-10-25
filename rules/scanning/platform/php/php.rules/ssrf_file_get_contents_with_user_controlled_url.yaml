@@ -1,0 +1,41 @@
+format: daksh-pattern-rule/v1
+id: php.core.ssrf_file_get_contents_with_user_controlled_url
+title: "Server-Side Request Forgery Review"
+order: 31
+category: Server-Side Request Forgery (SSRF)
+detection:
+  pattern: file_get_contents\s*\(\s*\$_(GET|POST|REQUEST|COOKIE)|\$\w+\s*=\s*file_get_contents\s*\(\s*\$
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:allowlist|whitelist|parse_url|filter_var|stream_context_create
+reporting:
+  type: area_of_interest
+  reason: Detects file_get_contents used with a user-controlled URL parameter.
+  trace:
+  - 'Externalized rule logic for SSRF: file_get_contents with User-Controlled URL.'
+  description: The application makes an outbound request whose destination may be influenced by external data. Resolve
+    URL construction, redirects, DNS results, and network reachability.
+  impact: If an attacker can select a reachable destination, the application may expose internal services or metadata
+    credentials, or send protected data to an unauthorized recipient.
+  remediation: Allowlist required destinations and protocols, validate resolved addresses and every redirect, and
+    restrict outbound access to internal and metadata services.
+  reviewer: Verify URL validation controls wherever file_get_contents is called with variable arguments. This can
+    be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Verify the operation makes a server-side request, then trace external control over the URL, host, port and redirects.
+  - Inspect destination restrictions, DNS resolution and redirect handling; distinguish fixed destinations from
+    caller-controlled requests.
+  - Check deployment egress controls and whether internal services or local files are reachable from the requesting
+    process.
+  recommendations:
+  - Prefer fixed destinations or a restricted set of permitted services; validate schemes, hosts and ports before
+    the request.
+  - Apply destination checks to redirects and resolved addresses where applicable, restrict network egress, and
+    test prohibited destinations.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

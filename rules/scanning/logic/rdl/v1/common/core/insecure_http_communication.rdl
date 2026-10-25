@@ -1,6 +1,0 @@
-VERSION 1
-WHEN PRESENT (?i)http://
-WHEN EXPR PRESENT:(?i)\b(url|uri|endpoint|fetch|axios|request|httpclient|redirect|href|src)\b
-REPORT AS area_of_interest
-REASON Detects the use of insecure HTTP communication.
-TRACE Externalized rule logic for Insecure HTTP Communication.

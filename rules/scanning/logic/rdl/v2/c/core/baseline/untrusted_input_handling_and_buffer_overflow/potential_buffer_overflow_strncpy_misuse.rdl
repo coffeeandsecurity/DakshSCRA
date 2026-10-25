@@ -3,7 +3,7 @@ RULE baseline.c.core.potential_buffer_overflow_strncpy_misuse VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\bstrncpy\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*,\\s*\\w+\\s*\\-\\s*1\\s*\\)" "im"
 WHEN TEXT_MISSING "strlcpy|memcpy|snprintf" "im"
-REPORT "Potential Buffer Overflow: strncpy() Misuse"
+REPORT "String Copy Bounds Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -2,7 +2,7 @@ VERSION 2
 RULE android.webview-universal-file-access VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:setAllowUniversalAccessFromFileURLs\\s*\\(\\s*true\\s*\\)|allowUniversalAccessFromFileURLs\\s*=\\s*true\\b)" ""
-REPORT "WebView Universal File-Origin Access Enabled"
+REPORT "WebView File Access Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

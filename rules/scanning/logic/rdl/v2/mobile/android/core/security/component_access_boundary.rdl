@@ -1,8 +1,8 @@
 VERSION 2
 RULE android.component-access-boundary VERSION 1
 IN FILE
-WHEN TEXT_MATCHES "\\bandroid:exported\\s*=\\s*[\"\\x27]true[\"\\x27]|<intent-filter\\b" ""
-REPORT "Exported Android Component Access Boundary"
+WHEN TEXT_MATCHES "\\b[A-Za-z_][\\w.-]*:exported\\s*=\\s*[\"\\x27]true[\"\\x27]|<intent-filter\\b" ""
+REPORT "Exported Component Access Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

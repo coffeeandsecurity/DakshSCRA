@@ -3,7 +3,7 @@ RULE baseline.kotlin.core.javascript_bridge_exposure_webview_addjavascriptinterf
 IN FILE
 WHEN TEXT_MATCHES "\\.addJavascriptInterface\\s*\\(" "im"
 WHEN TEXT_MISSING "@JavascriptInterface|setAllowFileAccess\\s*\\(\\s*false|setAllowUniversalAccessFromFileURLs\\s*\\(\\s*false|trustedOrigin|allowlist" "im"
-REPORT "JavaScript Bridge Exposure: WebView.addJavascriptInterface()"
+REPORT "WebView Native Bridge Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

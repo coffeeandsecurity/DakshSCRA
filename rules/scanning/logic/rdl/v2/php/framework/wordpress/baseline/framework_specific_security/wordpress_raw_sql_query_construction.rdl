@@ -2,7 +2,7 @@ VERSION 2
 RULE baseline.php.framework.wordpress.wordpress_raw_sql_query_construction VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "DB::raw\\(|selectRaw\\(|whereRaw\\(|->query\\(\\s*\\$|mysqli_query\\(|PDO::query\\(" "im"
-REPORT "Wordpress Raw SQL Query Construction"
+REPORT "SQL Query Construction Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

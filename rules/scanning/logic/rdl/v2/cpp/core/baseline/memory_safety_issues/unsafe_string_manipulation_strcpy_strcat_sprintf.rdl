@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.cpp.core.unsafe_string_manipulation_strcpy_strcat_sprintf VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(strcpy|strcat|sprintf)\\s*\\(" "im"
-WHEN TEXT_MISSING "strlcpy|strlcat|snprintf|strncpy|strncat|_s\\b|StringCchCopy|StringCchCat" "im"
-REPORT "Unsafe String Manipulation: strcpy(), strcat(), sprintf()"
+REPORT "String Buffer Bounds Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -3,7 +3,7 @@ RULE baseline.python.framework.sqlalchemy.filter_with_raw_string_condition VERSI
 IN FILE
 WHEN TEXT_MATCHES "\\.filter\\s*\\(\\s*[\"']|\\.filter\\s*\\(\\s*f[\"']|\\.filter\\s*\\(\\s*[\"'][^\"']*[\"']\\s*%" "im"
 WHEN TEXT_MISSING "bindparams|bindparam|:(?!:)\\w|params" "im"
-REPORT "filter() with Raw String Condition"
+REPORT "SQL Query Construction Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

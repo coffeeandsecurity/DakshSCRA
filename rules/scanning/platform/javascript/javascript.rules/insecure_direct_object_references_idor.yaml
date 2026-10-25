@@ -1,0 +1,43 @@
+format: daksh-pattern-rule/v1
+id: javascript.core.insecure_direct_object_references_idor
+title: "Object Authorization Review"
+order: 19
+category: MISC Checks
+detection:
+  pattern: (req\.params|req\.query|req\.body)[\s\S]*?(\[|\.)[\s\S]*?
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:(findByPk|findOne|findAll|where|delete|update|patch|put|remove|destroy) && MISSING:(authorize|isAuthorized|canAccess|hasRole|ownership|tenantId)
+reporting:
+  type: area_of_interest
+  reason: Detects potential Insecure Direct Object References (IDOR).
+  trace:
+  - Externalized rule logic for Insecure Direct Object References (IDOR).
+  description: The checked code implements an identity, access-control, or abuse-prevention decision. Determine
+    the trusted verifier, protected resources, and whether the control is enforced on every relevant path.
+  impact: If identity or resource authorization can be bypassed, an attacker may impersonate a user, access another
+    user’s data, or perform restricted operations. A control’s presence alone does not establish a weakness.
+  remediation: Enforce authentication and object-level authorization on the trusted server or privileged boundary.
+    Use strong verifier material, appropriate rate limits and recovery controls, and test access by unauthenticated
+    and insufficiently privileged callers.
+  reviewer: Verify whether the code implements proper authorization and access control mechanisms to prevent IDOR
+    vulnerabilities. Check whether user input used to access resources is properly validated, sanitized, and authorized.
+    Reviewers should assess the effectiveness of the implemented measures in mitigating IDOR risks. This can be
+    confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify the actor, action and protected resource, including ownership and tenant boundaries.
+  - Trace every reachable request or service path and inspect the effective permission check before sensitive work
+    occurs.
+  - Test unauthenticated access, insufficient roles and access to another user or tenant; record effective middleware
+    and service-level controls.
+  recommendations:
+  - Enforce authorization on the server for each protected action and resource; deny requests without an explicit
+    permitted outcome.
+  - Add tests for cross-user and cross-tenant access and ensure alternate routes cannot bypass the same policy.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

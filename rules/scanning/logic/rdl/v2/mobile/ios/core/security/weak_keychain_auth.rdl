@@ -2,7 +2,7 @@ VERSION 2
 RULE ios.weak-keychain-auth VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:biometryAny|kSecAccessControlBiometryAny)\\b" ""
-REPORT "Keychain Access Control Allows Any Biometric Enrollment"
+REPORT "Keychain Biometric Access Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

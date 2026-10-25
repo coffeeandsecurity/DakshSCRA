@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.android.core.review_android_unsafe_intent_uri VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bIntent\\s*\\.\\s*parseUri\\s*\\(" "im"
+REPORT "Intent URI Parsing Entry Point"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

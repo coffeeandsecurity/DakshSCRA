@@ -3,7 +3,7 @@ RULE baseline.javascript.framework.express.express_sql_nosql_injection_sink VERS
 IN FILE
 WHEN TEXT_MATCHES "\\.(query|execute)\\(\\s*`|\\$where\\s*:\\s*|sequelize\\.query\\(" "im"
 WHEN TEXT_MISSING "prepare|parameterize|escape|\\?.*params|mysql\\.escape|knex|sequelize" "im"
-REPORT "Express SQL/NoSQL Injection Sink"
+REPORT "SQL Injection Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

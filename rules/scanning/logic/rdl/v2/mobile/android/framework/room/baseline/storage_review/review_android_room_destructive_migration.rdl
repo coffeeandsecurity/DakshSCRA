@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.android.framework.room.review_android_room_destructive_migration VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bfallbackToDestructiveMigration(?:OnDowngrade|From)?\\s*\\(" "im"
+REPORT "Room Destructive Migration Enabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.mobile.xplat.flutter.core.external_storage_used_for_sensitive_file_operations VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\bgetExternalStorageDirectory\\s*\\(|\\bgetExternalFilesDir\\s*\\(" "im"
-WHEN TEXT_MATCHES "password|token|secret|key|credential|auth|private" "im"
-REPORT "External Storage Used for Sensitive File Operations"
+REPORT "External File Storage Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

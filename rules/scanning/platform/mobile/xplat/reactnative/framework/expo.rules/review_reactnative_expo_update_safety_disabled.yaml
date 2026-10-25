@@ -1,0 +1,38 @@
+format: daksh-pattern-rule/v1
+id: mobile.xplat.reactnative.framework.expo.review_reactnative_expo_update_safety_disabled
+title: Expo Update Safety Protections Disabled
+order: 4
+category: CODE Review
+detection:
+  pattern: '["\x27]?disableAntiBrickingMeasures["\x27]?\s*:\s*true|["\x27]?EXUpdatesDisableAntiBrickingMeasures["\x27]?\s*[:=]\s*(?:true|YES)'
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: The application disables a safety mechanism in its runtime update configuration. Identify the untrusted
+    input or update supplier and the precise executable, object or destination file it controls.
+  impact: If the disabled mechanism was preventing unsafe updates or launches, a bad or untrusted update may disrupt
+    availability or replace trusted application behavior, depending on the remaining signing and update controls.
+  remediation: Keep update safety checks enabled, verify update authenticity and channel configuration, and test
+    rollback behavior before distributing updates. Verify signed updates and compatibility, restrict decoded types,
+    and enforce canonical destination containment before extraction or execution.
+  reviewer: Test tampered updates, downgrade/replay, absolute paths, traversal, sibling-prefix and symlink escapes,
+    size limits and partial failure; an unrelated validation call does not protect this operation.
+  review_steps:
+  - Trace the matched candidate to its actual value, caller or resource.
+  - Test tampered updates, downgrade/replay, absolute paths, traversal, sibling-prefix and symlink escapes, size
+    limits and partial failure; an unrelated validation call does not protect this operation.
+  - Resolve release configuration and runtime assumptions before confirming an issue.
+  recommendations:
+  - Keep update safety checks enabled, verify update authenticity and channel configuration, and test rollback behavior
+    before distributing updates. Verify signed updates and compatibility, restrict decoded types, and enforce canonical
+    destination containment before extraction or execution.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

@@ -3,7 +3,7 @@ RULE baseline.golang.core.arbitrary_code_execution_unsafe_go_generate VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "unsafe\\.|go:generate" "im"
 WHEN TEXT_MISSING "// #nosec|gosec:disable|SECURITY_REVIEW" "im"
-REPORT "Arbitrary Code Execution: unsafe, go:generate"
+REPORT "Go Unsafe Code Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

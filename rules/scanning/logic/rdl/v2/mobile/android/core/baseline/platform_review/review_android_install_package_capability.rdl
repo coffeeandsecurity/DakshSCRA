@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.android.core.review_android_install_package_capability VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:PackageInstaller\\s*\\.\\s*Session|ACTION_INSTALL_PACKAGE|canRequestPackageInstalls)\\b" "im"
+REPORT "Package Installation Capability"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

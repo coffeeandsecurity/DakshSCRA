@@ -2,7 +2,7 @@ VERSION 2
 RULE android.accessibility-capture-capability VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:getRootInActiveWindow|performGlobalAction|dispatchGesture)\\s*\\(" ""
-REPORT "Accessibility Capture Or Automation Capability"
+REPORT "Accessibility Automation Capability"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

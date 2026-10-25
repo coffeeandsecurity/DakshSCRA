@@ -3,7 +3,7 @@ RULE baseline.cpp.core.missing_os_runtime_security_mitigation_flags_in_binaries 
 IN FILE
 WHEN TEXT_MATCHES "/NXCOMPAT|/DYNAMICBASE|/GS|/guard:cf" "im"
 WHEN (TEXT_MATCHES "CFLAGS|LDFLAGS|cmake_minimum_required|add_compile_options|target_compile_options" "im" AND TEXT_MISSING "-fstack-protector|-D_FORTIFY_SOURCE|-pie|-fPIE|-Wl.*now|-Wl.*relro" "im")
-REPORT "Missing OS Runtime Security Mitigation Flags in Binaries"
+REPORT "Binary Hardening Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

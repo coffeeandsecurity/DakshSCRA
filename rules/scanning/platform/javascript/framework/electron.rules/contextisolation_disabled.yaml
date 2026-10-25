@@ -1,0 +1,39 @@
+format: daksh-pattern-rule/v1
+id: javascript.framework.electron.contextisolation_disabled
+title: "Renderer Context Isolation Review"
+order: 2
+category: Framework-Specific Issues - Electron
+detection:
+  pattern: contextIsolation\s*:\s*false
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:contextIsolation:\s*false && MISSING:test|development
+reporting:
+  type: area_of_interest
+  reason: Detects Electron BrowserWindow configurations with context isolation disabled.
+  trace:
+  - Externalized rule logic for contextIsolation Disabled.
+  description: Browser or embedded-renderer configuration relaxes an isolation or content-execution control. Determine
+    which external content can reach the affected context.
+  impact: Untrusted page content may cross an intended browser or renderer boundary, execute privileged operations,
+    or access protected data when the relaxed control exposes those capabilities.
+  remediation: Restore origin and process isolation, keep privileged APIs out of untrusted renderers, and use a
+    restrictive content-security policy without unnecessary unsafe execution directives.
+  reviewer: 'Confirm contextIsolation: true is set for all BrowserWindow instances. This can be confirmed as an
+    issue when the matched path is reachable and required controls are missing, weak, or inconsistent.'
+  review_steps:
+  - Identify the loaded content, permitted origins and script-to-native operations exposed by the application.
+  - Inspect navigation, message validation and resource or operation authorization on the native side.
+  - Test untrusted content and unexpected messages; a bridge declaration alone does not prove unauthorized native
+    access.
+  recommendations:
+  - Restrict trusted content and navigation and expose only the native operations required by the application.
+  - Validate messages and enforce native-side authorization; test rejection of unapproved origins and unexpected
+    operations.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

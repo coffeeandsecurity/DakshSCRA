@@ -3,7 +3,7 @@ RULE baseline.python.core.sql_query_select_statements_with_where_or_order_by VER
 IN FILE
 WHEN TEXT_MATCHES "(?i)\\bSELECT\\s+?\\*?\\s+?FROM\\s+[^\\s]+\\s+(WHERE|ORDER BY)\\b.*" "im"
 WHEN (TEXT_MATCHES "(request|params|query|format\\(|f\\\"|f'|\\+)" "im" AND TEXT_MISSING "%s|\\?|:\\w+|params=|execute\\(" "im")
-REPORT "SQL Query: SELECT Statements with WHERE or ORDER BY"
+REPORT "SQL Query Construction Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

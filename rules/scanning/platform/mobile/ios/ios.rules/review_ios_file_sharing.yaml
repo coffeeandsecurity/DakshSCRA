@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: mobile.ios.core.review_ios_file_sharing
+title: "Application File Sharing Review"
+order: 23
+category: STORAGE Review
+detection:
+  pattern: <key>\s*UIFileSharingEnabled\s*</key>\s*<true\s*/>
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: Application configuration enables document-directory sharing. Identify the files exposed through
+    this setting and whether sensitive records are stored there. Identify the value written, backing store and access
+    class, including backup, restore, reinstall and logout behavior.
+  impact: A person with access to the device’s file-sharing interface may copy exposed application documents. The
+    risk depends on the files present and the applicable device access controls.
+  remediation: Disable document sharing when unnecessary. Keep secrets and private records outside the shared Documents
+    directory and verify the distribution configuration and actual exposed files. Keep privileged secrets on the
+    server, use appropriate device-backed secure storage for local credentials, and restrict backup and sharing
+    to intended non-sensitive data.
+  reviewer: Test device lock state, cloud backup versus device transfer, restored keys, keychain persistence after
+    reinstall, and secure-storage failure; do not silently fall back to plaintext or treat an unrelated secure store
+    as protection.
+  review_steps:
+  - Trace the matched candidate to its actual value, caller or resource.
+  - Test device lock state, cloud backup versus device transfer, restored keys, keychain persistence after reinstall,
+    and secure-storage failure; do not silently fall back to plaintext or treat an unrelated secure store as protection.
+  - Resolve release configuration and runtime assumptions before confirming an issue.
+  recommendations:
+  - Disable document sharing when unnecessary. Keep secrets and private records outside the shared Documents directory
+    and verify the distribution configuration and actual exposed files. Keep privileged secrets on the server, use
+    appropriate device-backed secure storage for local credentials, and restrict backup and sharing to intended
+    non-sensitive data.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

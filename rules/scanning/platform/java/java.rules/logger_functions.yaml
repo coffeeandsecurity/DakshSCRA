@@ -1,0 +1,43 @@
+format: daksh-pattern-rule/v1
+id: java.core.logger_functions
+title: "Application Logging Review"
+order: 27
+category: Information Disclosure
+detection:
+  pattern: logger\.(error|warn|info|debug|trace)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:release|production
+reporting:
+  type: area_of_interest
+  reason: Detects the usage of Java logger functions (error, warn, info, debug, trace), which can introduce potential
+    security vulnerabilities if not handled properly.
+  trace:
+  - Externalized rule logic for Logger Functions.
+  description: The code writes diagnostic data or exposes detailed errors. Establish the values emitted, production
+    configuration, and recipients of the output.
+  impact: Readers of exposed diagnostics may obtain credentials, private records, internal paths, or implementation
+    details that enable account misuse or targeted attacks.
+  remediation: Keep sensitive values and detailed errors out of user-facing responses and routine logs. Redact before
+    emission, restrict diagnostic access, and verify production logging configuration.
+  reviewer: Verify that the usage of logger functions (error, warn, info, debug, trace) in Java code is appropriate
+    and adheres to secure coding practices. Assess whether proper validation mechanisms are in place to prevent
+    the logging of sensitive information. Also review the log configurations to ensure that log levels are set appropriately
+    and sensitive data is not leaked through the logs. This can be confirmed as an issue when the matched path is
+    reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Determine whether the matched path logs sensitive data or exposes diagnostics to an untrusted recipient.
+  - Trace the actual values, redaction and error handling, including production configuration and log retention
+    or access.
+  - Distinguish internal operational diagnostics from client-visible output and record the reachable disclosure
+    path without reproducing secrets.
+  recommendations:
+  - Log only the operational details needed, redact sensitive values, and return limited error messages to clients.
+  - Restrict diagnostic and log access and test production error responses and representative log output.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

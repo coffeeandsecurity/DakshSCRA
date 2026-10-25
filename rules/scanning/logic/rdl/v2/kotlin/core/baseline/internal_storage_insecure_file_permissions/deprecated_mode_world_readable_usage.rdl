@@ -3,7 +3,7 @@ RULE baseline.kotlin.core.deprecated_mode_world_readable_usage VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "M(?:ODE_)?WORLD_READABLE" "im"
 WHEN TEXT_MISSING "EncryptedSharedPreferences|EncryptedFile|KeyStore|test|example" "im"
-REPORT "Deprecated MODE_WORLD_READABLE Usage"
+REPORT "World-Readable Storage Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -4,7 +4,7 @@ IN DATA_FLOW
 LET input BE VARIABLE MATCHES input.untrusted
 LET sink BE CALL MATCHES variable.extraction
 WHEN input FLOWS TO sink
-REPORT "variable injection"
+REPORT "Variable Injection Review"
 SEVERITY HIGH
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

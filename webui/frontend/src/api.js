@@ -1,3 +1,4 @@
+import { referenceCode, validReference, friendlyError } from './lib/apiErrors'
 const API_BASE = import.meta.env.VITE_API_BASE || ''
 
 // Registered by App.jsx so a session that expires mid-use (401 from any
@@ -8,19 +9,48 @@ export function setUnauthorizedHandler(fn) {
   onUnauthorized = fn
 }
 
+const pendingKey = 'daksh.pending-api-errors'
+let reporting = false, lastReport = 0
+function pendingErrors() {
+  try { return JSON.parse(sessionStorage.getItem(pendingKey) || '[]').filter(item => Date.now() - item.time < 86400000).slice(-20) } catch { return [] }
+}
+function queueClientError(code, path, method, detail) {
+  console.error('Backend request failed', { error_code: code, path: path.split('?')[0], method, detail })
+  try { sessionStorage.setItem(pendingKey, JSON.stringify([...pendingErrors(), { error_code: code, path: path.split('?')[0], method, detail: String(detail).slice(0, 1000), time: Date.now() }].slice(-20))) } catch { /* Storage may be unavailable. */ }
+}
+async function flushClientErrors() {
+  if (reporting || Date.now() - lastReport < 10000) return
+  const pending = pendingErrors()
+  if (!pending.length) return
+  reporting = true; lastReport = Date.now()
+  try {
+    for (const item of pending) {
+      const response = await fetch(`${API_BASE}/api/v1/client-errors`, { method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'X-Request-ID': item.error_code }, body: JSON.stringify(item) })
+      if (!response.ok) break
+      try { sessionStorage.setItem(pendingKey, JSON.stringify(pendingErrors().filter(entry => entry.error_code !== item.error_code))) } catch { /* Storage unavailable. */ }
+    }
+  } catch { /* Keep pending diagnostics until a later successful request. */ }
+  finally { reporting = false }
+}
+
 async function request(path, options = {}) {
-  const headers = { ...(options.headers || {}) }
+  const code = referenceCode()
+  const headers = { ...(options.headers || {}), 'X-Request-ID': code }
   const hasBody = options.body !== undefined && options.body !== null
   const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData
   if (hasBody && !isFormData && !headers['Content-Type']) {
     headers['Content-Type'] = 'application/json'
   }
 
-  const res = await fetch(`${API_BASE}${path}`, {
-    credentials: 'include',
-    headers,
-    ...options
-  })
+  let res
+  try {
+    res = await fetch(`${API_BASE}${path}`, { ...options, credentials: 'include', headers })
+  } catch (error) {
+    if (error.name === 'AbortError') throw error
+    queueClientError(code, path, options.method || 'GET', `${error.name}: ${error.message}`)
+    throw friendlyError(0, code)
+  }
 
   // A 401 from /auth/login or /auth/change-password means "wrong password
   // entered", not "your session expired" - those should show an inline
@@ -30,32 +60,40 @@ async function request(path, options = {}) {
     if (typeof onUnauthorized === 'function') onUnauthorized()
   }
 
+  const headerCode = res.headers.get('x-request-id')
+  let responseCode = validReference(headerCode) ? headerCode : code
   if (!res.ok) {
-    let message = `HTTP ${res.status}`
+    let detail
     try {
-      const data = await res.clone().json()
-      if (data?.detail) message = String(data.detail)
-    } catch {
-      try {
-        const txt = await res.text()
-        if (txt) message = txt
-      } catch {
-        // response body unreadable - fall back to the HTTP status message
+      const data = await res.json()
+      if (validReference(data?.error_code)) {
+        responseCode = data.error_code
+        detail = data.detail
       }
-    }
-    throw new Error(message)
+    } catch { /* Non-JSON proxy errors use the friendly status message. */ }
+    throw friendlyError(res.status, responseCode, detail)
   }
-
-  if (res.status === 204 || res.headers.get('content-length') === '0') return null
-  return res.headers.get('content-type')?.includes('application/json') ? res.json() : res.text()
+  if (res.status === 204 || res.headers.get('content-length') === '0') {
+    void flushClientErrors()
+    return null
+  }
+  try {
+    const data = res.headers.get('content-type')?.includes('application/json') ? await res.json() : await res.text()
+    void flushClientErrors()
+    return data
+  } catch (error) {
+    if (error.name === 'AbortError') throw error
+    queueClientError(responseCode, path, options.method || 'GET', `${error.name}: Invalid response body`)
+    throw friendlyError(500, responseCode)
+  }
 }
 
 export function getHealth() {
   return request('/api/v1/health')
 }
 
-export function getCheckCatalog() {
-  return request('/api/v1/check-catalog')
+export function getCheckCatalog(refresh = false) {
+  return request('/api/v1/check-catalog' + (refresh ? '?refresh=true' : ''))
 }
 
 export function getBootstrapInfo() {
@@ -110,6 +148,18 @@ export function getScan(runUuid) {
   return request(`/api/v1/scans/${encodeURIComponent(runUuid)}`)
 }
 
+export function beginQueueEdit(runUuid) {
+  return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/queue-edit`, { method: 'POST' })
+}
+
+export function updateQueueEdit(runUuid, token, action, settings) {
+  const suffix = action === 'move-back' ? '/move-back' : ''
+  const method = { renew: 'PATCH', cancel: 'DELETE', save: 'PUT', 'move-back': 'POST' }[action]
+  return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/queue-edit${suffix}`, {
+    method, body: JSON.stringify({ token, ...(settings ? { settings } : {}) }),
+  })
+}
+
 export function getScanArtifacts(runUuid) {
   return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/artifacts`)
 }
@@ -118,8 +168,8 @@ export function getScanLog(runUuid) {
   return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/log`)
 }
 
-export function listDirectories(path = '') {
-  return request(`/api/v1/fs/list?path=${encodeURIComponent(path)}`)
+export function listDirectories(path = '', options = {}) {
+  return request(`/api/v1/fs/list?path=${encodeURIComponent(path)}`, options)
 }
 
 export function stopScan(runUuid) {
@@ -135,7 +185,9 @@ export function deleteScanRecord(runUuid) {
 }
 
 export function streamScanLog(runUuid, onChunk, onDone) {
-  const url = `${API_BASE}/api/v1/scans/${encodeURIComponent(runUuid)}/stream`
+  const code = referenceCode()
+  const streamPath = `/api/v1/scans/${encodeURIComponent(runUuid)}/stream`
+  const url = `${API_BASE}${streamPath}?request_id=${code}`
   const MAX_RETRIES = 3
   const RETRY_DELAY_MS = 1000
   let es = null
@@ -165,6 +217,8 @@ export function streamScanLog(runUuid, onChunk, onDone) {
       es.close()
       if (cancelled) return
       if (retryCount >= MAX_RETRIES) {
+        queueClientError(code, streamPath, 'GET', 'EventSource connection failed after three retries')
+        onChunk(`\nLive updates could not connect. Refresh the page to try again. Reference: ${code}\n`, 'unknown', null)
         onDone('unknown')
         return
       }
@@ -182,12 +236,30 @@ export function streamScanLog(runUuid, onChunk, onDone) {
   }
 }
 
-export function getScanFindings(runUuid) {
-  return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/findings`)
+export function getScanFindings(runUuid, options = {}) {
+  return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/findings`, options)
+}
+
+export function getEffortPlan(runUuid) {
+  return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/effort-plan`)
+}
+
+export function createEffortPlan(runUuid, options, report = false) {
+  return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/${report ? 'effort-report' : 'effort-plan'}`, {
+    method: 'POST', body: JSON.stringify(options),
+  })
 }
 
 export function getScanAnalysis(runUuid) {
   return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/analysis`)
+}
+
+export function getProgramGraphs(runUuid, options = {}) {
+  return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/program-graphs?${new URLSearchParams(options)}`)
+}
+
+export function buildProgramGraphs(runUuid) {
+  return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/program-graphs`, { method: 'POST' })
 }
 
 export function getRdlShadowResults(runUuid, limit = 50, options = {}) {
@@ -215,9 +287,9 @@ export function getVersion() {
   return request('/api/v1/version')
 }
 
-export function getSuppressedFindings(runUuid, summaryOnly = false) {
+export function getSuppressedFindings(runUuid, summaryOnly = false, options = {}) {
   const suffix = summaryOnly ? '?summary_only=true' : ''
-  return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/suppressed${suffix}`)
+  return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/suppressed${suffix}`, options)
 }
 
 export function updateSuppressedItem(runUuid, itemId, payload) {
@@ -243,18 +315,40 @@ export function regenerateReports(runUuid) {
   return request(`/api/v1/scans/${encodeURIComponent(runUuid)}/regenerate-reports`, { method: 'POST' })
 }
 
-/** Check GitHub for the latest release tag. Cached in sessionStorage for the session. */
+/** Numeric parts of a release tag. v0.41-beta -> [0, 41], v1.0 -> [1, 0]. */
+function releaseNumbers(tag) {
+  const m = String(tag).replace(/^v/i, '').match(/^[\d.]+/)
+  return m ? m[0].split('.').map(Number) : [0]
+}
+
+function compareReleaseNumbers(a, b) {
+  const len = Math.max(a.length, b.length)
+  for (let i = 0; i < len; i++) {
+    const diff = (a[i] ?? 0) - (b[i] ?? 0)
+    if (diff) return diff
+  }
+  return 0
+}
+
+/**
+ * Check GitHub for the highest published release, beta or stable. The `releases/latest`
+ * endpoint skips pre-releases, so a beta such as v0.41 or a first v1.0 could be missed.
+ * Cached in sessionStorage for the session.
+ */
 export async function getLatestGithubRelease(repo) {
-  const cacheKey = `gh_latest_${repo}`
+  const cacheKey = `gh_latest_v2_${repo}`
   const cached = sessionStorage.getItem(cacheKey)
   if (cached) return JSON.parse(cached)
   try {
-    const res = await fetch(`https://api.github.com/repos/${repo}/releases/latest`, {
+    const res = await fetch(`https://api.github.com/repos/${repo}/releases?per_page=30`, {
       headers: { Accept: 'application/vnd.github+json' }
     })
     if (!res.ok) return null
-    const data = await res.json()
-    const result = { tag: data.tag_name, url: data.html_url, name: data.name }
+    const releases = (await res.json()).filter(r => r && !r.draft && r.tag_name)
+    if (!releases.length) return null
+    const best = releases.reduce((top, r) =>
+      compareReleaseNumbers(releaseNumbers(r.tag_name), releaseNumbers(top.tag_name)) > 0 ? r : top)
+    const result = { tag: best.tag_name, url: best.html_url, name: best.name, prerelease: !!best.prerelease }
     sessionStorage.setItem(cacheKey, JSON.stringify(result))
     return result
   } catch {
@@ -275,6 +369,11 @@ export const generateReport = (runUuid, options) => request(`/api/v1/scans/${enc
 export const reportDownloadUrl = (runUuid, reportId) => `${API_BASE}/api/v1/scans/${encodeURIComponent(runUuid)}/reports/${encodeURIComponent(reportId)}/download`
 
 export const getDiskInfo = () => request('/api/v1/system/disk')
+export const cleanupDiskAreas = areas => request('/api/v1/system/disk/cleanup', { method: 'POST', body: JSON.stringify({ areas }) })
 export const getDiskFiles = (runUuid, unitId, offset = 0) => request(`/api/v1/system/disk/scans/${encodeURIComponent(runUuid)}/units/${encodeURIComponent(unitId)}/files?offset=${offset}&limit=100`)
 export const deleteDiskUnit = (runUuid, unitId) => request(`/api/v1/system/disk/scans/${encodeURIComponent(runUuid)}/units/${encodeURIComponent(unitId)}`, { method: 'DELETE' })
 export const deleteDiskScan = runUuid => request(`/api/v1/system/disk/scans/${encodeURIComponent(runUuid)}`, { method: 'DELETE' })
+
+export function getRdlAdvancedResults(runUuid, limit = 50, options = {}) {
+  return getRdlShadowResults(runUuid, limit, { ...options, advanced: true })
+}

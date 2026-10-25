@@ -2,7 +2,7 @@ VERSION 2
 RULE android.external-storage-write VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:getExternalStorageDirectory|getExternalStoragePublicDirectory)\\s*\\(" ""
-REPORT "Shared External Storage Write Surface"
+REPORT "External File Storage Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

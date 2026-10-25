@@ -1,3 +1,4 @@
+from utils.datetime_utils import format_datetime
 from utils.scan_scope import walk_source, allows_file
 import base64
 import fnmatch
@@ -8,6 +9,7 @@ import time
 from collections import Counter, defaultdict
 from datetime import datetime
 from pathlib import Path
+from core.android_artifacts import artifact_detections, source_limitations
 
 import yaml
 from jinja2 import Environment, FileSystemLoader
@@ -385,11 +387,11 @@ def recon(targetdir, flag=False, strict_mode=False, progress_callback=None):
     targetdir = str(Path(targetdir).expanduser().resolve())
 
     recon_started_ts = time.time()
-    recon_started_at = datetime.now()
-    print(f"     [-] Recon started at: {recon_started_at.strftime('%Y-%m-%d %H:%M:%S')}")
+    recon_started_at = datetime.now().astimezone()
+    print(f"     [-] Recon started at: {format_datetime(recon_started_at)}")
     print(f"     [-] Recon target    : {targetdir}")
     print(f"     [-] Recon strict    : {'enabled' if strict_mode else 'disabled'}")
-    result.update_scan_summary("scanning_timeline.recon_start_time", recon_started_at.strftime('%Y-%m-%d %H:%M:%S'))
+    result.update_scan_summary("scanning_timeline.recon_start_time", recon_started_at.isoformat())
     result.update_scan_summary("inputs_received.recon_target_directory", targetdir)
     result.update_scan_summary("inputs_received.recon_strict_mode", str(bool(strict_mode)).lower())
 
@@ -436,6 +438,9 @@ def recon(targetdir, flag=False, strict_mode=False, progress_callback=None):
         ext = Path(file_path).suffix.lower()
         matched_languages = set()
 
+        for category, name, confidence in artifact_detections(file_path):
+            add_match(category, name, file_path, confidence)
+
         for spec in tech_ext_specs.get(ext, []):
             add_match(spec["category"], spec["name"], file_path, "medium")
             matched_languages.add(spec["name"])
@@ -448,6 +453,9 @@ def recon(targetdir, flag=False, strict_mode=False, progress_callback=None):
         regex_candidates = list(tech_regex_specs.get(ext, [])) + list(tech_regex_specs.get("*", []))
         needs_content = bool(regex_candidates or other_specs or matched_languages)
         content = _read_text(file_path) if (needs_content and ext in content_scan_exts) else None
+        if content:
+            for category, name, confidence in source_limitations(file_path, content):
+                add_match(category, name, file_path, confidence)
 
         for spec in regex_candidates:
             regex = spec.get("regex")
@@ -492,11 +500,17 @@ def recon(targetdir, flag=False, strict_mode=False, progress_callback=None):
 
     print(" " * 90, end="\r")
     print("     [-] Reconnaissance completed.")
-    recon_completed_at = datetime.now()
+    coverage = recon_output_map.get('Analysis Coverage', {})
+    if coverage:
+        print('     [!] Input coverage limitations found: source rules do not decode DEX or binary XML.')
+        print('         Use decoded source and XML; recover failed decompiler methods. Missing findings do not establish safety.')
+        for name, paths in sorted(coverage.items()):
+            print(f'         [-] {name}: {len(paths)} file(s)')
+    recon_completed_at = datetime.now().astimezone()
     elapsed = time.time() - recon_started_ts
-    print(f"     [-] Recon completed at: {recon_completed_at.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"     [-] Recon completed at: {format_datetime(recon_completed_at)}")
     print(f"     [-] Recon time taken : {_format_elapsed(elapsed)}")
-    result.update_scan_summary("scanning_timeline.recon_end_time", recon_completed_at.strftime('%Y-%m-%d %H:%M:%S'))
+    result.update_scan_summary("scanning_timeline.recon_end_time", recon_completed_at.isoformat())
     result.update_scan_summary("scanning_timeline.recon_duration", _format_elapsed(elapsed))
 
     recon_output = {}
@@ -639,7 +653,7 @@ def summarize_recon(json_file_path):
             .get("inputs_received", {})
             .get("recon_strict_mode", "false"),
             "recon_tuning_enabled": str(Path(str(state.root_dir) + "/config/recon_tuning.json").exists()).lower(),
-            "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "generated_at": datetime.now().astimezone().isoformat(),
         },
         "categories": summary,
     }
@@ -708,8 +722,8 @@ def recon_summary_html_report(json_file_path, output_file_path):
         recon_report=recon_report,
         reportTitle=report_title,
         reportSubTitle=report_subtitle,
-        reportDate=datetime.now().strftime("%b %d, %Y"),
-        generated_at=datetime.now().strftime("%b %d, %Y %H:%M"),
+        reportDate=format_datetime(date_only=True),
+        generated_at=format_datetime(),
         recon_target=meta.get("recon_target_directory", ""),
         recon_strict_mode=meta.get("recon_strict_mode", "false"),
         logoImagePath=logo_image_path,

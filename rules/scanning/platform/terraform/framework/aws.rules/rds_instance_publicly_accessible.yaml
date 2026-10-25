@@ -1,0 +1,41 @@
+format: daksh-pattern-rule/v1
+id: terraform.framework.aws.rds_instance_publicly_accessible
+title: RDS Instance Publicly Accessible
+order: 3
+category: AWS Database Security
+detection:
+  pattern: resource\s+"aws_db_instance"[^}]*publicly_accessible\s*=\s*true
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:publicly_accessible\s*=\s*true && MISSING:# intentional|# development|# staging
+reporting:
+  type: area_of_interest
+  reason: Detects RDS instances configured to be publicly accessible from the internet.
+  trace:
+  - Externalized rule logic for RDS Instance Publicly Accessible.
+  description: The deployment declares a public address, exposed ports, or broad inbound access. Resolve effective
+    routes, firewall rules, listening services, and authentication.
+  impact: If a sensitive service is reachable from an untrusted network, remote actors may attempt credential attacks
+    or exploit reachable service defects. A public address or image EXPOSE declaration alone does not establish
+    internet reachability.
+  remediation: Restrict inbound access to required services and trusted networks. Keep management and database endpoints
+    private where possible, and verify actual listening ports, firewall rules, and access controls.
+  reviewer: RDS public accessibility is a high-severity finding. Verify this is not required. This can be confirmed
+    as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Resolve actual listeners, routes, firewall rules and reachable deployment interfaces.
+  - Inspect authentication and authorization on the exposed service and identify the data or operations it makes
+    available.
+  - Test reachability from the relevant network boundary; an exposed-port declaration alone does not establish a
+    vulnerability.
+  recommendations:
+  - Expose only required services to the intended networks and restrict administrative interfaces.
+  - Verify the effective network policy and application access controls after deployment, including denied access
+    from untrusted networks.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

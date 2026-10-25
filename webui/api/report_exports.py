@@ -13,11 +13,12 @@ from pathlib import Path
 from uuid import uuid4
 
 from pydantic import BaseModel
-from typing import Literal
+from typing import Literal, Optional
 
 class ReportRequest(BaseModel):
     format: Literal['html', 'pdf', 'docx', 'json'] = 'html'
     scope: Literal['full', 'findings', 'analysis', 'suppressed'] = 'full'
+    report_audience: Optional[Literal['developer', 'code_review', 'both']] = None
 
 _POOL = ThreadPoolExecutor(max_workers=1, thread_name_prefix='report-export')
 _LOCK = threading.Lock()
@@ -43,6 +44,8 @@ def jobs(root):
     return sorted(result, key=lambda item: item['created_at'], reverse=True)
 
 def start(root, data_dir, request, scan):
+    from utils.report_audience import normalize_audience
+    audience = normalize_audience(request.report_audience or scan.get('report_audience'))
     with _LOCK:
         if not data_dir.is_dir():
             raise ValueError('Saved scan data is unavailable. Refresh this scan before generating a report.')
@@ -51,21 +54,21 @@ def start(root, data_dir, request, scan):
         # Repeated clicks reuse an in-flight request for this scan and selection.
         for path in (root / 'exports').glob('*/job.json'):
             item = json.loads(path.read_text())
-            if item['id'] in _ACTIVE and item['format'] == request.format and item['scope'] == request.scope:
+            if item['id'] in _ACTIVE and item['format'] == request.format and item['scope'] == request.scope and item.get('report_audience', 'both') == audience:
                 return item
         ident = uuid4().hex
         folder = root / 'exports' / ident
         folder.mkdir(parents=True)
-        item = dict(id=ident, format=request.format, scope=request.scope, status='queued',
-                    progress=dict(phase='queued', message='Waiting for the report worker'), created_at=datetime.now(timezone.utc).isoformat(), filename=f'daksh-{request.scope}-{scan["run_uuid"]}.{"zip" if request.format == "html" else request.format}')
+        item = dict(id=ident, format=request.format, scope=request.scope, report_audience=audience, status='queued',
+                    progress=dict(phase='queued', message='Waiting for the report worker'), created_at=datetime.now(timezone.utc).isoformat(), filename=f'daksh-{request.scope}-{audience}-{scan["run_uuid"]}.{"zip" if request.format == "html" else request.format}')
         _write(folder / 'job.json', item)
         _ACTIVE.add(ident)
         _POOL.submit(_generate, folder, data_dir, root, item, scan)
         return item
 
-def collect(data_dir, root, scope, scan):
+def collect(data_dir, root, scope, scan, audience=None):
     from core.report_document import saved_document
-    return saved_document(data_dir, root / 'runtime', scope, scan)
+    return saved_document(data_dir, root / 'runtime', scope, scan, audience=audience)
 
 def blocks(value, depth=0):
     """Stream every saved field, including nested evidence, without truncation."""
@@ -114,7 +117,7 @@ def _generate(folder, data_dir, root, item, scan):
     try:
         item.update(status='running', started_at=datetime.now(timezone.utc).isoformat())
         progress(dict(phase='collecting', message='Collecting saved scan results'))
-        document = collect(data_dir, root, item['scope'], scan)
+        document = collect(data_dir, root, item['scope'], scan, item.get('report_audience', 'both'))
         output = folder / item['filename']
         partial = folder / ('partial.' + item['format'])
         with TemporaryDirectory(prefix='scratch-', dir=folder) as temporary:

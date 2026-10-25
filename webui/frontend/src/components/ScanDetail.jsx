@@ -1,3 +1,5 @@
+import { countFindingFamilies } from '../lib/findingFamilies'
+import { formatDateTime } from '../lib/datetime'
 import ScanSummary from './ScanSummary'
 import ReportGenerator from './ReportGenerator'
 import { formatDuration as niceDuration } from '../lib/duration'
@@ -6,9 +8,9 @@ import { createQueryCache, queryKey } from '../lib/queryCache'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { artifactUrl, getRdlShadowResults, getScanArtifacts, getScanFindings, getSuppressedFindings, listProjects, listScans, stopScan, streamScanLog } from '../api'
 import AreasOfInterest from './AreasOfInterest'
-import RdlAdvancedAnalysis from './RdlAdvancedAnalysis'
+import { ReportAudienceContext } from './ReportAudience'
+import RecordedAnalysis from './RecordedAnalysis'
 import InsightsPanel from './InsightsPanel'
-import SuppressedPanel from './SuppressedPanel'
 const VulnerabilityAnalysis = lazy(() => import('./RdlShadowPanel'))
 
 function StatusBadge({ status }) {
@@ -22,13 +24,7 @@ function StatusBadge({ status }) {
 
 
 
-function niceDate(iso) {
-  if (!iso) return '-'
-  return new Date(iso).toLocaleString(undefined, {
-    month: 'short', day: 'numeric', year: 'numeric',
-    hour: '2-digit', minute: '2-digit'
-  })
-}
+const niceDate = formatDateTime
 
 function ArtifactIcon({ name }) {
   const low = (name || '').toLowerCase()
@@ -248,6 +244,8 @@ function artifactLabel(path) {
     'analysis.html': 'Taint analysis report',
     'analysis_xref.html': 'Cross-reference report',
     'analysis.json': 'Analysis data',
+    'mobile_review.json': 'Mobile build, data lifecycle and boundary evidence',
+    'mobile_review.html': 'Mobile Review Evidence',
     'estimation.html': 'Review effort estimate',
     'reconnaissance.html': 'Reconnaissance report',
     'areas_of_interest.json': 'Areas of interest data',
@@ -302,6 +300,8 @@ function buildArtifactCatalog(paths) {
     } else if (findingsMatch && findingsMatch[1].toLowerCase() !== 'index') {
       catalog.platformFindings.push({ platform: findingsMatch[1], path })
     } else if (/\/scan\/(?:html|pdf|estimate|recon)\//i.test(normalized)) {
+      catalog.scanReports.push(path)
+    } else if (/\/mobile_review\.html$/i.test(normalized)) {
       catalog.scanReports.push(path)
     } else if (/\/data\/[^/]+$/i.test(normalized)) {
       catalog.data.push(path)
@@ -684,15 +684,16 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
     setSuppressedCount(null)
     setFindingsLoading(false)
     if (!run?.run_uuid || isActive) return
+    const controller = new AbortController()
     setFindingsLoading(true)
-    getScanFindings(run.run_uuid)
+    getScanFindings(run.run_uuid, { signal: controller.signal })
       .then(data => { if (!cancelled) setFindingsData(data) })
       .catch(error => { if (!cancelled) setFindingsError(error.message || 'Unable to load scan results') })
       .finally(() => { if (!cancelled) setFindingsLoading(false) })
-    getSuppressedFindings(run.run_uuid, true)
+    getSuppressedFindings(run.run_uuid, true, { signal: controller.signal })
       .then(data => { if (!cancelled) setSuppressedCount(data?.summary?.total_suppressed ?? 0) })
       .catch(() => {})
-    return () => { cancelled = true }
+    return () => { cancelled = true; controller.abort() }
   }, [run?.run_uuid, isActive, findingsReload])
 
   useEffect(() => {
@@ -735,7 +736,7 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
 
   const artifactCatalog = useMemo(() => buildArtifactCatalog(allArtifacts), [allArtifacts])
 
-  const findingsCount = (findingsData?.findings?.length ?? 0) + (findingsData?.filepaths?.length ?? 0)
+  const findingsCount = countFindingFamilies(findingsData?.findings) + (findingsData?.filepaths?.length ?? 0)
   const inputMeta = findingsData?.scan_meta?.inputs_received || {}
   const resolvedProjectId = inputMeta?.project_id || ''
   const resolvedRunId = inputMeta?.run_id || run?.run_uuid || ''
@@ -766,7 +767,7 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
   }
 
   return (
-    <div className="detail-panel">
+    <ReportAudienceContext.Provider value={run.report_audience || 'both'}><div className="detail-panel">
       {/* Header */}
       <div className="detail-header">
         <div className="detail-title">
@@ -850,12 +851,7 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
         >
           Log
         </button>
-        <button
-          className={`detail-tab${tab === 'suppressed' ? ' active' : ''}`}
-          onClick={() => setTab('suppressed')}
-        >
-          {`Suppressed Findings${!isActive && suppressedCount != null && suppressedCount > 0 ? ` (${suppressedCount})` : ''}`}
-        </button>
+
       </div>
 
       {findingsError && ['findings', 'advanced-analysis', 'insights'].includes(tab) ? (
@@ -866,7 +862,12 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
 
       {isActive && tab === 'telemetry' ? (
         <div className="live-scan-shell">
-          <ProgressCard progress={liveProgress} startedAt={run.status === 'running' ? run.started_at : null} />
+          {run.status === 'queued' ? (
+            <section className="card card-body" role="status" aria-label="Scan queued">
+              <h3>Scan queued</h3>
+              <p>This scan is waiting for its turn. Scanning has not started. View Queued Scans for the current queue order.</p>
+            </section>
+          ) : <ProgressCard progress={liveProgress} startedAt={run.status === 'running' ? run.started_at : null} />}
         </div>
       ) : null}
 
@@ -907,6 +908,9 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
             <AreasOfInterest
               data={findingsData}
               requestedSection={aoiRequest}
+              runUuid={run.run_uuid}
+              suppressedCount={suppressedCount}
+              onSuppressedLoaded={setSuppressedCount}
               status={run.status}
               rdlEngine={run.rdl_engine}
               onViewAnalysis={() => setTab('rdl-shadow')}
@@ -923,7 +927,7 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
               <span>Loading advanced analysis…</span>
             </div>
           ) : (
-            <RdlAdvancedAnalysis runUuid={run.run_uuid} onCount={setAdvancedRdlCount} onFinding={openRdlFinding} />
+            <RecordedAnalysis runUuid={run.run_uuid} artifactIndex={artifactIndex} onCount={setAdvancedRdlCount} onFinding={openRdlFinding} />
           )}
         </RetainedTab>
       )}
@@ -951,7 +955,7 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
             onProjectSelect={selectDownloadProject}
             onRunSelect={selectDownloadRun}
           />
-          <ReportGenerator key={downloadRunUuid} runUuid={downloadRunUuid} />
+          <ReportGenerator key={downloadRunUuid} runUuid={downloadRunUuid} defaultAudience={(downloadRunUuid === run.run_uuid ? run : downloadRuns.find(item => item.run_uuid === downloadRunUuid))?.report_audience || 'both'} />
           <h3>Saved scan data</h3>
           {downloadsError ? <div className="error-banner dl-error">{downloadsError}</div> : null}
           {selectedArtifactRoot && (
@@ -1062,7 +1066,7 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
       {/* Tab: Summary */}
       {(
         <RetainedTab key={`summary:${run.run_uuid}:${refreshVersion}`} active={tab === 'summary'} className="detail-tab-content">
-          <ScanSummary run={run} data={findingsData} loading={findingsLoading} error={findingsError} suppressedCount={suppressedCount} reportRoot={resolvedReportRoot} reportFolderUrl={pathToFileUrl(resolvedReportRoot)} onNavigate={destination => { if (destination === 'code-aoi' || destination === 'path-aoi') { setAoiRequest({ section: destination === 'path-aoi' ? 'paths' : 'code' }); setTab('findings') } else setTab(destination) }} />
+          <ScanSummary run={run} data={findingsData} loading={findingsLoading} error={findingsError} suppressedCount={suppressedCount} reportRoot={resolvedReportRoot} reportFolderUrl={pathToFileUrl(resolvedReportRoot)} onNavigate={destination => { if (destination === 'code-aoi' || destination === 'path-aoi' || destination === 'suppressed') { setAoiRequest({ section: destination === 'suppressed' ? 'suppressed' : destination === 'path-aoi' ? 'paths' : 'code' }); setTab('findings') } else setTab(destination) }} />
         </RetainedTab>
       )}
 
@@ -1090,18 +1094,11 @@ export default function ScanDetail({ run, log: logProp, artifactIndex, onStopped
           <Suspense fallback={<div className="fr-loading"><div className="fr-spinner" /><span>Loading RDL review...</span></div>}>
             <VulnerabilityAnalysis key={`${run.run_uuid}:${rdlFocusItem?.id || 'overview'}`} initialSection={rdlFocusItem ? 'confirmed' : 'summary'} focusItem={rdlFocusItem} runUuid={run.run_uuid} data={rdlShadowData} loading={rdlShadowLoading || !rdlShadowData} onQuery={loadRdlResults} onRefresh={() => { rdlCache.current.clear(); loadRdlResults(rdlShadowData?.query || {}) }} />
           </Suspense>
-          <ArtifactGroup title="RDL v2 Downloads" description="Experimental reports and recorded evidence for this scan" paths={rdlArtifacts} />
+          <ArtifactGroup title="Rule Evidence Downloads" description="Recorded rule evidence and analysis limits for this scan" paths={rdlArtifacts} />
         </RetainedTab>
       )}
 
-      {/* Tab: Suppressed Findings */}
-      {!isActive && (
-        <RetainedTab key={`suppressed:${run.run_uuid}:${refreshVersion}`} active={tab === 'suppressed'} className="detail-tab-content findings-tab-content">
-          {run.rdl_engine === 'v2' ? <div className="empty-state"><div className="empty-title">RDL v1 was not run for this scan</div><p>RDL v1 suppressions require a scan with Both or RDL v1 selected.</p></div> :
-              <SuppressedPanel runUuid={run.run_uuid} onLoaded={setSuppressedCount} />
-          }
-        </RetainedTab>
-      )}
-    </div>
+
+    </div></ReportAudienceContext.Provider>
   )
 }

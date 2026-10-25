@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.android.core.review_android_screen_capture_capability VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:createScreenCaptureIntent|getMediaProjection)\\s*\\(" "im"
+REPORT "Screen Capture Capability"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

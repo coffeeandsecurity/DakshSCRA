@@ -1,0 +1,46 @@
+format: daksh-pattern-rule/v1
+id: python.core.insecure_use_of_django_login_required_decorator
+title: "Authentication Decorator Review"
+order: 29
+category: Insecure Mitigations
+detection:
+  pattern: '@\s*[\w.]*\blogin_required\b'
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: An authentication decorator is applied; inspect its implementation and the
+    resource permissions required by the view.
+  trace:
+  - Externalized rule logic for Insecure Use of Django @login_required Decorator.
+  description: A login_required decorator may be provided by a framework or defined
+    by this application. Its presence is an area of interest, not evidence that authentication
+    is insecure or that Django is used.
+  impact: No adverse security consequence follows from the presence of a protection
+    alone. If it is bypassed or applied outside the correct context, the protected
+    operation may still permit injection or unauthorized access.
+  remediation: Verify that the control applies to every relevant entry point and uses
+    the required context and policy. Retain effective protections; test bypass cases
+    before recommending a change.
+  reviewer: Resolve the decorator to its actual definition. Check authentication failure
+    paths, session handling and resource authorization for the decorated route. A
+    permission keyword on another route does not establish protection here.
+  review_steps:
+  - Inspect the matched construct in its containing function or configuration and
+    identify the security-sensitive behavior under review.
+  - Verify reachable callers, external influence and effective protections, including
+    deployment overrides and failure paths.
+  - Record concrete evidence for a confirmed issue or a justified suppression; retain
+    an unresolved outcome when the required evidence is unavailable.
+  recommendations:
+  - Apply the rule-specific correction above only after verifying the affected behavior
+    and required control.
+  - Add a regression case for the unsafe condition and a valid protected case; verify
+    the effective behavior in the relevant deployment.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

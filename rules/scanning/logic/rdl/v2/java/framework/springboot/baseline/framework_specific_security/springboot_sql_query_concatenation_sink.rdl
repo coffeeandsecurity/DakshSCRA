@@ -3,7 +3,7 @@ RULE baseline.java.framework.springboot.springboot_sql_query_concatenation_sink 
 IN FILE
 WHEN TEXT_MATCHES "createQuery\\(\\s*\"[^\"]*\"\\s*\\+|createNativeQuery\\(\\s*\"[^\"]*\"\\s*\\+|Statement\\s+\\w+\\s*=\\s*.*createStatement\\(" "im"
 WHEN TEXT_MISSING "queryForObject\\s*\\(.*\\?|NamedParameterJdbcTemplate|query\\s*\\(.*\\?|PreparedStatement" "im"
-REPORT "Springboot SQL Query Concatenation Sink"
+REPORT "SQL Injection Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

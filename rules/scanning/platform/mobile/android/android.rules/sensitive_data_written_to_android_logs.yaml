@@ -1,0 +1,52 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.sensitive_data_written_to_android_logs
+title: "Sensitive Data Logging Review"
+order: 32
+category: Data Residue and Lifecycle
+detection:
+  pattern: (?i)Log\.[dviweVIWDE]\s*\((?:[^\n]*|[^;{}]*?)(?:password|token|secret|apiKey|credential|authToken|accessToken|bearer|ssn|card)
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects Android log statements that reference sensitive data outside a debug build guard.
+  trace:
+  - Externalized mobile rule logic for Sensitive Data Written to Android Logs.
+  description: 'Review target: Sensitive Data Written to Android Logs. The code writes diagnostic data or exposes
+    detailed errors. Establish the values emitted, production configuration, and recipients of the output. Identify
+    the actual sensitive value and the recipients, retention and user-consent context of this exposure or capability.'
+  impact: Readers of exposed diagnostics may obtain credentials, private records, internal paths, or implementation
+    details that enable account misuse or targeted attacks.
+  remediation: Keep sensitive values and detailed errors out of user-facing responses and routine logs. Redact before
+    emission, restrict diagnostic access, and verify production logging configuration. Minimize collection and retention,
+    redact secret values, and apply the platform controls needed for sensitive UI and data sharing.
+  reviewer: Search for Log.* calls referencing sensitive field names and verify that each call is guarded by a BuildConfig.DEBUG
+    conditional. This can be confirmed as an issue when the matched path is reachable and required controls are
+    missing, weak, or inconsistent. Test release logging, crash-report payloads, screenshot/background snapshots
+    and clipboard lifetime; permission or API capability alone does not establish collection or malicious behavior.
+  review_steps:
+  - Determine whether the matched path logs sensitive data or exposes diagnostics to an untrusted recipient.
+  - Trace the actual values, redaction and error handling, including production configuration and log retention
+    or access.
+  - Distinguish internal operational diagnostics from client-visible output and record the reachable disclosure
+    path without reproducing secrets.
+  - Identify the actual sensitive value and the recipients, retention and user-consent context of this exposure
+    or capability.
+  - Test release logging, crash-report payloads, screenshot/background snapshots and clipboard lifetime; permission
+    or API capability alone does not establish collection or malicious behavior.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Log only the operational details needed, redact sensitive values, and return limited error messages to clients.
+  - Restrict diagnostic and log access and test production error responses and representative log output.
+  - Minimize collection and retention, redact secret values, and apply the platform controls needed for sensitive
+    UI and data sharing.
+scan_config:
+  match_mode: file
+  context_type: lines
+  context_lines_before: '2'
+  context_lines_after: '0'
+  aggregate: none
+  report_format: default
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: yellow

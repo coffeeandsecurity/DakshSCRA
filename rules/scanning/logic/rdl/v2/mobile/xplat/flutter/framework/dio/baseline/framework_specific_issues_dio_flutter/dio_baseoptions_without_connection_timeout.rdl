@@ -1,9 +1,8 @@
 VERSION 2
 RULE baseline.mobile.xplat.flutter.framework.dio.dio_baseoptions_without_connection_timeout VERSION 1
 IN FILE
-WHEN TEXT_MATCHES "BaseOptions\\s*\\(" "im"
-WHEN TEXT_MISSING "connectTimeout|receiveTimeout|sendTimeout" "im"
-REPORT "Dio BaseOptions Without Connection Timeout"
+WHEN TEXT_MATCHES "BaseOptions\\s*\\(|Dio\\s*\\(\\s*BaseOptions\\s*\\(" "im"
+REPORT "Dio BaseOptions without Connection Timeout"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -10,7 +10,7 @@ EXTENSIONS = {
     'java': ('.java', '.jsp'), 'kotlin': ('.kt', '.kts'),
     'csharp': ('.cs', '.cshtml', '.aspx', '.asax', '.svc'),
     'vb': ('.vb', '.asp'), 'go': ('.go',),
-    'c': ('.c', '.h'), 'cpp': ('.cpp', '.cc', '.cxx', '.hpp', '.hh', '.hxx'),
+    'c': ('.c', '.h'), 'cpp': ('.cpp', '.cc', '.cxx', '.hpp', '.hh', '.hxx', '.h'),
     'ruby': ('.rb', '.erb'), 'rust': ('.rs',), 'swift': ('.swift',),
     'objc': ('.m', '.mm'), 'dart': ('.dart',),
     'bash': ('.sh', '.bash', '.bsh'), 'powershell': ('.ps1', '.psm1'),
@@ -24,7 +24,7 @@ SOURCES = {
     'kotlin': r'\b(?:savedStateHandle|navController\.currentBackStackEntry\.arguments|parameters\[)\b|\b(?:getParameter|getHeader|getStringExtra|getQueryParameter|receiveText|receiveParameters|receive|readLine)\(|\b(?:call\.(?:parameters|request)|intent\.(?:data|extras)|args)\b',
     'csharp': r'\b(?:[Rr]equest\.(?:Query|QueryString|Form|Body|Headers|Cookies|Params)|args|Environment\.GetEnvironmentVariable)\b|\b(?:ReadLine|GetStringExtra|GetQueryParameter)\(',
     'vb': r'\b(?:Request\.(?:QueryString|Form|Params|Cookies)|Request\(|Command\(|Console\.ReadLine\()',
-    'go': r'\b(?:os\.Args|r\.URL|req\.URL|request\.URL)\b|\b(?:FormValue|PostFormValue|QueryParam|Param|Query|GetHeader|GetString)\(',
+    'go': r'\b(?:c|ctx|context)\.Query\(|\b(?:os\.Args|(?:r|req|request)\.(?:URL|Body|Form|PostForm|Header))\b|\b(?:r|req|request)\.(?:Cookie|Cookies)\(|\b(?:FormValue|PostFormValue|QueryParam|Param|GetHeader|GetString)\(',
     'c': r'\b(?:argv|getenv|gets|fgets|getline|read|recv)\b',
     'cpp': r'\b(?:argv|getenv|gets|fgets|getline|read|recv|cin|QLineEdit)\b|\b(?:text|readAll|queryItemValue)\(',
     'ruby': r'\b(?:params|ARGV|ENV|request\.(?:body|params|query_string|headers)|gets)\b',
@@ -50,7 +50,7 @@ SINKS = {
         'java': r'(?:^|\.)(?:exec|ProcessBuilder)$', 'kotlin': r'(?:^|\.)(?:exec|ProcessBuilder)$',
         'csharp': r'(?:Process\.Start|StartProcess)$', 'vb': r'(?:Shell|Process\.Start)$',
         'go': r'(?:exec\.Command|exec\.CommandContext)$',
-        'c': r'(?:^|\.)(?:system|popen|execl|execv)$', 'cpp': r'(?:^|::|\.)(?:system|popen|execute|startDetached)$',
+        'c': r'(?:^|\.)(?:system|popen|execl|execv)$', 'cpp': r'(?:^|::|\.)(?:system|popen|execl|execv|execle|execve|execlp|execvp|execvpe|CreateProcess(?:A|W)?|ShellExecute(?:Ex)?(?:A|W)?|WinExec|(?:g_)?spawn_command_line_(?:async|sync)|execute|startDetached)$',
         'ruby': r'(?:^|\.)(?:system|exec|spawn|popen)$',
         'rust': r'(?:Command::new|\.arg|\.args)$', 'swift': r'(?:system|popen|Process|\.run)$',
         'objc': r'(?:system|popen|launch|launchPath)$', 'dart': r'Process\.(?:run|runSync|start)$',
@@ -58,9 +58,9 @@ SINKS = {
         'groovy': r'(?:^|\.)(?:execute|exec|ProcessBuilder)$', 'carbon': r'(?:System|Execute)$',
     },
     'sql.execution': {'*': r'(?:^|\.|::)(?:query|queryRaw|\$queryRawUnsafe|\$executeRawUnsafe|executeQuery|executeUpdate|rawQuery|execSQL|SqlCommand|ExecuteSqlRaw|ExecuteSqlCommand|Query|Exec|Raw|execute|exec_query|find_by_sql|select_all|sqlite3_exec|executeSql|raw|createQuery|createNativeQuery)$'},
-    'filesystem.access': {'*': r'(?:^|\.|::)(?:open|fopen|readFile|readFileSync|writeFile|writeFileSync|readFileAsString|readAsString|readAsBytes|File|FileInputStream|ReadAllText|ReadAllBytes|WriteAllText|ReadFile|WriteFile|Open|OpenFile|read_to_string|file_get_contents|Get-Content|Set-Content|sendFile|send_file)$'},
+    'filesystem.access': {'*': r'(?:^|\.|::)(?:open|fopen|readFile|readFileSync|writeFile|writeFileSync|readFileAsString|readAsString|readAsBytes|File|FileInputStream|FileOutputStream|OutputStreamWriter|ReadAllText|ReadAllBytes|WriteAllText|ReadFile|WriteFile|Open|OpenFile|read_to_string|file_get_contents|Get-Content|Set-Content|sendFile|send_file)$'},
     'network.outbound-request': {'*': r'(?:^|\.|::)(?:fetch|http\.get|http\.post|axios\.get|axios\.post|requests\.get|GetAsync|PostAsync|DownloadString|WebRequest\.Create|URL|Http\.Get|http\.Get|http\.Post|reqwest::get|URLSession|openUrl|HTTParty\.get|RestClient\.get|Invoke-WebRequest)$'},
-    'dynamic.evaluation': {'*': r'(?:^|\.|::)(?:eval|Evaluate|evaluate|ExecuteScript|evaluateJavascript|evaluateJavaScript|loadHTMLString|Function)$'},
+    'dynamic.evaluation': {'*': r'(?:^|\.|::)(?:eval|import|Evaluate|evaluate|ExecuteScript|evaluateJavascript|evaluateJavaScript|loadHTMLString|Function)$'},
     'deserialization.object-construction': {'*': r'(?:^|\.|::)(?:Deserialize|DeserializeObject|readObject|Marshal\.load|YAML\.load|unsafe_load|unarchiveObjectWithData)$'},
     'output.html': {'*': r'(?:^|\.|::)(?:write|html|send|Html\.Raw|Write|render_template_string)$'},
 }
@@ -68,6 +68,8 @@ PARAMETER_SOURCE = re.compile(r'@(RequestParam|PathVariable|RequestBody|RequestH
 
 
 def is_source(language, text):
+    if language == 'go' and re.search(r'\.(?:Header|Form|PostForm)\.(?:Set|Add|Del)\s*\(|\.Body\.Close\s*\(', text):
+        return False
     return bool(re.search(SOURCES[language], text, re.I if language in {'vb', 'powershell'} else 0))
 
 
@@ -85,7 +87,17 @@ SQL_APIS = {
     'objc': r'(?:^|\.)(?:executeQuery|sqlite3_exec|predicateWithFormat)$',
     'c': r'^sqlite3_exec$', 'cpp': r'(?:^|::|\.)(?:sqlite3_exec|exec|execute)$',
 }
+SINKS['platform.intent-launch'] = {language: r'(?:^|\.)(?:startActivity|startActivities|startService|startForegroundService|bindService|sendBroadcast|sendOrderedBroadcast)$' for language in ('java','kotlin')}
+SINKS['navigation.redirect'] = {'python': r'^(?:flask|werkzeug\.utils|django\.shortcuts)\.redirect$'}
+SINKS['platform.web-navigation'] = {
+    'java': r'(?:^|\.)(?:loadUrl|postUrl)$', 'kotlin': r'(?:^|\.)(?:loadUrl|postUrl)$',
+    'dart': r'(?:^|\.)(?:loadRequest|loadUrl)$',
+}
+SINKS['data.json-deserialization'] = {'csharp': r'(?:^|\.)DeserializeObject$'}
+SINKS['deserialization.object-construction']['csharp'] = r'(?:^|\.)(?:Deserialize|readObject|unsafe_load|unarchiveObjectWithData)$'
 SINKS['sql.execution'].update(SQL_APIS)
+SINKS['sql.execution']['go'] = r'(?:^|\.)(?:Query|QueryRow|QueryContext|QueryRowContext|Exec|ExecContext|Select|SelectOne|SelectInt|SelectStr|SelectFloat|SelectNullInt|SelectNullStr)$'
+SINKS['sql.execution']['csharp'] = r'(?:^|\.)(?:SqlQuery|ExecuteSqlCommand|ExecuteSqlRaw|ExecuteSqlInterpolated|FromSqlRaw|FromSqlInterpolated|SqlCommand|ExecuteReader|ExecuteNonQuery|ExecuteScalar)$'
 
 
 def sink_concepts(language, name):
@@ -108,7 +120,7 @@ def project_mappings():
         'security/path_traversal', 'security/server_side_request_forgery',
         'security/unsafe_deserialization',
     )
-    return {
+    mappings = {
         'project-flow/{}/{}'.format(language, rule.split('/')[-1]): {
             'v2_rule': ('rules/scanning/logic/rdl/v2/php/core/injection/code_injection.rdl' if rule == 'injection/code_injection'
                         else 'rules/scanning/logic/rdl/v2/common/core/' + rule + '.rdl'),
@@ -116,6 +128,22 @@ def project_mappings():
         }
         for language, extensions in EXTENSIONS.items() for rule in rules
     }
+    for language, extensions in EXTENSIONS.items():
+        for kind in ('intent_redirection_flow','webview_navigation_flow'):
+            if language not in ({'java','kotlin'} if kind == 'intent_redirection_flow' else {'java','kotlin','dart'}):
+                continue
+            mappings['project-flow/{}/{}'.format(language,kind)] = dict(
+                v2_rule='rules/scanning/logic/rdl/v2/mobile/android/core/platform/'+kind+'.rdl',
+                language=language,extensions=list(extensions),semantic_only=True)
+    from .security_operations import MASS_APIS, HEADER_APIS, KEY_APIS
+    models = dict(EXTENSIONS, python=('.py',), php=('.php',))
+    for kind, profiles in (('bulk_binding_flow', MASS_APIS), ('origin_response_flow', HEADER_APIS),
+                           ('literal_key_fallback_flow', KEY_APIS)):
+        for language in profiles:
+            mappings['project-flow/{}/{}'.format(language, kind)] = dict(
+                v2_rule='rules/scanning/logic/rdl/v2/common/core/security/'+kind+'.rdl',
+                language=language, extensions=list(models[language]), semantic_only=True)
+    return mappings
 
 # Exact output-encoding API summaries. Project definitions override these names.
 HTML_ENCODERS = {

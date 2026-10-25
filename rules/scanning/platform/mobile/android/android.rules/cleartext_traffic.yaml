@@ -1,0 +1,43 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.cleartext_traffic
+title: "Cleartext Network Policy Review"
+order: 9
+category: AndroidManifest.xml - Insecure Misconfiguration
+detection:
+  pattern: '[A-Za-z_][\w.-]*:usesCleartextTraffic\s*=\s*"(true|TRUE)"'
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Cleartext traffic is enabled in the manifest and should be reviewed together with any network security
+    configuration files.
+  trace:
+  - Mobile RDL pilot checked the manifest hit and also looked for project-level network security configuration artifacts.
+  description: A manifest or network security configuration permits cleartext traffic in the recorded scope.
+    Resolve the selected resource, inherited domain policy and actual connection before assessing exposure.
+  impact: An attacker able to observe or alter an affected unencrypted connection may read or modify its data.
+    The permitted destination, transmitted values and attacker access must be established. A localhost exception
+    does not permit cleartext traffic to arbitrary remote hosts; local-service trust boundaries require separate review.
+  remediation: Use authenticated HTTPS for sensitive connections and disable unnecessary cleartext access.
+    Scope justified exceptions to the required destinations, verify the most specific effective domain policy,
+    and test the selected build and client implementation.
+  reviewer: Resolve android:usesCleartextTraffic and the selected android:networkSecurityConfig resource.
+    Trace the actual destination and transmitted data. Distinguish localhost exceptions, domain policies,
+    build variants and clients that do not honor the platform policy. A declaration alone does not prove data exposure.
+  review_steps:
+  - Resolve the manifest reference and selected network configuration, including inherited and nested domain policies.
+  - Identify an actual cleartext connection, its destination, transmitted values and the client's policy enforcement.
+  - Verify attacker access to the relevant network or local service before confirming confidentiality or integrity impact.
+  recommendations:
+  - Use authenticated HTTPS for sensitive traffic and remove unnecessary cleartext permissions.
+  - Narrow justified exceptions to required destinations and verify the selected build and connection behavior.
+scan_config:
+  match_mode: file
+  context_type: lines
+  context_lines_before: '1'
+  context_lines_after: '0'
+  aggregate: file
+  report_format: default
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

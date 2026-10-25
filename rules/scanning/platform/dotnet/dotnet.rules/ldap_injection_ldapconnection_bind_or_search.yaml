@@ -1,0 +1,41 @@
+format: daksh-pattern-rule/v1
+id: dotnet.core.ldap_injection_ldapconnection_bind_or_search
+title: "LDAP Injection Review"
+order: 28
+category: LDAP Injection
+detection:
+  pattern: LdapConnection\s*\(|new\s+LdapConnection|LdapConnection\.Bind\s*\(
+  conditions:
+  - WHEN PRESENT LdapConnection\s*\(|new\s+LdapConnection
+  - WHEN EXPR PRESENT:Request\.|QueryString|Form|userInput|\+ && MISSING:EscapeLdapFilter|AntiXss\.LdapFilterEncode
+reporting:
+  type: area_of_interest
+  reason: Detects LdapConnection usage in .NET where search queries may use unvalidated user input.
+  trace:
+  - 'Externalized rule logic for LDAP Injection: LdapConnection Bind or Search.'
+  description: The code constructs a directory query, XPath expression, or naming-service lookup. Review which input
+    controls query syntax or the lookup target.
+  impact: Attacker-controlled query syntax may bypass intended selection or authorization and expose protected records.
+    An attacker-selected naming-service target may also invoke unsafe remote resolution, depending on runtime behavior.
+  remediation: Keep untrusted values out of expression structure and remote naming targets. Use context-appropriate
+    parameter binding or escaping, fixed trusted lookup destinations, and least-privileged service credentials.
+  reviewer: Inspect LdapConnection query construction for user-controlled values. This can be confirmed as an issue
+    when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect how untrusted values enter the directory query, selection expression or naming-service lookup.
+  - Distinguish data parameters from syntax and determine whether external input can alter the selected records
+    or remote target.
+  - Verify the exact API-specific escaping, binding or destination restrictions and resource authorization at the
+    use point.
+  recommendations:
+  - Use the query API’s parameter mechanism or syntax-specific escaping for data values; restrict externally selected
+    lookup destinations.
+  - Test that unusual input cannot alter query structure or bypass access controls; avoid substituting generic sanitization
+    for the required control.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

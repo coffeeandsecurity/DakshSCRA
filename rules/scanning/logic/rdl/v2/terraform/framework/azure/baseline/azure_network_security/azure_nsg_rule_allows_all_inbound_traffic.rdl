@@ -3,7 +3,7 @@ RULE baseline.terraform.framework.azure.azure_nsg_rule_allows_all_inbound_traffi
 IN FILE
 WHEN TEXT_MATCHES "source_address_prefix\\s*=\\s*\"\\*\"[^}]*direction\\s*=\\s*\"Inbound\"|direction\\s*=\\s*\"Inbound\"[^}]*source_address_prefix\\s*=\\s*\"\\*\"" "im"
 WHEN (TEXT_MATCHES "source_address_prefix\\s*=\\s*\"\\*\"|source_address_prefix\\s*=\\s*\"Internet\"" "im" AND TEXT_MATCHES "access\\s*=\\s*\"Allow\"" "im" AND TEXT_MISSING "# intentional|# required|egress" "im")
-REPORT "Azure NSG Rule Allows All Inbound Traffic"
+REPORT "Azure NSG Inbound Access Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

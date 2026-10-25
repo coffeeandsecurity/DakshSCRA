@@ -1,5 +1,0 @@
-VERSION 1
-WHEN PRESENT (?i)/(Controllers|Controller)/
-WHEN EXPR PRESENT:(?i)(/|\\\\).*(controllers?|handlers?|routes?)
-REPORT AS area_of_interest
-REASON Detects file paths related to controllers.

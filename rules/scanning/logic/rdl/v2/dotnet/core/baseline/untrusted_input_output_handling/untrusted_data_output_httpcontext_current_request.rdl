@@ -3,7 +3,7 @@ RULE baseline.dotnet.core.untrusted_data_output_httpcontext_current_request VERS
 IN FILE
 WHEN TEXT_MATCHES "\\.(Append|WriteLine)\\([^\\)]*?HttpContext\\.Current\\.Request\\.(Url|Form|QueryString)" "im"
 WHEN TEXT_MISSING "(HtmlEncode|UrlEncode|Sanitize|AntiXssEncoder)" "im"
-REPORT "Untrusted Data Output: HttpContext.Current.Request"
+REPORT "Untrusted Input Entry Point"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

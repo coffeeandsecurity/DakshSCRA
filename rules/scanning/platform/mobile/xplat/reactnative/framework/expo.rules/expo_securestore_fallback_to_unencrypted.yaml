@@ -1,0 +1,51 @@
+format: daksh-pattern-rule/v1
+id: mobile.xplat.reactnative.framework.expo.expo_securestore_fallback_to_unencrypted
+title: "Secure Storage Fallback Review"
+order: 3
+category: Framework-Specific Issues - Expo (React Native)
+detection:
+  pattern: SecureStore\.setItemAsync|SecureStore\.getItemAsync
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects Expo SecureStore usage without explicit accessibility and authentication options.
+  trace:
+  - Externalized mobile rule logic for Expo SecureStore Fallback to Unencrypted.
+  description: 'Review target: Expo SecureStore Fallback to Unencrypted. Secure-storage configuration does not establish
+    the intended synchronization and lock-state accessibility policy. Resolve library defaults and the effective
+    platform options. Resolve the exact declaration or operation in the selected build and identify its security
+    boundary.'
+  impact: Secrets may be accessible on synchronized devices or while the device is locked if the effective policy
+    is broader than the application requires. Missing options alone do not prove plaintext storage or synchronization.
+  remediation: Set synchronization and accessibility options explicitly for the threat model, verify library defaults
+    on supported platforms, and avoid plaintext fallback when secure storage fails. Apply the least-privilege platform
+    control appropriate to the matched operation and verify the production configuration.
+  reviewer: Verify SecureStore calls include appropriate accessibility options for the sensitivity of stored data.
+    This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak,
+    or inconsistent. Check debug/release and product flavors, generated/native code, plugin boundaries and failure
+    paths; source evidence alone does not establish shipped or runtime behavior.
+  review_steps:
+  - Identify the sensitive data, actual storage location, backup inclusion and lock-state or account access policy.
+  - Inspect encryption, key access and data retention, including copies in caches, backups and exported artifacts.
+  - Verify access under the relevant attacker model; a storage API alone does not establish an exposure.
+  - Resolve the exact declaration or operation in the selected build and identify its security boundary.
+  - Check debug/release and product flavors, generated/native code, plugin boundaries and failure paths; source
+    evidence alone does not establish shipped or runtime behavior.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Store secrets using the platform credential store and apply appropriate access controls and protection to other
+    private data.
+  - Limit retention and unnecessary copies, configure backup handling deliberately, and verify access and recovery
+    behavior in the deployed environment.
+  - Apply the least-privilege platform control appropriate to the matched operation and verify the production configuration.
+scan_config:
+  match_mode: file
+  context_type: lines
+  context_lines_before: '3'
+  context_lines_after: '0'
+  aggregate: none
+  report_format: default
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: yellow

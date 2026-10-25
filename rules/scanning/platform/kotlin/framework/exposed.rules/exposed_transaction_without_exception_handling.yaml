@@ -1,0 +1,38 @@
+format: daksh-pattern-rule/v1
+id: kotlin.framework.exposed.exposed_transaction_without_exception_handling
+title: "Transaction Error Handling Review"
+order: 3
+category: Framework-Specific Issues - Kotlin Exposed
+detection:
+  pattern: transaction\s*\{
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:try|catch|runCatching|rollback
+reporting:
+  type: area_of_interest
+  reason: Detects Exposed transaction blocks that perform mutations without exception handling for rollback.
+  trace:
+  - Externalized rule logic for Exposed Transaction Without Exception Handling.
+  description: The code configures failure handling or resource consumption. Determine whether failure paths preserve
+    security invariants and whether work is bounded.
+  impact: Unhandled failures or unbounded work may disrupt availability or leave security-relevant state inconsistent.
+    The presence or absence of a named handler alone does not establish a reachable security defect.
+  remediation: Bound resource use, handle failures at the correct ownership boundary, and fail safely before updating
+    trusted state. Test exceptional paths, cancellation, timeouts, and recovery behavior.
+  reviewer: Verify mutating transactions have appropriate error handling and that partial failures are detected
+    and handled. This can be confirmed as an issue when the matched path is reachable and required controls are
+    missing, weak, or inconsistent.
+  review_steps:
+  - Trace who controls the operation count, input size, duration or resource allocation.
+  - Inspect limits, cancellation, cleanup and error paths, including concurrency and deployment quotas.
+  - Establish a reachable way to exhaust or retain a relevant resource before confirming an availability issue.
+  recommendations:
+  - Set limits and timeouts appropriate to the operation and release resources on success, failure and cancellation.
+  - Test oversized input and concurrent requests against the intended limits and verify cleanup under failure.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: magenta

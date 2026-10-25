@@ -1,0 +1,41 @@
+format: daksh-pattern-rule/v1
+id: c.core.risky_memory_allocation_malloc_and_related_functions
+title: "Memory Allocation Review"
+order: 8
+category: Memory Management and Allocation
+detection:
+  pattern: ^[^*/]*\b(malloc|calloc|realloc)\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:user_input|argv|getenv|scanf|fgets|recv\s*\(|read\s*\(|atoi|atol|strtol|strtoul|input|request|len\s*\*|size\s*\*
+reporting:
+  type: area_of_interest
+  reason: Detects usage of memory allocation functions in code.
+  trace:
+  - 'Externalized rule logic for Risky Memory Allocation: malloc() and Related Functions.'
+  description: The code manages allocation, ownership, indexed access, or resource release. Confirm capacity, lifetime,
+    nullability, and transfer of ownership across callers.
+  impact: An invalid lifetime or out-of-range access may corrupt memory, disclose process data, or crash the application.
+    Unbounded or unreleased resources may exhaust memory and deny service under repeated use.
+  remediation: Enforce bounds and lifetime invariants, handle allocation failure, and use appropriate automatic
+    resource ownership. Confirm a leak or invalid access before adding cleanup that could introduce double release.
+  reviewer: Verify upper and lower limits on memory allocation and ensure overflow checks are correctly implemented.
+    This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak,
+    or inconsistent.
+  review_steps:
+  - Inspect buffer capacity, index bounds, integer conversions and ownership at the matched operation and its callers.
+  - Check initialization, aliases, lifetime and cleanup on success, exception and early-return paths; identify external
+    influence over sizes or values.
+  - Verify a concrete unsafe access or lifetime condition. A low-level API or allocation alone does not prove memory
+    corruption.
+  recommendations:
+  - Use bounded operations, checked size calculations and explicit ownership or automatic resource management appropriate
+    to the language.
+  - Test boundary sizes and failure paths; use memory diagnostics where available to verify the specific correction.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

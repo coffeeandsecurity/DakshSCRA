@@ -11,14 +11,13 @@ from pathlib import Path
 
 from .executor import Evidence, ExecutionOutcome
 from .text import match_location
+from core.mobile_model import component_permissions, preference_writes, sensitive_logs, SYSTEM_PERMISSIONS
 
 ANDROID = '{http://schemas.android.com/apk/res/android}'
 MAX_WITNESSES = 1000
-# Exact system-only binding contracts; unknown BIND_* names are not controls.
-SYSTEM_BINDING_PERMISSIONS = frozenset('android.permission.' + name for name in (
-    'BIND_AUTOFILL_SERVICE', 'BIND_ACCESSIBILITY_SERVICE',
-    'BIND_CREDENTIAL_PROVIDER_SERVICE', 'BIND_QUICK_SETTINGS_TILE',
-))
+# Exact platform-restricted contracts; unknown permission names are not controls.
+# DUMP can also be explicitly granted for development; it is not ordinary access.
+SYSTEM_BINDING_PERMISSIONS = SYSTEM_PERMISSIONS
 
 
 def _result(result, path, text, hits, error=None):
@@ -67,16 +66,22 @@ def _manifest(entry, result, path, text):
         return _result(result, path, text, [])
     # Use the same comment-free view for parsing and offsets. A declaration in
     # an XML comment must not be paired with an active component.
-    names = ('activity', 'activity-alias', 'service', 'receiver')
+    names = ('activity', 'activity-alias', 'service', 'receiver', 'provider')
+    components = {id(node) for node in app if node.tag in names}
     permissions = {node.get(ANDROID+'name'): node.get(ANDROID+'protectionLevel', 'normal')
                    for node in root.findall('permission')}
     if len(permissions) != len(root.findall('permission')):
         return _result(result, path, text, [], 'Duplicate permission declarations need manifest-merge resolution.')
     for name in names:
-        nodes, tags = list(app.iter(name)), _tags(text, name)
+        # Lexical tags cover the whole document, including package-visibility
+        # queries. Associate all tags first, then restrict review to actual
+        # application components so queries cannot mask or create findings.
+        nodes, tags = list(root.iter(name)), _tags(text, name)
         if len(nodes) != len(tags):
             return _result(result, path, text, [], 'Cannot associate mobile declarations with source locations.')
         for node, tag in zip(nodes, tags):
+            if id(node) not in components:
+                continue
             if node.get(ANDROID+'enabled') == 'false':
                 continue
             exported = node.get(ANDROID+'exported')
@@ -86,9 +91,10 @@ def _manifest(entry, result, path, text):
             if check == 'manifest-export' and (exported == 'true' or unresolved or (exported is None and filters)):
                 permission = node.get(ANDROID+'permission', '' if name == 'activity-alias' else app.get(ANDROID+'permission', ''))
                 level = permissions.get(permission, '')
-                # Accept exact system binding contracts and local signature
+                # Accept exact platform-restricted contracts and local signature
                 # declarations; unknown or conflicting definitions stay leads.
-                signature = (permission in SYSTEM_BINDING_PERMISSIONS and permission not in permissions) or bool(re.search(r'(?:^|\|)\s*signature\s*(?:\||$)', level))
+                restrictions = component_permissions(node, root, app)
+                signature = all(restrictions.values())
                 if not signature:
                     detail = '{} {}: exported={}, permission={!r}; signature restriction is not locally established. Resolve merged manifests, SDK defaults and runtime authorization.'.format(name, node.get(ANDROID+'name', '(unnamed)'), exported or 'implicit/SDK-dependent', permission)
             if check == 'manifest-deeplink' and exported != 'false':
@@ -326,14 +332,14 @@ def _plist(entry, result, path, text):
             raise ValueError('cannot associate plist keys with source locations')
         locations = {id(key): tag for key, tag in zip(keys, tags)}
         hits = []
-        def visit(current, components):
+        def visit(current, components, trail=()):
             if not isinstance(current, dict):
                 raise ValueError('expected a dictionary at '+components[0])
             for key, (node, value) in current.items():
                 if components[0] not in {'*', key}:
                     continue
                 if len(components) > 1:
-                    visit(value, components[1:])
+                    visit(value, components[1:], trail+(key,))
                     continue
                 predicate = entry.get('plist_value', 'true')
                 risky = (value is True if predicate == 'true' else
@@ -354,20 +360,215 @@ def _plist(entry, result, path, text):
                     key_end = text.find('</key>', tag.end())+len('</key>')
                     tail = re.match(r'\s*<[^>]+>(?:[^<]*</[^>]+>)?', text[key_end:])
                     end = key_end + (tail.end() if tail else 0)
-                    hits.append((tag.start(), end, entry['description']))
+                    detail=entry['description']+' Configuration scope: '+' / '.join(trail+(key,))+'.'
+                    if trail and trail[0]=='NSAppTransportSecurity':
+                        detail+=' A domain-specific exception does not establish a global transport bypass.'
+                    hits.append((tag.start(), end, detail))
         visit(values, entry['plist_path'].split('/'))
         return _result(result, path, text, hits)
     except (ET.ParseError, ValueError) as exc:
         return _result(result, path, text, [], 'Cannot resolve Apple configuration: '+str(exc))
 
 
-def review_mobile(entry, result, path, text, code):
+def _xml_config(entry, result, path, text):
+    """Associate risky attributes with active declarations in the expected document."""
+    try:
+        root = ET.fromstring(text)
+        expected = entry['root_tag']
+        root_name = root.tag.rsplit('}', 1)[-1]
+        namespace = root.tag[1:].split('}', 1)[0] if root.tag.startswith('{') else ''
+        if namespace and not (root_name == 'widget' and namespace == 'http://www.w3.org/ns/widgets'):
+            return _result(result, path, text, [], 'Unsupported configuration namespace: '+namespace)
+        if root_name not in (expected if isinstance(expected, list) else [expected]):
+            return _result(result, path, text, [])
+        hits = []
+        parents = {child: parent for parent in root.iter() for child in parent}
+        for name in entry['xml_tags']:
+            nodes = [node for node in root.iter() if node.tag.rsplit('}', 1)[-1] == name]
+            tags = list(re.finditer(r'<(?:[A-Za-z_][\w.-]*:)?'+re.escape(name)+r'(?=[\s/>])(?:[^>\"\']|\"[^\"]*\"|\'[^\']*\')*>', text))
+            if len(nodes) != len(tags):
+                raise ValueError('cannot associate configuration declarations with source locations')
+            for node, tag in zip(nodes, tags):
+                node_namespace = node.tag[1:].split('}', 1)[0] if node.tag.startswith('{') else ''
+                if node_namespace != namespace:
+                    continue
+                policy = entry['attribute_policy']
+                value = node.get('path', '')
+                risky = False
+                if policy in {'broad-path','backup-root'} and re.search(r'\$\{|\$\(|^@', value):
+                    raise ValueError('unresolved path configuration')
+                if policy == 'broad-path':
+                    risky = name == 'root-path' or value in {'', '.', '/', './', '..', '../'}
+                elif policy == 'pin-override':
+                    value = node.get('overridePins')
+                    if value is not None and value not in {'true', 'false'}:
+                        raise ValueError('unresolved overridePins value')
+                    risky = value == 'true'
+                elif policy == 'weak-permission':
+                    value = node.get(ANDROID+'protectionLevel', 'normal')
+                    if re.search(r'\$\{|\$\(|^@', value):
+                        raise ValueError('unresolved protection level')
+                    try:
+                        base = int(value, 0) & 0xf
+                    except ValueError:
+                        base = value.split('|')[0].strip()
+                    risky = base in {'normal', 'dangerous', 0, 1}
+                elif policy == 'backup-root':
+                    risky = value in {'.', '/', './', '', '..', '../'}
+                    parent = parents.get(node)
+                    if parent is None or parent.tag not in {'cloud-backup','device-transfer','full-backup-content'} or not node.get('domain'):
+                        raise ValueError('unresolved backup section or domain')
+                    # An exact exclusion in the same domain and backup section overrides this include.
+                    if any(exclude.get('domain') == node.get('domain') and exclude.get('path') == value for exclude in parent.findall('exclude')):
+                        risky = False
+                elif policy == 'wildcard-navigation':
+                    risky = node.get('href') in {'*', '*://*/*', 'http://*/*', 'https://*/*', 'data:*'}
+                elif policy == 'cordova-preference':
+                    preference, value = node.get('name', '').lower(), node.get('value', '')
+                    risky = (preference == 'ignoresslerrors' and value.lower() in {'true','yes'}) if 'ssl-bypass' in entry['rule_id'] else preference in {'androidextrafilesystems','iosextrafilesystems'} and bool(re.search(r'(?:^|,)\s*root\s*(?:,|$)', value))
+                if risky:
+                    hits.append((tag.start(), tag.end(), entry['description'] + ' Resolve the selected configuration and its associated resource; unrelated declarations do not protect this scope.'))
+        return _result(result, path, text, hits)
+    except (ET.ParseError, ValueError) as exc:
+        return _result(result, path, text, [], 'Cannot resolve mobile configuration: '+str(exc))
+
+
+def _configuration(entry, result, path, text, code):
+    if Path(path).suffix == '.json':
+        import json
+        def unique_pairs(pairs):
+            value = {}
+            for key, item in pairs:
+                if key in value:
+                    raise ValueError('duplicate JSON configuration key '+key)
+                value[key] = item
+            return value
+        try:
+            json.loads(text, object_pairs_hook=unique_pairs)
+        except (ValueError, TypeError) as exc:
+            return _result(result, path, text, [], 'Cannot resolve JSON configuration: '+str(exc))
+    elif Path(path).suffix in {'.plist', '.xml'}:
+        try:
+            ET.fromstring(text)
+        except ET.ParseError as exc:
+            return _result(result, path, text, [], 'Cannot resolve mobile configuration: '+str(exc))
+    hits = []
+    for match in re.finditer(entry['pattern'], text):
+        # Unquoted configuration identifiers inside source string examples are not active settings.
+        if Path(path).suffix in {'.js','.ts'} and not code[match.start():match.start()+1].strip():
+            colon = text.find(':', match.start(), match.end())
+            if text[match.start()] not in {'"', "'"} or colon < 0 or not code[colon:colon+1].strip():
+                continue
+        hits.append((match.start(), match.end(), entry['description']+' Resolve generated configuration, object scope and release overrides.'))
+    return _result(result, path, text, hits)
+
+
+def _contextual_operation(entry, result, path, text, code):
+    """Bound a candidate to the relevant local widget, catch block or assignment."""
+    hits = []
+    for match in re.finditer(entry['pattern'], text):
+        if not code[match.start():match.start()+1].strip():
+            continue
+        check = entry['mobile_check']
+        if check == 'sensitive-widget':
+            # Locate the enclosing TextField constructor using balanced parentheses.
+            constructors = list(re.finditer(r'\b(?:TextField|TextFormField)\s*\(', code[:match.start()]))
+            if not constructors:
+                continue
+            start = constructors[-1].end()-1
+            depth, end = 1, start+1
+            while end < len(code) and depth:
+                depth += (code[end] == '(') - (code[end] == ')')
+                end += 1
+            if depth:
+                return _result(result, path, text, [], 'Cannot resolve sensitive widget boundaries')
+            if match.start() >= end or not re.search(r'\bobscureText\s*:\s*true\b', code[start:end]):
+                continue
+        elif check == 'storage-fallback':
+            if re.match(r'\s*,\s*(?:null|\"\"|string\.Empty)\s*\)', text[match.end():]):
+                continue
+            catches = list(re.finditer(r'\bcatch\s*(?:\([^)]*\))?\s*\{', code[:match.start()]))
+            if not catches:
+                continue
+            start = catches[-1].end()-1
+            depth, end = 1, start+1
+            while end < len(code) and depth:
+                depth += (code[end] == '{') - (code[end] == '}')
+                end += 1
+            if depth or match.start() >= end:
+                continue
+            tries = list(re.finditer(r'\btry\s*\{', code[:start]))
+            if not tries:
+                continue
+            try_start=tries[-1].end()-1
+            depth, try_end=1,try_start+1
+            while try_end < start and depth:
+                depth += (code[try_end] == '{') - (code[try_end] == '}')
+                try_end += 1
+            if depth or not re.search(r'\bSecureStorage(?:\.Default)?\s*\.\s*(?:SetAsync|GetAsync)\s*\(', code[try_start:try_end]):
+                continue
+        elif check == 'security-random':
+            line = code[code.rfind('\n',0,match.start())+1:match.start()]
+            if not re.search(r'(?i)\b(?:token|secret|password|nonce|iv|salt|key)\w*\s*(?::[^=]+)?=\s*$',line):
+                continue
+        hits.append((match.start(), match.end(), entry['description']+' The local operation context is recorded; value sensitivity and runtime policy require review.'))
+    return _result(result, path, text, hits)
+
+
+def review_mobile(entry, result, path, text, code, project_root=None):
     """Preserve original offsets; gate checks by real source/configuration kind."""
     if not any(fnmatch.fnmatch(Path(path).name, pattern) for pattern in entry['file_patterns']):
         return _result(result, path, text, [])
     if len(text) > 4*1024*1024:
         return _result(result, path, text, [], 'Mobile input exceeds 4 MiB budget.')
     check = entry['mobile_check']
+    if entry['rule_id'] == 'android.sql-raw-query-surface':
+        from .mobile_precision import fixed_sql_calls
+        text = fixed_sql_calls(path, text)
+    if entry['rule_id'] == 'android.persistent-device-identifier':
+        from .mobile_precision import identifier_calls
+        text = identifier_calls(path, text)
+    if check == 'credential-http-request':
+        from .android_requests import credential_http_requests
+        return _result(result, path, text, credential_http_requests(text, code))
+    if check in {'release-signing', 'provider-stream', 'project-privacy', 'project-backup', 'project-logout'}:
+        from core.mobile_project import signing_hits, stream_hits, project_for_review
+        if check == 'release-signing':
+            return _result(result,path,text,list(signing_hits(path,text,code)))
+        if check == 'provider-stream':
+            return _result(result,path,text,list(stream_hits(text,code)))
+        if not project_root:
+            return _result(result,path,text,[],'Project root is unavailable for mobile correlation')
+        project = project_for_review(project_root)
+        if project.issues:
+            return _result(result,path,text,[],'; '.join(project.issues[:8]))
+        if check == 'project-logout':
+            from .session_contracts import logout_contracts
+            contracts, unknown = logout_contracts(project, path)
+            if unknown and not contracts:
+                return _result(result,path,text,[],'; '.join(unknown[:8]))
+            hits = []
+            for contract in contracts:
+                line = contract['source']['line']
+                start = sum(len(row) for row in text.splitlines(keepends=True)[:line-1])
+                hits.append((start, min(len(text),start+len(text.splitlines()[line-1])),
+                             'Local logout clears '+', '.join(contract['cleared_fields'])+' but its reducer spread retains '+', '.join(contract['retained_fields'])+' in '+contract['store']+'. Resolve delegated cleanup and account/session scoping.'))
+            return _result(result,path,text,hits)
+        if check == 'project-privacy':
+            contracts,unknown = project.purpose_hits(path)
+            if unknown and not contracts:
+                return _result(result,path,text,[],'; '.join(unknown))
+            detail = '; '.join(c['key']+' required by '+c['source']['file']+':'+str(c['source']['line']) for c in contracts)
+        else:
+            contracts=[c for c in project.backup_contracts(path) if c['state']=='potentially_included']
+            detail='; '.join(str(c['store'])+' credential-related write at '+c['source']['file']+':'+str(c['source']['line'])+' may enter '+c['section'] for c in contracts)
+        return _result(result,path,text,[(0,min(len(text),80),detail+'. Resolve active callers, selected build, platform versions and final configuration.')] if contracts else [])
+    if check == 'xml-config':
+        return _xml_config(entry, result, path, text)
+    if check == 'configuration':
+        return _configuration(entry, result, path, text, code)
+    if check in {'sensitive-widget', 'storage-fallback', 'security-random'}:
+        return _contextual_operation(entry, result, path, text, code)
     if check == 'network-config':
         return review_network_config(entry, result, path, text)
     if check == 'device-admin':
@@ -379,23 +580,11 @@ def review_mobile(entry, result, path, text, code):
     if check == 'plist':
         return _plist(entry, result, path, text)
     if check == 'preference-secret':
-        # A literal secret key is not itself a secret. Require a value write
-        # through a preferences editor; unrelated encrypted stores are not
-        # a file-wide exemption for another editor's write.
-        editors = set(re.findall(r'\b([A-Za-z_]\w*)\s*=\s*[A-Za-z_]\w*\s*\.\s*edit\s*\(', code))
-        hits = []
-        for match in re.finditer(entry['pattern'], text):
-            if not code[match.start():match.start()+1].strip():
-                continue
-            receiver = match.group('receiver')
-            if receiver not in editors:
-                continue
-            value = match.group('value').strip()
-            if value in {'null', '""', "''"}:
-                continue
-            hits.append((match.start(), match.end(), entry['description'] +
-                ' Preferences editor: '+receiver+'. Resolve value protection and the actual backing store; a key name alone does not establish plaintext.'))
+        hits = [(start, end, entry['description'] + ' Sensitive preferences write; resolve backing-store protection, backup policy and cleanup at callers.')
+                for start, end, key in preference_writes(text, code)]
         return _result(result, path, text, hits)
+    if entry['rule_id'] == 'reactnative.sensitive-console':
+        return _result(result, path, text, list(sensitive_logs(text, code)))
     hits = []
     for match in re.finditer(entry['pattern'], text):
         # API names inside comments and string literals are not executable calls.

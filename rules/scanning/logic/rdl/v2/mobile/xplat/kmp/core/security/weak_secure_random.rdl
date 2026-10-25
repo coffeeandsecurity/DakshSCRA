@@ -1,0 +1,8 @@
+VERSION 2
+RULE kmp.weak-secure-random VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bRandom\\s*\\.\\s*(?:nextBytes|nextInt|nextLong)\\s*\\(" ""
+REPORT "Security-Sensitive Randomness Review"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

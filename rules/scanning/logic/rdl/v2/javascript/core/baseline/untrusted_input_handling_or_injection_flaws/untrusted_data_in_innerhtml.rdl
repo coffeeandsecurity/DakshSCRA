@@ -2,7 +2,7 @@ VERSION 2
 RULE baseline.javascript.core.untrusted_data_in_innerhtml VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\.innerHTML\\s?=\\s?.+" "im"
-REPORT "Untrusted Data in InnerHTML"
+REPORT "HTML Output Encoding Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

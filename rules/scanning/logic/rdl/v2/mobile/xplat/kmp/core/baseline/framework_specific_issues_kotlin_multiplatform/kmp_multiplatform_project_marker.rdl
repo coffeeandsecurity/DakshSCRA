@@ -1,8 +1,8 @@
 VERSION 2
 RULE baseline.mobile.xplat.kmp.core.kmp_multiplatform_project_marker VERSION 1
 IN FILE
-WHEN TEXT_MATCHES "kotlin\\(\\\"multiplatform\\\"\\)|org\\.jetbrains\\.kotlin\\.multiplatform|kotlin-multiplatform" "m"
-REPORT "KMP Multiplatform Project Marker"
+WHEN TEXT_MATCHES "kotlin\\(\\\"multiplatform\\\"\\)|org\\.jetbrains\\.kotlin\\.multiplatform|kotlin-multiplatform" "im"
+REPORT "Multiplatform Project Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

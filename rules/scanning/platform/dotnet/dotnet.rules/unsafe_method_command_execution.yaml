@@ -1,0 +1,43 @@
+format: daksh-pattern-rule/v1
+id: dotnet.core.unsafe_method_command_execution
+title: "OS Command Injection Review"
+order: 11
+category: Insecure Method/Function Call
+detection:
+  pattern: (?i)execute\s(\@|\()
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:(Request\.|QueryString|Form|userInput|args) && MISSING:(allowlist|whitelist|argument escaping|ProcessStartInfo)
+reporting:
+  type: area_of_interest
+  reason: Detects the usage of command execution methods that can introduce security vulnerabilities.
+  trace:
+  - 'Externalized rule logic for Unsafe Method: Command Execution.'
+  description: The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace
+    executable selection and evaluated content to their trust boundaries.
+  impact: If an attacker controls interpreted syntax or the operation selected, code or commands may run with the
+    application’s privileges, allowing data theft, state changes, or service disruption.
+  remediation: Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate
+    argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates
+    or expressions.
+  reviewer: Ensure that proper input validation and sanitization techniques are implemented for command execution
+    methods. Verify that developers have taken appropriate measures to prevent command injection vulnerabilities,
+    such as using parameterized queries or prepared statements. Also assess the sensitivity of the commands executed
+    and confirm that relevant security controls are in place. This can be confirmed as an issue when the matched
+    path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Determine whether the matched operation interprets code, expressions or templates; identify its execution context
+    and permissions.
+  - Trace control over the executed text and distinguish fixed application code from externally influenced content.
+  - Inspect restrictions and failure paths; record a reachable input-to-execution path before confirming code execution.
+  recommendations:
+  - Replace externally assembled code with fixed operations and data-only inputs where possible.
+  - Keep template or expression sources under application control; restrict exposed capabilities and test rejection
+    of unexpected syntax.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

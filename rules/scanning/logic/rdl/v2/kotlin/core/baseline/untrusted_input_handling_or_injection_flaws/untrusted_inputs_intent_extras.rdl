@@ -3,7 +3,7 @@ RULE baseline.kotlin.core.untrusted_inputs_intent_extras VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "Intent\\.get.*Extra\\(\".*\"" "im"
 WHEN (TEXT_MATCHES "(execute|query|rawQuery|execSQL|Runtime|ProcessBuilder|File\\s*\\(|URL\\s*\\(|startActivity|intent\\.)" "im" AND TEXT_MISSING "(validate|sanitize|escape|encode|allowlist|whitelist)" "im")
-REPORT "Untrusted Inputs: Intent Extras"
+REPORT "Untrusted Input Entry Point"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

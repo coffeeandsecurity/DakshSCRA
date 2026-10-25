@@ -1,7 +1,8 @@
 import FlowView from './FlowView'
+import { ReviewGuidance } from './ReportAudience'
 import { useEffect, useMemo, useState } from 'react'
 
-const SEVERITY_ORDER = ['critical', 'high', 'medium', 'low']
+const SEVERITY_ORDER = ['critical', 'high', 'medium', 'low', 'info']
 
 function SummaryTabIcon() {
   return (
@@ -418,7 +419,7 @@ function FamilySummary({ family, open, onToggle }) {
           <span>{family.cwe || family.kind || 'Analyzer-confirmed family'}</span>
           <span>{family.files.length} location{family.files.length === 1 ? '' : 's'}</span>
           <span>{family.items.length} trace{family.items.length === 1 ? '' : 's'}</span>
-          <span>max score {family.maxRisk}</span>
+          <span>max priority {family.maxRisk}</span>
         </div>
       </div>
       <div className="vg-family-head-side">
@@ -460,7 +461,7 @@ function InstanceDetail({ item }) {
           <div className="vg-detail-sub">{item.function ? `${item.function} · ` : ''}{channelLabel(item)} · {item.platform || 'platform'}</div>
         </div>
         <div className="vg-detail-pills">
-          <span className="aa-pill plain">score {item.risk_score}</span>
+          <span className="aa-pill plain">priority {item.risk_score}</span>
           <TraceBadge value={item.trace_status} />
         </div>
       </div>
@@ -489,7 +490,7 @@ function InstanceDetail({ item }) {
 
       {item.issue_description ? <div className="vg-section"><div className="vg-section-label">Issue description</div><p>{item.issue_description}</p></div> : null}
       {item.security_impact ? <div className="vg-section"><div className="vg-section-label">Security impact</div><p>{item.security_impact}</p></div> : null}
-      {item.recommendation ? <div className="vg-section"><div className="vg-section-label">Recommended correction</div><p>{item.recommendation}</p></div> : null}
+      <ReviewGuidance developer={item.recommendation} reviewer={item.reviewer_note} />
       <FlowView steps={item.path || []} title="Vulnerability trace">{({steps}) => { const pathGroups = pathByFile(steps); return <>
       <div className="vg-trace">
         <div className="vg-section-label">Graphical Taint Path</div>
@@ -598,7 +599,7 @@ function FamilyBlock({ family, open, onToggle }) {
               >
                 <div className="vg-instance-row-top">
                   <strong>{shortLoc(item)}</strong>
-                  <span className="vg-instance-score">score {item.risk_score}</span>
+                  <span className="vg-instance-score">priority {item.risk_score}</span>
                 </div>
                 <div className="vg-instance-row-sub">
                   <span>{item.function || item.sink_name || item.sink || item.kind}</span>

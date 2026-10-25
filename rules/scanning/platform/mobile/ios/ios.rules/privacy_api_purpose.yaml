@@ -1,0 +1,29 @@
+format: daksh-pattern-rule/v1
+id: mobile.ios.core.privacy_api_purpose
+title: Privacy API Purpose Description Review
+order: 1101
+category: Mobile Security
+detection:
+  pattern: <plist\b
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: A supported protected-resource API in the supplied source has no resolved nonempty purpose description
+    in this application plist. Resolve active callers, generated settings, localization and API-specific platform
+    requirements.
+  description: A supported protected-resource API in the supplied source has no resolved nonempty purpose description
+    in this application plist. Resolve active callers, generated settings, localization and API-specific platform
+    requirements.
+  impact: A missing effective purpose description can prevent a protected operation or fail platform privacy requirements;
+    API presence alone does not establish data disclosure.
+  remediation: Supply a meaningful description for the used resource in the selected target and localization, request
+    only required access and test denied/restricted behavior.
+  reviewer: Verify the selected build and active callers. Retain unresolved evidence when runtime, backend or generated
+    configuration is unavailable.
+scan_config:
+  match_mode: file
+  context_lines_before: '0'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'

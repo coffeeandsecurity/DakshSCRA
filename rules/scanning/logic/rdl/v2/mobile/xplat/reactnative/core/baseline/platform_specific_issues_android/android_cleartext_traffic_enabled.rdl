@@ -2,7 +2,7 @@ VERSION 2
 RULE baseline.mobile.xplat.reactnative.core.android_cleartext_traffic_enabled VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "usesCleartextTraffic\\s*=\\s*\"?(?:true|TRUE)\"?" "im"
-REPORT "Android Cleartext Traffic Enabled"
+REPORT "Cleartext Network Policy Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

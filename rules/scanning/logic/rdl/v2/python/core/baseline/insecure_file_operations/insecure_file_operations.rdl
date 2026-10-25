@@ -3,7 +3,7 @@ RULE baseline.python.core.insecure_file_operations VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(?i)(os\\.remove|os\\.unlink|shutil\\.rmtree)" "im"
 WHEN (TEXT_MATCHES "(request|input\\(|argv|user_input|params|query)" "im" AND TEXT_MISSING "(abspath|realpath|normpath|startswith\\(|allowlist|whitelist)" "im")
-REPORT "Insecure File Operations"
+REPORT "File Path and Access Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

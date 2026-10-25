@@ -1,0 +1,41 @@
+format: daksh-pattern-rule/v1
+id: terraform.framework.gcp.gcp_vm_instance_with_public_ip
+title: GCP VM Instance with Public IP
+order: 1
+category: GCP Compute Security
+detection:
+  pattern: resource\s+"google_compute_instance"[^}]*access_config\s*\{
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:nat_ip\s*=\s*""
+reporting:
+  type: area_of_interest
+  reason: Detects GCP Compute Engine instances configured with external IP addresses via access_config blocks.
+  trace:
+  - Externalized rule logic for GCP VM Instance with Public IP.
+  description: The deployment declares a public address, exposed ports, or broad inbound access. Resolve effective
+    routes, firewall rules, listening services, and authentication.
+  impact: If a sensitive service is reachable from an untrusted network, remote actors may attempt credential attacks
+    or exploit reachable service defects. A public address or image EXPOSE declaration alone does not establish
+    internet reachability.
+  remediation: Restrict inbound access to required services and trusted networks. Keep management and database endpoints
+    private where possible, and verify actual listening ports, firewall rules, and access controls.
+  reviewer: Confirm public IP assignment is justified and security groups restrict access appropriately. This can
+    be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Resolve actual listeners, routes, firewall rules and reachable deployment interfaces.
+  - Inspect authentication and authorization on the exposed service and identify the data or operations it makes
+    available.
+  - Test reachability from the relevant network boundary; an exposed-port declaration alone does not establish a
+    vulnerability.
+  recommendations:
+  - Expose only required services to the intended networks and restrict administrative interfaces.
+  - Verify the effective network policy and application access controls after deployment, including denied access
+    from untrusted networks.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

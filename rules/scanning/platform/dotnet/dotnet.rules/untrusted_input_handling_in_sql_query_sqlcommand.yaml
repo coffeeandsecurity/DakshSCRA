@@ -1,0 +1,40 @@
+format: daksh-pattern-rule/v1
+id: dotnet.core.untrusted_input_handling_in_sql_query_sqlcommand
+title: "SQL Injection Review"
+order: 4
+category: Untrusted Input/Output Handling
+detection:
+  pattern: new SqlCommand\(.*\)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:(\+|String\.Format|Request\.|QueryString|Form) && MISSING:(SqlParameter|AddWithValue|Parameters\.Add|Parameters\.AddWithValue)
+reporting:
+  type: area_of_interest
+  reason: Detects the usage of SqlCommand without parameterized queries, which can lead to SQL injection vulnerabilities.
+  trace:
+  - 'Externalized rule logic for Untrusted Input Handling in SQL Query: SqlCommand.'
+  description: A SqlCommand operation is present near input or query-construction markers. Its constructor alone
+    does not establish SQL injection.
+  impact: If externally controlled values enter query syntax, an attacker may read, change, or delete records or
+    bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound
+    parameters do not establish this condition.
+  remediation: Use SqlParameter bindings on the exact SqlCommand that executes the query. Keep dynamic identifiers
+    in fixed mappings. Follow CommandText assignments and helper returns before changing constant or correctly parameterized
+    SQL.
+  reviewer: Trace external values to CommandText and execution. Match placeholders to Parameters on the same command.
+    Distinguish constant SQL from dynamic syntax; missing callers or frontend code leave the trace incomplete rather
+    than proving the command safe.
+  review_steps:
+  - Resolve final CommandText and the execution call.
+  - Match placeholders to bindings on the same command.
+  - Check reachable attacker control and unresolved caller or helper code.
+  recommendations:
+  - Bind values with SqlParameter rather than constructing SQL syntax.
+  - Use fixed identifier mappings and verify access to the selected records.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

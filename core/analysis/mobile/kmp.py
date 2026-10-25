@@ -5,7 +5,7 @@ import re
 
 import state.runtime_state as state
 from core.analysis.kotlin.analyzer import analyze_kotlin_flows
-from core.analysis.mobile.common import annotate_flows, collect_files, first_match_line, flow, line_text, output_dir
+from core.analysis.mobile.common import read_mobile_lines, annotate_flows, collect_files, first_match_line, flow, line_text, output_dir
 from core.analysis.report import write_reports
 
 
@@ -20,7 +20,7 @@ def _semantic_flows(source_root: Path) -> List[dict]:
     is_kmp_project = False
     for file_path in project_files:
         try:
-            lines = file_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+            lines = read_mobile_lines(file_path)
         except OSError:
             continue
         marker_line = first_match_line(lines, MULTIPLATFORM_RE)
@@ -53,7 +53,7 @@ def _semantic_flows(source_root: Path) -> List[dict]:
     kotlin_files = collect_files(source_root, ("*.kt", "*.kts"))
     for file_path in kotlin_files:
         try:
-            lines = file_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+            lines = read_mobile_lines(file_path)
         except OSError:
             continue
 

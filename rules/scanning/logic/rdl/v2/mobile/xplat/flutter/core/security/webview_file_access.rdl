@@ -2,7 +2,7 @@ VERSION 2
 RULE flutter.webview-file-access VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\ballowUniversalAccessFromFileURLs\\s*:\\s*true\\b" ""
-REPORT "Flutter WebView Universal File Access Enabled"
+REPORT "WebView File Access Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

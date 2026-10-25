@@ -3,7 +3,7 @@ RULE baseline.golang.framework.gin.gin_debug_mode_enabled VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "GIN_MODE\\s*=\\s*debug|SetMode\\(\\s*gin\\.DebugMode\\s*\\)|\\.Debug\\s*=\\s*true" "im"
 WHEN TEXT_MISSING "release|production" "im"
-REPORT "Gin Debug Mode Enabled"
+REPORT "Debug Mode Configuration Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

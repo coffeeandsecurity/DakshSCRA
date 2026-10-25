@@ -1,0 +1,44 @@
+format: daksh-pattern-rule/v1
+id: python.core.insecure_mitigation_django_safe_filter_django_utils_safestring
+title: "HTML Output Encoding Review"
+order: 26
+category: Insecure Mitigations
+detection:
+  pattern: (?i)\.safestring
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:escape|bleach\.clean|html\.escape|strip_tags|validate && MISSING:test|example
+reporting:
+  type: area_of_interest
+  reason: Detects the potentially insecure usage of the Django Safe Filter (django.utils.safestring), which may
+    indicate an insufficient security mitigation approach.
+  trace:
+  - 'Externalized rule logic for Insecure Mitigation: Django Safe Filter django.utils.safestring.'
+  description: The code contains a security-control marker. Its presence is a review surface rather than evidence
+    that the control is defective or consistently enforced.
+  impact: No adverse security consequence follows from the presence of a protection alone. If it is bypassed or
+    applied outside the correct context, the protected operation may still permit injection or unauthorized access.
+  remediation: Verify that the control applies to every relevant entry point and uses the required context and policy.
+    Retain effective protections; test bypass cases before recommending a change.
+  reviewer: Verify that the Django Safe Filter (django. utils. safestring) is used in a secure manner, with additional
+    security measures such as output encoding and validation applied to prevent XSS vulnerabilities. Ensure that
+    developers have not solely depended on the Safe Filter for security mitigation. This can be confirmed as an
+    issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the matched construct in its containing function or configuration and identify the security-sensitive
+    behavior under review.
+  - Verify reachable callers, external influence and effective protections, including deployment overrides and failure
+    paths.
+  - Record concrete evidence for a confirmed issue or a justified suppression; retain an unresolved outcome when
+    the required evidence is unavailable.
+  recommendations:
+  - Apply the rule-specific correction above only after verifying the affected behavior and required control.
+  - Add a regression case for the unsafe condition and a valid protected case; verify the effective behavior in
+    the relevant deployment.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

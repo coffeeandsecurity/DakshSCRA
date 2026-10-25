@@ -3,7 +3,7 @@ RULE baseline.kubernetes.core.no_resource_limits_defined VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "containers\\s*:" "im"
 WHEN TEXT_MISSING "resources\\s*:|limits\\s*:|requests\\s*:" "im"
-REPORT "No Resource Limits Defined"
+REPORT "Container Resource Limits Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

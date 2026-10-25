@@ -1,0 +1,36 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.nested_intent_component_launch
+title: "Nested Intent and Component Launch Review"
+order: 1000
+category: Platform Interaction
+detection:
+  pattern: \b(?:getParcelableExtra|getSerializableExtra|parseUri|startActivity|startService|bindService)\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Review external intent data and component launch targets.
+  description: The source reads a parcelled intent or launches an Android component. Resolve any untrusted nested
+    intent, its destination and URI grants before a sensitive operation.
+  impact: A forwarded attacker-controlled intent may expose private components or data through the launching application
+    when target restrictions and caller authorization are insufficient.
+  remediation: Avoid forwarding untrusted nested intents. Constrain the exact component and data, clear unnecessary
+    read/write/persistable/prefix grants, and apply runtime authorization. Resolve target platform launch protections
+    rather than assuming they cover every supported device.
+  reviewer: Trace the same intent into the launch. Test explicit and implicit targets, nested extras, malformed
+    parcels, null callers and URI grant flags. Android platform hardening and sanitizers must be resolved for the
+    actual path and build; unrelated guards do not protect it.
+  review_steps:
+  - Trace external input to the intent actually launched.
+  - Resolve component restrictions, caller authorization and transferred URI grants.
+  - Test each supported platform version and failure path.
+  recommendations:
+  - Use a constrained sanitized intent or an appropriate immutable PendingIntent for the intended operation.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  highlight_enabled: 'true'
+  highlight_color: red
+  highlight_target: match
+  aggregate: none

@@ -1,0 +1,44 @@
+format: daksh-pattern-rule/v1
+id: python.core.insecure_url_configuration
+title: "Route Authorization Review"
+order: 8
+category: Untrusted Input Handling or Injection Flaws
+detection:
+  pattern: (?i)(url|re_path)\s*\(\s*['"](\^|\^\/)([^'"]+)['"]
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:login_required|permission_required|LoginRequired|csrf_protect
+reporting:
+  type: area_of_interest
+  reason: Detects insecure URL configurations in Django's URL patterns.
+  trace:
+  - Externalized rule logic for Insecure URL Configuration.
+  description: The code handles a link, redirect, or externally selected navigation target. Validate the effective
+    destination and any action triggered by the receiving handler.
+  impact: A crafted destination or link may direct users to a phishing site, leak URL-carried secrets, or trigger
+    unauthorized operations if routing trusts external parameters without the required access checks.
+  remediation: Allowlist schemes, hosts, paths, and operations. Validate parsed link parameters, avoid credentials
+    in URLs, and require authentication and authorization before sensitive actions.
+  reviewer: Check for insecure URL configurations in Django's URL patterns and assess if proper security measures
+    are in place to prevent open redirects or unauthorized access. recommend securing sensitive views and URL patterns.
+    This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak,
+    or inconsistent.
+  review_steps:
+  - Identify who can supply the matched input, including stored values and upstream services; record its type, size
+    limits and trust boundary.
+  - Trace the value through transformations to each sensitive operation. Check the protection at that destination
+    and resource-level authorization.
+  - Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side
+    check alone is insufficient evidence.
+  recommendations:
+  - Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve
+    legitimate characters and protect each destination separately.
+  - Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations
+    where applicable. Test rejected input and unauthorized access.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

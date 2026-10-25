@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.mobile.xplat.cordova.core.insecure_external_url_handling VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:window\\.open|cordova\\.InAppBrowser\\.open)\\s*\\(" "im"
-WHEN (TEXT_MISSING "allowlist|trustedUrls|validateUrl|startsWith.*https" "im" AND TEXT_MISSING "test|example" "im")
-REPORT "Insecure External URL Handling"
+REPORT "External URL Handling Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -1,0 +1,41 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.review_android_content_provider_query_surface
+title: "Content Provider Query Review"
+order: 72
+category: PLATFORM Review
+detection:
+  pattern: \b(?:override\s+fun\s+query|public\s+Cursor\s+query)\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: The application queries a content provider. Determine the provider’s trust, returned data sensitivity,
+    and any selection built from external input. Resolve the external entry point, its caller or URI grant, and
+    the sensitive operation or resource reached.
+  impact: Private provider data may be disclosed or modified if the provider lacks effective caller authorization
+    or if attacker-controlled selection text changes the intended query.
+  remediation: Validate provider authority and permissions, bind selection arguments, and authorize each data operation.
+    Limit requested columns and avoid logging sensitive results. Minimize exported surfaces and URI grants; validate
+    parsed schemes, hosts and paths, use verified links where appropriate, and authorize each sensitive action.
+  reviewer: Resolve merged manifests, aliases and SDK defaults; test custom-scheme collision, malformed URLs, encoded
+    paths, nested intents, read/write grants and permission inheritance. Registration or permission presence alone
+    does not prove unauthorized access.
+  review_steps:
+  - Trace the matched candidate to its actual value, caller or resource.
+  - Resolve merged manifests, aliases and SDK defaults; test custom-scheme collision, malformed URLs, encoded paths,
+    nested intents, read/write grants and permission inheritance. Registration or permission presence alone does
+    not prove unauthorized access.
+  - Resolve release configuration and runtime assumptions before confirming an issue.
+  recommendations:
+  - Validate provider authority and permissions, bind selection arguments, and authorize each data operation. Limit
+    requested columns and avoid logging sensitive results. Minimize exported surfaces and URI grants; validate parsed
+    schemes, hosts and paths, use verified links where appropriate, and authorize each sensitive action.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

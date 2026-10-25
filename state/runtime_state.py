@@ -61,7 +61,7 @@ suppressionBaseline = Path(str(root_dir) + "/config/suppressions.json")
 estimateConfig = Path(str(root_dir) + "/config/estimate.yaml")
 
 # Files path scanning rules
-rulesFpaths = Path(str(rulesRootDir) + "/filepaths.xml")
+rulesFpaths = Path(str(rulesRootDir) + "/filepaths.rules")
 
 # Static paths
 staticPdfCssFpath = Path(str(root_dir) + "/resources/static/pdf.css")

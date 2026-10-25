@@ -1,0 +1,52 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.missing_obfuscation_for_sensitive_classes
+title: "Code Obfuscation Review"
+order: 10
+category: Proguard/R8 - Code Obfuscation
+detection:
+  pattern: (?i)-keepclassmembers\s+class\s+[^\n{]*(?:password|secret|token|apikey)[^\n{]*
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects missing obfuscation for sensitive classes or methods.
+  trace:
+  - Externalized mobile rule logic for Missing Obfuscation for Sensitive Classes.
+  description: 'Review target: Missing Obfuscation for Sensitive Classes. The source identifies classes for a release-hardening
+    review. A marker alone does not establish the final artifact’s obfuscation settings. Resolve the exact declaration
+    or operation in the selected build and identify its security boundary.'
+  impact: Unobfuscated code may be easier to inspect or modify, but obfuscation does not protect embedded secrets
+    or provide a reliable authorization boundary.
+  remediation: Verify release-hardening settings in the distributed artifact. Keep credentials and authoritative
+    security decisions on a trusted boundary regardless of obfuscation. Apply the least-privilege platform control
+    appropriate to the matched operation and verify the production configuration.
+  reviewer: Verify that the Proguard/R8 rules include obfuscation for sensitive classes and methods. This can be
+    confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+    Check debug/release and product flavors, generated/native code, plugin boundaries and failure paths; source
+    evidence alone does not establish shipped or runtime behavior.
+  review_steps:
+  - Inspect the matched construct in its containing function or configuration and identify the security-sensitive
+    behavior under review.
+  - Verify reachable callers, external influence and effective protections, including deployment overrides and failure
+    paths.
+  - Record concrete evidence for a confirmed issue or a justified suppression; retain an unresolved outcome when
+    the required evidence is unavailable.
+  - Resolve the exact declaration or operation in the selected build and identify its security boundary.
+  - Check debug/release and product flavors, generated/native code, plugin boundaries and failure paths; source
+    evidence alone does not establish shipped or runtime behavior.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Apply the rule-specific correction above only after verifying the affected behavior and required control.
+  - Add a regression case for the unsafe condition and a valid protected case; verify the effective behavior in
+    the relevant deployment.
+  - Apply the least-privilege platform control appropriate to the matched operation and verify the production configuration.
+scan_config:
+  match_mode: file
+  context_type: lines
+  context_lines_before: '1'
+  context_lines_after: '0'
+  aggregate: none
+  report_format: default
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: yellow

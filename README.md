@@ -25,43 +25,25 @@ DakshSCRA brings together distinctive capabilities for manual source code review
 |---|---|---|
 | **File Path Areas of Interest** | World's First* | Scans file and directory names themselves, alongside code, to flag suspicious paths such as backup files, debug endpoints, configuration dumps and credential files that reviewers often miss. |
 | **Scientific Effort Estimation** | World's First* | Produces a quantified estimate of manual-review effort based on codebase size and project signals. Configurable assumptions make engagement planning explicit and repeatable. |
-| **Areas of Interest, Not Bug Flags** | Reviewer in Control | Surfaces patterns worth investigating rather than tagging every match as a vulnerability. Contextual rules and suppression evidence reduce triage noise and keep the reviewer in control. |
-| **Software Reconnaissance** | Integrated Software Recon | Detects languages, frameworks and infrastructure from file contents and project structure before scanning. Connects the technology inventory to automatic rule selection, semantic analysis and review planning. |
-| **RDL Conditional Rules** | Advanced Conditional Rules | Goes beyond simple regex with PRESENT, MISSING, boolean expressions and file/path conditions. RDL v1 records decisions and suppression reasons; RDL v2 adds typed semantic services and bounded cross-file evidence. |
-| **Advanced Semantic and Cross-File Analysis** | Built from the Ground Up | Traces user-controlled data from source to sink across supported file boundaries using purpose-built analysis. Advanced Analysis shipped alongside the original RDL in March 2026; RDL v2 extends semantic rule evaluation across files. |
-| **Platform-Agnostic Auto Scanning** | Automatic Multi-Platform | Use `-r auto` to scan mixed-technology projects without choosing a single language beforehand. Recon selects supported platform and framework rules automatically. Introduced in v0.23-beta, November 2024. |
-| **Application-Specific Security Logic** | Custom RDL Packs | Encode application trust boundaries, authorization decisions and business invariants in optional custom RDL packs. Project-specific logic runs alongside the generic scanning rules. |
-| **Interactive Text and Graph Evidence** | Follow the Evidence | Follow recorded source-to-sink paths in linked Text and Graph views. Source excerpts, file lanes and handoff details make cross-file evidence easier to inspect. |
-| **Review Lifecycle and Portable Reports** | Review, Resume and Export | Keep scan history, review suppressions and resume interrupted scans. Export HTML, PDF, editable Word and JSON through shared CLI and Web UI reports, with offline evidence navigation where available. |
+| **Software Reconnaissance** | World's Second* | Detects languages, frameworks and infrastructure from file contents and project structure before scanning. Connects the technology inventory to automatic rule selection, semantic analysis and review planning. |
+| **Advanced Semantic and Cross-File Analysis** | Most Advanced Open Source at Release* | Traces user-controlled data from source to sink across supported file boundaries using purpose-built analysis. Advanced Analysis shipped alongside the original RDL in March 2026; RDL v2 extends semantic rule evaluation across files. |
 
-* World's First badges reflect the project's original claims; worldwide priority has not been independently verified.
+* Based on general searches at the time each feature was introduced. No similar feature was found in open source security code review tools. For effort estimation, no similar approach was found in commercial tools either. Recon came second after Microsoft Application Inspector. Cross-file analysis was the most advanced among open source code review tools at the time of its release.
 
 ### Feature History and Evidence
 
 | Feature / milestone | Date | Release | Evidence / scope |
 |---|---|---|---|
-| Private training release | 2022 (Black Hat USA) | Private student release | [Distributed privately to Black Hat USA 2022 training students before the public web release.](https://github.com/coffeeandsecurity/DakshSCRA/blob/fe878be/README.md) |
 | Initial beta and file-path rules | 22 October 2022 | v0.1-beta | [Initial release; retained source includes the dedicated file-path rule inventory.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.1-beta) |
-| PDF and HTML reports | 23 May 2023 | v0.2-beta | [Release notes list PDF/HTML report generation and scanning-rule updates.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.2-beta) |
 | Software reconnaissance (published introduction) | 9 July 2023 | v0.3-beta | [Release notes introduce recon; earlier repository code is separate implementation evidence.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.3-beta) |
 | Manual-review effort estimation (implementation) | 29 July 2023 | Implementation commit | [Dedicated estimation module added; not the date of the later fix release.](https://github.com/coffeeandsecurity/DakshSCRA/commit/65d5c6a) |
-| Early Android manifest and Kotlin checks | 27 April 2024 | v0.16-beta | [Introduced Android manifest misconfiguration checks and Kotlin-specific checks; module described as early development, with broader coverage still in progress.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.16-beta) |
-| Multi-platform scan flags (initial design) | 4 November 2024 | v0.20-beta | [Added comma-separated platform selection with -r; initial implementation did not yet isolate each platform rule set to its own file types.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.20-beta) |
-| Platform-agnostic auto scanning | 10 November 2024 (release listing) | v0.23-beta | [Automatic platform/rule selection; implementation commit dated 11 November.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.23-beta) |
-| PDF rendering upgrade | 21 July 2025 | v0.29-beta | [Migrated PDF export from WeasyPrint to Playwright and Chromium; added HTML-size-based timeouts for large reports and cross-platform setup instructions.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.29-beta) |
-| Initial iOS scanning support | 2 March 2026 | v0.31-beta | [Added iOS rules and Swift/Objective-C/configuration file selection; later releases expanded coverage.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.31-beta) |
 | Original RDL and inter-file Advanced Analysis | 2 March 2026 | v0.31-beta | [Conditional rule logic and independent cross-file analysis shipped together. Release display date is 2 March; publication timestamp is 1 March 2026 at 18:39 UTC.](https://github.com/coffeeandsecurity/DakshSCRA/commit/d90ba51) |
-| Web UI and Docker rollout | 16 March 2026 | v0.33-beta | [Introduced browser-launched scans, live progress, findings/artifact browsing, OS-aware directory selection and built-in Help; added Docker Compose Web UI/CLI services and portable environment setup.](https://github.com/coffeeandsecurity/DakshSCRA/releases/tag/v0.33-beta) |
-| External RDL architecture and reporting | 22 March 2026 | v0.37-beta | [External rule logic and revised advanced reports.](https://github.com/coffeeandsecurity/DakshSCRA/commit/5b17d89) |
-| RDL v2 semantic services and integrated workflow | 10 October 2026 | v0.39 | Typed semantic rules, bounded cross-file evidence and custom packs. |
 
 ### Comparative evidence
 
-- **Recon predecessor:** [Microsoft Application Inspector](https://www.microsoft.com/en-us/security/blog/2020/01/16/introducing-microsoft-application-inspector/) — 16 January 2020. Documents an earlier source-characteristics tool; does not establish a worldwide first/second ranking.
+- **Recon predecessor:** [Microsoft Application Inspector](https://www.microsoft.com/en-us/security/blog/2020/01/16/introducing-microsoft-application-inspector/) (16 January 2020) documents an earlier source-characteristics tool. Daksh SCRA recon is placed second after it.
 
-Dates identify repository or release milestones; they do not independently establish worldwide priority. “Not verified” means a release number has not been established from the reviewed evidence.
-
-Release milestones and comparative evidence are listed above.
+Dates identify repository or release milestones.
 
 DakshSCRA was introduced during **Black Hat USA 2022** training and publicly debuted at **Black Hat USA 2023**. Those dates describe the project's introduction, not every current feature.
 
@@ -156,7 +138,7 @@ available. Its baseline mounts the repository at `/scan-targets` and
 `${DAKSH_HOST_MOUNT:-/}` at `/host/root`. Use the helper for Windows drive discovery
 and common-folder shortcuts; plain Compose cannot detect the client OS.
 
-Then open [http://localhost:8080](http://localhost:8080).
+Then open [http://localhost:3030](http://localhost:3030).
 
 To use a different port:
 
@@ -170,6 +152,34 @@ Stop the stack with:
 docker compose down
 ```
 
+### Freeing disk space after repeated Docker builds
+
+Use the separate cleanup helpers from the repository folder. They preview by default:
+
+**This deletes Daksh containers, service images, networks and volumes, including saved accounts, scan history and artifacts stored in the runtime volume. Back up anything you want to keep first.**
+
+```bash
+python3 tools/clean_project_docker.py
+python3 tools/purge_all_docker.py
+```
+
+Add `--execute` to delete, then type the requested confirmation. The first helper
+removes this project's containers, networks, service images and volumes, preserving
+shared build cache. The second forcibly removes containers across **all projects on
+the selected Docker engine** and prunes images, networks, named/anonymous volumes
+and default-builder cache. It can affect a remote engine. Neither deletes
+bind-mounted host files or uninstalls Docker. Windows users can replace `python3`
+with `py`. See [cleanup scope and commands](docs/usage-guide.md#docker-cleanup-and-full-purge)
+for custom project names, exclusions and deletion details.
+
+Check remaining Docker disk usage with:
+
+```bash
+docker system df
+```
+
+To free only unused build cache while keeping saved Daksh data, run just `docker builder prune --all --force`. Files in bind-mounted host folders, including the repository and scan targets, remain on disk. Start again with `python3 tools/start_webui.py --detach` when ready.
+
 ### Logging in
 
 The Web UI requires an account. On first startup, an initial admin account is created from `DAKSH_ADMIN_USERNAME` / `DAKSH_ADMIN_PASSWORD` (set these in `.env`); if `DAKSH_ADMIN_PASSWORD` is left unset, a random password is generated and printed once to the API's startup log - save it, since it cannot be recovered afterward.
@@ -181,6 +191,7 @@ You'll be required to set your own password (and, optionally, username) the firs
 - Responsive command builder for scan, recon, estimate, recon+estimate, list, and PDF-from-JSON modes
 - Real-time console feed and live per-stage progress during execution
 - Per-job artifact snapshots for HTML / PDF / JSON outputs
+- Developer Mode, Code Review Mode, or Both guidance for results and reports; Both is the default
 - Fast in-browser navigation across run form, live feed, artifacts, and recent jobs
 - Built-in directory browser for selecting target paths (OS-aware: Windows, macOS, Linux / Docker)
 
@@ -484,218 +495,21 @@ analysis:
   - `professional_mode`: light modern analyzer theme
   - `both`: generate both theme variants side-by-side
 
-### RDL Rule Authoring
+### Pattern Rules and Semantic Rules
 
-RDL v1 definitions live under [`rules/scanning/logic/rdl/v1/`](rules/scanning/logic/rdl/v1/).
-Experimental RDL v2 definitions live under [`rules/scanning/logic/rdl/v2/`](rules/scanning/logic/rdl/v2/README.md),
-using `common/core/`, `<platform>/core/`, and `<platform>/framework/<framework>/`
-with bug-class subdirectories. The [v2 scope index](rules/scanning/logic/rdl/v2/INDEX.md) links
-all registered language/framework extension points, rule IDs, and current v1-to-v2 mappings.
-Directory presence does not imply completed coverage; v1 remains supported.
+**Pattern Rules identify areas of interest using patterns and contextual conditions. A reviewer investigates whether they represent actual security issues.**
 
-RDL (Rule Description Language) is DakshSCRA's externalized rule-logic layer. In the v1 architecture:
+**Semantic Rules provide stronger evidence by analyzing code relationships, input propagation and modeled protections. They can support a finding or suppression, but incomplete modeling, deployment settings and runtime behavior can still affect the conclusion.**
 
-- XML rules remain the rule inventory and carry metadata such as `name`, `regex`, descriptions, and optional `scan_config`.
-- RDL logic is executed by [`core/rdl_engine.py`](core/rdl_engine.py).
-- Rule logic files live under `rules/scanning/logic/rdl/v1/...` and are referenced from XML using `<rdl_ref>`.
-- `rdl_ref` values are resolved relative to `rules/scanning/`, for example:
-  `logic/rdl/v1/php/core/some_rule.rdl` -> `rules/scanning/logic/rdl/v1/php/core/some_rule.rdl`
-- Logic outcomes are exported into report JSON as metadata such as `logic_engine`, `logic_source`,
-  `logic_reason`, `logic_trace`, `logic_consulted_files`, and `logic_outcome`.
+Select `--rule-mode pattern|semantic|both` (default `both`), or choose the same modes in New Scan. Semantic-only skips native text baselines while retaining refined mobile source/configuration checks and supported flow models. A supported finding still requires reviewer confirmation; suppression does not establish safety.
 
-The older inline `<rdl>` form is no longer the active architecture and should not be used for new rules.
+Built-in checks are authored as single-file Pattern Rules under [`rules/scanning/platform/`](rules/scanning/platform/), preserving platform and framework directories. For example, Java checks live in `java/java.rules/*.yaml` and Spring checks in `java/framework/spring.rules/*.yaml`. Each file retains the pattern, contextual conditions, rule and impact descriptions, developer and reviewer guidance, recommendations, and all code-context and highlighting settings. Actionable `review_steps` and `recommendations` extend the original guidance with actionable instructions. Add a YAML file to an existing pack, validate it with `python3 tools/rdl_lint.py rules/scanning/platform`, then scan a small positive/negative fixture. The scanner discovers it without editing XML or a separate RDL v1 file.
 
-#### RDL architecture at a glance
+Semantic definitions remain under [`rules/scanning/logic/rdl/v2/`](rules/scanning/logic/rdl/v2/). Native text baselines evaluated by that engine remain Pattern Rules. Legacy `--rdl-engine` selections remain compatible with saved scans and existing scripts.
 
-```text
-XML rule
-  -> regex / exclude / scan_config / descriptions
-  -> rdl_ref
-       -> rules/scanning/logic/rdl/v1/<platform>/<scope>/<rule>.rdl
-           -> core/rdl_engine.py
-               -> pass / fail
-               -> reason / fail_reason
-               -> trace / consulted_files / outcome
-```
+See the [rule authoring and migration guide](docs/usage-guide.md#pattern-rules-and-semantic-rules) for the YAML format, conditions, validation, evidence settings and external XML import.
 
-#### Scan sequence
-
-For a source rule, DakshSCRA evaluates logic in this order:
-
-1. Recon selects matching platforms and frameworks.
-2. The XML rule is loaded from `rules/scanning/platform/...`.
-3. `regex` finds candidate lines or whole-file matches when present.
-4. `exclude` removes obvious noise for that rule, if present.
-5. The external `.rdl` file from `rdl_ref` is evaluated against the current file text, current file path, and project root.
-6. If the RDL script passes, DakshSCRA keeps the finding and merges exported logic metadata into the report output.
-7. If the RDL script fails, the match is suppressed with the RDL fail reason and decision trace metadata.
-
-For file-path rules in `filepaths.xml`, the same `rdl_ref` model applies, but the matching subject is
-the normalized relative path instead of source code text. In that mode, RDL receives the relative path
-string as the current-file text and path context.
-
-#### Current rule structure
-
-```xml
-<rule>
-  <name>Rule Name</name>
-  <regex><![CDATA[regex_to_match]]></regex>
-  <rdl_ref>logic/rdl/v1/common/core/insecure_sql_query_unsafe_string_concatenation.rdl</rdl_ref>
-  <exclude><![CDATA[pattern_to_exclude_lines]]></exclude>  <!-- optional -->
-  <scan_config>...</scan_config>                           <!-- optional -->
-  <rule_desc>Short description of what the rule detects.</rule_desc>
-  <vuln_desc>Why the pattern matters.</vuln_desc>
-  <developer>Fix guidance for developers.</developer>
-  <reviewer>Manual confirmation guidance for reviewers.</reviewer>
-</rule>
-```
-
-#### Current `.rdl` structure
-
-```text
-VERSION 1
-WHEN PRESENT /\\b(?:mysql_query|mysqli_query|->query)\\s*\\(/i
-WHEN EXPR PRESENT:\\$_(GET|POST|REQUEST|COOKIE) && MISSING:\\b(?:prepare|bindParam|bindValue|PDO::prepare)\\b
-REPORT AS area_of_interest
-REASON SQL query execution appears reachable without parameterisation in this file.
-FAIL_REASON Matching query API was found, but the file also contains prepared-statement indicators.
-TRACE SQLi gate: input source present and mitigation missing.
-```
-
-#### Current layout
-
-```text
-rules/
-└── scanning/
-    ├── platform/
-    │   ├── php/php.xml
-    │   ├── java/java.xml
-    │   └── ...
-    └── rdl/
-        └── logic/
-            ├── v1/
-            │   ├── common/core/
-            │   ├── php/core/
-            │   └── ...
-            └── v2/
-                ├── common/core/
-                ├── php/core/
-                └── ...
-```
-
-#### Execution semantics
-
-- `WHEN PRESENT`, `WHEN MISSING`, and `WHEN CURRENT_FILE_MATCHES` evaluate against the current file text.
-- `WHEN FILE_NAME_IS` and `WHEN FILE_PATH_MATCHES` evaluate against the current file path context.
-- `WHEN EXPR` supports boolean logic over `PRESENT:`, `MISSING:`, and `EXISTS:` predicates.
-- `OBSERVE PROJECT_HAS_GLOB ... AS ...` does not gate the finding; it records related project files in trace metadata.
-- `REPORT AS`, `REASON`, `FAIL_REASON`, and `TRACE` control the exported reporting metadata.
-- Regex tokens can be written either as raw patterns or as `/pattern/flags`, with `i`, `m`, and `s` supported.
-
-#### Supported RDL commands
-
-| Command | Behaviour | Typical use |
-|---|---|---|
-| `WHEN PRESENT <regex>` | Require a pattern to exist in the current file text | Require a co-occurring risky API or sensitive field |
-| `WHEN MISSING <regex>` | Require a pattern to be absent from the current file text | Suppress when mitigation already exists |
-| `WHEN EXPR <expr>` | Evaluate boolean expressions using `PRESENT:` / `MISSING:` / `EXISTS:` with `&&`, `||`, `!` | Express compact risk gates |
-| `WHEN CURRENT_FILE_MATCHES <regex>` | Match against the full current file text | Re-check complex whole-file conditions |
-| `WHEN FILE_NAME_IS <name>` | Require the current filename to match exactly | Limit plist / manifest / config rules |
-| `WHEN FILE_PATH_MATCHES <glob>` | Require the current relative path to match a glob | Narrow framework/config path rules |
-| `UNLESS CURRENT_FILE_MATCHES <regex>` | Fail when the whole file matches an exclusion pattern | Block known-safe structural cases |
-| `OBSERVE PROJECT_HAS_GLOB <glob> AS <label>` | Record related project files in trace metadata | Surface supporting config or companion files |
-| `REPORT AS <outcome>` | Set the rule outcome, usually `area_of_interest` | Future-proof explicit outcomes |
-| `REASON <text>` | Reason shown when the rule passes | Explain why the finding stayed visible |
-| `FAIL_REASON <text>` | Reason shown when the rule suppresses a match | Explain why the hit was filtered |
-| `TRACE <text>` | Add debug/decision trace lines | Migration/debugging support |
-
-Boolean expressions in `WHEN EXPR` support:
-- `PRESENT:<regex>`
-- `MISSING:<regex>`
-- `EXISTS:<regex>`
-- `&&`, `||`, `!`, and parentheses
-
-#### Example 1 - PHP SQL injection gating
-
-XML rule:
-
-```xml
-<rule>
-  <name>Possible SQL Injection in Query Execution</name>
-  <regex><![CDATA[(?i)\b(?:mysql_query|mysqli_query|->query)\s*\(]]></regex>
-  <rdl_ref>logic/rdl/v1/common/core/insecure_sql_query_unsafe_string_concatenation.rdl</rdl_ref>
-  <rule_desc>...</rule_desc>
-</rule>
-```
-
-External RDL:
-
-```text
-VERSION 1
-WHEN PRESENT /\b(?:mysql_query|mysqli_query|->query)\s*\(/i
-WHEN EXPR PRESENT:\$_(GET|POST|REQUEST|COOKIE) && MISSING:\b(?:prepare|bindParam|bindValue|PDO::prepare)\b
-REPORT AS area_of_interest
-REASON Query execution appears to rely on direct input without parameterisation.
-FAIL_REASON Query API matched, but parameterised query indicators were also found in the file.
-```
-
-#### Example 2 - Android manifest rule with file-aware checks
-
-XML rule:
-
-```xml
-<rule>
-  <name>Exported Components Without Permission</name>
-  <regex><![CDATA[<(?P<component>activity|service|receiver|provider)\s[^>]*android:name="(?P<name>[^"]+)"[^>]*android:exported="true"[^>]*(?:/>|>)]]></regex>
-  <rdl_ref>logic/rdl/v1/mobile/android/core/exported_components.rdl</rdl_ref>
-  <scan_config>...</scan_config>
-</rule>
-```
-
-External RDL:
-
-```text
-VERSION 1
-WHEN FILE_NAME_IS AndroidManifest.xml
-WHEN CURRENT_FILE_MATCHES /android:exported\s*=\s*"true"/i
-WHEN MISSING /android:permission\s*=\s*"/i
-REPORT AS area_of_interest
-REASON Exported component appears reachable without a permission guard.
-```
-
-#### Example 3 - File-path area-of-interest rule
-
-XML rule:
-
-```xml
-<rule>
-  <name>Admin Section File Path</name>
-  <regex><![CDATA[(?i)(^|/)(admin|administrator|root)(/|$)]]></regex>
-  <rdl_ref>logic/rdl/v1/filepaths/core/admin_section.rdl</rdl_ref>
-</rule>
-```
-
-External RDL:
-
-```text
-VERSION 1
-WHEN CURRENT_FILE_MATCHES /(^|\/)(admin|administrator|root)(\/|$)/i
-UNLESS CURRENT_FILE_MATCHES /(^|\/)(tests?|docs?|samples?|examples?)(\/|$)/i
-REPORT AS area_of_interest
-REASON File path suggests privileged application functionality.
-FAIL_REASON Path matched an excluded documentation or sample location.
-```
-
-#### Authoring guidance
-
-- Keep `regex` broad enough to catch candidates, then use RDL to filter context.
-- Prefer `rdl_ref` for all rule logic and keep the `.rdl` file beside the appropriate platform/framework logic tree.
-- Do not add new inline `<rdl>` blocks.
-- Use `WHEN PRESENT` / `WHEN MISSING` for simple gates and `WHEN EXPR` only when the logic is genuinely boolean.
-- Put reviewer-facing reasoning in `REASON` and suppression explanations in `FAIL_REASON`.
-- Treat `PRESENT` and `MISSING` as whole-file checks. A mitigation anywhere in the file can suppress every match from that file.
-- Use `OBSERVE PROJECT_HAS_GLOB` to enrich findings with project context, not as a pass/fail gate.
-- Keep `logic/rdl/v1/...` paths stable and platform-scoped so XML rules remain thin and the logic layer stays reusable.
+Applicable platform and framework packs also include security-operation review candidates. Semantic models distinguish response-origin values, bulk-binding sources and cryptographic key arguments, and can trace supported configuration fallbacks into key operations. Newly generated findings associate supported method/class control declarations with the operation; typed C# model review can retain declared field policies. Tenant isolation requires an application-specific invariant. These are evidence-backed review capabilities with explicit modeling limits, not guaranteed detection of every authorization or business-logic flaw. See [security operation and control context](docs/usage-guide.md#security-operation-and-control-context).
 
 ---
 
@@ -754,3 +568,17 @@ When running via the Web UI, each job's outputs are additionally snapshotted und
 If DakshSCRA has helped your team save significant time, effort, or cost, reduced dependence on expensive commercial tools, improved review coverage, or made code review more structured and effective, feel free to reach out and share your experience. I am always open to thoughtful feedback and interesting conversations.
 
 Found a bug or want to contribute? Open an issue or pull request on GitHub.
+
+Global date and time preferences are shared by the web UI and CLI. Set them in **Settings → Global date and time**. The defaults are `MM-DD-YYYY`, 24-hour time and UTC. Choose `DD-MM-YYYY` or `YYYY-MM-DD`, 12-hour time, and any valid IANA time zone. New scans capture these preferences; web displays use the current global settings. Existing exported files remain unchanged. Machine timestamps and scan IDs retain their canonical format.
+
+```bash
+python dakshscra.py --settings
+python dakshscra.py --save-settings --date-format MM-DD-YYYY --time-format 12h --timezone Pacific/Auckland
+python dakshscra.py -r auto -t ./src --date-format DD-MM-YYYY --time-format 24h --timezone UTC
+```
+
+The last command overrides preferences for that scan without saving them globally.
+
+Mobile reviews cover native Android/iOS and supported framework code, including applicable native bridge files in hybrid projects. Pattern candidates remain available for investigation; semantic refinements associate settings with their declaration or operation and record modeled flows. See the [mobile review coverage guide](docs/usage-guide.md#mobile-security-review-coverage) for checks, edge cases and verification boundaries.
+
+Mobile scans also export `mobile_review.json` and a readable `mobile_review.html` beside the structured scan data. These connect build scope, credential storage and backup policies, sensitive logging, cleanup callers, native bridge identities, API contracts and unresolved analysis. New source checks cover release debug signing, unchecked provider-stream reads and API-to-privacy-description mismatches. Exact source contracts do not establish the shipped artifact, runtime reachability or backend authorization.

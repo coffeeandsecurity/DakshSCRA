@@ -2,7 +2,7 @@ VERSION 2
 RULE ios.webview-unbounded-file-read VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:allowingReadAccessTo\\s*:\\s*(?:URL\\s*\\(\\s*fileURLWithPath\\s*:\\s*[\"\\x27]/[\"\\x27]|(?:NSHomeDirectory\\s*\\())|allowingReadAccessToURL\\s*:\\s*\\[NSURL\\s+fileURLWithPath\\s*:\\s*@\"/\")" ""
-REPORT "WKWebView Broad File Read Scope"
+REPORT "WebView File Access Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

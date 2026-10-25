@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.ios.core.review_ios_ats_global_arbitrary_loads VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "<key>NSAllowsArbitraryLoads</key>" "im"
+REPORT "App Transport Security Review"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -3,7 +3,7 @@ RULE baseline.php.framework.yii.unsafe_mass_assignment_via_load_or_setattributes
 IN FILE
 WHEN TEXT_MATCHES "->load\\s*\\(\\s*\\$_(?:POST|GET|REQUEST)|->setAttributes\\s*\\(\\s*\\$_(?:POST|GET|REQUEST)" "im"
 WHEN TEXT_MISSING "safeAttributes|rules|scenarios|safe\\s*=>" "im"
-REPORT "Unsafe Mass Assignment via load() or setAttributes()"
+REPORT "Bulk Object Field Binding Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

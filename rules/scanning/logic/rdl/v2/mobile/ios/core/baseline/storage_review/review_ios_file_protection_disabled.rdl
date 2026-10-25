@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.ios.core.review_ios_file_protection_disabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:NSFileProtectionNone|FileProtectionType\\s*\\.\\s*none|URLFileProtection\\s*\\.\\s*none|noFileProtection)\\b" "im"
+REPORT "File Data Protection Explicitly Disabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

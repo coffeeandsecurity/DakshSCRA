@@ -1,0 +1,50 @@
+format: daksh-pattern-rule/v1
+id: mobile.xplat.cordova.core.cordova_webview_javascript_bridge_marker
+title: "WebView Native Bridge Review"
+order: 8
+category: Framework-Specific Security
+detection:
+  pattern: addJavascriptInterface\(|cordova\.exec\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects JavaScript-native bridge usage requiring trust-boundary review.
+  trace:
+  - Externalized mobile rule logic for Cordova WebView JavaScript Bridge Marker.
+  description: 'Review target: Cordova WebView JavaScript Bridge Marker. The application renders web content, executes
+    scripts, or exposes a native messaging interface. Resolve navigation trust, origin isolation, and validation
+    at the native boundary. Resolve the loaded content and frame origin, the exact WebView instance, and the native
+    operations available to that content.'
+  impact: Attacker-controlled web content may execute in a trusted context or invoke native operations, exposing
+    session data or application privileges when isolation and per-operation checks are insufficient.
+  remediation: Restrict navigation and message origins to required trusted sources. Avoid dynamic script construction,
+    minimize native bridge methods, validate message inputs, and authorize sensitive native operations. Restrict
+    schemes and parsed hosts, isolate external content, and validate messages and permissions on the native side.
+  reviewer: Review plugin bridge interfaces and content trust assumptions. This can be confirmed as an issue when
+    the matched path is reachable and required controls are missing, weak, or inconsistent. Test subframes, redirects,
+    javascript/data/content URLs, deceptive host suffixes, and a safe WebView beside an unsafe instance; JavaScript
+    enablement alone is not a vulnerability.
+  review_steps:
+  - Identify the loaded content, permitted origins and script-to-native operations exposed by the application.
+  - Inspect navigation, message validation and resource or operation authorization on the native side.
+  - Test untrusted content and unexpected messages; a bridge declaration alone does not prove unauthorized native
+    access.
+  - Resolve the loaded content and frame origin, the exact WebView instance, and the native operations available
+    to that content.
+  - Test subframes, redirects, javascript/data/content URLs, deceptive host suffixes, and a safe WebView beside
+    an unsafe instance; JavaScript enablement alone is not a vulnerability.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Restrict trusted content and navigation and expose only the native operations required by the application.
+  - Validate messages and enforce native-side authorization; test rejection of unapproved origins and unexpected
+    operations.
+  - Restrict schemes and parsed hosts, isolate external content, and validate messages and permissions on the native
+    side.
+scan_config:
+  match_mode: file
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: magenta

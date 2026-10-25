@@ -4,7 +4,7 @@ IN PROJECT
 LET first BE RESOURCE MATCHES concurrency.lock
 LET second BE RESOURCE MATCHES concurrency.lock
 WHEN lock_order first second AND lock_order second first
-REPORT "inconsistent lock ordering"
+REPORT "Inconsistent Lock Ordering"
 SEVERITY HIGH
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

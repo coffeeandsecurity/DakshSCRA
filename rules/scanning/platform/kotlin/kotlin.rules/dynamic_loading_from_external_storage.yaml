@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: kotlin.core.dynamic_loading_from_external_storage
+title: "External Code Loading Review"
+order: 16
+category: External Storage - Insecure Practices
+detection:
+  pattern: (DexClassLoader|PathClassLoader)\s*\([^,]*Environment\.getExternalStorageDirectory
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:verify|signature|checksum|MessageDigest|trusted
+reporting:
+  type: area_of_interest
+  reason: Detects dynamic loading of files from external storage.
+  trace:
+  - Externalized rule logic for Dynamic Loading from External Storage.
+  description: The code accesses, creates, deletes, or shares filesystem data. Resolve path provenance, destination
+    containment, permission modes, and any concurrent access.
+  impact: An attacker controlling a path or shared file may read or replace private files, delete data, or redirect
+    an operation outside its intended directory if containment and access controls are ineffective.
+  remediation: Resolve paths beneath a fixed permitted root and verify containment and effective permissions. Use
+    safe exclusive temporary-file creation, restrict sharing, and account for symlinks and concurrent changes.
+  reviewer: Check for usage of `DexClassLoader` or `PathClassLoader` with files retrieved from external storage.
+    Verify that proper cryptographic verification mechanisms are in place. This can be confirmed as an issue when
+    the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Trace external influence over the path and resolve it as the filesystem will, including relative segments and
+    symbolic links.
+  - Check the resolved destination remains within the permitted root and that the caller is authorized for the specific
+    file operation.
+  - Inspect read, write and extraction paths separately; record the effective path restrictions and deployment permissions.
+  recommendations:
+  - Resolve paths against a fixed permitted root and enforce containment with filesystem-aware checks; avoid simple
+    prefix checks.
+  - Use application-controlled file identifiers where possible, restrict filesystem privileges, and test traversal
+    and archive extraction boundaries.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

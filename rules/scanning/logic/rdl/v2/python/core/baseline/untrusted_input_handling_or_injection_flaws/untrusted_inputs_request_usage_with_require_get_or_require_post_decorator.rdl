@@ -3,7 +3,7 @@ RULE baseline.python.core.untrusted_inputs_request_usage_with_require_get_or_req
 IN FILE
 WHEN TEXT_MATCHES "@require_(GET|POST)[\\s\\S]*?def\\s+(\\w+)\\(.*?request.*?:" "im"
 WHEN TEXT_MISSING "cleaned_data|validate|sanitize|escape" "im"
-REPORT "Untrusted Inputs: Request Usage with require_GET or require_POST Decorator"
+REPORT "Untrusted Input Entry Point"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

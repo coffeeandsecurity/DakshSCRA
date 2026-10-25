@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: common.core.authorization_modules
+title: "Authorization Review"
+order: 2
+category: Authentication or Authorization Functionalities
+detection:
+  pattern: (?i)\b(?:authoriz(?:e|ing|ed)|access_control|rbac|abac|acl_(?:get|set|check)\w*)\b
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: An authorization API or policy marker is present. Review enforcement and callers; the marker alone does
+    not establish an authorization defect.
+  trace:
+  - Externalized rule logic for Authorization Modules.
+  description: The checked code implements an identity, access-control, or abuse-prevention decision. Determine
+    the trusted verifier, protected resources, and whether the control is enforced on every relevant path.
+  impact: If identity or resource authorization can be bypassed, an attacker may impersonate a user, access another
+    user’s data, or perform restricted operations. A control’s presence alone does not establish a weakness.
+  remediation: Enforce authentication and object-level authorization on the trusted server or privileged boundary.
+    Use strong verifier material, appropriate rate limits and recovery controls, and test access by unauthenticated
+    and insufficiently privileged callers.
+  reviewer: Verify that authorization checks are properly enforced and configured to secure sensitive data and resources.
+    This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak,
+    or inconsistent.
+  review_steps:
+  - Identify the actor, action and protected resource, including ownership and tenant boundaries.
+  - Trace every reachable request or service path and inspect the effective permission check before sensitive work
+    occurs.
+  - Test unauthenticated access, insufficient roles and access to another user or tenant; record effective middleware
+    and service-level controls.
+  recommendations:
+  - Enforce authorization on the server for each protected action and resource; deny requests without an explicit
+    permitted outcome.
+  - Add tests for cross-user and cross-tenant access and ensure alternate routes cannot bypass the same policy.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

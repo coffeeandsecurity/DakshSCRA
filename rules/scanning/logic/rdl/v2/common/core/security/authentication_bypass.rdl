@@ -4,7 +4,7 @@ IN FUNCTION
 LET operation BE CALL MATCHES authentication.success
 WHEN reachable operation
 REQUIRE NOT authentication.proof_dominates operation
-REPORT "authentication bypass"
+REPORT "Authentication Bypass"
 SEVERITY CRITICAL
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: common.core.miscellaneous_webapp_mitigations_csrf_xss_sql_injection
+title: "Security Control Review"
+order: 24
+category: Common Mitigations
+detection:
+  pattern: \\S*(CSRF|XSS|SQLi)\\S*(\\.|\\-\\>)(ToLower|ToUpper)\\s*\\
+  conditions:
+  - WHEN PRESENT (?i)(CSRF|XSS|SQLi)
+  - WHEN EXPR PRESENT:(?i)(ToLower|ToUpper) && MISSING:(?i)(sanitize|escape|encode|prepared|parameterized)
+reporting:
+  type: area_of_interest
+  reason: Detects standard mitigation techniques for CSRF, XSS, and SQL injection vulnerabilities.
+  trace:
+  - 'Externalized rule logic for Miscellaneous Webapp Mitigations: CSRF, XSS, SQL Injection.'
+  description: The code contains a security-control marker. Its presence is a review surface rather than evidence
+    that the control is defective or consistently enforced.
+  impact: No adverse security consequence follows from the presence of a protection alone. If it is bypassed or
+    applied outside the correct context, the protected operation may still permit injection or unauthorized access.
+  remediation: Verify that the control applies to every relevant entry point and uses the required context and policy.
+    Retain effective protections; test bypass cases before recommending a change.
+  reviewer: Evaluate the effectiveness of the standard mitigation techniques and assess if additional measures are
+    necessary for robust security. This can be confirmed as an issue when the matched path is reachable and required
+    controls are missing, weak, or inconsistent.
+  review_steps:
+  - Locate the final query and determine whether caller-controlled data can alter its structure; inspect interpolated
+    fragments and raw-query helpers.
+  - Verify that values are bound by the database driver. For identifiers or sort directions that cannot be bound,
+    inspect a fixed mapping of allowed choices.
+  - Record the reachable caller and effective controls; a constant query or correctly bound value does not establish
+    injection.
+  recommendations:
+  - Bind data values with the driver or ORM parameter API; avoid constructing query syntax from external strings.
+  - Use fixed mappings for dynamic identifiers and ordering. Test that unusual input remains data and that the database
+    account has only required privileges.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: green

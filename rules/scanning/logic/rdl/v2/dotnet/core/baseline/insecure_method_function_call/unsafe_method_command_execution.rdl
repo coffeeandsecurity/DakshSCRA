@@ -3,7 +3,7 @@ RULE baseline.dotnet.core.unsafe_method_command_execution VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(?i)execute\\s(\\@|\\()" "im"
 WHEN (TEXT_MATCHES "(Request\\.|QueryString|Form|userInput|args)" "im" AND TEXT_MISSING "(allowlist|whitelist|argument escaping|ProcessStartInfo)" "im")
-REPORT "Unsafe Method: Command Execution"
+REPORT "OS Command Injection Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

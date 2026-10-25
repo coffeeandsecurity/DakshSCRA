@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.ios.core.review_ios_runtime_method_hooking VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:method_exchangeImplementations|method_setImplementation|class_replaceMethod|MSHookFunction|MSHookMessageEx|fishhook|rebind_symbols)\\s*\\(" "im"
+REPORT "Objective-C Runtime Method Hooking"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

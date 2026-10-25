@@ -1,0 +1,46 @@
+format: daksh-pattern-rule/v1
+id: common.core.api_endpoint_detection
+title: "API Endpoint Review"
+order: 18
+category: APIs and Endpoints
+detection:
+  pattern: (["'])(\/\w+\/{[^{}]+})\1
+  conditions:
+  - WHEN PRESENT (?i)/\w+/\{\w+\}
+  - WHEN EXPR PRESENT:(?i)\b(route|router|controller|handler|get|post|put|delete)\b
+reporting:
+  type: area_of_interest
+  reason: Detects the usage of potential API endpoints in source code files, which may require special handling
+    and validation.
+  trace:
+  - Externalized rule logic for API Endpoint Detection.
+  summary: Detects potential API endpoints in source code.
+  description: The code declares an entry point, model, destination, or configuration value that may cross a trust
+    boundary. Identify callers, recipients, and the required data-access policy.
+  impact: A boundary that trusts unauthorized callers or exposes private output may permit data disclosure or state
+    changes. A declaration, address, or architectural marker alone does not establish such a failure.
+  remediation: Trace the actual boundary, restrict accepted inputs and recipients, and enforce authentication and
+    object-level authorization where required. Verify both authorized and denied use cases.
+  reviewer: Check for the presence of API endpoints in the source code. Verify if developers have implemented appropriate
+    security measures for handling API endpoints, such as input validation, authentication, authorization, rate
+    limiting, and secure data handling. Also assess the sensitivity of the data handled by the API endpoints and
+    confirm the presence of relevant security controls. This can be confirmed as an issue when the matched path
+    is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the matched construct in its containing function or configuration and identify the security-sensitive
+    behavior under review.
+  - Verify reachable callers, external influence and effective protections, including deployment overrides and failure
+    paths.
+  - Record concrete evidence for a confirmed issue or a justified suppression; retain an unresolved outcome when
+    the required evidence is unavailable.
+  recommendations:
+  - Apply the rule-specific correction above only after verifying the affected behavior and required control.
+  - Add a regression case for the unsafe condition and a valid protected case; verify the effective behavior in
+    the relevant deployment.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

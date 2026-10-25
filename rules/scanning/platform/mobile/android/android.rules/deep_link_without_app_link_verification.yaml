@@ -1,0 +1,55 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.deep_link_without_app_link_verification
+title: "Deep Link without App Link Verification"
+order: 16
+category: Insecure Code Patterns
+detection:
+  pattern: '[A-Za-z_][\w.-]*:scheme\s*=\s*"(?!https?)[^"]+"|<data\s[^>]*[A-Za-z_][\w.-]*:host\s*='
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects custom URI scheme deep links without Android App Links autoVerify, which allows any app to intercept
+    them.
+  trace:
+  - Externalized mobile rule logic for Deep Link Without App Link Verification.
+  description: 'Review target: Deep Link Without App Link Verification. The code handles a link, redirect, or externally
+    selected navigation target. Validate the effective destination and any action triggered by the receiving handler.
+    Resolve the external entry point, its caller or URI grant, and the sensitive operation or resource reached.'
+  impact: A crafted destination or link may direct users to a phishing site, leak URL-carried secrets, or trigger
+    unauthorized operations if routing trusts external parameters without the required access checks.
+  remediation: Allowlist schemes, hosts, paths, and operations. Validate parsed link parameters, avoid credentials
+    in URLs, and require authentication and authorization before sensitive actions. Minimize exported surfaces and
+    URI grants; validate parsed schemes, hosts and paths, use verified links where appropriate, and authorize each
+    sensitive action.
+  reviewer: Check all deep link intent filters for autoVerify="true". Confirm that sensitive data (tokens, codes)
+    is not delivered via unverified custom schemes. This can be confirmed as an issue when the matched path is reachable
+    and required controls are missing, weak, or inconsistent. Resolve merged manifests, aliases and SDK defaults;
+    test custom-scheme collision, malformed URLs, encoded paths, nested intents, read/write grants and permission
+    inheritance. Registration or permission presence alone does not prove unauthorized access.
+  review_steps:
+  - Determine whether untrusted input controls the redirect destination and whether the redirect is reachable.
+  - Inspect URL parsing, relative versus absolute destinations, scheme handling and authorization around the redirect.
+  - Check how encoded or ambiguous URLs are interpreted by the framework and browser before confirming an unsafe
+    redirect.
+  - Resolve the external entry point, its caller or URI grant, and the sensitive operation or resource reached.
+  - Resolve merged manifests, aliases and SDK defaults; test custom-scheme collision, malformed URLs, encoded paths,
+    nested intents, read/write grants and permission inheritance. Registration or permission presence alone does
+    not prove unauthorized access.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Prefer application route identifiers mapped to fixed destinations; permit only necessary relative paths or explicitly
+    allowed external destinations.
+  - Reject unsupported schemes and ambiguous destinations and test redirect handling after decoding and normalization.
+  - Minimize exported surfaces and URI grants; validate parsed schemes, hosts and paths, use verified links where
+    appropriate, and authorize each sensitive action.
+scan_config:
+  match_mode: file
+  context_type: lines
+  context_lines_before: '2'
+  context_lines_after: '0'
+  aggregate: file
+  report_format: default
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: yellow

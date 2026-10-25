@@ -3,7 +3,7 @@ RULE baseline.cpp.core.exceptions_in_destructors_risk_of_unhandled_behavior VERS
 IN FILE
 WHEN TEXT_MATCHES "\\bthrow\\s*\\(" "im"
 WHEN (TEXT_MATCHES "~\\w+\\s*\\(\\s*\\)\\s*\\{|~\\w+\\s*\\(\\s*\\)\\s*noexcept" "im" AND TEXT_MISSING "noexcept|try\\s*\\{|catch\\s*\\(|std::terminate" "im")
-REPORT "Exceptions in Destructors: Risk of Unhandled Behavior"
+REPORT "Destructor Exception Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -1,0 +1,46 @@
+format: daksh-pattern-rule/v1
+id: java.core.file_sharing_without_content_provider
+title: Outgoing URI Intent Review
+order: 11
+category: Internal Storage - Insecure File Permissions
+detection:
+  pattern: \b(?:new\s+(?:android\.content\.)?Intent\s*\(\s*(?:android\.content\.)?Intent\.[A-Z_]+\s*,\s*(?:android\.net\.)?Uri\s*\.\s*parse|\w+\s*\.\s*setData(?:AndType)?\s*\(\s*(?:android\.net\.)?Uri\s*\.\s*parse)\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Review an outgoing URI carried by a locally constructed Android Intent.
+  trace:
+  - Externalized rule logic for File Sharing Without Content Provider.
+  description: A constructed intent receives a URI. Resolve its actual scheme, destination
+    handler, URI grants and sensitive content; an HTTP URL does not require a FileProvider.
+  impact: An unintended recipient, untrusted URI scheme or overly broad content grant
+    can expose data when a sensitive value reaches this outgoing intent. A VIEW intent
+    alone does not prove nested-intent forwarding, incoming export or private-file
+    disclosure.
+  remediation: Validate the scheme and intended recipient. Use a content provider
+    with narrowly scoped grants when sharing private files; for remote URLs, protect
+    transport and encode request components. An unrelated provider import or grant
+    elsewhere does not protect this operation.
+  reviewer: Trace the same URI into the launched intent and distinguish remote web
+    links from private-file sharing. Review the selected handler, release reachability
+    and data sensitivity before confirming exposure.
+  review_steps:
+  - Inspect the effective export status, permission requirements and runtime identity
+    checks on the inter-process interface.
+  - Trace untrusted callers and received values to sensitive actions, including indirect
+    recipients and granted resource access.
+  - Verify unauthorized callers cannot invoke the protected operation; a declared
+    component or intent alone is not an issue.
+  recommendations:
+  - Keep internal components private where possible; enforce caller permissions and
+    resource authorization on exposed operations.
+  - Constrain recipients and granted access and test calls from an untrusted process
+    or application.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

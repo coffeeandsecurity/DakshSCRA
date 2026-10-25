@@ -2,7 +2,7 @@ VERSION 2
 RULE android.screenshot-protection-disabled VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\bclearFlags\\s*\\([^\\n;]{0,160}\\bFLAG_SECURE\\b" ""
-REPORT "Secure Window Protection Explicitly Cleared"
+REPORT "Screen Capture Protection Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

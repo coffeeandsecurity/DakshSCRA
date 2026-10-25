@@ -3,7 +3,7 @@ RULE baseline.kotlin.core.insecure_external_storage_read VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(Environment\\.getExternalStorageDirectory|Context\\.getExternalFilesDir)\\s*\\(\\)\\s*\\.read" "im"
 WHEN (TEXT_MISSING "validate|sanitize|allowlist" "im" AND TEXT_MISSING "test|example|sample" "im")
-REPORT "Insecure External Storage Read"
+REPORT "External File Storage Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

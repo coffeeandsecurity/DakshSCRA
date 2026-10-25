@@ -3,7 +3,7 @@ RULE baseline.java.framework.struts.ognl_expression_injection_via_action_name VE
 IN FILE
 WHEN TEXT_MATCHES "getValue\\s*\\(\\s*[^)]*\\+|findValue\\s*\\(\\s*[^)]*(?:request|param|getParameter)" "im"
 WHEN TEXT_MISSING "ESAPI\\.encoder|AntiXss|sanitize|escapeHtml" "im"
-REPORT "OGNL Expression Injection via Action Name"
+REPORT "OGNL Expression Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

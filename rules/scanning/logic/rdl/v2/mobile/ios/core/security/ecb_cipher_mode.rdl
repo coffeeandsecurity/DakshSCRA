@@ -2,7 +2,7 @@ VERSION 2
 RULE ios.ecb-cipher-mode VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\bkCCOptionECBMode\\b" ""
-REPORT "iOS ECB Cipher Mode"
+REPORT "ECB Cipher Mode Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

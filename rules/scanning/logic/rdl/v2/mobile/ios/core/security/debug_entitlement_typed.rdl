@@ -2,7 +2,7 @@ VERSION 2
 RULE ios.debug-entitlement-typed VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "<key>get-task-allow</key>" ""
-REPORT "Debug Task Entitlement In Apple Configuration"
+REPORT "Debug Task Entitlement in Apple Configuration"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

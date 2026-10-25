@@ -3,7 +3,7 @@ RULE baseline.cpp.core.c_style_variadic_functions_potential_for_type_safety_issu
 IN FILE
 WHEN TEXT_MATCHES "\\b(__attribute__\\s*\\(\\s*format\\s*\\(\\s*__variadic\\s*,)" "im"
 WHEN (TEXT_MATCHES "va_list|va_start|va_arg|va_end" "im" AND TEXT_MISSING "vsnprintf|type_safe|fmt::|std::format" "im" AND TEXT_MISSING "test|example" "im")
-REPORT "C-style Variadic Functions: Potential for Type Safety Issues"
+REPORT "Variadic Function Type Safety Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

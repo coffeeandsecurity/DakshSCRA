@@ -1,0 +1,46 @@
+format: daksh-pattern-rule/v1
+id: java.core.disabled_input_validation
+title: Disabled Input Validation
+order: 26
+category: Disabled/Missing Security Controls
+detection:
+  pattern: (\bvalidateInput\s*=\s*['"]false['"])
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:validateRequest\s*=\s*"false"|@SuppressWarnings.*"unchecked"|@Valid\s*=\s*false|disableValidation
+    && MISSING:test|example
+reporting:
+  type: area_of_interest
+  reason: Detects disabled input validation in Java code.
+  trace:
+  - Externalized rule logic for Disabled Input Validation.
+  description: The code accepts or reads externally influenced data. Trace it to security-sensitive operations and
+    identify the validation and authorization required by each destination.
+  impact: External input may cause injection, incorrect decisions, or unauthorized data access if it reaches a sensitive
+    operation without the controls required by that operation. Reading input alone does not establish a vulnerability.
+  remediation: Validate type, size, and allowed values at trust boundaries, and apply destination-specific parameter
+    binding or output encoding. Enforce authorization independently of input validation.
+  reviewer: Verify that input validation mechanisms are properly implemented and enabled for all relevant data inputs.
+    Identify any instances where input validation is explicitly disabled and assess the impact of such configurations.
+    Also evaluate the effectiveness of the implemented input validation measures in preventing common security vulnerabilities.
+    This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak,
+    or inconsistent.
+  review_steps:
+  - Identify who can supply the matched input, including stored values and upstream services; record its type, size
+    limits and trust boundary.
+  - Trace the value through transformations to each sensitive operation. Check the protection at that destination
+    and resource-level authorization.
+  - Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side
+    check alone is insufficient evidence.
+  recommendations:
+  - Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve
+    legitimate characters and protect each destination separately.
+  - Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations
+    where applicable. Test rejected input and unauthorized access.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

@@ -3,7 +3,7 @@ RULE baseline.php.framework.wordpress.wordpress_dangerous_dynamic_eval_template_
 IN FILE
 WHEN TEXT_MATCHES "\\beval\\s*\\(|assert\\s*\\(\\s*\\$|create_function\\s*\\(" "im"
 WHEN TEXT_MISSING "validate|allowlist|trusted|esc_attr|wp_kses|test|example" "im"
-REPORT "Wordpress Dangerous Dynamic Eval/Template Execution"
+REPORT "Dynamic Code Evaluation Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

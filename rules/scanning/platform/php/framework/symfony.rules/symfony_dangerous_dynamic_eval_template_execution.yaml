@@ -1,0 +1,40 @@
+format: daksh-pattern-rule/v1
+id: php.framework.symfony.symfony_dangerous_dynamic_eval_template_execution
+title: "Dynamic Code Evaluation Review"
+order: 2
+category: Framework-Specific Security
+detection:
+  pattern: \beval\s*\(|assert\s*\(\s*\$|create_function\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:validate|allowlist|trusted|twig|test|example
+reporting:
+  type: area_of_interest
+  reason: Detects dangerous dynamic code execution primitives in PHP code paths.
+  trace:
+  - Externalized rule logic for Symfony Dangerous Dynamic Eval/Template Execution.
+  description: The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace
+    executable selection and evaluated content to their trust boundaries.
+  impact: If an attacker controls interpreted syntax or the operation selected, code or commands may run with the
+    application’s privileges, allowing data theft, state changes, or service disruption.
+  remediation: Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate
+    argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates
+    or expressions.
+  reviewer: Review data flow into dynamic execution sinks for user-controlled input. This can be confirmed as an
+    issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Determine whether the matched operation interprets code, expressions or templates; identify its execution context
+    and permissions.
+  - Trace control over the executed text and distinguish fixed application code from externally influenced content.
+  - Inspect restrictions and failure paths; record a reachable input-to-execution path before confirming code execution.
+  recommendations:
+  - Replace externally assembled code with fixed operations and data-only inputs where possible.
+  - Keep template or expression sources under application control; restrict exposed capabilities and test rejection
+    of unexpected syntax.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

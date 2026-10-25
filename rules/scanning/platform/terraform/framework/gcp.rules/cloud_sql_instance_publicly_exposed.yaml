@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: terraform.framework.gcp.cloud_sql_instance_publicly_exposed
+title: Cloud SQL Instance Publicly Exposed
+order: 5
+category: GCP Database Security
+detection:
+  pattern: resource\s+"google_sql_database_instance"[^}]*ipv4_enabled\s*=\s*true|authorized_networks\s*\{[^}]*value\s*=\s*"0\.0\.0\.0/0"
+  conditions:
+  - WHEN PRESENT authorized_networks\s*\{[^}]*value\s*=\s*"0\.0\.0\.0/0"
+  - WHEN EXPR PRESENT:ipv4_enabled\s*=\s*true|authorized_networks && MISSING:require_ssl\s*=\s*true|ssl_mode\s*=\s*"ENCRYPTED_ONLY"|private_network
+reporting:
+  type: area_of_interest
+  reason: Detects Cloud SQL instances authorized to accept connections from all IP addresses.
+  trace:
+  - Externalized rule logic for Cloud SQL Instance Publicly Exposed.
+  description: The checked source contains a database query or query-construction operation. Determine whether untrusted
+    values can change statement structure and whether record access is authorized.
+  impact: If externally controlled values enter query syntax, an attacker may read, change, or delete records or
+    bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound
+    parameters do not establish this condition.
+  remediation: Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level
+    access checks. Trace the complete query construction before replacing a safe query.
+  reviewer: Confirm Cloud SQL is not publicly accessible via authorized_networks. This can be confirmed as an issue
+    when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Locate the final query and determine whether caller-controlled data can alter its structure; inspect interpolated
+    fragments and raw-query helpers.
+  - Verify that values are bound by the database driver. For identifiers or sort directions that cannot be bound,
+    inspect a fixed mapping of allowed choices.
+  - Record the reachable caller and effective controls; a constant query or correctly bound value does not establish
+    injection.
+  recommendations:
+  - Bind data values with the driver or ORM parameter API; avoid constructing query syntax from external strings.
+  - Use fixed mappings for dynamic identifiers and ordering. Test that unusual input remains data and that the database
+    account has only required privileges.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

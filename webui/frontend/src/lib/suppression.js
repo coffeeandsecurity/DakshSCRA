@@ -8,6 +8,14 @@ export function suppressionDetails(item) {
   const textVersion = (item.rdl_text || '').match(/^\s*VERSION\s+([12])\b/im)?.[1]
   const version = explicit.match(/^v?([12])$/i)?.[1] || engineVersion || pathVersion || textVersion
   const isRdl = engine.startsWith('rdl') || Boolean(pathVersion || textVersion) || /^RDL:/i.test(item.rdl_condition || '')
-  const label = isRdl ? (version ? `RDL v${version}` : 'RDL · version not recorded') : (engine || 'Engine not recorded')
-  return { source, engine: label, reason: item.suppression_reason || 'Suppression reason was not recorded for this finding.' }
+  const label = engine === 'pattern' ? 'Pattern Rules' : isRdl ? (version ? `RDL v${version}` : 'RDL · version not recorded') : (engine || 'Engine not recorded')
+  const explanation = item.suppression_explanation || {}
+  const technicalReason = item.suppression_reason || 'Suppression reason was not recorded for this finding.'
+  const reason = explanation.summary || (technicalReason.startsWith('Expression did not pass:')
+    ? 'The additional Pattern rule condition did not pass. This does not establish that a protection exists.' : technicalReason)
+  return { source, engine: label, reason, technicalReason,
+    scope: explanation.decision_scope,
+    traceSummary: explanation.trace_summary || 'Complete source-to-operation tracing was not recorded for this suppression.',
+    traceStatus: explanation.trace_status || 'not_recorded', limitations: explanation.limitations || [] }
+
 }

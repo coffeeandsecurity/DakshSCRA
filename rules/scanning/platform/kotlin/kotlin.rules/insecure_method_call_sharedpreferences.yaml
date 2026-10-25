@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: kotlin.core.insecure_method_call_sharedpreferences
+title: "Shared Preferences Usage Review"
+order: 8
+category: Insecure Method/Function Call
+detection:
+  pattern: getSharedPreferences\(\s*[^,]+,\s*Context\.MODE_PRIVATE\s*\)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:(putString|putInt|putLong|putBoolean|getString|getInt|getLong|getBoolean) && PRESENT:(token|secret|password|auth|session|apikey|key)
+    && MISSING:(EncryptedSharedPreferences|MasterKey|KeyStore|Keystore|Cipher|encrypt|decrypt)
+reporting:
+  type: area_of_interest
+  reason: Detects insecure usage of SharedPreferences without proper encryption or secure storage.
+  trace:
+  - 'Externalized rule logic for Insecure Method Call: SharedPreferences.'
+  description: The application stores sensitive values or configures protection for persistent data. Determine the
+    actual storage location, backup policy, and lock-state access restrictions.
+  impact: An actor with access to unprotected application files, backups, or overly broad keychain access may recover
+    credentials or private records and use them outside the intended trust boundary.
+  remediation: Use the platform credential or key store for secrets and appropriate authenticated encryption and
+    file protection for private records. Minimize stored data, backup exposure, and lock-state accessibility.
+  reviewer: Sensitive data is stored in SharedPreferences without proper encryption or secure storage. Ensure that
+    developers have implemented appropriate security measures, such as encryption or secure storage solutions, to
+    protect sensitive data stored on the device. This can be confirmed as an issue when the matched path is reachable
+    and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify the sensitive data, actual storage location, backup inclusion and lock-state or account access policy.
+  - Inspect encryption, key access and data retention, including copies in caches, backups and exported artifacts.
+  - Verify access under the relevant attacker model; a storage API alone does not establish an exposure.
+  recommendations:
+  - Store secrets using the platform credential store and apply appropriate access controls and protection to other
+    private data.
+  - Limit retention and unnecessary copies, configure backup handling deliberately, and verify access and recovery
+    behavior in the deployed environment.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

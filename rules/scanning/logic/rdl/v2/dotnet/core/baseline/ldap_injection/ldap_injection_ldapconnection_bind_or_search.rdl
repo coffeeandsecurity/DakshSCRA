@@ -3,7 +3,7 @@ RULE baseline.dotnet.core.ldap_injection_ldapconnection_bind_or_search VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "LdapConnection\\s*\\(|new\\s+LdapConnection" "im"
 WHEN (TEXT_MATCHES "Request\\.|QueryString|Form|userInput|\\+" "im" AND TEXT_MISSING "EscapeLdapFilter|AntiXss\\.LdapFilterEncode" "im")
-REPORT "LDAP Injection: LdapConnection Bind or Search"
+REPORT "LDAP Injection Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

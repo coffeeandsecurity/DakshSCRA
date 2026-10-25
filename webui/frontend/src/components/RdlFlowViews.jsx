@@ -4,6 +4,8 @@ import RdlTrace, { RdlSourceEvidence, locationLabel } from './RdlTrace'
 import { collectPaths, collectReferences, handoffLabel } from '../lib/rdlReviewModels'
 
 function RelatedFindings({ items, onNavigate }) {
+  items = items.filter(item => !item.record.analysis_only)
+  if (!items.length) return <p className="rdl-coverage-note">Recorded flow evidence. Check Vulnerability Analysis for rule outcomes and reviewer decisions.</p>
   return <section className="rdl-related-findings"><h4>Linked review findings</h4><p className="rdl-coverage-note">Open a finding for its impact, confidence and recommended correction.</p>{items.map(item => <button key={item.id} className="rdl-context-link" onClick={() => onNavigate('findings', item)}><span className={`aa-pill severity ${String(item.finding.severity || '').toLowerCase()}`}>{item.finding.severity || 'Review'}</span><span>{item.finding.title}</span><span aria-hidden="true">→</span></button>)}</section>
 }
 
@@ -49,7 +51,7 @@ export function CrossReferences({ items, onNavigate }) {
           <span className="aa-simple-stage-title">{label}</span><strong>{locationLabel(selected[key].location)}</strong><code>{selected[key].symbol || selected[key].explanation || 'Recorded value'}</code>
           <RdlSourceEvidence finding={selected.items[0].finding} step={selected[key]} title="Code at this endpoint" />
         </section>)}</div>
-        <FlowView steps={[selected.from, selected.to].filter(Boolean)} title="Recorded handoff"><p>Inspect the recorded connection and its linked paths below.</p></FlowView><section className="rdl-reference-paths"><h4>Paths using this connection</h4>{paths.map(path => <button className="rdl-context-link" key={path.key} onClick={() => onNavigate('taint', path.items[0])}><span>{locationLabel(path.source.location)} → {path.sink ? locationLabel(path.sink.location) : 'Unresolved destination'}</span><span>Open taint flow →</span></button>)}</section>
+        <FlowView steps={[selected.from, selected.to].filter(Boolean)} blocks={selected.items[0]?.finding.trace?.blocks || []} title="Recorded handoff"><p>Inspect the recorded connection and its linked paths below.</p></FlowView><section className="rdl-reference-paths"><h4>Paths using this connection</h4>{paths.map(path => <button className="rdl-context-link" key={path.key} onClick={() => onNavigate('taint', path.items[0])}><span>{locationLabel(path.source.location)} → {path.sink ? locationLabel(path.sink.location) : 'Unresolved destination'}</span><span>Open taint flow →</span></button>)}</section>
         <RelatedFindings items={selected.items} onNavigate={onNavigate} />
       </div>
     </div> : <div className="empty-state">No handoffs of this type on this page.</div>}

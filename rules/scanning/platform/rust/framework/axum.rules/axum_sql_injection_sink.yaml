@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: rust.framework.axum.axum_sql_injection_sink
+title: "SQL Injection Review"
+order: 3
+category: Framework-Specific Security
+detection:
+  pattern: format!\(\s*"\s*SELECT|format!\(\s*"\s*INSERT|sql_query\(\s*format!
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:query!\s*\(|sqlx::query!|prepare\s*\(|bind\s*\(|QueryBuilder|params && MISSING:test|example
+reporting:
+  type: area_of_interest
+  reason: Detects likely formatted SQL query construction.
+  trace:
+  - Externalized rule logic for Axum SQL Injection Sink.
+  description: The checked source contains a database query or query-construction operation. Determine whether untrusted
+    values can change statement structure and whether record access is authorized.
+  impact: If externally controlled values enter query syntax, an attacker may read, change, or delete records or
+    bypass data-access restrictions with the database connection’s privileges. Fixed queries and correctly bound
+    parameters do not establish this condition.
+  remediation: Bind data values as parameters, choose dynamic identifiers from a fixed allowlist, and enforce object-level
+    access checks. Trace the complete query construction before replacing a safe query.
+  reviewer: Review data flow into formatted SQL fragments. This can be confirmed as an issue when the matched path
+    is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Locate the final query and determine whether caller-controlled data can alter its structure; inspect interpolated
+    fragments and raw-query helpers.
+  - Verify that values are bound by the database driver. For identifiers or sort directions that cannot be bound,
+    inspect a fixed mapping of allowed choices.
+  - Record the reachable caller and effective controls; a constant query or correctly bound value does not establish
+    injection.
+  recommendations:
+  - Bind data values with the driver or ORM parameter API; avoid constructing query syntax from external strings.
+  - Use fixed mappings for dynamic identifiers and ordering. Test that unusual input remains data and that the database
+    account has only required privileges.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: magenta

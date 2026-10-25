@@ -1,0 +1,10 @@
+VERSION 2
+RULE security.literal-key-fallback-flow VERSION 1
+IN DATA_FLOW
+LET key BE VARIABLE MATCHES secret.literal-key-fallback
+LET operation BE CALL MATCHES crypto.key-material
+WHEN key FLOWS TO operation
+REPORT "Cryptographic Key Fallback Review"
+SEVERITY MEDIUM
+CONFIDENCE FROM EVIDENCE
+WITH TRACE

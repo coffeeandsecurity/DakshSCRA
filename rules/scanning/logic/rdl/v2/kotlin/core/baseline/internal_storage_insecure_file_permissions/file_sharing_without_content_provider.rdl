@@ -3,7 +3,7 @@ RULE baseline.kotlin.core.file_sharing_without_content_provider VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "Intent\\s*\\(\\s*(?:[^,]*,\\s*)?Uri\\.parse" "im"
 WHEN TEXT_MISSING "Uri\\.parse\\s*\\(\\s*\"(?:https?:|smsto:|sms:|tel:|mailto:|about:|geo:|market:|content:)" "im"
-REPORT "File Sharing Without Content Provider"
+REPORT "File Sharing Provider Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

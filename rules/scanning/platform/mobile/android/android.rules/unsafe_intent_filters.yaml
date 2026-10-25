@@ -1,0 +1,55 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.unsafe_intent_filters
+title: "Deep Link Intent Filter Review"
+order: 7
+category: AndroidManifest.xml - Insecure Misconfiguration
+detection:
+  pattern: android.intent.action.VIEW
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects unsafe intent filters.
+  trace:
+  - Externalized mobile rule logic for Unsafe Intent Filters.
+  description: 'Review target: Unsafe Intent Filters. The code handles a link, redirect, or externally selected
+    navigation target. Validate the effective destination and any action triggered by the receiving handler. Resolve
+    the external entry point, its caller or URI grant, and the sensitive operation or resource reached.'
+  impact: A crafted destination or link may direct users to a phishing site, leak URL-carried secrets, or trigger
+    unauthorized operations if routing trusts external parameters without the required access checks.
+  remediation: Allowlist schemes, hosts, paths, and operations. Validate parsed link parameters, avoid credentials
+    in URLs, and require authentication and authorization before sensitive actions. Minimize exported surfaces and
+    URI grants; validate parsed schemes, hosts and paths, use verified links where appropriate, and authorize each
+    sensitive action.
+  reviewer: Verify that intent filters are properly configured to restrict access and prevent unintended behavior.
+    Ensure that input validation and data sanitization are implemented to mitigate potential security risks. This
+    can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or
+    inconsistent. Resolve merged manifests, aliases and SDK defaults; test custom-scheme collision, malformed URLs,
+    encoded paths, nested intents, read/write grants and permission inheritance. Registration or permission presence
+    alone does not prove unauthorized access.
+  review_steps:
+  - Determine whether untrusted input controls the redirect destination and whether the redirect is reachable.
+  - Inspect URL parsing, relative versus absolute destinations, scheme handling and authorization around the redirect.
+  - Check how encoded or ambiguous URLs are interpreted by the framework and browser before confirming an unsafe
+    redirect.
+  - Resolve the external entry point, its caller or URI grant, and the sensitive operation or resource reached.
+  - Resolve merged manifests, aliases and SDK defaults; test custom-scheme collision, malformed URLs, encoded paths,
+    nested intents, read/write grants and permission inheritance. Registration or permission presence alone does
+    not prove unauthorized access.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Prefer application route identifiers mapped to fixed destinations; permit only necessary relative paths or explicitly
+    allowed external destinations.
+  - Reject unsupported schemes and ambiguous destinations and test redirect handling after decoding and normalization.
+  - Minimize exported surfaces and URI grants; validate parsed schemes, hosts and paths, use verified links where
+    appropriate, and authorize each sensitive action.
+scan_config:
+  match_mode: file
+  context_type: lines
+  context_lines_before: '2'
+  context_lines_after: '0'
+  aggregate: file
+  report_format: default
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: yellow

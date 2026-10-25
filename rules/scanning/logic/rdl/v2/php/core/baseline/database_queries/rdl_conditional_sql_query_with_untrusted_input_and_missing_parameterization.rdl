@@ -3,7 +3,7 @@ RULE baseline.php.core.rdl_conditional_sql_query_with_untrusted_input_and_missin
 IN FILE
 WHEN TEXT_MATCHES "(?i)\\b(?:mysql_query|mysqli_query|pg_query|sqlite_query|->query)\\s*\\(" "im"
 WHEN TEXT_MATCHES "\\$_(GET|POST|REQUEST|COOKIE)|\\.\\s*\\$|sprintf\\s*\\(|format\\s*\\(" "im"
-REPORT "RDL Conditional: SQL Query with Untrusted Input and Missing Parameterization"
+REPORT "SQL Injection Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -3,7 +3,7 @@ RULE baseline.cpp.framework.qt.qt_insecure_serialization_deserialization_marker 
 IN FILE
 WHEN TEXT_MATCHES "boost::archive|QDataStream\\s*&gt;&gt;" "im"
 WHEN (TEXT_MISSING "trusted|validate|verify|schema|registerTag|QMetaType" "im" AND TEXT_MISSING "test|example" "im")
-REPORT "Qt Insecure Serialization/Deserialization Marker"
+REPORT "Object Deserialization Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

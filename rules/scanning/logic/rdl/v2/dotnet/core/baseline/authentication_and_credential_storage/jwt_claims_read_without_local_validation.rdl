@@ -1,0 +1,9 @@
+VERSION 2
+RULE baseline.dotnet.core.jwt_claims_read_without_local_validation VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bReadJwtToken\\s*\\(" "im"
+WHEN TEXT_MATCHES "\\.Claims\\b" "im"
+REPORT "JWT Claims Validation Review"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

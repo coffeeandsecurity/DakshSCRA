@@ -27,18 +27,18 @@ Status: 11 owned rule(s), 11 runtime mapping(s). No claim of complete coverage.
 
 ## Current runtime mappings
 
-Baseline and semantic comparisons link the v1 source; additional checks link the selected XML pack. Shared properties retain a single owning definition.
+Pattern baselines and semantic comparisons link the unified rule source; additional checks link the selected pack metadata. Shared properties retain a single owning definition.
 
-| V1 definition or selected pack | V2 property |
+| Unified rule or selected pack | V2 property |
 |---|---|
-| [wildcard_iam_policy_action.rdl](../../../v1/terraform/core/wildcard_iam_policy_action.rdl) | [baseline.terraform.core.wildcard_iam_policy_action](baseline/identity_and_access_management/wildcard_iam_policy_action.rdl) |
-| [wildcard_iam_resource.rdl](../../../v1/terraform/core/wildcard_iam_resource.rdl) | [baseline.terraform.core.wildcard_iam_resource](baseline/identity_and_access_management/wildcard_iam_resource.rdl) |
-| [security_group_open_to_all_traffic_0_0_0_0_0.rdl](../../../v1/terraform/core/security_group_open_to_all_traffic_0_0_0_0_0.rdl) | [baseline.terraform.core.security_group_open_to_all_traffic_0_0_0_0_0](baseline/network_security/security_group_open_to_all_traffic_0_0_0_0_0.rdl) |
-| [ssh_port_open_to_all_internet.rdl](../../../v1/terraform/core/ssh_port_open_to_all_internet.rdl) | [baseline.terraform.core.ssh_port_open_to_all_internet](baseline/network_security/ssh_port_open_to_all_internet.rdl) |
-| [rdp_port_open_to_all_internet.rdl](../../../v1/terraform/core/rdp_port_open_to_all_internet.rdl) | [baseline.terraform.core.rdp_port_open_to_all_internet](baseline/network_security/rdp_port_open_to_all_internet.rdl) |
-| [s3_bucket_publicly_accessible.rdl](../../../v1/terraform/core/s3_bucket_publicly_accessible.rdl) | [baseline.terraform.core.s3_bucket_publicly_accessible](baseline/storage_security/s3_bucket_publicly_accessible.rdl) |
-| [storage_encryption_disabled_or_not_configured.rdl](../../../v1/terraform/core/storage_encryption_disabled_or_not_configured.rdl) | [baseline.terraform.core.storage_encryption_disabled_or_not_configured](baseline/storage_security/storage_encryption_disabled_or_not_configured.rdl) |
-| [cloudtrail_logging_disabled.rdl](../../../v1/terraform/core/cloudtrail_logging_disabled.rdl) | [baseline.terraform.core.cloudtrail_logging_disabled](baseline/logging_and_monitoring/cloudtrail_logging_disabled.rdl) |
-| [vpc_flow_logs_disabled.rdl](../../../v1/terraform/core/vpc_flow_logs_disabled.rdl) | [baseline.terraform.core.vpc_flow_logs_disabled](baseline/logging_and_monitoring/vpc_flow_logs_disabled.rdl) |
-| [hardcoded_secret_or_password_in_terraform_variables.rdl](../../../v1/terraform/core/hardcoded_secret_or_password_in_terraform_variables.rdl) | [baseline.terraform.core.hardcoded_secret_or_password_in_terraform_variables](baseline/secrets_management/hardcoded_secret_or_password_in_terraform_variables.rdl) |
-| [terraform.xml](../../../../../platform/terraform/terraform.xml) | [terraform.metadata-v1](security/metadata_v1.rdl) |
+| [wildcard_iam_policy_action.yaml](../../../../../platform/terraform/terraform.rules/wildcard_iam_policy_action.yaml) | [baseline.terraform.core.wildcard_iam_policy_action](baseline/identity_and_access_management/wildcard_iam_policy_action.rdl) |
+| [wildcard_iam_resource.yaml](../../../../../platform/terraform/terraform.rules/wildcard_iam_resource.yaml) | [baseline.terraform.core.wildcard_iam_resource](baseline/identity_and_access_management/wildcard_iam_resource.rdl) |
+| [security_group_open_to_all_traffic_0_0_0_0_0.yaml](../../../../../platform/terraform/terraform.rules/security_group_open_to_all_traffic_0_0_0_0_0.yaml) | [baseline.terraform.core.security_group_open_to_all_traffic_0_0_0_0_0](baseline/network_security/security_group_open_to_all_traffic_0_0_0_0_0.rdl) |
+| [ssh_port_open_to_all_internet.yaml](../../../../../platform/terraform/terraform.rules/ssh_port_open_to_all_internet.yaml) | [baseline.terraform.core.ssh_port_open_to_all_internet](baseline/network_security/ssh_port_open_to_all_internet.rdl) |
+| [rdp_port_open_to_all_internet.yaml](../../../../../platform/terraform/terraform.rules/rdp_port_open_to_all_internet.yaml) | [baseline.terraform.core.rdp_port_open_to_all_internet](baseline/network_security/rdp_port_open_to_all_internet.rdl) |
+| [s3_bucket_publicly_accessible.yaml](../../../../../platform/terraform/terraform.rules/s3_bucket_publicly_accessible.yaml) | [baseline.terraform.core.s3_bucket_publicly_accessible](baseline/storage_security/s3_bucket_publicly_accessible.rdl) |
+| [storage_encryption_disabled_or_not_configured.yaml](../../../../../platform/terraform/terraform.rules/storage_encryption_disabled_or_not_configured.yaml) | [baseline.terraform.core.storage_encryption_disabled_or_not_configured](baseline/storage_security/storage_encryption_disabled_or_not_configured.rdl) |
+| [cloudtrail_logging_disabled.yaml](../../../../../platform/terraform/terraform.rules/cloudtrail_logging_disabled.yaml) | [baseline.terraform.core.cloudtrail_logging_disabled](baseline/logging_and_monitoring/cloudtrail_logging_disabled.rdl) |
+| [vpc_flow_logs_disabled.yaml](../../../../../platform/terraform/terraform.rules/vpc_flow_logs_disabled.yaml) | [baseline.terraform.core.vpc_flow_logs_disabled](baseline/logging_and_monitoring/vpc_flow_logs_disabled.rdl) |
+| [hardcoded_secret_or_password_in_terraform_variables.yaml](../../../../../platform/terraform/terraform.rules/hardcoded_secret_or_password_in_terraform_variables.yaml) | [baseline.terraform.core.hardcoded_secret_or_password_in_terraform_variables](baseline/secrets_management/hardcoded_secret_or_password_in_terraform_variables.rdl) |
+| [_pack.yaml](../../../../../platform/terraform/terraform.rules/_pack.yaml) | [terraform.metadata-v1](security/metadata_v1.rdl) |

@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: kotlin.core.insecure_method_call_webview_loadurl_with_dynamic_content
+title: "WebView Navigation Review"
+order: 6
+category: Insecure Method/Function Call
+detection:
+  pattern: \.loadUrl\s*\(\s*(?:"[^"]*\$[^"]*"|`[^`]*\$[^`]*`|[^\s"'(][^)]*\))
+  conditions:
+  - WHEN PRESENT \.loadUrl\s*\(
+  - WHEN EXPR MISSING:loadUrl\s*\(\s*"(?:about:|javascript:window\.|file:///android_asset) && MISSING:loadUrl\s*\(\s*"https://[a-zA-Z0-9]
+reporting:
+  type: area_of_interest
+  reason: Detects WebView.loadUrl() calls where the URL argument is a variable or contains Kotlin string interpolation,
+    which may allow JavaScript or URL injection.
+  trace:
+  - 'Externalized rule logic for Insecure Method Call: WebView.loadUrl() with Dynamic Content.'
+  description: The application renders web content, executes scripts, or exposes a native messaging interface. Resolve
+    navigation trust, origin isolation, and validation at the native boundary.
+  impact: Attacker-controlled web content may execute in a trusted context or invoke native operations, exposing
+    session data or application privileges when isolation and per-operation checks are insufficient.
+  remediation: Restrict navigation and message origins to required trusted sources. Avoid dynamic script construction,
+    minimize native bridge methods, validate message inputs, and authorize sensitive native operations.
+  reviewer: Confirm that the URL passed to loadUrl() is not derived from untrusted external input. Check for Kotlin
+    template literals (${ }) or variable arguments that could be influenced by intent extras, web content, or external
+    data. This can be confirmed as an issue when the matched path is reachable and required controls are missing,
+    weak, or inconsistent.
+  review_steps:
+  - Identify the loaded content, permitted origins and script-to-native operations exposed by the application.
+  - Inspect navigation, message validation and resource or operation authorization on the native side.
+  - Test untrusted content and unexpected messages; a bridge declaration alone does not prove unauthorized native
+    access.
+  recommendations:
+  - Restrict trusted content and navigation and expose only the native operations required by the application.
+  - Validate messages and enforce native-side authorization; test rejection of unapproved origins and unexpected
+    operations.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

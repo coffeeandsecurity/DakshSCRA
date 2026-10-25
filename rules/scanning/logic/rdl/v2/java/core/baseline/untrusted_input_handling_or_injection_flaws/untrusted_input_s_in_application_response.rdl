@@ -3,7 +3,7 @@ RULE baseline.java.core.untrusted_input_s_in_application_response VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "((\\bprint|out\\.print(ln)?|response\\.write)\\(.*|response\\.getWriter|out\\.write)(\\s)*\\((\\s)*(\"|')[^(\"|')]*" "im"
 WHEN (TEXT_MATCHES "(request|getParameter|requestParameters|cookie|header)" "im" AND TEXT_MISSING "(escapeHtml|StringEscapeUtils|Encode\\.forHtml|htmlspecialchars|sanitize)" "im")
-REPORT "Untrusted Input(s) in Application Response"
+REPORT "HTML Output Encoding Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

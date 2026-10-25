@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: rust.core.weak_randomness_source
+title: "Security-Sensitive Randomness Review"
+order: 6
+category: Cryptography and Transport Security
+detection:
+  pattern: \brand::random\s*\(\)|\bthread_rng\s*\(\)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:OsRng|rand_core::OsRng|getrandom|os_rng && MISSING:simulation|game|test|example
+reporting:
+  type: area_of_interest
+  reason: Detects generic randomness usage that may be misused in security-sensitive flows.
+  trace:
+  - Externalized rule logic for Weak Randomness Source.
+  description: The checked source uses a random generator, cryptographic primitive, or initialization value whose
+    suitability depends on its security purpose and inputs.
+  impact: Predictable secrets or unsuitable cryptographic parameters may enable credential guessing, reveal plaintext,
+    or weaken integrity when used to protect security-sensitive data. Non-security hashes and identifiers do not
+    establish this condition.
+  remediation: Use a cryptographically secure generator for secrets and modern purpose-appropriate cryptography.
+    Use unique nonces, protected keys, and a vetted password-hashing scheme where passwords are stored.
+  reviewer: Confirm randomness sources are appropriate for security context and threat model. This can be confirmed
+    as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify the purpose of the cryptographic operation, algorithm, mode, key or nonce handling, and protected data.
+  - Distinguish password storage, confidentiality, integrity and non-security checksums; each requires different
+    controls.
+  - Inspect deployed configuration and all encrypt, decrypt or verification paths before deciding whether the use
+    is unsafe.
+  recommendations:
+  - Use maintained high-level cryptographic APIs appropriate to the purpose; use authenticated encryption for confidential
+    application data.
+  - For passwords, use the platform password-hashing facility rather than a fast general-purpose digest. Verify
+    key, nonce and migration handling for affected data.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

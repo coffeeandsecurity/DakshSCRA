@@ -1,0 +1,43 @@
+format: daksh-pattern-rule/v1
+id: javascript.core.missing_cookie_security_flags
+title: "Session Cookie Protection Review"
+order: 22
+category: MISC Checks
+detection:
+  pattern: res\.cookie\s*\(|document\.cookie\s*=
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:httpOnly\s*:\s*true|secure\s*:\s*true|sameSite|SameSite
+reporting:
+  type: area_of_interest
+  reason: Detects cookie creation without essential security flags such as httpOnly, secure, and SameSite.
+  trace:
+  - Externalized rule logic for Missing Cookie Security Flags.
+  description: The code handles session state or configures cookies and session secrets. Resolve cookie attributes,
+    token generation, lifetime, and server-side validation.
+  impact: Weak session secrets, exposed cookies, or inadequate expiry may allow session theft, token forgery, or
+    continued access after the user’s intended authorization ends.
+  remediation: Use strong unpredictable session secrets, rotate tokens on privilege changes, and enforce expiry
+    and revocation. Set Secure, HttpOnly, and appropriate SameSite attributes for sensitive browser cookies.
+  reviewer: Confirm that all cookies setting session or authentication state include httpOnly, secure, and sameSite
+    attributes. This can be confirmed as an issue when the matched path is reachable and required controls are missing,
+    weak, or inconsistent.
+  review_steps:
+  - Identify whether the cookie carries a session or other sensitive value and inspect the flags on every issuance
+    and update path.
+  - Check effective Secure, HttpOnly and SameSite behavior, domain and path scope, expiry and session rotation in
+    the deployed flow.
+  - Distinguish intended browser access from a missing protection; verify actual response headers and cross-site
+    behavior.
+  recommendations:
+  - Set cookie protections appropriate to its purpose and deployed HTTPS flow; keep sensitive session cookies inaccessible
+    to scripts where required.
+  - Limit cookie scope and lifetime, rotate sessions at authentication changes, and test actual browser and response-header
+    behavior.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

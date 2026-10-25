@@ -1,0 +1,39 @@
+format: daksh-pattern-rule/v1
+id: filepaths.core.permission_management_or_handling
+title: "Permission Handling Review"
+order: 4
+detection:
+  pattern: (?i)Permission
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:(?i)(/|\\\\).*(permission|policy|acl|rbac)
+reporting:
+  type: area_of_interest
+  reason: Detects file paths related to permission management or handling functionality.
+  description: A file or directory name matches the permission management or handling review area. This check inspects
+    paths, not the implementation or a reachable execution path.
+  impact: A compromised actor may access additional data, modify protected resources, or extend compromise beyond
+    the intended application boundary when excessive privileges remain available. A filename match alone does not
+    establish this consequence.
+  remediation: Run with the least privileges required, remove unnecessary grants, and scope each permission to its
+    intended resource and operation. Verify effective inherited permissions and test denied access.
+  reviewer: Verify the presence and correctness of permission management or handling-related code paths. This can
+    be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the matched file or directory contents and determine whether it is deployed or externally accessible.
+  - Identify whether sensitive data, configuration or executable content is present; a name match alone does not
+    establish exposure.
+  - Check effective access controls and build or packaging exclusions and record the specific content and exposure
+    path.
+  recommendations:
+  - Where exposure is verified, remove unnecessary files from deployment or restrict access to the intended users
+    and processes.
+  - Verify the deployed artifact and access behavior after the change; retain required application files with appropriate
+    controls.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

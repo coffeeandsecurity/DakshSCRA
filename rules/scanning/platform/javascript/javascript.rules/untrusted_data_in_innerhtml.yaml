@@ -1,0 +1,37 @@
+format: daksh-pattern-rule/v1
+id: javascript.core.untrusted_data_in_innerhtml
+title: "HTML Output Encoding Review"
+order: 2
+category: Untrusted Input Handling or Injection Flaws
+detection:
+  pattern: \.innerHTML\s?=\s?.+
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects potential security risks when assigning untrusted data to the innerHTML property.
+  trace:
+  - Externalized rule logic for Untrusted Data in InnerHTML.
+  description: A value is assigned to innerHTML. The browser parses this value as HTML; the assignment alone does
+    not establish attacker control.
+  impact: If attacker-controlled content reaches an executable browser context, it may run under the application’s
+    origin, read accessible session data, or perform actions with the victim’s permissions.
+  remediation: Use textContent for text. If HTML is required, sanitize it with a maintained HTML allowlist sanitizer
+    immediately before insertion. Review Trusted Types policies for unsafe pass-through behavior.
+  reviewer: Trace the assigned expression to URL data, messages, form values, storage and server responses. Check
+    whether executable markup survives sanitization in the actual element context. Fixed markup and correctly sanitized
+    content do not establish cross-site scripting.
+  review_steps:
+  - Follow every value used to build the innerHTML assignment.
+  - Inspect sanitization and any transformations after it.
+  - Verify a reachable input-to-HTML path under the effective browser policy.
+  recommendations:
+  - Use textContent or createElement for ordinary content.
+  - Sanitize deliberately accepted HTML at its insertion boundary; input validation or CSP alone is not output encoding.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

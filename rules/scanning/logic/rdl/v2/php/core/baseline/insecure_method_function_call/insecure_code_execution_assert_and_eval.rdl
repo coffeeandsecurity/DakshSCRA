@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.php.core.insecure_code_execution_assert_and_eval VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(assert|eval)\\s*\\(\\s*(\\$_(GET|POST|REQUEST)|\\$\\{?(?:_[a-zA-Z0-9_]+|[a-zA-Z_\\x7f-\\xff][a-zA-Z0-9_\\x7f-\\xff]*)\\}?)" "im"
-WHEN (TEXT_MISSING "validate|allowlist|trusted|intval|is_int|is_numeric" "im" AND TEXT_MISSING "test|example" "im")
-REPORT "Insecure Code Execution: assert() and eval()"
+REPORT "Dynamic Code Evaluation Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

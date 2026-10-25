@@ -3,7 +3,7 @@ RULE baseline.javascript.core.missing_cookie_security_flags VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "res\\.cookie\\s*\\(|document\\.cookie\\s*=" "im"
 WHEN TEXT_MISSING "httpOnly\\s*:\\s*true|secure\\s*:\\s*true|sameSite|SameSite" "im"
-REPORT "Missing Cookie Security Flags"
+REPORT "Session Cookie Protection Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

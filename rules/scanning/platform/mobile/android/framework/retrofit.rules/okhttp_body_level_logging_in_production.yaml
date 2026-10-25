@@ -1,0 +1,52 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.framework.retrofit.okhttp_body_level_logging_in_production
+title: "HTTP Body Logging Review"
+order: 2
+category: Framework-Specific Issues - Retrofit (Android)
+detection:
+  pattern: HttpLoggingInterceptor\s*\(\s*\)[^;)]*level\s*=\s*HttpLoggingInterceptor\.Level\.BODY|setLevel\s*\(\s*HttpLoggingInterceptor\.Level\.BODY\s*\)
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects OkHttp logging interceptor configured at BODY level potentially in production builds.
+  trace:
+  - Externalized mobile rule logic for OkHttp Body-Level Logging in Production.
+  description: 'Review target: OkHttp Body-Level Logging in Production. The code writes diagnostic data or exposes
+    detailed errors. Establish the values emitted, production configuration, and recipients of the output. Resolve
+    the particular connection, host and client configuration selected by the shipped build.'
+  impact: Readers of exposed diagnostics may obtain credentials, private records, internal paths, or implementation
+    details that enable account misuse or targeted attacks.
+  remediation: Keep sensitive values and detailed errors out of user-facing responses and routine logs. Redact before
+    emission, restrict diagnostic access, and verify production logging configuration. Use platform trust and hostname
+    validation and encrypted transport. Remove permissive callbacks and narrow necessary exceptions to the intended
+    hosts.
+  reviewer: Confirm BODY-level logging is restricted to debug builds and does not exist in release build paths.
+    This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak,
+    or inconsistent. Test invalid chains, wrong hostnames, redirects and build-specific exceptions; an unrelated
+    trusted client or HTTPS URL does not protect this connection. Missing pinning alone is not proof of insecurity.
+  review_steps:
+  - Determine whether the matched path logs sensitive data or exposes diagnostics to an untrusted recipient.
+  - Trace the actual values, redaction and error handling, including production configuration and log retention
+    or access.
+  - Distinguish internal operational diagnostics from client-visible output and record the reachable disclosure
+    path without reproducing secrets.
+  - Resolve the particular connection, host and client configuration selected by the shipped build.
+  - Test invalid chains, wrong hostnames, redirects and build-specific exceptions; an unrelated trusted client or
+    HTTPS URL does not protect this connection. Missing pinning alone is not proof of insecurity.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Log only the operational details needed, redact sensitive values, and return limited error messages to clients.
+  - Restrict diagnostic and log access and test production error responses and representative log output.
+  - Use platform trust and hostname validation and encrypted transport. Remove permissive callbacks and narrow necessary
+    exceptions to the intended hosts.
+scan_config:
+  match_mode: file
+  context_type: lines
+  context_lines_before: '2'
+  context_lines_after: '0'
+  aggregate: none
+  report_format: default
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: yellow

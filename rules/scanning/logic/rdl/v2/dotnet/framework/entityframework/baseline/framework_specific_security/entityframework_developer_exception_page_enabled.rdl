@@ -3,7 +3,7 @@ RULE baseline.dotnet.framework.entityframework.entityframework_developer_excepti
 IN FILE
 WHEN TEXT_MATCHES "UseDeveloperExceptionPage\\(\\)" "im"
 WHEN (TEXT_MISSING "app\\.Environment\\.IsProduction\\(\\)|ASPNETCORE_ENVIRONMENT.*Production|IsDevelopment\\(\\).*false" "im" AND TEXT_MATCHES "UseDeveloperExceptionPage\\s*\\(\\s*\\)" "im")
-REPORT "Entityframework Developer Exception Page Enabled"
+REPORT "Developer Exception Page Enabled"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

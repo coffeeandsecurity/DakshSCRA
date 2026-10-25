@@ -1,0 +1,27 @@
+format: daksh-pattern-rule/v1
+id: javascript.core.otp_completion_navigation
+title: OTP Completion Without Verification Review
+order: 1100
+category: Authentication Issues
+detection:
+  pattern: \bonCodeFilled\s*=\s*\{\s*(?:\(\s*(?:[A-Za-z_$][\w$]*(?:\s*:\s*string)?)?\s*\)|[A-Za-z_$][\w$]*)\s*=>\s*
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: The OTP completion callback advances navigation without a preceding verification operation in the recorded
+    callback. Filling a field does not establish proof of possession.
+  description: The OTP completion callback advances navigation without a preceding verification operation in the
+    recorded callback. Filling a field does not establish proof of possession.
+  impact: The client may advance an account verification flow on arbitrary entered digits. Backend verification
+    and the shipped route must be reviewed before claiming account takeover.
+  remediation: Require a successful verification result before advancing; bind the verified account and challenge
+    on the backend. Resolve delegated verification and failure paths explicitly.
+  reviewer: Resolve active callers, delegated verification/cleanup and backend controls. The recorded client transition
+    alone does not establish an exploitable server vulnerability.
+scan_config:
+  match_mode: file
+  context_lines_before: '2'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'

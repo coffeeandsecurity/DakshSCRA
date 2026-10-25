@@ -1,0 +1,38 @@
+format: daksh-pattern-rule/v1
+id: kotlin.core.insecure_method_call_viewmodelscope_launch_no_error_handling
+title: "Coroutine Failure Handling Review"
+order: 9
+category: Insecure Method/Function Call
+detection:
+  pattern: viewModelScope\.launch\s*\{[^}]*(?:query|rawQuery|execSQL|getPassword|getToken|decrypt|encrypt|hash|credential|authToken|network|http|https)[^}]*\}
+  conditions:
+  - WHEN PRESENT viewModelScope\.launch\s*\{[^}]*(?:query|rawQuery|execSQL|getPassword|getToken|decrypt|encrypt|credential|authToken)[^}]*\}
+  - WHEN EXPR MISSING:try\s*\{|catch\s*\(|runCatching|CoroutineExceptionHandler
+reporting:
+  type: area_of_interest
+  reason: Detects security-sensitive operations inside viewModelScope.launch without exception handling.
+  trace:
+  - 'Externalized rule logic for Insecure Method Call: viewModelScope.launch (No Error Handling).'
+  description: The code configures failure handling or resource consumption. Determine whether failure paths preserve
+    security invariants and whether work is bounded.
+  impact: Unhandled failures or unbounded work may disrupt availability or leave security-relevant state inconsistent.
+    The presence or absence of a named handler alone does not establish a reachable security defect.
+  remediation: Bound resource use, handle failures at the correct ownership boundary, and fail safely before updating
+    trusted state. Test exceptional paths, cancellation, timeouts, and recovery behavior.
+  reviewer: Verify that coroutines performing security-sensitive operations (queries, crypto, auth) have explicit
+    error handling and do not silently discard exceptions. This can be confirmed as an issue when the matched path
+    is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Trace who controls the operation count, input size, duration or resource allocation.
+  - Inspect limits, cancellation, cleanup and error paths, including concurrency and deployment quotas.
+  - Establish a reachable way to exhaust or retain a relevant resource before confirming an availability issue.
+  recommendations:
+  - Set limits and timeouts appropriate to the operation and release resources on success, failure and cancellation.
+  - Test oversized input and concurrent requests against the intended limits and verify cleanup under failure.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

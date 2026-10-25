@@ -1,0 +1,40 @@
+format: daksh-pattern-rule/v1
+id: kubernetes.core.read_only_root_filesystem_not_enforced
+title: "Container Filesystem Write Access"
+order: 4
+category: Container Security
+detection:
+  pattern: readOnlyRootFilesystem\s*:\s*false
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:readOnlyRootFilesystem:\s*true|emptyDir|tmpfs:|volumeMounts && PRESENT:kind:\s*Deployment|kind:\s*StatefulSet|kind:\s*DaemonSet|kind:\s*Pod
+reporting:
+  type: area_of_interest
+  reason: Detects containers with a writable root filesystem.
+  trace:
+  - Externalized rule logic for Read-Only Root Filesystem Not Enforced.
+  description: The workload does not enforce a read-only root filesystem. Determine whether writing to image paths
+    is necessary and which volumes remain writable.
+  impact: A compromised workload may modify image files or configuration and retain unwanted changes within its
+    writable layer; this can aid persistence but does not by itself grant host access.
+  remediation: Use a read-only root filesystem where compatible and mount only required writable directories. Restrict
+    volume permissions and keep executable and configuration paths immutable.
+  reviewer: Confirm containers use read-only root filesystems wherever possible. This can be confirmed as an issue
+    when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Resolve the effective privileges, filesystem modes or identity grants, including inherited and deployment-level
+    permissions.
+  - Determine which operations are required and whether an untrusted actor can exercise the excess access.
+  - Record the affected resource and effective policy; distinguish a declared capability from an exploitable authorization
+    gap.
+  recommendations:
+  - Limit access and privileges to the operations and resources the application requires; remove unnecessary broad
+    grants.
+  - Test permitted operations and denied access with the actual deployment identity and effective policy.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

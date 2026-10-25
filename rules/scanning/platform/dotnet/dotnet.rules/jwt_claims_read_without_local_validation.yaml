@@ -1,0 +1,48 @@
+format: daksh-pattern-rule/v1
+id: dotnet.core.jwt_claims_read_without_local_validation
+title: "JWT Claims Validation Review"
+order: 31
+category: Authentication and Credential Storage
+detection:
+  pattern: \bReadJwtToken\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN PRESENT \.Claims\b
+reporting:
+  type: area_of_interest
+  reason: Decoded JWT claims are read without local token validation; inspect middleware
+    and authorization use.
+  trace:
+  - Decoding alone does not establish token authenticity.
+  description: A method reads decoded JWT claims without a local token-validation
+    call. Verify signature validation and middleware before trusting claims.
+  impact: Decoding a token does not establish its authenticity. Trusting unvalidated
+    claims can permit impersonation; validation elsewhere must be reviewed before
+    confirming a defect.
+  remediation: Obtain identity from a validated principal or validate the token against
+    the intended signing key, issuer, audience and lifetime before using its claims.
+  reviewer: Trace the decoded claims into authentication or authorization decisions
+    and verify the endpoint middleware. A missing local validation call alone does
+    not prove bypass. Unrelated or later validation, validation in a conditional branch,
+    and an unchecked asynchronous validation result do not protect this decode site.
+    Verify the same token and successful validation on every path before consuming
+    identity.
+  review_steps:
+  - Identify the trusted identity verifier, protected resources and decision made
+    by the matched control.
+  - Inspect effective middleware and service checks, alternate routes and failure
+    paths; validate the supplied evidence before issuing privileges.
+  - Test invalid identity evidence, insufficient permissions and access to another
+    user or tenant before confirming a bypass.
+  recommendations:
+  - Use a trusted verifier and enforce the applicable server-side identity and resource
+    checks consistently.
+  - Fail closed on invalid evidence and test that alternate routes and error paths
+    cannot issue unintended access.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: red

@@ -1,0 +1,49 @@
+format: daksh-pattern-rule/v1
+id: dotnet.framework.identity.jwt_token_validation_parameters_weakened
+title: "JWT Validation Policy Review"
+order: 4
+category: Framework-Specific Issues - ASP.NET Core Identity
+detection:
+  pattern: \b(?:ValidateIssuer|ValidateAudience|ValidateLifetime|ValidateIssuerSigningKey|RequireSignedTokens)\s*=\s*false\b
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects JWT token validation with one or more critical validation checks
+    disabled.
+  trace:
+  - Externalized rule logic for JWT Token Validation Parameters Weakened.
+  description: A token-policy setting disables an issuer, audience, lifetime, signing-key
+    policy or signed-token requirement. Review the actual policy object and the values
+    accepted by each endpoint. A false flag does not by itself establish authentication
+    bypass.
+  impact: An endpoint may accept tokens outside the intended issuer, audience or validity
+    period, or permit unsigned tokens when RequireSignedTokens is disabled. ValidateIssuerSigningKey
+    controls signing-key policy validation; setting it false alone does not establish
+    that signature verification is disabled.
+  remediation: Configure token validation for the intended trust boundary and verify
+    invalid-token rejection. Keep issuer and audience restrictions appropriate to
+    the endpoint, enforce lifetime and signed-token requirements, and validate signing-key
+    policy.
+  reviewer: Inspect the active TokenValidationParameters instance, custom validators
+    and middleware order. A development/test keyword or a strong policy elsewhere
+    does not protect this setting. Verify RequireSignedTokens separately from ValidateIssuerSigningKey.
+  review_steps:
+  - Identify the trusted identity verifier, protected resources and decision made
+    by the matched control.
+  - Inspect effective middleware and service checks, alternate routes and failure
+    paths; validate the supplied evidence before issuing privileges.
+  - Test invalid identity evidence, insufficient permissions and access to another
+    user or tenant before confirming a bypass.
+  recommendations:
+  - Use a trusted verifier and enforce the applicable server-side identity and resource
+    checks consistently.
+  - Fail closed on invalid evidence and test that alternate routes and error paths
+    cannot issue unintended access.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

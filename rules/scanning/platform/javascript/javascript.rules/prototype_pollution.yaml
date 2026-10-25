@@ -1,0 +1,43 @@
+format: daksh-pattern-rule/v1
+id: javascript.core.prototype_pollution
+title: Prototype Pollution
+order: 21
+category: MISC Checks
+detection:
+  pattern: (\b__proto__\b|Object\.prototype\.(?!hasOwnProperty)[a-zA-Z]+\s?=)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:Object\.freeze|hasOwnProperty|Object\.create\s*\(\s*null|__proto__.*check
+reporting:
+  type: area_of_interest
+  reason: Detects potential prototype pollution vulnerabilities.
+  trace:
+  - Externalized rule logic for Prototype Pollution.
+  description: The code writes object properties or merges data in a way that may affect prototype state. Determine
+    whether externally supplied keys can reach the operation.
+  impact: An attacker who changes shared prototype properties may alter authorization decisions or other application
+    behavior; some reachable gadgets may also lead to data disclosure or code execution.
+  remediation: Reject prototype-manipulating keys such as __proto__, constructor, and prototype where appropriate.
+    Use safe own-property handling, null-prototype dictionaries, and maintained merge libraries.
+  reviewer: The code directly uses or modifies the `__proto__` property or assigns values to properties of `Object.
+    prototype` (excluding `hasOwnProperty`). Assess whether proper precautions are taken to prevent prototype pollution
+    vulnerabilities. This can be confirmed as an issue when the matched path is reachable and required controls
+    are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the matched construct in its containing function or configuration and identify the security-sensitive
+    behavior under review.
+  - Verify reachable callers, external influence and effective protections, including deployment overrides and failure
+    paths.
+  - Record concrete evidence for a confirmed issue or a justified suppression; retain an unresolved outcome when
+    the required evidence is unavailable.
+  recommendations:
+  - Apply the rule-specific correction above only after verifying the affected behavior and required control.
+  - Add a regression case for the unsafe condition and a valid protected case; verify the effective behavior in
+    the relevant deployment.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

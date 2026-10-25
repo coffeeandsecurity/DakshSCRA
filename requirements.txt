@@ -17,3 +17,6 @@ bcrypt>=4.1.0
 reportlab>=4.2.0
 python-docx>=1.1.2
 pypdf>=5.0,<7
+
+# IANA time zone database for hosts without system zone data.
+tzdata

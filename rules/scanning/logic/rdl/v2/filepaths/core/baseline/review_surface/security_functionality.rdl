@@ -3,7 +3,7 @@ RULE baseline.filepaths.core.security_functionality VERSION 1
 IN PATH
 WHEN TEXT_MATCHES "(?i)security" "im"
 WHEN (TEXT_MATCHES "(?i)(/|\\\\\\\\).*(security|auth|policy|hardening)" "im" AND TEXT_MISSING "(?i)(/docs?/|/examples?/|/samples?/|/tests?/)" "im")
-REPORT "Security Functionality"
+REPORT "Security Control Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

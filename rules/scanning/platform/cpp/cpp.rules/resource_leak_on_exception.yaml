@@ -1,0 +1,39 @@
+format: daksh-pattern-rule/v1
+id: cpp.core.resource_leak_on_exception
+title: Resource Leak on Exception
+order: 17
+category: Exception Safety and Resource Management
+detection:
+  pattern: \btry\s*{[^}]*new\s+\w+
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:unique_ptr|shared_ptr|RAII|catch\s*\(std::bad_alloc
+reporting:
+  type: area_of_interest
+  reason: Detects dynamic memory allocations inside `try` blocks that may lead to memory leaks if an exception is
+    thrown.
+  trace:
+  - Externalized rule logic for Resource Leak on Exception.
+  description: The code manages allocation, ownership, indexed access, or resource release. Confirm capacity, lifetime,
+    nullability, and transfer of ownership across callers.
+  impact: An invalid lifetime or out-of-range access may corrupt memory, disclose process data, or crash the application.
+    Unbounded or unreleased resources may exhaust memory and deny service under repeated use.
+  remediation: Enforce bounds and lifetime invariants, handle allocation failure, and use appropriate automatic
+    resource ownership. Confirm a leak or invalid access before adding cleanup that could introduce double release.
+  reviewer: Reviewers should confirm that resources are managed using RAII or released safely in `catch` blocks
+    to prevent leaks. This can be confirmed as an issue when the matched path is reachable and required controls
+    are missing, weak, or inconsistent.
+  review_steps:
+  - Trace who controls the operation count, input size, duration or resource allocation.
+  - Inspect limits, cancellation, cleanup and error paths, including concurrency and deployment quotas.
+  - Establish a reachable way to exhaust or retain a relevant resource before confirming an availability issue.
+  recommendations:
+  - Set limits and timeouts appropriate to the operation and release resources on success, failure and cancellation.
+  - Test oversized input and concurrent requests against the intended limits and verify cleanup under failure.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

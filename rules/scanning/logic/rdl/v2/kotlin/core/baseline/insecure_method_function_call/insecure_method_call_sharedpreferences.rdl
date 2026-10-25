@@ -3,7 +3,7 @@ RULE baseline.kotlin.core.insecure_method_call_sharedpreferences VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "getSharedPreferences\\(\\s*[^,]+,\\s*Context\\.MODE_PRIVATE\\s*\\)" "im"
 WHEN (TEXT_MATCHES "(putString|putInt|putLong|putBoolean|getString|getInt|getLong|getBoolean)" "im" AND TEXT_MATCHES "(token|secret|password|auth|session|apikey|key)" "im" AND TEXT_MISSING "(EncryptedSharedPreferences|MasterKey|KeyStore|Keystore|Cipher|encrypt|decrypt)" "im")
-REPORT "Insecure Method Call: SharedPreferences"
+REPORT "Shared Preferences Usage Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -1,0 +1,44 @@
+format: daksh-pattern-rule/v1
+id: ruby.core.unsafe_shell_command_execution
+title: "OS Command Injection Review"
+order: 1
+category: Injection and Untrusted Input Handling
+detection:
+  pattern: \b(?:system|exec|spawn|popen|Open3\.(?:capture2e?|pipeline|popen2e?))\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:Shellwords\.escape|Shellwords\.shellescape|validate|sanitize|allowlist && MISSING:test|spec|example
+reporting:
+  type: area_of_interest
+  reason: Detects shell command execution APIs in Ruby that can be dangerous when fed untrusted input.
+  trace:
+  - Externalized rule logic for Unsafe Shell Command Execution.
+  description: The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace
+    executable selection and evaluated content to their trust boundaries.
+  impact: If an attacker controls interpreted syntax or the operation selected, code or commands may run with the
+    application’s privileges, allowing data theft, state changes, or service disruption.
+  remediation: Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate
+    argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates
+    or expressions.
+  reviewer: Verify command arguments are not derived from untrusted input and are validated/escaped safely. This
+    can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or
+    inconsistent.
+  review_steps:
+  - Identify who can supply the matched input, including stored values and upstream services; record its type, size
+    limits and trust boundary.
+  - Trace the value through transformations to each sensitive operation. Check the protection at that destination
+    and resource-level authorization.
+  - Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side
+    check alone is insufficient evidence.
+  recommendations:
+  - Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve
+    legitimate characters and protect each destination separately.
+  - Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations
+    where applicable. Test rejected input and unauthorized access.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

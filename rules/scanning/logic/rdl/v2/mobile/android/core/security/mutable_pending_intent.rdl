@@ -2,7 +2,7 @@ VERSION 2
 RULE android.mutable-pending-intent VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\bPendingIntent\\s*\\.\\s*FLAG_MUTABLE\\b" ""
-REPORT "Mutable PendingIntent Capability"
+REPORT "PendingIntent Mutability Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

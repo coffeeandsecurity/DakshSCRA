@@ -4,7 +4,7 @@ IN FUNCTION
 LET object BE OBJECT MATCHES type.dynamic-object
 WHEN assumed_type.incompatible object AND sensitive_operation object
 REQUIRE REACHABLE PATH
-REPORT "type confusion"
+REPORT "Type Confusion"
 SEVERITY CRITICAL
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

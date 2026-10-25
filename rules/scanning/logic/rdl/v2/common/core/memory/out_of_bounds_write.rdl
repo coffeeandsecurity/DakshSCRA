@@ -4,7 +4,7 @@ IN FUNCTION
 LET buffer BE OBJECT MATCHES memory.buffer
 WHEN EXISTS CALL MATCHES memory.write AS write
 REQUIRE write TARGETS buffer AND bounds.exceeded buffer
-REPORT "out of bounds write"
+REPORT "Out of Bounds Write"
 SEVERITY CRITICAL
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

@@ -1,0 +1,46 @@
+format: daksh-pattern-rule/v1
+id: dotnet.core.untrusted_data_output_httpcontext_current_request_form
+title: "Untrusted Input Entry Point"
+order: 8
+category: Untrusted Input/Output Handling
+detection:
+  pattern: \.Append\(.*HttpContext\.Current\.Request\.Form
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:(HtmlEncode|UrlEncode|Sanitize|AntiXssEncoder)
+reporting:
+  type: area_of_interest
+  reason: Detects the usage of untrusted data output with HttpContext.Current.Request.Form, which may lead to security
+    vulnerabilities.
+  trace:
+  - 'Externalized rule logic for Untrusted Data Output: HttpContext.Current.Request.Form.'
+  description: The code accepts or reads externally influenced data. Trace it to security-sensitive operations and
+    identify the validation and authorization required by each destination.
+  impact: External input may cause injection, incorrect decisions, or unauthorized data access if it reaches a sensitive
+    operation without the controls required by that operation. Reading input alone does not establish a vulnerability.
+  remediation: Validate type, size, and allowed values at trust boundaries, and apply destination-specific parameter
+    binding or output encoding. Enforce authorization independently of input validation.
+  reviewer: Check for the presence of untrusted data output involving HttpContext. Current. Request. Form. Verify
+    if developers have implemented proper input validation, output encoding, and secure data handling techniques
+    to prevent security vulnerabilities. Also assess the sensitivity of the output data and confirm the presence
+    of appropriate security controls. This can be confirmed as an issue when the matched path is reachable and required
+    controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify who can supply the matched input, including stored values and upstream services; record its type, size
+    limits and trust boundary.
+  - Trace the value through transformations to each sensitive operation. Check the protection at that destination
+    and resource-level authorization.
+  - Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side
+    check alone is insufficient evidence.
+  recommendations:
+  - Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve
+    legitimate characters and protect each destination separately.
+  - Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations
+    where applicable. Test rejected input and unauthorized access.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

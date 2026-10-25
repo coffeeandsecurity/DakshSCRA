@@ -1,0 +1,37 @@
+format: daksh-pattern-rule/v1
+id: mobile.xplat.reactnative.framework.expo.review_reactnative_expo_securestore_backup_config_disabled
+title: "Secure Storage Backup Review"
+order: 6
+category: STORAGE Review
+detection:
+  pattern: '["\x27]?configureAndroidBackup["\x27]?\s*:\s*false\b'
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: The secure-store plugin's automatic Android backup configuration is disabled. Custom backup rules
+    can make this legitimate; verify that encrypted entries are excluded from the actual cloud and transfer configurations.
+  impact: Recoverable sensitive values may expose sessions or private data to a party able to access the relevant
+    storage, backup or shared device.
+  remediation: Keep privileged secrets on the server, use appropriate device-backed secure storage for local credentials,
+    and restrict backup and sharing to intended non-sensitive data.
+  reviewer: Test device lock state, cloud backup versus device transfer, restored keys, keychain persistence after
+    reinstall, and secure-storage failure; do not silently fall back to plaintext or treat an unrelated secure store
+    as protection.
+  review_steps:
+  - Resolve the exact instance, declaration, value and release configuration.
+  - Test device lock state, cloud backup versus device transfer, restored keys, keychain persistence after reinstall,
+    and secure-storage failure; do not silently fall back to plaintext or treat an unrelated secure store as protection.
+  - Confirm reachability and security impact before confirming an issue.
+  recommendations:
+  - Keep privileged secrets on the server, use appropriate device-backed secure storage for local credentials, and
+    restrict backup and sharing to intended non-sensitive data.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

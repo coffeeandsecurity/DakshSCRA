@@ -1,0 +1,41 @@
+format: daksh-pattern-rule/v1
+id: c.core.potential_format_string_attack_printf_fprintf_etc
+title: "Format String Review"
+order: 7
+category: Format String Vulnerabilities
+detection:
+  pattern: \b(?:printf|vprintf|fprintf|vfprintf|sprintf|vsprintf|snprintf|vsnprintf)\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: A format argument is not a directly verified string literal. Trace its provenance and format contract;
+    this predicate alone does not prove attacker control.
+  trace:
+  - 'Externalized rule logic for Potential Format String Attack: printf(), fprintf(), etc..'
+  description: The code uses a low-level memory, formatting, allocation, or type-conversion operation whose safety
+    depends on bounds, types, initialization, and caller invariants.
+  impact: A violated memory or formatting invariant may expose process memory, corrupt application state, crash
+    the process, or permit code execution when an attacker can influence the relevant inputs.
+  remediation: Validate sizes and types before use, use bounded and type-safe APIs, and keep format strings fixed.
+    Prefer checked conversions and safe ownership abstractions; document and test every remaining unsafe invariant.
+  reviewer: Ensure format functions use proper format specifiers and do not allow direct user input as the format
+    string. This can be confirmed as an issue when the matched path is reachable and required controls are missing,
+    weak, or inconsistent.
+  review_steps:
+  - Inspect buffer capacity, index bounds, integer conversions and ownership at the matched operation and its callers.
+  - Check initialization, aliases, lifetime and cleanup on success, exception and early-return paths; identify external
+    influence over sizes or values.
+  - Verify a concrete unsafe access or lifetime condition. A low-level API or allocation alone does not prove memory
+    corruption.
+  recommendations:
+  - Use bounded operations, checked size calculations and explicit ownership or automatic resource management appropriate
+    to the language.
+  - Test boundary sizes and failure paths; use memory diagnostics where available to verify the specific correction.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

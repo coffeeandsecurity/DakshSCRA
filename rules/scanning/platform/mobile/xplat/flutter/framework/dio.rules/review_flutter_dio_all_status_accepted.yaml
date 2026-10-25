@@ -1,0 +1,41 @@
+format: daksh-pattern-rule/v1
+id: mobile.xplat.flutter.framework.dio.review_flutter_dio_all_status_accepted
+title: Dio Accepts Every HTTP Response Status
+order: 4
+category: CODE Review
+detection:
+  pattern: \bvalidateStatus\s*:\s*\([^)]{0,80}\)\s*=>\s*true\b
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: The response-status callback accepts every status for normal response processing rather than rejecting
+    statuses through the client error path. Inspect how each caller handles unauthorized, forbidden and failed responses;
+    callback acceptance does not prove an authorization bypass.
+  impact: If callers treat rejected or failed responses as valid, they may make incorrect authorization or transaction
+    decisions, process attacker-controlled error content, or conceal security-relevant failures.
+  remediation: Accept only the status codes expected by each operation. Handle authentication failures, redirects,
+    and server errors explicitly before consuming response data or updating trusted state. Use platform trust and
+    hostname validation and encrypted transport. Remove permissive callbacks and narrow necessary exceptions to
+    the intended hosts.
+  reviewer: Trace handling of 401, 403 and transaction failures at each caller. Explicit application-side error
+    handling can be legitimate; accepting a response is separate from trusting its body or authorizing an action.
+  review_steps:
+  - Trace the matched candidate to its actual value, caller or resource.
+  - Test invalid chains, wrong hostnames, redirects and build-specific exceptions; an unrelated trusted client or
+    HTTPS URL does not protect this connection. Missing pinning alone is not proof of insecurity.
+  - Resolve release configuration and runtime assumptions before confirming an issue.
+  recommendations:
+  - Accept only the status codes expected by each operation. Handle authentication failures, redirects, and server
+    errors explicitly before consuming response data or updating trusted state. Use platform trust and hostname
+    validation and encrypted transport. Remove permissive callbacks and narrow necessary exceptions to the intended
+    hosts.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

@@ -1,0 +1,44 @@
+format: daksh-pattern-rule/v1
+id: php.core.object_injection_via_serialization
+title: "Object Deserialization Review"
+order: 4
+category: Untrusted Input Handling or Injection Flaws
+detection:
+  pattern: (?i)\bunserialize\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Review an object-capable PHP deserialization call. Input trust and effective allowed_classes must be assessed
+    per call; unrelated JSON decoding is not a mitigation.
+  trace:
+  - Externalized rule logic for Object Injection via Serialization.
+  description: The application calls object-capable PHP deserialization. Identify the input trust and effective
+    allowed_classes policy at this specific call; serialization alone and unrelated JSON decoding do not establish
+    or mitigate object injection.
+  impact: A crafted untrusted payload may instantiate dangerous types or trigger object behavior that executes code,
+    modifies state, or exhausts resources when the parser permits those operations.
+  remediation: Use a data-only format and a safe loader for untrusted input. Disable automatic object or type construction,
+    allowlist required types, and bound parsing size and complexity.
+  reviewer: Trace whether untrusted input reaches unserialize or related deserialization paths and verify that class
+    restrictions and payload trust checks are enforced. This can be confirmed as an issue when the matched path
+    is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify who can supply the matched input, including stored values and upstream services; record its type, size
+    limits and trust boundary.
+  - Trace the value through transformations to each sensitive operation. Check the protection at that destination
+    and resource-level authorization.
+  - Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side
+    check alone is insufficient evidence.
+  recommendations:
+  - Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve
+    legitimate characters and protect each destination separately.
+  - Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations
+    where applicable. Test rejected input and unauthorized access.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

@@ -1,0 +1,40 @@
+format: daksh-pattern-rule/v1
+id: dockerfile.core.running_as_root_user
+title: "Container User Configuration Review"
+order: 1
+category: Image and Base Configuration
+detection:
+  pattern: ^USER\s+(?:root|0)\s*$
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:USER\s+(?!0|root)[a-zA-Z]|useradd|adduser|gosu|su-exec
+reporting:
+  type: area_of_interest
+  reason: Detects Dockerfiles that explicitly set or retain root as the container runtime user.
+  trace:
+  - Externalized rule logic for Running as Root User.
+  description: The code or deployment configuration requests privileges or grants access beyond an explicitly resolved
+    minimum. Determine the effective permissions and the operation’s requirements.
+  impact: A compromised actor may access additional data, modify protected resources, or extend compromise beyond
+    the intended application boundary when excessive privileges remain available.
+  remediation: Run with the least privileges required, remove unnecessary grants, and scope each permission to its
+    intended resource and operation. Verify effective inherited permissions and test denied access.
+  reviewer: Confirm the final USER directive before CMD or ENTRYPOINT is a non-root identity. This can be confirmed
+    as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Resolve the effective privileges, filesystem modes or identity grants, including inherited and deployment-level
+    permissions.
+  - Determine which operations are required and whether an untrusted actor can exercise the excess access.
+  - Record the affected resource and effective policy; distinguish a declared capability from an exploitable authorization
+    gap.
+  recommendations:
+  - Limit access and privileges to the operations and resources the application requires; remove unnecessary broad
+    grants.
+  - Test permitted operations and denied access with the actual deployment identity and effective policy.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

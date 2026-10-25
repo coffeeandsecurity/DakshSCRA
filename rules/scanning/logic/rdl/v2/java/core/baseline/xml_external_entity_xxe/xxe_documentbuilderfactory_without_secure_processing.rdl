@@ -3,7 +3,7 @@ RULE baseline.java.core.xxe_documentbuilderfactory_without_secure_processing VER
 IN FILE
 WHEN TEXT_MATCHES "DocumentBuilderFactory\\.newInstance\\s*\\(|SAXParserFactory\\.newInstance\\s*\\(|XMLInputFactory\\.newInstance\\s*\\(" "im"
 WHEN TEXT_MISSING "setFeature\\s*\\(.*FEATURE_SECURE_PROCESSING|setExpandEntityReferences\\s*\\(\\s*false|DISALLOW_DOCTYPE_DECL|SUPPORT_DTD\\s*,\\s*false" "im"
-REPORT "XXE: DocumentBuilderFactory Without Secure Processing"
+REPORT "XML External Entity Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

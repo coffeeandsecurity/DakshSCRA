@@ -1,0 +1,8 @@
+VERSION 2
+RULE android.archive-entry-destination VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:ZipEntry|ZipInputStream|getNextEntry|nextEntry|zipEntry\\s*\\.\\s*(?:name|getName\\s*\\())\\b" ""
+REPORT "Archive Entry Controls Extraction Destination"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

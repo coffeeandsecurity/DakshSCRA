@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.android.core.review_android_persistent_device_identifier VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:getDeviceId|getImei|getMeid|getSubscriberId)\\s*\\(" "im"
+REPORT "Persistent Device Identifier Access"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

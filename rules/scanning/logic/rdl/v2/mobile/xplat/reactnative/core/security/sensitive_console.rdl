@@ -2,7 +2,7 @@ VERSION 2
 RULE reactnative.sensitive-console VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(?i)\\bconsole\\.(?:log|debug|info|warn|error)\\s*\\([^\\n;]{0,200}\\b(?:password|token|secret|credential)\\b" ""
-REPORT "React Native Sensitive Console Logging"
+REPORT "Sensitive Data Logging Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

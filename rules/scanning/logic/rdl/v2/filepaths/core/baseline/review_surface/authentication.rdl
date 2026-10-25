@@ -3,7 +3,7 @@ RULE baseline.filepaths.core.authentication VERSION 1
 IN PATH
 WHEN TEXT_MATCHES "(?i)(Login|Signin|Authentication|Authenticated|Oauth|JWT)" "im"
 WHEN (TEXT_MATCHES "(?i)(/|\\\\\\\\).*(auth|login|signin|oauth|jwt)" "im" AND TEXT_MISSING "(?i)(/docs?/|/examples?/|/samples?/|/tests?/)" "im")
-REPORT "Authentication"
+REPORT "Authentication Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

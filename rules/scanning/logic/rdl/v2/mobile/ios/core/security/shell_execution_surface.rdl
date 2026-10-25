@@ -2,7 +2,7 @@ VERSION 2
 RULE ios.shell-execution-surface VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:system|popen|posix_spawn|execve|execl)\\s*\\(" ""
-REPORT "iOS Native Shell Execution Surface"
+REPORT "Process Execution Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

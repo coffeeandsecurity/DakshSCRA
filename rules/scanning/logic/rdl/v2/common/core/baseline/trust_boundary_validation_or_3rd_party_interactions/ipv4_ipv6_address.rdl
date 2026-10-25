@@ -1,9 +1,8 @@
 VERSION 2
 RULE baseline.common.core.ipv4_ipv6_address VERSION 1
 IN FILE
-WHEN TEXT_MATCHES "(?ix)\\b(?:(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.){3}(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\b|(?<![A-Za-z0-9_:.])(?=(?:[0-9A-Fa-f]{1,4}:){4,}[0-9A-Fa-f:]*|[0-9A-Fa-f:]*::[0-9A-Fa-f:]*|[0-9A-Fa-f:]*[A-Fa-f][0-9A-Fa-f:]*|[0-9A-Fa-f:]*:(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3})(?:(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,7}:|(?:[0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,5}(?::[0-9A-Fa-f]{1,4}){1,2}|(?:[0-9A-Fa-f]{1,4}:){1,4}(?::[0-9A-Fa-f]{1,4}){1,3}|(?:[0-9A-Fa-f]{1,4}:){1,3}(?::[0-9A-Fa-f]{1,4}){1,4}|(?:[0-9A-Fa-f]{1,4}:){1,2}(?::[0-9A-Fa-f]{1,4}){1,5}|[0-9A-Fa-f]{1,4}:(?:(?::[0-9A-Fa-f]{1,4}){1,6})|:(?:(?::[0-9A-Fa-f]{1,4}){1,7})|(?:[0-9A-Fa-f]{1,4}:){1,4}:(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3})(?![A-Za-z0-9_:.])" "im"
-WHEN TEXT_MATCHES "(?i)\\b(host|server|endpoint|baseurl|api|connect|socket|dns|proxy|url|uri|listen|bind|gateway|peer|target|remote)\\b" "im"
-REPORT "IPv4 / IPv6 Address"
+WHEN TEXT_MATCHES "(?<![A-Za-z0-9_:.%])(?:[A-Fa-f0-9]{0,4}:){2,8}[A-Fa-f0-9.]{0,45}(?:%[A-Za-z0-9_.~-]{1,64})?(?![A-Za-z0-9_:.%])|(?<![A-Za-z0-9_:.])(?:[0-9]{1,3}\\.){3}[0-9]{1,3}(?![A-Za-z0-9_.%])" "im"
+REPORT "IP Address Usage Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

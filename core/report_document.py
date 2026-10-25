@@ -22,14 +22,15 @@ def cli_document(analysis_path=None):
     if external:
         data_root = Path(analysis_path).parent
         runtime = (data_root.parent.parent if data_root.parent.name == 'results' else data_root.parent) / 'runtime'
-    return saved_document(data_root, runtime)
+    from utils.report_audience import current_audience
+    return saved_document(data_root, runtime, audience=current_audience())
 
 
 REPORT_LABELS = {'full': 'Full scan', 'findings': 'Areas of interest',
                  'analysis': 'Advanced analysis', 'suppressed': 'Suppressed findings'}
 
 
-def saved_document(data_root, runtime, scope='full', scan=None):
+def saved_document(data_root, runtime, scope='full', scan=None, audience=None):
     """One saved-data contract for CLI generation and web exports."""
     data_root, runtime = Path(data_root), Path(runtime)
     names = {'full': ['summary', 'recon', 'areas_of_interest', 'filepaths_aoi', 'analysis', 'suppressed_findings', 'estimation'],
@@ -55,10 +56,42 @@ def saved_document(data_root, runtime, scope='full', scan=None):
         'project': inputs.get('project_name') or inputs.get('project_id') or inputs.get('target_directory'),
         'project_key': inputs.get('project_id'), 'run_uuid': inputs.get('run_id')}.items() if value}
     identity.update(scan or {})
-    return {'scan': identity, 'report': REPORT_LABELS[scope], 'sections': sections}
+    from utils.report_audience import normalize_audience
+    from core.suppression_explanations import explain_suppressions
+    explanations = explain_suppressions(sections.get('suppressed_findings') or [], runtime,
+        target=inputs.get('target_directory'))
+    return {'suppression_explanations': [dict(id=row.get('id'), file=row.get('file'), line=row.get('line'),
+                explanation=row['suppression_explanation']) for row in explanations], 'scan': identity, 'report': REPORT_LABELS[scope], 'sections': sections,
+            'report_audience': normalize_audience(audience or identity.get('report_audience') or inputs.get('report_audience'))}
+
+
+def prepare_document(document):
+    """Refine guidance on copies, then remove the unselected perspective."""
+    from utils.report_audience import filter_guidance, normalize_audience
+    from core.review_guidance import audience_guidance
+    from core.issue_titles import normalize_record_titles
+    def refine(value):
+        if isinstance(value, list):
+            return [refine(child) for child in value]
+        if not isinstance(value, dict):
+            return value
+        from core.issue_notes import refresh_bundled_notes
+        result = refresh_bundled_notes({key: refine(child) for key, child in value.items()})
+        dev_key = next((key for key in ('developer_note', 'remediation', 'recommendation') if key in result), None)
+        reviewer_key = 'reviewer_note'
+        if dev_key or reviewer_key in result:
+            developer, reviewer = audience_guidance(result.get('rule_title') or result.get('title') or result.get('kind', ''),
+                result.get(dev_key, '') if dev_key else '', result.get(reviewer_key, ''), result.get('category', ''))
+            result[dev_key or 'developer_note'], result[reviewer_key] = developer, reviewer
+        return normalize_record_titles(result)
+    audience = normalize_audience(document.get('report_audience'))
+    return filter_guidance(dict(refine(document), report_audience=audience), audience)
 
 
 def render_json(document, destination):
+    from utils.report_audience import filter_guidance
+    from core.issue_titles import normalize_document_titles
+    document = normalize_document_titles(filter_guidance(document, document.get('report_audience', 'both')))
     destination = Path(destination)
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(json.dumps(document, ensure_ascii=True, indent=2), encoding='utf-8')
@@ -86,7 +119,22 @@ def review_sections(runtime):
                     shutil.copy2(journal, Path(temporary) / journal.name)
             sections['rdl_review_evidence'] = list(ResultStore(copied).iter_records(reviewed=True))
     if (runtime / 'rdl_xref.json').is_file():
-        sections['rdl_cross_references'] = _read(runtime / 'rdl_xref.json', {})
+        from core.rdl.xref import read_index
+        try:
+            sections['rdl_cross_references'] = read_index(runtime / 'rdl_xref.json') or {}
+        except ValueError:
+            legacy = _read(runtime / 'rdl_xref.json', {})
+            if 'version' in legacy or 'storage_encoding' in legacy:
+                raise
+            sections['rdl_cross_references'] = legacy
+    from core.rdl.advanced import read_inventory_index
+    advanced = read_inventory_index(runtime) if (runtime / 'rdl_advanced_review.json').is_file() or sections.get('rdl_cross_references', {}).get('input_inventory') is not None else None
+    if advanced and advanced.get('input_inventory') is not None:
+        sections['rdl_advanced_analysis'] = dict(provenance=advanced.get('provenance'), created_at=advanced.get('created_at'), **advanced['input_inventory'])
+    from core.rdl.program_graphs import read_catalog
+    program_graphs = read_catalog(runtime)
+    if program_graphs is not None:
+        sections['program_graphs'] = program_graphs
     return sections
 
 
@@ -117,6 +165,8 @@ def _rank(row):
 
 
 def presentation_context(document, platform=None):
+    from utils.datetime_utils import presentation_dates
+    document = presentation_dates(document)
     from core.recon_presentation import recon_presentation
     from core.rdl.narratives import enrich_analysis, refresh_record
     from core.rdl.assessment import classify_record, CATEGORIES, manual_review_direction
@@ -178,6 +228,7 @@ def presentation_context(document, platform=None):
                 seen.add(key)
                 rdl_findings.append(dict(finding, assessment=category, rule_title=context.get('rule_title') or record.get('v2_rule_id') or record.get('v2_rule'),
                     report_path=context.get('file_path', ''), report_kind=record.get('comparison_kind', ''),
+                    report_rule_id=record.get('v2_rule_id') or record.get('v2_rule') or '',
                     report_evidence=finding.get('evidence') or (finding.get('trace') or {}).get('steps') or [],
                     report_explanation=record.get('v2_explanation', '')))
         if record.get('v2_outcome') in ('INDETERMINATE', 'ERROR') or record.get('v2_errors'):
@@ -192,7 +243,7 @@ def presentation_context(document, platform=None):
         if finding['report_kind'] != 'baseline':
             compact.append(finding)
             continue
-        key = (finding['rule_title'], finding['report_path'])
+        key = (finding.get('report_rule_id') or finding['rule_title'], finding['report_path'])
         if key not in grouped:
             group = dict(finding, report_evidence=[], report_locations=[])
             grouped[key] = (group, set())
@@ -237,15 +288,23 @@ def presentation_context(document, platform=None):
         evidence_sources.append(dict(entry, rows=sorted(entry['rows'].values(), key=lambda r: (r.get('line') or 0))))
     xref = sections.get('rdl_cross_references') or {}
     suppressed = []
+    companions = {(entry.get('id'), entry.get('file'), entry.get('line')): entry.get('explanation')
+                  for entry in document.get('suppression_explanations', [])}
     for row in _rows(sections.get('suppressed_findings', [])):
+        row = dict(row)
+        if companions.get((row.get('id'), row.get('file'), row.get('line'))):
+            row['suppression_explanation'] = companions[(row.get('id'), row.get('file'), row.get('line'))]
         source = str(row.get('suppression_source') or row.get('logic_source') or row.get('rdl_condition') or '')
         engine = str(row.get('suppression_engine') or row.get('logic_engine') or '')
         version = (re.search(r'v?([12])', str(row.get('suppression_version') or row.get('logic_version') or ''))
                    or re.search(r'rdl[ _-]?v?([12])', engine, re.I)
                    or re.search(r'/rdl/v([12])/', source.replace('\\', '/'))
                    or re.search(r'^\s*VERSION\s+([12])\b', row.get('rdl_text', ''), re.M))
-        label = 'RDL v' + version[1] if version else (engine or 'Engine not recorded')
-        suppressed.append(dict(row, report_engine=label, report_source=source))
+        label = 'Pattern Rules' if engine == 'pattern' else 'RDL v' + version[1] if version else (engine or 'Engine not recorded')
+        from core.evidence_highlights import highlighted_html
+        enabled = str((row.get('scan_config') or {}).get('highlight_enabled', True)).lower() not in {'false', '0', 'no'}
+        code_html = Markup(highlighted_html(row.get('code', ''), row.get('highlights', []) if enabled else []))
+        suppressed.append(dict(row, report_engine=label, report_source=source, report_code_html=code_html))
     semantic_vectors, semantic_flows, semantic_references = [], [], []
     vector_seen, path_seen, edge_seen = set(), set(), set()
     from core.rdl.review_views import flow_traits
@@ -294,21 +353,30 @@ def presentation_context(document, platform=None):
                           semantic_flows=len(semantic_flows), coverage_limits=len(limitations),
                           suppressed=len(suppressed), symbols=len(xref.get('symbols', [])),
                           calls=len(xref.get('calls', [])))
-    return dict(report_scope=report, report_scan=document.get('scan', {}), analysis_targets=targets,
+    from core.rdl.program_graphs import report_views, graph_svg
+    program_graph_catalog = sections.get('program_graphs') or {}
+    program_graph_views = report_views(program_graph_catalog)
+    for view in program_graph_views:
+        view['svg'] = Markup(graph_svg(view)) if view.get('nodes') else ''
+    from utils.report_audience import normalize_audience, filter_guidance
+    audience = normalize_audience(document.get('report_audience'))
+    return filter_guidance(dict(report_scope=report, report_scan=document.get('scan', {}), analysis_targets=targets,
+                report_audience=audience, show_developer_guidance=audience != 'code_review', show_reviewer_guidance=audience != 'developer',
                 review_summary=review_summary, rdl_assessment_counts={key: len(value) for key, value in assessment_groups.items()},
                 analysis_flows=flows, vulnerabilities=assessments, mitigations=mitigations, manual_reviews=manual,
                 attack_vectors=vectors, semantic_vectors=semantic_vectors, semantic_flows=semantic_flows,
                 semantic_references=semantic_references, flow_references=references, rdl_findings=rdl_findings, rdl_assessments=[item for item in rdl_findings if item.get('assessment') == 'manual'],
                 evidence_sources=evidence_sources, rdl_finding_count=rdl_finding_count, rdl_outcomes=dict(Counter(r.get('v2_outcome', 'Unknown') for r in records)),
                 review_limitations=limitations, cross_reference=xref, suppressed=suppressed,
+                program_graph_catalog=program_graph_catalog, program_graph_views=program_graph_views,
                 recon=sections.get('recon') or {},
                 recon_report=recon_presentation(sections.get('recon')),
                 extra_sections={k: v for k, v in sections.items() if k not in {
                     'summary', 'areas_of_interest', 'filepaths_aoi', 'filepaths', 'analysis', 'recon',
-                    'suppressed_findings', 'rdl_review_evidence', 'rdl_cross_references'}},
+                    'suppressed_findings', 'rdl_review_evidence', 'rdl_cross_references', 'program_graphs'}},
                 show_findings=report not in ('Advanced analysis', 'Suppressed findings'),
                 show_analysis=report in ('Full scan', 'Advanced analysis'),
-                show_suppressed=report in ('Full scan', 'Suppressed findings'))
+                show_suppressed=report in ('Full scan', 'Suppressed findings')), audience)
 
 
 def _flow_graph_script():
@@ -317,12 +385,15 @@ def _flow_graph_script():
 
 
 def render_document(document, destination, fmt='html', title=None, progress=None):
+    document = prepare_document(document)
     from core.report_progress import report_progress
     report_progress(progress, 'building', 'Preparing report sections')
     from core import reports
     destination = Path(destination)
     sections = document.get('sections', {})
     context = reports._build_pdf_report_context(document=document)
+    from utils.report_audience import filter_guidance
+    context = filter_guidance(context, document['report_audience'])
     if title:
         context['reportTitle'] = title
     if fmt == 'pdf':
@@ -338,6 +409,8 @@ def render_document(document, destination, fmt='html', title=None, progress=None
     script = _flow_graph_script()
     context.update(report_graph_enabled=bool(script), report_graph_script=script)
     env = Environment(loader=FileSystemLoader(state.htmltemplates_dir), autoescape=True)
+    from utils.guidance_format import guidance_html
+    env.filters['guidance'] = guidance_html
     destination.parent.mkdir(parents=True, exist_ok=True)
     report_progress(progress, 'building', 'Rendering HTML report')
     destination.write_text(env.get_template('report_modern.html').render(**context), encoding='utf-8')
@@ -346,6 +419,8 @@ def render_document(document, destination, fmt='html', title=None, progress=None
 
 def render_html_package(document, destination, page_size=200, progress=None):
     """Render an offline index and bounded detail pages with bidirectional links."""
+    original_document = document
+    document = prepare_document(document)
     import os
     from core.report_progress import report_progress
     report_progress(progress, 'building', 'Preparing HTML report sections')
@@ -357,10 +432,14 @@ def render_html_package(document, destination, page_size=200, progress=None):
     detail = root / (destination.stem + '-files')
     detail.mkdir(parents=True, exist_ok=True)
     context = reports._build_pdf_report_context(document=document)
+    from utils.report_audience import filter_guidance
+    context = filter_guidance(context, document['report_audience'])
     context.update(reportDate=context['report_date'],
                    snippets=safe_snippets(reports.get_areas_of_interest(None, raw=document.get('sections', {}).get('areas_of_interest') or [])),
                    filepaths=context['all_filepaths'], filepaths_aoi=context['parsed_paths_aoi'])
     env = Environment(loader=FileSystemLoader(state.htmltemplates_dir), autoescape=True)
+    from utils.guidance_format import guidance_html
+    env.filters['guidance'] = guidance_html
     template = env.get_template('report_modern.html')
     script = _flow_graph_script()
     graph_asset = detail / 'flow-graph.js'
@@ -393,6 +472,7 @@ def render_html_package(document, destination, page_size=200, progress=None):
     add('cross-references', 'Cross References', (['xref_symbols', 'xref_calls'] if graph else ['flow_references']) + ['semantic_references'], context['show_analysis'])
     add('rdl-evidence', 'RDL Review Evidence', ['rdl_findings', 'review_limitations'], context['show_analysis'])
     add('source-evidence', 'Saved Source Evidence', ['evidence_sources'], context['show_analysis'])
+    add('program-graphs', 'CFG & DFG', ['program_graph_views'], context['show_analysis'] and bool(context['program_graph_catalog']))
     add('suppressed-findings', 'Suppressed Findings', ['suppressed'], context['show_suppressed'])
     add('reconnaissance', 'Reconnaissance', [], bool(context['recon']))
     extra_pages = {}
@@ -419,14 +499,14 @@ def render_html_package(document, destination, page_size=200, progress=None):
     completed_pages = 0
     report_progress(progress, 'building', 'Writing saved results for the HTML package')
     data = detail / 'saved-results.json'
-    data.write_text(json.dumps(document, ensure_ascii=True), encoding='utf-8')
+    data.write_text(json.dumps(filter_guidance(original_document, document['report_audience']), ensure_ascii=True), encoding='utf-8')
     def relative(path, current):
         return Path(os.path.relpath(path, current.parent)).as_posix()
     def write(path, key, page_context, pagination=None):
         nonlocal completed_pages
         report_progress(progress, 'building', 'Building ' + page_context['report_page_title'], completed_pages, total_pages, 'pages')
         pages = [dict(label=s['label'], count=s['count'], href=relative(s['paths'][0], path)) for s in specs]
-        page_context.update(report_graph_enabled=bool(script) and key in {'taint-flows','cross-references','rdl-evidence'}, report_graph_asset=relative(graph_asset, path) if script else None, report_pages=pages, report_home=relative(destination, path), report_data=relative(data, path),
+        page_context.update(report_graph_enabled=bool(script) and key in {'taint-flows','cross-references','rdl-evidence','program-graphs'}, report_graph_asset=relative(graph_asset, path) if script else None, report_pages=pages, report_home=relative(destination, path), report_data=relative(data, path),
                             report_pagination=pagination or [], page_sections={key},
                             platform_counts={}, total_findings=len(aoi), extra_sections=extra_pages.get(key, {}),
                             extra_section_id=key)

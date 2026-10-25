@@ -27,18 +27,18 @@ Status: 11 owned rule(s), 11 runtime mapping(s). No claim of complete coverage.
 
 ## Current runtime mappings
 
-Baseline and semantic comparisons link the v1 source; additional checks link the selected XML pack. Shared properties retain a single owning definition.
+Pattern baselines and semantic comparisons link the unified rule source; additional checks link the selected pack metadata. Shared properties retain a single owning definition.
 
-| V1 definition or selected pack | V2 property |
+| Unified rule or selected pack | V2 property |
 |---|---|
-| [running_as_root_user.rdl](../../../v1/dockerfile/core/running_as_root_user.rdl) | [baseline.dockerfile.core.running_as_root_user](baseline/image_and_base_configuration/running_as_root_user.rdl) |
-| [no_user_directive_present.rdl](../../../v1/dockerfile/core/no_user_directive_present.rdl) | [baseline.dockerfile.core.no_user_directive_present](baseline/image_and_base_configuration/no_user_directive_present.rdl) |
-| [using_latest_tag_for_base_image.rdl](../../../v1/dockerfile/core/using_latest_tag_for_base_image.rdl) | [baseline.dockerfile.core.using_latest_tag_for_base_image](baseline/image_and_base_configuration/using_latest_tag_for_base_image.rdl) |
-| [secret_passed_via_env_instruction.rdl](../../../v1/dockerfile/core/secret_passed_via_env_instruction.rdl) | [baseline.dockerfile.core.secret_passed_via_env_instruction](baseline/secret_and_credential_exposure/secret_passed_via_env_instruction.rdl) |
-| [secret_passed_via_arg_instruction.rdl](../../../v1/dockerfile/core/secret_passed_via_arg_instruction.rdl) | [baseline.dockerfile.core.secret_passed_via_arg_instruction](baseline/secret_and_credential_exposure/secret_passed_via_arg_instruction.rdl) |
-| [private_key_or_certificate_copied_into_image.rdl](../../../v1/dockerfile/core/private_key_or_certificate_copied_into_image.rdl) | [baseline.dockerfile.core.private_key_or_certificate_copied_into_image](baseline/secret_and_credential_exposure/private_key_or_certificate_copied_into_image.rdl) |
-| [add_used_to_fetch_remote_content.rdl](../../../v1/dockerfile/core/add_used_to_fetch_remote_content.rdl) | [baseline.dockerfile.core.add_used_to_fetch_remote_content](baseline/build_and_layer_security/add_used_to_fetch_remote_content.rdl) |
-| [package_manager_cache_not_cleared.rdl](../../../v1/dockerfile/core/package_manager_cache_not_cleared.rdl) | [baseline.dockerfile.core.package_manager_cache_not_cleared](baseline/build_and_layer_security/package_manager_cache_not_cleared.rdl) |
-| [sudo_or_su_installed_in_container.rdl](../../../v1/dockerfile/core/sudo_or_su_installed_in_container.rdl) | [baseline.dockerfile.core.sudo_or_su_installed_in_container](baseline/build_and_layer_security/sudo_or_su_installed_in_container.rdl) |
-| [broad_port_range_exposed.rdl](../../../v1/dockerfile/core/broad_port_range_exposed.rdl) | [baseline.dockerfile.core.broad_port_range_exposed](baseline/network_exposure/broad_port_range_exposed.rdl) |
-| [dockerfile.xml](../../../../../platform/dockerfile/dockerfile.xml) | [dockerfile.remote-download-shell](security/remote_download_shell.rdl) |
+| [running_as_root_user.yaml](../../../../../platform/dockerfile/dockerfile.rules/running_as_root_user.yaml) | [baseline.dockerfile.core.running_as_root_user](baseline/image_and_base_configuration/running_as_root_user.rdl) |
+| [no_user_directive_present.yaml](../../../../../platform/dockerfile/dockerfile.rules/no_user_directive_present.yaml) | [baseline.dockerfile.core.no_user_directive_present](baseline/image_and_base_configuration/no_user_directive_present.rdl) |
+| [using_latest_tag_for_base_image.yaml](../../../../../platform/dockerfile/dockerfile.rules/using_latest_tag_for_base_image.yaml) | [baseline.dockerfile.core.using_latest_tag_for_base_image](baseline/image_and_base_configuration/using_latest_tag_for_base_image.rdl) |
+| [secret_passed_via_env_instruction.yaml](../../../../../platform/dockerfile/dockerfile.rules/secret_passed_via_env_instruction.yaml) | [baseline.dockerfile.core.secret_passed_via_env_instruction](baseline/secret_and_credential_exposure/secret_passed_via_env_instruction.rdl) |
+| [secret_passed_via_arg_instruction.yaml](../../../../../platform/dockerfile/dockerfile.rules/secret_passed_via_arg_instruction.yaml) | [baseline.dockerfile.core.secret_passed_via_arg_instruction](baseline/secret_and_credential_exposure/secret_passed_via_arg_instruction.rdl) |
+| [private_key_or_certificate_copied_into_image.yaml](../../../../../platform/dockerfile/dockerfile.rules/private_key_or_certificate_copied_into_image.yaml) | [baseline.dockerfile.core.private_key_or_certificate_copied_into_image](baseline/secret_and_credential_exposure/private_key_or_certificate_copied_into_image.rdl) |
+| [add_used_to_fetch_remote_content.yaml](../../../../../platform/dockerfile/dockerfile.rules/add_used_to_fetch_remote_content.yaml) | [baseline.dockerfile.core.add_used_to_fetch_remote_content](baseline/build_and_layer_security/add_used_to_fetch_remote_content.rdl) |
+| [package_manager_cache_not_cleared.yaml](../../../../../platform/dockerfile/dockerfile.rules/package_manager_cache_not_cleared.yaml) | [baseline.dockerfile.core.package_manager_cache_not_cleared](baseline/build_and_layer_security/package_manager_cache_not_cleared.rdl) |
+| [sudo_or_su_installed_in_container.yaml](../../../../../platform/dockerfile/dockerfile.rules/sudo_or_su_installed_in_container.yaml) | [baseline.dockerfile.core.sudo_or_su_installed_in_container](baseline/build_and_layer_security/sudo_or_su_installed_in_container.rdl) |
+| [broad_port_range_exposed.yaml](../../../../../platform/dockerfile/dockerfile.rules/broad_port_range_exposed.yaml) | [baseline.dockerfile.core.broad_port_range_exposed](baseline/network_exposure/broad_port_range_exposed.rdl) |
+| [_pack.yaml](../../../../../platform/dockerfile/dockerfile.rules/_pack.yaml) | [dockerfile.remote-download-shell](security/remote_download_shell.rdl) |

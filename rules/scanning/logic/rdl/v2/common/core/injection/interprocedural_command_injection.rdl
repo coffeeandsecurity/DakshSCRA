@@ -6,7 +6,7 @@ LET sink BE CALL MATCHES command.execution
 WHEN input FLOWS TO sink
 REQUIRE interprocedural.path input
 REQUIRE NOT sanitizer.command-approved input
-REPORT "interprocedural command injection"
+REPORT "OS Command Injection Review"
 SEVERITY CRITICAL
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

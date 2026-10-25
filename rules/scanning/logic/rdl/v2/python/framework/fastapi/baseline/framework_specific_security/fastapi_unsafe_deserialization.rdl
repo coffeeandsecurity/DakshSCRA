@@ -3,7 +3,7 @@ RULE baseline.python.framework.fastapi.fastapi_unsafe_deserialization VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "pickle\\.loads\\(|yaml\\.load\\(\\s*[^,\\)]*\\)|marshal\\.loads\\(" "im"
 WHEN TEXT_MISSING "yaml\\.safe_load|Loader=SafeLoader|trusted|allowlist|from_trusted_source" "im"
-REPORT "Fastapi Unsafe Deserialization"
+REPORT "Object Deserialization Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

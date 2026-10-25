@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.android.core.review_android_high_risk_package_permission VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "<uses-permission(?:-sdk-23)?\\b[^>]{0,500}\\b[A-Za-z_][\\w.-]*:name\\s*=\\s*[\"\\x27](?:android\\.permission\\.REQUEST_INSTALL_PACKAGES|android\\.permission\\.QUERY_ALL_PACKAGES)[\"\\x27]" "im"
+REPORT "Package Management Capability"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

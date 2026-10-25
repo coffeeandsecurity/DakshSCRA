@@ -4,7 +4,7 @@ IN FUNCTION
 LET pointer BE VARIABLE MATCHES memory.pointer
 WHEN dereferenced pointer AND possibly_null pointer
 REQUIRE REACHABLE PATH
-REPORT "null pointer dereference"
+REPORT "Null Pointer Dereference"
 SEVERITY HIGH
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

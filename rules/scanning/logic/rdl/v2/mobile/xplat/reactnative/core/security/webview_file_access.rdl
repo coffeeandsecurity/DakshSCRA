@@ -2,7 +2,7 @@ VERSION 2
 RULE reactnative.webview-file-access VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\ballowUniversalAccessFromFileURLs\\s*=\\s*\\{\\s*true\\s*\\}" ""
-REPORT "React Native WebView Universal File Access Enabled"
+REPORT "WebView File Access Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

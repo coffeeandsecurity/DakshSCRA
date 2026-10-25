@@ -3,7 +3,7 @@ RULE baseline.javascript.framework.vue.vue_sql_nosql_injection_sink VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\.(query|execute)\\(\\s*`|\\$where\\s*:\\s*|sequelize\\.query\\(" "im"
 WHEN (TEXT_MISSING "parameterize|prepare|sanitize|validate|escape" "im" AND TEXT_MISSING "test|spec|example" "im")
-REPORT "Vue SQL/NoSQL Injection Sink"
+REPORT "SQL Injection Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

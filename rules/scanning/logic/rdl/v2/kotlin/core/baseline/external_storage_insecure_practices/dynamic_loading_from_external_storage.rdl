@@ -3,7 +3,7 @@ RULE baseline.kotlin.core.dynamic_loading_from_external_storage VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(DexClassLoader|PathClassLoader)\\s*\\([^,]*Environment\\.getExternalStorageDirectory" "im"
 WHEN TEXT_MISSING "verify|signature|checksum|MessageDigest|trusted" "im"
-REPORT "Dynamic Loading from External Storage"
+REPORT "External Code Loading Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

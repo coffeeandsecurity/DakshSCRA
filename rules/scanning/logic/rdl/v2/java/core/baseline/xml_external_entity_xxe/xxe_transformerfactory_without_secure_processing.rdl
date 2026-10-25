@@ -3,7 +3,7 @@ RULE baseline.java.core.xxe_transformerfactory_without_secure_processing VERSION
 IN FILE
 WHEN TEXT_MATCHES "TransformerFactory\\.newInstance\\s*\\(|SchemaFactory\\.newInstance\\s*\\(" "im"
 WHEN TEXT_MISSING "setFeature\\s*\\(.*FEATURE_SECURE_PROCESSING|setAttribute\\s*\\(.*ACCESS_EXTERNAL" "im"
-REPORT "XXE: TransformerFactory Without Secure Processing"
+REPORT "XML External Entity Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

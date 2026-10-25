@@ -2,7 +2,7 @@ VERSION 2
 RULE php.curl-peer-verification VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\bCURLOPT_SSL_VERIFYPEER\\s*(?:,|=>)\\s*(?:false|0)\\b" ""
-REPORT "PHP cURL Peer Verification Disabled"
+REPORT "TLS Certificate Validation Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

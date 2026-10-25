@@ -1,0 +1,39 @@
+format: daksh-pattern-rule/v1
+id: dotnet.framework.blazor.ijsruntime_invokevoidasync_with_user_input
+title: "JavaScript Interop Review"
+order: 2
+category: Framework-Specific Issues - Blazor
+detection:
+  pattern: InvokeVoidAsync\s*\(\s*["'][^"']*["']\s*,.*(?:request\.|Request\.|HttpContext\.|model\.|Model\.|Input\.|input\.)|\bInvokeAsync\s*<[^>]+>\s*\(\s*["'][^"']*["']\s*,.*(?:request\.|Request\.)
+  conditions:
+  - WHEN PRESENT InvokeVoidAsync\s*\(\s*["']\s*eval\s*["']|InvokeVoidAsync\s*\(\s*["']\s*Function\s*["']
+  - WHEN EXPR MISSING:validate|sanitize|allowlist|trusted|HtmlEncoder|WebUtility\.HtmlEncode && MISSING:test|example
+reporting:
+  type: area_of_interest
+  reason: Detects IJSRuntime JavaScript invocations calling eval or Function constructor.
+  trace:
+  - Externalized rule logic for IJSRuntime InvokeVoidAsync with User Input.
+  description: The application renders web content, executes scripts, or exposes a native messaging interface. Resolve
+    navigation trust, origin isolation, and validation at the native boundary.
+  impact: Attacker-controlled web content may execute in a trusted context or invoke native operations, exposing
+    session data or application privileges when isolation and per-operation checks are insufficient.
+  remediation: Restrict navigation and message origins to required trusted sources. Avoid dynamic script construction,
+    minimize native bridge methods, validate message inputs, and authorize sensitive native operations.
+  reviewer: Review all IJSRuntime invocations for eval or dynamic code execution patterns. This can be confirmed
+    as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify the loaded content, permitted origins and script-to-native operations exposed by the application.
+  - Inspect navigation, message validation and resource or operation authorization on the native side.
+  - Test untrusted content and unexpected messages; a bridge declaration alone does not prove unauthorized native
+    access.
+  recommendations:
+  - Restrict trusted content and navigation and expose only the native operations required by the application.
+  - Validate messages and enforce native-side authorization; test rejection of unapproved origins and unexpected
+    operations.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

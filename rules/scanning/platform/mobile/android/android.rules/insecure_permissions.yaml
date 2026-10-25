@@ -1,0 +1,57 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.insecure_permissions
+title: "Permission Handling Review"
+order: 1
+category: AndroidManifest.xml - Insecure Misconfiguration
+detection:
+  pattern: android\.permission\.(WRITE_EXTERNAL_STORAGE|READ_EXTERNAL_STORAGE|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION)
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects insecure permissions that can pose security risks.
+  trace:
+  - Externalized mobile rule logic for Insecure Permissions.
+  description: 'Review target: Insecure Permissions. The code or deployment configuration requests privileges or
+    grants access beyond an explicitly resolved minimum. Determine the effective permissions and the operation’s
+    requirements. Resolve the external entry point, its caller or URI grant, and the sensitive operation or resource
+    reached.'
+  impact: A compromised actor may access additional data, modify protected resources, or extend compromise beyond
+    the intended application boundary when excessive privileges remain available.
+  remediation: Run with the least privileges required, remove unnecessary grants, and scope each permission to its
+    intended resource and operation. Verify effective inherited permissions and test denied access. Minimize exported
+    surfaces and URI grants; validate parsed schemes, hosts and paths, use verified links where appropriate, and
+    authorize each sensitive action.
+  reviewer: Verify that the AndroidManifest.xml file requests only the permissions necessary for the application's
+    functionality. Ensure that unnecessary or overly broad permissions are not granted, as they can pose security
+    risks. This can be confirmed as an issue when the matched path is reachable and required controls are missing,
+    weak, or inconsistent. Resolve merged manifests, aliases and SDK defaults; test custom-scheme collision, malformed
+    URLs, encoded paths, nested intents, read/write grants and permission inheritance. Registration or permission
+    presence alone does not prove unauthorized access.
+  review_steps:
+  - Resolve the effective privileges, filesystem modes or identity grants, including inherited and deployment-level
+    permissions.
+  - Determine which operations are required and whether an untrusted actor can exercise the excess access.
+  - Record the affected resource and effective policy; distinguish a declared capability from an exploitable authorization
+    gap.
+  - Resolve the external entry point, its caller or URI grant, and the sensitive operation or resource reached.
+  - Resolve merged manifests, aliases and SDK defaults; test custom-scheme collision, malformed URLs, encoded paths,
+    nested intents, read/write grants and permission inheritance. Registration or permission presence alone does
+    not prove unauthorized access.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Limit access and privileges to the operations and resources the application requires; remove unnecessary broad
+    grants.
+  - Test permitted operations and denied access with the actual deployment identity and effective policy.
+  - Minimize exported surfaces and URI grants; validate parsed schemes, hosts and paths, use verified links where
+    appropriate, and authorize each sensitive action.
+scan_config:
+  match_mode: file
+  context_type: lines
+  context_lines_before: '2'
+  context_lines_after: '0'
+  aggregate: file
+  report_format: default
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: yellow

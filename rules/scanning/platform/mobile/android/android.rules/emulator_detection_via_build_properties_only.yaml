@@ -1,0 +1,53 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.emulator_detection_via_build_properties_only
+title: Emulator Detection via Build Properties Only
+order: 31
+category: Runtime Protection Bypass
+detection:
+  pattern: Build\.FINGERPRINT\.contains\s*\(|Build\.MODEL\.contains\s*\(\s*"(?:google_sdk|Emulator|Android SDK)"
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects emulator detection logic that relies only on Build string property comparisons, which are trivially
+    spoofable.
+  trace:
+  - Externalized mobile rule logic for Emulator Detection via Build Properties Only.
+  description: 'Review target: Emulator Detection via Build Properties Only. The application checks mutable device
+    properties as an environment-integrity signal. Resolve the exact declaration or operation in the selected build
+    and identify its security boundary.'
+  impact: An actor able to modify or hook device properties may evade a client-side environment check. Unauthorized
+    access follows only if a sensitive operation incorrectly relies on that check as its sole trust boundary.
+  remediation: Treat device-property checks as supplementary risk signals. Enforce authorization independently,
+    and use platform-backed integrity evidence with server-side verification when the operation requires it. Apply
+    the least-privilege platform control appropriate to the matched operation and verify the production configuration.
+  reviewer: Review the completeness of all emulator detection signals used. Single-source Build string comparisons
+    should be considered insufficient. This can be confirmed as an issue when the matched path is reachable and
+    required controls are missing, weak, or inconsistent. Check debug/release and product flavors, generated/native
+    code, plugin boundaries and failure paths; source evidence alone does not establish shipped or runtime behavior.
+  review_steps:
+  - Inspect the matched construct in its containing function or configuration and identify the security-sensitive
+    behavior under review.
+  - Verify reachable callers, external influence and effective protections, including deployment overrides and failure
+    paths.
+  - Record concrete evidence for a confirmed issue or a justified suppression; retain an unresolved outcome when
+    the required evidence is unavailable.
+  - Resolve the exact declaration or operation in the selected build and identify its security boundary.
+  - Check debug/release and product flavors, generated/native code, plugin boundaries and failure paths; source
+    evidence alone does not establish shipped or runtime behavior.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Apply the rule-specific correction above only after verifying the affected behavior and required control.
+  - Add a regression case for the unsafe condition and a valid protected case; verify the effective behavior in
+    the relevant deployment.
+  - Apply the least-privilege platform control appropriate to the matched operation and verify the production configuration.
+scan_config:
+  match_mode: file
+  context_type: lines
+  context_lines_before: '3'
+  context_lines_after: '4'
+  aggregate: none
+  report_format: default
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: yellow

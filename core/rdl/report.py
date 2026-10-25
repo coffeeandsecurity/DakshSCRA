@@ -11,6 +11,7 @@ import shutil
 from .shadow import read_shadow_results, iter_shadow_results
 from .explanation import format_issue_title
 from .trace import build_trace
+from utils.guidance_format import guidance_html
 
 
 def finding_anchor(record, finding):
@@ -63,7 +64,10 @@ def write_shadow_report(telemetry_path, destination):
     with tempfile.TemporaryDirectory(dir=destination.parent) as directory:
         root = Path(directory)
         seen = sqlite3.connect(str(root/'index.db'))
-        seen.execute('CREATE TABLE findings (id TEXT PRIMARY KEY)')
+        seen.execute('CREATE TABLE findings (id TEXT PRIMARY KEY, issue TEXT, title TEXT, rule TEXT, body TEXT)')
+        seen.execute('CREATE TABLE occurrences (id TEXT PRIMARY KEY, family TEXT, title TEXT)')
+        seen.execute('CREATE INDEX contributions_issue ON findings(issue)')
+        seen.execute('CREATE INDEX occurrences_family ON occurrences(family)')
         seen.execute('CREATE TABLE navigation (files INTEGER, body TEXT)')
         count = 0
         try:
@@ -71,23 +75,38 @@ def write_shadow_report(telemetry_path, destination):
                 for record in iter_shadow_results(telemetry_path):
                     for finding in record.get('v2_findings') or []:
                         from .review_views import finding_identity
+                        from .issue_families import occurrence_identity, family_title, family_key
+                        occurrence = hashlib.sha256(occurrence_identity(record,finding).encode()).hexdigest()
                         identity = hashlib.sha256(finding_identity(record,finding).encode()).hexdigest()
-                        if not seen.execute('INSERT OR IGNORE INTO findings VALUES (?)',(identity,)).rowcount:
+                        if not seen.execute('INSERT OR IGNORE INTO findings(id) VALUES (?)',(identity,)).rowcount:
                             continue
-                        count += 1
+                        count += seen.execute('INSERT OR IGNORE INTO occurrences VALUES (?,?,?)',(occurrence,family_key(finding),family_title(finding))).rowcount
                         anchor = 'trace-' + identity[:24]
                         location = finding.get('location') or {}
                         origin = next((item.get('location') or {} for item in finding.get('evidence') or [] if item.get('predicate') == 'SOURCE'), {})
                         trace = finding.get('trace') or build_trace(finding.get('evidence') or [],finding.get('cwe',''))
                         if trace['file_count'] > 1:
                             seen.execute('INSERT INTO navigation VALUES (?,?)',(trace['file_count'],'<li><a href="#{}">{} · {} files · source {}</a></li>'.format(anchor,escape(format_issue_title(finding['title'])),trace['file_count'],escape('/'.join(Path(origin.get('path','')).parts[-2:])))))
-                        findings.write(('<article id="'+anchor+'"><h2>{}</h2><p class="badge">{} · {} · Confidence {}</p><p><code>{}:{}</code></p><h3>Issue description</h3><p>{}</p><h3>Security impact</h3><p>{}</p>{}<aside><strong>Recommended correction</strong><p>{}</p></aside><p>{}</p></article>').format(
+                        body = (('<article id="'+anchor+'"><h2>{}</h2><p class="badge">{} · {} · Confidence {}</p><p><code>{}:{}</code></p><h3>Issue description</h3><p>{}</p><h3>Security impact</h3><p>{}</p>{}<aside><strong>Review guidance</strong>{}</aside><aside><strong>Recommendations</strong>{}</aside><p>{}</p></article>').format(
                             escape(format_issue_title(finding['title'])),escape(finding.get('severity','')),escape(finding.get('cwe','')),escape(finding.get('confidence','')),
-                            escape(str(location.get('path') or finding.get('path') or (record.get('context') or {}).get('file_path',''))),location.get('line','path only' if finding.get('path_only') else ''),escape(finding.get('description','')),escape(finding.get('impact','')),render_trace(finding,anchor),escape(finding.get('remediation','')),escape(finding.get('confidence_reason',''))))
+                            escape(str(location.get('path') or finding.get('path') or (record.get('context') or {}).get('file_path',''))),location.get('line','path only' if finding.get('path_only') else ''),escape(finding.get('description','')),escape(finding.get('impact','')),render_trace(finding,anchor),guidance_html(finding.get('reviewer_note','')),guidance_html(finding.get('remediation','')),escape(finding.get('confidence_reason',''))))
+                        seen.execute('UPDATE findings SET issue=?,title=?,rule=?,body=? WHERE id=?',(occurrence,family_title(finding),record.get('v2_rule_id') or record.get('v2_rule') or '',body,identity))
                     context = record.get('context') or {}
                     decisions.write('<details><summary>{} · {} · v1 {} / v2 {}</summary><p>{}</p><p>{}</p></details>'.format(
                         escape(str(record.get('comparison_kind','semantic'))+' · '+str(record.get('status','UNKNOWN'))),escape(str(context.get('file_path',''))),escape(str(record.get('v1_outcome',''))),escape(str(record.get('v2_outcome',''))),escape(str(record.get('v2_explanation',''))),escape(str(record.get('v1_reason','')))))
-            header = '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">\n<title>RDL v2 review</title><style>body{font:15px/1.6 system-ui,sans-serif;color:#183042;background:#edf2f6;margin:0}main{max-width:1060px;margin:auto;padding:36px 20px}h1{font-size:34px}article,header,details{background:white;border:1px solid #d2dfe8;border-radius:12px;padding:24px;margin:18px 0}code,pre{font:12px/1.7 monospace;overflow-wrap:anywhere}pre{overflow:auto;background:#f2f5f8;padding:12px}aside{background:#e8f3fa;border-left:4px solid #2375a5;padding:14px}summary{cursor:pointer;overflow-wrap:anywhere}.badge{font-weight:bold;color:#974717}li{margin:18px 0}@media print{body{background:white}article{break-inside:avoid}details{display:none}}</style><main>\n<header><h1>RDL v2 review</h1><p>Evidence, security impact, and corrective guidance for human review.</p>\n<p><strong>%(leads)s unique review leads · %(properties)s properties · %(files)s files evaluated</strong></p>\n<p>RDL v2 is experimental. V1 results remain separate when both engines are selected; NOT_RUN means v1 was not selected. The v1 column below describes its RDL logic gate, not every regex or suppression in the full scanner. V2 disagreements require review and are not automatically confirmed defects.</p>\n<p>Baseline text/path checks, semantic analysis and supplemental checks are separate coverage layers. Text matches do not establish data flow. Only selected rule packs and configured mappings were evaluated. A no-match is not proof of application safety. Unsupported control flow and dynamic behavior remain explicit limitations.</p></header>\n' % dict(leads=summary.get('review_leads',0),properties=summary.get('evaluated_properties',0),files=summary.get('evaluated_files',0))
+            with (root/'findings.html').open('w',encoding='utf-8') as findings:
+                for family, title in seen.execute('SELECT family,MIN(title) FROM occurrences GROUP BY family ORDER BY MIN(rowid)'):
+                    findings.write('<section class="issue-family"><h2>'+escape(title)+'</h2>')
+                    for occurrence, in seen.execute('SELECT id FROM occurrences WHERE family=? ORDER BY rowid',(family,)):
+                        findings.write('<details class="issue-occurrence" open><summary>Recorded source occurrence</summary>')
+                        first = True
+                        for title, rule, body in seen.execute('SELECT title,rule,body FROM findings WHERE issue=? ORDER BY rowid',(occurrence,)):
+                            body = body.replace('<h2>'+escape(format_issue_title(title))+'</h2>','',1)
+                            findings.write('<details class="rule-contribution"'+(' open' if first else '')+'><summary>Contributing rule: '+escape(rule)+'</summary>'+body+'</details>')
+                            first = False
+                        findings.write('</details>')
+                    findings.write('</section>')
+            header = '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">\n<title>RDL v2 review</title><style>body{font:15px/1.6 system-ui,sans-serif;color:#183042;background:#edf2f6;margin:0}main{max-width:1060px;margin:auto;padding:36px 20px}h1{font-size:34px}article,header,details{background:white;border:1px solid #d2dfe8;border-radius:12px;padding:24px;margin:18px 0}code,pre{font:12px/1.7 monospace;overflow-wrap:anywhere}pre{overflow:auto;background:#f2f5f8;padding:12px}aside{background:#e8f3fa;border-left:4px solid #2375a5;padding:14px}summary{cursor:pointer;overflow-wrap:anywhere}.badge{font-weight:bold;color:#974717}li{margin:18px 0}@media print{body{background:white}article{break-inside:avoid}details{display:none}.rule-contribution,.issue-occurrence{display:block}.rule-contribution>summary{display:none}}</style><main>\n<header><h1>RDL v2 review</h1><p>Evidence, security impact, and corrective guidance for human review.</p>\n<p><strong>%(leads)s unique review leads · %(properties)s properties · %(files)s files evaluated</strong></p>\n<p>RDL v2 is experimental. V1 results remain separate when both engines are selected; NOT_RUN means v1 was not selected. The v1 column below describes its RDL logic gate, not every regex or suppression in the full scanner. V2 disagreements require review and are not automatically confirmed defects.</p>\n<p>Baseline text/path checks, semantic analysis and supplemental checks are separate coverage layers. Text matches do not establish data flow. Only selected rule packs and configured mappings were evaluated. A no-match is not proof of application safety. Unsupported control flow and dynamic behavior remain explicit limitations.</p></header>\n' % dict(leads=count,properties=summary.get('evaluated_properties',0),files=summary.get('evaluated_files',0))
             header = header.replace('</style>', '\n.trace-layout{display:grid;grid-template-columns:minmax(240px, .85fr) minmax(0,1.15fr);gap:28px}.trace-steps{padding-left:25px;margin:0}.trace-steps p{margin:6px 0}.source-block{min-width:0;margin:16px 0 24px}.source-block h3{margin:0 0 6px;font-size:15px}.source-block pre{padding:10px 0}.code-line{display:flex;gap:12px;min-width:max-content;padding:2px 12px}.line-number{display:inline-block;min-width:3ch;color:#607286;user-select:none}.highlight{background:#fff3cb}.step-tags{margin-left:auto;padding-left:12px}a{color:#155bab}.code-line:target,.trace-steps li:target{outline:2px solid #2375a5;scroll-margin-top:24px}.trace-summary{color:#52687a;font-size:13px}@media(max-width:850px){.trace-layout{grid-template-columns:minmax(0,1fr)}}@media print{.trace-layout{display:block}.source-block pre{white-space:pre-wrap}.code-line{min-width:0}}\n.cross-file-index{padding:20px;background:#fff;border:2px solid #2375a5;border-radius:12px;margin:18px 0}.file-handoffs p{overflow-wrap:anywhere;margin:8px 0}article:target{outline:3px solid #2375a5;scroll-margin-top:12px}\n</style>')
             output = root/'report.html'
             with output.open('w',encoding='utf-8') as handle:

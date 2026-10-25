@@ -3,7 +3,7 @@ RULE baseline.javascript.core.handlebars_unescaped_string VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\{\\{\\{.*?\\}\\}\\}" "im"
 WHEN TEXT_MISSING "(sanitize|escape|xss|safeHtml)" "im"
-REPORT "Handlebars Unescaped String"
+REPORT "HTML Output Encoding Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

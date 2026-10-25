@@ -2,7 +2,7 @@ VERSION 2
 RULE baseline.mobile.xplat.flutter.core.flutter_certificate_validation_bypass VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "badCertificateCallback\\s*=\\s*\\(|badCertificateCallback\\s*:\\s*\\(" "im"
-REPORT "Flutter Certificate Validation Bypass"
+REPORT "TLS Certificate Validation Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

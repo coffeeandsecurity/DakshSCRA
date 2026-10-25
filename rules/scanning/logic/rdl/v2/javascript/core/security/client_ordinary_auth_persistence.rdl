@@ -2,7 +2,7 @@ VERSION 2
 RULE javascript.client.ordinary-auth-persistence VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b[A-Za-z_$][\\w$]*\\s*=\\s*\\{\\s*key\\s*:\\s*[\\\"\\x27][^\\\"\\x27\\r\\n]{1,80}[\\\"\\x27]\\s*,\\s*storage\\s*:\\s*AsyncStorage\\s*,?\\s*\\}" ""
-REPORT "Whole Redux State Persisted In Ordinary Storage"
+REPORT "State Persistence Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

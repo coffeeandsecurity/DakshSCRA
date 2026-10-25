@@ -3,7 +3,7 @@ RULE baseline.dotnet.core.path_traversal_directory_getfiles VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "Directory\\.GetFiles\\(.*\\)" "im"
 WHEN (TEXT_MATCHES "(Request\\.|QueryString|Form|userInput|path)" "im" AND TEXT_MISSING "(Path\\.GetFullPath|Path\\.Combine|StartsWith|allowlist|whitelist)" "im")
-REPORT "Path Traversal: Directory.GetFiles"
+REPORT "Path Traversal Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

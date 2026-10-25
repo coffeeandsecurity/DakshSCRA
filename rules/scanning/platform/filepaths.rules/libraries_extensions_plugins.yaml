@@ -1,0 +1,40 @@
+format: daksh-pattern-rule/v1
+id: filepaths.core.libraries_extensions_plugins
+title: "Extension Code Review"
+order: 13
+detection:
+  pattern: (?i)(Libraries|Extension|Plugin)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:(?i)(/|\\\\).*(lib|libs|extension|plugin|addons?)
+reporting:
+  type: area_of_interest
+  reason: Detects file paths related to libraries, extensions, or plugins.
+  description: A file or directory name matches the libraries | extensions | plugins review area. This check inspects
+    paths, not the implementation or a reachable execution path.
+  impact: A reachable vulnerability in an unsupported or affected dependency may compromise the application with
+    its privileges. A version declaration or deprecated API alone does not establish that such a vulnerability is
+    present. A filename match alone does not establish this consequence.
+  remediation: Inventory resolved dependencies and runtime versions, compare them with authoritative advisories
+    and support policy, and migrate affected or unsupported components to tested supported replacements.
+  reviewer: Verify the presence and correctness of code paths related to libraries, extensions, or plugins. This
+    can be confirmed as an issue when the matched path is reachable and required controls are missing, weak, or
+    inconsistent.
+  review_steps:
+  - Inspect the matched file or directory contents and determine whether it is deployed or externally accessible.
+  - Identify whether sensitive data, configuration or executable content is present; a name match alone does not
+    establish exposure.
+  - Check effective access controls and build or packaging exclusions and record the specific content and exposure
+    path.
+  recommendations:
+  - Where exposure is verified, remove unnecessary files from deployment or restrict access to the intended users
+    and processes.
+  - Verify the deployed artifact and access behavior after the change; retain required application files with appropriate
+    controls.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

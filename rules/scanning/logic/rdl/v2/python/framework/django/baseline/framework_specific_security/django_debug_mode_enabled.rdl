@@ -3,7 +3,7 @@ RULE baseline.python.framework.django.django_debug_mode_enabled VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\bDEBUG\\s*=\\s*True\\b|FLASK_DEBUG\\s*=\\s*1|reload\\s*=\\s*True" "im"
 WHEN TEXT_MISSING "release|production" "im"
-REPORT "Django Debug Mode Enabled"
+REPORT "Debug Mode Configuration Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

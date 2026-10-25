@@ -1,0 +1,8 @@
+VERSION 2
+RULE reactnative.expo.oauth-pkce-disabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\busePKCE\\s*:\\s*false\\b" ""
+REPORT "Native OAuth Proof-Key Protection Disabled"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

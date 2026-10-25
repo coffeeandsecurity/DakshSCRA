@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.mobile.android.core.webview_shouldoverrideurlloading_without_url_validation VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "shouldOverrideUrlLoading\\s*\\(" "im"
-WHEN TEXT_MISSING "getHost\\s*\\(\\)|getScheme\\s*\\(\\)|startsWith.*https|allowedHosts|trustedDomains|allowList|Uri\\.parse" "im"
-REPORT "WebView shouldOverrideUrlLoading Without URL Validation"
+REPORT "WebView Navigation Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -1,0 +1,45 @@
+format: daksh-pattern-rule/v1
+id: java.core.command_injection
+title: "OS Command Injection Review"
+order: 6
+category: Untrusted Input Handling or Injection Flaws
+detection:
+  pattern: (Runtime(\s)*\.getRuntime(\s)*(\.|->)exec|ProcessBuilder(\s)*(\.|->)start)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:(getParameter|requestParameters|System\.getProperty|args\[) && MISSING:(allowlist|whitelist)
+reporting:
+  type: area_of_interest
+  reason: Detects potential command injection vulnerabilities in Java code.
+  trace:
+  - Externalized rule logic for Command Injection.
+  description: The code invokes an interpreter, process, dynamic expression, or template-execution mechanism. Trace
+    executable selection and evaluated content to their trust boundaries.
+  impact: If an attacker controls interpreted syntax or the operation selected, code or commands may run with the
+    application’s privileges, allowing data theft, state changes, or service disruption.
+  remediation: Replace externally influenced evaluation with fixed operations and data-only inputs. Use separate
+    argument arrays for processes, allowlist permitted operations, and keep untrusted text out of executable templates
+    or expressions.
+  reviewer: Verify that safe mechanisms, such as parameterized commands or libraries with built-in protection, are
+    used to prevent command injection vulnerabilities. Assess whether user inputs are properly validated and sanitized
+    before being used in command execution. This can be confirmed as an issue when the matched path is reachable
+    and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify who can supply the matched input, including stored values and upstream services; record its type, size
+    limits and trust boundary.
+  - Trace the value through transformations to each sensitive operation. Check the protection at that destination
+    and resource-level authorization.
+  - Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side
+    check alone is insufficient evidence.
+  recommendations:
+  - Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve
+    legitimate characters and protect each destination separately.
+  - Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations
+    where applicable. Test rejected input and unauthorized access.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

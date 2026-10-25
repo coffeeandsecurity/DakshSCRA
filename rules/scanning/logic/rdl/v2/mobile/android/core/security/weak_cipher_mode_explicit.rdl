@@ -2,7 +2,7 @@ VERSION 2
 RULE android.weak-cipher-mode-explicit VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\bCipher\\s*\\.\\s*getInstance\\s*\\(\\s*[\"\\x27](?:AES/ECB/[^\"\\x27\\r\\n]{1,80}|DES(?:ede)?(?:/[^\"\\x27\\r\\n]{1,80})?|RC4)[\"\\x27]" ""
-REPORT "Android Explicit ECB Or Legacy Cipher"
+REPORT "Cryptographic Algorithm Use Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

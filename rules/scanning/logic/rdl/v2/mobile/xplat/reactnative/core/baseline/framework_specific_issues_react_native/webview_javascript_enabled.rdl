@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.mobile.xplat.reactnative.core.webview_javascript_enabled VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "<WebView[^>]*javaScriptEnabled\\s*=\\s*\\{?true\\}?" "im"
-WHEN (TEXT_MISSING "ShouldOverrideUrlLoading|NavigationDelegate|allowList|trustedOrigins" "im" AND TEXT_MISSING "test|example" "im")
-REPORT "WebView JavaScript Enabled"
+REPORT "WebView JavaScript Policy Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

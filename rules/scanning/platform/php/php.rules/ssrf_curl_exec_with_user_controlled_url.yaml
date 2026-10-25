@@ -1,0 +1,45 @@
+format: daksh-pattern-rule/v1
+id: php.core.ssrf_curl_exec_with_user_controlled_url
+title: "Outbound Request Destination Review"
+order: 30
+category: Server-Side Request Forgery (SSRF)
+detection:
+  pattern: curl_setopt\s*\(\s*\$\w+\s*,\s*CURLOPT_URL|curl_init\s*\(\s*[^\s)]|\bCURLOPT_URL\s*=>
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Review the cURL destination, its input source, redirects and effective network
+    restrictions.
+  trace:
+  - 'Externalized rule logic for SSRF: curl_exec with User-Controlled URL.'
+  description: The code initializes or assigns a cURL destination. Check who controls
+    it and which destinations the request can reach. A fixed destination is a review
+    surface, not evidence of SSRF.
+  impact: If an attacker can select a reachable destination, the application may expose
+    internal services or metadata credentials, or send protected data to an unauthorized
+    recipient.
+  remediation: Allowlist required destinations and protocols, validate resolved addresses
+    and every redirect, and restrict outbound access to internal and metadata services.
+  reviewer: Inspect curl URL construction paths for user input and verify destination
+    validation. This can be confirmed as an issue when the matched path is reachable
+    and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Verify the operation makes a server-side request, then trace external control
+    over the URL, host, port and redirects.
+  - Inspect destination restrictions, DNS resolution and redirect handling; distinguish
+    fixed destinations from caller-controlled requests.
+  - Check deployment egress controls and whether internal services or local files
+    are reachable from the requesting process.
+  recommendations:
+  - Prefer fixed destinations or a restricted set of permitted services; validate
+    schemes, hosts and ports before the request.
+  - Apply destination checks to redirects and resolved addresses where applicable,
+    restrict network egress, and test prohibited destinations.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

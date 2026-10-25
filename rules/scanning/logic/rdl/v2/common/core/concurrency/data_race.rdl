@@ -4,7 +4,7 @@ IN PROJECT
 LET shared BE VARIABLE MATCHES concurrency.shared-mutable
 WHEN concurrent.access shared AND one_or_more.write shared
 REQUIRE NOT synchronization.protects shared
-REPORT "data race on shared mutable state"
+REPORT "Data Race on Shared Mutable State"
 SEVERITY HIGH
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

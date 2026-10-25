@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.cpp.core.format_string_misuse_in_c_streams VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(std::printf|std::fprintf)\\s*\\(" "im"
-WHEN (TEXT_MISSING "\"%s\"|\"%d\"|\"%f\"|\"%i\"|\"%u\"|\"%x\"" "im" AND TEXT_MISSING "const\\s+char\\s*\\*\\s*format" "im")
-REPORT "Format String Misuse in C++ Streams"
+REPORT "Stream Formatting Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

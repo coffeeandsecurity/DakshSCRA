@@ -2,7 +2,7 @@ VERSION 2
 RULE baseline.mobile.xplat.ionic.core.capacitor_cordova_insecure_http_endpoint_usage VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(?i)\\b(?:fetch|XMLHttpRequest|HttpClient|axios\\.(?:get|post|put|delete|request)|\\$.ajax|url\\s*[:=]|baseUrl\\s*[:=]|serverUrl\\s*[:=]|endpoint\\s*[:=]|api(?:[_-]?(?:url|endpoint))?\\s*[:=]|src\\s*[:=]|href\\s*[:=]|window\\.open|Browser\\.open|InAppBrowser|allow-navigation|access\\s+origin)[^\\n]{0,220}http://" "im"
-REPORT "Capacitor/Cordova Insecure HTTP Endpoint Usage"
+REPORT "Cleartext HTTP Communication Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

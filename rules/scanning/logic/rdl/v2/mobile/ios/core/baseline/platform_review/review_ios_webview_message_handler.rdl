@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.ios.core.review_ios_webview_message_handler VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:addScriptMessageHandler\\s*:|addScriptMessageHandler\\s*\\(|add\\s*\\([^\\n;]{0,200}\\bname\\s*:)" "im"
+REPORT "WKWebView Native Message Handler"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

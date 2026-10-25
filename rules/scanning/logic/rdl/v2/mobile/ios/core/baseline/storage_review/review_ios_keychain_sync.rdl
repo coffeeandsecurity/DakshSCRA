@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.ios.core.review_ios_keychain_sync VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bkSecAttrSynchronizable\\s*(?:\\]\\s*=|:|=)\\s*(?:true\\b|kCFBooleanTrue\\b|@YES\\b)" "im"
+REPORT "Keychain Synchronization Enabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -5,7 +5,7 @@ LET iterator BE RESOURCE MATCHES collection.iterator
 STATE iterator STARTS valid
 TRANSITION collection.mutate(iterator) FROM valid TO invalid
 VIOLATION collection.use(iterator) WHILE invalid
-REPORT "use of invalidated iterator"
+REPORT "Use of Invalidated Iterator"
 SEVERITY HIGH
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

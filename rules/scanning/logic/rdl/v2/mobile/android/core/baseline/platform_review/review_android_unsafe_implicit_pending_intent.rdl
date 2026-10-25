@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.android.core.review_android_unsafe_implicit_pending_intent VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bPendingIntent\\s*\\.\\s*FLAG_ALLOW_UNSAFE_IMPLICIT_INTENT\\b" "im"
+REPORT "Unsafe Implicit PendingIntent Opt-In"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

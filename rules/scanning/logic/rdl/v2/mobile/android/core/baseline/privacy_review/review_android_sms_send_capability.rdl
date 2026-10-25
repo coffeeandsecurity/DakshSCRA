@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.android.core.review_android_sms_send_capability VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:sendTextMessage|sendMultipartTextMessage|sendDataMessage)\\s*\\(" "im"
+REPORT "SMS Transmission Capability"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

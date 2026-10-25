@@ -1,0 +1,43 @@
+format: daksh-pattern-rule/v1
+id: javascript.core.weak_random_number_generation
+title: Random Number Generation Review
+order: 8
+category: Cryptographic Issues
+detection:
+  pattern: Math\.random\(.*\)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:(token|secret|nonce|otp|session|password|key)
+reporting:
+  type: area_of_interest
+  reason: Detects the usage of Math.random() in security-sensitive contexts.
+  trace:
+  - Externalized rule logic for Weak Random Number Generation.
+  description: A general-purpose random generator is used. Trace its value to a security-sensitive consumer before
+    confirming weak token, nonce or credential generation.
+  impact: Predictable secrets or unsuitable cryptographic parameters may enable credential guessing, reveal plaintext,
+    or weaken integrity when used to protect security-sensitive data. Non-security hashes and identifiers do not
+    establish this condition.
+  remediation: Use a cryptographically secure generator for secrets and modern purpose-appropriate cryptography.
+    Use unique nonces, protected keys, and a vetted password-hashing scheme where passwords are stored.
+  reviewer: Verify that Math.random() is not used where cryptographic randomness is required. Confirm that security-sensitive
+    identifiers use a CSPRNG. This can be confirmed as an issue when the matched path is reachable and required
+    controls are missing, weak, or inconsistent.
+  review_steps:
+  - Identify the purpose of the cryptographic operation, algorithm, mode, key or nonce handling, and protected data.
+  - Distinguish password storage, confidentiality, integrity and non-security checksums; each requires different
+    controls.
+  - Inspect deployed configuration and all encrypt, decrypt or verification paths before deciding whether the use
+    is unsafe.
+  recommendations:
+  - Use maintained high-level cryptographic APIs appropriate to the purpose; use authenticated encryption for confidential
+    application data.
+  - For passwords, use the platform password-hashing facility rather than a fast general-purpose digest. Verify
+    key, nonce and migration handling for affected data.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

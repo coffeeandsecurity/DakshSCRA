@@ -16,11 +16,31 @@
 /docs/usage-guide.html -export-ignore
 /docs/usage-guide.md -export-ignore
 /tests export-ignore
+**/tests/** export-ignore
+**/__tests__/** export-ignore
+**/test_*.py export-ignore
+**/*_test.py export-ignore
+**/conftest.py export-ignore
+**/*.test.* export-ignore
+**/*.spec.* export-ignore
 /examples export-ignore
 /tools/** export-ignore
 /tools/start_webui.py -export-ignore
+/tools/clean_project_docker.py -export-ignore
+/tools/purge_all_docker.py -export-ignore
 /tools/rdl_lint.py -export-ignore
 /tools/rdl_migrate.py -export-ignore
 /tools/supported_platforms.py -export-ignore
 /tools/rdl_shadow_report.py -export-ignore
 /tools/prune_rdl_comparisons.py -export-ignore
+
+/tools/cleanup_storage.py -export-ignore
+
+# Exclude local dependencies and retired files from release archives.
+/venv export-ignore
+/.venv export-ignore
+**/node_modules/** export-ignore
+/docker/webui.Dockerfile export-ignore
+/webui/deploy/docker-compose.yml export-ignore
+/resources/logo.jpg export-ignore
+/resources/static/logo_for_report.jpg export-ignore

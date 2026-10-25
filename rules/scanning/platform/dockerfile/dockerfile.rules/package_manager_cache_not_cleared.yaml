@@ -1,0 +1,41 @@
+format: daksh-pattern-rule/v1
+id: dockerfile.core.package_manager_cache_not_cleared
+title: Package Manager Cache Not Cleared
+order: 8
+category: Build and Layer Security
+detection:
+  pattern: ^RUN\s+(?:apt-get\s+install|yum\s+install|apk\s+add|dnf\s+install)(?![^\n]*&&[^\n]*(?:rm\s+-rf\s+/var/(?:cache|lib)/apt|yum\s+clean\s+all|apk\s+--no-cache|dnf\s+clean\s+all))
+  conditions:
+  - WHEN PRESENT ^RUN\s+(?:apt-get\s+install|yum\s+install|apk\s+add|dnf\s+install)
+  - WHEN EXPR MISSING:rm\s+-rf|clean\s+all|--no-cache
+reporting:
+  type: area_of_interest
+  reason: Detects package installation without clearing the package manager cache in the same layer.
+  trace:
+  - Externalized rule logic for Package Manager Cache Not Cleared.
+  description: The code contains a maintainability, accessibility, or build-configuration review marker. Establish
+    a concrete affected behavior before assigning security severity.
+  impact: No direct confidentiality or integrity consequence is established by this marker alone. A related implementation
+    defect could affect availability or prevent users from using essential controls, depending on the actual behavior.
+  remediation: Resolve the specific unfinished behavior, accessibility requirement, or build hygiene concern. Confirm
+    its real operational effect and test the corrected behavior before classifying it as a security defect.
+  reviewer: Verify package install RUN commands clean the cache in the same layer. This can be confirmed as an issue
+    when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the matched construct in its containing function or configuration and identify the security-sensitive
+    behavior under review.
+  - Verify reachable callers, external influence and effective protections, including deployment overrides and failure
+    paths.
+  - Record concrete evidence for a confirmed issue or a justified suppression; retain an unresolved outcome when
+    the required evidence is unavailable.
+  recommendations:
+  - Apply the rule-specific correction above only after verifying the affected behavior and required control.
+  - Add a regression case for the unsafe condition and a valid protected case; verify the effective behavior in
+    the relevant deployment.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

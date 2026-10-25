@@ -3,7 +3,7 @@ RULE baseline.python.core.sql_query_subqueries_with_user_input VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "(?i)\\bSELECT\\s+[^\\s]+\\s+FROM\\s+\\((SELECT\\s+.*\\$.*)\\)" "im"
 WHEN TEXT_MISSING "%s|\\?|:\\w+|params=|execute\\(" "im"
-REPORT "SQL Query: Subqueries with User Input"
+REPORT "SQL Input Handling Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

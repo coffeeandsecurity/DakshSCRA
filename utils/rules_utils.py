@@ -7,6 +7,7 @@ from tabulate import tabulate
 
 # Local application imports
 import state.runtime_state as runtime_utils
+from core.pattern_rules import load_pack, resolve_pack
 
 
 
@@ -44,6 +45,8 @@ def get_rules_path_or_filetypes(platform, option):
                 ret_value = rule.find("platform_ftypes").text
             elif option == "rules":
                 ret_value = rule.find("path").text
+                resolved = resolve_pack(runtime_utils.rulesRootDir / ret_value.lstrip("/"))
+                ret_value = "/" + resolved.relative_to(runtime_utils.rulesRootDir).as_posix()
             break
 
     return ret_value
@@ -62,8 +65,7 @@ def rules_count(rules_file):
     """
 
     try:
-        tree = ET.parse(rules_file)
-        root = tree.getroot()
+        root = load_pack(rules_file)
 
         total_rules_count = 0  # Initialize the count
 

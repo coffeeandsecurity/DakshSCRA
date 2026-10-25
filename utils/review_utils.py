@@ -353,8 +353,9 @@ def filter_scan_outputs(review_config, *, source_findings, path_findings, analys
             kept.append(finding)
         entry_copy = deepcopy(entry)
         entry_copy["findings"] = kept
-        analyzer_count += len(kept)
         filtered_results.append(entry_copy)
+    from core.analysis_dispatch import unique_observation_count
+    analyzer_count = unique_observation_count(filtered_results)
     if isinstance(summary_copy, dict):
         summary_copy["results"] = filtered_results
         summary = summary_copy.get("summary", {})

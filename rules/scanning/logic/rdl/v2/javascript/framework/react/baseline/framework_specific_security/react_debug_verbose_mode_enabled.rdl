@@ -3,7 +3,7 @@ RULE baseline.javascript.framework.react.react_debug_verbose_mode_enabled VERSIO
 IN FILE
 WHEN TEXT_MATCHES "NODE_ENV\\s*=\\s*[\\'\\\"]development[\\'\\\"]|debug\\s*:\\s*true|logger\\(\\s*[\\'\\\"]dev[\\'\\\"]" "im"
 WHEN TEXT_MISSING "release|production" "im"
-REPORT "React Debug/Verbose Mode Enabled"
+REPORT "Debug Mode Configuration Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

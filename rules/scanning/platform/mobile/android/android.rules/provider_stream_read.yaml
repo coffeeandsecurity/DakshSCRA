@@ -1,0 +1,27 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.provider_stream_read
+title: Provider Stream Read Review
+order: 1100
+category: Mobile Security
+detection:
+  pattern: \bopenInputStream\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: A provider stream is sized with available() and read once without checking the returned byte count. This
+    is not a reliable complete or bounded file read.
+  description: A provider stream is sized with available() and read once without checking the returned byte count.
+    This is not a reliable complete or bounded file read.
+  impact: Partial reads can corrupt uploaded content; large provider-reported sizes can cause excessive allocation.
+    Exploitability depends on the selected provider and active caller.
+  remediation: Use bounded streaming, handle null and partial reads, enforce limits while consuming input and close
+    streams on all paths.
+  reviewer: Verify the selected build and active callers. Retain unresolved evidence when runtime, backend or generated
+    configuration is unavailable.
+scan_config:
+  match_mode: file
+  context_lines_before: '2'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'

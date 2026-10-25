@@ -3,7 +3,7 @@ RULE baseline.java.core.insecure_package_javax_xml_parsers_documentbuilderfactor
 IN FILE
 WHEN TEXT_MATCHES "javax\\.xml\\.parsers\\.DocumentBuilderFactory" "im"
 WHEN TEXT_MISSING "setFeature.*XMLConstants\\.FEATURE_SECURE_PROCESSING|setFeature.*disallow-doctype-decl|setExpandEntityReferences\\s*\\(\\s*false|XMLInputFactory.*IS_SUPPORTING_EXTERNAL_ENTITIES.*false" "im"
-REPORT "Insecure Package: javax.xml.parsers.DocumentBuilderFactory"
+REPORT "XML Parser Configuration Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

@@ -2,7 +2,7 @@ VERSION 2
 RULE javascript.client.raw-address-query VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "fetch\\s*\\(\\s*`https?://[^`\\r\\n]{1,300}[?&](?:address|query|search|q)=\\$\\{\\s*[A-Za-z_$][\\w$]*\\s*\\}" ""
-REPORT "Unencoded Address In Request Query"
+REPORT "URL Query Encoding Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

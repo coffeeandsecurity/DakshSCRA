@@ -1,0 +1,43 @@
+format: daksh-pattern-rule/v1
+id: python.core.insecure_use_of_django_mark_safe
+title: "HTML Output Encoding Review"
+order: 27
+category: Insecure Mitigations
+detection:
+  pattern: (?i)\.mark_safe\(\s*["']
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:escape|bleach\.clean|html\.escape|strip_tags|validate && MISSING:test|example
+reporting:
+  type: area_of_interest
+  reason: Detects potentially insecure usage of Django's mark_safe function, which can lead to Cross-Site Scripting
+    (XSS) vulnerabilities.
+  trace:
+  - Externalized rule logic for Insecure Use of Django mark_safe.
+  description: Application data is inserted into an HTML or script rendering context, or marked safe in a way that
+    may bypass automatic encoding.
+  impact: If attacker-controlled content reaches an executable browser context, it may run under the application’s
+    origin, read accessible session data, or perform actions with the victim’s permissions.
+  remediation: Use automatic context-aware output encoding and data-only DOM APIs. Sanitize deliberately accepted
+    rich HTML with a maintained allowlist sanitizer and avoid marking untrusted content as safe.
+  reviewer: Verify that mark_safe is used securely, with additional security measures such as output encoding and
+    validation applied to prevent XSS vulnerabilities. Ensure that developers have not solely depended on mark_safe
+    for security mitigation. This can be confirmed as an issue when the matched path is reachable and required controls
+    are missing, weak, or inconsistent.
+  review_steps:
+  - 'Trace the matched value to its browser rendering context: text, attribute, URL, script or DOM operation.'
+  - Inspect the exact encoder or safe rendering API and any bypass of automatic escaping; verify it protects that
+    context.
+  - Distinguish literal trusted content from externally influenced markup. Record the reachable rendering path and
+    any effective sanitizer configuration.
+  recommendations:
+  - Use safe text or template APIs and context-appropriate encoding at the rendering boundary.
+  - If rich HTML is required, use a maintained sanitizer with a restricted policy; validate URL schemes and test
+    the actual browser output.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

@@ -3,7 +3,7 @@ RULE baseline.python.framework.flask.flask_permissive_cors VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "allow_origins\\s*=\\s*\\[\\s*[\\'\\\"]\\*[\\'\\\"]\\s*\\]|CORS\\(.*origins\\s*=\\s*[\\'\\\"]\\*[\\'\\\"]" "im"
 WHEN TEXT_MISSING "allowlist|trusted_origins|configuration\\.allowed_origins" "im"
-REPORT "Flask Permissive CORS"
+REPORT "Cross-Origin Access Policy Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

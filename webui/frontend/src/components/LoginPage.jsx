@@ -3,9 +3,12 @@ import { getBootstrapInfo, login } from '../api'
 import BrandLogo from './BrandLogo'
 
 const FEATURES = [
-  'Areas-of-interest detection across 20+ languages & mobile platforms',
-  'RDL-gated findings, so obviously-mitigated matches are auto-suppressed',
-  'Taint-flow analysis, effort estimation, and framework-aware scanning',
+  ['Framework-aware scanning', 'Discover technologies and select checks for web, mobile and native applications.'],
+  ['Pattern & Semantic Rules', 'Combine contextual pattern checks with code relationships and modeled protections.'],
+  ['Advanced data-flow analysis', 'Trace inputs toward sensitive operations across files, with evidence and analysis limits.'],
+  ['Custom security checks', 'Extend reviews with project-specific rule packs and reusable security logic.'],
+  ['Focused finding review', 'Inspect highlighted source, review guidance and suppression decisions in one workspace.'],
+  ['Effort planning & reporting', 'Estimate manual review effort, follow live scan progress and export review reports.'],
 ]
 
 function CheckIcon() {
@@ -78,17 +81,22 @@ export default function LoginPage({ onLoggedIn }) {
           <div className="auth-brand-name">DAKSH SCRA</div>
           <div className="auth-brand-sub">Code Security Review</div>
           <p className="auth-brand-tagline">
-            Structured, framework-aware source code review that surfaces areas of
-            interest for a human to confirm - not another wall of unreviewed alerts.
+            Framework-aware code security review for web, mobile and native
+            applications. From technology discovery to advanced data-flow
+            analysis, turn source code into evidence for informed review decisions.
           </p>
           <div className="auth-brand-features">
-            {FEATURES.map((f) => (
-              <div className="auth-brand-feature" key={f}>
+            {FEATURES.map(([title, description]) => (
+              <div className="auth-brand-feature" key={title}>
                 <CheckIcon />
-                <span>{f}</span>
+                <span><strong>{title}</strong><span className="auth-feature-description">{description}</span></span>
               </div>
             ))}
           </div>
+          <p className="auth-brand-review-note">
+            Built to assist human review. Confirm findings against source,
+            deployment settings and runtime behavior.
+          </p>
         </div>
         <div className="auth-brand-footer">© {new Date().getFullYear()} Daksh SCRA - coffeeandsecurity.com</div>
       </div>

@@ -1,0 +1,38 @@
+format: daksh-pattern-rule/v1
+id: cpp.core.exceptions_in_destructors_risk_of_unhandled_behavior
+title: "Destructor Exception Review"
+order: 30
+category: Declarations and Initialization
+detection:
+  pattern: \bthrow\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:~\w+\s*\(\s*\)\s*\{|~\w+\s*\(\s*\)\s*noexcept && MISSING:noexcept|try\s*\{|catch\s*\(|std::terminate
+reporting:
+  type: area_of_interest
+  reason: Detects exceptions thrown from destructors or deallocation functions.
+  trace:
+  - 'Externalized rule logic for Exceptions in Destructors: Risk of Unhandled Behavior.'
+  description: The code configures failure handling or resource consumption. Determine whether failure paths preserve
+    security invariants and whether work is bounded.
+  impact: Unhandled failures or unbounded work may disrupt availability or leave security-relevant state inconsistent.
+    The presence or absence of a named handler alone does not establish a reachable security defect.
+  remediation: Bound resource use, handle failures at the correct ownership boundary, and fail safely before updating
+    trusted state. Test exceptional paths, cancellation, timeouts, and recovery behavior.
+  reviewer: Investigate destructors that may throw exceptions, ensuring proper handling to avoid security issues.
+    This can be confirmed as an issue when the matched path is reachable and required controls are missing, weak,
+    or inconsistent.
+  review_steps:
+  - Trace who controls the operation count, input size, duration or resource allocation.
+  - Inspect limits, cancellation, cleanup and error paths, including concurrency and deployment quotas.
+  - Establish a reachable way to exhaust or retain a relevant resource before confirming an availability issue.
+  recommendations:
+  - Set limits and timeouts appropriate to the operation and release resources on success, failure and cancellation.
+  - Test oversized input and concurrent requests against the intended limits and verify cleanup under failure.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

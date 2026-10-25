@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.android.core.review_android_sms_interception_permission VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "<uses-permission(?:-sdk-23)?\\b[^>]{0,500}\\b[A-Za-z_][\\w.-]*:name\\s*=\\s*[\"\\x27](?:android\\.permission\\.READ_SMS|android\\.permission\\.RECEIVE_SMS|android\\.permission\\.RECEIVE_MMS|android\\.permission\\.RECEIVE_WAP_PUSH)[\"\\x27]" "im"
+REPORT "SMS Reception Capability"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: powershell.core.convertto_securestring_with_plaintext
+title: "Plaintext Credential Conversion Review"
+order: 4
+category: Sensitive Data Exposure
+detection:
+  pattern: ConvertTo-SecureString\s+.*-AsPlainText\s+-Force|ConvertTo-SecureString\s+.*-Force\s+.*-AsPlainText
+  conditions:
+  - WHEN PRESENT ConvertTo-SecureString\s+.*-AsPlainText\s+-Force
+  - WHEN EXPR MISSING:Get-Secret|[System\.Environment]::GetEnvironmentVariable|$env:|placeholder|example|test
+reporting:
+  type: area_of_interest
+  reason: Detects ConvertTo-SecureString usage with -AsPlainText -Force flags indicating a plaintext credential
+    workflow.
+  trace:
+  - Externalized rule logic for ConvertTo-SecureString with PlainText.
+  description: The script converts plaintext into SecureString. Determine whether the original value is embedded,
+    logged, or accessible through process arguments.
+  impact: The original plaintext may disclose an active credential to script readers or diagnostic recipients; conversion
+    does not remove copies already exposed.
+  remediation: Obtain credentials from a restricted secret store or a secure input mechanism, keep plaintext out
+    of scripts and logs, and rotate active values that were exposed.
+  reviewer: Verify that the source string is not hardcoded or logged. This can be confirmed as an issue when the
+    matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the matched construct in its containing function or configuration and identify the security-sensitive
+    behavior under review.
+  - Verify reachable callers, external influence and effective protections, including deployment overrides and failure
+    paths.
+  - Record concrete evidence for a confirmed issue or a justified suppression; retain an unresolved outcome when
+    the required evidence is unavailable.
+  recommendations:
+  - Apply the rule-specific correction above only after verifying the affected behavior and required control.
+  - Add a regression case for the unsafe condition and a valid protected case; verify the effective behavior in
+    the relevant deployment.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '0'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: red

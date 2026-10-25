@@ -1,0 +1,51 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.outdated_dependencies
+title: "Dependency Version Review"
+order: 12
+category: Gradle Configuration - Build Security
+detection:
+  pattern: implementation\s+['"][\w\.-]+:\w+:\d+\.\d+\.\d+['"]
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Detects dependency declarations with version numbers in the Gradle file.
+  trace:
+  - Externalized mobile rule logic for Outdated Dependencies.
+  description: 'Review target: Outdated Dependencies. The source references a dependency, version, or deprecated
+    API. Resolve the actual deployed version and supported behavior before deciding whether it needs replacement.
+    Resolve the exact declaration or operation in the selected build and identify its security boundary.'
+  impact: A reachable vulnerability in an unsupported or affected dependency may compromise the application with
+    its privileges. A version declaration or deprecated API alone does not establish that such a vulnerability is
+    present.
+  remediation: Inventory resolved dependencies and runtime versions, compare them with authoritative advisories
+    and support policy, and migrate affected or unsupported components to tested supported replacements. Apply the
+    least-privilege platform control appropriate to the matched operation and verify the production configuration.
+  reviewer: Check the Gradle file for dependency declarations and verify that the specified versions are up-to-date.
+    Cross-reference with known vulnerabilities databases (e.g., CVE databases). This can be confirmed as an issue
+    when the matched path is reachable and required controls are missing, weak, or inconsistent. Check debug/release
+    and product flavors, generated/native code, plugin boundaries and failure paths; source evidence alone does
+    not establish shipped or runtime behavior.
+  review_steps:
+  - Resolve the dependency or deprecated API version actually included in the deployed artifact.
+  - Inspect the affected functionality and its callers; a declaration or API name alone does not establish a reachable
+    vulnerability.
+  - Check supported replacements and compatibility requirements, and record evidence for any affected deployed behavior.
+  - Resolve the exact declaration or operation in the selected build and identify its security boundary.
+  - Check debug/release and product flavors, generated/native code, plugin boundaries and failure paths; source
+    evidence alone does not establish shipped or runtime behavior.
+  - Confirm reachability, the selected release build and the effect on a sensitive value before confirming an issue.
+  recommendations:
+  - Replace unsupported APIs or affected dependencies with a supported option after checking application compatibility.
+  - Pin and verify the deployed version and test the affected behavior and error paths after the update.
+  - Apply the least-privilege platform control appropriate to the matched operation and verify the production configuration.
+scan_config:
+  match_mode: file
+  context_type: lines
+  context_lines_before: '1'
+  context_lines_after: '0'
+  aggregate: file
+  report_format: default
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: yellow

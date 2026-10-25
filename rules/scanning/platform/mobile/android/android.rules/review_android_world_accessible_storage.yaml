@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.review_android_world_accessible_storage
+title: World-Accessible Android Storage
+order: 53
+category: STORAGE Review
+detection:
+  pattern: \b(?:Context\s*\.\s*)?MODE_WORLD_(?:READABLE|WRITEABLE)\b
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: The application declares or uses broadly accessible storage. Resolve the actual directories, access
+    mode, platform version, and sensitivity of stored data. Identify the value written, backing store and access
+    class, including backup, restore, reinstall and logout behavior.
+  impact: Other actors with access to shared storage may read sensitive files or replace content later consumed
+    by the application, compromising confidentiality or integrity.
+  remediation: Keep private data in app-private storage and use platform-scoped access for deliberate sharing. Authenticate
+    or validate externally read files and avoid storing executable or credential material in shared locations. Keep
+    privileged secrets on the server, use appropriate device-backed secure storage for local credentials, and restrict
+    backup and sharing to intended non-sensitive data.
+  reviewer: Test device lock state, cloud backup versus device transfer, restored keys, keychain persistence after
+    reinstall, and secure-storage failure; do not silently fall back to plaintext or treat an unrelated secure store
+    as protection.
+  review_steps:
+  - Trace the matched candidate to its actual value, caller or resource.
+  - Test device lock state, cloud backup versus device transfer, restored keys, keychain persistence after reinstall,
+    and secure-storage failure; do not silently fall back to plaintext or treat an unrelated secure store as protection.
+  - Resolve release configuration and runtime assumptions before confirming an issue.
+  recommendations:
+  - Keep private data in app-private storage and use platform-scoped access for deliberate sharing. Authenticate
+    or validate externally read files and avoid storing executable or credential material in shared locations. Keep
+    privileged secrets on the server, use appropriate device-backed secure storage for local credentials, and restrict
+    backup and sharing to intended non-sensitive data.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

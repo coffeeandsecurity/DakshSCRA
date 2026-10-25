@@ -58,6 +58,7 @@ class SemanticExecutor:
         self.max_elapsed_ms = max(1, int(max_elapsed_ms))
         self._portable_graphs = []
         self._php_graphs = []
+        self._python_graphs = []
         self._path_snapshot = None
         self._snapshot_paths = {}
         self._portable_ir_limits = []
@@ -127,7 +128,7 @@ class SemanticExecutor:
         # create one; retain the same decisive no-match without rebuilding it.
         if (language == 'php' or portable) and Capability.DATA_FLOW in plan.capabilities:
             for declaration in document.rule.bindings:
-                if not declaration.concept.startswith('input.'):
+                if not (declaration.concept.startswith('input.') or declaration.concept == 'secret.literal-key-fallback'):
                     continue
                 candidates = self._entities(semantic_ir, declaration.entity_type, declaration.concept)
                 if source_paths is not None:
@@ -198,18 +199,26 @@ class SemanticExecutor:
             semantic_ir = replace(semantic_ir, entities=tuple(flow_graph.entities.values()))
             runtime_capabilities.add(Capability.DATA_FLOW)
         if Capability.DATA_FLOW in plan.capabilities and language == "python":
-            call_graph = PythonCallGraphProvider().build(Path(project_root or root_path), semantic_ir)
+            identity = (str(root_path), str(project_root or root_path),
+                        tuple(id(entity) for entity in semantic_ir.entities),
+                        tuple(id(edge) for edge in semantic_ir.edges))
+            cached = next((item for item in self._python_graphs if item[0] == identity), None)
+            original_ir = semantic_ir
+            call_graph = cached[3] if cached else PythonCallGraphProvider().build(Path(project_root or root_path), semantic_ir)
             local_calls = {edge.call_id for edge in call_graph.edges}
             # An explicitly resolved project function is modeled by its body,
             # not by a library API name heuristic (for example worker.execute).
             sink_concepts = {'sql.execution', 'command.execution', 'network.outbound-request',
-                             'filesystem.access', 'deserialization.object-construction'}
-            semantic_ir = replace(semantic_ir, entities=tuple(
+                             'filesystem.access', 'deserialization.object-construction', 'navigation.redirect',
+                             'web.origin-response', 'model.bulk-binding', 'crypto.key-material'}
+            semantic_ir = cached[2] if cached else replace(semantic_ir, entities=tuple(
                 replace(entity, concepts=entity.concepts - sink_concepts,
                         attributes=tuple((key, value) for key, value in entity.attributes
                                          if key not in {'sensitive_arguments', 'argv_taint_indices'}))
                 if entity.entity_id in local_calls else entity for entity in semantic_ir.entities))
-            flow_graph = PythonDataFlowProvider().build(root_path, semantic_ir)
+            flow_graph = cached[4] if cached else PythonDataFlowProvider().build(root_path, semantic_ir)
+            if cached is None and len(flow_graph.entities) + len(flow_graph.edges) <= 100000:
+                self._python_graphs = (self._python_graphs + [(identity, original_ir, semantic_ir, call_graph, flow_graph)])[-2:]
             if time.perf_counter() > deadline:
                 return ExecutionResult(ExecutionOutcome.INDETERMINATE, plan.rule_id, (), errors=("execution time budget exceeded",))
             runtime_capabilities.add(Capability.DATA_FLOW)
@@ -251,7 +260,7 @@ class SemanticExecutor:
         execution_context = {"last_flow_path": None, "last_control_path": None, "last_state_trace": None}
         for declaration in document.rule.bindings:
             candidates = self._entities(semantic_ir, declaration.entity_type, declaration.concept)
-            if source_paths is not None and declaration.concept.startswith('input.'):
+            if source_paths is not None and (declaration.concept.startswith('input.') or declaration.concept == 'secret.literal-key-fallback'):
                 candidates = [entity for entity in candidates if is_entry(entity)]
             matched = bool(candidates)
             entity = candidates[0] if candidates else None

@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.mobile.android.core.sqlite_raw_query_with_potential_injection VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\.rawQuery\\s*\\(|\\.execSQL\\s*\\(" "im"
-WHEN TEXT_MISSING "selectionArgs\\s*=|bindString\\s*\\(|bindLong\\s*\\(|\\?,\\s*new\\s+String" "im"
-REPORT "SQLite Raw Query with Potential Injection"
+REPORT "SQL Query Construction Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

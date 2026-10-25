@@ -3,7 +3,7 @@ RULE baseline.cpp.core.static_object_initialization_cycles_undefined_behavior_ri
 IN FILE
 WHEN TEXT_MATCHES "\\bstatic\\s+\\w+\\s*\\(" "im"
 WHEN (TEXT_MATCHES "static\\s+\\w+.*=\\s*\\w+::|static\\s+\\w+.*getInstance\\(\\)|Singleton" "im" AND TEXT_MISSING "constexpr|constinit|test|example" "im")
-REPORT "Static Object Initialization Cycles: Undefined Behavior Risk"
+REPORT "Static Initialization Order Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

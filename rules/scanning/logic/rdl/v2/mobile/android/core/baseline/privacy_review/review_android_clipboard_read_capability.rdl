@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.android.core.review_android_clipboard_read_capability VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\b(?:getPrimaryClip\\s*\\(|clipboard(?:Manager)?\\s*\\.\\s*primaryClip\\b)" "im"
+REPORT "Clipboard Read Capability"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

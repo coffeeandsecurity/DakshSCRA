@@ -3,7 +3,7 @@
     {"name": "JavaScript", "regex": "\\.(js|mjs|cjs)$|\\bjavascript\\b", "regexFlag": "0", "fileExtensions": [".js", ".mjs", ".cjs"]},
     {"name": "TypeScript", "regex": "\\.(ts|tsx)$|\\btypescript\\b", "regexFlag": "0", "fileExtensions": [".ts", ".tsx"]},
     {"name": "React", "regex": "\\bfrom\\s+['\"]react['\"]|\\breact-dom\\b|\\bjsx\\b", "regexFlag": "1", "fileExtensions": [".js", ".jsx", ".ts", ".tsx", ".json"]},
-    {"name": "Next.js", "regex": "\\bnext\\b|next\\.config\\.(js|mjs|ts)|\\bnext/router\\b", "regexFlag": "1", "fileExtensions": [".js", ".jsx", ".ts", ".tsx", ".json"]},
+    {"name": "Next.js", "regex": "next\\.config\\.(?:js|mjs|ts)|\\bnext/(?:router|navigation|server|image|link|head|document)\\b|[\"\\']next[\"\\']\\s*:\\s*[\"\\'][~^0-9*]", "regexFlag": "1", "fileExtensions": [".js", ".jsx", ".ts", ".tsx", ".json"]},
     {"name": "Vue.js", "regex": "\\bfrom\\s+['\"]vue['\"]|createApp\\(|\\.vue$", "regexFlag": "1", "fileExtensions": [".vue", ".js", ".ts", ".json"]},
     {"name": "Nuxt", "regex": "\\bnuxt\\b|nuxt\\.config\\.(js|ts)", "regexFlag": "1", "fileExtensions": [".js", ".ts", ".json"]},
     {"name": "Angular", "regex": "@angular/|angular\\.json|\\bNgModule\\b", "regexFlag": "1", "fileExtensions": [".ts", ".html", ".json"]},

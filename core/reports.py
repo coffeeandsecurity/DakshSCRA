@@ -1,3 +1,4 @@
+from utils.datetime_utils import format_datetime, presentation_dates
 # Standard libraries
 import base64
 import html
@@ -36,7 +37,8 @@ logger = get_logger(__name__)
 
 def _path_guidance(item):
     title = str(item.get("rule_title", "") or item.get("keyword", "")).strip()
-    guidance = FILEPATH_RULE_GUIDANCE.get(title, {})
+    from core.issue_titles import issue_title
+    guidance = FILEPATH_RULE_GUIDANCE.get(issue_title(title), {})
     return {
         "brief_desc": guidance.get("brief_desc", "") or str(item.get("brief_desc", "")).strip() or str(item.get("rule_desc", "")).strip(),
         "attack_desc": guidance.get("attack_desc", "") or str(item.get("attack_desc", "")).strip() or str(item.get("vuln_desc", "")).strip(),
@@ -227,7 +229,7 @@ def gen_pdf_report_modern(html_path, pdf_path, print_header=True):
 
         if print_header:
             cli.section_print("[*] PDF Report Generation")
-            print(f"    [-] Started at       : {start_dt.strftime('%Y-%m-%d %H:%M:%S')}")
+            print(f"    [-] Started at       : {format_datetime(start_dt)}")
 
         print("    [-] Rendering JSON-driven professional PDF report... ", end="", flush=True)
         spinner("start")
@@ -241,7 +243,7 @@ def gen_pdf_report_modern(html_path, pdf_path, print_header=True):
         elapsed = time.time() - started_at
 
         if print_header:
-            print(f"    [-] Completed at     : {end_dt.strftime('%Y-%m-%d %H:%M:%S')}")
+            print(f"    [-] Completed at     : {format_datetime(end_dt)}")
             hours, rem = divmod(elapsed, 3600)
             minutes, seconds = divmod(rem, 60)
             seconds, milliseconds = str(seconds).split('.')
@@ -324,14 +326,28 @@ def _saved_evidence_rows(evidence):
         code = str(row.get('code', '')).rstrip()
         key = (line, code)
         previous = files[path].get(key)
-        files[path][key] = ('match' if matched or (previous and previous[0] == 'match') else 'context', line, code)
+        combined = ('match' if matched or (previous and previous[0] == 'match') else 'context', line, code)
+        spans = row.get('highlights')
+        if isinstance(spans, list):
+            retained = list(previous[3]) if previous and len(previous) > 3 else []
+            for span in spans:
+                if span not in retained:
+                    retained.append(span)
+            combined += (retained,)
+        elif previous and len(previous) > 3:
+            combined += (previous[3],)
+        files[path][key] = combined
     for item in evidence if isinstance(evidence, list) else []:
         if not isinstance(item, dict):
             continue
         path = str(item.get('file', '')).strip()
         if item.get('aggregated'):
             for row in item.get('matches', []):
+                for context in row.get('context_before', []):
+                    add(path, context, False)
                 add(path, row, True)
+                for context in row.get('context_after', []):
+                    add(path, context, False)
         else:
             for row in item.get('context_before', []):
                 add(path, row, False)
@@ -494,7 +510,8 @@ def _build_pdf_report_context(
             {
                 "file": src_file,
                 "code": _render_code_viewer(
-                    sorted(rows, key=lambda r: r[1] if isinstance(r[1], int) else 0)
+                    sorted(rows, key=lambda r: r[1] if isinstance(r[1], int) else 0),
+                    (item.get('scan_config') or {}).get('highlight_enabled', True),
                 ),
             }
             for src_file, rows in file_rows.items()
@@ -631,8 +648,8 @@ def _build_pdf_report_context(
     extra = presentation_context(document if document is not None else cli_document(analysis_path=analysis_json_path), platform_filter)
     return {
         **extra,
-        "generated_at": datetime.now().strftime("%b %d, %Y %H:%M"),
-        "report_date": datetime.now().strftime("%b %d, %Y"),
+        "generated_at": format_datetime(),
+        "report_date": format_datetime(date_only=True),
         "logoImagePath": _load_report_logo_data_uri(),
         "reportTitle": report_title,
         "reportSubTitle": report_subtitle,
@@ -642,7 +659,7 @@ def _build_pdf_report_context(
         "platform_rules_breakdown": platform_rules_breakdown,
         "common_rules_breakdown": common_rules_breakdown,
         "detection": detection,
-        "timeline": timeline,
+        "timeline": presentation_dates(timeline),
         "extension_rows": extension_rows,
         "platform_sections": platform_sections,
         "rule_index": rule_index,
@@ -663,8 +680,10 @@ def _build_pdf_report_context(
 
 def _render_pdf_html(context):
     env = Environment(loader=FileSystemLoader(state.htmltemplates_dir), autoescape=True)
+    from utils.guidance_format import guidance_html
+    env.filters['guidance'] = guidance_html
     template = env.get_template("pdf_report.html")
-    return template.render(**context)
+    return template.render(**presentation_dates(context))
 
 
 def _write_temp_pdf_html(rendered_html):
@@ -786,6 +805,8 @@ def gen_html_report_modern(scan_summary, snippets, filepaths, filepaths_aoi, rep
     }
 
     env = Environment(loader=FileSystemLoader(state.htmltemplates_dir), autoescape=True)
+    from utils.guidance_format import guidance_html
+    env.filters['guidance'] = guidance_html
     template = env.get_template("report_modern.html")
     from core.report_document import presentation_context, cli_document, safe_snippets
     extra = presentation_context(document if document is not None else cli_document())
@@ -793,13 +814,13 @@ def gen_html_report_modern(scan_summary, snippets, filepaths, filepaths_aoi, rep
         **extra,
         reportTitle=config.get("title") or "Daksh SCRA Scan Report",
         reportSubTitle=config["subtitle"] if config["subtitle"].lower() != 'none' and config["subtitle"] != "" else None,
-        reportDate=datetime.now().strftime("%b %d, %Y"),
+        reportDate=format_datetime(date_only=True),
         logoImagePath=f"data:image/svg+xml;base64,{encoded_logo_image.decode('utf-8')}",
         inputs=inputs,
         platform_rules_breakdown=platform_rules_breakdown,
         common_rules_breakdown=common_rules_breakdown,
         detection=detection,
-        timeline=timeline,
+        timeline=presentation_dates(timeline),
         snippets=safe_snippets(snippets),
         filepaths_aoi=filepaths_aoi,
         filepaths=filepaths,
@@ -813,7 +834,7 @@ def gen_html_report_modern(scan_summary, snippets, filepaths, filepaths_aoi, rep
 
 
 
-def _render_code_viewer(rows):
+def _render_code_viewer(rows, highlight_enabled=True):
     """
     Render a list of (row_type, line_num, code_str) tuples as an HTML code viewer
     with a line-number gutter.  row_type is "match" or "context".
@@ -823,13 +844,17 @@ def _render_code_viewer(rows):
     valid_lns = [r[1] for r in rows if isinstance(r[1], int)]
     ln_width = len(str(max(valid_lns))) if valid_lns else 1
     parts = ['<div class="code-viewer">']
-    for row_type, ln, code in rows:
-        css = "cv-row cv-match" if row_type == "match" else "cv-row cv-ctx"
+    from core.evidence_highlights import highlighted_html
+    enabled = str(highlight_enabled).lower() not in {'false', '0', 'no'}
+    for row in rows:
+        row_type, ln, code = row[:3]
+        spans = row[3] if len(row) > 3 and enabled else []
+        css = "cv-row cv-match" if row_type == "match" and enabled else "cv-row cv-ctx"
         ln_str = str(ln).rjust(ln_width) if isinstance(ln, int) else " " * ln_width
         parts.append(
             f'<div class="{css}">'
             f'<span class="cv-ln">{ln_str}</span>'
-            f'<code class="cv-code">{html.escape(code or "")}</code>'
+            f'<code class="cv-code">{highlighted_html(code, spans)}</code>'
             f'</div>'
         )
     parts.append('</div>')
@@ -882,7 +907,7 @@ def get_areas_of_interest(input_file, raw=None):
             rows_sorted = sorted(rows, key=lambda r: r[1] if isinstance(r[1], int) else 0)
             snippet["sources"].append({
                 "source": src_file,
-                "code": _render_code_viewer(rows_sorted),
+                "code": _render_code_viewer(rows_sorted, (item.get('scan_config') or {}).get('highlight_enabled', True)),
             })
         grouped[platform].append(snippet)
     return _ordered_platform_dict(grouped)
@@ -940,6 +965,7 @@ def get_filepaths(input_file):
 
 def get_analysis_results(input_file):
     json_path = Path(input_file)
+    from core.analysis_dispatch import unique_observation_count
     from core.rdl.narratives import enrich_analysis
     data = enrich_analysis(_load_json_file(json_path, default={}, label="analysis summary") or {})
     if not isinstance(data, dict):
@@ -1000,10 +1026,15 @@ def get_analysis_results(input_file):
                 "termination_nodes": termination_nodes,
                 "cross_file": bool(finding.get("cross_file", False)),
                 "risk_score": finding.get("risk_score"),
+                "priority_score": finding.get('priority_score', finding.get('risk_score')),
+                "rating_basis": finding.get('rating_basis', ''),
+                "build_scope": finding.get('build_scope', 'unresolved'),
                 "severity": str(finding.get("severity", "")).strip(),
                 "source_count": finding.get("source_count", 0),
                 "confidence_score": f_score,
                 "confidence_label": _confidence_label(f_score),
+                "confidence_basis": finding.get('confidence_basis', ''),
+                "path_step_count": finding.get('path_step_count', len(normalized_path)),
             })
 
         display_target = target
@@ -1032,7 +1063,7 @@ def get_analysis_results(input_file):
         "targets_total": int(summary_raw.get("targets_total", len(normalized_results)) or 0),
         "targets_analyzed": int(summary_raw.get("targets_analyzed", len(normalized_results)) or 0),
         "taint_targets": int(summary_raw.get("taint_targets", len(taint_results)) or 0),
-        "findings_identified": int(summary_raw.get("findings_identified", sum(len(x.get("findings", [])) for x in normalized_results)) or 0),
+        "findings_identified": int(summary_raw.get("findings_identified", unique_observation_count(normalized_results)) or 0),
         "validated_findings": int(summary_raw.get("validated_findings", sum(int(((x.get("security_inventory", {}) or {}).get("summary", {}) or {}).get("validated_findings", 0) or 0) for x in normalized_results)) or 0),
         "confirmed_vulnerabilities": int(summary_raw.get("confirmed_vulnerabilities", sum(len((x.get("security_inventory", {}) or {}).get("vulnerabilities", [])) for x in normalized_results)) or 0),
         "mitigated_implementations": int(summary_raw.get("mitigated_implementations", sum(len((x.get("security_inventory", {}) or {}).get("mitigations", [])) for x in normalized_results)) or 0),
@@ -1088,8 +1119,8 @@ def get_summary(input_file):
     lines.append("")
 
     lines.append("[+] Scanning Timeline:")
-    lines.append(f"    [-] Scan start time: {timeline.get('scan_start_time','')}")
-    lines.append(f"    [-] Scan end time: {timeline.get('scan_end_time','')}")
+    lines.append(f"    [-] Scan start time: {format_datetime(timeline.get('scan_start_time',''))}")
+    lines.append(f"    [-] Scan end time: {format_datetime(timeline.get('scan_end_time',''))}")
     lines.append(f"    [-] Scan completed in: {timeline.get('scan_duration','')}")
 
     return html.escape("\n".join(lines))
@@ -1146,7 +1177,7 @@ def _load_yaml_file(path, default=None, label="yaml"):
 def _render_template(env, template_name, context, output_path):
     output_path.parent.mkdir(parents=True, exist_ok=True)
     template = env.get_template(template_name)
-    html = template.render(**context)
+    html = template.render(**presentation_dates(context))
     output_path.write_text(html, encoding="utf-8")
     return output_path
 

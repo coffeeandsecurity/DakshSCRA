@@ -3,7 +3,7 @@ RULE baseline.dotnet.core.untrusted_input_handling_in_htlm_output_response_write
 IN FILE
 WHEN TEXT_MATCHES "Response\\.Write\\(.*\\)" "im"
 WHEN (TEXT_MATCHES "(Request\\.|HttpContext\\.Current\\.Request)" "im" AND TEXT_MISSING "(HtmlEncode|HttpUtility\\.HtmlEncode|AntiXssEncoder|TagBuilder)" "im")
-REPORT "Untrusted Input Handling in HTLM Output: Response.Write"
+REPORT "HTML Output Encoding Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

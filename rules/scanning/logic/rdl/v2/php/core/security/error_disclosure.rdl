@@ -2,7 +2,7 @@ VERSION 2
 RULE php.error-disclosure VERSION 1
 IN FILE
 WHEN EXISTS CALL MATCHES error.disclosure AS operation
-REPORT "diagnostic information disclosure"
+REPORT "Error Detail Disclosure Review"
 SEVERITY MEDIUM
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.xplat.flutter.framework.dio.review_flutter_dio_all_status_accepted VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bvalidateStatus\\s*:\\s*\\([^)]{0,80}\\)\\s*=>\\s*true\\b" "im"
+REPORT "Dio Accepts Every HTTP Response Status"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

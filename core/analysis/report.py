@@ -13,6 +13,7 @@ from core.analysis.common import load_analysis_config
 from utils.decision_trace import append_trace
 from utils.output_mode import web_scan
 from .presentation import flow_finding
+from utils.json_io import write_json_atomic
 
 
 DEFAULT_RANKING = {
@@ -301,6 +302,9 @@ def rank_and_dedupe_flows(flows: List[Dict], platform: str = None) -> List[Dict]
         normalized["risk_score"] = score
         normalized["cross_file"] = cross_file
         normalized["severity"] = "Low" if _trace_status(normalized) == "partial" or unresolved_origin else _severity_from_score(score, profile)
+        if normalized.get('rating_basis') and str(flow.get('severity', '')).upper() == 'INFO':
+            normalized['severity'] = 'Info'
+        normalized['priority_score'] = score
         key = _flow_key(normalized)
         prev = best_by_key.get(key)
         if prev is None or normalized["risk_score"] > prev["risk_score"]:
@@ -445,9 +449,9 @@ def render_html(flows: List[Dict], output_path: Path, title: str = "Advanced Ana
         lines.append("<tr><td colspan='9' class='muted'>No flows detected.</td></tr>")
     else:
         for flow in flows:
-            input_surface = flow.get("input_surface") or _infer_input_surface(flow)
+            input_surface = (_infer_input_surface(flow) if _unknown_input_origin(flow) else flow.get("input_surface") or _infer_input_surface(flow))
             flow["input_surface"] = input_surface
-            attack_vectors = flow.get("attack_vectors") or _derive_attack_vectors(flow)
+            attack_vectors = (_derive_attack_vectors(flow) if _partial_vector_evidence(flow) else flow.get("attack_vectors") or _derive_attack_vectors(flow))
             flow["attack_vectors"] = attack_vectors
             trace_status = _trace_status(flow)
             termination_lines = _termination_summary(flow)
@@ -491,7 +495,7 @@ def render_html(flows: List[Dict], output_path: Path, title: str = "Advanced Ana
                 f"<div><span class='sev {sev_class}'>{severity}</span>"
                 f"<span class='sev trace-{trace_status}'>{trace_status.capitalize()}</span>"
                 f"<span class='sev {conf_class}'>Confidence: {confidence.capitalize()}</span>"
-                f"<strong>Score:</strong> {flow.get('risk_score', 0)}</div>"
+                f"<strong>Review priority:</strong> {flow.get('risk_score', 0)}</div>"
                 f"<div style='margin-top:6px;'>{_escape_html(description)}</div>"
                 + (f"<div class='muted' style='margin-top:6px;'><strong>Why this matters:</strong> {_escape_html(explanation)}</div>" if explanation else "")
                 + (f"<div class='muted' style='margin-top:6px;'><strong>Termination:</strong> {_escape_html(' | '.join(termination_lines))}</div>" if termination_lines else "")
@@ -648,9 +652,10 @@ FORM_SUBMIT_RE = re.compile(r"submitted via\s+([A-Z]+)\s+to\s+`([^`]+)`", re.IGN
 SOURCE_ASSIGN_RE = re.compile(r"\[source\].*assigned to\s+`?\$?([A-Za-z_][A-Za-z0-9_]*)`?", re.IGNORECASE)
 
 def _vuln_rule(kind: str, title: str, sink_names: List[str], cwe: str, reason: str) -> Dict:
+    from core.issue_titles import vulnerability_title
     return {
         "kind": kind,
-        "title": title,
+        "title": vulnerability_title(kind, title),
         "sink_names": {str(name or "").strip().lower() for name in sink_names if str(name or "").strip()},
         "cwe": cwe,
         "reason": reason,
@@ -1523,7 +1528,20 @@ def _flow_graph_steps(graph: Dict) -> List[str]:
     return steps
 
 
+def _unknown_input_origin(flow: Dict) -> bool:
+    source = next((s for s in flow.get('path', []) if str(s.get('role','')).lower() == 'source'), None)
+    return not source or str(source.get('code','')).lower().startswith('[inferred]')
+
+
+def _partial_vector_evidence(flow: Dict) -> bool:
+    return (_unknown_input_origin(flow) or flow.get('analysis_kind') == 'unresolved_call'
+            or flow.get('trace_status') in {'partial','unresolved'} or flow.get('flow_kind') == 'partial')
+
+
 def _infer_input_surface(flow: Dict) -> Dict:
+    if _unknown_input_origin(flow):
+        return dict(channel='code-path',methods=[],uris=[],params=[],derived_params=[],examples=[],
+                    review_note='The upstream input origin is unresolved. No external endpoint or request parameter is established.')
     source_hints = _infer_source_hints(flow)
     if source_hints.get("params") or source_hints.get("methods") or source_hints.get("uris") or source_hints.get("channel") in {"web-app", "api"}:
         return source_hints
@@ -1639,7 +1657,13 @@ _VECTOR_CATEGORY_BY_KIND = {
 def _derive_attack_vectors(flow: Dict) -> List[Dict]:
     vectors: List[Dict] = []
     path = flow.get("path", []) or []
-    input_surface = flow.get("input_surface") or _infer_input_surface(flow)
+    if _partial_vector_evidence(flow):
+        return [dict(kind='code_path',category='code-path',label='Unresolved call boundary',
+                     reason=('The upstream input origin is unresolved. External input control and a complete path to a security-sensitive destination are not established.'
+                             if _unknown_input_origin(flow) else
+                             'The recorded source reaches a partial or unresolved boundary. A complete path to a security-sensitive destination is not established.'),
+                     examples=[],taint_symbols=[])]
+    input_surface = (_infer_input_surface(flow) if _unknown_input_origin(flow) else flow.get("input_surface") or _infer_input_surface(flow))
     collected_vars: List[str] = []
     for step in path:
         for name in (step.get("variables") or []):
@@ -2521,9 +2545,9 @@ def render_xref_html(flows: List[Dict], output_path: Path, title: str = "Advance
         value_rows = _flow_value_hotspots(flow, limit=10)
         for row in value_rows:
             value_counter[row["token"]] += row["count"]
-        input_surface = flow.get("input_surface") or _infer_input_surface(flow)
+        input_surface = (_infer_input_surface(flow) if _unknown_input_origin(flow) else flow.get("input_surface") or _infer_input_surface(flow))
         flow["input_surface"] = input_surface
-        flow["attack_vectors"] = flow.get("attack_vectors") or _derive_attack_vectors(flow)
+        flow["attack_vectors"] = (_derive_attack_vectors(flow) if _partial_vector_evidence(flow) else flow.get("attack_vectors") or _derive_attack_vectors(flow))
 
         tags = " ".join(
             [
@@ -2707,7 +2731,7 @@ def render_xref_html(flows: List[Dict], output_path: Path, title: str = "Advance
         _conf = str(fp.get("confidence", "low")).lower()
         _conf_cls = {"high": "conf-high", "medium": "conf-medium"}.get(_conf, "conf-low")
         lines.append(
-            f"<div class='chips'><span class='chip'>Risk {fp['risk_score']}</span>"
+            f"<div class='chips'><span class='chip'>Priority {fp['risk_score']}</span>"
             f"<span class='chip'>Path {fp['path_len']}</span><span class='chip'>XREF {fp['xref_count']}</span>"
             f"<span class='chip'>Trace { _escape_html(str(fp.get('trace_status', 'complete')).capitalize()) }</span>"
             f"<span class='sev {_conf_cls}'>Confidence: {_escape_html(_conf.capitalize())}</span></div>"
@@ -2885,10 +2909,13 @@ def write_reports(flows: List[Dict], output_dir: Path, title: str, platform: str
     ranked_flows = rank_and_dedupe_flows(flows, platform=platform)
     print(f"     [-] Enriching flows    : inferring input surface and attack vectors", flush=True)
     for flow in ranked_flows:
-        flow["input_surface"] = flow.get("input_surface") or _infer_input_surface(flow)
-        flow["attack_vectors"] = flow.get("attack_vectors") or _derive_attack_vectors(flow)
+        flow["input_surface"] = (_infer_input_surface(flow) if _unknown_input_origin(flow) else flow.get("input_surface") or _infer_input_surface(flow))
+        flow["attack_vectors"] = (_derive_attack_vectors(flow) if _partial_vector_evidence(flow) else flow.get("attack_vectors") or _derive_attack_vectors(flow))
     print(f"     [-] Writing JSON       : {len(ranked_flows)} ranked flow(s) for Advanced Analysis", flush=True)
-    json_path.write_text(json.dumps(ranked_flows, indent=2), encoding="utf-8")
+    # Stream the encoder rather than materializing another full report string
+    # and its encoder chunks alongside the in-memory flow graph. Replace only
+    # a complete report so a failed write cannot publish truncated JSON.
+    write_json_atomic(json_path, ranked_flows)
 
     if web_scan():
         return json_path, None

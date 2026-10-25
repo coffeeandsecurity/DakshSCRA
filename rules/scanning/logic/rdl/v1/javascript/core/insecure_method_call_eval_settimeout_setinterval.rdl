@@ -1,5 +1,0 @@
-VERSION 1
-WHEN PRESENT \b(eval|setTimeout|setInterval)\(.+\)
-REPORT AS area_of_interest
-REASON Detects the usage of the `eval`, `setTimeout`, and `setInterval` functions.
-TRACE Externalized rule logic for Insecure Method Call: eval|setTimeout|setInterval.

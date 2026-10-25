@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: powershell.core.amsi_bypass_attempt
+title: "AMSI Bypass Review"
+order: 8
+category: Execution Policy and Security Controls
+detection:
+  pattern: amsiInitFailed|AmsiScanBuffer|amsi\.dll|amsiContext|Disable.*AMSI|AMSI.*bypass
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:amsi|AmsiScanBuffer|amsiContext|amsiInitFailed && MISSING:test|development|example|research
+reporting:
+  type: area_of_interest
+  reason: Detects known patterns associated with Antimalware Scan Interface (AMSI) bypass techniques.
+  trace:
+  - Externalized rule logic for AMSI Bypass Attempt.
+  description: The script contains an attempt to bypass an execution-policy or anti-malware inspection mechanism.
+    Determine actual effectiveness and deployment context.
+  impact: If the bypass is effective, unauthorized or malicious script behavior may evade a configured inspection
+    or execution restriction. A textual marker alone does not prove that protection was bypassed.
+  remediation: Remove unnecessary bypass behavior, retain applicable inspection controls, and enforce signing, application
+    control, and least privilege independently of execution-policy settings.
+  reviewer: Any occurrence of these patterns in production code should be treated as a high-severity indicator of
+    compromise or intentional security bypass. This can be confirmed as an issue when the matched path is reachable
+    and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the matched construct in its containing function or configuration and identify the security-sensitive
+    behavior under review.
+  - Verify reachable callers, external influence and effective protections, including deployment overrides and failure
+    paths.
+  - Record concrete evidence for a confirmed issue or a justified suppression; retain an unresolved outcome when
+    the required evidence is unavailable.
+  recommendations:
+  - Apply the rule-specific correction above only after verifying the affected behavior and required control.
+  - Add a regression case for the unsafe condition and a valid protected case; verify the effective behavior in
+    the relevant deployment.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

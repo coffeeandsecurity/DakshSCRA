@@ -2,7 +2,7 @@ VERSION 2
 RULE ios.tls-peer-name-disabled VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\bkCFStreamSSLPeerName\\s*(?:\\]\\s*=|:|=)\\s*(?:NSNull\\s*\\(|kCFNull\\b)" ""
-REPORT "TLS Peer Name Validation Disabled"
+REPORT "TLS Hostname Validation Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

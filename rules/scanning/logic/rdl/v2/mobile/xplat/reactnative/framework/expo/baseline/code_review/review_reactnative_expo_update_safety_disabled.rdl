@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.xplat.reactnative.framework.expo.review_reactnative_expo_update_safety_disabled VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "[\"\\x27]?disableAntiBrickingMeasures[\"\\x27]?\\s*:\\s*true|[\"\\x27]?EXUpdatesDisableAntiBrickingMeasures[\"\\x27]?\\s*[:=]\\s*(?:true|YES)" "im"
+REPORT "Expo Update Safety Protections Disabled"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -5,7 +5,7 @@ LET principal BE VARIABLE MATCHES identity.principal
 LET operation BE CALL MATCHES privilege.sensitive-operation
 WHEN principal FLOWS TO operation
 REQUIRE NOT authorization.proven operation
-REPORT "privilege boundary violation"
+REPORT "Privilege Boundary Violation"
 SEVERITY CRITICAL
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

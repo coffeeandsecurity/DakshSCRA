@@ -1,0 +1,45 @@
+format: daksh-pattern-rule/v1
+id: dotnet.core.untrusted_url_concatenation_append_method
+title: "URL Construction Review"
+order: 6
+category: Untrusted Input/Output Handling
+detection:
+  pattern: \.Append\(.*HttpContext\.Current\.Request\.Url
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:(Uri\.EscapeDataString|UrlEncode|IsLocalUrl|allowlist|whitelist)
+reporting:
+  type: area_of_interest
+  reason: Detects the usage of untrusted URL concatenation using the Append method, which may lead to security vulnerabilities.
+  trace:
+  - 'Externalized rule logic for Untrusted URL Concatenation: Append Method.'
+  description: The code handles a link, redirect, or externally selected navigation target. Validate the effective
+    destination and any action triggered by the receiving handler.
+  impact: A crafted destination or link may direct users to a phishing site, leak URL-carried secrets, or trigger
+    unauthorized operations if routing trusts external parameters without the required access checks.
+  remediation: Allowlist schemes, hosts, paths, and operations. Validate parsed link parameters, avoid credentials
+    in URLs, and require authentication and authorization before sensitive actions.
+  reviewer: Check for the presence of untrusted URL concatenation using the Append method. Verify if developers
+    have implemented proper URL encoding, validation, and input/output handling techniques to prevent security vulnerabilities.
+    Also assess the sensitivity of the URLs being concatenated and confirm the presence of appropriate security
+    controls. This can be confirmed as an issue when the matched path is reachable and required controls are missing,
+    weak, or inconsistent.
+  review_steps:
+  - Identify who can supply the matched input, including stored values and upstream services; record its type, size
+    limits and trust boundary.
+  - Trace the value through transformations to each sensitive operation. Check the protection at that destination
+    and resource-level authorization.
+  - Inspect the actual validation or protection implementation and its error path. A nearby keyword or a client-side
+    check alone is insufficient evidence.
+  recommendations:
+  - Use server-side type, length and allowed-value checks appropriate to the input. For free-form text, preserve
+    legitimate characters and protect each destination separately.
+  - Bind database values as parameters, encode output for its rendering context, and constrain file or network destinations
+    where applicable. Test rejected input and unauthorized access.
+scan_config:
+  match_mode: line
+  context_lines_before: '3'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

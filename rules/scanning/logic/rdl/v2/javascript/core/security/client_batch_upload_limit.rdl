@@ -2,7 +2,7 @@ VERSION 2
 RULE javascript.client.batch-upload-limit VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\bif\\s*\\(\\s*([A-Za-z_$][\\w$]*)\\.length\\s*>\\s*\\d+\\s*\\)\\s*\\{[^{}]{0,200}\\}\\s*else\\s*\\{\\s*[A-Za-z_$][\\w$]*\\s*\\(\\s*\\[\\s*\\.\\.\\.\\s*[A-Za-z_$][\\w$]*\\s*,\\s*\\.\\.\\.\\s*\\1\\s*\\]\\s*\\)" ""
-REPORT "Upload Limit Checks Only Current Batch"
+REPORT "Upload Quota Enforcement Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

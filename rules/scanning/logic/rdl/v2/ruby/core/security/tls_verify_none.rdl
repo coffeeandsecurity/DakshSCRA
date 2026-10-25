@@ -2,7 +2,7 @@ VERSION 2
 RULE ruby.tls-verify-none VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "\\b(?:OpenSSL::SSL::)?VERIFY_NONE\\b" ""
-REPORT "Ruby TLS Certificate Verification Disabled"
+REPORT "TLS Certificate Validation Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

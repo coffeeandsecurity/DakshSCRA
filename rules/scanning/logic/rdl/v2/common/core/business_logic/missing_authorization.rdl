@@ -4,7 +4,7 @@ IN FUNCTION
 LET operation BE CALL MATCHES business.sensitive-operation
 WHEN reachable operation
 REQUIRE NOT authorization.dominates operation
-REPORT "sensitive operation without required authorization"
+REPORT "Operation Authorization Review"
 SEVERITY HIGH
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

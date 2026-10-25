@@ -1,0 +1,42 @@
+format: daksh-pattern-rule/v1
+id: python.core.flask_request_data_review
+title: "Untrusted Input Entry Point"
+order: 39
+category: Authentication and Session Security
+detection:
+  pattern: \brequest\s*\.\s*(?:args|form|json|values|cookies|headers|files|get_json|get_data|data)\b
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Application code reads client-controlled request values. Trace them to database
+    queries, file operations, state changes and resource authorization checks; input
+    access alone is an area of interest.
+  description: Application code reads client-controlled request values. Trace them
+    to database queries, file operations, state changes and resource authorization
+    checks; input access alone is an area of interest.
+  impact: A client may influence sensitive actions or obtain unauthorized records
+    if destination-specific protection or resource ownership checks are missing.
+  remediation: Validate server-side types and limits, bind SQL values, and authorize
+    each resource against the authenticated identity. Keep authentication and ownership
+    enforcement distinct.
+  reviewer: Compare protected and unprotected branches and active route registration.
+    Parameterized SQL protects query syntax; it does not enforce ownership of a child,
+    account or other requested record.
+  review_steps:
+  - Trace the matched operation to its caller and verify whether that path is registered
+    and reachable in the deployed application.
+  - Compare protected and unprotected branches and active route registration. Parameterized
+    SQL protects query syntax; it does not enforce ownership of a child, account or
+    other requested record.
+  recommendations:
+  - Validate server-side types and limits, bind SQL values, and authorize each resource
+    against the authenticated identity. Keep authentication and ownership enforcement
+    distinct.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: red

@@ -1,0 +1,8 @@
+VERSION 2
+RULE javascript.client.otp-navigation VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "\\bonCodeFilled\\s*=\\s*\\{\\s*(?:\\(\\s*(?:[A-Za-z_$][\\w$]*(?:\\s*:\\s*string)?)?\\s*\\)|[A-Za-z_$][\\w$]*)\\s*=>\\s*" ""
+REPORT "OTP Completion Without Verification Review"
+SEVERITY MEDIUM
+CONFIDENCE LOW
+WITH TRACE

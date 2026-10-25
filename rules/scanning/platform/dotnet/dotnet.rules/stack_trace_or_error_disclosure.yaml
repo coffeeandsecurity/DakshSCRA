@@ -1,0 +1,39 @@
+format: daksh-pattern-rule/v1
+id: dotnet.core.stack_trace_or_error_disclosure
+title: "Error Detail Disclosure Review"
+order: 17
+category: Information Disclosure
+detection:
+  pattern: (?i)\b(?:Response\s*\.\s*Write(?:Async)?|Content|BadRequest|Problem|Json|Results\s*\.\s*(?:Problem|BadRequest|Json))\s*\([^;\n]{0,240}\b(?:\w+\s*\.\s*(?:StackTrace|ToString\s*\(|Message)|ExceptionDetails)
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Review diagnostic details passed to a response operation. A thrown exception or internal log alone does not establish
+    disclosure.
+  trace:
+  - Externalized rule logic for Stack Trace or Error Disclosure.
+  description: The code writes diagnostic data or exposes detailed errors. Establish the values emitted, production configuration,
+    and recipients of the output.
+  impact: Readers of exposed diagnostics may obtain credentials, private records, internal paths, or implementation details
+    that enable account misuse or targeted attacks.
+  remediation: Keep sensitive values and detailed errors out of user-facing responses and routine logs. Redact before emission,
+    restrict diagnostic access, and verify production logging configuration.
+  reviewer: Trace the response argument to its recipient. Check whether exception messages or stack traces contain private
+    details and whether production middleware changes the response. Keep an unresolved assessment when the recipient or exception
+    value cannot be established.
+  review_steps:
+  - Determine whether the matched path logs sensitive data or exposes diagnostics to an untrusted recipient.
+  - Trace the actual values, redaction and error handling, including production configuration and log retention or access.
+  - Distinguish internal operational diagnostics from client-visible output and record the reachable disclosure path without
+    reproducing secrets.
+  recommendations:
+  - Log only the operational details needed, redact sensitive values, and return limited error messages to clients.
+  - Restrict diagnostic and log access and test production error responses and representative log output.
+scan_config:
+  match_mode: line
+  context_lines_before: '2'
+  context_lines_after: '2'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_color: yellow

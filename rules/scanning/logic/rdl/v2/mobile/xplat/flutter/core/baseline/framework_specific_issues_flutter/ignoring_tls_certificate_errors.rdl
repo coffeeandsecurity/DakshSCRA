@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.mobile.xplat.flutter.core.ignoring_tls_certificate_errors VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "badCertificateCallback\\s*=|onBadCertificate\\s*=" "im"
-WHEN TEXT_MISSING "test|development|localhost|staging|// intentional|badCertificateCallback.*throw" "im"
-REPORT "Ignoring TLS Certificate Errors"
+REPORT "TLS Certificate Validation Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

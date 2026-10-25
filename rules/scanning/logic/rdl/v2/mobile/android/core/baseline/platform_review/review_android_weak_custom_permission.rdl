@@ -1,0 +1,8 @@
+VERSION 2
+RULE baseline.mobile.android.core.review_android_weak_custom_permission VERSION 1
+IN FILE
+WHEN TEXT_MATCHES "<permission\\b[^>]{0,500}\\b[A-Za-z_][\\w.-]*:protectionLevel\\s*=\\s*[\"\\x27](?:normal|dangerous|0|1)[\"\\x27]" "im"
+REPORT "Custom Permission Uses Weak Protection Level"
+SEVERITY INFO
+CONFIDENCE LOW
+WITH TRACE

@@ -1,0 +1,39 @@
+format: daksh-pattern-rule/v1
+id: php.core.deprecated_string_split_function
+title: "Legacy PHP API Review"
+order: 16
+category: Deprecated Functions
+detection:
+  pattern: \bsplit\s*\(\s*[^;]*\s*\)
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR MISSING:explode|str_split|preg_split && MISSING:test|example
+reporting:
+  type: area_of_interest
+  reason: Detects usage of the deprecated split() function, which can lead to unpredictable behavior and maintenance
+    challenges.
+  trace:
+  - Externalized rule logic for Deprecated String Split Function.
+  description: The source references a dependency, version, or deprecated API. Resolve the actual deployed version
+    and supported behavior before deciding whether it needs replacement.
+  impact: A reachable vulnerability in an unsupported or affected dependency may compromise the application with
+    its privileges. A version declaration or deprecated API alone does not establish that such a vulnerability is
+    present.
+  remediation: Inventory resolved dependencies and runtime versions, compare them with authoritative advisories
+    and support policy, and migrate affected or unsupported components to tested supported replacements.
+  reviewer: Locate deprecated API usage and validate migration completeness to secure alternatives. This can be
+    confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Resolve the dependency or deprecated API version actually included in the deployed artifact.
+  - Inspect the affected functionality and its callers; a declaration or API name alone does not establish a reachable
+    vulnerability.
+  - Check supported replacements and compatibility requirements, and record evidence for any affected deployed behavior.
+  recommendations:
+  - Replace unsupported APIs or affected dependencies with a supported option after checking application compatibility.
+  - Pin and verify the deployed version and test the affected behavior and error paths after the update.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

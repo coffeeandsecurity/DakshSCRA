@@ -4,7 +4,7 @@ IN FUNCTION
 LET buffer BE OBJECT MATCHES memory.buffer
 WHEN pointer.before_start buffer AND dereferenced buffer
 REQUIRE REACHABLE PATH
-REPORT "buffer underflow"
+REPORT "Buffer Underflow"
 SEVERITY HIGH
 CONFIDENCE FROM EVIDENCE
 WITH TRACE

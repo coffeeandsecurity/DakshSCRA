@@ -1,8 +1,8 @@
 VERSION 2
 RULE flutter.ios-keychain-accessibility VERSION 1
 IN FILE
-WHEN TEXT_MATCHES "\\baccessibility\\s*:\\s*KeychainAccessibility\\.(?:first_unlock|unlocked)\\b" ""
-REPORT "Flutter Keychain Accessible After First Unlock"
+WHEN TEXT_MATCHES "\\baccessibility\\s*:\\s*KeychainAccessibility\\.(?:first_unlock|first_unlock_this_device)\\b" ""
+REPORT "Keychain Accessibility Review"
 SEVERITY MEDIUM
 CONFIDENCE LOW
 WITH TRACE

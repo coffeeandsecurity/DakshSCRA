@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.mobile.xplat.ionic.core.ionic_cordova_allow_navigation_wildcard VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "<allow-navigation\\s+href=\\\"\\*\\\"|<access\\s+origin=\\\"\\*\\\"" "im"
-WHEN TEXT_MISSING "Content-Security-Policy" "im"
-REPORT "Ionic/Cordova Allow Navigation Wildcard"
+REPORT "WebView Navigation Policy Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

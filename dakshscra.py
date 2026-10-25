@@ -18,6 +18,7 @@ from uuid import uuid4
 # Local application imports
 import core.discovery as discover
 import core.estimator as estimate
+from core.effort import DOMAINS as EFFORT_DOMAINS
 import core.parser as parser
 import core.recon as rec
 import core.reports as report
@@ -98,11 +99,19 @@ args = cli.DakshArgumentParser(
     ),
 )
 
+settings_group = args.add_argument_group("Global date and time settings")
+settings_group.add_argument('--settings', action='store_true', help='Show global date/time preferences and exit')
+settings_group.add_argument('--save-settings', action='store_true', help='Save date/time preferences globally and exit')
+settings_group.add_argument('--date-format', choices=('MM-DD-YYYY', 'DD-MM-YYYY', 'YYYY-MM-DD'), default=None)
+settings_group.add_argument('--time-format', choices=('24h', '12h'), default=None)
+settings_group.add_argument('--timezone', default=None, metavar='IANA_ZONE')
 scan_group = args.add_argument_group("Scan options")
 scan_group.add_argument('--custom-rdl', action='append', default=[], metavar='PACK.json',
                         help='Include an optional application-specific RDL v2 pack; repeat for multiple packs')
-scan_group.add_argument('--rdl-engine', choices=('v1', 'v2', 'both'), default='both',
-                        help='RDL engines to run (default: both). V1: established rules; v2: experimental successor with incomplete coverage.')
+scan_group.add_argument('--rule-mode', choices=('pattern', 'semantic', 'both'), default=None,
+                        help='Rules to run (default: both). Pattern Rules identify areas of interest; Semantic Rules analyze relationships and modeled flows. Reviewer confirmation is required.')
+scan_group.add_argument('--rdl-engine', choices=('v1', 'v2', 'both'), default=None,
+                        help='Compatibility selection for older scripts: v1, v2 (includes native pattern baselines), or both. Prefer --rule-mode.')
 mode_group = args.add_argument_group("Mode options")
 output_group = args.add_argument_group("Output options")
 advanced_group = args.add_argument_group("Advanced options")
@@ -133,7 +142,16 @@ mode_group.add_argument('--rs', '--recon-strict', action='store_true', dest='rec
                         help='Strict recon filter (use with --recon): high-confidence framework/platform detections only')
 
 mode_group.add_argument('--estimate', action='store_true', dest='estimate',
-                        help='Estimate code review effort based on codebase size')
+                        help='Scan supplied scope, collect recon/LOC and estimate review effort from final evidence')
+mode_group.add_argument('--estimate-assumptions', default='{}', metavar='JSON',
+                        help='Per-scan effort rate overrides as a JSON object; omitted rates use global defaults')
+mode_group.add_argument('--estimate-mode', choices=('assisted', 'targeted', 'manual', 'ai'), default='assisted',
+                        help='Review effort scenario (default: assisted manual review)')
+mode_group.add_argument('--estimate-domain', action='append', default=None,
+                        choices=tuple(key for key, _ in EFFORT_DOMAINS),
+                        help='Targeted review domain; repeat to select multiple domains (default: all)')
+mode_group.add_argument('--estimate-calibration', default='', metavar='JSON',
+                        help='Observed comparable task samples: component, units and hours; at least five per component')
 
 mode_group.add_argument('--pdf-from-json', action='store_true', dest='pdf_from_json',
                         help='Generate PDF report(s) from existing JSON outputs without re-running scan')
@@ -145,6 +163,9 @@ output_group.add_argument('-rpt', '--report', type=str, action='store', dest='re
 output_group.add_argument('--json-input-dir', type=str, action='store', dest='json_input_dir',
                           default='', metavar='PATH',
                           help='Path to JSON report directory (for example: ./reports/<project-id>/<run-id>/data)')
+
+output_group.add_argument('--report-audience', choices=('developer', 'code_review', 'both'), default='both',
+                          help='Guidance shown in output reports: implementation checks, exploitability review, or both (default: both)')
 
 output_group.add_argument('--pdf-output', type=str, action='store', dest='pdf_output',
                           default='', metavar='PATH',
@@ -206,11 +227,53 @@ if len(sys.argv) < 2:
 
 # Parse arguments with error handling
 results = args.parse_args()
+from utils.datetime_utils import configure_display, format_datetime, save_display_preferences
+from utils.config_utils import get_display_config, get_now
+try:
+    display = get_display_config()
+    for key in ('date_format', 'time_format', 'timezone'):
+        if getattr(results, key) is not None:
+            display[key] = getattr(results, key)
+    display = configure_display(display)
+    if results.save_settings:
+        save_display_preferences(display)
+    if results.settings or results.save_settings:
+        print(json.dumps(display, indent=2))
+        sys.exit(0)
+except ValueError as exc:
+    args.error(str(exc))
+from core.rdl.selection import RULE_MODES
+from utils.report_audience import configure_audience
+configure_audience(results.report_audience)
+if results.rule_mode is not None and results.rdl_engine is not None and RULE_MODES[results.rule_mode] != results.rdl_engine:
+    args.error('--rule-mode and --rdl-engine select conflicting modes')
+if results.rdl_engine is None:
+    results.rule_mode = results.rule_mode or 'both'
+    results.rdl_engine = RULE_MODES[results.rule_mode]
+estimate_calibration_samples = []
+try:
+    estimate_assumptions = json.loads(results.estimate_assumptions)
+    from core.effort import validate_assumptions
+    if estimate_assumptions:
+        validate_assumptions(estimate_assumptions)
+    elif not isinstance(estimate_assumptions, dict):
+        raise ValueError('Effort assumptions must be a JSON object')
+except (ValueError, TypeError) as exc:
+    args.error(str(exc))
 if results.estimate:
+    # Estimates need the completed scan evidence and a measured code inventory.
+    results.rule_file = results.rule_file or 'auto'
     results.recon = True
     results.loc = True
+    if results.estimate_calibration:
+        try:
+            estimate_calibration_samples = json.loads(Path(results.estimate_calibration).read_text())
+            from core.effort import calibrate, load_assumptions
+            calibrate(estimate_calibration_samples, load_assumptions())
+        except (OSError, ValueError, TypeError, AttributeError) as exc:
+            args.error('Effort calibration: ' + str(exc))
 try:
-    configure_engines(state.root_dir, results.rdl_engine, results.custom_rdl)
+    configure_engines(state.root_dir, results.rdl_engine, results.custom_rdl, results.rule_mode)
 except (OSError, ValueError, KeyError, TypeError) as exc:
     args.error('Custom RDL configuration: ' + str(exc))
 
@@ -313,7 +376,8 @@ def _safe_load_json(path_obj, default):
 def _safe_write_json(path_obj, payload):
     try:
         Path(path_obj).parent.mkdir(parents=True, exist_ok=True)
-        Path(path_obj).write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        from utils.json_io import write_json_atomic
+        write_json_atomic(path_obj, payload)
         return True
     except OSError:
         return False
@@ -436,6 +500,14 @@ def _analysis_fallback_from_aoi(aoi_records, platform_key):
 
 
 def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, include_frameworks=True):
+    """Save complete findings and return small orchestration/status metadata."""
+    from core.analysis.spool import AnalysisSpool
+    with AnalysisSpool() as spool:
+        return _run_analyzer_stage_with_store(source_root, selected_platforms, framework_rules_map,
+                                              include_frameworks, spool)
+
+
+def _run_analyzer_stage_with_store(source_root, selected_platforms, framework_rules_map, include_frameworks, spool):
     analyzers = {
         "python": py_analysis.run,
         "php": php_analysis.run,
@@ -522,7 +594,9 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
         except (TypeError, ValueError):
             runner_accepts_progress = False
         target_started_at = time.time()
+        last_analysis_progress = {}
         def _analysis_progress(payload):
+            last_analysis_progress.update(payload)
             phase = str(payload.get("phase", "running") or "running")
             current_file = str(payload.get("current_file", "") or "")
             current_function = str(payload.get("current_function", "") or "")
@@ -582,7 +656,7 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
         })
         result.update_scan_summary_many({
             "analyzer_summary.current_target": platform,
-            "analyzer_summary.last_heartbeat_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "analyzer_summary.last_heartbeat_at": get_now().isoformat(),
             "analyzer_summary.heartbeat_message": heartbeat_message,
         })
         print(f"     [-] Analyzer Target      : {platform} ({index}/{total_platform_targets})")
@@ -628,7 +702,7 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
                         )
                         result.update_scan_summary_many({
                             "analyzer_summary.current_target": platform,
-                            "analyzer_summary.last_heartbeat_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            "analyzer_summary.last_heartbeat_at": get_now().isoformat(),
                             "analyzer_summary.heartbeat_message": heartbeat,
                         })
 
@@ -639,18 +713,27 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
                         flow_json_path, flow_html_path = runner(source_root, progress_callback=_analysis_progress)
                     else:
                         flow_json_path, flow_html_path = runner(source_root)
-                    flow_items = _safe_load_json(flow_json_path, [])
+                    _analysis_progress({'phase': 'reading_analyzer_results',
+                                        'current_file': str(flow_json_path), 'current_function': ''})
+                    from utils.json_io import iter_json_array
+                    flow_items = spool.add(
+                        (analysis_report.flow_finding(flow) for flow in iter_json_array(flow_json_path)
+                         if isinstance(flow, dict)),
+                        score=lambda finding: _normalize_confidence_score(finding.get('risk_score'), default=55))
                     cache[canonical] = {
                         "ok": True,
-                        "flows": flow_items if isinstance(flow_items, list) else [],
+                        "flows": flow_items,
                         "json_path": str(flow_json_path),
                         "html_path": str(flow_html_path) if flow_html_path else "",
                     }
                 except Exception as exc:
-                    print(f"     [!] Analyzer failed      : {platform}: {exc}", flush=True)
+                    error_message = analysis_dispatch.analyzer_exception_message(exc)
+                    print(f"     [!] Analyzer failed      : {platform}: {error_message}", flush=True)
                     cache[canonical] = {
                         "ok": False,
-                        "error": str(exc),
+                        "error": error_message,
+                        "failure_context": {key: last_analysis_progress.get(key, '') for key in
+                                            ('phase', 'current_file', 'current_function')},
                     }
                 finally:
                     heartbeat_stop.set()
@@ -699,25 +782,20 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
                 # Flow analyzers supply evidence to Advanced Analysis. Vulnerability
                 # decisions are owned by RDL v2, not a second sink-name classifier.
                 entry["vulnerability_engine"] = "rdl_v2"
-                scores = []
-                for flow in cache_entry.get("flows", []):
-                    if not isinstance(flow, dict):
-                        continue
-                    score = _normalize_confidence_score(flow.get("risk_score"), default=55)
-                    scores.append(score)
-                    entry["findings"].append(analysis_report.flow_finding(flow))
-                if scores:
-                    entry["confidence_score"] = int(round(sum(scores) / len(scores)))
+                entry['findings'] = cache_entry['flows']
+                if entry['findings']:
+                    entry["confidence_score"] = int(round(entry['findings'].score_sum / len(entry['findings'])))
                     entry["confidence_label"] = _confidence_label(entry["confidence_score"])
             else:
                 entry["status"] = "failed"
                 entry["error"] = cache_entry.get("error", "analysis failed")
+                entry["failure_context"] = cache_entry.get("failure_context", {})
 
         if not entry["findings"]:
             fallback_findings, fallback_score = _analysis_fallback_from_aoi(aoi_records, platform)
             for finding in fallback_findings:
                 finding["analysis_kind"] = "heuristic"
-            entry["findings"] = fallback_findings
+            entry["findings"] = spool.add(fallback_findings) if fallback_findings else []
             if fallback_score:
                 entry["confidence_score"] = fallback_score
                 entry["confidence_label"] = _confidence_label(fallback_score)
@@ -730,7 +808,7 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
         results_payload.append(entry)
         result.update_scan_summary_many({
             "analyzer_summary.platform_targets_completed": index,
-            "analyzer_summary.last_heartbeat_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "analyzer_summary.last_heartbeat_at": get_now().isoformat(),
             "analyzer_summary.heartbeat_message": f"Analyzer finished target {platform} ({index}/{total_platform_targets})",
         })
         _update_live_progress(
@@ -764,6 +842,8 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
                         fw_findings = inherited_findings[:20]
                     else:
                         fw_findings, inherited_score = _analysis_fallback_from_aoi(aoi_records, platform_key)
+                        if fw_findings:
+                            fw_findings = spool.add(fw_findings)
 
                     fw_entry_payload = {
                         "target_type": "framework",
@@ -782,11 +862,11 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
                     }
                     results_payload.append(fw_entry_payload)
 
-    total_findings = sum(len(item.get("findings", [])) for item in results_payload)
+    total_findings = spool.unique_count()
     taint_targets = len([item for item in results_payload if item.get("engine") == "dataflow_controlflow"])
     summary = {
         "enabled": True,
-        "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "generated_at": get_now().isoformat(),
         "targets_total": len(results_payload),
         "targets_analyzed": len([item for item in results_payload if item.get("status") in {"completed", "no_findings"}]),
         "targets_failed": len([item for item in results_payload if item.get("status") == "failed"]),
@@ -796,19 +876,18 @@ def _run_analyzer_stage(source_root, selected_platforms, framework_rules_map, in
         "platform_targets_total": total_platform_targets,
         "platform_targets_completed": total_platform_targets,
         "current_target": "",
-        "last_heartbeat_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "last_heartbeat_at": get_now().isoformat(),
         "heartbeat_message": "Analyzer completed with target failures" if any(item.get("status") == "failed" for item in results_payload) else "Analyzer completed",
-    }
-
-    output_payload = {
-        "summary": summary,
-        "results": results_payload,
     }
 
     output_path = Path(state.outputAnalysis_JSON)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(output_payload, indent=2), encoding="utf-8")
-    return output_payload
+    spool.write(output_path, summary, results_payload)
+    # The CLI needs status/counts, not another copy of the persisted evidence.
+    # File-backed rows are intentionally scoped to this stage's context manager.
+    return {'summary': summary, 'results': [
+        dict({key: value for key, value in entry.items() if key != 'findings'},
+             finding_count=len(entry['findings'])) for entry in results_payload]}
 
 scan_state_mgr = ScanStateManager(
     state_file=state_file_path,
@@ -845,10 +924,12 @@ def _repository_progress(payload):
     current_index = int(payload.get("current_index", 0) or 0)
     force = current_index == 0 or phase.endswith(("_ready", "_detected"))
     for metric in _repository_progress_totals:
-        _repository_progress_totals[metric] = max(
-            _repository_progress_totals[metric],
-            int(payload.get(metric, 0) or 0),
-        )
+        value = int(payload.get(metric, 0) or 0)
+        if metric == "files_selected" and phase == "inventory_ready":
+            # Discovery's unique selection supersedes reconnaissance candidates.
+            _repository_progress_totals[metric] = value
+        else:
+            _repository_progress_totals[metric] = max(_repository_progress_totals[metric], value)
     _update_live_progress(
         force=force,
         stage=stage,
@@ -914,31 +995,15 @@ elif results.rules_filetypes is not None:
     rutils.list_rules_filetypes(results.rules_filetypes)
     sys.exit(0)
 
-# Priority #1 - recon/estimate only
-if (results.recon or results.estimate) and results.target_dir and not results.rule_file:
+# Recon-only mode does not produce a review-effort plan.
+if results.recon and results.target_dir and not results.rule_file:
     print(constants.AUTHOR_BANNER.format(version=version))
     if not path.isdir(results.target_dir):
         print("\nInvalid target directory :" + results.target_dir + "\n")
         cli.tool_usage("invalid_dir")
         sys.exit(1)
-    targetdir = results.target_dir
-    if results.recon and not results.estimate:
-        rec.recon(targetdir, False, strict_mode=results.recon_strict, progress_callback=_repository_progress)
-        sys.exit(1)
-    elif results.estimate and not results.recon:
-        _, recSummary = rec.recon(targetdir, False, strict_mode=results.recon_strict, progress_callback=_repository_progress)
-        try:
-            estimate.effort_estimator(recSummary)
-        except (ValueError, OSError, KeyError) as exc:
-            print(f"     [-] Effort estimation skipped: {exc}")
-        sys.exit(1)
-    else:
-        _, recSummary = rec.recon(targetdir, False, strict_mode=results.recon_strict, progress_callback=_repository_progress)
-        try:
-            estimate.effort_estimator(recSummary)
-        except (ValueError, OSError, KeyError) as exc:
-            print(f"     [-] Effort estimation skipped: {exc}")
-        sys.exit(1)
+    rec.recon(results.target_dir, False, strict_mode=results.recon_strict, progress_callback=_repository_progress)
+    sys.exit(0)
 
 # Priority #2 - rule based scan
 elif results.rule_file:
@@ -969,6 +1034,8 @@ elif results.rule_file:
     result.update_scan_summary("inputs_received.run_id", state.run_id or run_output_id)
     result.update_scan_summary("inputs_received.report_root", str(state.reports_dirpath))
     result.update_scan_summary("inputs_received.rdl_engine", results.rdl_engine)
+    result.update_scan_summary("inputs_received.rule_mode", results.rule_mode or results.rdl_engine)
+    result.update_scan_summary("inputs_received.report_audience", results.report_audience)
     result.update_scan_summary("inputs_received.custom_rdl", results.custom_rdl)
     result.update_scan_summary(
         "inputs_received.rdl_v2_shadow_enabled",
@@ -1056,7 +1123,7 @@ if original_rule_file and original_rule_file.lower() == "auto":
 
 codebase = results.file_types
 selected_rule_platforms = [p.strip() for p in str(results.rule_file).split(",") if p.strip()]
-framework_rule_files = discover.detect_framework_rule_files(results.target_dir, selected_rule_platforms)
+framework_rule_files = discover.detect_framework_rule_files(results.target_dir, selected_rule_platforms, progress_callback=_repository_progress)
 framework_summary = {
     platform: [
         {
@@ -1116,7 +1183,7 @@ for fw_entries in framework_rule_files.values():
 total_rules_loaded = sum(map(int, rule_counts)) + common_rules_total + framework_rules_total
 
 cli.section_print(f"[*] Rules Loaded")
-print(f"     [-] RDL Engines          : {results.rdl_engine}" + (" (v2 experimental)" if results.rdl_engine != "v1" else ""))
+print(f"     [-] Rule Mode            : {results.rule_mode or results.rdl_engine}")
 print(f"     [-] Platform Rules       : {platform_rules_total}")
 print(f"     [-] Framework Rules      : {framework_rules_total}")
 print(f"     [-] Common Rules         : {common_rules_total}")
@@ -1141,6 +1208,7 @@ if results.rule_file:
         "exclude_types": results.exclude_types,
         "exclude_keywords": results.exclude_keywords,
         "rdl_engine": results.rdl_engine,
+        "rule_mode": results.rule_mode or results.rdl_engine,
     }
     scan_config = {
         "state_file": str(state_file_path),
@@ -1149,6 +1217,7 @@ if results.rule_file:
         "persist_interval_seconds": state_cfg["persist_interval_seconds"],
         "rule_engine": state.ruleEngine,
         "rdl_engine": results.rdl_engine,
+        "rule_mode": results.rule_mode or results.rdl_engine,
         "project_output_id": project_output_id,
         "run_output_id": run_output_id,
     }
@@ -1179,7 +1248,8 @@ if results.rule_file:
 
 sourcepath = Path(results.target_dir)
 state.start_time = time.time()
-state.start_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+state.start_timestamp = get_now().isoformat()
+result.update_scan_summary_many({'display.' + key: value for key, value in display.items()})
 
 sCnt = 0
 cli.section_print("[*] Scanner Initiated")
@@ -1224,18 +1294,6 @@ else:
         "master_file_paths": str(master_file_paths),
         "platform_file_paths": [str(p) for p in platform_file_paths],
     })
-
-    # Effort estimation: requires recon summary; run recon now if not already done.
-    if results.estimate:
-        sCnt += 1
-        cli.section_print(f"[*] [Stage {sCnt}] Effort Estimation")
-        if not results.recon:
-            print("     [-] Running recon to generate file inventory for estimation...")
-            rec.recon(results.target_dir, True, strict_mode=results.recon_strict, progress_callback=_repository_progress)
-        try:
-            estimate.effort_estimator(str(state.reconSummary_Fpath))
-        except (ValueError, OSError, KeyError) as exc:
-            print(f"     [-] Effort estimation skipped: {exc}")
 
 ###### [Stage 2 or 3] Pattern Matching & Analysis ######
 sCnt += 1
@@ -1323,6 +1381,8 @@ if results.rule_file.lower() not in ['common']:
         out_file_path.write_text("\n".join(selected) + ("\n" if selected else ""), encoding="utf-8")
         return out_file_path, len(selected)
 
+    pattern_overlay_seen = set()
+    native_pattern_overlay_summary = {}
     for index, (platform, rules_main_path) in enumerate(rules_main.items()):
         if platform.upper() in completed_platforms:
             print(f"\033[92m     --> Skipping {platform} (already completed in checkpoint)\033[0m")
@@ -1372,12 +1432,32 @@ if results.rule_file.lower() not in ['common']:
                     source_unmatched_rules.extend(fw_unmatched)
                     applied_fw_rule_paths.add(fw_rule_key)
                     f_targetfiles.seek(0)
+            if results.rdl_engine != 'v2':
+                from core.mobile_scope import pattern_overlays
+                from io import StringIO
+                selected_files = Path(platform_file_path).read_text(encoding='utf-8').splitlines()
+                for overlay_pack, overlay_files in pattern_overlays(state.root_dir, rules_main_path, selected_files, list(rules_main.values()) + [entry['path'] for entries in framework_rule_files.values() for entry in entries]):
+                    overlay_files = [name for name in overlay_files if (str(overlay_pack), name) not in pattern_overlay_seen]
+                    if not overlay_files:
+                        continue
+                    pattern_overlay_seen.update((str(overlay_pack), name) for name in overlay_files)
+                    overlay_info = native_pattern_overlay_summary.setdefault(str(overlay_pack), dict(pack=str(overlay_pack), rules=rutils.rules_count(overlay_pack), files=0))
+                    overlay_info['files'] += len(overlay_files)
+                    print(f"     --> Applying native Pattern Rules: {overlay_pack.name} ({len(overlay_files)} files)")
+                    matched, unmatched = parser.source_parser(overlay_pack, StringIO('\n'.join(overlay_files)),
+                        findings_json_path=state.outputAoI_JSON, progress_callback=_source_progress)
+                    source_matched_rules.extend(matched)
+                    source_unmatched_rules.extend(unmatched)
             completed_platforms.add(platform.upper())
             scan_state_mgr.mark_platform_completed(platform.upper())
             scan_state_mgr.update_stage("pattern_matching", "running", {
                 "completed_platforms": sorted(completed_platforms),
                 "common_rules_done": common_rules_done,
             })
+
+if results.rdl_engine != 'v2' and locals().get('native_pattern_overlay_summary'):
+    result.update_scan_summary('inputs_received.native_pattern_overlays', list(native_pattern_overlay_summary.values()))
+    result.update_scan_summary('inputs_received.total_rules_loaded', total_rules_loaded + sum(item['rules'] for item in native_pattern_overlay_summary.values()))
 
 # Common rules
 if common_rules_done:
@@ -1398,6 +1478,18 @@ else:
 
 source_matched_rules.extend(common_matched_rules)
 source_unmatched_rules.extend(common_unmatched_rules)
+coverage_path = state.runtime_dirpath / 'analysis_coverage.json'
+if coverage_path.exists():
+    from core.analysis_coverage import publish_findings, TITLE as coverage_title
+    coverage_report = json.loads(coverage_path.read_text(encoding='utf-8'))
+    result.update_scan_summary_many({
+        'analysis_coverage.status': coverage_report['status'],
+        'analysis_coverage.affected_files': coverage_report['affected_files'],
+    })
+    if publish_findings(coverage_report, state.outputAoI_JSON):
+        source_matched_rules.append(coverage_title)
+        state.rulesMatchCnt += 1
+        print(f"     [!] Incomplete source analysis: {coverage_report['affected_files']} affected files; see {coverage_title} finding for required actions.")
 print("\033[92m     --- Pattern Matching Summary ---\033[0m")
 scan_state_mgr.update_stage("pattern_matching", "completed", {
     "completed_platforms": sorted(completed_platforms),
@@ -1490,13 +1582,24 @@ if default_shadow_runner(state.root_dir).enabled:
     except Exception as exc:
         print("     [!] Source cross-reference index:", exc)
 
+if default_shadow_runner(state.root_dir).enabled or analysis_enabled_for_run:
+    try:
+        from core.rdl.program_graphs import build_catalog, INDEX_NAME as PROGRAM_GRAPH_INDEX
+        from core.rdl.xref import write_index
+        _update_live_progress(force=True, stage="analysis", status="running", message="Saving CFG and DFG evidence")
+        program_graphs = build_catalog(results.target_dir)
+        write_index(state.runtime_dirpath / PROGRAM_GRAPH_INDEX, program_graphs)
+        print("     [-] Saved CFG / DFG files  :", program_graphs['summary']['files'])
+    except Exception as exc:
+        print("     [!] CFG / DFG evidence:", exc)
+
 os.unlink(master_file_paths)
 scan_state_mgr.mark_path_analysis_completed()
 
 cli.section_print(f"[*] {'Rule Scan Timeline' if analysis_enabled_for_run else 'Scanning Timeline'}")
-print("    [-] Scan start time     : " + str(state.start_timestamp))
-end_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-print("    [-] Scan end time       : " + str(end_timestamp))
+print("    [-] Scan start time     : " + format_datetime(state.start_timestamp))
+end_timestamp = get_now().isoformat()
+print("    [-] Scan end time       : " + format_datetime(end_timestamp))
 hours, rem = divmod(time.time() - state.start_time, 3600)
 minutes, seconds = divmod(rem, 60)
 seconds, milliseconds = str(seconds).split('.')
@@ -1557,8 +1660,8 @@ if analysis_enabled_for_run:
         result.update_scan_summary("analyzer_summary.findings_identified", summary.get("findings_identified", 0))
         result.update_scan_summary("analyzer_summary.output_json", str(state.outputAnalysis_JSON))
     except Exception as exc:
-        analyzer_error_message = str(exc)
-        print(f"[!] Analyzer stage failed: {exc}")
+        analyzer_error_message = analysis_dispatch.analyzer_exception_message(exc)
+        print(f"[!] Analyzer stage failed: {analyzer_error_message}")
         scan_state_mgr.update_stage("analysis", "failed", {"error": str(exc)})
         result.update_scan_summary("analyzer_summary.enabled", False)
         result.update_scan_summary("analyzer_summary.taint_targets", 0)
@@ -1566,6 +1669,20 @@ if analysis_enabled_for_run:
 else:
     result.update_scan_summary("analyzer_summary.enabled", False)
     result.update_scan_summary("analyzer_summary.taint_targets", 0)
+
+mobile_platforms = {'android','ios','reactnative','flutter','cordova','ionic','nativescript','xamarin','maui','kmp'}
+if mobile_platforms.intersection(str(p).lower() for p in selected_rule_platforms):
+    try:
+        from core.mobile_project import write_review, retained_outcomes
+        mobile_review = write_review(sourcepath, Path(state.outputAoI_JSON).parent / 'mobile_review.json',
+                                     evaluation_counts=retained_outcomes(state.runtime_dirpath / 'rdl_shadow_comparisons.jsonl'))
+        result.update_scan_summary_many({'mobile_review.status': mobile_review['state'],
+            'mobile_review.coverage': mobile_review['coverage'],
+            'mobile_review.contracts': sum(len(mobile_review[k]) for k in ('privacy','backup','lifecycle','bridges','api_contracts','control_contracts'))})
+        print('     [-] Mobile review evidence: mobile_review.json / mobile_review.html')
+    except Exception as exc:
+        result.update_scan_summary_many({'mobile_review.status':'incomplete','mobile_review.error':str(exc)})
+        print('     [!] Mobile review evidence incomplete:',exc)
 
 # Re-snapshot the report-facing summary so the analyzer stage's results
 # (only known after this point) reach reports/.../data/summary.json,
@@ -1575,6 +1692,16 @@ parser.gen_scan_summary_text(state.scanSummary_Fpath)
 ###### [Stage 5] Generate Reports ######
 if results.review_config:
     _apply_review_config_to_outputs(results.review_config)
+
+if results.estimate:
+    cli.section_print('[*] Review Effort Planning')
+    try:
+        effort_plan = estimate.effort_estimator(mode=results.estimate_mode,
+            domains=results.estimate_domain, calibration=estimate_calibration_samples, assumptions=estimate_assumptions)
+        print('     [-] Review scenario     :', effort_plan['mode'])
+        print('     [-] Planning hours      :', effort_plan['total_hours'] or 'Not estimable from available measurements')
+    except (ValueError, OSError, KeyError) as exc:
+        print(f'     [!] Effort planning failed: {exc}')
 
 scan_state_mgr.update_stage("reporting", "running")
 _update_live_progress(
@@ -1606,7 +1733,7 @@ shadow_summary = summarize_shadow_records(state.runtime_dirpath / "rdl_shadow_co
 shadow_enabled = default_shadow_runner(state.root_dir).enabled
 if shadow_enabled:
     print("")
-    print("[*] RDL v2 review results")
+    print("[*] Recorded rule evidence")
     print("     [-] Retained results      :", shadow_summary["total"])
     print("     [-] Unique review leads   :", shadow_summary.get('review_leads', 0))
     print("     [-] Unresolved analysis   :", sum(shadow_summary['statuses'].get(key, 0) for key in ('INDETERMINATE', 'RULE_ERROR', 'SHADOW_ERROR')))
@@ -1624,12 +1751,19 @@ if not web_scan() and "pdf" not in selected_formats:
     print("         dakshscra.py --pdf-from-json --json-input-dir ./reports/<project-id>/<run-id>/data --pdf-single-only")
 
 cutils.update_project_config("","")     # Clean up project details in the config file
+final_counters = dict(
+    rules_match_count=state.rulesMatchCnt,
+    suppressed_count=state.suppressedFindingsCnt,
+    paths_match_count=state.rulesPathsMatchCnt,
+    parse_error_count=state.parseErrorCnt,
+)
 if analyzer_error_message:
     scan_state_mgr.mark_failed(analyzer_error_message)
-    _update_live_progress(force=True, stage="failed", status="failed", message=analyzer_error_message + "; partial results saved")
+    _update_live_progress(force=True, stage="failed", status="failed", message=analyzer_error_message + "; partial results saved", **final_counters)
 else:
     scan_state_mgr.mark_completed()
-    _update_live_progress(force=True, stage="completed", status="completed", message="Scan completed")
+    _update_live_progress(force=True, stage="completed", status="completed", message="Scan completed", **final_counters)
+parser.gen_scan_summary_text(state.scanSummary_Fpath)
 scan_state_mgr.uninstall_signal_handlers()
 
 if not os.environ.get("DAKSH_RUNTIME_DIR", "").strip():

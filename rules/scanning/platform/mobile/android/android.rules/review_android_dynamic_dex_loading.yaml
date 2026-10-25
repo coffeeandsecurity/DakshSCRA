@@ -1,0 +1,40 @@
+format: daksh-pattern-rule/v1
+id: mobile.android.core.review_android_dynamic_dex_loading
+title: "Dynamic Code Loading Review"
+order: 57
+category: CODE Review
+detection:
+  pattern: \b(?:new\s+)?(?:DexClassLoader|PathClassLoader|InMemoryDexClassLoader|DexFile\s*\.\s*loadDex)\s*\(
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: The code dynamically loads executable material or alters runtime method dispatch. Resolve the source,
+    integrity checks, and intended use of that material. Identify the untrusted input or update supplier and the
+    precise executable, object or destination file it controls.
+  impact: A party able to replace loaded code or control a runtime hook may execute with the application’s privileges,
+    inspect private data, or alter security decisions. Legitimate bundled code and instrumentation do not establish
+    an attack.
+  remediation: Load only approved code from trusted locations, verify integrity and authenticity before loading,
+    and keep runtime hooks confined to documented, authorized behavior. Verify signed updates and compatibility,
+    restrict decoded types, and enforce canonical destination containment before extraction or execution.
+  reviewer: Test tampered updates, downgrade/replay, absolute paths, traversal, sibling-prefix and symlink escapes,
+    size limits and partial failure; an unrelated validation call does not protect this operation.
+  review_steps:
+  - Trace the matched candidate to its actual value, caller or resource.
+  - Test tampered updates, downgrade/replay, absolute paths, traversal, sibling-prefix and symlink escapes, size
+    limits and partial failure; an unrelated validation call does not protect this operation.
+  - Resolve release configuration and runtime assumptions before confirming an issue.
+  recommendations:
+  - Load only approved code from trusted locations, verify integrity and authenticity before loading, and keep runtime
+    hooks confined to documented, authorized behavior. Verify signed updates and compatibility, restrict decoded
+    types, and enforce canonical destination containment before extraction or execution.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

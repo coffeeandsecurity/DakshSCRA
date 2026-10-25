@@ -1,0 +1,38 @@
+format: daksh-pattern-rule/v1
+id: mobile.ios.core.review_ios_insecure_unarchive_surface
+title: Unrestricted Objective-C Object Unarchive
+order: 30
+category: CODE Review
+detection:
+  pattern: '\b(?:unarchiveObjectWithData|unarchiveObjectWithFile|unarchiveTopLevelObjectWithData)\s*[:(]|\brequiresSecureCoding\s*=\s*(?:false|NO)\b|\bunarchiveObject\s*\(\s*(?:with|withFile)\s*:'
+  conditions:
+  - WHEN PRESENT ${pattern}
+reporting:
+  type: area_of_interest
+  reason: Pattern candidate for manual investigation.
+  description: Deserialization permits payload-controlled object types or unrestricted object reconstruction. Identify
+    the untrusted input or update supplier and the precise executable, object or destination file it controls.
+  impact: An attacker supplying a serialized payload may instantiate unexpected types, trigger dangerous object
+    behavior, or execute code when reachable gadget types are present.
+  remediation: Use a data-only deserialization model with explicit permitted types. Disable automatic polymorphic
+    type resolution for untrusted input and avoid unrestricted object unarchiving. Verify signed updates and compatibility,
+    restrict decoded types, and enforce canonical destination containment before extraction or execution.
+  reviewer: Test tampered updates, downgrade/replay, absolute paths, traversal, sibling-prefix and symlink escapes,
+    size limits and partial failure; an unrelated validation call does not protect this operation.
+  review_steps:
+  - Trace the matched candidate to its actual value, caller or resource.
+  - Test tampered updates, downgrade/replay, absolute paths, traversal, sibling-prefix and symlink escapes, size
+    limits and partial failure; an unrelated validation call does not protect this operation.
+  - Resolve release configuration and runtime assumptions before confirming an issue.
+  recommendations:
+  - Use a data-only deserialization model with explicit permitted types. Disable automatic polymorphic type resolution
+    for untrusted input and avoid unrestricted object unarchiving. Verify signed updates and compatibility, restrict
+    decoded types, and enforce canonical destination containment before extraction or execution.
+scan_config:
+  match_mode: file
+  context_lines_before: '3'
+  context_lines_after: '3'
+  aggregate: none
+  highlight_enabled: 'true'
+  highlight_target: match
+  highlight_color: red

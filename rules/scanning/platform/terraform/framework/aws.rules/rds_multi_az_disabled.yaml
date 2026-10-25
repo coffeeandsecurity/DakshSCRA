@@ -1,0 +1,40 @@
+format: daksh-pattern-rule/v1
+id: terraform.framework.aws.rds_multi_az_disabled
+title: RDS Multi-AZ Disabled
+order: 5
+category: AWS Database Security
+detection:
+  pattern: resource\s+"aws_db_instance"[^}]*multi_az\s*=\s*false
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:multi_az\s*=\s*false && MISSING:# intentional|# development|# staging|# cost
+reporting:
+  type: area_of_interest
+  reason: Detects production RDS instances with Multi-AZ failover disabled.
+  trace:
+  - Externalized rule logic for RDS Multi-AZ Disabled.
+  description: The database configuration does not enable the multi-zone availability option.
+  impact: A zone outage or instance failure may cause a longer interruption of database-dependent services when
+    no equivalent failover or recovery mechanism exists.
+  remediation: Choose redundancy and tested recovery appropriate to availability requirements. Verify backup restoration
+    and failover behavior before relying on a single-zone deployment.
+  reviewer: Verify single-AZ configurations are limited to development or non-critical environments. This can be
+    confirmed as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - Inspect the matched construct in its containing function or configuration and identify the security-sensitive
+    behavior under review.
+  - Verify reachable callers, external influence and effective protections, including deployment overrides and failure
+    paths.
+  - Record concrete evidence for a confirmed issue or a justified suppression; retain an unresolved outcome when
+    the required evidence is unavailable.
+  recommendations:
+  - Apply the rule-specific correction above only after verifying the affected behavior and required control.
+  - Add a regression case for the unsafe condition and a valid protected case; verify the effective behavior in
+    the relevant deployment.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  context_lines_after: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: yellow

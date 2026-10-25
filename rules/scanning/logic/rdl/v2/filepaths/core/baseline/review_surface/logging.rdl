@@ -2,8 +2,7 @@ VERSION 2
 RULE baseline.filepaths.core.logging VERSION 1
 IN PATH
 WHEN TEXT_MATCHES "(?-i:(?:(?<![A-Za-z])(?i:logs?|logging|logger)(?=[A-Z_. /\\\\-]|$)|(?<=[a-z])(?:Log|Logging|Logger)(?=[A-Z_. /\\\\-]|$)))" "im"
-WHEN TEXT_MISSING "(?i)(/docs?/|/examples?/|/samples?/|/tests?/)" "im"
-REPORT "Logging"
+REPORT "Application Logging Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

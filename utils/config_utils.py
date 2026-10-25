@@ -107,32 +107,16 @@ def get_state_management_config():
 
 
 def get_display_config():
-    """
-    Get display settings (timezone) with sane defaults.
-    """
-    tool_cfg = get_tool_config()
-    display_cfg = tool_cfg.get("display", {}) if isinstance(tool_cfg, dict) else {}
-    if not isinstance(display_cfg, dict):
-        display_cfg = {}
-    return {
-        "timezone": str(display_cfg.get("timezone", "")).strip(),
-    }
+    from utils.datetime_utils import validate_display
+    return validate_display(get_tool_config().get("display", {}) or {})
 
 
 def get_now():
-    """
-    Return the current datetime in the configured timezone.
-    Falls back to server local time if no timezone is set or the value is invalid.
-    """
     from datetime import datetime
-    tz_name = get_display_config().get("timezone", "").strip()
-    if not tz_name:
-        return datetime.now()
-    try:
-        from zoneinfo import ZoneInfo
-        return datetime.now(ZoneInfo(tz_name))
-    except Exception:
-        return datetime.now()
+    from zoneinfo import ZoneInfo
+    from utils.datetime_utils import display_preferences
+    return datetime.now(ZoneInfo(display_preferences()["timezone"]))
+
 
 
 def get_analysis_config():

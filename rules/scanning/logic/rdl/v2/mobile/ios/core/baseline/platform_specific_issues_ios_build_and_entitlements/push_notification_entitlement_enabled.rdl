@@ -2,7 +2,6 @@ VERSION 2
 RULE baseline.mobile.ios.core.push_notification_entitlement_enabled VERSION 1
 IN FILE
 WHEN TEXT_MATCHES "aps-environment" "im"
-WHEN (TEXT_MATCHES "aps-environment|com\\.apple\\.developer\\.aps-environment" "im" AND TEXT_MISSING "# intentional|# required" "im")
 REPORT "Push Notification Entitlement Enabled"
 SEVERITY INFO
 CONFIDENCE LOW

@@ -1,4 +1,5 @@
 import FlowView from './FlowView'
+import { analyzerTraceStatus as normalizeTraceStatus, recordedAnalyzerPath as ensureSourceStep } from '../lib/analyzerEvidence'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { artifactUrl } from '../api'
 
@@ -118,10 +119,6 @@ function resolvedStepCode(step, flow) {
   return 'No analyzer code detail recorded for this step.'
 }
 
-function normalizeTraceStatus(flow) {
-  return String(flow?.trace_status || '').toLowerCase() === 'partial' ? 'partial' : 'complete'
-}
-
 function extractTaintSymbol(flow, path) {
   const candidates = []
   const externalCandidates = []
@@ -141,45 +138,13 @@ function extractTaintSymbol(flow, path) {
   return externalCandidates[0] || candidates[0] || 'tainted input'
 }
 
-function ensureSourceStep(flow) {
-  let path = Array.isArray(flow?.path) ? [...flow.path] : []
-  const primarySymbol = extractTaintSymbol(flow, path)
-
-  if (!path.some((step) => String(step?.role || '').toLowerCase() === 'source')) {
-    const first = path[0]
-    const inferredCode = String(first?.role || '').toLowerCase() === 'param'
-      ? `[inferred] The analyzer sees taint arriving at parameter \`${first?.code || primarySymbol}\`, but the exact framework receive step was not resolved statically.`
-      : `[inferred] The analyzer sees \`${primarySymbol}\` as tainted at this boundary, but the original receive step was not resolved statically.`
-    path = [{
-      file: flow.source || first?.file || flow.file || '',
-      line: first?.line || flow.source_line || '',
-      role: 'source',
-      code: inferredCode,
-      inferred: true,
-      source_symbol: primarySymbol,
-      variables: [primarySymbol],
-    }, ...path]
-  }
-
-  if (!path.some((step) => String(step?.role || '').toLowerCase() === 'sink')) {
-    path = [...path, {
-      file: flow.file || flow.sink_file || '',
-      line: flow.line || flow.sink_line || '',
-      role: 'sink',
-      code: flow.sink || flow.title || '[resolved sink]',
-    }]
-  }
-
-  return path
-}
-
 function summarizeTrace(flow, path) {
   const taintedInput = extractTaintSymbol(flow, path)
   const files = Array.from(new Set((path || []).map((step) => step.file).filter(Boolean)))
-  const inferredSource = (path || []).some((step) => step.inferred)
+  const inferredSource = !(path || []).some(step => String(step.role || '').toLowerCase() === 'source') || (path || []).some(step => step.inferred || String(step.code || '').startsWith('[inferred]'))
   const termination = (flow.termination_nodes || [])[0] || null
   const firstStep = path?.[0] || null
-  const sinkStep = [...(path || [])].reverse().find((step) => String(step?.role || '').toLowerCase() === 'sink') || path?.[path.length - 1] || null
+  const sinkStep = [...(path || [])].reverse().find((step) => String(step?.role || '').toLowerCase() === 'sink') || null
   const assignments = (path || []).filter((step) => ['assign', 'param'].includes(String(step?.role || '').toLowerCase()))
   const calls = (path || []).filter((step) => ['call', 'handoff'].includes(String(step?.role || '').toLowerCase()))
 
@@ -736,7 +701,7 @@ function buildModel(analysis) {
     if (result.engine === 'dataflow_controlflow') {
       if (target && !taintTargets.includes(target)) taintTargets.push(target)
       for (const finding of result.findings || []) {
-        if (finding.analysis_kind !== 'taint_flow') continue
+        if (!['taint_flow', 'unresolved_call'].includes(finding.analysis_kind)) continue
         rawFlows.push({ ...finding, target })
       }
     } else if (target && !heuristicTargets.includes(target)) {
@@ -753,7 +718,7 @@ function buildModel(analysis) {
     const cross_file = new Set(path.map((step) => step.file).filter(Boolean)).size > 1
     const graph = buildGraphModel({ ...flow, path, input_surface, attack_vectors })
     const sourceStep = path.find((step) => String(step.role || '').toLowerCase() === 'source') || path[0]
-    const sinkStep = [...path].reverse().find((step) => String(step.role || '').toLowerCase() === 'sink') || path[path.length - 1]
+    const sinkStep = [...path].reverse().find((step) => String(step.role || '').toLowerCase() === 'sink')
     const trace_summary = summarizeTrace(flow, path)
 
     return {
@@ -796,6 +761,7 @@ function buildModel(analysis) {
     total: flows.length,
     complete: flows.filter((flow) => flow.trace_status === 'complete').length,
     partial: flows.filter((flow) => flow.trace_status === 'partial').length,
+    unresolved: flows.filter((flow) => flow.analysis_kind === 'unresolved_call').length,
     crossFile: flows.filter((flow) => flow.cross_file).length,
   }
 
@@ -1246,7 +1212,7 @@ function TaintWorkspace({ sourceCatalog, selectedFlow, onSelectFlow, artifactInd
                 <button key={flowKey(flow)} className={`aa-mini-card aa-flow-pick${flowKey(flow) === flowKey(selectedFlow) ? ' active' : ''}`} onClick={() => onSelectFlow(flowKey(flow))}>
                   <strong>{flow.title || flow.sink || 'sink'}</strong>
                   <span>{shortLocation(flow.sink_file, flow.sink_line)}</span>
-                  <span>{flow.trace_status} · {flow.severity} · score {flow.risk_score}</span>
+                  <span>{flow.trace_status} · {flow.severity} · priority {flow.risk_score}</span>
                 </button>
               ))}
             </div>
@@ -1340,7 +1306,7 @@ function FlowDetail({ flow, artifactIndex, onOpenReport }) {
         <div className="aa-pill-row">
           <span className={`aa-pill severity ${flow.severity}`}>{flow.severity}</span>
           <span className={`aa-pill trace ${flow.trace_status}`}>{flow.trace_status}</span>
-          <span className="aa-pill plain">score {flow.risk_score}</span>
+          <span className="aa-pill plain">priority {flow.risk_score}</span>
         </div>
       </div>
 
@@ -1493,7 +1459,7 @@ function ReportSubtab({ artifactIndex, flow, model, onSelect }) {
                 <div className="aa-pill-row">
                   <span className={`aa-pill severity ${flow.severity}`}>{flow.severity}</span>
                   <span className={`aa-pill trace ${flow.trace_status}`}>{flow.trace_status}</span>
-                  <span className="aa-pill plain">score {flow.risk_score}</span>
+                  <span className="aa-pill plain">priority {flow.risk_score}</span>
                 </div>
               </div>
               <div className="aa-report-spotlight-grid">
@@ -1968,7 +1934,7 @@ function AttackVectorsSubtab({ vectors, vectorGroups, pentestTargets, onSelect }
                     <div className="aa-vector-flow-meta">
                       <span className="aa-tag">{flow.input_surface?.channel || 'code-path'}</span>
                       <span className={`aa-pill trace ${flow.trace_status}`}>{flow.trace_status}</span>
-                      <span className="aa-pill plain">score {flow.risk_score}</span>
+                      <span className="aa-pill plain">priority {flow.risk_score}</span>
                     </div>
                     <span>Source: {shortPath(flow.source) || 'unknown'} → Sink: {shortPath(flow.file) || 'unknown'}:{flow.line || '?'}</span>
                     {(flow.input_surface?.examples || []).length ? (
@@ -2119,6 +2085,13 @@ export default function AdvancedAnalysis({ analysis, artifactIndex, initialSecti
   return (
     <div className="aa-root">
       <CoverageNotice taintTargets={model.taintTargets} heuristicTargets={model.heuristicTargets} />
+
+      {model.stats.unresolved > 0 && (
+        <p role="status" className="muted">
+          {`${model.stats.unresolved} unresolved call ${model.stats.unresolved === 1 ? 'trace is' : 'traces are'} included for investigation.`}
+          {' '}These traces have no resolved sensitive sink and do not establish a vulnerability.
+        </p>
+      )}
 
       <div className="aa-subtabs" role="tablist" aria-label="Advanced Analysis sections">
         {subtabs.map((item) => (

@@ -3,7 +3,7 @@ RULE baseline.c.framework.freertos.freertos_freertos_privileged_api_review_marke
 IN FILE
 WHEN TEXT_MATCHES "vTaskPrioritySet\\(|xTaskCreate\\(|xQueueReceive\\(" "im"
 WHEN TEXT_MISSING "assert|check|verify|privilege_check|permission" "im"
-REPORT "Freertos FreeRTOS Privileged API Review Marker"
+REPORT "FreeRTOS Privileged API Review"
 SEVERITY INFO
 CONFIDENCE LOW
 WITH TRACE

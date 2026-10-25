@@ -83,6 +83,7 @@ function RdlTextTrace({ finding, fullSource, fullSink }) {
   }
   const sourcePath = finding.location?.path || finding.path || source?.location?.path
   return <div className="rdl-shared-trace">
+    {finding.rating_basis ? <p className="rdl-coverage-note"><strong>Rating context{finding.build_scope && finding.build_scope !== 'unresolved' ? ` · ${finding.build_scope}` : ''}:</strong> {finding.rating_basis}</p> : null}
     {source ? <p className="rdl-coverage-note"><strong>Confidence: {finding.confidence || 'Unspecified'}.</strong> {finding.confidence_reason}</p> : null}
     <div className="rdl-trace-overview">
       <div className="rdl-context-card"><span className="aa-simple-stage-title">{source ? 'Where received' : 'Selected source'}</span><strong>{source ? locationLabel(source.location) : finding.path_only ? shortPath(sourcePath) : locationLabel(finding.location)}</strong><code className="rdl-source-location">{source?.location?.path || sourcePath || 'No source location recorded'}</code>{source?.symbol ? <span className="aa-tag">{source.symbol}</span> : null}</div>
@@ -132,7 +133,8 @@ function RdlRuleEvidence({ finding }) {
   const locations = [...new Map(observed.map(step => [JSON.stringify(step.location), step])).values()]
   return <section className="rdl-evidence-only" aria-label="Recorded rule evidence">
     <h4>Recorded rule evidence</h4>
-    <p className="rdl-coverage-note">This result records source or configuration checks. No source-to-sink data flow was recorded.</p>
+    {finding.rating_basis ? <p className="rdl-coverage-note"><strong>Rating context{finding.build_scope && finding.build_scope !== 'unresolved' ? ` · ${finding.build_scope}` : ''}:</strong> {finding.rating_basis}</p> : null}
+    <p className="rdl-coverage-note">This result records source or configuration checks. No source-to-sink data flow was recorded, so a taint graph is unavailable. The Security impact section describes the potential consequence; it does not establish an executed attack. If inter-file analysis ran, inspect Advanced Analysis → Inter-file analyzer for its separately recorded paths.</p>
     {locations.map((step, index) => <div key={index}>
       <code className="rdl-source-location">{locationLabel(step.location)}</code>
       <RdlSourceEvidence finding={finding} step={step} title="Recorded source context" />
@@ -152,8 +154,10 @@ export default function RdlTrace({ finding }) {
   const numbers = new Map(flow.map((step, index) => [step.number, index + 1]).filter(([number]) => number != null))
   const blocks = (trace.blocks || []).map(block => ({ ...block, lines: (block.lines || []).map(line => ({ ...line, steps: (line.steps || []).map(number => numbers.get(number)).filter(number => number != null) })) }))
   const projected = { ...finding, evidence: steps, trace: { ...trace, steps, blocks } }
+  const graph = graphableFlow(projected)
   return <>
-    <FlowView steps={steps} graphSteps={graphableFlow(projected)} blocks={blocks} title="Recorded data-flow trace" note={[finding.confidence_reason, trace.protection_note, trace.review_note].filter(Boolean).join(' ')}>{({steps:visible,start}) => <RdlTextPage finding={projected} steps={visible} start={start}/>}</FlowView>
+    {!graph.length ? <p className="rdl-coverage-note">Only an input source was recorded. Propagation to another operation or a sensitive destination was not established, so no connected taint graph is available.</p> : null}
+    <FlowView steps={steps} graphSteps={graph} blocks={blocks} title="Recorded data-flow trace" note={[finding.confidence_reason, trace.protection_note, trace.review_note].filter(Boolean).join(' ')}>{({steps:visible,start}) => <RdlTextPage finding={projected} steps={visible} start={start}/>}</FlowView>
     {conditions.length ? <RuleConditions evidence={conditions} /> : null}
   </>
 }

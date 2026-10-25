@@ -1,0 +1,39 @@
+format: daksh-pattern-rule/v1
+id: php.core.mitigation_identified_xss
+title: "HTML Output Encoding Review"
+order: 21
+category: Effective/Standard Mitigations Implemented
+detection:
+  pattern: htmlentities
+  conditions:
+  - WHEN PRESENT ${pattern}
+  - WHEN EXPR PRESENT:htmlspecialchars|htmlentities|strip_tags|esc_html|h\s*\( && MISSING:test|example
+reporting:
+  type: area_of_interest
+  reason: Detects the presence of XSS mitigation using htmlentities function.
+  trace:
+  - 'Externalized rule logic for Mitigation Identified: XSS.'
+  description: The code contains a security-control marker. Its presence is a review surface rather than evidence
+    that the control is defective or consistently enforced.
+  impact: No adverse security consequence follows from the presence of a protection alone. If it is bypassed or
+    applied outside the correct context, the protected operation may still permit injection or unauthorized access.
+  remediation: Verify that the control applies to every relevant entry point and uses the required context and policy.
+    Retain effective protections; test bypass cases before recommending a change.
+  reviewer: Check reflected output contexts for proper encoding and safe rendering behavior. This can be confirmed
+    as an issue when the matched path is reachable and required controls are missing, weak, or inconsistent.
+  review_steps:
+  - 'Trace the matched value to its browser rendering context: text, attribute, URL, script or DOM operation.'
+  - Inspect the exact encoder or safe rendering API and any bypass of automatic escaping; verify it protects that
+    context.
+  - Distinguish literal trusted content from externally influenced markup. Record the reachable rendering path and
+    any effective sanitizer configuration.
+  recommendations:
+  - Use safe text or template APIs and context-appropriate encoding at the rendering boundary.
+  - If rich HTML is required, use a maintained sanitizer with a restricted policy; validate URL schemes and test
+    the actual browser output.
+scan_config:
+  match_mode: line
+  context_lines_before: '1'
+  aggregate: file
+  highlight_enabled: 'true'
+  highlight_color: green
