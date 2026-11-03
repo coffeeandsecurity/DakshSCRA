@@ -112,7 +112,6 @@ def main():
             print('If Docker reports a denied mount, allow that host directory in Docker Desktop file sharing and retry.', file=sys.stderr)
         elif args.detach:
             port = values.get('DAKSH_PORT') or '3030'
-            compose = ' '.join(base)
             print()
             print('Daksh SCRA Web UI is running.')
             print(f'  Web UI:  http://localhost:{port}   (host port {port} -> container port 80)')
@@ -123,7 +122,7 @@ def main():
             else:
                 print(f'  Sign in: username "{user}", initial password "Daksh@ChangeMe1" (prefilled on first run).')
             print('           You are required to set your own password right after the first sign-in.')
-            print(f'  Stop:    {compose} stop   (keeps your data; do not use "down -v")')
+            print('  Stop:    docker compose stop   (run from the project folder; keeps your data)')
         return result.returncode
     except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as exc:
         print(f'Unable to start Web UI: {exc}', file=sys.stderr)
