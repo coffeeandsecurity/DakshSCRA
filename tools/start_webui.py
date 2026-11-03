@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import re
 import string
 import subprocess
 import sys
@@ -109,6 +110,20 @@ def main():
         result = subprocess.run(cmd)
         if result.returncode:
             print('If Docker reports a denied mount, allow that host directory in Docker Desktop file sharing and retry.', file=sys.stderr)
+        elif args.detach:
+            port = values.get('DAKSH_PORT') or '3030'
+            compose = ' '.join(base)
+            print()
+            print('Daksh SCRA Web UI is running.')
+            print(f'  Web UI:  http://localhost:{port}   (host port {port} -> container port 80)')
+            print('  API:     internal only (reached through the Web UI; no host port is published)')
+            user = values.get('DAKSH_ADMIN_USERNAME') or 'admin'
+            if values.get('DAKSH_ADMIN_PASSWORD'):
+                print(f'  Sign in: username "{user}" and the DAKSH_ADMIN_PASSWORD from .env (prefilled on first run).')
+            else:
+                print(f'  Sign in: username "{user}", initial password "Daksh@ChangeMe1" (prefilled on first run).')
+            print('           You are required to set your own password right after the first sign-in.')
+            print(f'  Stop:    {compose} stop   (keeps your data; do not use "down -v")')
         return result.returncode
     except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as exc:
         print(f'Unable to start Web UI: {exc}', file=sys.stderr)

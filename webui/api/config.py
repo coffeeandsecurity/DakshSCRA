@@ -21,7 +21,11 @@ DATABASE_URL = os.getenv("DATABASE_URL", _DEFAULT_DB)
 # ── Authentication ────────────────────────────────────────────────────────
 SESSION_COOKIE_NAME = "daksh_session"
 ADMIN_USERNAME = os.getenv("DAKSH_ADMIN_USERNAME", "admin").strip() or "admin"
-ADMIN_PASSWORD = os.getenv("DAKSH_ADMIN_PASSWORD", "").strip()
+# Documented first-run password used when DAKSH_ADMIN_PASSWORD is not set. The
+# initial account is always flagged must_change_password, so it cannot be used
+# past the first login.
+DEFAULT_ADMIN_PASSWORD = "Daksh@ChangeMe1"
+ADMIN_PASSWORD = os.getenv("DAKSH_ADMIN_PASSWORD", "").strip() or DEFAULT_ADMIN_PASSWORD
 COOKIE_SECURE = os.getenv("DAKSH_COOKIE_SECURE", "false").strip().lower() == "true"
 try:
     SESSION_TTL_HOURS = int(os.getenv("DAKSH_SESSION_TTL_HOURS", "168"))

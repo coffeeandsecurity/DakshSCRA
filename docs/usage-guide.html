@@ -810,9 +810,10 @@ or reconstruct missing historical evidence.</p>
 <h3 id="logging-in">Logging In</h3>
 <p>The Web UI requires an account. On first startup, an initial admin account
 is created from <code>DAKSH_ADMIN_USERNAME</code>/<code>DAKSH_ADMIN_PASSWORD</code> (set these in
-<code>.env</code>); if <code>DAKSH_ADMIN_PASSWORD</code> is left unset, a random password is
-generated and printed once to the API's startup log - save it, since it
-cannot be recovered afterward. An admin account can create further accounts
+<code>.env</code>); if <code>DAKSH_ADMIN_PASSWORD</code> is left unset, the initial password is
+<code>Daksh@ChangeMe1</code>. The login page pre-fills it on first run and a password change is
+required immediately after signing in. Set <code>DAKSH_ADMIN_PASSWORD</code> before
+first start if the portal is reachable by others. An admin account can create further accounts
 via the <code>POST /api/v1/auth/users</code> API endpoint. See <code>.env.example</code> for the
 full list of authentication-related settings (session lifetime, cookie
 security, CORS for <code>npm run dev</code>).</p>

@@ -106,8 +106,12 @@ export default function LoginPage({ onLoggedIn }) {
           <div className="auth-form-logo-mobile">
             <BrandLogo size={48} />
           </div>
-          <div className="auth-heading">Welcome back</div>
-          <div className="auth-subheading">Sign in to your DAKSH SCRA account to continue.</div>
+          <div className="auth-heading">{firstTimeSetup ? 'Welcome to DAKSH SCRA' : 'Welcome back'}</div>
+          <div className="auth-subheading">
+            {firstTimeSetup
+              ? 'Sign in with the initial administrator account to finish setup.'
+              : 'Sign in to your DAKSH SCRA account to continue.'}
+          </div>
 
           <form onSubmit={handleSubmit}>
             {firstTimeSetup && !error && (
@@ -117,8 +121,8 @@ export default function LoginPage({ onLoggedIn }) {
                 </svg>
                 {defaultPassword ? (
                   <span>
-                    First-time setup detected. The configured credentials have been prefilled.
-                    Sign in as <strong>{username}</strong>, then set your own password.
+                    First-time setup detected. The initial credentials have been prefilled.
+                    Sign in as <strong>{username}</strong>; you will be required to set your own password right away.
                   </span>
                 ) : (
                   <span>

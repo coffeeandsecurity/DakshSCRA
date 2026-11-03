@@ -659,11 +659,9 @@ def _user_out(user: User) -> UserOut:
 def get_bootstrap_info(db: Session = Depends(db_session)):
     # Public, and only reveals anything while the bootstrapped admin
     # account is still on its assigned password. default_password only
-    # ever surfaces the *configured* DAKSH_ADMIN_PASSWORD - if that env
-    # var was left unset at bootstrap, a one-time random password was
-    # generated and printed to the startup log instead, and there is no
-    # way to recover it here, so this deliberately stays null in that case
-    # rather than guessing.
+    # ever surfaces the initial password (the configured
+    # DAKSH_ADMIN_PASSWORD, or the documented default when unset), and the
+    # account is forced to change it at first login.
     admin = db.query(User).filter(User.username == ADMIN_USERNAME).first()
     pending = bool(admin and admin.must_change_password)
     return BootstrapInfo(

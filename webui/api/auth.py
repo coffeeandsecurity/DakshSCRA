@@ -7,7 +7,7 @@ import bcrypt
 from fastapi import Cookie, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 
-from .config import ADMIN_PASSWORD, ADMIN_USERNAME, COOKIE_SECURE, SESSION_COOKIE_NAME, SESSION_TTL_HOURS
+from .config import ADMIN_PASSWORD, DEFAULT_ADMIN_PASSWORD, ADMIN_USERNAME, COOKIE_SECURE, SESSION_COOKIE_NAME, SESSION_TTL_HOURS
 from .database import SessionLocal
 from .models import User, UserSession
 
@@ -127,18 +127,15 @@ def require_password_ok(user: User = Depends(get_current_user)) -> User:
 def bootstrap_admin_user(db: Session) -> None:
     """Create the first admin account on startup if no users exist yet.
 
-    Uses DAKSH_ADMIN_USERNAME/DAKSH_ADMIN_PASSWORD if set; otherwise
-    generates a random password and prints it once so the tool never
-    ships with a hardcoded default credential.
+    Uses DAKSH_ADMIN_USERNAME/DAKSH_ADMIN_PASSWORD if set; otherwise the
+    documented default password. Either way the account is flagged
+    must_change_password, so the first login forces a new password.
     """
     if db.query(User).count() > 0:
         return
 
     password = ADMIN_PASSWORD
-    generated = False
-    if not password:
-        password = secrets.token_urlsafe(18)
-        generated = True
+    using_default = password == DEFAULT_ADMIN_PASSWORD
 
     admin = User(
         username=ADMIN_USERNAME,
@@ -150,7 +147,7 @@ def bootstrap_admin_user(db: Session) -> None:
     db.commit()
 
     print(f"\n  Created initial admin account: {ADMIN_USERNAME}")
-    if generated:
-        print(f"  Generated password (save this - it will not be shown again): {password}\n")
+    if using_default:
+        print("  Initial password: the documented default. A password change is required at first login.\n")
     else:
-        print("  Password set from DAKSH_ADMIN_PASSWORD.\n")
+        print("  Password set from DAKSH_ADMIN_PASSWORD. A password change is required at first login.\n")

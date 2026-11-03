@@ -182,9 +182,22 @@ To free only unused build cache while keeping saved Daksh data, run just `docker
 
 ### Logging in
 
-The Web UI requires an account. On first startup, an initial admin account is created from `DAKSH_ADMIN_USERNAME` / `DAKSH_ADMIN_PASSWORD` (set these in `.env`); if `DAKSH_ADMIN_PASSWORD` is left unset, a random password is generated and printed once to the API's startup log - save it, since it cannot be recovered afterward.
+The Web UI requires an account.
 
-You'll be required to set your own password (and, optionally, username) the first time you log in. An admin account can create further accounts via the `POST /api/v1/auth/users` API endpoint (no dedicated UI for this yet). See `.env.example` for the full list of authentication-related settings (session lifetime, cookie security, CORS).
+**First-time login**
+
+1. Start the portal (`python3 tools/start_webui.py --detach`) and open [http://localhost:3030](http://localhost:3030).
+2. The login page detects first-time setup. It pre-fills the username `admin` and the initial password, and shows a first-time setup notice.
+
+   | Setting | Value |
+   |---|---|
+   | Username | `admin` (or `DAKSH_ADMIN_USERNAME` from `.env`) |
+   | Initial password | `Daksh@ChangeMe1` (or `DAKSH_ADMIN_PASSWORD` from `.env`) |
+
+3. Click **Sign in**. A full-screen **change password** step appears and cannot be skipped. Enter the initial password as the current password, choose a new password (at least 8 characters, different from the current one), and optionally change the username.
+4. After saving, you are taken to the dashboard. From then on the login page no longer pre-fills anything; sign in with your own credentials.
+
+The initial password is only used while the database has no accounts, and it stops working as soon as it is changed. Until then, anyone who can reach the portal can sign in with it, so set `DAKSH_ADMIN_PASSWORD` in `.env` before first start if the portal is reachable by others. An admin account can create further accounts via the `POST /api/v1/auth/users` API endpoint (no dedicated UI for this yet). New and reset accounts also have to change their assigned password at first login. See `.env.example` for the full list of authentication-related settings (session lifetime, cookie security, CORS).
 
 ### What you get
 

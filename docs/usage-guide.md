@@ -584,9 +584,10 @@ For Docker deployments, check `docker logs daksh-api` and `docker logs webui`. F
 
 The Web UI requires an account. On first startup, an initial admin account
 is created from `DAKSH_ADMIN_USERNAME`/`DAKSH_ADMIN_PASSWORD` (set these in
-`.env`); if `DAKSH_ADMIN_PASSWORD` is left unset, a random password is
-generated and printed once to the API's startup log - save it, since it
-cannot be recovered afterward. An admin account can create further accounts
+`.env`); if `DAKSH_ADMIN_PASSWORD` is left unset, the initial password is
+`Daksh@ChangeMe1`. The login page pre-fills it on first run and a password change is
+required immediately after signing in. Set `DAKSH_ADMIN_PASSWORD` before
+first start if the portal is reachable by others. An admin account can create further accounts
 via the `POST /api/v1/auth/users` API endpoint. See `.env.example` for the
 full list of authentication-related settings (session lifetime, cookie
 security, CORS for `npm run dev`).
